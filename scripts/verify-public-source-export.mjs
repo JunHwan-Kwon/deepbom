@@ -61,14 +61,20 @@ for (const required of [
 
 console.log(`Public source export verification passed (${declared.length} files; exact member, byte-length, SHA-256, license, workflow, package-script, and private-path contracts checked).`);
 
-async function collectFiles(directory) {
+async function collectFiles(directory, rootDirectory = directory) {
   const files = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const file = path.join(directory, entry.name);
-    if (entry.isDirectory()) files.push(...await collectFiles(file));
+    const relative = normalize(path.relative(rootDirectory, file));
+    if (entry.isDirectory() && isLocalOnlyPath(relative)) continue;
+    if (entry.isDirectory()) files.push(...await collectFiles(file, rootDirectory));
     else if (entry.isFile()) files.push(file);
   }
   return files;
+}
+
+function isLocalOnlyPath(file) {
+  return /^(?:\.git|node_modules|\.local-validation)(?:\/|$)/.test(file);
 }
 
 function isForbidden(file) {

@@ -44,7 +44,9 @@ jobs:
       - name: Verify clean public source boundary
         run: |
           npm run check:public-source
+          node scripts/verify-public-source-export.mjs .
           node scripts/check-git-privacy.mjs
+          node scripts/check-ci-deploy-contract.mjs
       - name: Verify CLI and format analyzers
         run: |
           npm run check:cli

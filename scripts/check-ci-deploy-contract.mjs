@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createCheck } from "./check-assert.mjs";
 import {
   classifyChangeSet,
@@ -13,10 +13,25 @@ import {
 import { privateModuleValidationCases } from "./private-wasm-modules.mjs";
 
 const { done, expect, expectDeepEqual, expectEqual } = createCheck("CI deploy contract check");
-const workflow = readFileSync(".github/workflows/pages.yml", "utf8");
-const qualityWorkflow = readFileSync(".github/workflows/quality.yml", "utf8");
 const publicQualityWorkflow = readFileSync(".github/workflows/public-quality.yml", "utf8");
 const channelReleaseWorkflow = readFileSync(".github/workflows/release-channels.yml", "utf8");
+const privateWorkflowPaths = [
+  ".github/workflows/pages.yml",
+  ".github/workflows/quality.yml",
+];
+const availablePrivateWorkflowCount = privateWorkflowPaths.filter((path) => existsSync(path)).length;
+expect(
+  availablePrivateWorkflowCount === 0 || availablePrivateWorkflowCount === privateWorkflowPaths.length,
+  "Private CI workflows must be either fully present or fully omitted.",
+);
+if (availablePrivateWorkflowCount === 0) {
+  checkPublicDistributionCiContract();
+  done("Public CI and release contract passed.");
+  process.exit(0);
+}
+
+const workflow = readFileSync(".github/workflows/pages.yml", "utf8");
+const qualityWorkflow = readFileSync(".github/workflows/quality.yml", "utf8");
 const channelBuildSource = readFileSync("scripts/build-channel-artifacts.mjs", "utf8");
 const checkTierSource = readFileSync("scripts/check-tier.mjs", "utf8");
 const deployGateSource = readFileSync("scripts/check-deploy.mjs", "utf8");
@@ -308,6 +323,81 @@ for (const stepName of [
 }
 
 done("CI deploy contract passed (deployable, check-only, package, and rust test-only cases).");
+
+function checkPublicDistributionCiContract() {
+  expect(
+    /^on:\s*\r?\n\s+push:/m.test(publicQualityWorkflow)
+      && /^\s+pull_request:/m.test(publicQualityWorkflow)
+      && /^\s+workflow_dispatch:/m.test(publicQualityWorkflow),
+    "Public core quality should run on public pushes, pull requests, and manual dispatch.",
+  );
+  expect(
+    publicQualityWorkflow.includes("if: github.event.repository.private == false"),
+    "Public core quality must consume no private-repository runner minutes.",
+  );
+  for (const snippet of [
+    "actions/checkout@v5",
+    "actions/setup-node@v6",
+    "actions/setup-python@v6",
+    "node-version: 24.12.0",
+    "npm ci",
+    "npx playwright install --with-deps chromium",
+    "npm audit --audit-level=high",
+    "npm run check:public-source",
+    "node scripts/verify-public-source-export.mjs .",
+    "node scripts/check-git-privacy.mjs",
+    "node scripts/check-ci-deploy-contract.mjs",
+    "npm run check:cli",
+    "npm run check:formats",
+    "npm run build:channels",
+    "npm run check:public-package-boundary",
+    "npm run check:channels -- --no-build",
+    "npm run check:rust",
+  ]) {
+    expect(publicQualityWorkflow.includes(snippet), `Public core quality should contain: ${snippet}`);
+  }
+  expect(
+    /^on:\s*\r?\n\s+workflow_dispatch:/m.test(channelReleaseWorkflow),
+    "Channel release must be manual-only.",
+  );
+  expect(
+    !/^\s+(?:push|pull_request|schedule|workflow_run):/m.test(channelReleaseWorkflow),
+    "Channel release must not have an automatic trigger.",
+  );
+  for (const snippet of [
+    "actions/checkout@v5",
+    "actions/setup-node@v6",
+    "actions/setup-python@v6",
+    "actions/upload-artifact@v6",
+    "actions/download-artifact@v6",
+    "node-version: 24.12.0",
+    "npm run check:channels -- --no-build",
+    "npm run check:public-package-boundary",
+    "verify-python-wheel-matrix.py",
+    "pypa/gh-action-pypi-publish@v1.14.2",
+    "npm publish dist/deepbom-${{ inputs.expected_version }}.tgz --access public",
+    "environment: pypi",
+    "environment: npm",
+    "npm >= 11.5.1 is required for Trusted Publishing",
+    'test "${GITHUB_REF}" = "refs/tags/channels-v${actual}"',
+  ]) {
+    expect(channelReleaseWorkflow.includes(snippet), `Channel release workflow should contain: ${snippet}`);
+  }
+  for (const identity of ["windows-x64", "windows-arm64", "linux-x64", "linux-arm64", "macos-x64", "macos-arm64"]) {
+    expect(channelReleaseWorkflow.includes(`id: ${identity}`), `Channel release matrix should contain ${identity}.`);
+  }
+  expect(
+    (channelReleaseWorkflow.match(/id-token:\s*write/g) || []).length === 2,
+    "Only the npm and PyPI publishing jobs should receive OIDC identity-token permission.",
+  );
+  expect(!channelReleaseWorkflow.includes("NPM_TOKEN"), "npm Trusted Publishing must not retain a long-lived publication token.");
+  expect(!channelReleaseWorkflow.includes("PYPI_API_TOKEN"), "PyPI Trusted Publishing must not retain a long-lived publication token.");
+  expect(!channelReleaseWorkflow.includes("--provenance=false"), "Public npm publishing must retain registry provenance.");
+  expect(
+    !/(?:npm_[A-Za-z0-9]{20,}|pypi-[A-Za-z0-9_-]{20,})/.test(channelReleaseWorkflow),
+    "Registry credentials must never be embedded in the release workflow.",
+  );
+}
 
 function packageText({
   buildWorker = "npm run build:wasm && node scripts/build-pages.mjs",

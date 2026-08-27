@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "8d5c3c2635351b626b386a6d21aefd9d59b3a63f",
+  "source_commit": "8fdd1e10ed2c1f9824e66d67f682c5b809f62ad7",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 844,
@@ -12,8 +12,8 @@
     },
     {
       "path": ".github/workflows/public-quality.yml",
-      "byte_length": 1774,
-      "sha256": "d6594a26598358a41cacd6b26d3d622abd071e7f9bcb9ad1b6f53a38c13f4e4a"
+      "byte_length": 1883,
+      "sha256": "633f8be0b700f2a260b68b506844dd9e58737d8a2d412f9ae7d709e16b8fb744"
     },
     {
       "path": ".github/workflows/release-channels.yml",
@@ -967,8 +967,8 @@
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
-      "byte_length": 22194,
-      "sha256": "fd12794aeb28dee4e727665450e7919f58b4a31eb503bb7fe08dee16797e0478"
+      "byte_length": 26034,
+      "sha256": "a4339349e884559a989d0c933651932f75d5abff6c084d44ede71a0bbe0996b1"
     },
     {
       "path": "scripts/check-cli.mjs",
@@ -2297,8 +2297,8 @@
     },
     {
       "path": "scripts/verify-public-source-export.mjs",
-      "byte_length": 5546,
-      "sha256": "6b9e4d3a6eaf838d7ff0c1ec3e5e4e36244bf44b66fb628a1a47003619be5101"
+      "byte_length": 5834,
+      "sha256": "3cb881a776cd9562e8e15262977aae5c14a7f38986cc1b8ca2a73c43baaadbb4"
     },
     {
       "path": "scripts/verify-python-wheel-matrix.py",
