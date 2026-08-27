@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "8fdd1e10ed2c1f9824e66d67f682c5b809f62ad7",
+  "source_commit": "0110e863ad0b2bed58a52e69f8d38f566951084d",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 844,
@@ -12,8 +12,8 @@
     },
     {
       "path": ".github/workflows/public-quality.yml",
-      "byte_length": 1883,
-      "sha256": "633f8be0b700f2a260b68b506844dd9e58737d8a2d412f9ae7d709e16b8fb744"
+      "byte_length": 1854,
+      "sha256": "017396b038e31fdebbc12b64df1b300bf09daf921d63039982aa1a25a630f344"
     },
     {
       "path": ".github/workflows/release-channels.yml",
@@ -767,8 +767,8 @@
     },
     {
       "path": "scripts/build-channel-artifacts.mjs",
-      "byte_length": 15037,
-      "sha256": "b65e7f5032ee6e24a7fa1731149fcb3732483b7ac3fdad4837206ef92e54a513"
+      "byte_length": 15146,
+      "sha256": "ae23c73adedecb3ca743caed62fccdb4598ac5fc23e6a6f9d63e743f4895ba49"
     },
     {
       "path": "scripts/build-coreml-legacy-quantization-corpus.mjs",
@@ -967,8 +967,8 @@
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
-      "byte_length": 26034,
-      "sha256": "a4339349e884559a989d0c933651932f75d5abff6c084d44ede71a0bbe0996b1"
+      "byte_length": 26050,
+      "sha256": "567b77201dcaeb59363fafb035edc210ea2a567d1c8d433a943374d44c5a0405"
     },
     {
       "path": "scripts/check-cli.mjs",
@@ -2297,8 +2297,8 @@
     },
     {
       "path": "scripts/verify-public-source-export.mjs",
-      "byte_length": 5834,
-      "sha256": "3cb881a776cd9562e8e15262977aae5c14a7f38986cc1b8ca2a73c43baaadbb4"
+      "byte_length": 5943,
+      "sha256": "0c54b73cf54e64ccf554b3540fc512c0d147750f8f67af59b6f692147430b53a"
     },
     {
       "path": "scripts/verify-python-wheel-matrix.py",

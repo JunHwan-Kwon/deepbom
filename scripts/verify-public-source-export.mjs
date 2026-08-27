@@ -20,7 +20,7 @@ assert(JSON.stringify(declaredPaths) === JSON.stringify([...declaredPaths].sort(
 
 const actualPaths = (await collectFiles(exportRoot))
   .map((file) => normalize(path.relative(exportRoot, file)))
-  .filter((file) => file !== "PUBLIC_SOURCE_MANIFEST.json")
+  .filter((file) => file !== "PUBLIC_SOURCE_MANIFEST.json" && !isLocalOnlyFile(file))
   .sort();
 assertEqual(actualPaths, declaredPaths, "public source member ledger");
 
@@ -75,6 +75,10 @@ async function collectFiles(directory, rootDirectory = directory) {
 
 function isLocalOnlyPath(file) {
   return /^(?:\.git|node_modules|\.local-validation)(?:\/|$)/.test(file);
+}
+
+function isLocalOnlyFile(file) {
+  return file === "web/lib/build-metadata.js";
 }
 
 function isForbidden(file) {

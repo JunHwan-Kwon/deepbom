@@ -57,10 +57,10 @@ expect(
     && !/^\s+(?:push|pull_request|schedule|workflow_run):/m.test(qualityWorkflow),
   "Full Quality must remain manual-only in this repository.",
 );
-expect(/^on:\s*\r?\n\s+push:/m.test(publicQualityWorkflow)
-  && /^\s+pull_request:/m.test(publicQualityWorkflow)
+expect(!/^\s+push:/m.test(publicQualityWorkflow)
+  && /^on:\s*\r?\n\s+pull_request:/m.test(publicQualityWorkflow)
   && /^\s+workflow_dispatch:/m.test(publicQualityWorkflow),
-"Public core quality should run on public pushes, pull requests, and manual dispatch.");
+"Public core quality should run on pull requests and manual dispatch, not every direct push.");
 expect(publicQualityWorkflow.includes("if: github.event.repository.private == false"),
   "Public core quality must consume no private-repository runner minutes.");
 for (const snippet of [
@@ -326,10 +326,10 @@ done("CI deploy contract passed (deployable, check-only, package, and rust test-
 
 function checkPublicDistributionCiContract() {
   expect(
-    /^on:\s*\r?\n\s+push:/m.test(publicQualityWorkflow)
-      && /^\s+pull_request:/m.test(publicQualityWorkflow)
+    !/^\s+push:/m.test(publicQualityWorkflow)
+      && /^on:\s*\r?\n\s+pull_request:/m.test(publicQualityWorkflow)
       && /^\s+workflow_dispatch:/m.test(publicQualityWorkflow),
-    "Public core quality should run on public pushes, pull requests, and manual dispatch.",
+    "Public core quality should run on pull requests and manual dispatch, not every direct push.",
   );
   expect(
     publicQualityWorkflow.includes("if: github.event.repository.private == false"),
