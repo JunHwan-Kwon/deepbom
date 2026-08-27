@@ -47,7 +47,12 @@ const cargoResult = run("cargo", ["run", "--quiet", "--manifest-path", cargoMani
   DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
 });
 assert.deepEqual(json(cargoResult.stdout), json(run(process.execPath, ["bin/deepbom.mjs", "audit", cases[1].path, "--compact"]).stdout), "Cargo launcher diverged from canonical CLI");
-const unboundCargo = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "--version"], { DEEPBOM_ENGINE: engine }, false);
+const unboundCargo = run(
+  "cargo",
+  ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"],
+  { DEEPBOM_ENGINE: engine },
+  false,
+);
 assert.notEqual(unboundCargo.status, 0);
 assert.match(unboundCargo.stderr, /DEEPBOM_ENGINE_SHA256/);
 

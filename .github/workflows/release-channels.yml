@@ -194,10 +194,38 @@ jobs:
           gh release upload "$RELEASE_TAG" release/* --repo "$GITHUB_REPOSITORY"
           gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false
 
+  smoke-cargo-release:
+    name: Smoke-test Cargo against published engines
+    if: inputs.publish
+    needs: publish-github-release
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Install declared Cargo MSRV
+        shell: pwsh
+        run: rustup toolchain install 1.85.0 --profile minimal --no-self-update
+      - name: Download, verify, and execute the immutable release engine
+        shell: pwsh
+        env:
+          DEEPBOM_HOME: ${{ runner.temp }}\deepbom-cargo-smoke
+        run: |
+          $version = cargo +1.85.0 run --quiet --locked --manifest-path channels/cargo/Cargo.toml -- --version
+          if ($LASTEXITCODE -ne 0 -or $version -ne "deepbom ${{ inputs.expected_version }}") {
+            throw "Cargo launcher version contract failed: $version"
+          }
+          cargo +1.85.0 run --quiet --locked --manifest-path channels/cargo/Cargo.toml -- engine verify
+          if ($LASTEXITCODE -ne 0) { throw "Remote engine verification failed." }
+          $output = cargo +1.85.0 run --quiet --locked --manifest-path channels/cargo/Cargo.toml -- audit corpus/onnx-extension-contract-corpus/deepbom-static-per-axis-qdq.onnx --compact
+          if ($LASTEXITCODE -ne 0) { throw "Remote engine execution failed." }
+          ($output -join "`n") | ConvertFrom-Json | Out-Null
+
   publish-cargo:
     name: Publish Cargo bootstrap release
     if: inputs.publish
-    needs: publish-github-release
+    needs: smoke-cargo-release
     runs-on: ubuntu-24.04
     environment: crates-io
     steps:
@@ -212,7 +240,7 @@ jobs:
   publish-pypi:
     name: Publish PyPI with Trusted Publishing
     if: inputs.publish
-    needs: publish-github-release
+    needs: smoke-cargo-release
     runs-on: ubuntu-24.04
     environment: pypi
     permissions:
@@ -229,7 +257,7 @@ jobs:
   publish-npm:
     name: Publish npm with Trusted Publishing
     if: inputs.publish
-    needs: publish-github-release
+    needs: smoke-cargo-release
     runs-on: ubuntu-24.04
     environment: npm
     permissions:

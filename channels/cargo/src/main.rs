@@ -15,6 +15,7 @@ const RELEASE_REPOSITORY: &str = "https://github.com/JunHwan-Kwon/deepbom";
 const MAX_MATRIX_BYTES: u64 = 1024 * 1024;
 const MAX_ENGINE_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_WASM_BYTES: u64 = 64 * 1024 * 1024;
+const DOWNLOAD_CHUNK_BYTES: usize = 64 * 1024;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -74,6 +75,10 @@ fn main() -> ExitCode {
 
 fn run() -> Result<i32, String> {
     let arguments: Vec<OsString> = env::args_os().skip(1).collect();
+    if arguments.len() == 1 && matches!(arguments[0].to_str(), Some("--version") | Some("-V")) {
+        println!("deepbom {VERSION}");
+        return Ok(0);
+    }
     if arguments.first().and_then(|value| value.to_str()) == Some("engine") {
         return engine_command(&arguments[1..]);
     }
@@ -346,7 +351,9 @@ fn download_verified(
         let mut output = File::create(&temporary).map_err(io_error("create temporary download"))?;
         let mut digest = Sha256::new();
         let mut total = 0_u64;
-        let mut buffer = [0_u8; 1024 * 1024];
+        // Keep the download buffer on the heap. A 1 MiB stack allocation exhausts
+        // the default Windows main-thread stack before the first network read.
+        let mut buffer = vec![0_u8; DOWNLOAD_CHUNK_BYTES];
         loop {
             let count = reader
                 .read(&mut buffer)
@@ -629,5 +636,10 @@ mod tests {
         assert!(validate_artifact(&artifact(expected.clone()), &expected, 2).is_ok());
         assert!(validate_artifact(&artifact("other.wasm".to_string()), &expected, 2).is_err());
         assert!(validate_artifact(&artifact(expected.clone()), &expected, 0).is_err());
+    }
+
+    #[test]
+    fn download_buffer_stays_below_windows_stack_pressure() {
+        assert!(DOWNLOAD_CHUNK_BYTES <= 64 * 1024);
     }
 }
