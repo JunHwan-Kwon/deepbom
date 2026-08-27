@@ -1,0 +1,2526 @@
+{
+  "schema": "deepbom.artifact_evidence_envelope.v1",
+  "generated_at": "2026-07-29T00:00:00.000Z",
+  "identity": {
+    "filename": "mobilenet_v2_1.0_224_quant.tflite",
+    "format": "tflite",
+    "sha256": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+    "hash_basis": "artifact_file_bytes_sha256",
+    "byte_length": 3577760,
+    "schema_or_opset": null
+  },
+  "capabilities": {
+    "schema": "deepbom.artifact_capability_manifest.v1",
+    "format": "tflite",
+    "declared_capabilities": [
+      "artifact_identity",
+      "graph",
+      "interfaces",
+      "tensor_payloads",
+      "affine_quantization",
+      "metadata",
+      "associated_files",
+      "runtime_floor",
+      "static_cost",
+      "tflite_arena",
+      "xnnpack_contracts",
+      "quantization_proofs",
+      "artifact_byte_integrity"
+    ],
+    "assessed": [
+      "artifact_identity",
+      "graph",
+      "interfaces",
+      "tensor_payloads",
+      "affine_quantization",
+      "metadata",
+      "associated_files",
+      "static_cost",
+      "tflite_arena",
+      "quantization_proofs"
+    ],
+    "partial": [
+      "xnnpack_contracts",
+      "artifact_byte_integrity"
+    ],
+    "unavailable": [
+      "runtime_floor"
+    ],
+    "conservation": {
+      "declared": 13,
+      "classified": 13,
+      "valid": true
+    }
+  },
+  "interfaces": {
+    "schema": "deepbom.interface_quantization_contracts.v1.3",
+    "hash_contract": {
+      "algorithm": "SHA-256",
+      "canonicalization": "RFC8785-JCS",
+      "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+      "selection": "containing_object_after_exclusions",
+      "excluded_json_pointers": [
+        "/ledger_sha256",
+        "/ledger_hash",
+        "/generated_at",
+        "/subject",
+        "/provenance"
+      ],
+      "interpretation": "Remove ledger_sha256, ledger_hash, and any document-envelope generated_at, subject, and provenance members from the ledger object; canonicalize the remaining contract with RFC8785-JCS, encode it as UTF-8, and hash it with SHA-256.",
+      "compatibility": "Per-parameter v1.1 JSON.stringify hashes remain inside each hash descriptor during schema migration."
+    },
+    "parameter_count": 2,
+    "quantized_parameter_count": 2,
+    "unquantized_parameter_count": 0,
+    "invalid_or_incomplete_parameter_count": 0,
+    "per_tensor_parameter_count": 2,
+    "per_axis_parameter_count": 0,
+    "blocked_parameter_count": 0,
+    "distinct_complete_quantization_contract_count": 2,
+    "multiple_complete_quantization_contracts_within_artifact": true,
+    "source_preprocessing_contract_status": "not_embedded_in_artifact",
+    "boundary_contract": {
+      "schema": "deepbom.interface_boundary_contract.v1",
+      "status": "fully_affine_quantized",
+      "parameter_count": 2,
+      "affine_quantized_parameter_count": 2,
+      "unquantized_parameter_count": 0,
+      "invalid_or_incomplete_parameter_count": 0,
+      "float32_parameter_count": 0,
+      "integer_parameter_count": 2,
+      "inputs": {
+        "status": "fully_affine_quantized",
+        "parameter_count": 1,
+        "affine_quantized_parameter_count": 1,
+        "unquantized_parameter_count": 0,
+        "invalid_or_incomplete_parameter_count": 0,
+        "float32_parameter_count": 0,
+        "integer_parameter_count": 1
+      },
+      "outputs": {
+        "status": "fully_affine_quantized",
+        "parameter_count": 1,
+        "affine_quantized_parameter_count": 1,
+        "unquantized_parameter_count": 0,
+        "invalid_or_incomplete_parameter_count": 0,
+        "float32_parameter_count": 0,
+        "integer_parameter_count": 1
+      },
+      "recorded_facts": [
+        "direction",
+        "ordinal",
+        "dtype",
+        "shape",
+        "shape_signature",
+        "affine_quantization"
+      ],
+      "not_established_by_this_contract": [
+        "channel_order",
+        "source_value_domain",
+        "mean_standard_deviation_normalization",
+        "resize_interpolation",
+        "application_tensor_layout",
+        "semantic_labels"
+      ]
+    },
+    "parameters": [
+      {
+        "parameter_id": "input:0:T171",
+        "direction": "input",
+        "ordinal": 0,
+        "tensor_index": 171,
+        "tensor_name": "input",
+        "dtype": "UINT8",
+        "shape": [
+          1,
+          224,
+          224,
+          3
+        ],
+        "shape_signature": null,
+        "source_data_to_tensor_preprocessing_status": "not_embedded_in_artifact",
+        "quantization": {
+          "status": "complete",
+          "scheme": "affine",
+          "granularity": "per_tensor",
+          "parameterization": "per_tensor",
+          "scales": [
+            0.0078125
+          ],
+          "zero_points": [
+            128
+          ],
+          "axis": null,
+          "block_size": null,
+          "affine_mapping_status": "complete_affine_mapping",
+          "scheme_evidence": "generic_affine_equation_observed_symmetry_not_encoded",
+          "symmetry_classification": "not_encoded",
+          "scale_count": 1,
+          "zero_point_count": 1,
+          "scale_values_complete": true,
+          "zero_point_values_complete": true,
+          "quantized_dimension": 0,
+          "axis_source": null,
+          "axis_applicable": false,
+          "quantized_dimension_role": "serialized_default_not_semantic_axis",
+          "scale_tensor_shape": [
+            1
+          ],
+          "zero_point_tensor_shape": [
+            1
+          ],
+          "value_vector_shape_basis": "derived_flat_affine_value_vector",
+          "cardinality_status": "valid",
+          "cardinality_reason": "One scale and one zero-point are declared.",
+          "scalar_real_code_domain": {
+            "qmin": 0,
+            "qmax": 255,
+            "real_min": -1,
+            "real_max": 0.9921875,
+            "formula": "real=(q-zero_point)*scale"
+          },
+          "contract_sha256": "2e534a974be2f7d41b2f9d6e19d8b3fd457c53e7bdb8d48600c79db2066c6577",
+          "contract_hash": {
+            "algorithm": "SHA-256",
+            "canonicalization": "RFC8785-JCS",
+            "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+            "sha256": "2e534a974be2f7d41b2f9d6e19d8b3fd457c53e7bdb8d48600c79db2066c6577",
+            "payload_contract": {
+              "selection": "included_json_pointers_only",
+              "included_json_pointers": [
+                "/status",
+                "/scheme",
+                "/granularity",
+                "/parameterization",
+                "/scales",
+                "/zero_points",
+                "/axis",
+                "/block_size"
+              ],
+              "excluded_json_pointers": [],
+              "interpretation": "Resolve the listed JSON Pointers relative to the containing contract object, construct the declared payload, canonicalize it with RFC8785-JCS, encode as UTF-8, and hash with SHA-256."
+            },
+            "legacy_v1_1": {
+              "method": "SHA-256 over UTF-8 JSON.stringify payload bytes",
+              "sha256": "ddad8d970d62658206391f62fbb3fcbc34f503041fc4ea5cfe981435605d4b3a",
+              "ordered_payload_fields": [
+                "scheme",
+                "granularity",
+                "scales",
+                "zero_points",
+                "axis"
+              ]
+            }
+          },
+          "serialized_quantization_sha256": "ed7e92d16bd71e5e69567afd76d90d2c1d31a611c1f085fcd1a5f227404ebdad",
+          "serialized_quantization_hash": {
+            "algorithm": "SHA-256",
+            "canonicalization": "RFC8785-JCS",
+            "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+            "sha256": "ed7e92d16bd71e5e69567afd76d90d2c1d31a611c1f085fcd1a5f227404ebdad",
+            "payload_contract": {
+              "selection": "included_json_pointers_only",
+              "included_json_pointers": [
+                "/status",
+                "/scheme",
+                "/granularity",
+                "/parameterization",
+                "/scales",
+                "/zero_points",
+                "/axis",
+                "/block_size",
+                "/quantized_dimension",
+                "/axis_source",
+                "/scale_tensor_shape",
+                "/zero_point_tensor_shape"
+              ],
+              "excluded_json_pointers": [],
+              "interpretation": "Resolve the listed JSON Pointers relative to the containing contract object, construct the declared payload, canonicalize it with RFC8785-JCS, encode as UTF-8, and hash with SHA-256."
+            },
+            "legacy_v1_1": {
+              "method": "SHA-256 over UTF-8 JSON.stringify payload bytes",
+              "sha256": "b1df1f7e1a36e92c968c84abf8f2dac55e26b77147609fd73f3f315a5a780580",
+              "ordered_payload_fields": [
+                "scheme",
+                "granularity",
+                "scales",
+                "zero_points",
+                "axis",
+                "quantized_dimension"
+              ]
+            }
+          }
+        },
+        "interface_contract_sha256": "14f100754e65c865b32b905a74c2915bec5a9872707bee7be70080c218ba4b56",
+        "interface_contract_hash": {
+          "algorithm": "SHA-256",
+          "canonicalization": "RFC8785-JCS",
+          "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+          "sha256": "14f100754e65c865b32b905a74c2915bec5a9872707bee7be70080c218ba4b56",
+          "payload_contract": {
+            "selection": "included_json_pointers_only",
+            "included_json_pointers": [
+              "/direction",
+              "/ordinal",
+              "/tensor_name",
+              "/dtype",
+              "/shape",
+              "/shape_signature",
+              "/quantization/status",
+              "/quantization/scheme",
+              "/quantization/granularity",
+              "/quantization/parameterization",
+              "/quantization/scales",
+              "/quantization/zero_points",
+              "/quantization/axis",
+              "/quantization/block_size"
+            ],
+            "excluded_json_pointers": [],
+            "interpretation": "Resolve the listed JSON Pointers relative to the containing contract object, construct the declared payload, canonicalize it with RFC8785-JCS, encode as UTF-8, and hash with SHA-256."
+          },
+          "legacy_v1_1": {
+            "method": "SHA-256 over UTF-8 JSON.stringify payload bytes",
+            "sha256": "320cb84c2163797f739edc9c0c90afa0a2871ae2be78335e11a3f92949623c7f",
+            "ordered_payload_fields": [
+              "direction",
+              "ordinal",
+              "name",
+              "dtype",
+              "shape",
+              "shape_signature",
+              "quantization"
+            ]
+          }
+        }
+      },
+      {
+        "parameter_id": "output:0:T172",
+        "direction": "output",
+        "ordinal": 0,
+        "tensor_index": 172,
+        "tensor_name": "output",
+        "dtype": "UINT8",
+        "shape": [
+          1,
+          1001
+        ],
+        "shape_signature": null,
+        "source_data_to_tensor_preprocessing_status": "not_applicable",
+        "quantization": {
+          "status": "complete",
+          "scheme": "affine",
+          "granularity": "per_tensor",
+          "parameterization": "per_tensor",
+          "scales": [
+            0.09889253973960876
+          ],
+          "zero_points": [
+            58
+          ],
+          "axis": null,
+          "block_size": null,
+          "affine_mapping_status": "complete_affine_mapping",
+          "scheme_evidence": "generic_affine_equation_observed_symmetry_not_encoded",
+          "symmetry_classification": "not_encoded",
+          "scale_count": 1,
+          "zero_point_count": 1,
+          "scale_values_complete": true,
+          "zero_point_values_complete": true,
+          "quantized_dimension": 0,
+          "axis_source": null,
+          "axis_applicable": false,
+          "quantized_dimension_role": "serialized_default_not_semantic_axis",
+          "scale_tensor_shape": [
+            1
+          ],
+          "zero_point_tensor_shape": [
+            1
+          ],
+          "value_vector_shape_basis": "derived_flat_affine_value_vector",
+          "cardinality_status": "valid",
+          "cardinality_reason": "One scale and one zero-point are declared.",
+          "scalar_real_code_domain": {
+            "qmin": 0,
+            "qmax": 255,
+            "real_min": -5.735767304897308,
+            "real_max": 19.481830328702927,
+            "formula": "real=(q-zero_point)*scale"
+          },
+          "contract_sha256": "34ea3904615e45df12cb0f5fdb229b6b582c0863002472c6d18c06da8e18ef13",
+          "contract_hash": {
+            "algorithm": "SHA-256",
+            "canonicalization": "RFC8785-JCS",
+            "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+            "sha256": "34ea3904615e45df12cb0f5fdb229b6b582c0863002472c6d18c06da8e18ef13",
+            "payload_contract": {
+              "selection": "included_json_pointers_only",
+              "included_json_pointers": [
+                "/status",
+                "/scheme",
+                "/granularity",
+                "/parameterization",
+                "/scales",
+                "/zero_points",
+                "/axis",
+                "/block_size"
+              ],
+              "excluded_json_pointers": [],
+              "interpretation": "Resolve the listed JSON Pointers relative to the containing contract object, construct the declared payload, canonicalize it with RFC8785-JCS, encode as UTF-8, and hash with SHA-256."
+            },
+            "legacy_v1_1": {
+              "method": "SHA-256 over UTF-8 JSON.stringify payload bytes",
+              "sha256": "8f94301ad596ad8da1061c74c9e8bc2aeeb9f81dcf609d51d2bb9be5eac257d8",
+              "ordered_payload_fields": [
+                "scheme",
+                "granularity",
+                "scales",
+                "zero_points",
+                "axis"
+              ]
+            }
+          },
+          "serialized_quantization_sha256": "b6815d4ce6bcfb4349e49516c21753a979d39aedd3fd2b184347111af46695b6",
+          "serialized_quantization_hash": {
+            "algorithm": "SHA-256",
+            "canonicalization": "RFC8785-JCS",
+            "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+            "sha256": "b6815d4ce6bcfb4349e49516c21753a979d39aedd3fd2b184347111af46695b6",
+            "payload_contract": {
+              "selection": "included_json_pointers_only",
+              "included_json_pointers": [
+                "/status",
+                "/scheme",
+                "/granularity",
+                "/parameterization",
+                "/scales",
+                "/zero_points",
+                "/axis",
+                "/block_size",
+                "/quantized_dimension",
+                "/axis_source",
+                "/scale_tensor_shape",
+                "/zero_point_tensor_shape"
+              ],
+              "excluded_json_pointers": [],
+              "interpretation": "Resolve the listed JSON Pointers relative to the containing contract object, construct the declared payload, canonicalize it with RFC8785-JCS, encode as UTF-8, and hash with SHA-256."
+            },
+            "legacy_v1_1": {
+              "method": "SHA-256 over UTF-8 JSON.stringify payload bytes",
+              "sha256": "0a85dcc36bd24d6e25e5324936f13e14e7e198216db8f2e850d81c8a68dd826f",
+              "ordered_payload_fields": [
+                "scheme",
+                "granularity",
+                "scales",
+                "zero_points",
+                "axis",
+                "quantized_dimension"
+              ]
+            }
+          }
+        },
+        "interface_contract_sha256": "0082096ef3eec9047e04771015d849c58d08758f75fab4fd8944029a4fa35cad",
+        "interface_contract_hash": {
+          "algorithm": "SHA-256",
+          "canonicalization": "RFC8785-JCS",
+          "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+          "sha256": "0082096ef3eec9047e04771015d849c58d08758f75fab4fd8944029a4fa35cad",
+          "payload_contract": {
+            "selection": "included_json_pointers_only",
+            "included_json_pointers": [
+              "/direction",
+              "/ordinal",
+              "/tensor_name",
+              "/dtype",
+              "/shape",
+              "/shape_signature",
+              "/quantization/status",
+              "/quantization/scheme",
+              "/quantization/granularity",
+              "/quantization/parameterization",
+              "/quantization/scales",
+              "/quantization/zero_points",
+              "/quantization/axis",
+              "/quantization/block_size"
+            ],
+            "excluded_json_pointers": [],
+            "interpretation": "Resolve the listed JSON Pointers relative to the containing contract object, construct the declared payload, canonicalize it with RFC8785-JCS, encode as UTF-8, and hash with SHA-256."
+          },
+          "legacy_v1_1": {
+            "method": "SHA-256 over UTF-8 JSON.stringify payload bytes",
+            "sha256": "1b47bc0ec72f8119ad4f7db0ef9f2e2896872bc52868a68b75cce8d58bbe1312",
+            "ordered_payload_fields": [
+              "direction",
+              "ordinal",
+              "name",
+              "dtype",
+              "shape",
+              "shape_signature",
+              "quantization"
+            ]
+          }
+        }
+      }
+    ],
+    "interpretation_boundary": "The ledger records serialized boundary dtype, shape, and affine quantization facts and validates affine value/cardinality consistency. A FLOAT32 boundary is an explicit unquantized storage contract, not missing quantization metadata. This ledger alone does not establish RGB/BGR order, source-value normalization, mean/standard-deviation transforms, resize interpolation, application tensor layout, the production preprocessing implementation, mismatch prevalence, or task accuracy.",
+    "ledger_sha256": "30c462341a9830ab81ec60bc3f27bc48a7cf826eea71a67b5abddf442150d38b",
+    "ledger_hash": {
+      "algorithm": "SHA-256",
+      "canonicalization": "RFC8785-JCS",
+      "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+      "sha256": "30c462341a9830ab81ec60bc3f27bc48a7cf826eea71a67b5abddf442150d38b",
+      "payload_contract": {
+        "selection": "containing_object_after_exclusions",
+        "included_json_pointers": [],
+        "excluded_json_pointers": [
+          "/ledger_sha256",
+          "/ledger_hash",
+          "/generated_at",
+          "/subject",
+          "/provenance"
+        ],
+        "interpretation": "Remove ledger_sha256, ledger_hash, and any document-envelope generated_at, subject, and provenance members from the ledger object; canonicalize the remaining contract with RFC8785-JCS, encode it as UTF-8, and hash it with SHA-256."
+      }
+    }
+  },
+  "graph": {
+    "operator_count": 65,
+    "tensor_count": 173,
+    "total_macs": 300775552,
+    "mac_assessment_status": "assessed"
+  },
+  "external_files": [],
+  "metadata": {
+    "status": "assessed_no_model_metadata",
+    "evidence_class": "NOT_ASSESSABLE",
+    "producer_name": null,
+    "producer_version": null,
+    "model_version": null,
+    "author": null,
+    "license": null,
+    "description": "TOCO Converted.",
+    "preprocessing_contract_status": "absent_no_model_metadata",
+    "output_semantics_documented": false
+  },
+  "findings": [
+    {
+      "id": "EA-IOC-0001",
+      "title": "Preprocessing contract is not embedded",
+      "severity": "high",
+      "status": "open",
+      "evidence_class": "OBSERVED",
+      "source_evidence_class": "OBSERVED",
+      "summary": "The artifact exposes UINT8 1x224x224x3 input. Tensor layout is NHWC (DERIVED; derived_nhwc_from_direct_consumer_semantics); tensor numerical status is known_from_artifact_quantization_metadata with scalar real range [-1.00000000, 0.992187500]. Source decoding, resize policy, interpolation, RGB/BGR order, and normalization remain undocumented.",
+      "interpretation": "The model artifact alone does not define the application-side input transformation needed for reproducible runtime or accuracy results.",
+      "recommendation": "Bind a versioned preprocessing specification and its checksum to the artifact release manifest.",
+      "source_pointers": [
+        "/evidence/static_analysis/inputs/0",
+        "/evidence/static_analysis/input_contracts/0",
+        "/evidence/static_analysis/metadata_presence/documented_preprocessing"
+      ],
+      "rule_id": "deepbom.report_findings.EA-IOC-0001.v1"
+    },
+    {
+      "id": "EA-OUT-0001",
+      "title": "Output interpretation contract is not embedded",
+      "severity": "medium",
+      "status": "open",
+      "evidence_class": "OBSERVED",
+      "source_evidence_class": "OBSERVED",
+      "summary": "The graph output is produced by RESHAPE #064 as UINT8 1x1001; no terminal SOFTMAX is observed, so probability semantics are NOT_ASSESSABLE from the artifact alone. No semantic label map, class ordering, or application-side output contract is embedded. Output dequantization contract: real_value = scale 0.09889253973960876 * (q - zero_point 58); implied representable range [-5.7358e+0, 1.9482e+1]; include this in the application-side interpretation spec.",
+      "interpretation": "The graph can expose mathematical tensor structure, but application semantics such as class ordering, label mapping, and consumer-side postprocessing are not established by shape and dtype alone.",
+      "recommendation": "Attach and hash the output label mapping and application-side interpretation specification.",
+      "source_pointers": [
+        "/evidence/static_analysis/outputs/0",
+        "/evidence/static_analysis/metadata_presence/output_semantics_documented"
+      ],
+      "rule_id": "deepbom.report_findings.EA-OUT-0001.v1"
+    },
+    {
+      "id": "EA-LIN-0001",
+      "title": "Source checkpoint and conversion lineage were not provided",
+      "severity": "high",
+      "status": "open",
+      "evidence_class": "NOT_ASSESSABLE",
+      "source_evidence_class": "NOT_ASSESSABLE",
+      "summary": "The artifact/report context does not provide source checkpoint SHA-256, export framework/version, converter version, export configuration, quantization/calibration configuration, representative dataset ID, build pipeline ID, software release ID, model requirement ID, or previous released artifact SHA-256.",
+      "interpretation": "The deployment artifact can be structurally analyzed, but it does not by itself establish traceability from training checkpoint to released runtime artifact.",
+      "recommendation": "Bind checkpoint-to-artifact lineage in the release manifest and include immutable hashes/IDs for source checkpoint, converter/framework, export options, calibration inputs where applicable, pipeline, software release, requirement, and previous artifact.",
+      "source_pointers": [
+        "/evidence/static_analysis/metadata_presence"
+      ],
+      "rule_id": "deepbom.report_findings.EA-LIN-0001.v1"
+    },
+    {
+      "id": "EA-RUN-0001",
+      "title": "Bundled runtime version was not provided",
+      "severity": "medium",
+      "status": "open",
+      "evidence_class": "NOT_ASSESSABLE",
+      "source_evidence_class": "NOT_ASSESSABLE",
+      "summary": "Observed mapped-op necessary floor 1.5.0; builtin op-version map coverage 5/5 (complete_for_observed_builtin_op_versions); declared min_runtime_version not embedded; highest observed operator version 1; deployed LiteRT/TFLite runtime build not provided.",
+      "interpretation": "Every observed builtin op code/version is covered by the pinned necessary-floor map, but compatibility of the application bundle still cannot be concluded without the exact runtime version and build flags.",
+      "recommendation": "Record the exact LiteRT/TFLite runtime build and build flags, resolve every unmapped builtin op version, and execute the artifact on that binary before claiming compatibility.",
+      "source_pointers": [
+        "/evidence/static_analysis/runtime_compat"
+      ],
+      "rule_id": "deepbom.report_findings.EA-RUN-0001.v1"
+    },
+    {
+      "id": "EA-WGT-0001",
+      "title": "Exact-zero kernel slices converge with constant-output channel proof",
+      "severity": "high",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "11 decoded kernel output slice(s) are near-zero after applying artifact quantization scale/zero-point metadata; 11 are exact-zero in stored centered-code space. MobilenetV2/Conv/weights_quant/FakeQuantWithMinMaxVars UINT8 32x3x3x3: near-zero decoded slice channel(s) 3, 7, 11, 12, 13, 16, 19, 28; exact-zero stored subset 3, 7, 11, 12, 13, 16, 19, 28; scale/zp 3.397e-2, 3.397e-2, 3.397e-2/122, 122, 122; MobilenetV2/Conv/Conv2D_Fold_bias INT32; real bias sample -1.216e+0, -2.543e+0, -2.988e-1; raw code sample -4,581, -9,582, -1,126; INT32 use 0.0002%, 0.0004%, 5.24e-5%; consumers #0 CONV_2D | MobilenetV2/expanded_conv/depthwise/weights_quant/FakeQuantWithMinMaxVars UINT8 1x3x3x32: near-zero decoded slice channel(s) 20; exact-zero stored subset 20; scale/zp 3.437e-1/165; MobilenetV2/expanded_conv/depthwise/depthwise_Fold_bias INT32; real bias sample 1.027e+0; raw code sample 127; INT32 use 5.91e-6%; consumers #1 DEPTHWISE_CONV_2D | MobilenetV2/expanded_conv_11/expand/weights_quant/FakeQuantWithMinMaxVars UINT8 576x1x1x96: near-zero decoded slice channel(s) 259; exact-zero stored subset 259; scale/zp 1.631e-3/134; MobilenetV2/expanded_conv_11/expand/Conv2D_Fold_bias INT32; real bias sample 2.276e+0; raw code sample 8,181; INT32 use 0.0004%; consumers #39 CONV_2D | MobilenetV2/expanded_conv_2/expand/weights_quant/FakeQuantWithMinMaxVars UINT8 144x1x1x24: near-zero decoded slice channel(s) 130; exact-zero stored subset 130; scale/zp 3.656e-3/144; MobilenetV2/expanded_conv_2/expand/Conv2D_Fold_bias INT32; real bias sample -1.846e+0; raw code sample -1,831; INT32 use 8.53e-5%; consumers #6 CONV_2D. Direct-consumer MAC share upper bound 12% (triage scope only; not zero-slice arithmetic, latency, or accuracy impact). Cross-ledger join proves 11 exact-zero coordinate(s) also emit one constant output code under both pinned fixed-point paths: T2/#000/ch3 bias -4,581 (0.0002% INT32), T2/#000/ch7 bias -9,582 (0.0004% INT32), T2/#000/ch11 bias -1,126 (5.24e-5% INT32), T2/#000/ch12 bias -736 (3.43e-5% INT32), T2/#000/ch13 bias -5,063 (0.0002% INT32), T2/#000/ch16 bias 26 (1.21e-6% INT32), T2/#000/ch19 bias -4,931 (0.0002% INT32), T2/#000/ch28 bias 330 (1.54e-5% INT32), T13/#001/ch20 bias 127 (5.91e-6% INT32), T41/#039/ch259 bias 8,181 (0.0004% INT32), T99/#006/ch130 bias -1,831 (8.53e-5% INT32).",
+      "interpretation": "The listed coordinates are exact local constant-output channels under both pinned TFLite fixed-point paths, not merely low-norm or scale-spread heuristics. This still does not prove the declared model outputs or task metric are invariant because downstream graph paths and representative inputs remain separate evidence.",
+      "recommendation": "Treat the convergent coordinates as a high-priority export defect review: compare against the source checkpoint/QAT graph, inspect raw INT32 bias generation, re-export, and run representative plus adversarial output regression before release.",
+      "source_pointers": [
+        "/evidence/static_analysis/weight_integrity/zero_kernel_slice_details",
+        "/evidence/static_analysis/channel_vitality/ops"
+      ],
+      "rule_id": "deepbom.report_findings.EA-WGT-0001.v1"
+    },
+    {
+      "id": "EA-QNT-0100",
+      "title": "Quantized constant grid utilization requires calibration review",
+      "severity": "medium",
+      "status": "open",
+      "evidence_class": "DERIVED_WITH_HEURISTIC_THRESHOLD",
+      "source_evidence_class": "HEURISTIC",
+      "summary": "Quantized constant grid scan: 53 tensor(s) decoded; all-size minimum 8-bit level utilization 20.3%; threshold-eligible minimum 20.3%; 53 tensor(s) with at least 256 elements assessed against the <25% threshold, of which 3 are below it; max qmin/qmax saturation 0.35%; 0 tensor(s) above 1% endpoint saturation. Alert threshold is HEURISTIC: <25% 8-bit level utilization for tensors with at least 256 elements, or >1% endpoint saturation.",
+      "interpretation": "The utilization and saturation values are deterministically derived from artifact constants; the alert threshold is a methodology heuristic for calibration review, not a task-accuracy claim.",
+      "recommendation": "Review calibration/QAT histograms for the flagged constants and compare representative-output drift against a re-calibrated export.",
+      "source_pointers": [
+        "/evidence/static_analysis/weight_integrity/quant_grid_detail"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0100.v1"
+    },
+    {
+      "id": "EA-QNT-0101",
+      "title": "Depthwise convolution weights use per-tensor quantization",
+      "severity": "medium",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "17 quantized DEPTHWISE_CONV_2D op(s) use a single weight scale; per-channel tensors observed: 0. Complete affected-op inventory: #001 DEPTHWISE_CONV_2D, #004 DEPTHWISE_CONV_2D, #007 DEPTHWISE_CONV_2D, #011 DEPTHWISE_CONV_2D, #014 DEPTHWISE_CONV_2D, #018 DEPTHWISE_CONV_2D, #022 DEPTHWISE_CONV_2D, #025 DEPTHWISE_CONV_2D, #029 DEPTHWISE_CONV_2D, #033 DEPTHWISE_CONV_2D, #037 DEPTHWISE_CONV_2D, #040 DEPTHWISE_CONV_2D, #044 DEPTHWISE_CONV_2D, #048 DEPTHWISE_CONV_2D, #051 DEPTHWISE_CONV_2D, #055 DEPTHWISE_CONV_2D, #059 DEPTHWISE_CONV_2D.",
+      "interpretation": "Per-tensor depthwise weight quantization is a design-review signal for mobile CNNs because channel distributions are forced onto one shared scale; it is not a confirmed defect without representative accuracy or calibration evidence.",
+      "recommendation": "Prefer per-channel/per-axis weight quantization for depthwise kernels where the target runtime supports it. Escalate to High only when accuracy regression, calibration error, or a product requirement is present.",
+      "source_pointers": [
+        "/evidence/quantization/quantization_contract_checks/kernel_quantization"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0101.v1"
+    },
+    {
+      "id": "EA-QNT-0108",
+      "title": "Residual ADD output contract does not contain the complete legal code domain",
+      "severity": "informational",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "10 / 10 assessed ADD output contract(s) exclude part of the uniform legal input-code sum domain. Top #027 has 14,923 / 65,536 endpoint escapes and 14,792 ideal projected clamps. Fixed-zero-point containment is 1.953x scale with 0 clamps; the globally finest full-containment contract is 1.896x scale with zero-point delta -4 and 0 clamps. Re-export impact is deterministically scoped to 2 direct parameter consumer(s): 384 kernel channel(s), 384 changed Q0.31 encoding(s), 384 changed shift(s), 384 changed bias code(s), 0 candidate INT32 bias overflow(s), and 2 changed direct-ADD parameter encoding(s). Its structural behavior radius is 37 reachable op(s) at maximum edge depth 19.",
+      "interpretation": "The counterfactual is exhaustive over uniform legal integer-code pairs. It proves output-contract geometry, not activation frequency, calibration quality, task accuracy, or executed fixed-point behavior.",
+      "recommendation": "Use the containment frontier and Contract Migration Impact ledger to scope a calibration or QAT re-export experiment. Regenerate the listed direct-consumer Q0.31 parameters and INT32 bias constants, verify every channel ledger, then validate representative and adversarial outputs. Do not patch the output tensor alone; reachable downstream ops are a behavior-impact radius, not a claim that every one needs metadata replacement.",
+      "source_pointers": [
+        "/evidence/static_analysis/quantization_lattice",
+        "/evidence/static_analysis/contract_migration",
+        "/evidence/quantization/quantization_contract_checks/residual_add",
+        "/evidence/quantization/quantization_contract_checks/contract_migration"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0108.v1"
+    },
+    {
+      "id": "EA-QNT-0109",
+      "title": "Residual containment has an exact local step-visibility trade-off",
+      "severity": "informational",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "Across 3,916,800 exhaustive adjacent branch transitions and 1,950,750 joint interior cells, both containment candidates remove 199,410 rounded clamp-pair instances in aggregate and add 511,902 silent transition instances versus their current contracts. Highest retention cost is #027: current has 14,792 clamp pairs and 34,984 silent transitions; globally finest containment has 0 and 65,375, respectively (+30,391 silent). Both-branch-visible interior cells change from 45,974 to 31,306.",
+      "interpretation": "This is exact local distinguishability over uniformly enumerated legal integer codes. It is not an activation distribution, entropy or mutual-information estimate, runtime branch-activity measurement, calibration verdict, or task-accuracy result.",
+      "recommendation": "Use the Residual Step Response ledger alongside domain containment and Contract Migration Impact when designing a calibration or QAT re-export experiment. Compare clamp removal, branch-specific silent transitions, and joint influence fields, then validate representative and adversarial task outputs before selecting a contract.",
+      "source_pointers": [
+        "/evidence/static_analysis/residual_step_response",
+        "/evidence/quantization/quantization_contract_checks/residual_step_response"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0109.v1"
+    },
+    {
+      "id": "EA-QNT-0110",
+      "title": "Clamp containment redistributes residual projection error across the legal code domain",
+      "severity": "informational",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "Across 1,310,720 exact current-versus-containment pair comparisons, the candidates rescue 199,410 current rounded-clamp instances and retain 0 candidate clamps. Ideal projection error decreases for 532,893 pairs, increases for 772,081, and is equal within the declared binary64 tolerance for 5,746; 3,764 represented-value sign classes change. Highest RMS displacement is #027. Its globally finest candidate rescues 14,792 clamps, changes 65,289 represented values, improves / worsens 28,006 / 37,283 pairs, and has RMS / p99 / maximum displacement 23.061 / 94.521 / 126.753 current output steps. Its uniform mean absolute ideal-projection error delta is -1.6358e+0 real units.",
+      "interpretation": "The candidates remove rare, large clamp errors while introducing smaller rounding changes over many interior code pairs. Pair counts are uniform-domain geometry, not activation probabilities; neither the lower mean error nor the larger worsened-pair count establishes task quality.",
+      "recommendation": "Use the Distortion Atlas with the Step Response and Contract Migration ledgers to choose re-export experiments. Validate representative and adversarial task outputs, especially around sign-class changes and the reported worst pair witnesses, before selecting a containment contract.",
+      "source_pointers": [
+        "/evidence/static_analysis/residual_contract_distortion",
+        "/evidence/quantization/quantization_contract_checks/residual_contract_distortion"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0110.v1"
+    },
+    {
+      "id": "EA-QNT-0111",
+      "title": "Pinned TFLite fixed-point build modes produce concrete endpoint code differences",
+      "severity": "informational",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "6,942,080 canonical legal-code term assignments and 72,228 pinned fixed-point endpoint executions expose 125 default-versus-TFLITE_SINGLE_ROUNDING output-code difference(s). Default versus direct ideal differs at 125 endpoint(s); single-rounding versus direct ideal differs at 0. The maximum absolute deltas are 1 and 0 output code(s), respectively. Reproducible witness: #055 channel 767 maximum; ideal/default/single output codes 137 / 138 / 137; pattern SHA-256 35445b96d727a11cf2bdeab9dc0df29210496ffb5cac395e59bff80c97f7e31c.",
+      "interpretation": "The artifact does not embed the runtime compile-time rounding mode. These are exact synthetic full-valid receptive-field endpoints under pinned TensorFlow source semantics, not an observed runtime mismatch, an activation frequency, a full-model input, or an accuracy estimate.",
+      "recommendation": "Bind the deployed runtime commit, binary hash, compile flags, and TFLITE_SINGLE_ROUNDING state to the release. Replay the exported Witness JSON against the target runtime and treat the observed target result as authoritative for that build.",
+      "source_pointers": [
+        "/evidence/static_analysis/kernel_extremum_witness",
+        "/evidence/quantization/quantization_contract_checks/kernel_extremum_witness"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0111.v1"
+    },
+    {
+      "id": "EA-QNT-0112",
+      "title": "Legal input-code domain cannot activate quantized output channels",
+      "severity": "high",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "18,057 channels were joined to exact stored-weight post-bias endpoints and both pinned TFLite fixed-point paths. 14 channel(s) are constant under both paths: 11 have a constant post-bias accumulator and 3 retain a variable accumulator yet collapse to one output code. Complete dual-mode constant-channel inventory: #000 CONV_2D [3, 7, 11, 12, 13, 16, 19, 28] / #001 DEPTHWISE_CONV_2D [3, 12, 16, 20] / #006 CONV_2D [130] / #039 CONV_2D [259]. Highest-ranked detailed coordinates at #001: ch 3: post-bias -320299..-19, default preclamp -110086..-7 -> output 0..0 (lower_code_clamp), single preclamp -110085..-7 -> output 0..0 (lower_code_clamp) / ch 12: post-bias -123474..-54, default preclamp -42438..-19 -> output 0..0 (lower_code_clamp), single preclamp -42437..-19 -> output 0..0 (lower_code_clamp) / ch 16: post-bias -110479..-64, default preclamp -37971..-22 -> output 0..0 (lower_code_clamp), single preclamp -37971..-22 -> output 0..0 (lower_code_clamp). 1 channel(s) change constant classification with TFLITE_SINGLE_ROUNDING; ch 26: post-bias -254..1, default preclamp -88..1 -> output 0..1 (nonconstant), single preclamp -87..0 -> output 0..0 (lower_code_clamp). Op vitality ledger SHA-256 d4b09fabf80bb0b6ac30e0686097e220720d918f59e1bec1cf6e84a5c2e3498d.",
+      "interpretation": "Equal endpoint outputs are an exact consequence of monotone positive-multiplier projection and clamp over the full-valid receptive-field legal-code domain. This is not observed runtime activation frequency, a full-model reachability claim, edge-padding behavior, delegate execution evidence, or a task-accuracy result.",
+      "recommendation": "Inspect the listed channels in the QAT or conversion graph, calibration ranges, bias, and activation contract. Re-export candidate artifacts, replay the selected channel proofs against the pinned runtime build, and compare representative plus adversarial task outputs before release.",
+      "source_pointers": [
+        "/evidence/static_analysis/channel_vitality",
+        "/evidence/quantization/quantization_contract_checks/channel_vitality"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0112.v1"
+    },
+    {
+      "id": "EA-QNT-0113",
+      "title": "Pinned TFLite rounding build modes are not bit-exact over the accumulator interval hull",
+      "severity": "informational",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "18,057 channels and 13,933,008,957 post-bias integer interval states were partitioned exactly into 7,280,734 maximal ordered-output-pair segments. 17,083 channel(s) across 52 op(s) contain 2,874,544 default-versus-TFLITE_SINGLE_ROUNDING state difference(s) (0.0206% of the interval-hull portfolio); 94.3% of divergent states are default-higher and 5.7% are default-lower; maximum absolute delta 1 output code. First ranked counterexample: #007 channel 37, accumulator 14, default/single outputs 3/2; last counterexample 1498; op certificate SHA-256 6b42280ab896789a75ce996634eb5251c01c8fbd554216f1cdaddbf3ee62e9ab.",
+      "interpretation": "This is an exact build-mode equivalence certificate over each closed post-bias int32 interval hull. Interior accumulator integers can be unreachable because legal dot products are discrete and correlated, so the state ratio is not an activation probability, observed mismatch rate, or accuracy estimate. The artifact does not embed the runtime compile-time rounding mode.",
+      "recommendation": "Bind the TensorFlow/LiteRT source commit, runtime binary hash, compile flags, and TFLITE_SINGLE_ROUNDING state to the release. Replay the exported first counterexample and representative full-model inputs on every target build when bit-exact reproducibility is required.",
+      "source_pointers": [
+        "/evidence/static_analysis/rounding_equivalence",
+        "/evidence/quantization/quantization_contract_checks/rounding_equivalence"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0113.v1"
+    },
+    {
+      "id": "EA-QNT-0115",
+      "title": "Pinned rounding build modes differ at constructively reachable kernel-local accumulator states",
+      "severity": "informational",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "18,057 channels were decomposed into bounded absolute-centered-weight denominations and intersected with the exact rounding pair partition. Of 2,874,544 interval-hull differences, 2,239,435 are constructively kernel-local reachable (77.9%), 3,585 are excluded by lattice residue, and 631,524 remain congruence-compatible but unproven. 13,320 channel(s) have complete integer coverage, 34 complete modular coverage, 4,692 endpoint-band proofs, and 11 singleton accumulators. Ranked exact counterexample: #058 channel 0, accumulator 27, default/single outputs 1/0; op reachability SHA-256 ed953ba2fc4fec5d1666cb2959ee629bc67a4bde3105965cac982a3ea0d55665.",
+      "interpretation": "The counterexample is exact for a full-valid kernel-local receptive field under independently selectable legal quantized input codes. It is stronger than interval-only exposure, but it is not proof that upstream model activations or a real model input realize the local assignment, that padding sites are free, that a declared output changes, or that the state occurs at runtime.",
+      "recommendation": "Export the aggregate coefficient witness and realize it as a concrete local input-code assignment, then replay the pinned default and TFLITE_SINGLE_ROUNDING kernels. Follow with paired full-model tests on captured representative and adversarial inputs before assigning model-output or task-level impact.",
+      "source_pointers": [
+        "/evidence/static_analysis/accumulator_reachability",
+        "/evidence/quantization/quantization_contract_checks/accumulator_reachability"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0115.v1"
+    },
+    {
+      "id": "EA-QNT-0114",
+      "title": "Exact kernel-local fixed-point counterexample has a structural path to declared model outputs",
+      "severity": "informational",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "52 of 52 divergent source op(s) contain at least one constructively reachable kernel-local counterexample and 52 of those have structural corridors to declared outputs. The divergent-state partition is 2,239,435 exact reachable, 3,585 residue-excluded, and 631,524 unresolved. Exact-qualified corridors span 64 ops, 65 tensors, and 2 predicted execution-domain edge(s) carrying 62.5 KiB. Ranked source #000 has 2,918 exact local difference(s) and reaches the output through 1,024 exact graph route(s); reachability SHA-256 67743dd329cabb5d6019924a46020b1ec59b6b69bb68f0136178184dfd1c4505; propagation SHA-256 0318b9ba433a62b8543aa3286130052cccea90769e0fe23d43106c54e2365229.",
+      "interpretation": "The source counterexample is exact for one full-valid kernel-local receptive field under independent legal input codes. Its downstream corridor is structural only: it does not prove that a full-model input realizes the local assignment or that cancellation, requantization, pooling, clamp, runtime lowering, and task semantics preserve a declared-output difference.",
+      "recommendation": "Bind the deployed runtime build and TFLITE_SINGLE_ROUNDING state, then run paired full-model output comparisons across those builds. Prioritize exported source corridors with high route multiplicity, residual reconvergence, and predicted execution-domain crossings; treat observed target outputs as authoritative.",
+      "source_pointers": [
+        "/evidence/static_analysis/numerical_abi_propagation",
+        "/evidence/quantization/quantization_contract_checks/numerical_abi_propagation"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0114.v1"
+    },
+    {
+      "id": "EA-QNT-0116",
+      "title": "Pinned rounding ABI has a complete model-input counterexample",
+      "severity": "medium",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "1 of 52 exact-local divergent source op(s) is constructively realizable by a complete declared model-input tensor. The representative 1x224x224x3 UINT8 tensor contains 150,528 elements, fills all positions with zero-point code 128, and applies 26 unique overrides in a full-valid 3x3x3 patch. Its exact dot -13,115 plus bias 13,159 reaches accumulator 44, producing default/single-rounding output codes 1/0. The source has 18 constructive channel(s), 2,918 exact divergent state(s), and 1,024 structural declared-output route(s). Full tensor SHA-256 89265147c9669c94eccbbdd5593623e04f1ba76190054786d88989aa6e5d3035; witness ledger SHA-256 45cdbb1087d79e088d7830c0e1840daa39b420b8f29e7c78fbb7e7ba702d0ce5.",
+      "interpretation": "This is the action-bearing apex of the same rounding-build provenance chain documented by EA-QNT-0111, 0113, 0115, and 0114; those records remain Informational evidence stages rather than duplicate Medium actions. The certificate is exact at the quantized model tensor ABI, but it does not establish that an application's image or audio preprocessing can emit the tensor, that the deployed runtime selects either pinned rounding path, or that the one-code source difference survives to a declared model output or changes task behavior.",
+      "recommendation": "Bind one runtime-build action: replay the exported raw input tensor on clean, binary-hashed runtime builds with default and TFLITE_SINGLE_ROUNDING configurations and compare source-op and declared-output tensors bit-for-bit. Separately test whether the documented production preprocessing contract can realize or approximate the certified tensor; keep structural route multiplicity distinct from observed output impact.",
+      "source_pointers": [
+        "/evidence/static_analysis/input_counterexample",
+        "/evidence/quantization/quantization_contract_checks/input_counterexample"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0116.v1"
+    },
+    {
+      "id": "EA-QNT-0117",
+      "title": "The exact ABI witness depends materially on the source preprocessing contract",
+      "severity": "medium",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "8 explicit 8-bit image preprocessing counterfactual(s) were exhaustively evaluated over all 256 source codes per channel. 4 contract(s) reproduce all 150,528 witness elements exactly: raw_storage_rgb, raw_storage_bgr, artifact_affine_rgb, center_128_div_128_rgb. 4 do not. Best non-exact unit_interval_rgb leaves 18 element(s) unrealizable with minimum total absolute tensor-code error 2,304; imagenet_mean_std_rgb leaves 150,503 element(s) unrealizable. The [0,1] RGB convention reaches 128/256, 128/256, 128/256 tensor codes by channel and leaves 128, 128, 128 code holes. Artifact range matching and witness realizability answer different questions: the declared affine range matches the common [-1,1] endpoint convention within one artifact step, while exact code reproduction is achieved by `real = (pixel - 128) / 128`; the textbook `real = (2 * pixel - 255) / 255` formula leaves 150,502 witness element(s) one or more tensor codes away. Exact fixture SHA-256 89265147c9669c94eccbbdd5593623e04f1ba76190054786d88989aa6e5d3035; portfolio SHA-256 35a1ca877c09dd440ed75e7cfbe1789c6b3693ea6572da5069cf6a01aadd5bb5.",
+      "interpretation": "The finite-domain result is exact for each named formula, channel permutation, saturation rule, and half-away rounding equation. It does not reveal which preprocessing implementation the application deploys; the artifact does not bind decoder, resize, color order, normalization, or quantizer behavior. A candidate mismatch is not evidence that the production app is wrong unless its contract is independently matched to that row.",
+      "recommendation": "Bind the production preprocessing implementation and checksum to the release, match it to an explicit formula and channel order, then replay the corresponding exported PNG and raw tensor through the production decoder-to-tensor path. Compare the produced tensor SHA-256 before performing paired runtime-build output tests.",
+      "source_pointers": [
+        "/evidence/static_analysis/preprocessing_realizability",
+        "/evidence/quantization/quantization_contract_checks/preprocessing_realizability"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0117.v1"
+    },
+    {
+      "id": "EA-QNT-0104",
+      "title": "Asymmetric UINT8 weight quantization observed",
+      "severity": "medium",
+      "status": "open",
+      "evidence_class": "DERIVED",
+      "source_evidence_class": "DERIVED",
+      "summary": "Invalid zero-points: 0. Symmetric INT8 violations: not applicable, no INT8 weight tensors. Asymmetric UINT8 weight tensors observed: 53. Representative example: MobilenetV2/Conv/weights_quant/FakeQuantWithMinMaxVars UINT8 zero-point(s) 122. Root-cause synthesis: artifact description is \"TOCO Converted.\"; CONVERSION_METADATA is absent; 53 asymmetric UINT8 kernel tensor(s), 17 per-tensor depthwise op(s), and 0 per-channel tensor(s) are observed; runtime floor is 1.5.0. These facts are jointly consistent with a legacy TOCO UINT8 export, while the exact converter binary/version remains unbound.",
+      "interpretation": "The artifact directly joins a TOCO description with UINT8 asymmetric/per-tensor quantization evidence. This is a source-artifact lineage diagnosis, not proof of the exact TOCO release, command line, calibration data, or training provenance.",
+      "recommendation": "Record converter lineage and compatibility reason; prefer modern per-channel symmetric INT8 exports when supported by the deployment runtime.",
+      "source_pointers": [
+        "/evidence/quantization/quantization_contract_checks/weight_zero_point"
+      ],
+      "rule_id": "deepbom.report_findings.EA-QNT-0104.v1"
+    },
+    {
+      "id": "EA-DEL-0004",
+      "title": "Required quantized XNNPACK build condition is not artifact-bound and conditional coverage collapses to zero",
+      "severity": "high",
+      "status": "open",
+      "evidence_class": "PREDICTED",
+      "source_evidence_class": "PREDICTED",
+      "summary": "`--define tflite_with_xnnpack_qu8=true; legacy QU8 support is experimental and runtime build configuration is not embedded` is required by the pinned rulepack but is not embedded in the model or bound runtime manifest. If the build condition is absent, conditionally delegatable coverage changes from 64 to 0 op(s), affecting 100% of modeled MACs and 2 predicted delegate segment(s).",
+      "interpretation": "The model artifact does not identify the deployed runtime binary or its compile flags. This row states what the pinned rulepack requires and the assignment consequence if that requirement is absent; it does not observe that the deployed runtime lacks the flag. For legacy QU8, the pinned source describes support as experimental; static artifact eligibility must not be read as observed runtime assignment.",
+      "recommendation": "Bind the deployed TFLite/XNNPACK commit, binary SHA-256, build configuration, and delegate assignment trace. Treat the no-flag scenario as the release default until the required flag is proven in the runtime manifest.",
+      "source_pointers": [
+        "/evidence/static_analysis/delegation_repair/runtime_build_risks"
+      ],
+      "rule_id": "deepbom.report_findings.EA-DEL-0004.v1"
+    },
+    {
+      "id": "EA-DEL-0002",
+      "title": "Predicted partition boundaries requiring runtime confirmation",
+      "severity": "medium",
+      "status": "open",
+      "evidence_class": "PREDICTED",
+      "source_evidence_class": "PREDICTED",
+      "summary": "1 non-structural predicted partition break; 0 predicted non-delegated shape operations; 2 graph-derived internal execution-domain edges. Graph-derived summed logical edge payload 62.5 KiB across 2 predicted internal partition edges: T4 MobilenetV2/Conv_1/Relu6 XNNPACK:C0->TFLITE_CPU 61.3 KiB / T6 MobilenetV2/Logits/AvgPool TFLITE_CPU->XNNPACK:C1 1.3 KiB.",
+      "interpretation": "Producer/consumer tensor edges and logical payloads are graph-derived from the static predicted assignment. The artifact alone cannot determine whether the runtime materializes copies, aliases buffers, converts layouts, or incurs measurable latency.",
+      "recommendation": "Confirm the predicted AVERAGE_POOL_2D fallback using target-runtime delegate logs and profiling before modifying the graph, delegate configuration, or affected operator implementation.",
+      "source_pointers": [
+        "/evidence/static_analysis/predicted_partition_boundaries"
+      ],
+      "rule_id": "deepbom.report_findings.EA-DEL-0002.v1"
+    },
+    {
+      "id": "EA-MEM-0001",
+      "title": "L1 row working-set pressure",
+      "severity": "medium",
+      "status": "open",
+      "evidence_class": "ESTIMATED",
+      "source_evidence_class": "ESTIMATED",
+      "summary": "36.8 KiB row working set / 32 KiB L1D = 1.15x; L2: 36.8 KiB / 128 KiB = 0.29x.",
+      "interpretation": "Static row working-set estimate exceeds the selected target L1D reference. Code, other live data, associativity, and runtime scratch leave less usable capacity than the nominal cache size.",
+      "recommendation": "Validate executed tiling and L1D refill/miss counters on the target; consider smaller spatial tiles, channel alignment, or graph changes only if this op is latency-dominant.",
+      "source_pointers": [
+        "/evidence/static_analysis/tensor_liveness"
+      ],
+      "rule_id": "deepbom.report_findings.EA-MEM-0001.v1"
+    },
+    {
+      "id": "EA-PKG-0001",
+      "title": "Weight packing warmup cost watchlist",
+      "severity": "informational",
+      "status": "open",
+      "evidence_class": "ESTIMATED",
+      "source_evidence_class": "ESTIMATED",
+      "summary": "22 ops exceeded the static packing-watch threshold; largest estimate 191.0 us. weight tensor T9 MobilenetV2/Logits/Conv2d_1c_1x1/weights_quant/FakeQuantWithMinMaxVars = 1281280 B (1.2 MiB); potential one-time packing cost 191.0 us on Android mid-range / Cortex-A55 (L1D 32 KiB default) during interpreter preparation or first invocation, depending on runtime implementation. Formula: 1281280 B / 7.0e9 B/s + setup 8.0 us = 191.0 us. Setup and bandwidth are rulepack heuristics, not device-calibrated measurements; criteria: estimated packing >= 10 us threshold",
+      "interpretation": "Static weight-byte, setup, and target-bandwidth estimates indicate potential one-time interpreter preparation or first-invocation packing cost; this is not steady-state Invoke latency. Escalate only if the configured cold-start budget is tight.",
+      "recommendation": "Warm up before measuring steady-state latency, and report preparation/first-invocation packing separately from p50/p90 Invoke results.",
+      "source_pointers": [
+        "/evidence/static_analysis/ops"
+      ],
+      "rule_id": "deepbom.report_findings.EA-PKG-0001.v1"
+    },
+    {
+      "id": "EA-CHN-0001",
+      "title": "SIMD/micro-kernel channel tail overhead",
+      "severity": "low",
+      "status": "open",
+      "evidence_class": "ESTIMATED",
+      "source_evidence_class": "ESTIMATED",
+      "summary": "output channels 24 vs planning-profile assumed UINT8 output-channel candidate multiples x16: modeled inactive-lane range 25%; worst case is x16 padding to 32 channels (75% occupancy); runtime kernel selection and tail handling are not confirmed from the artifact. Modeled candidate-set lane utilization: 75%; op MAC share 2.4%; model-level impact not estimated.",
+      "interpretation": "Actual overhead depends on runtime kernel selection, packing, and tail handling, and is not confirmed from the artifact alone.",
+      "recommendation": "Verify with a profiler or an aligned-head variant before acting; treat as an optimization opportunity, not a deployment defect.",
+      "source_pointers": [
+        "/evidence/static_analysis/ops",
+        "/evidence/static_analysis/target_profile"
+      ],
+      "rule_id": "deepbom.report_findings.EA-CHN-0001.v1"
+    },
+    {
+      "id": "EA-LIM-0001",
+      "title": "Representative-data validation not assessable",
+      "severity": "low",
+      "status": "open",
+      "evidence_class": "NOT_ASSESSABLE",
+      "source_evidence_class": "NOT_ASSESSABLE",
+      "summary": "No training, validation, clinical, or representative calibration dataset is included in the deployment artifact.",
+      "interpretation": "Accuracy, clinical benefit, bias, subgroup performance, and generalizability cannot be concluded from this artifact alone.",
+      "recommendation": "Link this artifact report to external validation, calibration, and risk-management records.",
+      "source_pointers": [
+        "/evidence/static_analysis"
+      ],
+      "rule_id": "deepbom.report_findings.EA-LIM-0001.v1"
+    }
+  ],
+  "format_extensions": {
+    "tflite": {
+      "schema_version": null,
+      "subgraph_count": 1,
+      "metadata_schema_identifier": null,
+      "arena_contract_schema": "deepbom.tflite_arena_plan_projection.v1",
+      "xnnpack_rulepack_schema": null,
+      "artifact_byte_integrity": {
+        "schema": "deepbom.tflite_artifact_byte_integrity.v1",
+        "status": "risk",
+        "evidence_class": "DERIVED",
+        "file_size": 3577760,
+        "flatbuffer_referenced_range_count": 249,
+        "flatbuffer_referenced_bytes": 3576565,
+        "flatbuffer_referenced_end": 3577752,
+        "flatbuffer_envelope_bytes": 3577752,
+        "flatbuffer_internal_alignment_or_unreferenced_bytes": 1187,
+        "flatbuffer_referenced_ranges": [
+          {
+            "offset": 0,
+            "end": 8,
+            "length": 8,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 14,
+            "end": 3546443,
+            "length": 3546429,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3546444,
+            "end": 3546625,
+            "length": 181,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3546628,
+            "end": 3546680,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3546684,
+            "end": 3546810,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3546812,
+            "end": 3546864,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3546868,
+            "end": 3546994,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3546996,
+            "end": 3547048,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3547052,
+            "end": 3547179,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3547180,
+            "end": 3547361,
+            "length": 181,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3547364,
+            "end": 3547514,
+            "length": 150,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3547516,
+            "end": 3547568,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3547572,
+            "end": 3547698,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3547700,
+            "end": 3547752,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3547756,
+            "end": 3547883,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3547884,
+            "end": 3547936,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3547940,
+            "end": 3548120,
+            "length": 180,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3548124,
+            "end": 3548250,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3548252,
+            "end": 3548433,
+            "length": 181,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3548436,
+            "end": 3548488,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3548492,
+            "end": 3548619,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3548620,
+            "end": 3548672,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3548676,
+            "end": 3548801,
+            "length": 125,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3548804,
+            "end": 3548856,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3548860,
+            "end": 3548986,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3548988,
+            "end": 3549040,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3549044,
+            "end": 3549224,
+            "length": 180,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3549228,
+            "end": 3549333,
+            "length": 105,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3549336,
+            "end": 3549368,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3549372,
+            "end": 3549536,
+            "length": 164,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3549540,
+            "end": 3549666,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3549668,
+            "end": 3549720,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3549724,
+            "end": 3549817,
+            "length": 93,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3549820,
+            "end": 3549872,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3549876,
+            "end": 3550056,
+            "length": 180,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3550060,
+            "end": 3550186,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3550188,
+            "end": 3550240,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3550244,
+            "end": 3550370,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3550372,
+            "end": 3550534,
+            "length": 162,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3550536,
+            "end": 3550568,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3550572,
+            "end": 3550681,
+            "length": 109,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3550684,
+            "end": 3550736,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3550740,
+            "end": 3550920,
+            "length": 180,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3550924,
+            "end": 3551049,
+            "length": 125,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3551052,
+            "end": 3551104,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3551108,
+            "end": 3551234,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3551236,
+            "end": 3551288,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3551292,
+            "end": 3551417,
+            "length": 125,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3551420,
+            "end": 3551472,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3551476,
+            "end": 3551624,
+            "length": 148,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3551628,
+            "end": 3551808,
+            "length": 180,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3551812,
+            "end": 3551938,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3551940,
+            "end": 3551992,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3551996,
+            "end": 3552176,
+            "length": 180,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3552180,
+            "end": 3552305,
+            "length": 125,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3552308,
+            "end": 3552489,
+            "length": 181,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3552492,
+            "end": 3552544,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3552548,
+            "end": 3552675,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3552676,
+            "end": 3552728,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3552732,
+            "end": 3552857,
+            "length": 125,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3552860,
+            "end": 3552912,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3552916,
+            "end": 3553042,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3553044,
+            "end": 3553155,
+            "length": 111,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3553156,
+            "end": 3553200,
+            "length": 44,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3553204,
+            "end": 3553297,
+            "length": 93,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3553300,
+            "end": 3553352,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3553356,
+            "end": 3553435,
+            "length": 79,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3553436,
+            "end": 3553787,
+            "length": 351,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3553788,
+            "end": 3553937,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3553940,
+            "end": 3553992,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3553996,
+            "end": 3554081,
+            "length": 85,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3554084,
+            "end": 3554265,
+            "length": 181,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3554268,
+            "end": 3554418,
+            "length": 150,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3554420,
+            "end": 3554472,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3554476,
+            "end": 3554561,
+            "length": 85,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3554564,
+            "end": 3554714,
+            "length": 150,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3554716,
+            "end": 3554768,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3554772,
+            "end": 3554866,
+            "length": 94,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3554868,
+            "end": 3554920,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3554924,
+            "end": 3555018,
+            "length": 94,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3555020,
+            "end": 3555072,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3555076,
+            "end": 3555161,
+            "length": 85,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3555164,
+            "end": 3555313,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3555316,
+            "end": 3555368,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3555372,
+            "end": 3555466,
+            "length": 94,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3555468,
+            "end": 3555520,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3555524,
+            "end": 3555609,
+            "length": 85,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3555612,
+            "end": 3555762,
+            "length": 150,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3555764,
+            "end": 3555914,
+            "length": 150,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3555916,
+            "end": 3556104,
+            "length": 188,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3556108,
+            "end": 3556202,
+            "length": 94,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3556204,
+            "end": 3556489,
+            "length": 285,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3556492,
+            "end": 3556544,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3556548,
+            "end": 3556832,
+            "length": 284,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3556836,
+            "end": 3556961,
+            "length": 125,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3556964,
+            "end": 3557016,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3557020,
+            "end": 3557265,
+            "length": 245,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3557268,
+            "end": 3557320,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3557324,
+            "end": 3557417,
+            "length": 93,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3557420,
+            "end": 3557472,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3557476,
+            "end": 3557553,
+            "length": 77,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3557556,
+            "end": 3557608,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3557612,
+            "end": 3557705,
+            "length": 93,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3557708,
+            "end": 3557760,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3557764,
+            "end": 3557857,
+            "length": 93,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3557860,
+            "end": 3557912,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3557916,
+            "end": 3558042,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3558044,
+            "end": 3558193,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3558196,
+            "end": 3558345,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3558348,
+            "end": 3558497,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3558500,
+            "end": 3558552,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3558556,
+            "end": 3558649,
+            "length": 93,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3558652,
+            "end": 3558704,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3558708,
+            "end": 3558834,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3558836,
+            "end": 3558985,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3558988,
+            "end": 3559151,
+            "length": 163,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3559152,
+            "end": 3559184,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3559188,
+            "end": 3559298,
+            "length": 110,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3559300,
+            "end": 3559352,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3559356,
+            "end": 3559633,
+            "length": 277,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3559636,
+            "end": 3559785,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3559788,
+            "end": 3559840,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3559844,
+            "end": 3560024,
+            "length": 180,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3560028,
+            "end": 3560176,
+            "length": 148,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3560180,
+            "end": 3560273,
+            "length": 93,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3560276,
+            "end": 3560328,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3560332,
+            "end": 3560457,
+            "length": 125,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3560460,
+            "end": 3560609,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3560612,
+            "end": 3560664,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3560668,
+            "end": 3560914,
+            "length": 246,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3560916,
+            "end": 3561065,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3561068,
+            "end": 3561120,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3561124,
+            "end": 3561217,
+            "length": 93,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3561220,
+            "end": 3561369,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3561372,
+            "end": 3561522,
+            "length": 150,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3561524,
+            "end": 3561705,
+            "length": 181,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3561708,
+            "end": 3561896,
+            "length": 188,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3561900,
+            "end": 3562026,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3562028,
+            "end": 3562080,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3562084,
+            "end": 3562178,
+            "length": 94,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3562180,
+            "end": 3562232,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3562236,
+            "end": 3562361,
+            "length": 125,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3562364,
+            "end": 3562416,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3562420,
+            "end": 3562514,
+            "length": 94,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3562516,
+            "end": 3562568,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3562572,
+            "end": 3562681,
+            "length": 109,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3562684,
+            "end": 3562736,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3562740,
+            "end": 3562888,
+            "length": 148,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3562892,
+            "end": 3562985,
+            "length": 93,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3562988,
+            "end": 3563040,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3563044,
+            "end": 3563328,
+            "length": 284,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3563332,
+            "end": 3563410,
+            "length": 78,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3563412,
+            "end": 3563464,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3563468,
+            "end": 3563648,
+            "length": 180,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3563652,
+            "end": 3563800,
+            "length": 148,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3563804,
+            "end": 3563931,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3563932,
+            "end": 3564162,
+            "length": 230,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3564164,
+            "end": 3564291,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3564292,
+            "end": 3564344,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3564348,
+            "end": 3564474,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3564476,
+            "end": 3564528,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3564532,
+            "end": 3564626,
+            "length": 94,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3564628,
+            "end": 3564680,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3564684,
+            "end": 3564779,
+            "length": 95,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3564780,
+            "end": 3564832,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3564836,
+            "end": 3564929,
+            "length": 93,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3564932,
+            "end": 3565081,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3565084,
+            "end": 3565233,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3565236,
+            "end": 3565424,
+            "length": 188,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3565428,
+            "end": 3565554,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3565556,
+            "end": 3565608,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3565612,
+            "end": 3565739,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3565740,
+            "end": 3566019,
+            "length": 279,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3566020,
+            "end": 3566169,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3566172,
+            "end": 3566321,
+            "length": 149,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3566324,
+            "end": 3566376,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3566380,
+            "end": 3566614,
+            "length": 234,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3566616,
+            "end": 3566648,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3566652,
+            "end": 3566863,
+            "length": 211,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3566864,
+            "end": 3566990,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3566992,
+            "end": 3567024,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3567028,
+            "end": 3567117,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3567120,
+            "end": 3567366,
+            "length": 246,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3567368,
+            "end": 3567400,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3567404,
+            "end": 3567493,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3567496,
+            "end": 3567622,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3567624,
+            "end": 3567656,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3567660,
+            "end": 3567749,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3567752,
+            "end": 3567998,
+            "length": 246,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3568000,
+            "end": 3568032,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3568036,
+            "end": 3568125,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3568128,
+            "end": 3568254,
+            "length": 126,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3568256,
+            "end": 3568288,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3568292,
+            "end": 3568381,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3568384,
+            "end": 3568630,
+            "length": 246,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3568632,
+            "end": 3568784,
+            "length": 152,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3568788,
+            "end": 3568877,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3568880,
+            "end": 3569126,
+            "length": 246,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3569128,
+            "end": 3569160,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3569164,
+            "end": 3569253,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3569256,
+            "end": 3569502,
+            "length": 246,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3569504,
+            "end": 3569536,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3569540,
+            "end": 3569629,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3569632,
+            "end": 3569664,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3569668,
+            "end": 3569757,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3569760,
+            "end": 3569792,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3569796,
+            "end": 3569886,
+            "length": 90,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3569888,
+            "end": 3569920,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3569924,
+            "end": 3570013,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570016,
+            "end": 3570143,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570144,
+            "end": 3570176,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570180,
+            "end": 3570270,
+            "length": 90,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570272,
+            "end": 3570304,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570308,
+            "end": 3570397,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570400,
+            "end": 3570527,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570528,
+            "end": 3570560,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570564,
+            "end": 3570654,
+            "length": 90,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570656,
+            "end": 3570688,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570692,
+            "end": 3570781,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570784,
+            "end": 3570911,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570912,
+            "end": 3570944,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3570948,
+            "end": 3571038,
+            "length": 90,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571040,
+            "end": 3571072,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571076,
+            "end": 3571165,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571168,
+            "end": 3571295,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571296,
+            "end": 3571328,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571332,
+            "end": 3571422,
+            "length": 90,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571424,
+            "end": 3571456,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571460,
+            "end": 3571549,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571552,
+            "end": 3571679,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571680,
+            "end": 3571712,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571716,
+            "end": 3571806,
+            "length": 90,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571808,
+            "end": 3571840,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571844,
+            "end": 3571933,
+            "length": 89,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3571936,
+            "end": 3572063,
+            "length": 127,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3572064,
+            "end": 3572096,
+            "length": 32,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3572100,
+            "end": 3572190,
+            "length": 90,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3572192,
+            "end": 3572409,
+            "length": 217,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3572412,
+            "end": 3572464,
+            "length": 52,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3572466,
+            "end": 3572541,
+            "length": 75,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3572544,
+            "end": 3572872,
+            "length": 328,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3572874,
+            "end": 3572888,
+            "length": 14,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3572900,
+            "end": 3573016,
+            "length": 116,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3573018,
+            "end": 3577220,
+            "length": 4202,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3577222,
+            "end": 3577292,
+            "length": 70,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3577308,
+            "end": 3577316,
+            "length": 8,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3577324,
+            "end": 3577328,
+            "length": 4,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3577672,
+            "end": 3577676,
+            "length": 4,
+            "class": "verified_flatbuffer_reference"
+          },
+          {
+            "offset": 3577746,
+            "end": 3577752,
+            "length": 6,
+            "class": "verified_flatbuffer_reference"
+          }
+        ],
+        "terminal_zero_alignment_bytes": 0,
+        "metadata_archive_status": "not_present",
+        "metadata_archive_start": null,
+        "metadata_archive_end": null,
+        "metadata_archive_central_directory_start": null,
+        "metadata_archive_central_directory_end": null,
+        "metadata_archive_eocd_offset": null,
+        "metadata_archive_bytes": 0,
+        "metadata_archive_file_count": 0,
+        "metadata_archive_case_insensitive_name_collision_count": 0,
+        "metadata_archive_size_policy_bytes": 134217728,
+        "metadata_archive_size_policy_exceeded": false,
+        "unowned_trailing_bytes": 8,
+        "unowned_trailing_ranges": [
+          {
+            "offset": 3577752,
+            "end": 3577760,
+            "length": 8,
+            "class": "unowned_trailing_bytes"
+          }
+        ],
+        "exact_shared_buffer_range_count": 0,
+        "partial_buffer_overlap_count": 0,
+        "flatbuffer_archive_overlap_bytes": 0,
+        "classified_bytes": 3577760,
+        "conservation_status": "exact",
+        "issue_count": 1,
+        "issues": [
+          "unowned_trailing_bytes: [3577752..3577760) = 8 byte(s)"
+        ],
+        "method": "Union every verified FlatBuffer table/vtable/vector/string/external-buffer range; take the greatest referenced end as the FlatBuffer envelope; parse a terminal bounded ZIP central directory and local records; classify only a <=16-byte all-zero terminal gap as an alignment candidate; classify every remaining gap before the ZIP or EOF as unowned trailing bytes; reject overlapping ownership; require exact file-size conservation.",
+        "detail": "File 3577760 B = FlatBuffer envelope 3577752 B (3576565 B in 249 merged referenced range(s), 1187 B internal alignment/unreferenced) + terminal zero-alignment candidate 0 B + unowned trailing 8 B + terminal metadata ZIP 0 B. Conservation: exact. Buffer locations: 0 exact shared range(s), 0 partial overlap pair(s)."
+      }
+    }
+  },
+  "provenance": {
+    "analyzer": "deepbom",
+    "analyzer_semantic_version": "1.94.0",
+    "analyzer_build_version": "2026-08-03",
+    "analyzer_build_commit": "684260dddf632240c31bee646581d9c4ae32623a",
+    "analyzer_build_source_state": "clean",
+    "analyzer_bundle_content_sha256": "5c03ec024b99e9a73ac3b3f098cebdd8dc18ae5ec67d740de97dd21df4e5b34d",
+    "analyzer_bundle_content_hash_method": "SHA-256 over RFC8785-JCS canonical deepbom.analyzer_build_file_digest_set.v1",
+    "rulepack_version": "deepbom.rulepack.2026-07-24.63",
+    "rulepack_sha256": "a1e0dc58a9dc742b4532448190410d89e04d56ab134a16a72cda6cae8b6a6d9f",
+    "rulepack_hash_basis": [
+      "web/lib/report-metadata.js (report metadata/provenance)",
+      "web/lib/reason-codes.js (reason-code labels)",
+      "web/lib/xnnpack-rulepack-metadata.js (generated XNNPACK delegate provenance)",
+      "src/xnnpack_delegate.rs (source-mapped XNNPACK delegate evaluator)",
+      "src/xnnpack_rulepack_generated.rs (generated XNNPACK delegate documentary rules)",
+      "reference/xnnpack-readme/README-v2.21.0.md (pinned XNNPACK delegate README snapshot)",
+      "reference/xnnpack-readme/rule-manifest-v2.21.0.json (XNNPACK delegate semantic rule manifest)",
+      "scripts/generate-xnnpack-delegate-rulepack.mjs (XNNPACK delegate rule generator and source digest contract)",
+      "src/lib.rs (target profiles and XNNPACK support rules)",
+      "src/lib.rs (TFLite runtime-version floor derivation)",
+      "src/runtime_version.rs (pinned TFLite runtime-version floor map)",
+      "src/tflite_metadata.rs (TFLite M001 metadata contract parser)",
+      "src/accumulator_atlas.rs (exact stored-weight accumulator envelope)",
+      "web/lib/accumulator-atlas.js (independent browser accumulator validator)",
+      "src/requantization_fidelity.rs (pinned TFLite requantization fidelity solver)",
+      "web/lib/requantization-fidelity.js (independent browser requantization validator)",
+      "src/kernel_witness.rs (exact quantized kernel extremum witness solver)",
+      "web/lib/kernel-witness.js (independent browser kernel witness validator and viewer)",
+      "web/lib/kernel-witness-worker.js (independent browser kernel witness verification worker)",
+      "src/channel_vitality.rs (exact monotone quantized channel vitality solver)",
+      "web/lib/channel-vitality.js (independent browser channel vitality validator and viewer)",
+      "web/lib/channel-vitality-worker.js (independent browser channel vitality verification worker)",
+      "src/rounding_equivalence.rs (exact fixed-point rounding equivalence solver)",
+      "web/lib/rounding-equivalence.js (independent browser rounding equivalence validator and viewer)",
+      "web/lib/rounding-equivalence-worker.js (independent browser rounding equivalence verification worker)",
+      "src/numerical_abi_propagation.rs (exact numerical ABI graph propagation solver)",
+      "web/lib/numerical-abi-propagation.js (independent browser numerical ABI propagation validator)",
+      "web/lib/numerical-abi-propagation-viewer.js (numerical ABI propagation atlas viewer and export renderer)",
+      "src/quantization_lattice.rs (exhaustive residual output-contract design solver)",
+      "web/lib/quantization-lattice.js (independent browser residual contract validator)",
+      "src/quantization_math.rs (shared pinned quantization arithmetic)",
+      "web/lib/quantization-math.js (independent browser quantization arithmetic)",
+      "src/contract_migration.rs (residual contract migration impact solver)",
+      "web/lib/contract-migration.js (independent browser migration validator)",
+      "src/residual_step_response.rs (exhaustive residual adjacent-code step-response solver)",
+      "web/lib/residual-step-response.js (independent browser residual step-response validator)",
+      "web/lib/residual-step-response-worker.js (independent browser residual step-response worker)",
+      "src/residual_contract_distortion.rs (exhaustive residual contract-distortion solver)",
+      "web/lib/residual-contract-distortion.js (independent browser residual contract-distortion validator)",
+      "web/lib/residual-contract-distortion-worker.js (independent browser residual contract-distortion worker)",
+      "scripts/generate-ort-rulepack.mjs (pinned ORT rule generator and source digest contract)",
+      "web/lib/xnnpack-selector-evidence.js (public XNNPACK evidence identity and arithmetic adapter)",
+      "web/lib/ort-compatibility-evidence.js (public ORT evidence identity and conservation adapter)",
+      "web/onnx.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-container-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-domain-analysis.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-external-data.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-extended-shape-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-imputer-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-imputer.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-label-encoder-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-label-encoder.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-linear-model-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-linear-model.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-normalizer-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-normalizer.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-one-hot-encoder-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-one-hot-encoder.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-scaler-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-scaler.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-svm-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-svm.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-tree-ensemble-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-tree-ensemble.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-value-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ort-extension-shape-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-opset-imports.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-schema-legality.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-shape-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-runtime-shape-binding.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-shape-ops.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-shape-schema-generated.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-sparse-tensor.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-static-value-evidence.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-tfidf-vectorizer-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-tfidf-vectorizer.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-type-proto.js (ONNX rule/reconstruction)",
+      "web/lib/report-findings.js (authoritative finding rules)",
+      "web/lib/finding-contract.js (finding evidence-pointer contract)",
+      "protected authenticated rule source set (3 owners; implementation paths withheld; included in RULEPACK_SHA256)"
+    ]
+  },
+  "evidence_boundary": "Serialized artifact facts and deterministic static derivations. Declarations and runtime measurements are accepted only through separately identified inputs.",
+  "envelope_sha256": "6bda36aacf2dd67461db6ccd138d947613cd6b81278e71235cb0fa6c00642484"
+}

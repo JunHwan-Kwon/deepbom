@@ -1,0 +1,116 @@
+.explorer-question-entry {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-tint);
+}
+
+.explorer-question-entry > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.explorer-question-entry > header strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.explorer-question-entry > header span {
+  color: var(--muted);
+  font-size: 10px;
+  text-align: right;
+}
+
+.explorer-question-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.explorer-question-card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+  min-height: 116px;
+  padding: 10px 11px 9px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  box-shadow: none;
+}
+
+.explorer-question-card.state-issue { border-left-color: var(--danger); }
+.explorer-question-card.state-observed { border-left-color: var(--good); }
+.explorer-question-card.state-unassessed { border-left-color: var(--warn); }
+
+.explorer-question-card:hover,
+.explorer-question-card:focus-visible {
+  border-color: var(--blue);
+  background: var(--surface-elevated);
+  color: var(--ink);
+  filter: none;
+  transform: none;
+}
+
+.explorer-question-card:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.explorer-question-label {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.explorer-question-card strong {
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.explorer-question-card small {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.explorer-question-card em {
+  align-self: end;
+  justify-self: start;
+  margin-top: 2px;
+  color: var(--blue);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1050px) {
+  .explorer-question-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 620px) {
+  .explorer-question-entry > header {
+    display: grid;
+    gap: 2px;
+  }
+
+  .explorer-question-entry > header span { text-align: left; }
+  .explorer-question-grid { grid-template-columns: minmax(0, 1fr); }
+  .explorer-question-card { min-height: 0; }
+}

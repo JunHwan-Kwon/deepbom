@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deepbom"
+version = "1.94.0"
+description = "Local deployment-artifact analysis for on-device AI models"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Jun-Hwan Kwon" }]
+dependencies = []
+keywords = ["tflite", "onnx", "gguf", "safetensors", "coreml", "tensorrt", "quantization", "on-device", "ml-bom"]
+
+[project.urls]
+Homepage = "https://deepbom.org"
+DOI = "https://doi.org/10.5281/zenodo.21834509"
+
+[project.scripts]
+deepbom = "deepbom.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+deepbom = ["_engine/*", "_engine/pkg/*"]

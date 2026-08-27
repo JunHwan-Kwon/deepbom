@@ -1,0 +1,29 @@
+{
+  "$schema": "https://cyclonedx.org/schema/2.0/cyclonedx-2.0.schema.json",
+  "specFormat": "CycloneDX",
+  "specVersion": "2.0",
+  "serialNumber": "urn:uuid:af6c9806-b66d-48d6-8685-6cbc9043961b",
+  "version": 1,
+  "components": [
+    {
+      "type": "machine-learning-model",
+      "bom-ref": "quant-fixture-valid-ai-ml-quantization-custom-scheme-2.0",
+      "name": "valid-ai-ml-quantization-custom-scheme-2.0",
+      "version": "1.0.0",
+      "modelProperties": {
+        "quantization": {
+          "method": "ternary-rtn",
+          "bits": 1.58,
+          "scheme": {
+            "name": "signed-ternary",
+            "description": "Three-level signed representation."
+          },
+          "granularity": {
+            "name": "per-block",
+            "description": "One mapping per implementation-defined block."
+          }
+        }
+      }
+    }
+  ]
+}

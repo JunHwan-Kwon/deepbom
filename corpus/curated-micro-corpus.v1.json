@@ -1,0 +1,267 @@
+{
+  "schema": "deepbom.curated_micro_corpus.v1",
+  "corpus_id": "awesome-tinyml-resolved-micro-v1",
+  "tier": "micro",
+  "artifact_count": 11,
+  "format": "tflite",
+  "target_profile_id": "android_mid_a55",
+  "analysis_target_semantics": "The current sweep target is used for deterministic graph, quantization, and report-integrity validation only. It is not an STM32 latency or memory-fit claim.",
+  "discovery_source": {
+    "repository": "umitkacar/awesome-tinyml",
+    "revision": "16e565e55e5385000bc259cf621a169bf13a1ff6",
+    "readme_path": "README.md",
+    "readme_sha256": "6b021af6b7072da34b161f6ec259789ba6547e1ae787336977cf4882ca70f5de",
+    "license": "MIT",
+    "role": "Discovery index only; linked projects are independently resolved and are never inherited as licensed model artifacts."
+  },
+  "source_policy": {
+    "classification": "Only directly downloadable TFLite or ONNX artifacts with a pinned byte size and SHA-256 enter the executable corpus.",
+    "distribution": "Model bytes are downloaded to a user-local DeepBOM cache and are never committed or included in the web deployment.",
+    "identity": "Mutable release URLs are accepted only with a pinned byte size and SHA-256; a changed payload fails closed.",
+    "license_boundary": "Repository license evidence is recorded separately from artifact identity. This manifest is technical provenance and not a license grant.",
+    "micro_boundary": "The micro tier requires explicit MCU/TinyML evidence. Published SRAM or flash figures remain upstream claims until reproduced on a pinned runtime and device."
+  },
+  "sources": [
+    {
+      "id": "mit-han-lab/mcunet",
+      "revision": "9c164f8483003a5c6445871d94d30720aecc5918",
+      "default_branch": "master",
+      "model_index_path": "mcunet/model_zoo.py",
+      "model_index_sha256": "52981250bf6607ba8e61020c72c2dfe455cec25de17337f378fbee41befce816",
+      "readme_sha256": "c6b1584bb915fdbabf9a7c722fc1b32992151902dad5056ac88c8fa28e918069",
+      "license_path": "LICENSE",
+      "license_sha256": "461e568b2ba8b2d9ab6a055746590a5bd2d030211dd751acba01cdf78511c06d",
+      "repository_license": "MIT",
+      "artifact_license_status": "No artifact-specific license was observed; consumers must confirm that the repository license covers the downloaded weights.",
+      "release_base_url": "https://hanlab18.mit.edu/projects/tinyml/mcunet/release/",
+      "runtime_evidence": "README metrics are reported with TinyEngine on STM32F746.",
+      "quantization_evidence": "README states that the supplied TFLite models are INT8 post-training quantized rather than QAT."
+    }
+  ],
+  "discovery_candidates": [
+    {
+      "repository": "aztc/EtinyNet",
+      "revision": "d3270389fb09057bbcd9006520e6307ec4984518",
+      "readme_sha256": "558fb1fb9ab1efad0cdbab2cacb9d5ac4c46bb6662fdd677b07b826a39a0fa4c",
+      "classification": "micro_explicit",
+      "ingestion_status": "blocked",
+      "reason": "The pinned repository exposes MXNet source and a .params checkpoint, but no TFLite or ONNX artifact and no repository license file."
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "mcunet-in0",
+      "source_id": "mit-han-lab/mcunet",
+      "model_index_id": "mcunet-in0",
+      "filename": "mcunet-10fps_imagenet.tflite",
+      "url": "https://hanlab18.mit.edu/projects/tinyml/mcunet/release/mcunet-10fps_imagenet.tflite",
+      "task": "image_classification",
+      "published_precision": "int8_ptq",
+      "size_bytes": 998728,
+      "sha256": "4791f13ac1b90b0a1a0b96177d905197a1ebd34f7bc960d92c9d3250aa5b6ef8",
+      "upstream_metrics": {
+        "macs": 6400000,
+        "parameters": 750000,
+        "peak_sram_kib": 266,
+        "flash_kib": 889,
+        "input_resolution": [48, 48],
+        "top1_fp32_percent": 41.5,
+        "top1_int8_percent": 40.4
+      }
+    },
+    {
+      "id": "mcunet-in1",
+      "source_id": "mit-han-lab/mcunet",
+      "model_index_id": "mcunet-in1",
+      "filename": "mcunet-5fps_imagenet.tflite",
+      "url": "https://hanlab18.mit.edu/projects/tinyml/mcunet/release/mcunet-5fps_imagenet.tflite",
+      "task": "image_classification",
+      "published_precision": "int8_ptq",
+      "size_bytes": 860752,
+      "sha256": "bf14b8de64caba8630086250b4c6ee660c222d8e48ce3e8c791d0a402e15ef73",
+      "upstream_metrics": {
+        "macs": 12800000,
+        "parameters": 640000,
+        "peak_sram_kib": 307,
+        "flash_kib": 992,
+        "input_resolution": [96, 96],
+        "top1_fp32_percent": 51.5,
+        "top1_int8_percent": 49.9
+      }
+    },
+    {
+      "id": "mcunet-in2",
+      "source_id": "mit-han-lab/mcunet",
+      "model_index_id": "mcunet-in2",
+      "filename": "mcunet-256kb-1mb_imagenet.tflite",
+      "url": "https://hanlab18.mit.edu/projects/tinyml/mcunet/release/mcunet-256kb-1mb_imagenet.tflite",
+      "task": "image_classification",
+      "published_precision": "int8_ptq",
+      "size_bytes": 1010840,
+      "sha256": "38c5d0794fa40196cb5c8da4fc64b116a33f448f3db721458916b54b1e4a11fb",
+      "upstream_metrics": {
+        "macs": 67300000,
+        "parameters": 730000,
+        "peak_sram_kib": 242,
+        "flash_kib": 878,
+        "input_resolution": [160, 160],
+        "top1_fp32_percent": 60.9,
+        "top1_int8_percent": 60.3
+      }
+    },
+    {
+      "id": "mcunet-in3",
+      "source_id": "mit-han-lab/mcunet",
+      "model_index_id": "mcunet-in3",
+      "filename": "mcunet-320kb-1mb_imagenet.tflite",
+      "url": "https://hanlab18.mit.edu/projects/tinyml/mcunet/release/mcunet-320kb-1mb_imagenet.tflite",
+      "task": "image_classification",
+      "published_precision": "int8_ptq",
+      "size_bytes": 1018208,
+      "sha256": "780563f544bccba413b1ee4e051159996ac8b5be39eba8bb38761a51b58a07d1",
+      "upstream_metrics": {
+        "macs": 81800000,
+        "parameters": 740000,
+        "peak_sram_kib": 293,
+        "flash_kib": 897,
+        "input_resolution": [176, 176],
+        "top1_fp32_percent": 62.2,
+        "top1_int8_percent": 61.8
+      }
+    },
+    {
+      "id": "mcunet-in4",
+      "source_id": "mit-han-lab/mcunet",
+      "model_index_id": "mcunet-in4",
+      "filename": "mcunet-512kb-2mb_imagenet.tflite",
+      "url": "https://hanlab18.mit.edu/projects/tinyml/mcunet/release/mcunet-512kb-2mb_imagenet.tflite",
+      "task": "image_classification",
+      "published_precision": "int8_ptq",
+      "size_bytes": 2088096,
+      "sha256": "1ad36261efdc5185d5236e7f8306a9481d9044c56cbb72f9230fbc67ba13545e",
+      "upstream_metrics": {
+        "macs": 125900000,
+        "parameters": 1730000,
+        "peak_sram_kib": 456,
+        "flash_kib": 1876,
+        "input_resolution": [160, 160],
+        "top1_fp32_percent": 68.4,
+        "top1_int8_percent": 68.0
+      }
+    },
+    {
+      "id": "mbv2-w0-35",
+      "source_id": "mit-han-lab/mcunet",
+      "model_index_id": "mbv2-w0.35",
+      "filename": "mbv2-w0.35-r144_imagenet.tflite",
+      "url": "https://hanlab18.mit.edu/projects/tinyml/mcunet/release/mbv2-w0.35-r144_imagenet.tflite",
+      "task": "image_classification",
+      "published_precision": "int8_ptq",
+      "size_bytes": 989616,
+      "sha256": "00c87d2a5f2d96deb7a7e8afe000b786e5198384ab66f21c714dd3ed43d00f8c",
+      "upstream_metrics": {
+        "macs": 23500000,
+        "parameters": 750000,
+        "peak_sram_kib": 308,
+        "flash_kib": 862,
+        "input_resolution": [144, 144],
+        "top1_fp32_percent": 49.7,
+        "top1_int8_percent": 49.0
+      }
+    },
+    {
+      "id": "proxyless-w0-3",
+      "source_id": "mit-han-lab/mcunet",
+      "model_index_id": "proxyless-w0.3",
+      "filename": "proxyless-w0.3-r176_imagenet.tflite",
+      "url": "https://hanlab18.mit.edu/projects/tinyml/mcunet/release/proxyless-w0.3-r176_imagenet.tflite",
+      "task": "image_classification",
+      "published_precision": "int8_ptq",
+      "size_bytes": 991864,
+      "sha256": "8cfa09445a43c8eb51b94685b72a4aa1c0318865af03636f3f81bcf7042dacc7",
+      "upstream_metrics": {
+        "macs": 38300000,
+        "parameters": 750000,
+        "peak_sram_kib": 292,
+        "flash_kib": 892,
+        "input_resolution": [176, 176],
+        "top1_fp32_percent": 57.0,
+        "top1_int8_percent": 56.2
+      }
+    },
+    {
+      "id": "mcunet-vww0",
+      "source_id": "mit-han-lab/mcunet",
+      "model_index_id": "mcunet-vww0",
+      "filename": "mcunet-10fps_vww.tflite",
+      "url": "https://hanlab18.mit.edu/projects/tinyml/mcunet/release/mcunet-10fps_vww.tflite",
+      "task": "visual_wake_words",
+      "published_precision": "int8_ptq",
+      "size_bytes": 543248,
+      "sha256": "4676b97e2fe775929b1538446a120173ab0e1a0f94a1d81e7322f09fee9b3d1d",
+      "upstream_metrics": {
+        "macs": 6000000,
+        "parameters": 370000,
+        "peak_sram_kib": 146,
+        "flash_kib": 617,
+        "input_resolution": [64, 64],
+        "top1_fp32_percent": 87.4,
+        "top1_int8_percent": 87.3
+      }
+    },
+    {
+      "id": "mcunet-vww1",
+      "source_id": "mit-han-lab/mcunet",
+      "model_index_id": "mcunet-vww1",
+      "filename": "mcunet-5fps_vww.tflite",
+      "url": "https://hanlab18.mit.edu/projects/tinyml/mcunet/release/mcunet-5fps_vww.tflite",
+      "task": "visual_wake_words",
+      "published_precision": "int8_ptq",
+      "size_bytes": 635968,
+      "sha256": "d878916e93f59e63949ce9b8e1a585382d466d3b94d751b9f1628a7753e03c24",
+      "upstream_metrics": {
+        "macs": 11600000,
+        "parameters": 430000,
+        "peak_sram_kib": 162,
+        "flash_kib": 689,
+        "input_resolution": [80, 80],
+        "top1_fp32_percent": 88.9,
+        "top1_int8_percent": 88.9
+      }
+    },
+    {
+      "id": "mcunet-vww2",
+      "source_id": "mit-han-lab/mcunet",
+      "model_index_id": "mcunet-vww2",
+      "filename": "mcunet-320kb-1mb_vww.tflite",
+      "url": "https://hanlab18.mit.edu/projects/tinyml/mcunet/release/mcunet-320kb-1mb_vww.tflite",
+      "task": "visual_wake_words",
+      "published_precision": "int8_ptq",
+      "size_bytes": 941120,
+      "sha256": "5180674a058b7c7b627a4142b4c6b194382e6df05ad8c8eb40a86aab8c1c7986",
+      "upstream_metrics": {
+        "macs": 55800000,
+        "parameters": 640000,
+        "peak_sram_kib": 311,
+        "flash_kib": 897,
+        "input_resolution": [144, 144],
+        "top1_fp32_percent": 91.7,
+        "top1_int8_percent": 91.8
+      }
+    },
+    {
+      "id": "mcunet-person-det",
+      "source_id": "mit-han-lab/mcunet",
+      "model_index_id": "person-det",
+      "filename": "person-det.tflite",
+      "url": "https://hanlab18.mit.edu/projects/tinyml/mcunet/release/person-det.tflite",
+      "task": "person_detection",
+      "published_precision": "int8_ptq",
+      "size_bytes": 295768,
+      "sha256": "ceb419a25d1f807e4a2480cb93f75e7d18fc6f147fc0addbf9288da8a957449a",
+      "upstream_metrics": {
+        "input_resolution": [128, 160]
+      }
+    }
+  ]
+}

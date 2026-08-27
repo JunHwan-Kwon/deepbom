@@ -1,0 +1,809 @@
+{
+  "schema": "deepbom.missing_provenance_field_specification.v1.1",
+  "document_type": "missing-provenance-field-specification",
+  "generated_at": "2026-07-29T00:00:00.000Z",
+  "subject": {
+    "name": "mobilenet_v2_1.0_224_quant.tflite",
+    "format": "tflite",
+    "sha256": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+    "hash_basis": "artifact_file_bytes_sha256",
+    "byte_length": 3577760,
+    "schema_or_opset": "TFLite schema 3",
+    "declared_version": null,
+    "component_bom_ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d"
+  },
+  "purpose": "Machine-readable inventory of release-lineage and artifact-embedded fields required for reproducibility, integration, and change control.",
+  "status_counts": {
+    "present": 0,
+    "partial": 4,
+    "missing": 14,
+    "not_applicable": 0
+  },
+  "release_manifest_status_counts": {
+    "present": 0,
+    "partial": 3,
+    "missing": 7,
+    "not_applicable": 0
+  },
+  "artifact_embedded_status_counts": {
+    "present": 0,
+    "partial": 1,
+    "missing": 7,
+    "not_applicable": 0
+  },
+  "release_manifest_fields": [
+    {
+      "id": "source_checkpoint_sha256",
+      "label": "Source checkpoint SHA-256",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/source_checkpoint_sha256",
+        "/provenance/source_checkpoint_sha256",
+        "/metadata_presence/source_checkpoint_sha256"
+      ],
+      "reason": "A deployment artifact does not normally retain the source checkpoint digest.",
+      "impact": "Without it, the released runtime model cannot be unambiguously traced back to the training checkpoint.",
+      "remediation": "Record the immutable source checkpoint SHA-256 in the release manifest."
+    },
+    {
+      "id": "export_framework",
+      "label": "Export framework and version",
+      "category": "release_manifest",
+      "status": "partial",
+      "evidence_class": "DERIVED_FROM_CONVERGENT_CONVERTER_FAMILY",
+      "value": {
+        "inferred_family": "TensorFlow",
+        "version": null
+      },
+      "source_pointer": "/observed_formulation/export_framework",
+      "searched_pointers": [
+        "/release_manifest",
+        "/metadata_presence",
+        "/ops",
+        "/tensors"
+      ],
+      "reason": "Only a framework family is inferred from artifact evidence; no complete declaration is embedded.",
+      "impact": "Without an immutable framework identity, converter behavior and operator lowering cannot be reproduced exactly.",
+      "remediation": "Bind export framework name, package version, source commit, and binary or container digest."
+    },
+    {
+      "id": "converter_version",
+      "label": "Converter version",
+      "category": "release_manifest",
+      "status": "partial",
+      "evidence_class": "CONVERGENT_ARTIFACT_FINGERPRINT",
+      "value": {
+        "inferred_family": "tensorflow-toco-legacy",
+        "structural_fingerprint": {
+          "asymmetric_uint8_kernel_tensor_count": 53,
+          "per_tensor_depthwise_op_count": 17,
+          "per_axis_kernel_tensor_count": 0,
+          "conversion_metadata_status": "not_present",
+          "artifact_description": "TOCO Converted.",
+          "maximum_observed_op_version": 1,
+          "derived_runtime_floor": "1.5.0"
+        }
+      },
+      "source_pointer": "/observed_formulation",
+      "searched_pointers": [
+        "/release_manifest",
+        "/metadata_presence",
+        "/ops",
+        "/tensors"
+      ],
+      "reason": "Artifact evidence identifies a converter family but not an exact converter binary or version.",
+      "impact": "Without the exact converter build, graph rewrites and numerical contracts cannot be reproduced bit-for-bit.",
+      "remediation": "Record converter package version, source commit, and binary or container digest."
+    },
+    {
+      "id": "export_configuration",
+      "label": "Export configuration",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/export_configuration",
+        "/export_configuration"
+      ],
+      "reason": "Graph structure does not uniquely recover exporter options.",
+      "impact": "Options such as keepdims, fused activations, signatures, and optimization passes can change graph structure and delegate partitioning.",
+      "remediation": "Persist canonical exporter options and their SHA-256."
+    },
+    {
+      "id": "quantization_calibration_configuration",
+      "label": "Quantization and calibration configuration",
+      "category": "release_manifest",
+      "status": "partial",
+      "evidence_class": "DERIVED_PARTIAL",
+      "value": {
+        "artifact_quantization_classification": "full_integer"
+      },
+      "source_pointer": "/quantization_status",
+      "searched_pointers": [
+        "/release_manifest/quantization_configuration",
+        "/quantization_configuration",
+        "/quantization_status",
+        "/tensors"
+      ],
+      "reason": "The artifact exposes resulting scales and zero-points, but not the complete recipe or calibration run.",
+      "impact": "Without the recipe and representative-data binding, quantization drift and calibration regressions cannot be reproduced.",
+      "remediation": "Record quantizer version, scheme selection, calibration options, and calibration-data binding."
+    },
+    {
+      "id": "representative_dataset_id",
+      "label": "Representative dataset ID",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/representative_dataset_id",
+        "/representative_dataset_id"
+      ],
+      "reason": "Representative calibration data cannot be reconstructed from scales alone.",
+      "impact": "Without it, calibration ranges and resulting integer contracts cannot be regenerated or audited against dataset changes.",
+      "remediation": "Record dataset/version ID, selection query, preprocessing revision, and immutable digest."
+    },
+    {
+      "id": "build_pipeline_id",
+      "label": "Build pipeline ID",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/build_pipeline_id",
+        "/build_pipeline_id"
+      ],
+      "reason": "The artifact does not bind the CI/CD execution that produced it.",
+      "impact": "Without a pipeline run identity, toolchain, environment, and policy evidence cannot be reconstructed.",
+      "remediation": "Record immutable pipeline or workflow ID and run ID."
+    },
+    {
+      "id": "software_release_id",
+      "label": "Software release ID",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/software_release_id",
+        "/software_release_id",
+        "/metadata_presence/metadata_model_version"
+      ],
+      "reason": "No release identity is bound.",
+      "impact": "Without it, a model artifact cannot be tied to the application or firmware release that shipped it.",
+      "remediation": "Bind the model artifact to the shipping software release ID."
+    },
+    {
+      "id": "model_requirement_id",
+      "label": "Model requirement ID",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/model_requirement_id",
+        "/model_requirement_id"
+      ],
+      "reason": "The artifact does not identify the requirement or acceptance criterion it satisfies.",
+      "impact": "Without it, audit findings cannot be evaluated against an approved model requirement or acceptance criterion.",
+      "remediation": "Record the immutable requirement or specification ID and revision."
+    },
+    {
+      "id": "previous_release_artifact_sha256",
+      "label": "Previous release artifact SHA-256",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/previous_artifact_sha256",
+        "/previous_artifact_sha256",
+        "/release_manifest/no_predecessor",
+        "/release_manifest/previous_release_status"
+      ],
+      "reason": "The artifact does not carry a predecessor link or no-predecessor declaration.",
+      "impact": "Without an explicit predecessor state, release deltas and change-control lineage cannot be established.",
+      "remediation": "Record the immediately previous released artifact SHA-256 or an explicit no-predecessor declaration."
+    }
+  ],
+  "artifact_embedded_fields": [
+    {
+      "id": "serving_signature",
+      "label": "TFLite SignatureDef",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": "/metadata_presence/signature_keys",
+      "searched_pointers": [
+        "/metadata_presence/has_signature_defs",
+        "/metadata_presence/signature_count",
+        "/metadata_presence/signature_keys"
+      ],
+      "reason": "No typed serving signature is embedded.",
+      "impact": "Without a signature, input/output names alone do not bind a stable callable interface.",
+      "remediation": "Embed and version the serving signature used by the application."
+    },
+    {
+      "id": "typed_model_metadata",
+      "label": "TFLITE_METADATA",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": "/metadata_presence",
+      "searched_pointers": [
+        "/metadata_presence/has_model_metadata",
+        "/metadata_presence/metadata_entries",
+        "/metadata_presence/metadata_schema_identifier"
+      ],
+      "reason": "No typed model metadata block is embedded.",
+      "impact": "Without typed metadata, tooling cannot reliably recover model identity, process units, associated files, or semantic contracts.",
+      "remediation": "Embed the format-native typed metadata block and bind its schema version."
+    },
+    {
+      "id": "declared_min_runtime_version",
+      "label": "Declared minimum runtime version",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/runtime_compat/min_runtime_version",
+        "/metadata_presence/metadata_entries"
+      ],
+      "reason": "A runtime floor may be derived from op versions, but no minimum is embedded by the producer.",
+      "impact": "Without a declaration, deployment systems cannot compare the producer-stated compatibility floor against analyzer-derived requirements.",
+      "remediation": "Embed the producer-declared minimum runtime version and retain the derived floor separately."
+    },
+    {
+      "id": "model_version",
+      "label": "Model version",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": "/metadata_presence/metadata_model_version",
+      "searched_pointers": [
+        "/metadata_presence/metadata_model_version",
+        "/metadata_presence/model_version"
+      ],
+      "reason": "No model version is embedded.",
+      "impact": "Without it, identical model names cannot be ordered or linked to release history without relying only on hashes.",
+      "remediation": "Embed a stable model semantic or release version while retaining the artifact SHA-256 as identity."
+    },
+    {
+      "id": "model_author",
+      "label": "Model author",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": "/metadata_presence/metadata_author",
+      "searched_pointers": [
+        "/metadata_presence/metadata_author"
+      ],
+      "reason": "No model author is embedded.",
+      "impact": "Without an author or owning organization, responsibility and maintenance escalation are not machine-readable.",
+      "remediation": "Embed model author or owner identity and an immutable organization reference."
+    },
+    {
+      "id": "model_license",
+      "label": "Model license",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": "/metadata_presence/metadata_license",
+      "searched_pointers": [
+        "/metadata_presence/metadata_license"
+      ],
+      "reason": "No model license is embedded.",
+      "impact": "Without a license declaration, redistribution and deployment permissions cannot be evaluated from the artifact.",
+      "remediation": "Embed an SPDX license identifier or a cryptographically bound license reference."
+    },
+    {
+      "id": "output_label_map",
+      "label": "Output label or semantic map",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": {
+        "declared_label_files": 0,
+        "verified_output0_label_files": 0
+      },
+      "source_pointer": "/metadata_presence/output_associated_files",
+      "searched_pointers": [
+        "/metadata_presence/output_semantics_documented",
+        "/metadata_presence/output_label_file_count",
+        "/metadata_presence/verified_output0_label_file_count",
+        "/metadata_presence/output_associated_files"
+      ],
+      "reason": "No machine-verified output-0 label or semantic mapping is embedded.",
+      "impact": "Without it, class indices or output tensors cannot be mapped to application meaning reproducibly.",
+      "remediation": "Embed and hash the output label map or typed postprocessing contract."
+    },
+    {
+      "id": "preprocessing_contract",
+      "label": "Preprocessing contract",
+      "category": "artifact_embedded",
+      "status": "partial",
+      "evidence_class": "DERIVED_CANDIDATE_SET",
+      "value": {
+        "exact_artifact_realization_candidates": [
+          "raw_storage_rgb",
+          "raw_storage_bgr",
+          "artifact_affine_rgb",
+          "center_128_div_128_rgb"
+        ],
+        "production_selection_unbound": true
+      },
+      "source_pointer": "/preprocessing_realizability",
+      "searched_pointers": [
+        "/metadata_presence/documented_preprocessing",
+        "/metadata_presence/preprocessing_contract_status",
+        "/metadata_presence/input_process_units",
+        "/preprocessing_realizability"
+      ],
+      "reason": "Static analysis derives exact realizability candidates, but the artifact does not select or document the production implementation.",
+      "impact": "Without it, a numerically valid model can silently receive application inputs under an incompatible normalization or channel-order contract.",
+      "remediation": "Embed the preprocessing contract and bind the production implementation SHA-256."
+    }
+  ],
+  "fields": [
+    {
+      "id": "source_checkpoint_sha256",
+      "label": "Source checkpoint SHA-256",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/source_checkpoint_sha256",
+        "/provenance/source_checkpoint_sha256",
+        "/metadata_presence/source_checkpoint_sha256"
+      ],
+      "reason": "A deployment artifact does not normally retain the source checkpoint digest.",
+      "impact": "Without it, the released runtime model cannot be unambiguously traced back to the training checkpoint.",
+      "remediation": "Record the immutable source checkpoint SHA-256 in the release manifest."
+    },
+    {
+      "id": "export_framework",
+      "label": "Export framework and version",
+      "category": "release_manifest",
+      "status": "partial",
+      "evidence_class": "DERIVED_FROM_CONVERGENT_CONVERTER_FAMILY",
+      "value": {
+        "inferred_family": "TensorFlow",
+        "version": null
+      },
+      "source_pointer": "/observed_formulation/export_framework",
+      "searched_pointers": [
+        "/release_manifest",
+        "/metadata_presence",
+        "/ops",
+        "/tensors"
+      ],
+      "reason": "Only a framework family is inferred from artifact evidence; no complete declaration is embedded.",
+      "impact": "Without an immutable framework identity, converter behavior and operator lowering cannot be reproduced exactly.",
+      "remediation": "Bind export framework name, package version, source commit, and binary or container digest."
+    },
+    {
+      "id": "converter_version",
+      "label": "Converter version",
+      "category": "release_manifest",
+      "status": "partial",
+      "evidence_class": "CONVERGENT_ARTIFACT_FINGERPRINT",
+      "value": {
+        "inferred_family": "tensorflow-toco-legacy",
+        "structural_fingerprint": {
+          "asymmetric_uint8_kernel_tensor_count": 53,
+          "per_tensor_depthwise_op_count": 17,
+          "per_axis_kernel_tensor_count": 0,
+          "conversion_metadata_status": "not_present",
+          "artifact_description": "TOCO Converted.",
+          "maximum_observed_op_version": 1,
+          "derived_runtime_floor": "1.5.0"
+        }
+      },
+      "source_pointer": "/observed_formulation",
+      "searched_pointers": [
+        "/release_manifest",
+        "/metadata_presence",
+        "/ops",
+        "/tensors"
+      ],
+      "reason": "Artifact evidence identifies a converter family but not an exact converter binary or version.",
+      "impact": "Without the exact converter build, graph rewrites and numerical contracts cannot be reproduced bit-for-bit.",
+      "remediation": "Record converter package version, source commit, and binary or container digest."
+    },
+    {
+      "id": "export_configuration",
+      "label": "Export configuration",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/export_configuration",
+        "/export_configuration"
+      ],
+      "reason": "Graph structure does not uniquely recover exporter options.",
+      "impact": "Options such as keepdims, fused activations, signatures, and optimization passes can change graph structure and delegate partitioning.",
+      "remediation": "Persist canonical exporter options and their SHA-256."
+    },
+    {
+      "id": "quantization_calibration_configuration",
+      "label": "Quantization and calibration configuration",
+      "category": "release_manifest",
+      "status": "partial",
+      "evidence_class": "DERIVED_PARTIAL",
+      "value": {
+        "artifact_quantization_classification": "full_integer"
+      },
+      "source_pointer": "/quantization_status",
+      "searched_pointers": [
+        "/release_manifest/quantization_configuration",
+        "/quantization_configuration",
+        "/quantization_status",
+        "/tensors"
+      ],
+      "reason": "The artifact exposes resulting scales and zero-points, but not the complete recipe or calibration run.",
+      "impact": "Without the recipe and representative-data binding, quantization drift and calibration regressions cannot be reproduced.",
+      "remediation": "Record quantizer version, scheme selection, calibration options, and calibration-data binding."
+    },
+    {
+      "id": "representative_dataset_id",
+      "label": "Representative dataset ID",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/representative_dataset_id",
+        "/representative_dataset_id"
+      ],
+      "reason": "Representative calibration data cannot be reconstructed from scales alone.",
+      "impact": "Without it, calibration ranges and resulting integer contracts cannot be regenerated or audited against dataset changes.",
+      "remediation": "Record dataset/version ID, selection query, preprocessing revision, and immutable digest."
+    },
+    {
+      "id": "build_pipeline_id",
+      "label": "Build pipeline ID",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/build_pipeline_id",
+        "/build_pipeline_id"
+      ],
+      "reason": "The artifact does not bind the CI/CD execution that produced it.",
+      "impact": "Without a pipeline run identity, toolchain, environment, and policy evidence cannot be reconstructed.",
+      "remediation": "Record immutable pipeline or workflow ID and run ID."
+    },
+    {
+      "id": "software_release_id",
+      "label": "Software release ID",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/software_release_id",
+        "/software_release_id",
+        "/metadata_presence/metadata_model_version"
+      ],
+      "reason": "No release identity is bound.",
+      "impact": "Without it, a model artifact cannot be tied to the application or firmware release that shipped it.",
+      "remediation": "Bind the model artifact to the shipping software release ID."
+    },
+    {
+      "id": "model_requirement_id",
+      "label": "Model requirement ID",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/model_requirement_id",
+        "/model_requirement_id"
+      ],
+      "reason": "The artifact does not identify the requirement or acceptance criterion it satisfies.",
+      "impact": "Without it, audit findings cannot be evaluated against an approved model requirement or acceptance criterion.",
+      "remediation": "Record the immutable requirement or specification ID and revision."
+    },
+    {
+      "id": "previous_release_artifact_sha256",
+      "label": "Previous release artifact SHA-256",
+      "category": "release_manifest",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/release_manifest/previous_artifact_sha256",
+        "/previous_artifact_sha256",
+        "/release_manifest/no_predecessor",
+        "/release_manifest/previous_release_status"
+      ],
+      "reason": "The artifact does not carry a predecessor link or no-predecessor declaration.",
+      "impact": "Without an explicit predecessor state, release deltas and change-control lineage cannot be established.",
+      "remediation": "Record the immediately previous released artifact SHA-256 or an explicit no-predecessor declaration."
+    },
+    {
+      "id": "serving_signature",
+      "label": "TFLite SignatureDef",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": "/metadata_presence/signature_keys",
+      "searched_pointers": [
+        "/metadata_presence/has_signature_defs",
+        "/metadata_presence/signature_count",
+        "/metadata_presence/signature_keys"
+      ],
+      "reason": "No typed serving signature is embedded.",
+      "impact": "Without a signature, input/output names alone do not bind a stable callable interface.",
+      "remediation": "Embed and version the serving signature used by the application."
+    },
+    {
+      "id": "typed_model_metadata",
+      "label": "TFLITE_METADATA",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": "/metadata_presence",
+      "searched_pointers": [
+        "/metadata_presence/has_model_metadata",
+        "/metadata_presence/metadata_entries",
+        "/metadata_presence/metadata_schema_identifier"
+      ],
+      "reason": "No typed model metadata block is embedded.",
+      "impact": "Without typed metadata, tooling cannot reliably recover model identity, process units, associated files, or semantic contracts.",
+      "remediation": "Embed the format-native typed metadata block and bind its schema version."
+    },
+    {
+      "id": "declared_min_runtime_version",
+      "label": "Declared minimum runtime version",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": null,
+      "searched_pointers": [
+        "/runtime_compat/min_runtime_version",
+        "/metadata_presence/metadata_entries"
+      ],
+      "reason": "A runtime floor may be derived from op versions, but no minimum is embedded by the producer.",
+      "impact": "Without a declaration, deployment systems cannot compare the producer-stated compatibility floor against analyzer-derived requirements.",
+      "remediation": "Embed the producer-declared minimum runtime version and retain the derived floor separately."
+    },
+    {
+      "id": "model_version",
+      "label": "Model version",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": "/metadata_presence/metadata_model_version",
+      "searched_pointers": [
+        "/metadata_presence/metadata_model_version",
+        "/metadata_presence/model_version"
+      ],
+      "reason": "No model version is embedded.",
+      "impact": "Without it, identical model names cannot be ordered or linked to release history without relying only on hashes.",
+      "remediation": "Embed a stable model semantic or release version while retaining the artifact SHA-256 as identity."
+    },
+    {
+      "id": "model_author",
+      "label": "Model author",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": "/metadata_presence/metadata_author",
+      "searched_pointers": [
+        "/metadata_presence/metadata_author"
+      ],
+      "reason": "No model author is embedded.",
+      "impact": "Without an author or owning organization, responsibility and maintenance escalation are not machine-readable.",
+      "remediation": "Embed model author or owner identity and an immutable organization reference."
+    },
+    {
+      "id": "model_license",
+      "label": "Model license",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": null,
+      "source_pointer": "/metadata_presence/metadata_license",
+      "searched_pointers": [
+        "/metadata_presence/metadata_license"
+      ],
+      "reason": "No model license is embedded.",
+      "impact": "Without a license declaration, redistribution and deployment permissions cannot be evaluated from the artifact.",
+      "remediation": "Embed an SPDX license identifier or a cryptographically bound license reference."
+    },
+    {
+      "id": "output_label_map",
+      "label": "Output label or semantic map",
+      "category": "artifact_embedded",
+      "status": "missing",
+      "evidence_class": "NOT_ASSESSABLE",
+      "value": {
+        "declared_label_files": 0,
+        "verified_output0_label_files": 0
+      },
+      "source_pointer": "/metadata_presence/output_associated_files",
+      "searched_pointers": [
+        "/metadata_presence/output_semantics_documented",
+        "/metadata_presence/output_label_file_count",
+        "/metadata_presence/verified_output0_label_file_count",
+        "/metadata_presence/output_associated_files"
+      ],
+      "reason": "No machine-verified output-0 label or semantic mapping is embedded.",
+      "impact": "Without it, class indices or output tensors cannot be mapped to application meaning reproducibly.",
+      "remediation": "Embed and hash the output label map or typed postprocessing contract."
+    },
+    {
+      "id": "preprocessing_contract",
+      "label": "Preprocessing contract",
+      "category": "artifact_embedded",
+      "status": "partial",
+      "evidence_class": "DERIVED_CANDIDATE_SET",
+      "value": {
+        "exact_artifact_realization_candidates": [
+          "raw_storage_rgb",
+          "raw_storage_bgr",
+          "artifact_affine_rgb",
+          "center_128_div_128_rgb"
+        ],
+        "production_selection_unbound": true
+      },
+      "source_pointer": "/preprocessing_realizability",
+      "searched_pointers": [
+        "/metadata_presence/documented_preprocessing",
+        "/metadata_presence/preprocessing_contract_status",
+        "/metadata_presence/input_process_units",
+        "/preprocessing_realizability"
+      ],
+      "reason": "Static analysis derives exact realizability candidates, but the artifact does not select or document the production implementation.",
+      "impact": "Without it, a numerically valid model can silently receive application inputs under an incompatible normalization or channel-order contract.",
+      "remediation": "Embed the preprocessing contract and bind the production implementation SHA-256."
+    }
+  ],
+  "ci_gate": {
+    "policy": "require_present_unless_not_applicable",
+    "result": "incomplete",
+    "missing_field_count": 14,
+    "partial_field_count": 4,
+    "noncompliant_field_count": 18,
+    "release_manifest_result": "incomplete",
+    "artifact_embedded_result": "incomplete"
+  },
+  "related_documents": [
+    {
+      "role": "subject_evidence_bom",
+      "path": "deepbom_cyclonedx_evidence.cdx.json",
+      "component_bom_ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+      "integrity_binding": "The evidence BOM hashes this specification; the complete ZIP member set is bound by deepbom_contract_pack_manifest.json."
+    }
+  ],
+  "provenance": {
+    "analyzer": "deepbom",
+    "analyzer_semantic_version": "1.94.0",
+    "analyzer_build_version": "2026-08-03",
+    "analyzer_build_commit": "684260dddf632240c31bee646581d9c4ae32623a",
+    "analyzer_build_source_state": "clean",
+    "analyzer_bundle_content_sha256": "5c03ec024b99e9a73ac3b3f098cebdd8dc18ae5ec67d740de97dd21df4e5b34d",
+    "analyzer_bundle_content_hash_method": "SHA-256 over RFC8785-JCS canonical deepbom.analyzer_build_file_digest_set.v1",
+    "rulepack_version": "deepbom.rulepack.2026-07-24.63",
+    "rulepack_sha256": "a1e0dc58a9dc742b4532448190410d89e04d56ab134a16a72cda6cae8b6a6d9f",
+    "rulepack_hash_basis": [
+      "web/lib/report-metadata.js (report metadata/provenance)",
+      "web/lib/reason-codes.js (reason-code labels)",
+      "web/lib/xnnpack-rulepack-metadata.js (generated XNNPACK delegate provenance)",
+      "src/xnnpack_delegate.rs (source-mapped XNNPACK delegate evaluator)",
+      "src/xnnpack_rulepack_generated.rs (generated XNNPACK delegate documentary rules)",
+      "reference/xnnpack-readme/README-v2.21.0.md (pinned XNNPACK delegate README snapshot)",
+      "reference/xnnpack-readme/rule-manifest-v2.21.0.json (XNNPACK delegate semantic rule manifest)",
+      "scripts/generate-xnnpack-delegate-rulepack.mjs (XNNPACK delegate rule generator and source digest contract)",
+      "src/lib.rs (target profiles and XNNPACK support rules)",
+      "src/lib.rs (TFLite runtime-version floor derivation)",
+      "src/runtime_version.rs (pinned TFLite runtime-version floor map)",
+      "src/tflite_metadata.rs (TFLite M001 metadata contract parser)",
+      "src/accumulator_atlas.rs (exact stored-weight accumulator envelope)",
+      "web/lib/accumulator-atlas.js (independent browser accumulator validator)",
+      "src/requantization_fidelity.rs (pinned TFLite requantization fidelity solver)",
+      "web/lib/requantization-fidelity.js (independent browser requantization validator)",
+      "src/kernel_witness.rs (exact quantized kernel extremum witness solver)",
+      "web/lib/kernel-witness.js (independent browser kernel witness validator and viewer)",
+      "web/lib/kernel-witness-worker.js (independent browser kernel witness verification worker)",
+      "src/channel_vitality.rs (exact monotone quantized channel vitality solver)",
+      "web/lib/channel-vitality.js (independent browser channel vitality validator and viewer)",
+      "web/lib/channel-vitality-worker.js (independent browser channel vitality verification worker)",
+      "src/rounding_equivalence.rs (exact fixed-point rounding equivalence solver)",
+      "web/lib/rounding-equivalence.js (independent browser rounding equivalence validator and viewer)",
+      "web/lib/rounding-equivalence-worker.js (independent browser rounding equivalence verification worker)",
+      "src/numerical_abi_propagation.rs (exact numerical ABI graph propagation solver)",
+      "web/lib/numerical-abi-propagation.js (independent browser numerical ABI propagation validator)",
+      "web/lib/numerical-abi-propagation-viewer.js (numerical ABI propagation atlas viewer and export renderer)",
+      "src/quantization_lattice.rs (exhaustive residual output-contract design solver)",
+      "web/lib/quantization-lattice.js (independent browser residual contract validator)",
+      "src/quantization_math.rs (shared pinned quantization arithmetic)",
+      "web/lib/quantization-math.js (independent browser quantization arithmetic)",
+      "src/contract_migration.rs (residual contract migration impact solver)",
+      "web/lib/contract-migration.js (independent browser migration validator)",
+      "src/residual_step_response.rs (exhaustive residual adjacent-code step-response solver)",
+      "web/lib/residual-step-response.js (independent browser residual step-response validator)",
+      "web/lib/residual-step-response-worker.js (independent browser residual step-response worker)",
+      "src/residual_contract_distortion.rs (exhaustive residual contract-distortion solver)",
+      "web/lib/residual-contract-distortion.js (independent browser residual contract-distortion validator)",
+      "web/lib/residual-contract-distortion-worker.js (independent browser residual contract-distortion worker)",
+      "scripts/generate-ort-rulepack.mjs (pinned ORT rule generator and source digest contract)",
+      "web/lib/xnnpack-selector-evidence.js (public XNNPACK evidence identity and arithmetic adapter)",
+      "web/lib/ort-compatibility-evidence.js (public ORT evidence identity and conservation adapter)",
+      "web/onnx.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-container-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-domain-analysis.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-external-data.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-extended-shape-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-imputer-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-imputer.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-label-encoder-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-label-encoder.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-linear-model-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-linear-model.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-normalizer-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-normalizer.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-one-hot-encoder-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-one-hot-encoder.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-scaler-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-scaler.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-svm-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-svm.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-tree-ensemble-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-tree-ensemble.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-value-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ort-extension-shape-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-opset-imports.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-schema-legality.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-shape-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-runtime-shape-binding.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-shape-ops.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-shape-schema-generated.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-sparse-tensor.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-static-value-evidence.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-tfidf-vectorizer-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-tfidf-vectorizer.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-type-proto.js (ONNX rule/reconstruction)",
+      "web/lib/report-findings.js (authoritative finding rules)",
+      "web/lib/finding-contract.js (finding evidence-pointer contract)",
+      "protected authenticated rule source set (3 owners; implementation paths withheld; included in RULEPACK_SHA256)"
+    ]
+  },
+  "interpretation_boundary": "Missing means not found in the artifact or supplied release context, not proof that the organization lacks the information. Partial preserves artifact-derived evidence without promoting it to a producer declaration."
+}

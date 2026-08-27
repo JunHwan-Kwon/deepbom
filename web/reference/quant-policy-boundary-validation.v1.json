@@ -1,0 +1,32 @@
+{
+  "schema": "deepbom.interface_boundary_corpus_validation_profile.v1",
+  "profile_id": "quant-policy-boundary-public-50-2026-08-05",
+  "verification_status": "pass",
+  "verified_at": "2026-08-05",
+  "source": {
+    "corpus_id": "quant-policy-boundary-public-50-2026-07-30",
+    "manifest_path": "corpus/quant_policy/manifest.v1.json",
+    "manifest_sha256": "9ec7fdf97c8fcc8e14d3b9b5a61ffafe05d0e90e5a58005cdca51a1d886f0540",
+    "sweep_sha256": "73cba5ea4f78d788ae0c4830362ebc0fce334fe4d1479218c4d5137a18abdcbe",
+    "review_sha256": "617630133a28f10cb6d121e0a265e4d9fa051381357e0c32473eaf17aedc62c6",
+    "review_ledger_sha256": "3abd2f6148e150b6e1b6ed523c4f2ed037a972053a740ad2b0af1e8132577e12"
+  },
+  "verifier": {
+    "schema": "deepbom.interface_boundary_corpus_review.v1",
+    "implementation": "scripts/verify-interface-boundary-corpus.mjs",
+    "implementation_sha256": "d316401f638ce32642c52afad59b33858326e852f9f63d94c84ebcaacf0ec5c6",
+    "repeat_count": 2,
+    "analyzer_wasm_sha256": "95aec2444fa76c1ef6fd636c1003b7e01c78f79f24962a3180af0158fa454a1e"
+  },
+  "results": {
+    "public_artifact_count": 50,
+    "external_parameter_count": 114,
+    "complete_affine_parameter_count": 62,
+    "explicitly_unquantized_parameter_count": 52,
+    "invalid_or_incomplete_parameter_count": 0,
+    "fully_affine_quantized_artifact_count": 30,
+    "artifacts_with_any_complete_affine_parameter": 32,
+    "valid_explicit_boundary_contract_artifact_count": 50
+  },
+  "interpretation_boundary": "This profile records an exact, repeat-verified result for a predeclared hash-pinned 50-artifact corpus. It is not a random estimate of ecosystem prevalence, does not validate the currently analyzed artifact, and does not establish source preprocessing, task accuracy, clinical performance, or release readiness. Subcohort results and the pinned analyzer identity are required when citing aggregate ratios."
+}

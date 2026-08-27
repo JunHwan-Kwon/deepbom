@@ -1,0 +1,1315 @@
+{
+  "schema": "deepbom.standardization_evidence.v1",
+  "snapshot_id": "standardization-6e50cb53b9d26cb2",
+  "hash_contract": {
+    "algorithm": "SHA-256",
+    "canonicalization": "RFC8785-JCS",
+    "excluded_pointers": [
+      "/ledger_sha256"
+    ]
+  },
+  "aggregation_contract": {
+    "population_unit": "Artifact counts are unique only within the named population unless that population states another unit.",
+    "overlap_rule": "Named populations overlap and MUST NOT be summed into an ecosystem-wide artifact denominator.",
+    "inference_rule": "Exact ratios describe only their predeclared or measured population. No confidence interval or ecosystem prevalence is emitted because no population is a probability sample.",
+    "zero_rule": "A zero count in a bounded corpus or fixture is not evidence of absence from the ecosystem."
+  },
+  "taxonomy_coverage_assessment": {
+    "status": "STRUCTURAL_REQUIREMENTS_SUPPORTED_TAXONOMY_VOCABULARY_INCOMPLETE",
+    "interpretation": "Artifact counts alone do not establish taxonomy coverage. Coverage is tracked across container extension, representation family, granularity, numeric encoding, scope, axis semantics, and evidence class.",
+    "measured_extension_matrix": [
+      {
+        "format": "tflite",
+        "artifact_count": 50,
+        "extension_file_counts": {
+          ".tflite": 50
+        },
+        "observed_scheme_set": [
+          "affine",
+          "not_quantized"
+        ],
+        "observed_granularity_set": [
+          "per-tensor external parameter",
+          "per-axis kernel",
+          "per-tensor kernel"
+        ],
+        "observed_encoding_set": [
+          "FLOAT32",
+          "INT32",
+          "INT8",
+          "STRING",
+          "UINT8"
+        ],
+        "observed_axis_set": [],
+        "measured_detail": {
+          "complete_affine_external_parameters": 62,
+          "explicitly_unquantized_external_parameters": 52,
+          "external_per_tensor_parameters": 62,
+          "external_per_axis_parameters": 0,
+          "kernel_granularity_artifact_counts": {
+            "not_assessed": 9,
+            "not_quantized": 7,
+            "per_axis_kernel_observed": 30,
+            "per_tensor_kernel_observed": 4
+          }
+        }
+      },
+      {
+        "format": "onnx",
+        "artifact_count": 48,
+        "extension_file_counts": {
+          ".onnx": 48,
+          ".onnx_data": 14
+        },
+        "observed_scheme_set": [
+          "affine",
+          "onnx_integer_operator_or_scale_graph",
+          "onnx_tensor_dtype_storage"
+        ],
+        "observed_granularity_set": [
+          "operation-scoped",
+          "per-tensor"
+        ],
+        "observed_encoding_set": [
+          "INT8",
+          "operator_scoped",
+          "UINT8"
+        ],
+        "observed_group_size_set": [],
+        "observed_axis_set": [],
+        "representation_profile_count": 74
+      },
+      {
+        "format": "gguf",
+        "artifact_count": 20,
+        "extension_file_counts": {
+          ".gguf": 20
+        },
+        "observed_scheme_set": [
+          "ggml_block_encoding",
+          "ggml_scalar_dtype_storage"
+        ],
+        "observed_granularity_set": [
+          "block",
+          "scalar_storage"
+        ],
+        "observed_encoding_set": [
+          "F16",
+          "F32",
+          "IQ4_NL",
+          "Q2_K",
+          "Q3_K",
+          "Q4_0",
+          "Q4_K",
+          "Q5_0",
+          "Q5_1",
+          "Q6_K",
+          "Q8_0"
+        ],
+        "observed_group_size_set": [
+          32,
+          256
+        ],
+        "observed_axis_set": [],
+        "representation_profile_count": 74
+      },
+      {
+        "format": "safetensors",
+        "artifact_count": 18,
+        "extension_file_counts": {
+          ".json": 18,
+          ".safetensors": 18
+        },
+        "observed_scheme_set": [
+          "safetensors_dtype_storage"
+        ],
+        "observed_granularity_set": [],
+        "observed_encoding_set": [
+          "BF16",
+          "F16",
+          "F32"
+        ],
+        "observed_group_size_set": [],
+        "observed_axis_set": [],
+        "representation_profile_count": 20
+      },
+      {
+        "format": "coreml",
+        "artifact_count": 27,
+        "extension_file_counts": {
+          ".mlmodel": 19,
+          ".mlpackage.zip": 8
+        },
+        "observed_scheme_set": [
+          "coreml_float_weight_storage",
+          "coreml_serialized_quantization_transform",
+          "coreml_typed_value_precision",
+          "coreml_weightparams_quantized_storage"
+        ],
+        "observed_granularity_set": [
+          "operation-scoped",
+          "unspecified_or_per-tensor"
+        ],
+        "observed_encoding_set": [
+          "BOOL",
+          "DICTIONARY",
+          "FLOAT16",
+          "float16_weight",
+          "FLOAT32",
+          "float32_weight",
+          "FLOAT64",
+          "IMAGE_GRAYSCALE8",
+          "IMAGE_RGB8",
+          "INT32",
+          "mil_operation",
+          "quantized_weight",
+          "STRING",
+          "UINT16"
+        ],
+        "observed_group_size_set": [],
+        "observed_axis_set": [],
+        "representation_profile_count": 78
+      }
+    ],
+    "conformance_extension_matrix": [
+      {
+        "format": "onnx",
+        "artifact_count": 4,
+        "observed_scheme_set": [
+          "affine",
+          "external_custom_domain_identity"
+        ],
+        "observed_granularity_set": [
+          "per-axis"
+        ],
+        "evidence_boundary": "Purposeful conformance corpus; counts do not estimate ecosystem prevalence or runtime support."
+      },
+      {
+        "format": "safetensors",
+        "artifact_count": 2,
+        "observed_scheme_set": [
+          "awq",
+          "gptq"
+        ],
+        "observed_granularity_set": [
+          "per-group weight"
+        ],
+        "observed_group_size_set": [
+          128
+        ],
+        "assessed_module_count": 322,
+        "evidence_boundary": "Two purposeful public architecture anchors. Counts establish parser and contract behavior only; they are not ecosystem prevalence estimates. Payload values were not scanned."
+      }
+    ],
+    "source_bound_implementation_matrix": [
+      {
+        "format": "safetensors",
+        "representation_families": [
+          "awq",
+          "gptq",
+          "hqq",
+          "compressed-tensors"
+        ],
+        "implementation_sources": {
+          "awq": {
+            "repository": "casper-hansen/AutoAWQ",
+            "commit": "5f3785dcaa107ca76f5fa5355f459370c86f82d6",
+            "path": "awq/modules/linear/gemm.py",
+            "sha256": "073e1faa28ce167349606ee2d0ad6362a1f978fe08ca07298da3c6b977123081"
+          },
+          "gptq": {
+            "repository": "ModelCloud/GPTQModel",
+            "commit": "a752a7cebeaa5feb499e0b038895f745572ab0fa",
+            "path": "gptqmodel/nn_modules/qlinear/__init__.py",
+            "sha256": "63c03283af6a1452b1427f88340e992795dfc8169e06f52a4500d692b01486d4"
+          },
+          "hqq": {
+            "repository": "mobiusml/hqq",
+            "commit": "d88a488ec8aa2d58362ef2038a52bca862db2e74",
+            "path": "hqq/core/quantize.py",
+            "sha256": "a76a054ba4382d9552f563c468296771cddf53dcd9f4ce6655f94fe18e653daa"
+          },
+          "compressed-tensors": {
+            "repository": "vllm-project/compressed-tensors",
+            "commit": "8aa8b822c8f6dac6272bb0749a498e3297b88510",
+            "path": "src/compressed_tensors/compressors/quantized_compressors/pack_quantized.py",
+            "sha256": "48f207964f1ec22a762dc8e0902c34d8adb51247d448549df6a42a2f43ede5e3"
+          }
+        },
+        "static_contract_scope": "Exact method-specific metadata, grouping, packed shape, code/storage-bit conservation, and source-defined padding for supported static layouts.",
+        "evidence_boundary": "AWQ and GPTQ additionally have public revision-bound header/config anchors. HQQ and compressed-tensors currently have source-pinned deterministic regression fixtures, not a public ecosystem prevalence corpus. Dynamic, nonuniform, and unmatched module-target schemes remain not assessed."
+      }
+    ],
+    "structural_conclusions_supported_now": [
+      "Model-level numerical representations must be repeatable and explicitly scoped.",
+      "Named external input/output affine contracts must remain distinct from model weight/storage summaries.",
+      "Affine mappings, graph quantization transforms, block encodings, palette/LUT transforms, and scalar storage precision are distinct representation families.",
+      "Observed zero, unavailable, not applicable, externally declared, and runtime-required values require separate machine-readable states.",
+      "A portable taxonomy needs an extension mechanism; the measured vocabularies are not a complete closed enum."
+    ],
+    "vocabulary_coverage_limits": [
+      {
+        "id": "external-per-axis-affine",
+        "status": "STRUCTURE_AND_STATIC_FIXTURE_POSITIVE_EXTERNAL_VALUES_INCOMPLETE",
+        "requirement": "The source-derived ONNX fixtures now establish named external tensor shape, schema-default axis, and scale cardinality while values remain runtime inputs; add hash-bound public external-parameter examples whose complete per-axis scale vectors are serialized before claiming external numerical-contract coverage."
+      },
+      {
+        "id": "framework-native-negative-axis",
+        "status": "SCHEMA_PROBE_ONLY",
+        "requirement": "Add rank-bound ONNX artifacts and a declared normalization rule before proposing a format-neutral axis constraint."
+      },
+      {
+        "id": "affine-per-group",
+        "status": "PUBLIC_AWQ_GPTQ_STRUCTURE_POSITIVE_HQQ_COMPRESSED_TENSORS_SOURCE_FIXTURES_POSITIVE_PREVALENCE_UNASSESSED",
+        "requirement": "Two public revision-bound SafeTensors repositories establish AutoAWQ GEMM and AutoGPTQ packed layout, 322/322 valid module groups, 4-bit codes, group size 128, scale/zero cardinality, and exact packed-capacity conservation. Source-pinned deterministic fixtures now also establish HQQ encoded-state and compressed-tensors pack-quantized shape, grouping, and storage-bit conservation. Add independent public HQQ/compressed-tensors artifacts, sharded packages, and full-payload scale/zero scans before proposing universal affine per-group semantics or ecosystem prevalence. GGUF block size is not automatically recast as affine per-group quantization."
+      },
+      {
+        "id": "safetensors-quantization-sidecars",
+        "status": "SINGLE_FILE_AWQ_GPTQ_POSITIVE_SHARDED_UNCOVERED",
+        "requirement": "The public AWQ and GPTQ anchors bind config.json plus quant_config.json or quantize_config.json to immutable model identity. Add manifest-bound sharded quantized repositories and conflicting/missing sidecar invalid fixtures before claiming general SafeTensors package coverage."
+      },
+      {
+        "id": "onnx-quantization-families",
+        "status": "PARTIAL_POSITIVE_CONFORMANCE",
+        "requirement": "Per-axis Q/DQ and non-ORT external custom-domain fail-closed behavior now have hash-bound positive conformance artifacts. Positive public application coverage remains needed for per-axis Q/DQ, QLinear, DynamicQuantizeLinear, sub-byte packed tensors, and contrib/custom-domain weight-only operators."
+      },
+      {
+        "id": "coreml-compression-families",
+        "status": "POSITIVE_PER_CHANNEL_CONFORMANCE_PUBLIC_APPLICATION_INCOMPLETE",
+        "requirement": "A source-pinned legacy NeuralNetwork fixture now establishes per-output-channel linear scale/bias cardinality, packed INT4 code conservation, and fail-closed axis mismatch. Add public-model application coverage, modern MLProgram per-channel/per-block contracts, and positive sparse/pruned representations before generalizing ecosystem prevalence or all Core ML compression families."
+      },
+      {
+        "id": "symmetry-and-zero-point-semantics",
+        "status": "PARTIAL",
+        "requirement": "Add cross-format examples for explicit/implicit zero points, symmetric/asymmetric classification, signed/unsigned domains, and canonical omission rules."
+      }
+    ],
+    "contribution_gate": {
+      "repeatable_scoped_schema_shape": "SUPPORTED",
+      "named_external_parameter_binding": "SUPPORTED",
+      "open_custom_representation_escape_hatch": "REQUIRED_BY_INCOMPLETE_VOCABULARY",
+      "closed_cross_ecosystem_scheme_enum": "NOT_SUPPORTED",
+      "closed_cross_ecosystem_granularity_enum": "NOT_SUPPORTED",
+      "universal_axis_constraint": "NOT_SUPPORTED",
+      "per_group_normative_semantics": "NOT_SUPPORTED"
+    },
+    "singleton_counterexample_breakdown": {
+      "onnx": "2/2",
+      "gguf": "20/20",
+      "coreml": "5/5",
+      "safetensors": "0/0",
+      "interpretation": "These counterexamples establish the need for a repeatable scoped structure. They do not establish vocabulary completeness or ecosystem prevalence."
+    }
+  },
+  "terminology": [
+    {
+      "name": "artifact_identity",
+      "definition": "Cryptographic identity of the analyzed model file or complete package content set."
+    },
+    {
+      "name": "artifact_set_identity",
+      "definition": "Cryptographic identity and dependency binding for a primary model file plus every externally stored payload required to reconstruct its serialized tensors."
+    },
+    {
+      "name": "external_parameter_contract",
+      "definition": "A named input or output with direction, identity, dtype, shape, and explicit quantization status; affine values are present only when applicable."
+    },
+    {
+      "name": "runtime_build_identity",
+      "definition": "Runtime family/version plus source commit, build configuration and binary digest when each is available."
+    },
+    {
+      "name": "execution_configuration",
+      "definition": "Threads, execution mode, providers/backends, delegates and other invocation settings bound to a capture."
+    },
+    {
+      "name": "placement_evidence",
+      "definition": "Observed assignment only when a runtime record identifies it; source eligibility and static prediction remain separate classes."
+    },
+    {
+      "name": "timing_evidence",
+      "definition": "Observed timing samples or aggregates bound to one artifact, runtime build and execution configuration."
+    },
+    {
+      "name": "memory_evidence",
+      "definition": "Observed allocator or process memory when imported; static liveness and arena projections remain separate estimates."
+    },
+    {
+      "name": "claim_boundary",
+      "definition": "An explicit statement of what the evidence establishes and what remains unassessed."
+    },
+    {
+      "name": "field_state",
+      "definition": "A machine-readable distinction among observed, derived, externally declared, unavailable, not applicable, runtime required, and out-of-scope values; unavailable and not applicable are never numerical zero."
+    }
+  ],
+  "populations": {
+    "empirical_measurements": [
+      {
+        "id": "tflite-external-interface-predeclared-50",
+        "evidence_class": "EXACT_WITHIN_PREDECLARED_POPULATION",
+        "source_ids": [
+          "interfaceSweep",
+          "quantManifest"
+        ],
+        "unit": "hash-identified TFLite artifact",
+        "selection": "The public target combines complete, predeclared subcohorts rather than selecting artifacts after observing findings. Counts are reported by workflow-provenance and quantization-granularity strata. A missing QAT declaration is unknown provenance, not a PTQ label.",
+        "repeat_count": 2,
+        "public_artifact_count": 50,
+        "external_parameter_count": 114,
+        "complete_affine_parameter_count": 62,
+        "explicitly_unquantized_parameter_count": 52,
+        "invalid_or_incomplete_parameter_count": 0,
+        "artifacts_with_any_complete_affine_parameter": 32,
+        "valid_explicit_boundary_contract_artifact_count": 50,
+        "boundary_status_counts": {
+          "fully_affine_quantized": 30,
+          "mixed_quantized_unquantized": 2,
+          "fully_unquantized": 18,
+          "invalid_or_incomplete": 0
+        },
+        "subcohorts": {
+          "google-legacy-quantized": {
+            "artifact_count": 4,
+            "boundary_status_counts": {
+              "fully_affine_quantized": 3,
+              "mixed_quantized_unquantized": 1,
+              "fully_unquantized": 0,
+              "invalid_or_incomplete": 0
+            }
+          },
+          "litert-modern-static-int8": {
+            "artifact_count": 15,
+            "boundary_status_counts": {
+              "fully_affine_quantized": 15,
+              "mixed_quantized_unquantized": 0,
+              "fully_unquantized": 0,
+              "invalid_or_incomplete": 0
+            }
+          },
+          "mcunet-curated-ptq": {
+            "artifact_count": 11,
+            "boundary_status_counts": {
+              "fully_affine_quantized": 10,
+              "mixed_quantized_unquantized": 0,
+              "fully_unquantized": 1,
+              "invalid_or_incomplete": 0
+            }
+          },
+          "mediapipe-public": {
+            "artifact_count": 20,
+            "boundary_status_counts": {
+              "fully_affine_quantized": 2,
+              "mixed_quantized_unquantized": 1,
+              "fully_unquantized": 17,
+              "invalid_or_incomplete": 0
+            }
+          }
+        },
+        "dtype_shape_signatures_with_multiple_affine_contracts": 6,
+        "scope_limit": "This population establishes serialized external parameter dtype, shape, quantization status, and affine values when present. It does not establish color order, source normalization, resize interpolation, labels, deployed preprocessing, task accuracy, clinical performance, or release readiness."
+      },
+      {
+        "id": "tflite-mediapipe-generation-pinned-20",
+        "evidence_class": "EXACT_WITHIN_PREDECLARED_POPULATION",
+        "source_ids": [
+          "publicSweep"
+        ],
+        "unit": "hash-identified TFLite artifact",
+        "requested_artifact_count": 20,
+        "passed_artifact_count": 20,
+        "failed_artifact_count": 0,
+        "deterministic_artifact_count": 20,
+        "artifact_class_counts": {
+          "dynamic_range": 1,
+          "float": 7,
+          "full_integer": 4,
+          "weight_only": 8
+        },
+        "overlap_note": "These 20 artifacts are also one subcohort of tflite-external-interface-predeclared-50."
+      },
+      {
+        "id": "onnx-residual-measured-48",
+        "evidence_class": "MEASURED_CORPUS",
+        "source_ids": [
+          "residual"
+        ],
+        "unit": "unique artifact bytes",
+        "artifact_count": 48,
+        "path_record_count": 48,
+        "repository_count": 40,
+        "measured_counts": {
+          "node_count": 41462,
+          "node_output_count": 43180,
+          "external_custom_domain_node_count": 0,
+          "ort_contrib_node_count": 1397,
+          "ort_contrib_shape_rule_unsupported_node_count": 0,
+          "shape_rule_unsupported_node_count": 0,
+          "shape_rule_unresolved_node_count": 2332,
+          "shape_contract_known_node_output_count": 40785,
+          "shape_contract_unknown_node_output_count": 2395,
+          "invalid_node_output_count": 1995,
+          "conditionally_invalid_node_output_count": 400,
+          "conditional_invalid_variant_count": 543,
+          "conditional_unassessed_variant_count": 0,
+          "unresolved_nonconflict_shape_contract_node_output_count": 0,
+          "total_macs_unresolved_op_count": 213,
+          "total_macs_artifact_contract_conflict_op_count": 213,
+          "total_macs_external_binding_required_op_count": 0,
+          "total_macs_analyzer_or_contract_residual_op_count": 0
+        },
+        "non_claim": "This bounded measured population ranks observed analyzer residuals and is not an ecosystem prevalence sample."
+      },
+      {
+        "id": "public-onnx-generalization",
+        "evidence_class": "MEASURED_CORPUS",
+        "source_ids": [
+          "multiformatManifest",
+          "cyclonedxGeneralization"
+        ],
+        "unit": "unique primary artifact bytes",
+        "artifact_count": 48,
+        "path_record_count": 48,
+        "source_count": 40,
+        "architecture_strata": {
+          "BertForMaskedLM": 1,
+          "BertForSequenceClassification": 1,
+          "BertModel": 1,
+          "CohereAsrForConditionalGeneration": 1,
+          "depth_anything": 1,
+          "DepthAnythingForDepthEstimation": 1,
+          "DINOv3ConvNextModel": 1,
+          "DINOv3ViTModel": 1,
+          "EdgeTamModel": 1,
+          "Gemma4ForConditionalGeneration": 1,
+          "GPT2LMHeadModel": 1,
+          "Idefics3ForConditionalGeneration": 1,
+          "JinaEmbeddingsV5OmniModel": 1,
+          "Lfm2ForCausalLM": 1,
+          "Lfm2VlForConditionalGeneration": 1,
+          "LlamaForCausalLM": 1,
+          "MetaCLIP2Model": 1,
+          "mobilenet_v3": 1,
+          "mobilenet_v4": 1,
+          "ModernBertDecoderForCausalLM": 1,
+          "ModernBertForMaskedLM": 1,
+          "PatchTSMixerForPrediction": 1,
+          "Qwen2ForCausalLM": 1,
+          "Qwen3_5ForConditionalGeneration": 1,
+          "RobertaModel": 1,
+          "SamModel": 1,
+          "style_text_to_speech_2": 2,
+          "supertonic": 1,
+          "Swin2SRForImageSuperResolution": 1,
+          "unclassified": 5,
+          "VitPoseForPoseEstimation": 1,
+          "VoxtralForConditionalGeneration": 1,
+          "WhisperForAudioClassification": 1,
+          "WhisperForConditionalGeneration": 7,
+          "XLMRobertaForQuestionAnswering": 1,
+          "XLMRobertaForTokenClassification": 1,
+          "yolov10": 1
+        },
+        "task_strata": {
+          "any-to-any": 1,
+          "audio-text-to-text": 1,
+          "automatic-speech-recognition": 8,
+          "depth-estimation": 2,
+          "feature-extraction": 2,
+          "fill-mask": 2,
+          "image-classification": 1,
+          "image-feature-extraction": 2,
+          "image-segmentation": 1,
+          "image-text-to-text": 3,
+          "image-to-image": 1,
+          "keypoint-detection": 1,
+          "mask-generation": 1,
+          "object-detection": 1,
+          "question-answering": 1,
+          "sentence-similarity": 1,
+          "text-classification": 1,
+          "text-generation": 3,
+          "text-to-speech": 4,
+          "time-series-forecasting": 1,
+          "token-classification": 1,
+          "translation": 1,
+          "unclassified": 6,
+          "voice-activity-detection": 1,
+          "zero-shot-image-classification": 1
+        },
+        "precision_strata": {
+          "bnb4": 3,
+          "fp16": 8,
+          "int4": 1,
+          "int8_or_quantized": 7,
+          "q4": 3,
+          "q4f16": 5,
+          "uint8": 2,
+          "unspecified_in_filename": 19
+        },
+        "measured_counts": {
+          "external_parameter_count": 679,
+          "affine_external_parameter_count": 0,
+          "singleton_model_quantization_lossy_count": 2,
+          "singleton_model_quantization_applicable_count": 2,
+          "serialized_contract_status": {
+            "assessed_no_checked_contract_issue": 48
+          },
+          "serialized_contract_issue_codes": {}
+        },
+        "non_claim": "This deliberately stratified public-file population validates artifact parsing and representational counterexamples. It is not a probability sample and does not establish runtime placement, model quality, or ecosystem prevalence."
+      },
+      {
+        "id": "public-gguf-generalization",
+        "evidence_class": "MEASURED_CORPUS",
+        "source_ids": [
+          "multiformatManifest",
+          "cyclonedxGeneralization"
+        ],
+        "unit": "unique primary artifact bytes",
+        "artifact_count": 20,
+        "path_record_count": 20,
+        "source_count": 16,
+        "architecture_strata": {
+          "falcon": 1,
+          "falcon40b": 1,
+          "gpt2": 1,
+          "gptneox": 1,
+          "internlm2": 1,
+          "llama": 5,
+          "llama-onnx-origin": 1,
+          "llama2-kv": 1,
+          "llama3": 1,
+          "mistral": 1,
+          "mistral-small": 1,
+          "mpt": 1,
+          "olmo": 1,
+          "phi3-small": 1,
+          "qwen3": 1,
+          "stablelm": 1
+        },
+        "task_strata": {
+          "text_generation_storage": 20
+        },
+        "precision_strata": {
+          "IQ4_NL": 1,
+          "Q2_K": 4,
+          "Q2_K_filename_candidate": 12,
+          "Q4_0": 1,
+          "Q8_0": 1,
+          "TQ2_0": 1
+        },
+        "measured_counts": {
+          "external_parameter_count": 0,
+          "affine_external_parameter_count": 0,
+          "singleton_model_quantization_lossy_count": 20,
+          "singleton_model_quantization_applicable_count": 20,
+          "serialized_contract_status": {
+            "assessed_no_checked_contract_issue": 19,
+            "partial_serialized_contract_issue_observed": 1
+          },
+          "serialized_contract_issue_codes": {
+            "GGUF_INVALID_TENSOR_BLOCK_CARDINALITY": 1
+          }
+        },
+        "non_claim": "This deliberately stratified public-file population validates artifact parsing and representational counterexamples. It is not a probability sample and does not establish runtime placement, model quality, or ecosystem prevalence."
+      },
+      {
+        "id": "public-safetensors-generalization",
+        "evidence_class": "MEASURED_CORPUS",
+        "source_ids": [
+          "multiformatManifest",
+          "cyclonedxGeneralization"
+        ],
+        "unit": "unique primary artifact bytes",
+        "artifact_count": 18,
+        "path_record_count": 18,
+        "source_count": 18,
+        "architecture_strata": {
+          "cohere": 1,
+          "cohere2": 1,
+          "exaone4": 1,
+          "gemma": 1,
+          "gemma2": 1,
+          "granite": 1,
+          "llama": 1,
+          "mamba": 1,
+          "ministral": 1,
+          "mistral": 1,
+          "mixtral": 1,
+          "nemotron": 1,
+          "olmo": 1,
+          "olmo2": 1,
+          "phi3": 1,
+          "qwen2": 1,
+          "qwen3": 1,
+          "smollm3": 1
+        },
+        "task_strata": {
+          "on_device_llm_weight_contract": 18
+        },
+        "precision_strata": {
+          "serialized_tensor_dtypes": 18
+        },
+        "measured_counts": {
+          "external_parameter_count": 0,
+          "affine_external_parameter_count": 0,
+          "singleton_model_quantization_lossy_count": 0,
+          "singleton_model_quantization_applicable_count": 0,
+          "serialized_contract_status": {
+            "assessed_no_checked_contract_issue": 18
+          },
+          "serialized_contract_issue_codes": {}
+        },
+        "non_claim": "This deliberately stratified public-file population validates artifact parsing and representational counterexamples. It is not a probability sample and does not establish runtime placement, model quality, or ecosystem prevalence."
+      },
+      {
+        "id": "public-coreml-generalization",
+        "evidence_class": "MEASURED_CORPUS",
+        "source_ids": [
+          "multiformatManifest",
+          "cyclonedxGeneralization"
+        ],
+        "unit": "unique primary artifact bytes",
+        "artifact_count": 27,
+        "path_record_count": 27,
+        "source_count": 1,
+        "architecture_strata": {
+          "bert_squad": 1,
+          "deeplabv3": 3,
+          "depth_anything_v2": 2,
+          "detr_resnet50": 2,
+          "fastvit_ma36": 2,
+          "fastvit_t8": 2,
+          "mnist_classifier": 1,
+          "mobilenetv2": 3,
+          "resnet50": 4,
+          "updatable_drawing_classifier": 1,
+          "yolov3": 3,
+          "yolov3_tiny": 3
+        },
+        "task_strata": {
+          "depth_estimation": 2,
+          "drawing_classification": 2,
+          "image_classification": 8,
+          "image_feature_extraction": 3,
+          "image_segmentation": 5,
+          "object_detection": 6,
+          "question_answering": 1
+        },
+        "precision_strata": {
+          "float16": 6,
+          "float32": 6,
+          "float32_headless": 1,
+          "int8_lut_weight_storage": 5,
+          "mlprogram_float16": 4,
+          "mlprogram_float16_headless": 2,
+          "mlprogram_float16_palettized_6bit": 1,
+          "mlprogram_float16_palettized_8bit": 1,
+          "updatable_pipeline": 1
+        },
+        "measured_counts": {
+          "external_parameter_count": 84,
+          "affine_external_parameter_count": 0,
+          "singleton_model_quantization_lossy_count": 5,
+          "singleton_model_quantization_applicable_count": 5,
+          "serialized_contract_status": {
+            "assessed_no_checked_contract_issue": 25,
+            "partial_serialized_contract_issue_observed": 2
+          },
+          "serialized_contract_issue_codes": {
+            "COREML_PREPROCESSING_FEATURE_NAME_MISSING": 2
+          }
+        },
+        "non_claim": "This deliberately stratified public-file population validates artifact parsing and representational counterexamples. It is not a probability sample and does not establish runtime placement, model quality, or ecosystem prevalence."
+      }
+    ],
+    "metadata_sampling_frames": [
+      {
+        "id": "huggingface-community-metadata-frame-v1",
+        "evidence_class": "METADATA_FRAME_ONLY",
+        "source_ids": [
+          "hfSummary",
+          "hfSnapshot"
+        ],
+        "repository_count": 1542,
+        "organization_counts": {
+          "litert-community": 282,
+          "onnx-community": 1260
+        },
+        "file_count": 27666,
+        "model_file_count": 14014,
+        "analyzer_supported_file_count": 13852,
+        "default_sweep_eligible_file_count": 9535,
+        "format_counts": {
+          "litertlm": 101,
+          "mediapipe_task": 61,
+          "onnx": 13258,
+          "tflite": 594
+        },
+        "non_claim": "Repository metadata and filename classification define a download/sampling frame only. They do not prove parser success, execution, model quality or ecosystem prevalence beyond the enumerated organizations and snapshot."
+      }
+    ],
+    "contract_fixtures": [
+      {
+        "id": "safetensors-architecture",
+        "evidence_class": "CONTRACT_CONFORMANCE_ONLY",
+        "source_ids": [
+          "safetensors"
+        ],
+        "format": "safetensors",
+        "artifact_count": 3,
+        "strata": {
+          "dense_decoder": 1,
+          "sparse_moe_decoder": 1,
+          "ssm_recurrent": 1
+        },
+        "scope": "Three public, randomly initialized, size-bounded Hugging Face checkpoints selected to exercise one registered dense decoder, sparse-MoE decoder, and recurrent SSM family. This validation set establishes byte-bound parser and architecture-contract behavior only; it is not a prevalence, quality, accuracy, runtime, or license-generalization sample."
+      },
+      {
+        "id": "safetensors-awq-gptq-quantization-contract",
+        "evidence_class": "PUBLIC_HEADER_AND_CONFIG_CONFORMANCE_ONLY",
+        "source_ids": [
+          "safetensorsQuantization"
+        ],
+        "format": "safetensors",
+        "artifact_count": 2,
+        "strata": {
+          "awq": 1,
+          "gptq": 1
+        },
+        "assessed_module_count": 322,
+        "invalid_module_count": 0,
+        "scope": "Source-bound structural validation of public AWQ and GPTQ SafeTensors repositories without redistributing model payloads.",
+        "non_claim": "Two purposeful public architecture anchors. Counts establish parser and contract behavior only; they are not ecosystem prevalence estimates."
+      },
+      {
+        "id": "gguf-architecture-encoding",
+        "evidence_class": "CONTRACT_CONFORMANCE_ONLY",
+        "source_ids": [
+          "gguf"
+        ],
+        "format": "gguf",
+        "artifact_count": 8,
+        "strata": {
+          "gpt2": 1,
+          "llama": 5,
+          "olmo": 1,
+          "stablelm": 1
+        },
+        "scope": "Eight immutable public GGUF files selected to separate serialized architecture coverage from GGML tensor-storage coverage. Five MIT-licensed TinyMQA files exercise Q2_K, Q4_0, Q8_0, IQ4_NL, and TQ2_0 strata; GPT-2, OLMo, and StableLM files expand serialized architecture coverage. Actual tensor encodings are read from GGUF tensor headers and may differ from filename labels."
+      },
+      {
+        "id": "coreml-mlprogram-contract",
+        "evidence_class": "CONTRACT_CONFORMANCE_ONLY",
+        "source_ids": [
+          "coreml"
+        ],
+        "format": "coreml_mlpackage",
+        "artifact_count": 5,
+        "strata": {
+          "blockwise_affine_compression": 1,
+          "bounded_shape_range": 1,
+          "enumerated_shape": 1,
+          "lut_palettization_compression": 1,
+          "static_external_blob": 1
+        },
+        "scope": "Five deterministic source-pinned MLProgram package fixtures establish parser, package binding, flexible-interface, blockwise affine, and LUT palettization contract behavior. They are conformance fixtures, not public-model samples and not evidence of ecosystem prevalence, runtime device placement, latency, or task quality."
+      },
+      {
+        "id": "coreml-legacy-per-channel-quantization",
+        "evidence_class": "CONTRACT_CONFORMANCE_ONLY",
+        "source_ids": [
+          "coreml"
+        ],
+        "format": "coreml_mlmodel",
+        "artifact_count": 1,
+        "strata": {
+          "per_output_channel": 1
+        },
+        "scope": "One deterministic source-pinned legacy NeuralNetwork fixture establishes per-output-channel linear WeightParams parsing, packed-code conservation, and fail-closed channel cardinality. It is a conformance fixture, not a public-model sample or evidence of ecosystem prevalence, runtime placement, latency, or task quality."
+      },
+      {
+        "id": "onnx-extension-contract",
+        "evidence_class": "CONTRACT_CONFORMANCE_ONLY",
+        "source_ids": [
+          "onnxExtensions"
+        ],
+        "format": "onnx",
+        "artifact_count": 4,
+        "strata": {
+          "per_axis_qdq": 3,
+          "complete_static_affine": 1,
+          "runtime_value_unresolved": 2,
+          "external_custom_domain": 1
+        },
+        "scope": "Positive contract coverage for ONNX per-axis Q/DQ and non-ORT external custom-domain handling.",
+        "non_claim": "Purposeful conformance corpus; counts do not estimate ecosystem prevalence or runtime support."
+      },
+      {
+        "id": "cross-format-runtime-evidence-sidecar",
+        "evidence_class": "CONTRACT_CONFORMANCE_ONLY",
+        "source_ids": [
+          "runtimeSidecar",
+          "runtimeSidecarCheck"
+        ],
+        "covered_formats": [
+          "tflite",
+          "onnx",
+          "gguf",
+          "coreml"
+        ],
+        "schema": "deepbom.runtime_evidence_sidecar.v1",
+        "guarantees": [
+          "artifact binding",
+          "source evidence digest",
+          "build/placement/timing/memory claim separation",
+          "tamper rejection"
+        ],
+        "non_claim": "This fixture proves normalization and validation behavior, not runtime-provider prevalence or device execution."
+      },
+      {
+        "id": "cyclonedx-2.0-draft-quantization-fixtures",
+        "evidence_class": "CONTRACT_CONFORMANCE_ONLY",
+        "source_ids": [
+          "cyclonedxQuantization"
+        ],
+        "upstream_pull_request": 990,
+        "upstream_head_commit": "49a945618811213e55686a23fa63b287940071c6",
+        "candidate_fixture_count": 5,
+        "candidate_valid_fixture_count": 2,
+        "candidate_invalid_fixture_count": 3,
+        "schema_probe_counts": {
+          "valid": 8,
+          "invalid": 4
+        },
+        "non_claim": "This validates candidate fixtures against one pinned draft PR head. It does not establish acceptance into CycloneDX, final 2.0 semantics, framework prevalence, or per-group behavior in the measured TFLite corpus."
+      }
+    ],
+    "detached_profiles": [
+      {
+        "id": "quant-policy-boundary-public-50-2026-08-05",
+        "evidence_class": "ARCHIVED_VERIFIED_PROFILE",
+        "source_ids": [
+          "interfaceProfile"
+        ],
+        "verification_status": "pass",
+        "verified_at": "2026-08-05",
+        "declared_source_digests": {
+          "sweep_sha256": "73cba5ea4f78d788ae0c4830362ebc0fce334fe4d1479218c4d5137a18abdcbe",
+          "review_sha256": "617630133a28f10cb6d121e0a265e4d9fa051381357e0c32473eaf17aedc62c6",
+          "review_ledger_sha256": "3abd2f6148e150b6e1b6ed523c4f2ed037a972053a740ad2b0af1e8132577e12"
+        },
+        "declared_source_bytes_present": false,
+        "lineage_status": "DETACHED_DIGEST_PROFILE",
+        "available_interface_sweep_sha256": "8ba2af81e3e2a69aaea841e1f3ab01f241186e4d4f09d1817353d7f7d5d9b74b",
+        "interpretation": "The compact profile is preserved, but its declared sweep/review byte digests are not both present in this repository state. Use the available repeat-2 sweep as a separate measured source; do not claim byte-for-byte reconstruction of the detached profile.",
+        "boundary": "This profile records an exact, repeat-verified result for a predeclared hash-pinned 50-artifact corpus. It is not a random estimate of ecosystem prevalence, does not validate the currently analyzed artifact, and does not establish source preprocessing, task accuracy, clinical performance, or release readiness. Subcohort results and the pinned analyzer identity are required when citing aggregate ratios."
+      }
+    ]
+  },
+  "source_semantics": [
+    {
+      "id": "tflite-xnnpack-delegate",
+      "evidence_class": "SOURCE_BACKED_RULEPACK",
+      "repository": "tensorflow/tensorflow",
+      "commit": "87bbf65b8d23d3f06912b1b2183587e1884bc45c",
+      "manifest_sha256": "657160ac6438d2a2752bb1574acf6e2057f5d478dcffbb38779212f792033c79",
+      "operator_counts": {
+        "fp32": 41,
+        "quantized": 24
+      },
+      "constraint_counts": {
+        "documented": 133,
+        "implemented": 133,
+        "unmapped": 0
+      },
+      "boundary": "Source-backed artifact eligibility is not selected-build availability, runtime assignment, copy materialization or timing evidence."
+    },
+    {
+      "id": "tflite-gpu-nnapi-delegates",
+      "evidence_class": "SOURCE_BACKED_RULEPACK",
+      "repository": "tensorflow/tensorflow",
+      "commit": "87bbf65b8d23d3f06912b1b2183587e1884bc45c",
+      "manifest_sha256": "6d9eab61818427fda1cd48c4c4eca55e654fcdd45bf07bed79c1a29ffa58932d",
+      "profiles": [
+        {
+          "id": "tflite_gpu",
+          "registered_op_count": 80
+        },
+        {
+          "id": "tflite_nnapi",
+          "registered_op_count": 94
+        }
+      ],
+      "boundary": "A source registration plus passed artifact-visible prechecks is a candidate only. It is not selected-build availability, successful parser/Validate execution, device acceptance, partition assignment, materialized-copy evidence, or latency evidence."
+    },
+    {
+      "id": "onnxruntime-execution-providers",
+      "evidence_class": "SOURCE_BACKED_RULEPACK",
+      "repository": "microsoft/onnxruntime",
+      "commit": "8c546c37b43caaca1fa25db430dab94b901cf277",
+      "runtime_version": "1.26.0",
+      "generated_inventory": {
+        "provider_source_count": 8,
+        "provider_rule_count": 938,
+        "runtime_release_count": 32,
+        "contrib_release_count": 29,
+        "schema_history_count": 332
+      },
+      "boundary": "Registration and passed artifact predicates establish conditional eligibility only. Selected-build inclusion, optimized-node assignment and execution require build/runtime evidence."
+    },
+    {
+      "id": "gguf-llama-backends",
+      "evidence_class": "SOURCE_BACKED_RULEPACK",
+      "repository": "ggml-org/llama.cpp",
+      "commit": "7bd8282c37fcd9c4d7236106d664761a23318f18",
+      "pinned_source_file_count": 6,
+      "boundary": "Serialized architecture and build-option evidence does not establish the loaded backend, offload plan, scheduler decisions or timing."
+    },
+    {
+      "id": "coreml-mlprogram-format",
+      "evidence_class": "SOURCE_BACKED_CONTRACT",
+      "repository": "apple/coremltools",
+      "commit": "02c736ddca4668a13626c96912939bc83ff55172",
+      "pinned_proto_count": 3,
+      "boundary": "Format semantics and generated fixtures do not establish compute-unit placement or executed device behavior."
+    }
+  ],
+  "standardization_claims": [
+    {
+      "id": "external-affine-contract-requires-parameter-binding",
+      "status": "SUPPORTED",
+      "evidence_ids": [
+        "tflite-external-interface-predeclared-50"
+      ],
+      "observation": {
+        "dtype_shape_signatures_with_multiple_affine_contracts": 6,
+        "complete_affine_parameters": {
+          "numerator": 62,
+          "denominator": 114,
+          "decimal": "0.543860"
+        }
+      },
+      "conclusion": "Direction, dtype and shape do not uniquely identify an affine mapping. Exact scale and zero-point values must be bound to a schema-addressable named parameter or another stable tensor identity.",
+      "generalization_basis": "This is a structural counterexample argument, not a prevalence estimate. One repeated dtype/shape signature with different affine values disproves uniqueness; the predeclared corpus contains six such signatures across multiple workflow strata.",
+      "non_claim": "The corpus does not estimate how often deployment harnesses contain a mismatched mapping."
+    },
+    {
+      "id": "boundary-contract-must-represent-explicitly-unquantized",
+      "status": "SUPPORTED",
+      "evidence_ids": [
+        "tflite-external-interface-predeclared-50"
+      ],
+      "observation": {
+        "explicitly_unquantized_parameters": {
+          "numerator": 52,
+          "denominator": 114,
+          "decimal": "0.456140"
+        },
+        "fully_unquantized_artifacts": {
+          "numerator": 18,
+          "denominator": 50,
+          "decimal": "0.360000"
+        },
+        "mixed_boundary_artifacts": {
+          "numerator": 2,
+          "denominator": 50,
+          "decimal": "0.040000"
+        },
+        "valid_explicit_boundary_contracts": {
+          "numerator": 50,
+          "denominator": 50,
+          "decimal": "1.000000"
+        }
+      },
+      "conclusion": "A boundary contract needs an explicit not-quantized state; absence of affine values must not conflate FLOAT I/O with missing or invalid metadata.",
+      "generalization_basis": "The semantic distinction applies to any typed model interface. The reported ratios remain exact only for this predeclared TFLite population.",
+      "non_claim": "An explicit dtype/affine boundary does not establish color order, normalization, resize, labels, task accuracy or clinical validity."
+    },
+    {
+      "id": "model-quantization-requires-scoped-repeatable-representations",
+      "status": "STRUCTURE_SUPPORTED_VOCABULARY_INCOMPLETE",
+      "evidence_ids": [
+        "tflite-external-interface-predeclared-50",
+        "public-onnx-generalization",
+        "public-gguf-generalization",
+        "public-safetensors-generalization",
+        "public-coreml-generalization"
+      ],
+      "observation": {
+        "model_representation_counterexamples": {
+          "id": "model-quantization-multiplicity",
+          "support_type": "DIRECT_REPRESENTATIONAL_COUNTEREXAMPLE",
+          "conclusion": "A repeatable, scoped representation is required when one artifact contains mixed encodings, granularities, axes, or non-affine storage families.",
+          "observed_numerator": 27,
+          "observed_denominator": 27,
+          "population_unit": "unique primary artifacts with an applicable singleton-losslessness assessment",
+          "measurement_interpretation": "The numerator counts artifacts whose extracted tensor/block-scoped numerical contract cannot be flattened into one model-level scheme/granularity/bits/axis tuple without information loss."
+        },
+        "tflite_external_affine_parameters": {
+          "numerator": 62,
+          "denominator": 114,
+          "decimal": "0.543860"
+        },
+        "tflite_dtype_shape_signatures_with_multiple_affine_contracts": 6
+      },
+      "conclusion": "A model-level quantization description needs repeatable, explicitly scoped representations when an artifact mixes tensor mappings, storage encodings, axes, granularities, or non-affine block formats.",
+      "generalization_basis": "The 27/27 result is not used as an ecosystem prevalence estimate. Each of the 27 artifacts is a constructive counterexample to singleton losslessness, so one counterexample is sufficient to establish the repeatable scoped structure. The separate TFLite population supplies positive parameter-level affine contracts and six dtype/shape collisions, showing why model summary and named-parameter contract are distinct levels.",
+      "non_claim": "This evidence does not establish a complete cross-ecosystem scheme, granularity, bit-width, axis, packing, or zero-point vocabulary. SafeTensors storage dtype is not itself an affine mapping, GGUF block encoding is not recast as one, and runtime lowering and task quality remain outside this evidence."
+    },
+    {
+      "id": "evidence-fields-require-applicability-and-availability-states",
+      "status": "SUPPORTED_BY_CONSERVED_CROSS_FORMAT_STATES",
+      "evidence_ids": [
+        "public-onnx-generalization",
+        "public-gguf-generalization",
+        "public-safetensors-generalization",
+        "public-coreml-generalization"
+      ],
+      "observation": {
+        "id": "applicability-availability-and-zero-are-distinct",
+        "support_type": "DIRECT_FIELD_STATE_COUNTEREXAMPLE",
+        "conclusion": "A portable evidence schema must distinguish an observed serialized graph, a graph that is applicable but unavailable to the bounded decoder, and a graph that the container does not serialize. None of these states is numerical zero.",
+        "observed_numerator": 113,
+        "observed_denominator": 113,
+        "population_unit": "unique primary artifacts with a conserved graph evidence state",
+        "observed_state_counts": {
+          "NOT_APPLICABLE": 38,
+          "OBSERVED": 70,
+          "UNAVAILABLE": 5
+        },
+        "measurement_interpretation": "70 OBSERVED, 5 UNAVAILABLE, and 38 NOT_APPLICABLE graph states reconstruct the full 113-artifact denominator without null-to-zero coercion."
+      },
+      "conclusion": "Portable evidence fields need explicit observed, unavailable, and not-applicable states. Missing assessment and inapplicability must not be serialized as zero or collapsed into one null state.",
+      "generalization_basis": "The same graph field assumes all three states in hash-identified artifacts: serialized graph present, serialized graph applicable but outside the bounded decoder, and graph not serialized by the container. This is a semantic counterexample, so the need for separate states does not depend on estimating ecosystem frequency.",
+      "non_claim": "The state counts do not rank formats or imply that an unavailable graph is malformed."
+    },
+    {
+      "id": "external-payloads-require-artifact-set-identity",
+      "status": "SUPPORTED_BY_ONNX_COUNTEREXAMPLES",
+      "evidence_ids": [
+        "public-onnx-generalization"
+      ],
+      "observation": {
+        "id": "compound-artifact-identity",
+        "support_type": "DIRECT_EXTERNAL_PAYLOAD_MEASUREMENT",
+        "conclusion": "Formats with externally stored tensor payloads need a content-set identity and explicit dependency binding in addition to the primary model-file hash.",
+        "observed_numerator": 14,
+        "observed_denominator": 48,
+        "population_unit": "ONNX primary artifacts",
+        "measurement_interpretation": "14/48 ONNX records required and verified a separately hashed external tensor payload. The count proves the existence of compound artifacts in this bounded frame, not their ecosystem prevalence."
+      },
+      "conclusion": "When tensor payloads are external, a primary model-file hash is insufficient for a reproducible artifact identity; the record must bind every required external component and its digest.",
+      "generalization_basis": "Fourteen independently hash-bound ONNX records reconstruct only with verified external payload components. One such artifact is sufficient to disprove universal single-file identity; 14 records demonstrate that the condition is not a synthetic fixture in this frame.",
+      "non_claim": "The 14/48 ratio is not an estimate of external-data prevalence across ONNX models."
+    },
+    {
+      "id": "artifact-source-and-license-provenance-are-independent",
+      "status": "SUPPORTED_BY_FIELD_AVAILABILITY_MATRIX",
+      "evidence_ids": [
+        "public-onnx-generalization",
+        "public-gguf-generalization",
+        "public-safetensors-generalization",
+        "public-coreml-generalization"
+      ],
+      "observation": {
+        "id": "artifact-source-and-license-provenance-separation",
+        "support_type": "DIRECT_PROVENANCE_STATE_MEASUREMENT",
+        "conclusion": "Artifact byte identity, source revision, and externally declared license metadata are independent provenance fields; a missing revision or license declaration must not invalidate an observed artifact hash or be inferred from bytes.",
+        "observed_numerator": 113,
+        "observed_denominator": 113,
+        "population_unit": "hash-identified unique primary artifacts",
+        "source_revision_external_count": 86,
+        "source_license_external_count": 44,
+        "measurement_interpretation": "All 113 records are byte-hash bound, while 86 carry an external source revision and 44 carry external license metadata. These are field-availability counts within distinct source frames, not license grants or prevalence estimates."
+      },
+      "conclusion": "Artifact digest, source revision, and externally declared license metadata must remain independently optional and independently sourced fields.",
+      "generalization_basis": "All 113 records have observed byte identity, but revision and license metadata are available for different subsets and come from external source frames. The coexistence of these states is a direct counterexample to deriving one field from another.",
+      "non_claim": "External license metadata is not a license grant, legal conclusion, or fact inferred from model bytes."
+    },
+    {
+      "id": "serialized-contract-validity-is-independent-of-readability",
+      "status": "SUPPORTED_BY_ISSUE_BEARING_ARTIFACTS",
+      "evidence_ids": [
+        "public-onnx-generalization",
+        "public-gguf-generalization",
+        "public-safetensors-generalization",
+        "public-coreml-generalization"
+      ],
+      "observation": {
+        "id": "validity-is-not-availability-or-runtime-evidence",
+        "support_type": "DIRECT_SERIALIZED_CONTRACT_MEASUREMENT",
+        "conclusion": "A readable artifact can carry a source-rule contract defect; validity, missing metadata, external dependency completeness, and runtime observation require separate states.",
+        "observed_numerator": 3,
+        "observed_denominator": 113,
+        "population_unit": "unique primary artifacts",
+        "observed_issue_codes": {
+          "COREML_PREPROCESSING_FEATURE_NAME_MISSING": 2,
+          "GGUF_INVALID_TENSOR_BLOCK_CARDINALITY": 1
+        },
+        "measurement_interpretation": "Issue-bearing artifacts remain in the denominator and retain their exact issue codes instead of being silently dropped or reported as fully assessed."
+      },
+      "conclusion": "Parser success, checked serialized-contract validity, external dependency completeness, and runtime compatibility are separate statuses.",
+      "generalization_basis": "Three readable artifacts retained exact source-rule issue codes while remaining in the measured denominator. Their existence disproves the implication that parse success establishes contract conformance.",
+      "non_claim": "A clean implemented-rule result is not proof of complete semantic correctness or runtime compatibility."
+    },
+    {
+      "id": "runtime-evidence-needs-cross-format-claim-separation",
+      "status": "CONTRACT_PROVEN",
+      "evidence_ids": [
+        "cross-format-runtime-evidence-sidecar",
+        "tflite-xnnpack-delegate",
+        "onnxruntime-execution-providers",
+        "gguf-llama-backends",
+        "coreml-mlprogram-format"
+      ],
+      "conclusion": "A portable runtime evidence index should bind artifact, runtime build and execution configuration while representing placement, timing and memory as separate claims with independent evidence classes.",
+      "generalization_basis": "The four adapters expose different runtime records but share these identity and claim-boundary invariants. This is cross-format contract conformance, not an empirical ecosystem frequency claim.",
+      "non_claim": "The normalized sidecar does not upgrade source eligibility or a static plan into observed execution."
+    }
+  ],
+  "contribution_guidance": {
+    "normative_candidate_terms": [
+      "artifact_set_identity",
+      "external_parameter_contract",
+      "field_state",
+      "runtime_build_identity",
+      "execution_configuration",
+      "placement_evidence",
+      "claim_boundary"
+    ],
+    "fixture_requirements": [
+      "Valid fixtures bind affine values to a named input or output.",
+      "Valid fixtures distinguish not-quantized from missing or invalid quantization metadata.",
+      "Invalid fixtures target constraints that the candidate schema actually rejects; semantic desiderata are labeled separately until schema conditions exist.",
+      "Runtime fixtures never equate source eligibility, configured inclusion, assignment and execution.",
+      "Graph and numerical fields distinguish an assessed zero from unavailable and not-applicable states.",
+      "External-data fixtures bind the primary artifact and every required payload component by digest."
+    ],
+    "reporting_rule": "Every quoted ratio carries numerator, denominator, population ID, selection rule and claim boundary."
+  },
+  "source_records": [
+    {
+      "id": "interfaceProfile",
+      "path": "web/reference/quant-policy-boundary-validation.v1.json",
+      "sha256": "991eb12596486da9841022efaf3b9a13a79f632d5c6349e7ad3dd677a55338f9",
+      "byte_length": 1905
+    },
+    {
+      "id": "interfaceSweep",
+      "path": "corpus/measurements/quantization-interface-public-50-repeat2/quant-policy-boundary-sweep.json.gz",
+      "sha256": "8ba2af81e3e2a69aaea841e1f3ab01f241186e4d4f09d1817353d7f7d5d9b74b",
+      "byte_length": 40745
+    },
+    {
+      "id": "quantManifest",
+      "path": "corpus/quant_policy/manifest.v1.json",
+      "sha256": "9ec7fdf97c8fcc8e14d3b9b5a61ffafe05d0e90e5a58005cdca51a1d886f0540",
+      "byte_length": 3780
+    },
+    {
+      "id": "publicSweep",
+      "path": "corpus/measurements/public-model-corpus-v1-final/corpus-sweep.json.gz",
+      "sha256": "a13157236ea29453230261a555000a68c104362be88f625319c0bd9987d73c82",
+      "byte_length": 3505
+    },
+    {
+      "id": "hfSummary",
+      "path": "corpus/huggingface-community-corpus.v1.summary.json",
+      "sha256": "91f8c6100a1b3b224a08c2e4017e10757de8e7ca72b70ea6cc16296da0b22e17",
+      "byte_length": 2542
+    },
+    {
+      "id": "hfSnapshot",
+      "path": "corpus/huggingface-community-corpus.v1.json.gz",
+      "sha256": "6afa933143a19879752007612f2431124d1db40857937628ccdae836faa62765",
+      "byte_length": 2265251
+    },
+    {
+      "id": "residual",
+      "path": "corpus/residual-coverage-priorities.v1.json",
+      "sha256": "f010160ade6a6e6267197257c9f205e10d7b87cdfa8388d8e3adb7c139792c4c",
+      "byte_length": 90713
+    },
+    {
+      "id": "safetensors",
+      "path": "corpus/safetensors-architecture-corpus.v1.json",
+      "sha256": "72dd538a2b479597ec12c64fbf77c8dee3436df73c5b67649296c1d1deae8336",
+      "byte_length": 4758
+    },
+    {
+      "id": "safetensorsQuantization",
+      "path": "corpus/safetensors-quantization-contract-corpus.v1.json",
+      "sha256": "e2f2be65c3d3e964820f0578c8d8721ebc95778295f16b08e07a4db5c8ec3358",
+      "byte_length": 17602
+    },
+    {
+      "id": "gguf",
+      "path": "corpus/gguf-architecture-encoding-corpus.v1.json",
+      "sha256": "7bda00215305df8ac7275d05fc3ab69164ea74d60f49bdb16118d847ff9cc6f9",
+      "byte_length": 10228
+    },
+    {
+      "id": "coreml",
+      "path": "corpus/coreml-mlprogram-contract-corpus.v1.json",
+      "sha256": "23b784ac962cce042f5ca5b889f696b360142c727ff7e729b54600f38b7201fd",
+      "byte_length": 12903
+    },
+    {
+      "id": "coremlLegacyQuantization",
+      "path": "corpus/coreml-legacy-quantization-corpus.v1.json",
+      "sha256": "1ee5fbba1e844a32adab1a71370850393f8b4a14ac0f29f7e4df2ed71fcafdd2",
+      "byte_length": 2723
+    },
+    {
+      "id": "onnxExtensions",
+      "path": "corpus/onnx-extension-contract-corpus.v1.json",
+      "sha256": "160510ec64bf789e0d23da333e65d31413ee99a111ab528573cd35b47d8fbc31",
+      "byte_length": 5974
+    },
+    {
+      "id": "multiformatManifest",
+      "path": "corpus/public-multiformat-corpus.v1.json",
+      "sha256": "661e1299babfdea8c29396c47e4d5cccf6b4ccf5423bb5e044e13c47f39a9837",
+      "byte_length": 112069
+    },
+    {
+      "id": "cyclonedxGeneralization",
+      "path": "corpus/cyclonedx-generalization-evidence.v1.json",
+      "sha256": "179467ba3dfc7a46e13734942dc5d821e2c11b0a1880f3ce91e674cb53edaea2",
+      "byte_length": 91015
+    },
+    {
+      "id": "cyclonedxGeneralizationRecords",
+      "path": "corpus/cyclonedx-generalization-evidence.records.v1.json.gz",
+      "sha256": "127f93a234f9b71ea0918f10bcc259fbab84e3fa990bf2cc4e0fd55311329558",
+      "byte_length": 70928
+    },
+    {
+      "id": "runtimeSidecar",
+      "path": "web/lib/runtime-evidence-sidecar.js",
+      "sha256": "72771618980755a16a9f3c591077a4a3cf749016c39e4997ded5c5d0570ddcce",
+      "byte_length": 17062
+    },
+    {
+      "id": "runtimeSidecarCheck",
+      "path": "scripts/check-runtime-evidence-sidecar.mjs",
+      "sha256": "9cceb52089742626cb57fff5c36dc8ae3ea55c9000565a74df3eaf592cbb1eaf",
+      "byte_length": 6269
+    },
+    {
+      "id": "cyclonedxQuantization",
+      "path": "corpus/cyclonedx-20-quantization-fixtures/evidence.v1.json",
+      "sha256": "70963daf95e3ebe8ec86caf3b038024a9ac6cf72fa7bab32b89d907750c7c784",
+      "byte_length": 17785
+    },
+    {
+      "id": "ortRulepack",
+      "path": "protected/deepbom_wasm/src/ort_rulepack_generated.rs",
+      "sha256": "04aeab43b79343ba4b672c42623e06aca2e89416da655abb1724aaed0df0ee32",
+      "byte_length": 1143645
+    }
+  ],
+  "ledger_sha256": "9af774e70882f7443887b3ab97bb39b8fd9eebd39b97c9c683b32ed680041173"
+}

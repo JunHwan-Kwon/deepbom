@@ -1,0 +1,333 @@
+{
+  "schema": "deepbom.google_legacy_corpus.v1",
+  "corpus_id": "google-legacy-hosted-models-2026-07-29",
+  "title": "Google-hosted legacy TFLite quantization cohort and matched float controls",
+  "retrieved_at": "2026-07-29",
+  "target_profile_id": "android_mid_a55",
+  "artifact_count": 8,
+  "quantized_artifact_count": 4,
+  "float_control_count": 4,
+  "source_pages": [
+    {
+      "title": "TensorFlow Lite Hosted Models",
+      "url": "https://www.tensorflow.org/lite/guide/hosted_models.md",
+      "role": "Official model inventory and download links"
+    },
+    {
+      "title": "Accelerating TensorFlow Lite on Qualcomm Hexagon",
+      "url": "https://blog.tensorflow.org/2019/12/accelerating-tensorflow-lite-on-qualcomm.html",
+      "role": "Official QAT provenance statement for the hosted SSD MobileNetV1 and InceptionV3 quantized models"
+    }
+  ],
+  "cohort_policy": {
+    "legacy_quantized": "Official Google-hosted pre-MLIR-era TFLite artifacts with artifact-visible integer compute. This is an historical artifact cohort, not proof that one exact converter binary produced every member.",
+    "historical_float_control": "Official Google-hosted artifacts proposed as quantized candidates but measured as FLOAT32. They are retained as negative controls and excluded from quantized-defect denominators.",
+    "converter_attribution": "A converter generation is confirmed only when embedded metadata, a pinned conversion recipe, or an official artifact-specific statement identifies it. Publication year alone is insufficient.",
+    "activation_inventory": "Activation families are derived from each FlatBuffer during the sweep; architecture-family descriptions are not substituted for serialized fused-activation settings."
+  },
+  "artifacts": [
+    {
+      "id": "mobilenet-v1-1.0-224-quant",
+      "model": "MobileNetV1 1.0 224 quant",
+      "architecture_year": 2017,
+      "task": "image-classification",
+      "cohort": "legacy_quantized",
+      "converter_generation": "pre_mlir_candidate",
+      "converter_evidence": "Official 2018 Google-hosted quantized artifact; exact converter build is not embedded.",
+      "published_precision": "uint8_quantized",
+      "source_url": "https://storage.googleapis.com/download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_1.0_224_quant.tgz",
+      "archive": {
+        "filename": "mobilenet_v1_1.0_224_quant.tgz",
+        "size_bytes": 35069912,
+        "sha256": "d32432d28673a936b2d6281ab0600c71cf7226dfe4cdcef3012555f691744166"
+      },
+      "member": {
+        "path": "./mobilenet_v1_1.0_224_quant.tflite",
+        "filename": "mobilenet_v1_1.0_224_quant.tflite",
+        "size_bytes": 4276352,
+        "sha256": "ecc3a67c47c5a609ec35f6a58a7d97532834e43df4cb7d3f1204a8164b7d20dd"
+      },
+      "baseline": {
+        "artifact_class": "full_integer",
+        "quantization_classification": "full_integer",
+        "operator_count": 31,
+        "tensor_count": 89,
+        "total_macs": 568741376,
+        "lab_count": 15,
+        "class_supported_lab_count": 15,
+        "assessed_lab_count": 10,
+        "partial_lab_count": 0,
+        "not_assessed_lab_count": 1,
+        "not_applicable_lab_count": 4
+      }
+    },
+    {
+      "id": "mobilenet-v2-1.0-224-quant",
+      "model": "MobileNetV2 1.0 224 quant",
+      "architecture_year": 2018,
+      "task": "image-classification",
+      "cohort": "legacy_quantized",
+      "converter_generation": "pre_mlir_candidate",
+      "converter_evidence": "Official 2018 Google-hosted quantized artifact; exact converter build is not embedded.",
+      "published_precision": "uint8_quantized",
+      "source_url": "https://storage.googleapis.com/download.tensorflow.org/models/tflite_11_05_08/mobilenet_v2_1.0_224_quant.tgz",
+      "archive": {
+        "filename": "mobilenet_v2_1.0_224_quant.tgz",
+        "size_bytes": 43420937,
+        "sha256": "d6a04d780f76f656c902413be432eb349ec4a458240e3739119eb44977f77a79"
+      },
+      "member": {
+        "path": "mobilenet_v2_1.0_224_quant.tflite",
+        "filename": "mobilenet_v2_1.0_224_quant.tflite",
+        "size_bytes": 3577760,
+        "sha256": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d"
+      },
+      "baseline": {
+        "artifact_class": "full_integer",
+        "quantization_classification": "full_integer",
+        "operator_count": 65,
+        "tensor_count": 173,
+        "total_macs": 300775552,
+        "lab_count": 15,
+        "class_supported_lab_count": 15,
+        "assessed_lab_count": 14,
+        "partial_lab_count": 0,
+        "not_assessed_lab_count": 1,
+        "not_applicable_lab_count": 0
+      }
+    },
+    {
+      "id": "inception-v3-quant",
+      "model": "Inception V3 quant",
+      "architecture_year": 2015,
+      "artifact_release_year": 2018,
+      "task": "image-classification",
+      "cohort": "legacy_quantized",
+      "converter_generation": "pre_mlir_candidate",
+      "converter_evidence": "The official Google Hexagon article identifies this hosted model as quantization-aware trained; the exact converter build is not embedded.",
+      "published_precision": "uint8_qat",
+      "source_url": "https://storage.googleapis.com/download.tensorflow.org/models/tflite_11_05_08/inception_v3_quant.tgz",
+      "archive": {
+        "filename": "inception_v3_quant.tgz",
+        "size_bytes": 207790187,
+        "sha256": "d75a319eaef4d34b985bc319db260197a464893a9380f8167432ad2492e1995e"
+      },
+      "member": {
+        "path": "inception_v3_quant.tflite",
+        "filename": "inception_v3_quant.tflite",
+        "size_bytes": 23942928,
+        "sha256": "6aecf177dc84a11dc5ea8f03df188039dded543fc7cd03f3b89a6541dbb37ee6"
+      },
+      "baseline": {
+        "artifact_class": "full_integer",
+        "quantization_classification": "full_integer",
+        "operator_count": 125,
+        "tensor_count": 317,
+        "total_macs": 5713218144,
+        "lab_count": 15,
+        "class_supported_lab_count": 15,
+        "assessed_lab_count": 10,
+        "partial_lab_count": 0,
+        "not_assessed_lab_count": 1,
+        "not_applicable_lab_count": 4
+      }
+    },
+    {
+      "id": "ssd-mobilenet-v1-quant",
+      "model": "SSD MobileNetV1 quant",
+      "architecture_year": 2018,
+      "task": "object-detection",
+      "cohort": "legacy_quantized",
+      "converter_generation": "pre_mlir_candidate",
+      "converter_evidence": "The official Google Hexagon article identifies this hosted model as quantization-aware trained; the exact converter build is not embedded.",
+      "published_precision": "uint8_qat_float_io",
+      "source_url": "https://storage.googleapis.com/download.tensorflow.org/models/tflite/coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip",
+      "archive": {
+        "filename": "coco_ssd_mobilenet_v1_1.0_quant_2018_06_29.zip",
+        "size_bytes": 2807218,
+        "sha256": "a809cd290b4d6a2e8a9d5dad076e0bd695b8091974e0eed1052b480b2f21b6dc"
+      },
+      "member": {
+        "path": "detect.tflite",
+        "filename": "detect.tflite",
+        "size_bytes": 4183312,
+        "sha256": "e4b118e5e4531945de2e659742c7c590f7536f8d0ed26d135abcfe83b4779d13"
+      },
+      "baseline": {
+        "artifact_class": "full_integer",
+        "quantization_classification": "integer_internal_float_io",
+        "operator_count": 64,
+        "tensor_count": 176,
+        "total_macs": 728036496,
+        "lab_count": 15,
+        "class_supported_lab_count": 15,
+        "assessed_lab_count": 10,
+        "partial_lab_count": 0,
+        "not_assessed_lab_count": 1,
+        "not_applicable_lab_count": 4
+      }
+    },
+    {
+      "id": "mnasnet-0.5-224-float-control",
+      "model": "MnasNet 0.5 224",
+      "architecture_year": 2018,
+      "task": "image-classification",
+      "cohort": "historical_float_control",
+      "converter_generation": "historical_hosted_unknown",
+      "converter_evidence": "Official Google-hosted artifact; the FlatBuffer is FLOAT32 and therefore is not a quantized converter cohort member.",
+      "published_precision": "float32",
+      "source_url": "https://storage.googleapis.com/download.tensorflow.org/models/tflite/mnasnet_0.5_224_09_07_2018.tgz",
+      "archive": {
+        "filename": "mnasnet_0.5_224_09_07_2018.tgz",
+        "size_bytes": 16573924,
+        "sha256": "3c609d19c3939220c7ce5197231dfe0d7e5f090772946197d3e5eb76016551e1"
+      },
+      "member": {
+        "path": "mnasnet_0.5_224/mnasnet_0.5_224.tflite",
+        "filename": "mnasnet_0.5_224.tflite",
+        "size_bytes": 8860904,
+        "sha256": "1bfa321ef5cebb5bafaae6cf502e4a88460538919b3b8b3d6f06c8c49b5df607"
+      },
+      "baseline": {
+        "artifact_class": "float",
+        "quantization_classification": "not_quantized_float",
+        "operator_count": 64,
+        "tensor_count": 172,
+        "total_macs": 104457248,
+        "lab_count": 15,
+        "class_supported_lab_count": 0,
+        "assessed_lab_count": 0,
+        "partial_lab_count": 0,
+        "not_assessed_lab_count": 0,
+        "not_applicable_lab_count": 15
+      }
+    },
+    {
+      "id": "mnasnet-0.75-224-float-control",
+      "model": "MnasNet 0.75 224",
+      "architecture_year": 2018,
+      "task": "image-classification",
+      "cohort": "historical_float_control",
+      "converter_generation": "historical_hosted_unknown",
+      "converter_evidence": "Official Google-hosted artifact; the FlatBuffer is FLOAT32 and therefore is not a quantized converter cohort member.",
+      "published_precision": "float32",
+      "source_url": "https://storage.googleapis.com/download.tensorflow.org/models/tflite/mnasnet_0.75_224_09_07_2018.tgz",
+      "archive": {
+        "filename": "mnasnet_0.75_224_09_07_2018.tgz",
+        "size_bytes": 23335157,
+        "sha256": "95f48e96fbb01c52946c4ba391de73e32657364edbf9a50d33ef8d52df8aafb6"
+      },
+      "member": {
+        "path": "mnasnet_0.75_224/mnasnet_0.75_224.tflite",
+        "filename": "mnasnet_0.75_224.tflite",
+        "size_bytes": 12472968,
+        "sha256": "b35e26f1d0215b7f8570f34fbe8e60d2524cb7d579411bbc94e8bfb7824f0a1f"
+      },
+      "baseline": {
+        "artifact_class": "float",
+        "quantization_classification": "not_quantized_float",
+        "operator_count": 64,
+        "tensor_count": 172,
+        "total_macs": 189631792,
+        "lab_count": 15,
+        "class_supported_lab_count": 0,
+        "assessed_lab_count": 0,
+        "partial_lab_count": 0,
+        "not_assessed_lab_count": 0,
+        "not_applicable_lab_count": 15
+      }
+    },
+    {
+      "id": "mnasnet-1.0-224-float-control",
+      "model": "MnasNet 1.0 224",
+      "architecture_year": 2018,
+      "task": "image-classification",
+      "cohort": "historical_float_control",
+      "converter_generation": "historical_hosted_unknown",
+      "converter_evidence": "Official Google-hosted artifact; the FlatBuffer is FLOAT32 and therefore is not a quantized converter cohort member.",
+      "published_precision": "float32",
+      "source_url": "https://storage.googleapis.com/download.tensorflow.org/models/tflite/mnasnet_1.0_224_09_07_2018.tgz",
+      "archive": {
+        "filename": "mnasnet_1.0_224_09_07_2018.tgz",
+        "size_bytes": 32694497,
+        "sha256": "53fde7980ffe647863c0edea1d3b9035496f5fdd9b3798f982749daab37d9cc7"
+      },
+      "member": {
+        "path": "mnasnet_1.0_224/mnasnet_1.0_224.tflite",
+        "filename": "mnasnet_1.0_224.tflite",
+        "size_bytes": 17485512,
+        "sha256": "8ed17db916455193a9f8350f5ef38ee50ec9ac55cab04a917cf44ec5cd79cdde"
+      },
+      "baseline": {
+        "artifact_class": "float",
+        "quantization_classification": "not_quantized_float",
+        "operator_count": 64,
+        "tensor_count": 172,
+        "total_macs": 314417152,
+        "lab_count": 15,
+        "class_supported_lab_count": 0,
+        "assessed_lab_count": 0,
+        "partial_lab_count": 0,
+        "not_assessed_lab_count": 0,
+        "not_applicable_lab_count": 15
+      }
+    },
+    {
+      "id": "mnasnet-1.3-224-float-control",
+      "model": "MnasNet 1.3 224",
+      "architecture_year": 2018,
+      "task": "image-classification",
+      "cohort": "historical_float_control",
+      "converter_generation": "historical_hosted_unknown",
+      "converter_evidence": "Official Google-hosted artifact; the FlatBuffer is FLOAT32 and therefore is not a quantized converter cohort member.",
+      "published_precision": "float32",
+      "source_url": "https://storage.googleapis.com/download.tensorflow.org/models/tflite/mnasnet_1.3_224_09_07_2018.tgz",
+      "archive": {
+        "filename": "mnasnet_1.3_224_09_07_2018.tgz",
+        "size_bytes": 46149549,
+        "sha256": "0048cf5518f9f5031feed2290dffba8fad6428b4d5cc88ac3dec76e7d65a0fbf"
+      },
+      "member": {
+        "path": "mnasnet_1.3_224/mnasnet_1.3_224.tflite",
+        "filename": "mnasnet_1.3_224.tflite",
+        "size_bytes": 24694792,
+        "sha256": "824aed0956015f41150ba62229b1a6abda48c0282ece49e8dc823c83569bf6cb"
+      },
+      "baseline": {
+        "artifact_class": "float",
+        "quantization_classification": "not_quantized_float",
+        "operator_count": 64,
+        "tensor_count": 172,
+        "total_macs": 484347584,
+        "lab_count": 15,
+        "class_supported_lab_count": 0,
+        "assessed_lab_count": 0,
+        "partial_lab_count": 0,
+        "not_assessed_lab_count": 0,
+        "not_applicable_lab_count": 15
+      }
+    }
+  ],
+  "corrected_proposals": [
+    {
+      "proposal": "MnasNet quant 0.5/0.75/1.0/1.3",
+      "disposition": "retained_as_float_controls",
+      "reason": "The official hosted .tflite members are FLOAT32, not quantized."
+    },
+    {
+      "proposal": "NASNet-Mobile quant",
+      "disposition": "excluded",
+      "reason": "The official hosted inventory exposes a float model; no artifact-specific official quantized TFLite member was verified."
+    },
+    {
+      "proposal": "SqueezeNet in google_legacy",
+      "disposition": "excluded",
+      "reason": "SqueezeNet is not a Google architecture and the hosted inventory entry is float. It belongs in a separate architecture control corpus."
+    },
+    {
+      "proposal": "SSD MobileNetV2 quant",
+      "disposition": "pending",
+      "reason": "The commonly linked Google object is an object-detection checkpoint rather than a pinned prebuilt quantized TFLite artifact. Admit only after a model member or a pinned conversion recipe is verified."
+    }
+  ]
+}

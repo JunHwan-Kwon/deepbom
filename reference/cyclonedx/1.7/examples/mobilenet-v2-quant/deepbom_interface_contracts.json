@@ -1,0 +1,534 @@
+{
+  "schema": "deepbom.interface_quantization_contracts.v1.3",
+  "hash_contract": {
+    "algorithm": "SHA-256",
+    "canonicalization": "RFC8785-JCS",
+    "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+    "selection": "containing_object_after_exclusions",
+    "excluded_json_pointers": [
+      "/ledger_sha256",
+      "/ledger_hash",
+      "/generated_at",
+      "/subject",
+      "/provenance"
+    ],
+    "interpretation": "Remove ledger_sha256, ledger_hash, and any document-envelope generated_at, subject, and provenance members from the ledger object; canonicalize the remaining contract with RFC8785-JCS, encode it as UTF-8, and hash it with SHA-256.",
+    "compatibility": "Per-parameter v1.1 JSON.stringify hashes remain inside each hash descriptor during schema migration."
+  },
+  "parameter_count": 2,
+  "quantized_parameter_count": 2,
+  "unquantized_parameter_count": 0,
+  "invalid_or_incomplete_parameter_count": 0,
+  "per_tensor_parameter_count": 2,
+  "per_axis_parameter_count": 0,
+  "blocked_parameter_count": 0,
+  "distinct_complete_quantization_contract_count": 2,
+  "multiple_complete_quantization_contracts_within_artifact": true,
+  "source_preprocessing_contract_status": "not_embedded_in_artifact",
+  "boundary_contract": {
+    "schema": "deepbom.interface_boundary_contract.v1",
+    "status": "fully_affine_quantized",
+    "parameter_count": 2,
+    "affine_quantized_parameter_count": 2,
+    "unquantized_parameter_count": 0,
+    "invalid_or_incomplete_parameter_count": 0,
+    "float32_parameter_count": 0,
+    "integer_parameter_count": 2,
+    "inputs": {
+      "status": "fully_affine_quantized",
+      "parameter_count": 1,
+      "affine_quantized_parameter_count": 1,
+      "unquantized_parameter_count": 0,
+      "invalid_or_incomplete_parameter_count": 0,
+      "float32_parameter_count": 0,
+      "integer_parameter_count": 1
+    },
+    "outputs": {
+      "status": "fully_affine_quantized",
+      "parameter_count": 1,
+      "affine_quantized_parameter_count": 1,
+      "unquantized_parameter_count": 0,
+      "invalid_or_incomplete_parameter_count": 0,
+      "float32_parameter_count": 0,
+      "integer_parameter_count": 1
+    },
+    "recorded_facts": [
+      "direction",
+      "ordinal",
+      "dtype",
+      "shape",
+      "shape_signature",
+      "affine_quantization"
+    ],
+    "not_established_by_this_contract": [
+      "channel_order",
+      "source_value_domain",
+      "mean_standard_deviation_normalization",
+      "resize_interpolation",
+      "application_tensor_layout",
+      "semantic_labels"
+    ]
+  },
+  "parameters": [
+    {
+      "parameter_id": "input:0:T171",
+      "direction": "input",
+      "ordinal": 0,
+      "tensor_index": 171,
+      "tensor_name": "input",
+      "dtype": "UINT8",
+      "shape": [
+        1,
+        224,
+        224,
+        3
+      ],
+      "shape_signature": null,
+      "source_data_to_tensor_preprocessing_status": "not_embedded_in_artifact",
+      "quantization": {
+        "status": "complete",
+        "scheme": "affine",
+        "granularity": "per_tensor",
+        "parameterization": "per_tensor",
+        "scales": [
+          0.0078125
+        ],
+        "zero_points": [
+          128
+        ],
+        "axis": null,
+        "block_size": null,
+        "affine_mapping_status": "complete_affine_mapping",
+        "scheme_evidence": "generic_affine_equation_observed_symmetry_not_encoded",
+        "symmetry_classification": "not_encoded",
+        "scale_count": 1,
+        "zero_point_count": 1,
+        "scale_values_complete": true,
+        "zero_point_values_complete": true,
+        "quantized_dimension": 0,
+        "axis_source": null,
+        "axis_applicable": false,
+        "quantized_dimension_role": "serialized_default_not_semantic_axis",
+        "scale_tensor_shape": [
+          1
+        ],
+        "zero_point_tensor_shape": [
+          1
+        ],
+        "value_vector_shape_basis": "derived_flat_affine_value_vector",
+        "cardinality_status": "valid",
+        "cardinality_reason": "One scale and one zero-point are declared.",
+        "scalar_real_code_domain": {
+          "qmin": 0,
+          "qmax": 255,
+          "real_min": -1,
+          "real_max": 0.9921875,
+          "formula": "real=(q-zero_point)*scale"
+        },
+        "contract_sha256": "2e534a974be2f7d41b2f9d6e19d8b3fd457c53e7bdb8d48600c79db2066c6577",
+        "contract_hash": {
+          "algorithm": "SHA-256",
+          "canonicalization": "RFC8785-JCS",
+          "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+          "sha256": "2e534a974be2f7d41b2f9d6e19d8b3fd457c53e7bdb8d48600c79db2066c6577",
+          "payload_contract": {
+            "selection": "included_json_pointers_only",
+            "included_json_pointers": [
+              "/status",
+              "/scheme",
+              "/granularity",
+              "/parameterization",
+              "/scales",
+              "/zero_points",
+              "/axis",
+              "/block_size"
+            ],
+            "excluded_json_pointers": [],
+            "interpretation": "Resolve the listed JSON Pointers relative to the containing contract object, construct the declared payload, canonicalize it with RFC8785-JCS, encode as UTF-8, and hash with SHA-256."
+          },
+          "legacy_v1_1": {
+            "method": "SHA-256 over UTF-8 JSON.stringify payload bytes",
+            "sha256": "ddad8d970d62658206391f62fbb3fcbc34f503041fc4ea5cfe981435605d4b3a",
+            "ordered_payload_fields": [
+              "scheme",
+              "granularity",
+              "scales",
+              "zero_points",
+              "axis"
+            ]
+          }
+        },
+        "serialized_quantization_sha256": "ed7e92d16bd71e5e69567afd76d90d2c1d31a611c1f085fcd1a5f227404ebdad",
+        "serialized_quantization_hash": {
+          "algorithm": "SHA-256",
+          "canonicalization": "RFC8785-JCS",
+          "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+          "sha256": "ed7e92d16bd71e5e69567afd76d90d2c1d31a611c1f085fcd1a5f227404ebdad",
+          "payload_contract": {
+            "selection": "included_json_pointers_only",
+            "included_json_pointers": [
+              "/status",
+              "/scheme",
+              "/granularity",
+              "/parameterization",
+              "/scales",
+              "/zero_points",
+              "/axis",
+              "/block_size",
+              "/quantized_dimension",
+              "/axis_source",
+              "/scale_tensor_shape",
+              "/zero_point_tensor_shape"
+            ],
+            "excluded_json_pointers": [],
+            "interpretation": "Resolve the listed JSON Pointers relative to the containing contract object, construct the declared payload, canonicalize it with RFC8785-JCS, encode as UTF-8, and hash with SHA-256."
+          },
+          "legacy_v1_1": {
+            "method": "SHA-256 over UTF-8 JSON.stringify payload bytes",
+            "sha256": "b1df1f7e1a36e92c968c84abf8f2dac55e26b77147609fd73f3f315a5a780580",
+            "ordered_payload_fields": [
+              "scheme",
+              "granularity",
+              "scales",
+              "zero_points",
+              "axis",
+              "quantized_dimension"
+            ]
+          }
+        }
+      },
+      "interface_contract_sha256": "14f100754e65c865b32b905a74c2915bec5a9872707bee7be70080c218ba4b56",
+      "interface_contract_hash": {
+        "algorithm": "SHA-256",
+        "canonicalization": "RFC8785-JCS",
+        "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+        "sha256": "14f100754e65c865b32b905a74c2915bec5a9872707bee7be70080c218ba4b56",
+        "payload_contract": {
+          "selection": "included_json_pointers_only",
+          "included_json_pointers": [
+            "/direction",
+            "/ordinal",
+            "/tensor_name",
+            "/dtype",
+            "/shape",
+            "/shape_signature",
+            "/quantization/status",
+            "/quantization/scheme",
+            "/quantization/granularity",
+            "/quantization/parameterization",
+            "/quantization/scales",
+            "/quantization/zero_points",
+            "/quantization/axis",
+            "/quantization/block_size"
+          ],
+          "excluded_json_pointers": [],
+          "interpretation": "Resolve the listed JSON Pointers relative to the containing contract object, construct the declared payload, canonicalize it with RFC8785-JCS, encode as UTF-8, and hash with SHA-256."
+        },
+        "legacy_v1_1": {
+          "method": "SHA-256 over UTF-8 JSON.stringify payload bytes",
+          "sha256": "320cb84c2163797f739edc9c0c90afa0a2871ae2be78335e11a3f92949623c7f",
+          "ordered_payload_fields": [
+            "direction",
+            "ordinal",
+            "name",
+            "dtype",
+            "shape",
+            "shape_signature",
+            "quantization"
+          ]
+        }
+      }
+    },
+    {
+      "parameter_id": "output:0:T172",
+      "direction": "output",
+      "ordinal": 0,
+      "tensor_index": 172,
+      "tensor_name": "output",
+      "dtype": "UINT8",
+      "shape": [
+        1,
+        1001
+      ],
+      "shape_signature": null,
+      "source_data_to_tensor_preprocessing_status": "not_applicable",
+      "quantization": {
+        "status": "complete",
+        "scheme": "affine",
+        "granularity": "per_tensor",
+        "parameterization": "per_tensor",
+        "scales": [
+          0.09889253973960876
+        ],
+        "zero_points": [
+          58
+        ],
+        "axis": null,
+        "block_size": null,
+        "affine_mapping_status": "complete_affine_mapping",
+        "scheme_evidence": "generic_affine_equation_observed_symmetry_not_encoded",
+        "symmetry_classification": "not_encoded",
+        "scale_count": 1,
+        "zero_point_count": 1,
+        "scale_values_complete": true,
+        "zero_point_values_complete": true,
+        "quantized_dimension": 0,
+        "axis_source": null,
+        "axis_applicable": false,
+        "quantized_dimension_role": "serialized_default_not_semantic_axis",
+        "scale_tensor_shape": [
+          1
+        ],
+        "zero_point_tensor_shape": [
+          1
+        ],
+        "value_vector_shape_basis": "derived_flat_affine_value_vector",
+        "cardinality_status": "valid",
+        "cardinality_reason": "One scale and one zero-point are declared.",
+        "scalar_real_code_domain": {
+          "qmin": 0,
+          "qmax": 255,
+          "real_min": -5.735767304897308,
+          "real_max": 19.481830328702927,
+          "formula": "real=(q-zero_point)*scale"
+        },
+        "contract_sha256": "34ea3904615e45df12cb0f5fdb229b6b582c0863002472c6d18c06da8e18ef13",
+        "contract_hash": {
+          "algorithm": "SHA-256",
+          "canonicalization": "RFC8785-JCS",
+          "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+          "sha256": "34ea3904615e45df12cb0f5fdb229b6b582c0863002472c6d18c06da8e18ef13",
+          "payload_contract": {
+            "selection": "included_json_pointers_only",
+            "included_json_pointers": [
+              "/status",
+              "/scheme",
+              "/granularity",
+              "/parameterization",
+              "/scales",
+              "/zero_points",
+              "/axis",
+              "/block_size"
+            ],
+            "excluded_json_pointers": [],
+            "interpretation": "Resolve the listed JSON Pointers relative to the containing contract object, construct the declared payload, canonicalize it with RFC8785-JCS, encode as UTF-8, and hash with SHA-256."
+          },
+          "legacy_v1_1": {
+            "method": "SHA-256 over UTF-8 JSON.stringify payload bytes",
+            "sha256": "8f94301ad596ad8da1061c74c9e8bc2aeeb9f81dcf609d51d2bb9be5eac257d8",
+            "ordered_payload_fields": [
+              "scheme",
+              "granularity",
+              "scales",
+              "zero_points",
+              "axis"
+            ]
+          }
+        },
+        "serialized_quantization_sha256": "b6815d4ce6bcfb4349e49516c21753a979d39aedd3fd2b184347111af46695b6",
+        "serialized_quantization_hash": {
+          "algorithm": "SHA-256",
+          "canonicalization": "RFC8785-JCS",
+          "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+          "sha256": "b6815d4ce6bcfb4349e49516c21753a979d39aedd3fd2b184347111af46695b6",
+          "payload_contract": {
+            "selection": "included_json_pointers_only",
+            "included_json_pointers": [
+              "/status",
+              "/scheme",
+              "/granularity",
+              "/parameterization",
+              "/scales",
+              "/zero_points",
+              "/axis",
+              "/block_size",
+              "/quantized_dimension",
+              "/axis_source",
+              "/scale_tensor_shape",
+              "/zero_point_tensor_shape"
+            ],
+            "excluded_json_pointers": [],
+            "interpretation": "Resolve the listed JSON Pointers relative to the containing contract object, construct the declared payload, canonicalize it with RFC8785-JCS, encode as UTF-8, and hash with SHA-256."
+          },
+          "legacy_v1_1": {
+            "method": "SHA-256 over UTF-8 JSON.stringify payload bytes",
+            "sha256": "0a85dcc36bd24d6e25e5324936f13e14e7e198216db8f2e850d81c8a68dd826f",
+            "ordered_payload_fields": [
+              "scheme",
+              "granularity",
+              "scales",
+              "zero_points",
+              "axis",
+              "quantized_dimension"
+            ]
+          }
+        }
+      },
+      "interface_contract_sha256": "0082096ef3eec9047e04771015d849c58d08758f75fab4fd8944029a4fa35cad",
+      "interface_contract_hash": {
+        "algorithm": "SHA-256",
+        "canonicalization": "RFC8785-JCS",
+        "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+        "sha256": "0082096ef3eec9047e04771015d849c58d08758f75fab4fd8944029a4fa35cad",
+        "payload_contract": {
+          "selection": "included_json_pointers_only",
+          "included_json_pointers": [
+            "/direction",
+            "/ordinal",
+            "/tensor_name",
+            "/dtype",
+            "/shape",
+            "/shape_signature",
+            "/quantization/status",
+            "/quantization/scheme",
+            "/quantization/granularity",
+            "/quantization/parameterization",
+            "/quantization/scales",
+            "/quantization/zero_points",
+            "/quantization/axis",
+            "/quantization/block_size"
+          ],
+          "excluded_json_pointers": [],
+          "interpretation": "Resolve the listed JSON Pointers relative to the containing contract object, construct the declared payload, canonicalize it with RFC8785-JCS, encode as UTF-8, and hash with SHA-256."
+        },
+        "legacy_v1_1": {
+          "method": "SHA-256 over UTF-8 JSON.stringify payload bytes",
+          "sha256": "1b47bc0ec72f8119ad4f7db0ef9f2e2896872bc52868a68b75cce8d58bbe1312",
+          "ordered_payload_fields": [
+            "direction",
+            "ordinal",
+            "name",
+            "dtype",
+            "shape",
+            "shape_signature",
+            "quantization"
+          ]
+        }
+      }
+    }
+  ],
+  "interpretation_boundary": "The ledger records serialized boundary dtype, shape, and affine quantization facts and validates affine value/cardinality consistency. A FLOAT32 boundary is an explicit unquantized storage contract, not missing quantization metadata. This ledger alone does not establish RGB/BGR order, source-value normalization, mean/standard-deviation transforms, resize interpolation, application tensor layout, the production preprocessing implementation, mismatch prevalence, or task accuracy.",
+  "ledger_sha256": "30c462341a9830ab81ec60bc3f27bc48a7cf826eea71a67b5abddf442150d38b",
+  "ledger_hash": {
+    "algorithm": "SHA-256",
+    "canonicalization": "RFC8785-JCS",
+    "method": "SHA-256 over UTF-8 RFC8785-JCS canonical JSON",
+    "sha256": "30c462341a9830ab81ec60bc3f27bc48a7cf826eea71a67b5abddf442150d38b",
+    "payload_contract": {
+      "selection": "containing_object_after_exclusions",
+      "included_json_pointers": [],
+      "excluded_json_pointers": [
+        "/ledger_sha256",
+        "/ledger_hash",
+        "/generated_at",
+        "/subject",
+        "/provenance"
+      ],
+      "interpretation": "Remove ledger_sha256, ledger_hash, and any document-envelope generated_at, subject, and provenance members from the ledger object; canonicalize the remaining contract with RFC8785-JCS, encode it as UTF-8, and hash it with SHA-256."
+    }
+  },
+  "generated_at": "2026-07-29T00:00:00.000Z",
+  "subject": {
+    "name": "mobilenet_v2_1.0_224_quant.tflite",
+    "format": "tflite",
+    "sha256": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+    "hash_basis": "artifact_file_bytes_sha256",
+    "byte_length": 3577760,
+    "schema_or_opset": "TFLite schema 3",
+    "declared_version": null,
+    "component_bom_ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d"
+  },
+  "provenance": {
+    "analyzer": "deepbom",
+    "analyzer_semantic_version": "1.94.0",
+    "analyzer_build_version": "2026-08-03",
+    "analyzer_build_commit": "684260dddf632240c31bee646581d9c4ae32623a",
+    "analyzer_build_source_state": "clean",
+    "analyzer_bundle_content_sha256": "5c03ec024b99e9a73ac3b3f098cebdd8dc18ae5ec67d740de97dd21df4e5b34d",
+    "analyzer_bundle_content_hash_method": "SHA-256 over RFC8785-JCS canonical deepbom.analyzer_build_file_digest_set.v1",
+    "rulepack_version": "deepbom.rulepack.2026-07-24.63",
+    "rulepack_sha256": "a1e0dc58a9dc742b4532448190410d89e04d56ab134a16a72cda6cae8b6a6d9f",
+    "rulepack_hash_basis": [
+      "web/lib/report-metadata.js (report metadata/provenance)",
+      "web/lib/reason-codes.js (reason-code labels)",
+      "web/lib/xnnpack-rulepack-metadata.js (generated XNNPACK delegate provenance)",
+      "src/xnnpack_delegate.rs (source-mapped XNNPACK delegate evaluator)",
+      "src/xnnpack_rulepack_generated.rs (generated XNNPACK delegate documentary rules)",
+      "reference/xnnpack-readme/README-v2.21.0.md (pinned XNNPACK delegate README snapshot)",
+      "reference/xnnpack-readme/rule-manifest-v2.21.0.json (XNNPACK delegate semantic rule manifest)",
+      "scripts/generate-xnnpack-delegate-rulepack.mjs (XNNPACK delegate rule generator and source digest contract)",
+      "src/lib.rs (target profiles and XNNPACK support rules)",
+      "src/lib.rs (TFLite runtime-version floor derivation)",
+      "src/runtime_version.rs (pinned TFLite runtime-version floor map)",
+      "src/tflite_metadata.rs (TFLite M001 metadata contract parser)",
+      "src/accumulator_atlas.rs (exact stored-weight accumulator envelope)",
+      "web/lib/accumulator-atlas.js (independent browser accumulator validator)",
+      "src/requantization_fidelity.rs (pinned TFLite requantization fidelity solver)",
+      "web/lib/requantization-fidelity.js (independent browser requantization validator)",
+      "src/kernel_witness.rs (exact quantized kernel extremum witness solver)",
+      "web/lib/kernel-witness.js (independent browser kernel witness validator and viewer)",
+      "web/lib/kernel-witness-worker.js (independent browser kernel witness verification worker)",
+      "src/channel_vitality.rs (exact monotone quantized channel vitality solver)",
+      "web/lib/channel-vitality.js (independent browser channel vitality validator and viewer)",
+      "web/lib/channel-vitality-worker.js (independent browser channel vitality verification worker)",
+      "src/rounding_equivalence.rs (exact fixed-point rounding equivalence solver)",
+      "web/lib/rounding-equivalence.js (independent browser rounding equivalence validator and viewer)",
+      "web/lib/rounding-equivalence-worker.js (independent browser rounding equivalence verification worker)",
+      "src/numerical_abi_propagation.rs (exact numerical ABI graph propagation solver)",
+      "web/lib/numerical-abi-propagation.js (independent browser numerical ABI propagation validator)",
+      "web/lib/numerical-abi-propagation-viewer.js (numerical ABI propagation atlas viewer and export renderer)",
+      "src/quantization_lattice.rs (exhaustive residual output-contract design solver)",
+      "web/lib/quantization-lattice.js (independent browser residual contract validator)",
+      "src/quantization_math.rs (shared pinned quantization arithmetic)",
+      "web/lib/quantization-math.js (independent browser quantization arithmetic)",
+      "src/contract_migration.rs (residual contract migration impact solver)",
+      "web/lib/contract-migration.js (independent browser migration validator)",
+      "src/residual_step_response.rs (exhaustive residual adjacent-code step-response solver)",
+      "web/lib/residual-step-response.js (independent browser residual step-response validator)",
+      "web/lib/residual-step-response-worker.js (independent browser residual step-response worker)",
+      "src/residual_contract_distortion.rs (exhaustive residual contract-distortion solver)",
+      "web/lib/residual-contract-distortion.js (independent browser residual contract-distortion validator)",
+      "web/lib/residual-contract-distortion-worker.js (independent browser residual contract-distortion worker)",
+      "scripts/generate-ort-rulepack.mjs (pinned ORT rule generator and source digest contract)",
+      "web/lib/xnnpack-selector-evidence.js (public XNNPACK evidence identity and arithmetic adapter)",
+      "web/lib/ort-compatibility-evidence.js (public ORT evidence identity and conservation adapter)",
+      "web/onnx.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-container-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-domain-analysis.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-external-data.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-extended-shape-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-imputer-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-imputer.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-label-encoder-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-label-encoder.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-linear-model-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-linear-model.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-normalizer-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-normalizer.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-one-hot-encoder-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-one-hot-encoder.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-scaler-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-scaler.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-svm-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-svm.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-tree-ensemble-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-tree-ensemble.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-value-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ort-extension-shape-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-opset-imports.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-schema-legality.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-shape-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-runtime-shape-binding.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-shape-ops.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-shape-schema-generated.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-sparse-tensor.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-static-value-evidence.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-tfidf-vectorizer-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-tfidf-vectorizer.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-type-proto.js (ONNX rule/reconstruction)",
+      "web/lib/report-findings.js (authoritative finding rules)",
+      "web/lib/finding-contract.js (finding evidence-pointer contract)",
+      "protected authenticated rule source set (3 owners; implementation paths withheld; included in RULEPACK_SHA256)"
+    ]
+  }
+}

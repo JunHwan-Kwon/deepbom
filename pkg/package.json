@@ -1,0 +1,21 @@
+{
+  "name": "tflite_wasm_audit",
+  "type": "module",
+  "description": "Browser-side TFLite and ONNX static audit WASM module.",
+  "version": "1.94.0",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JunHwan-Kwon/deepbom"
+  },
+  "files": [
+    "tflite_wasm_audit_bg.wasm",
+    "tflite_wasm_audit.js",
+    "tflite_wasm_audit.d.ts"
+  ],
+  "main": "tflite_wasm_audit.js",
+  "types": "tflite_wasm_audit.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

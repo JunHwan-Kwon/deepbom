@@ -1,0 +1,38 @@
+{
+  "schema": "deepbom.signing_key_registry.v1",
+  "registry_version": 1,
+  "authority": {
+    "name": "DEEPBOM",
+    "canonical_origin": "https://deepbom.org",
+    "registry_url": "https://deepbom.org/.well-known/deepbom-signing-keys.json",
+    "zenodo_doi": "https://doi.org/10.5281/zenodo.21834509"
+  },
+  "updated_at": "2026-08-15T00:00:00Z",
+  "keys": [
+    {
+      "key_id": "deepbom-official-release-es256-v1",
+      "signer_class": "OFFICIAL_RELEASE_KEY",
+      "algorithm": "ES256",
+      "curve": "P-256",
+      "status": "active",
+      "valid_from": "2026-08-15T00:00:00Z",
+      "valid_until": null,
+      "revoked_at": null,
+      "allowed_scopes": [
+        "official_release_evidence",
+        "official_verified_example"
+      ],
+      "public_jwk": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "BOq5h0PoRy__Hpd2JiXKlxtna4KA4AmEadcODj9xG5E",
+        "y": "Q1u4M6J1p0qtJnaOLoOxUhVPp52lpyBhGnu_wM8ccpI",
+        "alg": "ES256",
+        "use": "sig"
+      },
+      "rfc7638_thumbprint_sha256": "bfdf57d6c3baefc8ca10dc980e012e0f08a578dda7a5696d7776a77b7bc22ad4",
+      "purpose": "Signs DEEPBOM-maintained release evidence and hash-pinned verified examples. It does not certify arbitrary browser-generated user reports."
+    }
+  ],
+  "verification_boundary": "The registry binds public keys to the DEEPBOM release authority when retrieved from the fixed HTTPS registry URL. Cryptographic validity, registry authority, allowed scope, key validity interval, and revocation status are separate checks."
+}

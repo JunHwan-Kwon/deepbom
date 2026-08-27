@@ -1,0 +1,1627 @@
+{
+  "schema": "deepbom.xnnpack_delegate_rule_manifest.v1",
+  "source": {
+    "repository": "tensorflow/tensorflow",
+    "checked_ref": "87bbf65b8d23d3f06912b1b2183587e1884bc45c",
+    "tag_alias": "v2.21.0",
+    "tag_commit": "a481b10260dfdf833a1b16007eead49c1d7febf3",
+    "path": "tensorflow/lite/delegates/xnnpack/README.md",
+    "sha256": "85524b3e6acfe5429b9d8b7c1ef47dde79a4543ccbe2f73a0e276f8e7e0eb93c",
+    "relationship": "The pinned main-branch commit and the v2.21.0 tag carry byte-identical XNNPACK delegate README content."
+  },
+  "coverage": {
+    "fp32_operator_count": 41,
+    "quantized_operator_count": 24,
+    "documented_operator_constraint_count": 133,
+    "implemented_operator_constraint_count": 133,
+    "unmapped_operator_constraint_count": 0,
+    "runtime_only_global_requirement_count": 2
+  },
+  "runtime_requirements": [
+    {
+      "id": "quantized_qs8_build_flag",
+      "precision": "quantized",
+      "condition": "INT8 operator delegation requires a runtime built with --define tflite_with_xnnpack_qs8=true.",
+      "assessment": "runtime_only",
+      "reason": "A TFLite artifact does not encode the delegate library build flags of the eventual runtime."
+    },
+    {
+      "id": "quantized_qu8_build_flag",
+      "precision": "quantized",
+      "condition": "UINT8 operator delegation requires a runtime built with --define tflite_with_xnnpack_qu8=true.",
+      "assessment": "runtime_only",
+      "reason": "A TFLite artifact does not encode the delegate library build flags of the eventual runtime."
+    }
+  ],
+  "rules": [
+    {
+      "precision": "fp32",
+      "op": "ABS",
+      "constraints": [
+        {
+          "id": "fp32.abs.L320",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 320,
+          "source_line_end": 320,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "ADD",
+      "constraints": [
+        {
+          "id": "fp32.add.L324",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 324,
+          "source_line_end": 324,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.add.L325",
+          "predicate": "input_count_two",
+          "assessment": "implemented",
+          "source_line_start": 325,
+          "source_line_end": 325,
+          "source_text_sha256": "2a1b3b2caa9dafa62ef4dc7ba17842dce372532457ff3cafadbcc66f0ac10108",
+          "source_text": "Only addition with two inputs is supported."
+        },
+        {
+          "id": "fp32.add.L326",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 326,
+          "source_line_end": 327,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "AVERAGE_POOL_2D",
+      "constraints": [
+        {
+          "id": "fp32.average_pool_2d.L331",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 331,
+          "source_line_end": 331,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.average_pool_2d.L332",
+          "predicate": "pool_one_by_one_requires_unit_stride",
+          "assessment": "implemented",
+          "source_line_start": 332,
+          "source_line_end": 332,
+          "source_text_sha256": "8027c50142cd023abc9df7f2a9cf061e1f11929362554bc239e184a3009e3e60",
+          "source_text": "1x1 pooling with non-unit stride is not supported."
+        },
+        {
+          "id": "fp32.average_pool_2d.L333",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 333,
+          "source_line_end": 334,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "CEIL",
+      "constraints": [
+        {
+          "id": "fp32.ceil.L338",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 338,
+          "source_line_end": 338,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "CONCATENATION",
+      "constraints": [
+        {
+          "id": "fp32.concatenation.L342",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 342,
+          "source_line_end": 342,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.concatenation.L343",
+          "predicate": "input_count_two_to_four",
+          "assessment": "implemented",
+          "source_line_start": 343,
+          "source_line_end": 343,
+          "source_text_sha256": "2d48a4ad414f18d0691f955965a874dba6009d236a115d79a20a995aa7a75e61",
+          "source_text": "Only concatenation with two, three, or four inputs is supported."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "CONV_2D",
+      "constraints": [
+        {
+          "id": "fp32.conv_2d.L347",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 347,
+          "source_line_end": 347,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.conv_2d.L348",
+          "predicate": "bias_mandatory",
+          "assessment": "implemented",
+          "source_line_start": 348,
+          "source_line_end": 348,
+          "source_text_sha256": "5eebc48632fe6cb7f1959cb22d93d57aa9145e273a652749baf1b853e2718e13",
+          "source_text": "Bias is mandatory."
+        },
+        {
+          "id": "fp32.conv_2d.L349",
+          "predicate": "filter_bias_static",
+          "assessment": "implemented",
+          "source_line_start": 349,
+          "source_line_end": 349,
+          "source_text_sha256": "081d23139c968f96eabf51d9e19580417fb832c989060a1d5b7af60fb215fd3f",
+          "source_text": "Both filter and bias must be static (use `kTfLiteMmapRo` allocation type)."
+        },
+        {
+          "id": "fp32.conv_2d.L350",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 350,
+          "source_line_end": 351,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "DEPTH_TO_SPACE",
+      "constraints": [
+        {
+          "id": "fp32.depth_to_space.L355",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 355,
+          "source_line_end": 355,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.depth_to_space.L356",
+          "predicate": "block_size_greater_than_one",
+          "assessment": "implemented",
+          "source_line_start": 356,
+          "source_line_end": 356,
+          "source_text_sha256": "815f4cadb0121437eb5814563d23881f5703f8d349e03c3204b2fa8506a7ee21",
+          "source_text": "Block size must be greater than 1."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "DEPTHWISE_CONV_2D",
+      "constraints": [
+        {
+          "id": "fp32.depthwise_conv_2d.L360",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 360,
+          "source_line_end": 360,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.depthwise_conv_2d.L361",
+          "predicate": "bias_mandatory",
+          "assessment": "implemented",
+          "source_line_start": 361,
+          "source_line_end": 361,
+          "source_text_sha256": "5eebc48632fe6cb7f1959cb22d93d57aa9145e273a652749baf1b853e2718e13",
+          "source_text": "Bias is mandatory."
+        },
+        {
+          "id": "fp32.depthwise_conv_2d.L362",
+          "predicate": "filter_bias_static",
+          "assessment": "implemented",
+          "source_line_start": 362,
+          "source_line_end": 362,
+          "source_text_sha256": "081d23139c968f96eabf51d9e19580417fb832c989060a1d5b7af60fb215fd3f",
+          "source_text": "Both filter and bias must be static (use `kTfLiteMmapRo` allocation type)."
+        },
+        {
+          "id": "fp32.depthwise_conv_2d.L363",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 363,
+          "source_line_end": 364,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "DIV",
+      "constraints": [
+        {
+          "id": "fp32.div.L368",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 368,
+          "source_line_end": 368,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.div.L369",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 369,
+          "source_line_end": 370,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "ELU",
+      "constraints": [
+        {
+          "id": "fp32.elu.L374",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 374,
+          "source_line_end": 374,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "FLOOR",
+      "constraints": [
+        {
+          "id": "fp32.floor.L385",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 385,
+          "source_line_end": 385,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "FULLY_CONNECTED",
+      "constraints": [
+        {
+          "id": "fp32.fully_connected.L378",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 378,
+          "source_line_end": 378,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.fully_connected.L379",
+          "predicate": "filter_bias_static",
+          "assessment": "implemented",
+          "source_line_start": 379,
+          "source_line_end": 379,
+          "source_text_sha256": "081d23139c968f96eabf51d9e19580417fb832c989060a1d5b7af60fb215fd3f",
+          "source_text": "Both filter and bias must be static (use `kTfLiteMmapRo` allocation type)."
+        },
+        {
+          "id": "fp32.fully_connected.L380",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 380,
+          "source_line_end": 381,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "HARD_SWISH",
+      "constraints": [
+        {
+          "id": "fp32.hard_swish.L389",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 389,
+          "source_line_end": 389,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "LEAKY_RELU",
+      "constraints": [
+        {
+          "id": "fp32.leaky_relu.L393",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 393,
+          "source_line_end": 393,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "LOGISTIC",
+      "constraints": [
+        {
+          "id": "fp32.logistic.L397",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 397,
+          "source_line_end": 397,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "MAX_POOL_2D",
+      "constraints": [
+        {
+          "id": "fp32.max_pool_2d.L401",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 401,
+          "source_line_end": 401,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.max_pool_2d.L402",
+          "predicate": "pool_one_by_one_requires_unit_stride",
+          "assessment": "implemented",
+          "source_line_start": 402,
+          "source_line_end": 402,
+          "source_text_sha256": "8027c50142cd023abc9df7f2a9cf061e1f11929362554bc239e184a3009e3e60",
+          "source_text": "1x1 pooling with non-unit stride is not supported."
+        },
+        {
+          "id": "fp32.max_pool_2d.L403",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 403,
+          "source_line_end": 404,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "MAXIMUM",
+      "constraints": [
+        {
+          "id": "fp32.maximum.L408",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 408,
+          "source_line_end": 408,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "MEAN",
+      "constraints": [
+        {
+          "id": "fp32.mean.L412",
+          "predicate": "primary_io_fp32_rank4",
+          "assessment": "implemented",
+          "source_line_start": 412,
+          "source_line_end": 413,
+          "source_text_sha256": "4037f6ec68a9dde9e2b8ba16e0423721a90d2e1d0ff606eba142e0468bc61e18",
+          "source_text": "The first input and the output must be 4D tensors in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.mean.L414",
+          "predicate": "input_one_static",
+          "assessment": "implemented",
+          "source_line_start": 414,
+          "source_line_end": 415,
+          "source_text_sha256": "10ad2824655800298b0f188933ff2b58418ecfcb4359d228615195ffc7cb3e9f",
+          "source_text": "The second input (the input with the axes specification) must be static (use `kTfLiteMmapRo` allocation type)."
+        },
+        {
+          "id": "fp32.mean.L416",
+          "predicate": "mean_axes_supported",
+          "assessment": "implemented",
+          "source_line_start": 416,
+          "source_line_end": 417,
+          "source_text_sha256": "3b8cbae98b3b144405ed7bc6f1fb031760b86e605a59583bf56056c7b24f051e",
+          "source_text": "Only [1, 2], [2, 1], and [2] axes specification (i.e. reduction across either both spatial dimensions or across the width dimension) is supported."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "MINIMUM",
+      "constraints": [
+        {
+          "id": "fp32.minimum.L421",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 421,
+          "source_line_end": 421,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "MUL",
+      "constraints": [
+        {
+          "id": "fp32.mul.L425",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 425,
+          "source_line_end": 425,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.mul.L426",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 426,
+          "source_line_end": 427,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "NEG",
+      "constraints": [
+        {
+          "id": "fp32.neg.L431",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 431,
+          "source_line_end": 431,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "PAD",
+      "constraints": [
+        {
+          "id": "fp32.pad.L435",
+          "predicate": "primary_io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 435,
+          "source_line_end": 435,
+          "source_text_sha256": "cd07a439231af3516c969c544c072834457d34d5994e27b2d78393a47092bb83",
+          "source_text": "The first input and the output must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.pad.L436",
+          "predicate": "input_one_static",
+          "assessment": "implemented",
+          "source_line_start": 436,
+          "source_line_end": 437,
+          "source_text_sha256": "a067e8542ada4f650e3d38344050fc8288bd0e06471e3383fe66ccb98996f618",
+          "source_text": "The second input (the input with the padding specification) must be static (use `kTfLiteMmapRo` allocation type)."
+        },
+        {
+          "id": "fp32.pad.L438",
+          "predicate": "padding_values_nonnegative",
+          "assessment": "implemented",
+          "source_line_start": 438,
+          "source_line_end": 438,
+          "source_text_sha256": "4c3604f0a6d88eb9535af1fd7d2437c851b1caafac775de3a973564d9991be29",
+          "source_text": "The numbers of padding elements must be non-negative."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "PRELU",
+      "constraints": [
+        {
+          "id": "fp32.prelu.L442",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 442,
+          "source_line_end": 442,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.prelu.L443",
+          "predicate": "input_one_static",
+          "assessment": "implemented",
+          "source_line_start": 443,
+          "source_line_end": 443,
+          "source_text_sha256": "573b915c966b4f1cd8367b35ced78e6ba53c90335b072857eccaee896440f24e",
+          "source_text": "Slope must be static (use `kTfLiteMmapRo` allocation type)."
+        },
+        {
+          "id": "fp32.prelu.L444",
+          "predicate": "prelu_slope_shape_supported",
+          "assessment": "implemented",
+          "source_line_start": 444,
+          "source_line_end": 445,
+          "source_text_sha256": "3900286faaffc8f9f07aaa10f6ae86b2954fb23adcc5db08ca187f661bd27865",
+          "source_text": "Slope must be either a 1D tensor, or have all its non-channel dimensions equal 1."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "RELU",
+      "constraints": [
+        {
+          "id": "fp32.relu.L449",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 449,
+          "source_line_end": 449,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "RELU_N1_TO_1",
+      "constraints": [
+        {
+          "id": "fp32.relu_n1_to_1.L457",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 457,
+          "source_line_end": 457,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "RELU6",
+      "constraints": [
+        {
+          "id": "fp32.relu6.L453",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 453,
+          "source_line_end": 453,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "RESHAPE",
+      "constraints": [
+        {
+          "id": "fp32.reshape.L461",
+          "predicate": "primary_io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 461,
+          "source_line_end": 461,
+          "source_text_sha256": "cd07a439231af3516c969c544c072834457d34d5994e27b2d78393a47092bb83",
+          "source_text": "The first input and the output must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.reshape.L462",
+          "predicate": "reshape_shape_static_or_absent",
+          "assessment": "implemented",
+          "source_line_start": 462,
+          "source_line_end": 464,
+          "source_text_sha256": "1e0322d9f998bb2707d0039ee2b8251c6263b635bc6b459d7a339d1939326ac4",
+          "source_text": "The second input (the input with the new shape specification) must be either static (use `kTfLiteMmapRo` allocation type), or absent (with the new shape specified via `ReshapeOptions` table)."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "RESIZE_BILINEAR",
+      "constraints": [
+        {
+          "id": "fp32.resize_bilinear.L468",
+          "predicate": "primary_io_fp32_rank4",
+          "assessment": "implemented",
+          "source_line_start": 468,
+          "source_line_end": 469,
+          "source_text_sha256": "4037f6ec68a9dde9e2b8ba16e0423721a90d2e1d0ff606eba142e0468bc61e18",
+          "source_text": "The first input and the output must be 4D tensors in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.resize_bilinear.L470",
+          "predicate": "input_one_static",
+          "assessment": "implemented",
+          "source_line_start": 470,
+          "source_line_end": 471,
+          "source_text_sha256": "dc1bd514ccfce7e8d3e92c7406e3720491fdd3465a8c200a1d6b5df6aa1a5ccc",
+          "source_text": "The second input (the input with the new shape specification) must be static (use `kTfLiteMmapRo` allocation type)."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "ROUND",
+      "constraints": [
+        {
+          "id": "fp32.round.L475",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 475,
+          "source_line_end": 475,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "SLICE",
+      "constraints": [
+        {
+          "id": "fp32.slice.L479",
+          "predicate": "primary_io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 479,
+          "source_line_end": 479,
+          "source_text_sha256": "cd07a439231af3516c969c544c072834457d34d5994e27b2d78393a47092bb83",
+          "source_text": "The first input and the output must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.slice.L480",
+          "predicate": "inputs_one_two_static",
+          "assessment": "implemented",
+          "source_line_start": 480,
+          "source_line_end": 481,
+          "source_text_sha256": "006d3f25a348658adee8538ae47e8485da5d0ea8f4037cc189c73887f31da5e3",
+          "source_text": "The second and third inputs (the inputs with the slices' begin and size specification) must be static (use `kTfLiteMmapRo` allocation type)."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "SOFTMAX",
+      "constraints": [
+        {
+          "id": "fp32.softmax.L485",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 485,
+          "source_line_end": 485,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.softmax.L486",
+          "predicate": "softmax_beta_one",
+          "assessment": "implemented",
+          "source_line_start": 486,
+          "source_line_end": 486,
+          "source_text_sha256": "c5146a603c40b44176141b0d2c06b1eb88a4a1fcf910cbbf1d5b3370657bd90c",
+          "source_text": "Only `beta = 1.0` is supported."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "SPACE_TO_DEPTH",
+      "constraints": [
+        {
+          "id": "fp32.space_to_depth.L490",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 490,
+          "source_line_end": 490,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.space_to_depth.L491",
+          "predicate": "block_size_greater_than_one",
+          "assessment": "implemented",
+          "source_line_start": 491,
+          "source_line_end": 491,
+          "source_text_sha256": "815f4cadb0121437eb5814563d23881f5703f8d349e03c3204b2fa8506a7ee21",
+          "source_text": "Block size must be greater than 1."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "SPLIT",
+      "constraints": [
+        {
+          "id": "fp32.split.L495",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 495,
+          "source_line_end": 495,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.split.L496",
+          "predicate": "output_count_two_to_four",
+          "assessment": "implemented",
+          "source_line_start": 496,
+          "source_line_end": 496,
+          "source_text_sha256": "d6e202a71c79e05dbcf5cc668e228e15caa12340d0bd988919eed7c4e388f51f",
+          "source_text": "Only split into two, three, or four outputs is supported."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "SQRT",
+      "constraints": [
+        {
+          "id": "fp32.sqrt.L500",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 500,
+          "source_line_end": 500,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "SQUARE",
+      "constraints": [
+        {
+          "id": "fp32.square.L504",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 504,
+          "source_line_end": 504,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "SQUARED_DIFFERENCE",
+      "constraints": [
+        {
+          "id": "fp32.squared_difference.L508",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 508,
+          "source_line_end": 508,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "STRIDED_SLICE",
+      "constraints": [
+        {
+          "id": "fp32.strided_slice.L512",
+          "predicate": "primary_io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 512,
+          "source_line_end": 512,
+          "source_text_sha256": "cd07a439231af3516c969c544c072834457d34d5994e27b2d78393a47092bb83",
+          "source_text": "The first input and the output must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.strided_slice.L513",
+          "predicate": "inputs_one_two_three_static",
+          "assessment": "implemented",
+          "source_line_start": 513,
+          "source_line_end": 515,
+          "source_text_sha256": "6b22e67459256e1178cfb2c25f4a23c413fbd52409805d39f04bf671b417fe9f",
+          "source_text": "The second, third, and fourth inputs (the inputs with the slices' begin, end, and stride specification) must be static (use `kTfLiteMmapRo` allocation type)."
+        },
+        {
+          "id": "fp32.strided_slice.L516",
+          "predicate": "strided_slice_strides_one",
+          "assessment": "implemented",
+          "source_line_start": 516,
+          "source_line_end": 516,
+          "source_text_sha256": "647e6741377932acd95ab7b97e74960bb3f08d5c94f5a712f5da097d46c49af7",
+          "source_text": "The fourth input (strides) must be all ones."
+        },
+        {
+          "id": "fp32.strided_slice.L517",
+          "predicate": "strided_slice_masks_zero",
+          "assessment": "implemented",
+          "source_line_start": 517,
+          "source_line_end": 517,
+          "source_text_sha256": "da4257fe3682281ba6aaa9ec3637535367f6c9e438e5a8c890b914a267bfc094",
+          "source_text": "The ellipsis mask, new axis mask, and shrink axis mask must be 0."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "SUB",
+      "constraints": [
+        {
+          "id": "fp32.sub.L521",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 521,
+          "source_line_end": 521,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.sub.L522",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 522,
+          "source_line_end": 523,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "TANH",
+      "constraints": [
+        {
+          "id": "fp32.tanh.L527",
+          "predicate": "io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 527,
+          "source_line_end": 527,
+          "source_text_sha256": "1ea7cf99173a1750126480e0ca151d34069127b1bba8a3f14666637f60700e53",
+          "source_text": "Inputs and outputs must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "TRANSPOSE",
+      "constraints": [
+        {
+          "id": "fp32.transpose.L531",
+          "predicate": "primary_io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 531,
+          "source_line_end": 531,
+          "source_text_sha256": "cd07a439231af3516c969c544c072834457d34d5994e27b2d78393a47092bb83",
+          "source_text": "The first input and the output must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.transpose.L532",
+          "predicate": "input_one_static",
+          "assessment": "implemented",
+          "source_line_start": 532,
+          "source_line_end": 533,
+          "source_text_sha256": "1bfccbaeac38dbb2d3133adf647b5ac68da1c16c72ca69a139b385634e0c3660",
+          "source_text": "The second input (the input with the permutation specification) must be static (use `kTfLiteMmapRo` allocation type)."
+        }
+      ]
+    },
+    {
+      "precision": "fp32",
+      "op": "TRANSPOSE_CONV",
+      "constraints": [
+        {
+          "id": "fp32.transpose_conv.L537",
+          "predicate": "transpose_conv_io_fp32",
+          "assessment": "implemented",
+          "source_line_start": 537,
+          "source_line_end": 538,
+          "source_text_sha256": "3a50ef9a3ec9713c0d085fc78fad56beea063c61a2b586132c024102ffebb9e1",
+          "source_text": "Input, filter, bias (if present) and output tensors must be in 32-bit floating-point format."
+        },
+        {
+          "id": "fp32.transpose_conv.L539",
+          "predicate": "transpose_conv_parameters_static",
+          "assessment": "implemented",
+          "source_line_start": 539,
+          "source_line_end": 540,
+          "source_text_sha256": "8286aee33a023446a471bf42c1b7efb0ceb6e63396cef41ccb4b1d3c860d55e3",
+          "source_text": "Output size, filter and bias (if present) must be static (use `kTfLiteMmapRo` allocation type)."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "ADD",
+      "constraints": [
+        {
+          "id": "quantized.add.L639",
+          "predicate": "io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 639,
+          "source_line_end": 639,
+          "source_text_sha256": "eb22fedfa81245b404b04558e9b6899b2681eacb814d7372a0cf0eeabf05f457",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.add.L640",
+          "predicate": "input_count_two",
+          "assessment": "implemented",
+          "source_line_start": 640,
+          "source_line_end": 640,
+          "source_text_sha256": "2a1b3b2caa9dafa62ef4dc7ba17842dce372532457ff3cafadbcc66f0ac10108",
+          "source_text": "Only addition with two inputs is supported."
+        },
+        {
+          "id": "quantized.add.L641",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 641,
+          "source_line_end": 642,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "CONCATENATION",
+      "constraints": [
+        {
+          "id": "quantized.concatenation.L646",
+          "predicate": "io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 646,
+          "source_line_end": 646,
+          "source_text_sha256": "eb22fedfa81245b404b04558e9b6899b2681eacb814d7372a0cf0eeabf05f457",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.concatenation.L647",
+          "predicate": "input_count_two_to_four",
+          "assessment": "implemented",
+          "source_line_start": 647,
+          "source_line_end": 647,
+          "source_text_sha256": "2d48a4ad414f18d0691f955965a874dba6009d236a115d79a20a995aa7a75e61",
+          "source_text": "Only concatenation with two, three, or four inputs is supported."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "CONV_2D",
+      "constraints": [
+        {
+          "id": "quantized.conv_2d.L651",
+          "predicate": "conv_io_quant8_bias_int32",
+          "assessment": "implemented",
+          "source_line_start": 651,
+          "source_line_end": 652,
+          "source_text_sha256": "112cf0fe5b6a994768db3183b108e317d5356e934144aaaa6901eedcea73ae90",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format (bias must be in 32-bit quantized format)."
+        },
+        {
+          "id": "quantized.conv_2d.L653",
+          "predicate": "bias_mandatory",
+          "assessment": "implemented",
+          "source_line_start": 653,
+          "source_line_end": 653,
+          "source_text_sha256": "5eebc48632fe6cb7f1959cb22d93d57aa9145e273a652749baf1b853e2718e13",
+          "source_text": "Bias is mandatory."
+        },
+        {
+          "id": "quantized.conv_2d.L654",
+          "predicate": "filter_bias_static",
+          "assessment": "implemented",
+          "source_line_start": 654,
+          "source_line_end": 655,
+          "source_text_sha256": "d814bebdc77214db70a6eed6f914c9c7b32da1803c9ea8d322298b7a59849f23",
+          "source_text": "Both filter and bias must be static (use `kTfLiteMmapRo` allocation type), and can use either per-tensor or per-channel quantization parameters."
+        },
+        {
+          "id": "quantized.conv_2d.L656",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 656,
+          "source_line_end": 657,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "DEPTH_TO_SPACE",
+      "constraints": [
+        {
+          "id": "quantized.depth_to_space.L661",
+          "predicate": "io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 661,
+          "source_line_end": 661,
+          "source_text_sha256": "eb22fedfa81245b404b04558e9b6899b2681eacb814d7372a0cf0eeabf05f457",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.depth_to_space.L662",
+          "predicate": "block_size_greater_than_one",
+          "assessment": "implemented",
+          "source_line_start": 662,
+          "source_line_end": 662,
+          "source_text_sha256": "815f4cadb0121437eb5814563d23881f5703f8d349e03c3204b2fa8506a7ee21",
+          "source_text": "Block size must be greater than 1."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "DEPTHWISE_CONV_2D",
+      "constraints": [
+        {
+          "id": "quantized.depthwise_conv_2d.L666",
+          "predicate": "conv_io_quant8_bias_int32",
+          "assessment": "implemented",
+          "source_line_start": 666,
+          "source_line_end": 667,
+          "source_text_sha256": "112cf0fe5b6a994768db3183b108e317d5356e934144aaaa6901eedcea73ae90",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format (bias must be in 32-bit quantized format)."
+        },
+        {
+          "id": "quantized.depthwise_conv_2d.L668",
+          "predicate": "bias_mandatory",
+          "assessment": "implemented",
+          "source_line_start": 668,
+          "source_line_end": 668,
+          "source_text_sha256": "5eebc48632fe6cb7f1959cb22d93d57aa9145e273a652749baf1b853e2718e13",
+          "source_text": "Bias is mandatory."
+        },
+        {
+          "id": "quantized.depthwise_conv_2d.L669",
+          "predicate": "filter_bias_static",
+          "assessment": "implemented",
+          "source_line_start": 669,
+          "source_line_end": 670,
+          "source_text_sha256": "d814bebdc77214db70a6eed6f914c9c7b32da1803c9ea8d322298b7a59849f23",
+          "source_text": "Both filter and bias must be static (use `kTfLiteMmapRo` allocation type), and can use either per-tensor or per-channel quantization parameters."
+        },
+        {
+          "id": "quantized.depthwise_conv_2d.L671",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 671,
+          "source_line_end": 672,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "DEQUANTIZE",
+      "constraints": [
+        {
+          "id": "quantized.dequantize.L676",
+          "predicate": "dequantize_input_per_tensor_quant8",
+          "assessment": "implemented",
+          "source_line_start": 676,
+          "source_line_end": 677,
+          "source_text_sha256": "af4ca02a40598310bbc3df563bed021b5f9f8f260a4f5ea75689467b904d3560",
+          "source_text": "Input tensor must be in 8-bit quantized format without per-channel quantization."
+        },
+        {
+          "id": "quantized.dequantize.L678",
+          "predicate": "output_fp32",
+          "assessment": "implemented",
+          "source_line_start": 678,
+          "source_line_end": 678,
+          "source_text_sha256": "6aaffdef2d942fac50917e789b81efb9304583fa3ea0bd0c95ccddabd65dd5f8",
+          "source_text": "Output tensor must be in 32-bit floating-point format."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "ELU",
+      "constraints": [
+        {
+          "id": "quantized.elu.L682",
+          "predicate": "io_signed_int8",
+          "assessment": "implemented",
+          "source_line_start": 682,
+          "source_line_end": 682,
+          "source_text_sha256": "6e26dfd4bfdf9f469b68bcd33a608ce898cdac461e93e5cee4379fbe0b539c11",
+          "source_text": "Inputs and outputs must be in 8-bit signed quantized format."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "FULLY_CONNECTED",
+      "constraints": [
+        {
+          "id": "quantized.fully_connected.L686",
+          "predicate": "fully_connected_io_quant8_bias_int32",
+          "assessment": "implemented",
+          "source_line_start": 686,
+          "source_line_end": 687,
+          "source_text_sha256": "79cc9a9852b1f65cc0cb66db4be7d3b9f22366463aa9bb2d8ad19c4cc5e8c3a9",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format (bias, if present, must be in 32-bit quantized format)."
+        },
+        {
+          "id": "quantized.fully_connected.L688",
+          "predicate": "filter_bias_static",
+          "assessment": "implemented",
+          "source_line_start": 688,
+          "source_line_end": 688,
+          "source_text_sha256": "081d23139c968f96eabf51d9e19580417fb832c989060a1d5b7af60fb215fd3f",
+          "source_text": "Both filter and bias must be static (use `kTfLiteMmapRo` allocation type)."
+        },
+        {
+          "id": "quantized.fully_connected.L689",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 689,
+          "source_line_end": 690,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "LEAKY_RELU",
+      "constraints": [
+        {
+          "id": "quantized.leaky_relu.L694",
+          "predicate": "io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 694,
+          "source_line_end": 694,
+          "source_text_sha256": "eb22fedfa81245b404b04558e9b6899b2681eacb814d7372a0cf0eeabf05f457",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.leaky_relu.L695",
+          "predicate": "leaky_relu_scale_ratio",
+          "assessment": "implemented",
+          "source_line_start": 695,
+          "source_line_end": 695,
+          "source_text_sha256": "2862104eafde98de38446ec93a6d0bce157b7c15e85b60b65bea2f0c63ecbd86",
+          "source_text": "The ratio of input scale to output scale must be within [1/256, 128]."
+        },
+        {
+          "id": "quantized.leaky_relu.L696",
+          "predicate": "leaky_relu_slope_scale_product",
+          "assessment": "implemented",
+          "source_line_start": 696,
+          "source_line_end": 697,
+          "source_text_sha256": "9c0af2e940ec127123875687319d216ad08c0c5d1c1ade088eefd90fcc258827",
+          "source_text": "The product of negative slope by the ratio of input scale to output scale must be within either [-127.99609375, -1/256] range or [1/256, 128] range."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "LOGISTIC",
+      "constraints": [
+        {
+          "id": "quantized.logistic.L701",
+          "predicate": "io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 701,
+          "source_line_end": 701,
+          "source_text_sha256": "eb22fedfa81245b404b04558e9b6899b2681eacb814d7372a0cf0eeabf05f457",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "MAX_POOL_2D",
+      "constraints": [
+        {
+          "id": "quantized.max_pool_2d.L705",
+          "predicate": "io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 705,
+          "source_line_end": 705,
+          "source_text_sha256": "eb22fedfa81245b404b04558e9b6899b2681eacb814d7372a0cf0eeabf05f457",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.max_pool_2d.L706",
+          "predicate": "pool_one_by_one_requires_unit_stride",
+          "assessment": "implemented",
+          "source_line_start": 706,
+          "source_line_end": 706,
+          "source_text_sha256": "8027c50142cd023abc9df7f2a9cf061e1f11929362554bc239e184a3009e3e60",
+          "source_text": "1x1 pooling with non-unit stride is not supported."
+        },
+        {
+          "id": "quantized.max_pool_2d.L707",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 707,
+          "source_line_end": 708,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "MEAN",
+      "constraints": [
+        {
+          "id": "quantized.mean.L712",
+          "predicate": "primary_io_quant8_rank4",
+          "assessment": "implemented",
+          "source_line_start": 712,
+          "source_line_end": 712,
+          "source_text_sha256": "035b83051d35a9984466f6c80c01ec6a637668fb14f44bd2f8de4e25fc996020",
+          "source_text": "The first input and the output must be 4D tensors in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.mean.L713",
+          "predicate": "input_one_static",
+          "assessment": "implemented",
+          "source_line_start": 713,
+          "source_line_end": 714,
+          "source_text_sha256": "10ad2824655800298b0f188933ff2b58418ecfcb4359d228615195ffc7cb3e9f",
+          "source_text": "The second input (the input with the axes specification) must be static (use `kTfLiteMmapRo` allocation type)."
+        },
+        {
+          "id": "quantized.mean.L715",
+          "predicate": "mean_axes_supported",
+          "assessment": "implemented",
+          "source_line_start": 715,
+          "source_line_end": 716,
+          "source_text_sha256": "3b8cbae98b3b144405ed7bc6f1fb031760b86e605a59583bf56056c7b24f051e",
+          "source_text": "Only [1, 2], [2, 1], and [2] axes specification (i.e. reduction across either both spatial dimensions or across the width dimension) is supported."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "MUL",
+      "constraints": [
+        {
+          "id": "quantized.mul.L720",
+          "predicate": "io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 720,
+          "source_line_end": 720,
+          "source_text_sha256": "eb22fedfa81245b404b04558e9b6899b2681eacb814d7372a0cf0eeabf05f457",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.mul.L721",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 721,
+          "source_line_end": 722,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "PAD",
+      "constraints": [
+        {
+          "id": "quantized.pad.L726",
+          "predicate": "primary_io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 726,
+          "source_line_end": 726,
+          "source_text_sha256": "e7cbf9eff0feb460e41fb541c0a5bd8094dd4a6f54c5587c49a93dc1c3100183",
+          "source_text": "The first input and the output must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.pad.L727",
+          "predicate": "input_one_static",
+          "assessment": "implemented",
+          "source_line_start": 727,
+          "source_line_end": 728,
+          "source_text_sha256": "a067e8542ada4f650e3d38344050fc8288bd0e06471e3383fe66ccb98996f618",
+          "source_text": "The second input (the input with the padding specification) must be static (use `kTfLiteMmapRo` allocation type)."
+        },
+        {
+          "id": "quantized.pad.L729",
+          "predicate": "padding_values_nonnegative",
+          "assessment": "implemented",
+          "source_line_start": 729,
+          "source_line_end": 729,
+          "source_text_sha256": "4c3604f0a6d88eb9535af1fd7d2437c851b1caafac775de3a973564d9991be29",
+          "source_text": "The numbers of padding elements must be non-negative."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "QUANTIZE",
+      "constraints": [
+        {
+          "id": "quantized.quantize.L733",
+          "predicate": "quantize_input_fp32_or_quant8",
+          "assessment": "implemented",
+          "source_line_start": 733,
+          "source_line_end": 734,
+          "source_text_sha256": "0be06a05fd3fc1b35a1854897cba18abb981dbaa145b8a8c7a9fe037f74091e2",
+          "source_text": "Input tensor must be in 32-bit floating-point format or in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.quantize.L735",
+          "predicate": "quantize_output_per_tensor_quant8",
+          "assessment": "implemented",
+          "source_line_start": 735,
+          "source_line_end": 736,
+          "source_text_sha256": "d4849f904213598817384e685f01b4fe8fc41f31372e4681231f30e5081969ca",
+          "source_text": "Output tensor must be in 8-bit quantized format without per-channel quantization."
+        },
+        {
+          "id": "quantized.quantize.L737",
+          "predicate": "quantize_requantization_contract",
+          "assessment": "implemented",
+          "source_line_start": 737,
+          "source_line_end": 739,
+          "source_text_sha256": "860c97abc429d32e31f0ce02afbc4741469de9033e8e6e952d7ae0073a0750ab",
+          "source_text": "If inputs are in 8-bit quantized format, they must have the same signedness as the outputs, and the ratio of input scale to output scale must be in the [2**-8, 2**7] range."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "RESHAPE",
+      "constraints": [
+        {
+          "id": "quantized.reshape.L743",
+          "predicate": "primary_io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 743,
+          "source_line_end": 743,
+          "source_text_sha256": "e7cbf9eff0feb460e41fb541c0a5bd8094dd4a6f54c5587c49a93dc1c3100183",
+          "source_text": "The first input and the output must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.reshape.L744",
+          "predicate": "reshape_shape_static_or_absent",
+          "assessment": "implemented",
+          "source_line_start": 744,
+          "source_line_end": 746,
+          "source_text_sha256": "1e0322d9f998bb2707d0039ee2b8251c6263b635bc6b459d7a339d1939326ac4",
+          "source_text": "The second input (the input with the new shape specification) must be either static (use `kTfLiteMmapRo` allocation type), or absent (with the new shape specified via `ReshapeOptions` table)."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "RESIZE_BILINEAR",
+      "constraints": [
+        {
+          "id": "quantized.resize_bilinear.L750",
+          "predicate": "primary_io_quant8_rank4",
+          "assessment": "implemented",
+          "source_line_start": 750,
+          "source_line_end": 750,
+          "source_text_sha256": "035b83051d35a9984466f6c80c01ec6a637668fb14f44bd2f8de4e25fc996020",
+          "source_text": "The first input and the output must be 4D tensors in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.resize_bilinear.L751",
+          "predicate": "input_one_static",
+          "assessment": "implemented",
+          "source_line_start": 751,
+          "source_line_end": 752,
+          "source_text_sha256": "dc1bd514ccfce7e8d3e92c7406e3720491fdd3465a8c200a1d6b5df6aa1a5ccc",
+          "source_text": "The second input (the input with the new shape specification) must be static (use `kTfLiteMmapRo` allocation type)."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "SLICE",
+      "constraints": [
+        {
+          "id": "quantized.slice.L756",
+          "predicate": "primary_io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 756,
+          "source_line_end": 756,
+          "source_text_sha256": "e7cbf9eff0feb460e41fb541c0a5bd8094dd4a6f54c5587c49a93dc1c3100183",
+          "source_text": "The first input and the output must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.slice.L757",
+          "predicate": "inputs_one_two_static",
+          "assessment": "implemented",
+          "source_line_start": 757,
+          "source_line_end": 758,
+          "source_text_sha256": "006d3f25a348658adee8538ae47e8485da5d0ea8f4037cc189c73887f31da5e3",
+          "source_text": "The second and third inputs (the inputs with the slices' begin and size specification) must be static (use `kTfLiteMmapRo` allocation type)."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "SPACE_TO_DEPTH",
+      "constraints": [
+        {
+          "id": "quantized.space_to_depth.L762",
+          "predicate": "io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 762,
+          "source_line_end": 762,
+          "source_text_sha256": "eb22fedfa81245b404b04558e9b6899b2681eacb814d7372a0cf0eeabf05f457",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.space_to_depth.L763",
+          "predicate": "block_size_greater_than_one",
+          "assessment": "implemented",
+          "source_line_start": 763,
+          "source_line_end": 763,
+          "source_text_sha256": "815f4cadb0121437eb5814563d23881f5703f8d349e03c3204b2fa8506a7ee21",
+          "source_text": "Block size must be greater than 1."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "SPLIT",
+      "constraints": [
+        {
+          "id": "quantized.split.L767",
+          "predicate": "io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 767,
+          "source_line_end": 767,
+          "source_text_sha256": "eb22fedfa81245b404b04558e9b6899b2681eacb814d7372a0cf0eeabf05f457",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.split.L768",
+          "predicate": "output_count_two_to_four",
+          "assessment": "implemented",
+          "source_line_start": 768,
+          "source_line_end": 768,
+          "source_text_sha256": "d6e202a71c79e05dbcf5cc668e228e15caa12340d0bd988919eed7c4e388f51f",
+          "source_text": "Only split into two, three, or four outputs is supported."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "SUB",
+      "constraints": [
+        {
+          "id": "quantized.sub.L772",
+          "predicate": "io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 772,
+          "source_line_end": 772,
+          "source_text_sha256": "eb22fedfa81245b404b04558e9b6899b2681eacb814d7372a0cf0eeabf05f457",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.sub.L773",
+          "predicate": "fused_activation_supported",
+          "assessment": "implemented",
+          "source_line_start": 773,
+          "source_line_end": 774,
+          "source_text_sha256": "0be2357a82a7952e2e1d3a84b17163ce3be92443979326d09be5175061acfab8",
+          "source_text": "Fused `NONE`, `RELU`, `RELU_N1_TO_1`, and `RELU6` activations are supported, but fused `TANH` and `SIGN_BIT` activations are not."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "TANH",
+      "constraints": [
+        {
+          "id": "quantized.tanh.L778",
+          "predicate": "io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 778,
+          "source_line_end": 778,
+          "source_text_sha256": "eb22fedfa81245b404b04558e9b6899b2681eacb814d7372a0cf0eeabf05f457",
+          "source_text": "Inputs and outputs must be in 8-bit quantized format."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "TRANSPOSE",
+      "constraints": [
+        {
+          "id": "quantized.transpose.L782",
+          "predicate": "primary_io_quant8",
+          "assessment": "implemented",
+          "source_line_start": 782,
+          "source_line_end": 782,
+          "source_text_sha256": "e7cbf9eff0feb460e41fb541c0a5bd8094dd4a6f54c5587c49a93dc1c3100183",
+          "source_text": "The first input and the output must be in 8-bit quantized format."
+        },
+        {
+          "id": "quantized.transpose.L783",
+          "predicate": "input_one_static",
+          "assessment": "implemented",
+          "source_line_start": 783,
+          "source_line_end": 784,
+          "source_text_sha256": "1bfccbaeac38dbb2d3133adf647b5ac68da1c16c72ca69a139b385634e0c3660",
+          "source_text": "The second input (the input with the permutation specification) must be static (use `kTfLiteMmapRo` allocation type)."
+        }
+      ]
+    },
+    {
+      "precision": "quantized",
+      "op": "TRANSPOSE_CONV",
+      "constraints": [
+        {
+          "id": "quantized.transpose_conv.L788",
+          "predicate": "transpose_conv_io_quant8_bias_int32",
+          "assessment": "implemented",
+          "source_line_start": 788,
+          "source_line_end": 789,
+          "source_text_sha256": "f3b9b8888a9a8014f2c5047e3076a8b32a0a9c07da594675a027a16b61dad7bb",
+          "source_text": "Input, filter, and output tensors must be in 8-bit quantized format (bias, if present, must be in 32-bit quantized format)."
+        },
+        {
+          "id": "quantized.transpose_conv.L790",
+          "predicate": "transpose_conv_parameters_static",
+          "assessment": "implemented",
+          "source_line_start": 790,
+          "source_line_end": 791,
+          "source_text_sha256": "8286aee33a023446a471bf42c1b7efb0ceb6e63396cef41ccb4b1d3c860d55e3",
+          "source_text": "Output size, filter and bias (if present) must be static (use `kTfLiteMmapRo` allocation type)."
+        }
+      ]
+    }
+  ],
+  "manifest_content_sha256": "657160ac6438d2a2752bb1574acf6e2057f5d478dcffbb38779212f792033c79",
+  "manifest_hash_basis": "SHA-256 of canonical JSON with manifest_content_sha256 and manifest_hash_basis omitted."
+}

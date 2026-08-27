@@ -1,0 +1,1151 @@
+.qe-head,
+.qe-selected-head,
+.qe-ledger-toolbar,
+.qe-chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.qe-head {
+  margin-bottom: 14px;
+}
+
+.qe-head h3,
+.qe-selected-head h4 {
+  margin: 3px 0 4px;
+}
+
+.qe-head p,
+.qe-selected-head p,
+.qe-definition-ledger p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.qe-kicker {
+  color: #38bdf8;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.qe-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.qe-metric {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.qe-metric span,
+.qe-metric small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.qe-metric strong {
+  display: block;
+  margin: 3px 0;
+  font-size: 17px;
+}
+
+.qe-metric.qe-risk {
+  border-color: rgba(239, 68, 68, 0.58);
+}
+
+.qe-metric.qe-warn {
+  border-color: rgba(245, 158, 11, 0.58);
+}
+
+.qe-layout {
+  display: grid;
+  grid-template-columns: minmax(210px, 280px) minmax(0, 1fr);
+  gap: 10px;
+  min-height: 560px;
+}
+
+.qe-tensor-list,
+.qe-detail,
+.qe-chart-panel,
+.qe-channel-ledger,
+.qe-definition-ledger {
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.qe-tensor-list {
+  padding: 10px;
+  overflow: auto;
+  max-height: 78vh;
+}
+
+.qe-tensor-list h4 {
+  margin: 2px 4px 10px;
+}
+
+.qe-quiet-tensors {
+  margin-top: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.qe-quiet-tensors > summary {
+  margin: 0 4px 8px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.qe-tensor-item {
+  display: grid;
+  width: 100%;
+  gap: 3px;
+  padding: 9px;
+  margin-bottom: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.qe-tensor-item span,
+.qe-tensor-item small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qe-tensor-item span,
+.qe-tensor-item small {
+  color: var(--muted);
+}
+
+.qe-tensor-item:hover,
+.qe-tensor-item.active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.qe-detail {
+  min-width: 0;
+  padding: 12px;
+}
+
+.qe-op-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+  max-width: 48%;
+}
+
+.qe-definition-ledger {
+  margin: 10px 0;
+  padding: 10px 12px;
+}
+
+.qe-definition-ledger p + p {
+  margin-top: 5px;
+}
+
+.qe-chart-panel {
+  min-width: 0;
+  padding: 10px;
+}
+
+.qe-chart-head span,
+.qe-ledger-toolbar span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.qe-scale-chart {
+  display: block;
+  width: 100%;
+  height: 260px;
+  margin-top: 8px;
+  cursor: crosshair;
+}
+
+.qe-grid-line {
+  stroke: rgba(148, 163, 184, 0.18);
+  stroke-width: 1;
+}
+
+.qe-axis-label {
+  fill: #94a3b8;
+  font: 10px ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.qe-scale-line {
+  fill: none;
+  stroke: #38bdf8;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.qe-scale-flag {
+  fill: #ef4444;
+  stroke: #fecaca;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.qe-selection-line {
+  stroke: #f59e0b;
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.qe-channel-ledger {
+  margin-top: 10px;
+}
+
+.qe-ledger-toolbar {
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 10px;
+}
+
+.qe-ledger-toolbar span {
+  margin-right: auto;
+}
+
+.qe-table-wrap {
+  max-height: 420px;
+  overflow: auto;
+}
+
+.qe-channel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.qe-channel-table th,
+.qe-channel-table td {
+  padding: 6px 8px;
+  border-top: 1px solid var(--line);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.qe-channel-table th:first-child,
+.qe-channel-table td:first-child,
+.qe-channel-table th:last-child,
+.qe-channel-table td:last-child {
+  text-align: left;
+}
+
+.qe-channel-table tbody tr {
+  cursor: pointer;
+}
+
+.qe-channel-table tbody tr:hover,
+.qe-channel-table tbody tr.selected-row {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.qe-flagged-row {
+  color: #fca5a5;
+}
+
+.qe-threshold-row {
+  color: #fcd34d;
+}
+
+.qe-risk-text {
+  color: #fca5a5 !important;
+}
+
+.qe-pass-text {
+  color: #86efac !important;
+}
+
+.qe-empty-state {
+  padding: 32px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.artifact-bar-action {
+  cursor: pointer;
+}
+
+.artifact-bar-action:hover,
+.artifact-bar-action:focus-visible {
+  outline: 1px solid #38bdf8;
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .qe-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qe-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .qe-tensor-list {
+    max-height: 260px;
+  }
+
+  .qe-selected-head {
+    display: block;
+  }
+
+  .qe-op-buttons {
+    justify-content: flex-start;
+    max-width: none;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 560px) {
+  .qe-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .qe-ledger-toolbar {
+    flex-wrap: wrap;
+  }
+}
+
+.nv-shell {
+  position: relative;
+  min-width: 0;
+}
+
+.nv-shell.expanded {
+  position: fixed;
+  inset: 10px;
+  z-index: 1200;
+  display: flex;
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.nv-shell.expanded .nv-layout {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.nv-shell.expanded .nv-viewport,
+.nv-shell.expanded .nv-graph {
+  min-height: 0;
+  height: 100%;
+}
+
+.nv-shell.expanded .nv-detail {
+  max-height: none;
+}
+
+.nv-heading,
+.nv-toolbar,
+.nv-detail-actions,
+.nv-link-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nv-heading {
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.nv-heading h3,
+.nv-detail h3 {
+  margin: 3px 0 4px;
+}
+
+.nv-heading p,
+.nv-detail p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.nv-kicker {
+  color: #38bdf8;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.nv-count {
+  max-width: 46%;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.nv-toolbar {
+  flex-wrap: wrap;
+  padding: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.nv-toolbar input {
+  min-width: 220px;
+  max-width: 360px;
+  flex: 1;
+}
+
+.nv-segments {
+  display: flex;
+  gap: 2px;
+}
+
+.nv-segments button,
+.nv-view-controls button {
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+}
+
+.nv-segments button.active,
+.nv-view-controls button.active {
+  border-color: var(--accent);
+  color: var(--ink);
+  background: var(--accent-soft);
+}
+
+.nv-view-controls,
+.nv-flag-controls {
+  display: flex;
+  gap: 2px;
+}
+
+.nv-view-controls {
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.nv-view-controls .nv-zoom-button {
+  width: 32px;
+  padding-inline: 0;
+  color: var(--ink-soft);
+  font-size: 16px;
+}
+
+.nv-zoom-level {
+  min-width: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 5px;
+  border-block: 1px solid var(--line);
+  color: var(--muted);
+  font: 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.nv-flag-controls .secondary-action {
+  min-height: 32px;
+  padding-inline: 8px;
+  font-size: 10px;
+}
+
+.nv-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 320px);
+  min-height: 650px;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  background: #0b1220;
+}
+
+.nv-shell.inspector-collapsed .nv-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.nv-shell.inspector-collapsed .nv-detail {
+  display: none;
+}
+
+.nv-viewport {
+  position: relative;
+  min-width: 0;
+  min-height: 650px;
+  overflow: hidden;
+  border-right: 1px solid var(--line);
+  touch-action: none;
+  background:
+    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--viz-edge) 22%, transparent) 1px, transparent 1.1px),
+    var(--viz-canvas);
+  background-size: 22px 22px;
+}
+
+.nv-graph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 650px;
+  cursor: grab;
+}
+
+.nv-graph:active {
+  cursor: grabbing;
+}
+
+.nv-graph.dragging {
+  cursor: grabbing;
+}
+
+.nv-graph.overview-scale .nv-edge-label {
+  display: none;
+}
+
+.nv-minimap {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 3;
+  width: 176px;
+  height: 126px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  background: color-mix(in srgb, var(--viz-panel-strong) 92%, transparent);
+  box-shadow: var(--shadow-tight);
+}
+
+.nv-minimap-graph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+.nv-minimap-edges line {
+  stroke: var(--viz-edge);
+  stroke-width: 5;
+  opacity: 0.48;
+  vector-effect: non-scaling-stroke;
+}
+
+.nv-minimap-nodes rect {
+  fill: var(--viz-node-muted);
+  stroke: var(--viz-node-border);
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.nv-minimap-nodes rect.selected {
+  fill: var(--accent);
+  stroke: var(--accent);
+  stroke-width: 7;
+}
+
+.nv-minimap-window {
+  fill: color-mix(in srgb, var(--accent) 13%, transparent);
+  stroke: var(--accent);
+  stroke-width: 8;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.nv-edge,
+.nv-edge-risk,
+.nv-edge-redesign-direct,
+.nv-edge-redesign-propagated {
+  fill: none;
+  stroke: #64748b;
+  stroke-width: 1.2;
+  opacity: 0.66;
+  vector-effect: non-scaling-stroke;
+}
+
+.nv-edge-risk {
+  stroke: #ef4444;
+}
+
+.nv-edge-redesign-direct {
+  stroke: #f59e0b;
+  stroke-width: 2.6;
+  opacity: 1;
+}
+
+.nv-edge-redesign-propagated {
+  stroke: #22d3ee;
+  stroke-width: 2;
+  stroke-dasharray: 5 3;
+  opacity: 0.95;
+}
+
+.nv-edge.selected,
+.nv-edge-risk.selected,
+.nv-edge-redesign-direct.selected,
+.nv-edge-redesign-propagated.selected {
+  stroke-width: 2.4;
+  opacity: 1;
+}
+
+.nv-edge-label {
+  pointer-events: none;
+}
+
+.nv-edge-label rect {
+  fill: #0b1220;
+  stroke: #334155;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.nv-edge-label text {
+  fill: #a9bbcf;
+  font: 8px ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.nv-edge-label.selected rect {
+  stroke: #38bdf8;
+}
+
+.nv-edge-label.selected text {
+  fill: #e0f2fe;
+}
+
+.nv-arrow {
+  fill: #64748b;
+}
+
+.nv-interface-edge {
+  fill: none;
+  stroke: #64748b;
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.nv-interface-node rect {
+  fill: #081521;
+  stroke: #38bdf8;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.nv-interface-output rect {
+  fill: #111827;
+  stroke: #a78bfa;
+}
+
+.nv-interface-title,
+.nv-interface-meta {
+  pointer-events: none;
+}
+
+.nv-interface-title {
+  fill: #e0f2fe;
+  font: 700 9px ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.nv-interface-meta {
+  fill: #94a3b8;
+  font: 8px ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.nv-node {
+  cursor: pointer;
+}
+
+.nv-node rect {
+  fill: #111827;
+  stroke: #475569;
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.nv-node-divider {
+  stroke: var(--viz-node-border);
+  stroke-width: 1;
+  opacity: 0.72;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.nv-node:hover rect,
+.nv-node.connected rect {
+  stroke: #38bdf8;
+}
+
+.nv-node.selected rect {
+  stroke-width: 3.2;
+  filter: drop-shadow(0 0 3px rgb(248 250 252 / 0.9));
+}
+
+.nv-node.search-dim {
+  opacity: 0.2;
+}
+
+.nv-node.focus-hidden,
+.nv-edge-label.focus-hidden,
+.nv-edge.focus-hidden,
+.nv-edge-risk.focus-hidden,
+.nv-edge-redesign-direct.focus-hidden,
+.nv-edge-redesign-propagated.focus-hidden {
+  display: none;
+}
+
+.nv-node-delegated rect {
+  fill: #082f2d;
+  stroke: #14b8a6;
+}
+
+.nv-node-quant rect {
+  fill: #312e0c;
+  stroke: #eab308;
+}
+
+.nv-node-risk rect {
+  fill: #3f1118;
+  stroke: #ef4444;
+}
+
+.nv-node-warn rect {
+  fill: #3b2609;
+  stroke: #f59e0b;
+}
+
+.nv-node-cool rect {
+  fill: #0c2940;
+  stroke: #38bdf8;
+}
+
+.nv-node-merge rect {
+  fill: #22143d;
+  stroke: #a78bfa;
+}
+
+.nv-node-split rect {
+  fill: #0b3140;
+  stroke: #22d3ee;
+}
+
+.nv-node-muted rect {
+  fill: #171923;
+  stroke: #64748b;
+}
+
+.nv-node-redesign-direct rect {
+  stroke: #f59e0b;
+  stroke-width: 2.4;
+}
+
+.nv-node-redesign-propagated rect {
+  stroke: #22d3ee;
+  stroke-width: 1.8;
+}
+
+.nv-node-redesign-global rect {
+  stroke: #4fb39e;
+  stroke-width: 1.8;
+}
+
+.nv-node-redesign-direct:hover rect,
+.nv-node-redesign-direct.connected rect,
+.nv-node-redesign-direct.selected rect {
+  stroke: #f59e0b;
+}
+
+.nv-node-redesign-propagated:hover rect,
+.nv-node-redesign-propagated.connected rect,
+.nv-node-redesign-propagated.selected rect {
+  stroke: #22d3ee;
+}
+
+.nv-node-redesign-global:hover rect,
+.nv-node-redesign-global.connected rect,
+.nv-node-redesign-global.selected rect {
+  stroke: #4fb39e;
+}
+
+.nv-node-muted.nv-contract-satisfied:hover rect,
+.nv-node-muted.nv-contract-satisfied.connected rect,
+.nv-node-muted.nv-contract-satisfied.selected rect,
+.nv-node-muted.nv-contract-conditional:hover rect,
+.nv-node-muted.nv-contract-conditional.connected rect,
+.nv-node-muted.nv-contract-conditional.selected rect,
+.nv-node-muted.nv-contract-unassessed:hover rect,
+.nv-node-muted.nv-contract-unassessed.connected rect,
+.nv-node-muted.nv-contract-unassessed.selected rect,
+.nv-node-muted.nv-contract-issue:hover rect,
+.nv-node-muted.nv-contract-issue.connected rect,
+.nv-node-muted.nv-contract-issue.selected rect,
+.nv-node-muted.nv-contract-watch:hover rect,
+.nv-node-muted.nv-contract-watch.connected rect,
+.nv-node-muted.nv-contract-watch.selected rect,
+.nv-node-muted.nv-contract-blocked:hover rect,
+.nv-node-muted.nv-contract-blocked.connected rect,
+.nv-node-muted.nv-contract-blocked.selected rect {
+  stroke: #64748b;
+}
+
+.nv-contract-issue rect {
+  fill: #54141d;
+}
+
+.nv-contract-watch rect {
+  fill: #4a2e08;
+}
+
+.nv-contract-satisfied rect {
+  fill: #102d28;
+}
+
+.nv-contract-conditional rect {
+  fill: #18314a;
+}
+
+.nv-contract-unassessed rect {
+  fill: #171923;
+}
+
+.nv-contract-blocked rect {
+  fill: #32143f;
+}
+
+.nv-contract-state-label {
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0;
+  pointer-events: none;
+}
+
+.nv-contract-label-issue {
+  fill: #ff9b8f;
+}
+
+.nv-contract-label-watch {
+  fill: #ffd166;
+}
+
+.nv-contract-label-satisfied {
+  fill: #7de2c5;
+}
+
+.nv-contract-label-conditional {
+  fill: #82c7ff;
+}
+
+.nv-contract-label-unassessed {
+  fill: #a9bbcf;
+}
+
+.nv-contract-label-blocked {
+  fill: #e8a5ff;
+}
+
+.nv-port {
+  fill: #cbd5e1;
+  stroke: #0b1220;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.nv-node-index,
+.nv-node-name,
+.nv-node-meta,
+.nv-node-evidence {
+  pointer-events: none;
+}
+
+.nv-node-index {
+  fill: #94a3b8;
+  font: 9px ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.nv-node-name {
+  fill: #f8fafc;
+  font: 600 12px system-ui, sans-serif;
+}
+
+.nv-node-meta {
+  fill: #94a3b8;
+  font: 9px ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.nv-node-evidence {
+  fill: var(--viz-title);
+  font: 8px ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.nv-detail {
+  overflow: auto;
+  max-height: 78vh;
+  padding: 12px;
+  background: var(--panel);
+}
+
+.nv-detail-actions {
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.nv-return-graph {
+  display: none;
+}
+
+.nv-edit-fields {
+  align-self: center;
+  color: #f3c36f;
+  font: 9px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.nv-editability-badge {
+  align-self: center;
+  padding: 6px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--muted);
+  background: var(--surface-elevated);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.nv-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.nv-detail-grid > div {
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid var(--line);
+}
+
+.nv-detail-grid span,
+.nv-detail-grid strong {
+  display: block;
+}
+
+.nv-detail-grid span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.nv-detail-grid strong {
+  margin-top: 2px;
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.nv-link-ledger,
+.nv-tensor-ledger {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.nv-tensor-contracts {
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.nv-evidence-ledger {
+  margin-top: 0;
+  border-top: 1px solid var(--line);
+}
+
+.nv-tensor-contracts > summary,
+.nv-evidence-ledger > summary {
+  padding: 9px 0;
+  color: #a9bbcf;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nv-evidence-rows {
+  display: grid;
+  margin: 0;
+}
+
+.nv-evidence-rows > div {
+  display: grid;
+  grid-template-columns: minmax(84px, 0.42fr) minmax(0, 1fr);
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+
+.nv-evidence-rows dt,
+.nv-evidence-rows dd {
+  min-width: 0;
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.nv-evidence-rows dt {
+  color: var(--muted);
+}
+
+.nv-evidence-rows dd {
+  color: var(--ink-soft);
+}
+
+.nv-tensor-contracts .nv-tensor-ledger {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.nv-link-row {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.nv-link-row > span {
+  min-width: 66px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.nv-link-chip {
+  max-width: 190px;
+  overflow: hidden;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nv-tensor-ledger > div {
+  margin-bottom: 9px;
+}
+
+.nv-tensor-ledger strong,
+.nv-tensor-ledger span {
+  display: block;
+}
+
+.nv-tensor-ledger strong {
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.nv-tensor-ledger span {
+  overflow-wrap: anywhere;
+  font: 9px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+@media (max-width: 1000px) {
+  .nv-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .nv-viewport {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nv-detail {
+    max-height: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .nv-heading,
+  .nv-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nv-toolbar input {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+
+  .nv-detail {
+    order: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nv-viewport {
+    min-height: 560px;
+  }
+
+  .nv-return-graph {
+    display: inline-flex;
+  }
+
+  .nv-segments {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+  }
+
+  .nv-segments button {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 6px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .nv-count {
+    max-width: none;
+    text-align: left;
+  }
+
+  .nv-view-controls {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .nv-view-controls button:not(.nv-zoom-button) {
+    flex: 1 1 auto;
+  }
+
+  .nv-minimap {
+    width: 92px;
+    height: 70px;
+    right: 8px;
+    left: auto;
+    bottom: 8px;
+    opacity: 0.88;
+  }
+
+  .nv-shell.expanded {
+    inset: 4px;
+    padding: 7px;
+  }
+
+  .nv-flag-controls {
+    width: 100%;
+  }
+
+  .nv-flag-controls button {
+    flex: 1;
+  }
+}

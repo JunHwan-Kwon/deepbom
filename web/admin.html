@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Console / DEEPBOM</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="admin-page">
+    <header class="topbar admin-topbar">
+      <div>
+        <p class="eyebrow">ON-DEVICE Pipeline</p>
+        <h1>Admin Console</h1>
+      </div>
+      <div class="topbar-meta">
+        <a class="admin-link" href="./">Workbench</a>
+        <span class="status" id="adminStatus">Loading</span>
+      </div>
+    </header>
+
+    <main class="admin-shell">
+      <section class="admin-hero">
+        <div>
+          <p class="eyebrow">Private Access Operations</p>
+          <h2>Requests, accounts, and access controls</h2>
+          <p id="adminIdentity">Checking admin session.</p>
+        </div>
+        <button id="adminRefreshAll" type="button">Refresh</button>
+      </section>
+
+      <section class="admin-metrics" id="adminMetrics"></section>
+
+      <section class="admin-bench-section external-test-admin">
+        <div class="admin-section-head">
+          <div>
+            <h2>External Test Access</h2>
+            <p>Create a 24-hour link that opens the full evaluation Workbench without sign-in. Admin and account-bound operations are never included.</p>
+          </div>
+        </div>
+        <div class="external-test-link-form">
+          <p><strong>Bearer link.</strong> Anyone who receives it can evaluate the product until it expires. Share it through a private channel.</p>
+          <button id="testLinkCreate" type="button">Create 24-hour link</button>
+        </div>
+        <div class="external-test-link-result" id="testLinkResult" hidden>
+          <label>
+            <span>External test URL</span>
+            <input id="testLinkUrl" type="text" readonly />
+          </label>
+          <button id="testLinkCopy" class="secondary-action" type="button">Copy link</button>
+          <p id="testLinkMeta"></p>
+        </div>
+      </section>
+
+      <section class="admin-grid">
+        <section class="admin-board">
+          <div class="admin-section-head">
+            <div>
+              <h2>Request Queue</h2>
+              <p>Feature access, feedback, bug reports, and research collaboration notes.</p>
+            </div>
+            <label>
+              <span>Status</span>
+              <select id="requestStatusFilter">
+                <option value="all">All</option>
+                <option value="new">New</option>
+                <option value="reviewing">Reviewing</option>
+                <option value="planned">Planned</option>
+                <option value="granted">Granted</option>
+                <option value="declined">Declined</option>
+                <option value="closed">Closed</option>
+              </select>
+            </label>
+          </div>
+          <div class="admin-request-board" id="adminRequestBoard"></div>
+        </section>
+
+        <section class="admin-board">
+          <div class="admin-section-head">
+            <div>
+              <h2>Accounts And Permissions</h2>
+              <p>Signed-up accounts, role, access scope, authorization state, and request load.</p>
+            </div>
+            <label>
+              <span>Search</span>
+              <input id="userSearch" type="search" placeholder="email, name, access scope" />
+            </label>
+          </div>
+          <div class="admin-user-table" id="adminUserTable"></div>
+        </section>
+      </section>
+
+      <section class="admin-bench-section">
+        <div class="admin-section-head">
+          <div>
+            <h2>Analyzed Models</h2>
+            <p>Models stored in D1 via research-consent telemetry. Click Queue to schedule a benchmark run.</p>
+          </div>
+          <button id="structuresRefresh" type="button">Refresh</button>
+        </div>
+        <div id="adminStructuresBoard" class="admin-bench-board"></div>
+      </section>
+
+      <section class="admin-bench-section">
+        <div class="admin-section-head">
+          <div>
+            <h2>Synthetic Device Benchmark Queue</h2>
+            <p>Zero-weight structural timing jobs on registered hardware - pending, running, and completed.</p>
+          </div>
+          <div class="admin-bench-controls">
+            <label>
+              <span>Status</span>
+              <select id="benchStatusFilter">
+                <option value="">All</option>
+                <option value="pending">Pending</option>
+                <option value="running">Running</option>
+                <option value="complete">Complete</option>
+                <option value="failed">Failed</option>
+              </select>
+            </label>
+            <button id="benchRefresh" type="button">Refresh</button>
+          </div>
+        </div>
+        <div id="adminBenchBoard" class="admin-bench-board"></div>
+      </section>
+    </main>
+
+    <script type="module" src="./admin.js?v=2"></script>
+  </body>
+</html>

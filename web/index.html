@@ -1,0 +1,2126 @@
+<!doctype html>
+<html lang="en" data-analysis-depth="deep">
+<head>
+  <meta name="deepbom-release" content="1.94.0" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta id="themeColor" name="theme-color" content="#fffefa" />
+
+    <!-- Primary SEO -->
+    <title>DEEPBOM | Deployment Artifact Evidence for On-Device AI</title>
+    <meta name="description" content="Inspect TFLite, ONNX, GGUF, SafeTensors, and Core ML deployment artifacts locally in the browser. Separate artifact facts, target-specific models, runtime evidence, and unproven claims." />
+    <meta name="keywords" content="TFLite analyzer, ONNX analyzer, GGUF inspector, SafeTensors inspector, Core ML analyzer, on-device AI, model audit, quantization analysis, INT8, WebAssembly, WASM, TensorFlow Lite, XNNPACK, roofline model, neural network inspector, edge inference, mobile AI" />
+    <meta name="author" content="Jun-Hwan Kwon, Ph.D., Yonsei University College of Medicine" />
+    <meta name="citation_title" content="DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts" />
+    <meta name="citation_author" content="Kwon, Jun-Hwan" />
+    <meta name="citation_publication_date" content="2026-08-07" />
+    <meta name="citation_doi" content="10.5281/zenodo.21834509" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://deepbom.org/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://deepbom.org/" />
+    <meta property="og:title" content="DEEPBOM | Deployment Artifact Evidence for On-Device AI" />
+    <meta property="og:description" content="Inspect deployment artifacts locally and separate serialized facts, deterministic derivations, target models, imported runtime evidence, and what remains unproven." />
+    <meta property="og:site_name" content="DEEPBOM" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="https://deepbom.org/web/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="DEEPBOM browser-native neural network artifact audit" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="DEEPBOM | Deployment Artifact Evidence for On-Device AI" />
+    <meta name="twitter:description" content="Browser-local deployment artifact evidence for TFLite, ONNX, GGUF, SafeTensors, and Core ML with explicit claim boundaries." />
+    <meta name="twitter:image" content="https://deepbom.org/web/og-image.png" />
+
+    <!-- Structured data: SoftwareApplication + FAQPage + WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://deepbom.org/#app",
+          "name": "DEEPBOM",
+          "alternateName": ["Deep BOM", "deepbom", "DEEPBOM analyzer"],
+          "applicationCategory": "DeveloperApplication",
+          "applicationSubCategory": "Machine Learning Tool",
+          "operatingSystem": "Web Browser",
+          "url": "https://deepbom.org/",
+          "softwareVersion": "1.94.0",
+          "identifier": "https://doi.org/10.5281/zenodo.21834509",
+          "citation": "Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts (Version 1.94.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.21834509",
+          "description": "Browser-local deployment artifact evidence for TFLite, ONNX, GGUF, SafeTensors, and Core ML. The analyzer separates serialized facts, deterministic derivations, target-specific models, imported runtime observations, and unassessed claims.",
+          "featureList": [
+            "TFLite FlatBuffer static analysis",
+            "ONNX model analysis",
+            "INT8 activation precision boundary detection",
+            "Per-channel scale and zero-point audit",
+            "Weight histogram per tensor",
+            "Low-norm filter heuristic (L2 below 2% of layer maximum)",
+            "Static XNNPACK partition prediction and transition-cost estimation",
+            "Cross-target deployment frontier with robust hotspots and source-backed ONNX EP portability candidates",
+            "Roofline model — MACs vs. memory bandwidth per op",
+            "Synthetic-output perturbation geometry — 2D output-drift slices with Li et al. 2018 filter normalization",
+            "Multi-projection geometry summary — independently seeded 2D slices",
+            "Projected curvature descriptors — λ_max and trace via centered finite differences",
+            "Directional λ_max coefficient of variation across assessed slices",
+            "Haar wavelet frequency decomposition — LL/LH/HL/HH energy per kernel",
+            "Activation Haar decomposition — frequency signature of activation maps",
+            "Artifact Viewer — sidebar layer list, filter spatial canvas, per-layer perturbation surface",
+            "Runtime benchmark — WASM, WebGPU, WebNN latency measurement",
+            "Engineering report export — editable HTML, JSON, CycloneDX ML-BOM",
+            "Zero model upload — analysis remains in browser memory"
+          ],
+          "author": {
+            "@type": "Person",
+            "@id": "https://deepbom.org/#author",
+            "name": "Jun-Hwan Kwon, Ph.D.",
+            "jobTitle": "Research Assistant Professor",
+            "affiliation": {
+              "@type": "Organization",
+              "name": "Anesthesia and Pain Research Institute, Yonsei University College of Medicine",
+              "address": { "@type": "PostalAddress", "addressCountry": "KR" }
+            },
+            "identifier": {
+              "@type": "PropertyValue",
+              "propertyID": "ORCID",
+              "value": "0000-0002-6464-3895"
+            },
+            "sameAs": [
+              "https://orcid.org/0000-0002-6464-3895",
+              "https://www.linkedin.com/in/jun-hwan-kwon"
+            ],
+            "url": "https://deepbom.org/"
+          },
+          "creator": { "@id": "https://deepbom.org/#author" },
+          "keywords": "TFLite, ONNX, GGUF, SafeTensors, Core ML, model analysis, INT8 quantization, on-device AI, WebAssembly, neural network, XNNPACK, roofline",
+          "inLanguage": "en",
+          "isAccessibleForFree": true
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://deepbom.org/#website",
+          "url": "https://deepbom.org/",
+          "name": "DEEPBOM",
+          "description": "Deployment artifact evidence for on-device AI, with format-specific analysis depth and explicit claim boundaries",
+          "publisher": { "@id": "https://deepbom.org/#author" }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://deepbom.org/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is DEEPBOM?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "DEEPBOM is a browser-local evidence analysis tool for TFLite, ONNX, GGUF, SafeTensors, and Core ML artifacts. It reports the exact analysis depth available for each format, and artifact bytes remain local."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does DEEPBOM upload my model to a server?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No. Artifact files, weight payloads, tensor values, selected inputs, outputs, and reports remain in browser memory. Users may separately opt in to de-identified structural telemetry and may withdraw that consent; analysis does not require telemetry consent."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What file formats does DEEPBOM support?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "DEEPBOM provides deep deployment analysis for TFLite, graph and compatibility analysis for ONNX, container and tensor inspection for GGUF, checkpoint and shard inspection for SafeTensors, and model or package inspection for Core ML, including serialized graph evidence when present."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What does DEEPBOM analyze in a TFLite or ONNX model?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "DEEPBOM analyzes: (1) INT8 quantization contracts — holes, per-channel scale/zero-point distribution, and dequantize-requantize boundaries; (2) stored constant distributions — histogram, low-norm heuristics, and L2 norm per output channel where applicable; (3) synthetic-output perturbation geometry — 2D RMS output-drift slices using filter-normalized random directions, centered finite-difference projected-curvature descriptors, and a multi-projection directional summary; (4) frequency composition — Haar LL/LH/HL/HH energy for stored convolutional kernels and synthetic or observed activation maps; and (5) deployment evidence — static XNNPACK partition prediction, roofline modeling, and explicitly separate browser runtime measurements."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do I analyze a TFLite model with DEEPBOM?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "1. Open deepbom.org in your browser. 2. Select a supported artifact file or package; it stays local. 3. Review the displayed format-specific evidence scope. 4. Run the static artifact audit. 5. Export the hash-bound evidence, CycloneDX document, or public watermarked report."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is DEEPBOM's artifact perturbation geometry proxy?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "DEEPBOM evaluates a deterministic synthetic-input scalar functional: RMS output change between the unperturbed artifact and filter-normalized weight perturbations. It reports 2D output-drift grids, centered finite-difference projected-curvature descriptors, and raw directional λ_max variation across independently seeded slices. The input basis, seeds, radius, stencil, included constants, and INT8 dequantization policy are disclosed with the result. This is not training loss, a full-space Hessian, a 3D reconstruction, or evidence of generalization, accuracy, robustness, clinical performance, or release readiness."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <script type="importmap">
+      {
+        "imports": {
+          "@litertjs/core": "../node_modules/@litertjs/core/dist/index.js",
+          "@litertjs/wasm-utils": "../node_modules/@litertjs/wasm-utils/dist/index.js",
+          "onnxruntime-web/wasm": "../node_modules/onnxruntime-web/dist/ort.wasm.min.mjs"
+        }
+      }
+    </script>
+    <script src="./lib/theme-ui.js"></script>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./report-workspace.css" />
+    <link rel="stylesheet" href="./explorer-redesign.css" />
+    <link rel="stylesheet" href="./explorer-evidence.css" />
+    <link rel="stylesheet" href="./explorer-question.css" />
+    <link rel="stylesheet" href="./execution-placement.css" />
+    <link rel="stylesheet" href="./onnx-domain.css" />
+    <link rel="stylesheet" href="./research-theme.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">ON-DEVICE Pipeline</p>
+        <h1>DEEPBOM</h1>
+        <p class="product-deck">Deployment artifact evidence for on-device AI</p>
+        <address class="author-block">
+          <div class="author-identity">
+            <span class="author-kicker">Developed by</span>
+            <strong>Jun-Hwan Kwon, Ph.D.</strong>
+          </div>
+          <div class="author-affiliation-block" aria-label="Author affiliation">
+            <span class="author-role">Research Assistant Professor</span>
+            <span class="author-affiliation">Anesthesia and Pain Research Institute, Yonsei University College of Medicine, Republic of Korea</span>
+            <a
+              class="author-social-link"
+              href="https://www.linkedin.com/in/jun-hwan-kwon"
+              rel="me noopener"
+              target="_blank"
+              title="Jun-Hwan Kwon on LinkedIn"
+              aria-label="Jun-Hwan Kwon on LinkedIn"
+            ><span class="linkedin-mark" aria-hidden="true">in</span><span>LinkedIn</span></a>
+          </div>
+          <div class="author-details">
+            <div class="author-details-body">
+              <div class="citation-reference" aria-label="DEEPBOM citation">
+                <span class="citation-label">Citation</span>
+                <a class="citation-doi" href="https://doi.org/10.5281/zenodo.21834509" rel="noopener" target="_blank">doi:10.5281/zenodo.21834509</a>
+                <button
+                  class="citation-copy-button"
+                  id="copyCitationBtn"
+                  type="button"
+                  title="Copy the recommended DEEPBOM citation"
+                  aria-label="Copy the recommended DEEPBOM citation"
+                >Copy citation</button>
+              </div>
+              <a href="https://orcid.org/0000-0002-6464-3895" rel="me noopener" target="_blank">ORCID 0000-0002-6464-3895</a>
+              <a href="#contact" id="authorEmailLink" rel="nofollow">contact</a>
+              <span class="application-build" id="applicationBuild" hidden></span>
+              <span class="author-disclaimer">Independently developed research software. Institutional affiliation is provided for author identification and does not imply institutional endorsement.</span>
+            </div>
+          </div>
+        </address>
+      </div>
+      <div class="topbar-meta">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Use dark theme" title="Use dark theme">
+          <span class="theme-toggle-icon" aria-hidden="true"></span>
+          <span id="themeToggleLabel">Dark</span>
+        </button>
+        <div class="auth-widget" id="authWidget">
+          <button id="authOpen" type="button">Sign in</button>
+          <div id="authUser" hidden inert aria-hidden="true">
+            <div class="auth-user-main">
+              <span class="auth-role" id="authRole" hidden></span>
+              <strong id="authName"></strong>
+              <span id="authEmail"></span>
+              <span id="authProvider"></span>
+              <span class="auth-verify" id="authVerify" hidden>Email not verified</span>
+            </div>
+            <div class="auth-actions">
+              <button id="resendVerify" type="button" hidden>Verify</button>
+              <button id="accountOpen" type="button">Account</button>
+              <button id="adminOpen" type="button" hidden>Console</button>
+              <button id="authLogout" type="button">Logout</button>
+            </div>
+          </div>
+        </div>
+        <div class="status" id="status">Waiting</div>
+      </div>
+    </header>
+
+    <div class="auth-backdrop" id="authBackdrop" role="dialog" aria-modal="true" aria-labelledby="authTitle" hidden inert aria-hidden="true">
+      <section class="auth-modal">
+        <button class="modal-close" id="authClose" type="button" aria-label="Close">x</button>
+        <p class="eyebrow">Account</p>
+        <h2 id="authTitle">Sign in</h2>
+        <p id="authMessage">Static analysis and standalone CycloneDX exports are open. An account preserves access to controlled report and research modules.</p>
+        <div class="auth-tabs" id="authPasswordTabs">
+          <button class="active" id="authLoginTab" type="button">Login</button>
+          <button id="authSignupTab" type="button">Sign up</button>
+        </div>
+        <form class="auth-form" id="authForm">
+          <label id="authNameWrap" hidden>
+            <span>Name</span>
+            <input id="authFormName" type="text" autocomplete="name" />
+          </label>
+          <label>
+            <span>Email</span>
+            <input id="authFormEmail" type="email" autocomplete="email" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input id="authFormPassword" type="password" autocomplete="current-password" minlength="10" required />
+          </label>
+          <button id="authSubmit" type="submit">Login</button>
+        </form>
+        <div class="auth-divider" id="authDivider"><span>or</span></div>
+        <button class="google-button" id="googleLogin" type="button">Continue with Google</button>
+      </section>
+    </div>
+
+    <div class="runtime-profile-backdrop" id="runtimeProfileBackdrop" role="dialog" aria-modal="true" aria-labelledby="runtimeProfileTitle" hidden inert aria-hidden="true">
+      <section class="runtime-profile-modal">
+        <button class="modal-close" id="runtimeProfileClose" type="button" aria-label="Close">x</button>
+        <p class="eyebrow">Runtime Evidence</p>
+        <h2 id="runtimeProfileTitle">ONNX Runtime profile</h2>
+        <div class="runtime-profile-preview" id="runtimeProfilePreview"></div>
+        <form class="runtime-profile-form" id="runtimeProfileForm">
+          <div class="runtime-profile-form-grid">
+            <label>
+              <span>Runtime version</span>
+              <input id="runtimeProfileVersion" type="text" maxlength="80" placeholder="1.26.0" required />
+            </label>
+            <label>
+              <span>Execution providers</span>
+              <textarea id="runtimeProfileBackend" rows="2" maxlength="200" readonly required></textarea>
+            </label>
+            <label>
+              <span>Graph optimization</span>
+              <select id="runtimeProfileOptimization">
+                <option value="unknown">Unknown</option>
+                <option value="disabled">Disabled</option>
+                <option value="basic">Basic</option>
+                <option value="extended">Extended</option>
+                <option value="all">All</option>
+              </select>
+            </label>
+            <label>
+              <span>Execution mode</span>
+              <select id="runtimeProfileExecutionMode">
+                <option value="unknown">Unknown</option>
+                <option value="sequential">Sequential</option>
+                <option value="parallel">Parallel</option>
+              </select>
+            </label>
+            <label>
+              <span>Collection time</span>
+              <input id="runtimeProfileCollectedAt" type="datetime-local" step="0.001" required />
+            </label>
+            <label id="runtimeProfileCaptureLabel" hidden>
+              <span>Benchmark capture ID</span>
+              <input id="runtimeProfileCapture" type="text" maxlength="160" autocomplete="off" placeholder="device-run-2026-07-16-001" />
+            </label>
+            <label>
+              <span>Runtime binary SHA-256</span>
+              <input id="runtimeProfileBinarySha" type="text" maxlength="64" pattern="[a-fA-F0-9]{64}" placeholder="Optional" />
+            </label>
+          </div>
+          <label>
+            <span>Build ID and relevant flags</span>
+            <input id="runtimeProfileBuild" type="text" maxlength="500" required />
+          </label>
+          <output id="runtimeProfileStatus"></output>
+          <div class="runtime-profile-actions">
+            <button class="secondary-action" id="runtimeProfileCancel" type="button">Cancel</button>
+            <button id="runtimeProfileImport" type="submit">Import observed evidence</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="account-backdrop" id="accountBackdrop" role="dialog" aria-modal="true" aria-labelledby="accountTitle" hidden inert aria-hidden="true">
+      <section class="account-modal">
+        <button class="modal-close" id="accountClose" type="button" aria-label="Close">x</button>
+        <p class="eyebrow">Account</p>
+        <h2 id="accountTitle">Account and requests</h2>
+        <p id="accountProfileStatus">Submit access requests, feedback, and research notes. Artifact files and reports are not uploaded.</p>
+        <div class="account-layout">
+          <section class="account-card">
+            <div class="account-card-head">
+              <h3>Current Features</h3>
+              <span id="accountCapabilityCount"></span>
+            </div>
+            <div class="feature-list" id="accountCapabilityList"></div>
+          </section>
+
+          <section class="account-card">
+            <div class="account-card-head">
+              <h3>Request / Feedback</h3>
+              <span id="accountRequestStatus">Ready</span>
+            </div>
+            <form class="account-request-form" id="accountRequestForm">
+              <label>
+                <span>Type</span>
+                <select id="accountRequestProfile">
+                  <option value="feedback">Feedback</option>
+                  <option value="research">Advanced analysis module</option>
+                  <option value="medical_ai">Regulatory workspace</option>
+                  <option value="bug">Bug report</option>
+                </select>
+              </label>
+              <div id="accessProfileInfo" class="access-profile-info" hidden></div>
+              <label>
+                <span>Title</span>
+                <input id="accountRequestTitle" type="text" maxlength="160" placeholder="Short title" />
+              </label>
+              <label>
+                <span>Message</span>
+                <textarea id="accountRequestMessage" rows="6" maxlength="4000" required placeholder="For a controlled module request, include a brief self-introduction, affiliation, intended use, and what you want to evaluate. For feedback or bugs, describe what happened and what would help."></textarea>
+              </label>
+              <button id="accountRequestSubmit" type="submit">Submit request</button>
+            </form>
+          </section>
+
+          <section class="account-card">
+            <div class="account-card-head">
+              <h3>My Requests</h3>
+              <span id="accountRequestCount"></span>
+            </div>
+            <div class="request-list" id="accountRequestList"></div>
+          </section>
+
+          <section class="account-card">
+            <div class="account-card-head">
+              <h3>Research metadata &amp; consent</h3>
+              <span id="consentStatusBadge"></span>
+            </div>
+            <p class="consent-card-copy">Optional structure telemetry shares op types, shapes, operator sequence, assessed MAC counts, predicted partition-boundary counts, timing, and a structure fingerprint for synthetic registered-device timing research. Model weights, tensor values, inputs, outputs, filenames, and reports are never sent. You can opt in or withdraw at any time.</p>
+            <div class="consent-metadata-log" id="consentMetadataLog"></div>
+            <div class="consent-actions">
+              <button id="withdrawConsentBtn" class="secondary-action" type="button">Withdraw consent</button>
+              <button id="restoreConsentBtn" class="secondary-action" type="button" hidden>Re-enable sharing</button>
+            </div>
+          </section>
+
+          <section class="account-card admin-card" id="adminPanel" hidden>
+            <div class="account-card-head">
+              <h3>Admin Console</h3>
+              <button id="adminRefresh" type="button">Open Console</button>
+            </div>
+            <div class="request-list admin-list" id="adminRequestList"></div>
+            <div class="account-card-head admin-bench-head">
+              <h3>Synthetic Device Benchmark Queue</h3>
+              <div class="admin-bench-filters">
+                <select id="adminBenchStatusFilter">
+                  <option value="">all</option>
+                  <option value="pending">pending</option>
+                  <option value="running">running</option>
+                  <option value="complete">complete</option>
+                  <option value="failed">failed</option>
+                </select>
+                <button id="adminBenchRefresh" type="button">Refresh</button>
+              </div>
+            </div>
+            <div id="adminBenchList" class="admin-bench-list"></div>
+          </section>
+        </div>
+      </section>
+    </div>
+
+    <div class="agreement-backdrop" id="agreementBackdrop" role="dialog" aria-modal="true" aria-labelledby="agreementTitle" hidden inert aria-hidden="true">
+      <section class="agreement-modal">
+        <div class="agreement-scroll">
+          <p class="eyebrow">Privacy Agreement</p>
+          <h2 id="agreementTitle">Local-only artifact inspection</h2>
+          <p class="agreement-lead">
+            This workbench runs locally in your browser. Artifact bytes, weight payloads, selected images, generated reports, tensor values, and outputs are not uploaded by this app.
+          </p>
+          <ul class="agreement-summary-list">
+            <li>Original artifacts, weights, inputs, outputs, and reports remain on this device.</li>
+            <li>Optional structural telemetry stays off unless you explicitly enable it.</li>
+            <li>A registered-device benchmark receives a zero-weight synthetic reconstruction, never the original artifact or weights.</li>
+          </ul>
+          <details class="agreement-technical-details">
+            <summary>Exact data-path boundaries</summary>
+            <div class="agreement-points">
+              <div>
+                <strong>Artifact bytes stay local</strong>
+                <span>The selected artifact remains on this device during analysis.</span>
+              </div>
+              <div>
+                <strong>Browser-local execution</strong>
+                <span>Static analysis, preprocessing, report generation, and browser-runtime benchmarks happen in browser memory.</span>
+              </div>
+              <div>
+                <strong>No artifact-content telemetry</strong>
+                <span>Artifact bytes, tensors, images, outputs, filenames, and reports are never sent. Optional structure telemetry is controlled separately below.</span>
+              </div>
+              <div>
+                <strong>Synthetic Device Benchmark is a separate path</strong>
+                <span>An explicit queue action uses consented structure metadata to build a zero-weight synthetic reconstruction for a registered device agent. The agent does not receive the original artifact or weight payload.</span>
+              </div>
+            </div>
+          </details>
+          <label class="agreement-check">
+            <input id="privacyAgree" type="checkbox" />
+            <span>I understand that artifact inspection runs locally and artifact content is not uploaded.</span>
+          </label>
+          <label class="agreement-check agreement-check-optional">
+            <input id="researchConsent" type="checkbox" />
+            <span><strong>Optional research telemetry.</strong> Share de-identified structural telemetry only: op types, shapes, operator sequence, assessed MAC counts, predicted partition-boundary counts, timing, and a structure fingerprint. Model weights, filenames, inputs, outputs, and reports are never sent. Structural patterns may still be distinctive; do not enable this for confidential model architectures unless your policy permits it.</span>
+          </label>
+        </div>
+        <button id="acceptAgreement" type="button" disabled>Continue</button>
+      </section>
+    </div>
+
+    <main class="layout">
+      <section class="session-anchor" id="sessionAnchor" aria-label="Pinned model session">
+        <section class="upload-panel" id="dropzone">
+          <div class="artifact-intro">
+            <p class="artifact-intro-kicker">Deployment artifact evidence</p>
+            <h2>Inspect the artifact that will actually run.</h2>
+            <p class="artifact-intro-lead">Separate serialized facts, deterministic derivations, target models, and observed runtime evidence before release.</p>
+            <details class="evidence-class-disclosure">
+              <summary>Evidence classes</summary>
+              <p class="artifact-intro-evidence-copy">DEEPBOM separates serialized artifact facts, deterministic derivations, target-specific models, imported runtime observations, and what remains unassessed.</p>
+              <ul class="evidence-class-strip" aria-label="Evidence classes kept separate by DEEPBOM">
+                <li><strong>Artifact fact</strong><span>read from bytes</span></li>
+                <li><strong>Derived</strong><span>reproducible calculation</span></li>
+                <li><strong>Target model</strong><span>declared assumptions</span></li>
+                <li><strong>Runtime import</strong><span>observed elsewhere</span></li>
+                <li><strong>Not assessed</strong><span>no claim made</span></li>
+              </ul>
+            </details>
+            <h3 id="artifactContextTitle">Begin with a hash-identified artifact</h3>
+            <p id="artifactContextCopy">Select a local artifact or package. Format-specific evidence scope is resolved before analysis.</p>
+          </div>
+          <div class="upload-controls">
+            <select id="targetSelect" hidden aria-hidden="true"></select>
+            <label class="file-button file-button-formats artifact-picker">
+              <input id="fileInput" type="file" accept=".tflite,.onnx,.gguf,.safetensors,.mlmodel,.pte,.ptd,application/octet-stream" />
+              <span>Select artifact</span>
+              <small>(.tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd)</small>
+            </label>
+            <label class="file-button file-button-formats package-picker" title="Select a Core ML .mlpackage or a SafeTensors repository directory with optional config, tokenizer, deployment, and DEEPBOM runtime sidecars">
+              <input id="artifactBundleInput" type="file" multiple webkitdirectory directory />
+              <span>Select package</span>
+              <small>(.mlpackage, sharded .safetensors repository + config/sidecars)</small>
+            </label>
+            <div class="onnx-external-control" id="onnxExternalDataControl" hidden>
+              <label class="file-button external-file-button" title="Select ONNX external-data files or ExecuTorch PTD sidecars referenced by the active artifact">
+                <input id="onnxExternalDataInput" type="file" multiple />
+                Add sidecar files
+              </label>
+              <label class="file-button external-file-button" title="Select the sidecar directory while retaining safe relative paths">
+                <input id="onnxExternalDataDirectoryInput" type="file" multiple webkitdirectory directory />
+                Add sidecar folder
+              </label>
+              <output id="onnxExternalDataStatus" class="onnx-external-status">No sidecars selected</output>
+            </div>
+            <button class="run-audit-button" id="runAudit" type="button" disabled>Run Static Audit</button>
+            <div class="sample-model-control">
+              <label for="sampleModelSelect">Verified example</label>
+              <select id="sampleModelSelect" aria-label="Public verified example model">
+                <option value="tflite-mobilenet-v2-int8">TFLite - MobileNet V2 UINT8 (3.4 MiB)</option>
+                <option value="tflite-efficientnet-lite0-int8">TFLite - EfficientNet-Lite0 per-axis INT8 (5.2 MiB)</option>
+                <option value="tflite-efficientdet-lite0-int8">TFLite - EfficientDet-Lite0 INT8 + float outputs (4.4 MiB)</option>
+                <option value="tflite-blazeface-short-fp16">TFLite - BlazeFace FP16 weight storage (224 KiB)</option>
+                <option value="onnx-mnist-8">ONNX - MNIST-8 (25.8 KiB)</option>
+                <option value="gguf-tinymqa-q4">GGUF - TinyMQA 1M Q4_0 (509 KiB)</option>
+                <option value="safetensors-nanofable-fp16">SafeTensors - NanoFable 1M FP16 (2.6 MiB)</option>
+                <option value="coreml-mnist-classifier">Core ML - MNIST Classifier (386 KiB)</option>
+              </select>
+              <button class="secondary-action" id="trySampleModel" type="button">Run verified example</button>
+              <small id="sampleModelFocus" aria-live="polite"></small>
+            </div>
+          </div>
+          <details class="pre-audit-reference" id="preAuditReference">
+            <summary>
+              <strong>Evidence guide</strong>
+              <span>Scope, provenance, and trust boundaries</span>
+            </summary>
+            <div class="pre-audit-reference-body">
+              <section class="sample-evidence-glance" id="sampleEvidenceGlance" aria-label="Selected verified example evidence" aria-live="polite"></section>
+              <div class="first-visit-context">
+                <section aria-labelledby="medicalEvidenceTitle">
+                  <p class="context-kicker">Clinical engineering context</p>
+                  <h3 id="medicalEvidenceTitle">Why this matters for medical AI</h3>
+                  <p class="medical-context-summary">Model evidence alone does not characterize the final deployed configuration. Runtime, hardware, interface contracts, and workflow integration can affect behavior under intended conditions of use.</p>
+                  <details class="medical-context-detail">
+                    <summary>Read full clinical engineering context</summary>
+                    <div>
+                      <p>Model-level performance evidence does not fully characterize the final deployed configuration. Runtime, target hardware, input and output contracts, quantization, fallback behavior, resource constraints, and workflow integration can affect how an AI-enabled medical device behaves under its intended conditions of use.</p>
+                      <p>DEEPBOM provides technical deployment evidence that can support traceability, verification, and change-impact assessment. It does not replace clinical validation, usability engineering, cybersecurity assessment, or medical-device risk management.</p>
+                    </div>
+                  </details>
+                </section>
+                <section aria-labelledby="dataBoundaryTitle">
+                  <p class="context-kicker">Trust boundary</p>
+                  <h3 id="dataBoundaryTitle">Three distinct data paths</h3>
+                  <dl class="data-boundary-list">
+                    <div><dt>Browser audit</dt><dd>Original artifact bytes, weights, tensor values, inputs, outputs, and reports remain on this device.</dd></div>
+                    <div><dt>Optional telemetry</dt><dd>Only after explicit opt-in, structure metadata and a structure fingerprint may be stored. Structural patterns can still be distinctive.</dd></div>
+                    <div><dt>Synthetic device benchmark</dt><dd>A registered agent receives a zero-weight, shape/op/dtype/quantization-equivalent synthetic reconstruction, not the original artifact. Aggregate structural timing and status return through the queue. No automatic retention period is claimed; queue records are subject to administrative deletion.</dd></div>
+                  </dl>
+                </section>
+              </div>
+              <details class="sample-library" id="sampleLibrary">
+                <summary>
+                  <span>Verified example library</span>
+                  <strong>8 hash-pinned evidence profiles</strong>
+                  <small>See what each artifact proves before running it</small>
+                </summary>
+                <div class="sample-library-head">
+                  <p>Each profile separates its deterministic regression baseline from runtime and task claims that the artifact cannot establish.</p>
+                  <button class="secondary-action" id="downloadSampleManifest" type="button">Expected evidence JSON</button>
+                </div>
+                <div class="sample-library-grid" id="sampleLibraryGrid" aria-label="Verified example evidence profiles"></div>
+              </details>
+            </div>
+          </details>
+          <section class="sample-verification" id="sampleVerificationPanel" aria-label="Verified example expected and observed evidence" hidden></section>
+          <div class="target-switcher-bar" id="targetSwitcherBar" aria-label="Static audit target conditions" hidden></div>
+        </section>
+
+        <section class="model-plan" id="modelPlan">
+          <div>
+            <span>Selected Artifact</span>
+            <strong id="selectedModelName">Unselected</strong>
+            <p id="selectedModelMeta">Choose a local artifact or package to inspect.</p>
+          </div>
+          <div>
+            <span>Analysis Time</span>
+            <strong id="analysisEstimate">Not estimated</strong>
+            <p id="analysisEstimateNote">A light local read starts only after an artifact is selected.</p>
+          </div>
+          <div>
+            <span>Next Step</span>
+            <strong id="analysisPlanStatus">Waiting for artifact</strong>
+            <p>Artifact bytes are read fully only after Run Static Audit is clicked.</p>
+            <div class="audit-progress" id="auditProgress" role="progressbar" aria-label="Static audit phase progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
+              <div class="audit-progress-track"><i id="auditProgressBar"></i></div>
+              <output id="auditProgressLabel">0%</output>
+            </div>
+          </div>
+        </section>
+        <details class="format-capability-panel" id="formatCapabilityPanel">
+          <summary>
+            <span>Evidence capability</span>
+            <strong data-capability-summary>Compare the evidence each supported artifact class can establish.</strong>
+          </summary>
+          <p data-capability-detail>The same evidence spine is used across formats; absent execution evidence is never inferred from a tensor container.</p>
+          <strong class="capability-section-title" data-current-capability-title hidden>Current artifact coverage</strong>
+          <div class="format-capability-table-wrap" data-current-capability-wrap hidden>
+            <table class="format-capability-table current-capability-table" data-current-capability-table>
+              <thead><tr></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <strong class="capability-section-title">Maximum supported scope</strong>
+          <p class="capability-boundary">The current row is the selected artifact's emitted coverage. The matrix below is a capability ceiling, not a claim that every artifact closes every rule.</p>
+          <div class="format-capability-table-wrap">
+            <table class="format-capability-table scope-capability-table" data-scope-capability-table>
+              <thead><tr></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <section class="format-runtime-binding" data-format-runtime-binding hidden>
+            <div>
+              <span>Runtime build binding</span>
+              <strong data-format-runtime-title>External runtime evidence</strong>
+              <p data-format-runtime-detail>Bind an exact runtime binary and build manifest without treating it as serialized graph evidence.</p>
+            </div>
+            <div class="format-runtime-actions">
+              <button class="secondary-action" id="importFormatRuntimeEvidence" type="button">Import evidence</button>
+              <button class="secondary-action" id="downloadFormatRuntimeTemplate" type="button">Template</button>
+              <button class="secondary-action" id="downloadFormatRuntimeCapturePlan" type="button">Capture plan</button>
+              <button class="secondary-action" id="clearFormatRuntimeEvidence" type="button" hidden>Clear</button>
+            </div>
+          </section>
+        </details>
+        <section class="audit-claim-boundary" id="auditClaimBoundary" hidden aria-live="polite">
+          <div class="audit-claim-head">
+            <div>
+              <span>Claim boundary</span>
+              <strong id="auditClaimStatus">Static artifact audit not run</strong>
+            </div>
+            <em id="auditClaimEvidence">STATIC ARTIFACT EVIDENCE</em>
+          </div>
+          <div class="audit-claim-grid">
+            <div><span>Analysis depth</span><strong id="auditClaimDepth">Not selected</strong></div>
+            <div><span>Assessed in this run</span><p id="auditClaimAssessed">Select an artifact to resolve format-specific coverage.</p></div>
+            <div><span>Not proven here</span><p id="auditClaimRuntime">Runtime execution is not observed by a static audit.</p></div>
+            <div><span>Next proof</span><p id="auditClaimNextProof">Select an artifact to resolve the next required evidence.</p></div>
+          </div>
+          <p class="audit-claim-release" id="auditClaimRelease">Release readiness is not assessed without deployment requirements and representative task-output evidence.</p>
+          <ol class="evidence-spine" id="evidenceSpine" aria-label="Evidence progression">
+            <li data-evidence-stage="artifact"><button type="button" data-evidence-workflow="input" aria-label="Artifact: Not selected. Open artifact selection."><span>Artifact</span><strong>Not selected</strong></button></li>
+            <li data-evidence-stage="derivation"><button type="button" data-evidence-workflow="audit" data-evidence-audit-tab="overview" aria-label="Derivation: Pending artifact." disabled><span>Derivation</span><strong>Pending artifact</strong></button></li>
+            <li data-evidence-stage="deployment"><button type="button" data-evidence-workflow="audit" data-evidence-audit-tab="xnnpack" aria-label="Deployment model: Pending format." disabled><span>Deployment model</span><strong>Pending format</strong></button></li>
+            <li data-evidence-stage="runtime"><button type="button" data-evidence-workflow="runtime" aria-label="Runtime observation: Not imported." disabled><span>Runtime observation</span><strong>Not imported</strong></button></li>
+            <li data-evidence-stage="release"><button type="button" data-evidence-workflow="output" aria-label="Release decision: Not assessed." disabled><span>Release decision</span><strong>Not assessed</strong></button></li>
+          </ol>
+        </section>
+
+        <section class="workflow-console" id="workflowConsole" aria-label="Audit workspace navigation" hidden>
+          <div class="workflow-head">
+            <div>
+              <span>Explorer</span>
+              <h2>Artifact audit session</h2>
+            </div>
+            <aside class="workflow-head-actions" aria-label="Analysis and session state">
+              <span class="analysis-depth-state" data-analysis-depth-mode="deep" role="status">Full analysis</span>
+              <strong id="workflowMode">No artifact selected</strong>
+            </aside>
+          </div>
+          <div class="workflow-rail" id="workflowRail" role="tablist" aria-label="Audit workflow">
+            <button class="workflow-step active" type="button" data-workflow-step="input">
+              <span>Input</span>
+              <strong>Artifact</strong>
+              <p>Select artifact; context follows</p>
+            </button>
+            <button class="workflow-step" type="button" data-workflow-step="audit">
+              <span>Audit</span>
+              <strong>Overview</strong>
+              <p>Static signals and risks</p>
+            </button>
+            <button class="workflow-step" type="button" data-workflow-step="findings">
+              <span>Results</span>
+              <strong>Findings</strong>
+              <p>Ranked actionable findings</p>
+            </button>
+            <button class="workflow-step" type="button" data-workflow-step="graph" data-analysis-depth="deep">
+              <span>Graph</span>
+              <strong>Explorer</strong>
+              <p>Ops, tensors, links</p>
+            </button>
+            <button class="workflow-step" type="button" data-workflow-step="redesign" data-analysis-depth="deep">
+              <span>Design</span>
+              <strong>Redesign</strong>
+              <p>Edit blocks, compare impact</p>
+            </button>
+            <button class="workflow-step" type="button" data-workflow-step="runtime">
+              <span>Runtime</span>
+              <strong>Benchmark</strong>
+              <p>Preprocess and timing</p>
+            </button>
+            <details class="workflow-research-group" id="workflowResearchGroup" data-analysis-depth="deep">
+              <summary>
+                <span>Optional</span>
+                <strong>Research</strong>
+                <p>Open research modules</p>
+              </summary>
+              <button class="workflow-step" type="button" data-workflow-step="deepbom" data-workflow-module="deepbom" data-analysis-depth="deep">
+                <span>Artifact</span>
+                <strong>Geometry Proxy</strong>
+                <p>Weight/topology descriptors</p>
+              </button>
+              <button class="workflow-step" type="button" data-workflow-step="runtime_basin" data-workflow-module="runtime_basin" data-analysis-depth="deep">
+                <span>Perturbation</span>
+                <strong>Drift Analysis</strong>
+                <p>Output drift &amp; stability</p>
+              </button>
+              <button class="workflow-step" type="button" data-workflow-step="offline_test" data-workflow-module="offline_test" data-analysis-depth="deep" hidden>
+                <span>On-device</span>
+                <strong>Synthetic Device</strong>
+                <p>Structural timing on registered hardware</p>
+              </button>
+              <button class="workflow-step" type="button" data-workflow-step="deployment_sensitivity" data-workflow-module="deployment_sensitivity" data-analysis-depth="deep">
+                <span>Finite difference</span>
+                <strong>Deployment Sensitivity Proxy</strong>
+                <p>Local deploy proxy</p>
+              </button>
+            </details>
+            <button class="workflow-step" type="button" data-workflow-step="output">
+              <span>Output</span>
+              <strong>Reports</strong>
+              <p>Evidence reports</p>
+            </button>
+          </div>
+          <section class="audit-workbench" id="auditWorkbench" hidden aria-label="Audit detail selector">
+            <div class="module-head audit-selector-head">
+              <div>
+                <span>Audit selector</span>
+                <h2>Static analysis views</h2>
+                <p>Switch between the main summary, delegate coverage, quantization contract, roofline pressure, and stage structure.</p>
+              </div>
+              <strong>Open static audit</strong>
+            </div>
+            <div class="audit-tabs" role="tablist" aria-label="Audit details">
+              <button class="audit-tab active" type="button" data-audit-tab="overview" aria-label="Overview, static evidence triage">
+                <span>Summary</span>
+                <strong>Overview</strong>
+                <em>Triage</em>
+              </button>
+              <button class="audit-tab" type="button" data-audit-tab="xnnpack" data-format-scope="tflite" aria-label="TFLite XNNPACK conditional eligibility and predicted partition segments">
+                <span>Delegate</span>
+                <strong>XNNPACK</strong>
+                <em>Segments</em>
+              </button>
+              <button class="audit-tab" type="button" data-audit-tab="accelerator" aria-label="Source-backed accelerator eligibility, partitions, boundaries, and unresolved runtime conditions">
+                <span>Placement</span>
+                <strong>Accelerator</strong>
+                <em>Eligibility</em>
+              </button>
+              <button class="audit-tab" type="button" data-audit-tab="quant" aria-label="Quantization summary, numerical state and risk">
+                <span>Quantization</span>
+                <strong>Quant</strong>
+                <em>Summary</em>
+              </button>
+              <button class="audit-tab" type="button" data-audit-tab="quant-labs" data-analysis-depth="deep" aria-label="Quantization labs, Q/DQ and arithmetic contracts">
+                <span>Arithmetic</span>
+                <strong>Quant Labs</strong>
+                <em>Q/DQ</em>
+              </button>
+              <button class="audit-tab" type="button" data-audit-tab="llm" data-format-scope="tflite onnx gguf safetensors" aria-label="On-device LLM serialized graph or architecture, state, tokenizer, runtime, and medical evidence boundary">
+                <span>On-device</span>
+                <strong>LLM</strong>
+                <em>Contract</em>
+              </button>
+              <button class="audit-tab" type="button" data-audit-tab="roofline" aria-label="Static roofline, target bound posture">
+                <span>Target</span>
+                <strong>Roofline</strong>
+                <em>Bound</em>
+              </button>
+              <button class="audit-tab" type="button" data-audit-tab="stage" data-analysis-depth="deep" aria-label="Stage topology and blocks">
+                <span>Topology</span>
+                <strong>Stage</strong>
+                <em>Blocks</em>
+              </button>
+            </div>
+            <label class="mobile-audit-view" for="mobileAuditView">
+              <span>Static analysis view</span>
+              <select id="mobileAuditView">
+                <option value="overview">Summary</option>
+                <option value="xnnpack">Deployment / XNNPACK</option>
+                <option value="accelerator">Accelerator eligibility and boundaries</option>
+                <option value="quant">Quantization summary</option>
+                <option value="quant-labs" data-analysis-depth="deep">Quantization arithmetic and Q/DQ</option>
+                <option value="llm">On-device LLM contract</option>
+                <option value="roofline">Performance / Roofline</option>
+                <option value="stage" data-analysis-depth="deep">Architecture / Stages</option>
+              </select>
+            </label>
+            <div class="audit-focus-note">
+              <strong id="auditFocusTitle">Overview</strong>
+            <p id="auditFocusCopy">Review target-independent artifact identity first, then the separately labeled selected-target engineering dashboard.</p>
+            </div>
+          </section>
+          <div class="output-module-selector" id="outputModuleSelector" hidden>
+            <div class="module-head">
+              <div>
+                <span>Output selector</span>
+                <h2>Module results and report packages</h2>
+                <p>Select a completed module result, open the Engineering Report, or export reusable engineering evidence.</p>
+              </div>
+              <strong id="moduleAccessStatus">Open audit ready</strong>
+            </div>
+            <div class="module-tabs" id="moduleTabs" role="tablist" aria-label="Analysis and report modules">
+              <button class="module-tab" type="button" data-module-tab="deepbom" data-feature-id="artifact_geometry" data-analysis-depth="deep">
+                <span>Research</span>
+                <strong>Artifact Geometry</strong>
+                <em>Locked</em>
+              </button>
+              <button class="module-tab" type="button" data-module-tab="runtime_basin" data-feature-id="runtime_basin" data-analysis-depth="deep">
+                <span>Research</span>
+                <strong>Drift Analysis</strong>
+                <em>Locked</em>
+              </button>
+              <button class="module-tab" type="button" data-module-tab="offline_test" data-feature-id="runtime_basin" data-analysis-depth="deep" hidden>
+                <span>On-device</span>
+                <strong>Synthetic Device</strong>
+                <em>Sign in</em>
+              </button>
+              <button class="module-tab" type="button" data-module-tab="deployment_sensitivity" data-feature-id="deployment_sensitivity" data-analysis-depth="deep">
+                <span>Research</span>
+                <strong>Deployment Sensitivity Proxy</strong>
+                <em>Locked</em>
+              </button>
+              <button class="module-tab active" type="button" data-module-tab="engineering_report">
+                <span>Final</span>
+                <strong>Engineering Report</strong>
+                <em>Run audit</em>
+              </button>
+              <button class="module-tab" type="button" data-module-tab="export_contracts">
+                <span>Machine</span>
+                <strong>Export</strong>
+                <em>7 docs + pack</em>
+              </button>
+            </div>
+          </div>
+          <div class="workflow-runbook">
+            <div>
+              <span>Next action</span>
+              <strong id="workflowNextAction">Select artifact</strong>
+              <p id="workflowNextDetail">Choose a local artifact or package; deployment context follows its format.</p>
+            </div>
+            <div class="analysis-levels">
+              <span>Evidence workflow</span>
+              <div>
+                <strong>1. Artifact</strong>
+                <p>Resolve file or package</p>
+              </div>
+              <div>
+                <strong>2. Derive</strong>
+                <p>Compute serialized evidence</p>
+              </div>
+              <div>
+                <strong>3. Model</strong>
+                <p>Apply deployment context</p>
+              </div>
+              <div>
+                <strong>4. Observe</strong>
+                <p>Bind runtime evidence</p>
+              </div>
+              <div>
+                <strong>5. Release</strong>
+                <p>Evaluate requirements</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="module-run-console" id="moduleRunConsole" hidden aria-label="Selected module execution">
+        <div class="module-run-head">
+          <div>
+            <span>Execution pane</span>
+            <h2>Run selected module</h2>
+            <p>Run controls live here. Results and downloads appear in the report pane below after execution.</p>
+          </div>
+        </div>
+            <div class="module-run-panels">
+              <section class="module-run-panel active" data-module-run-panel="deepbom" data-analysis-depth="deep">
+                <div class="module-panel-head">
+                  <div>
+                    <span>Research analysis <em class="maturity-badge maturity-research">Research preview</em></span>
+                    <h3>Artifact Geometry: deploy-artifact weight and topology descriptors.</h3>
+                    <p id="deepBomAccessNote">The controlled WASM module is loaded only for authorized accounts. Browser delivery controls access, not cryptographic source secrecy.</p>
+                  </div>
+                  <div class="module-actions">
+                    <button id="runDeepBom" type="button">Run Artifact Geometry</button>
+                    <button id="requestDeepBomAccess" class="secondary-action" type="button" data-request-feature="research">Request module access</button>
+                  </div>
+                </div>
+              </section>
+              <section class="module-run-panel" data-module-run-panel="runtime_basin" data-analysis-depth="deep">
+                <div class="module-panel-head">
+                  <div>
+                    <span>Research analysis <em class="maturity-badge maturity-research">Research preview</em></span>
+                    <h3>Drift Analysis: perturbation drift and backend consistency checks.</h3>
+                    <p id="runtimeBasinPanelNote">Runs input/output drift probes, backend availability checks, and bounded output comparisons locally in the browser.</p>
+                  </div>
+                  <button class="secondary-action" id="perturbationPanelAction" type="button">Locked</button>
+                  <button id="modelViewerBtn" class="secondary-action" type="button" hidden>Artifact Viewer</button>
+                </div>
+                <p id="perturbationPanelNote" hidden></p>
+              </section>
+              <section class="module-run-panel" data-module-run-panel="offline_test" data-analysis-depth="deep">
+                <div class="module-panel-head">
+                  <div>
+                    <span>Registered-device synthetic benchmark</span>
+                    <h3><em class="maturity-badge maturity-beta">Beta</em> Structural timing from a zero-weight reconstruction.</h3>
+                    <p id="offlineTestPanelNote">Run Static Audit, select registered hardware, then queue a shape/op/dtype/quantization-equivalent reconstruction. The original artifact and weight payload are not transferred.</p>
+                  </div>
+                </div>
+              </section>
+              <section class="module-run-panel" data-module-run-panel="deployment_sensitivity" data-analysis-depth="deep">
+                <div class="module-panel-head">
+                  <div>
+                    <span>Research analysis</span>
+                    <h3><em class="maturity-badge maturity-research">Research preview</em> Deployment Sensitivity Proxy: finite-difference probes on the deployed function.</h3>
+                    <p id="deploymentSensitivityPanelNote">Runs locally against the deployed TFLite runtime path and reports finite-difference deployment-function sensitivity evidence.</p>
+                  </div>
+                  <button class="secondary-action" id="deploymentSensitivityPanelAction" type="button" data-request-feature="research">Request module access</button>
+                </div>
+              </section>
+              <section class="module-run-panel" data-module-run-panel="engineering_report">
+                <div class="module-panel-head">
+                  <div>
+                    <span>Final report</span>
+                    <h3><em class="maturity-badge maturity-stable">Stable</em> Engineering Report: technical audit evidence for deployment engineers.</h3>
+                  <p id="engineeringReportScopeCopy">The login-free Engineering Report preserves the complete synthesized evidence ledger and action queue in a watermarked copy whose visible body is bound by SHA-256. Raw reusable derivatives remain separately controlled.</p>
+                  </div>
+                </div>
+              </section>
+              <section class="module-run-panel" data-module-run-panel="export_contracts">
+                <div class="module-panel-head">
+                  <div>
+                    <span>Machine-readable contracts</span>
+                    <h3><em class="maturity-badge maturity-stable">Stable</em> Artifact, formulation, runtime, and provenance release contracts.</h3>
+                    <p>Every document binds the analyzed artifact SHA-256; target-dependent requirements bind the active analyzed target.</p>
+                  </div>
+                </div>
+              </section>
+        </div>
+      </section>
+
+      <section class="module-console" id="actions" hidden aria-label="Output modules">
+        <div class="module-panels">
+          <section class="module-panel active" data-module-panel="deepbom" data-analysis-depth="deep">
+            <div class="module-result-placeholder">No Artifact Geometry result yet. Run the research preview from the Explorer controls above.</div>
+            <div class="deepbom-panel" id="deepBomPanel" hidden>
+              <div class="section-head">
+                <div>
+                  <h2>Artifact Geometry Proxy</h2>
+                  <p>Local deploy-artifact weight and topology descriptors. They prioritize follow-up validation and are not training-loss, accuracy, or release-readiness evidence.</p>
+                </div>
+                <span id="deepBomStatus">Not loaded</span>
+              </div>
+              <div class="deepbom-grid" id="deepBomGrid"></div>
+              <div class="deepbom-protocols" id="deepBomProtocols"></div>
+              <div class="deepbom-caveats" id="deepBomCaveats" hidden></div>
+              <div class="deepbom-notes" id="deepBomNotes"></div>
+              <button class="deepbom-download" id="downloadDeepBom" type="button" hidden>Download Artifact Geometry JSON</button>
+            </div>
+          </section>
+          <section class="module-panel" data-module-panel="runtime_basin" data-analysis-depth="deep">
+            <div class="module-result-placeholder">No local analysis results yet. Run Drift Analysis from the Explorer controls above.</div>
+            <div class="deepbom-panel" id="perturbationResultPanel" hidden>
+              <div class="section-head">
+                <div>
+                  <h2>Perturbation</h2>
+                  <p>Local input perturbation sensitivity. Artifact bytes and generated tensors stay in browser memory.</p>
+                </div>
+                <span id="perturbationStatus">Not run</span>
+              </div>
+              <div class="deepbom-grid" id="perturbationGrid"></div>
+              <div class="haar-panel" id="haarSweepPanel" hidden></div>
+              <div class="haar-panel" id="lossLandscapePanel" hidden></div>
+              <div id="modelViewerPanel" hidden style="margin:16px 0"></div>
+              <div class="haar-panel" id="lossTomoPanel" hidden></div>
+              <div class="deepbom-protocols" id="perturbationProtocols"></div>
+              <div class="deepbom-notes" id="perturbationNotes"></div>
+            </div>
+            <div class="deepbom-panel" id="runtimeBasinResultPanel" hidden>
+              <div class="section-head">
+                <div>
+                  <h2>Backend Consistency</h2>
+                  <p>Local backend availability and output-drift checks.</p>
+                </div>
+                <span id="runtimeBasinStatus">Not run</span>
+              </div>
+              <div class="deepbom-grid" id="runtimeBasinGrid"></div>
+              <div class="deepbom-protocols" id="runtimeBasinProtocols"></div>
+              <div class="deepbom-notes" id="runtimeBasinNotes"></div>
+            </div>
+          </section>
+          <section class="module-panel" data-module-panel="offline_test" data-analysis-depth="deep">
+            <div class="offline-test-panel" id="offlineTestPanel">
+              <div class="device-registry-section">
+                <div class="device-registry-head">
+                  <h3>Registered Devices</h3>
+                  <button class="device-refresh-btn" id="deviceRegistryRefresh" type="button">↻</button>
+                </div>
+                <div id="deviceRegistryList" class="device-registry-list">
+                  <span class="device-empty">No devices registered yet. Start the <code>agent.py</code> on a real device to register it.</span>
+                </div>
+              </div>
+              <div id="offlineTestModels" class="offline-test-models"></div>
+              <p id="offlineTestStatus" class="offline-test-status" hidden></p>
+            </div>
+          </section>
+          <section class="module-panel" data-module-panel="deployment_sensitivity" data-analysis-depth="deep">
+            <div class="module-result-placeholder">No Deployment Sensitivity Proxy result yet. Run it from the Explorer controls above.</div>
+            <div class="deepbom-panel" id="deploymentSensitivityResultPanel" hidden>
+              <div class="section-head">
+                <div>
+                  <h2>Deployment Sensitivity Proxy</h2>
+                  <p>Runs local finite-difference probes on the deployed model function and reports research-stage sensitivity proxies, not operational-stability evidence.</p>
+                </div>
+                <span id="deploymentSensitivityStatus">Not run</span>
+              </div>
+              <div class="deepbom-grid" id="deploymentSensitivityGrid"></div>
+              <div class="deepbom-protocols" id="deploymentSensitivityProtocols"></div>
+              <div class="deepbom-notes" id="deploymentSensitivityNotes"></div>
+            </div>
+          </section>
+          <section class="module-panel" data-module-panel="engineering_report">
+            <section class="calibration-validation-panel" aria-labelledby="calibrationValidationTitle">
+              <div class="calibration-validation-head">
+                <div>
+                  <span>Hash-bound runtime evidence</span>
+                  <h3 id="calibrationValidationTitle">Representative Dataset Validation</h3>
+                  <p>Calculate exact interface endpoint counts, reference-output drift, and repeated-run variance from a local capture. No capture values are uploaded.</p>
+                </div>
+                <div class="calibration-validation-actions">
+                  <input id="calibrationValidationInput" type="file" accept="application/json,.json" hidden />
+                  <button id="calibrationValidationSelect" class="secondary-action" type="button">Import capture</button>
+                  <button id="calibrationValidationDownload" class="secondary-action" type="button" disabled>Download ledger</button>
+                </div>
+              </div>
+              <p id="calibrationValidationStatus" class="calibration-validation-status" data-state="idle">Waiting for an audited artifact</p>
+              <div id="calibrationValidationResult" class="calibration-validation-result">
+                <p class="calibration-validation-empty">Run a static audit before importing a capture.</p>
+              </div>
+            </section>
+            <div class="report-workspace">
+              <div class="report-preview">
+                <div class="report-preview-head">
+                  <div>
+                    <span>Generated report preview</span>
+                    <strong id="reportPreviewTitle">Engineering report</strong>
+                  </div>
+                  <div class="report-preview-tools">
+                    <button id="copyReportBtn" class="secondary-action" type="button" title="Copy the generated report markdown to the clipboard" disabled>Copy</button>
+                    <button id="registerVerifyBtn" class="secondary-action" type="button" title="Register this report-body fingerprint for later byte-integrity comparison (signed-in)" disabled>Register fingerprint</button>
+                    <em id="reportPreviewStatus">Not generated</em>
+                  </div>
+                </div>
+                <div class="report-target-bar">
+                  <label for="reportTargetSelect">
+                    <span>Report target</span>
+                    <select id="reportTargetSelect" aria-describedby="reportTargetStatus"></select>
+                  </label>
+                  <div class="report-target-actions">
+                    <em id="reportTargetStatus">Not analyzed</em>
+                    <button id="reportTargetAnalyzeBtn" class="secondary-action" type="button" disabled>Run audit first</button>
+                  </div>
+                </div>
+                <pre id="reportPreview">Run a static audit to generate the report preview.</pre>
+              </div>
+              <div class="bundle-panel">
+                <div class="bundle-copy">
+                  <span>Evidence Package</span>
+                  <h3>Choose a review profile. Every profile is generated locally without sign-in and excludes original model bytes and raw tensor values.</h3>
+                  <ul class="bundle-scope" id="engineeringBundleScope"></ul>
+                </div>
+                <div class="bundle-action-wrap">
+                  <label class="evidence-package-profile" for="evidencePackageProfile">
+                    <span>Package profile</span>
+                    <select id="evidencePackageProfile">
+                      <option value="public" selected>Public</option>
+                      <option value="engineering">Engineering review</option>
+                      <option value="regulatory">Regulatory support</option>
+                      <option value="machine_readable">Machine-readable</option>
+                    </select>
+                  </label>
+                  <label class="evidence-package-profile" for="evidencePackageLevel">
+                    <span>Evidence depth</span>
+                    <select id="evidencePackageLevel">
+                      <option value="artifact_facts">Artifact facts</option>
+                      <option value="deterministic">Deterministic</option>
+                      <option value="planning">Planning</option>
+                      <option value="all_available" selected>All available</option>
+                    </select>
+                  </label>
+                  <button id="downloadPublicBundle" class="bundle-action" type="button" disabled title="Download a login-free, hash-bound evidence package">Download Evidence Package</button>
+                  <p class="evidence-bundle-note" id="engineeringBundleNote">Run a static audit first. Package profiles exclude model bytes and raw tensor values. Hashes and signatures detect later changes but cannot prevent copying or editing.</p>
+                </div>
+              </div>
+              <details class="individual-export-menu report-export-panel">
+                <summary>Individual report and derivative downloads</summary>
+                <div>
+                  <span>Separate files</span>
+                  <p>The watermarked report, public summary, and verification manifest require no login. Raw JSON, CSV, diagrams, images, and the complete raw engineering bundle retain their separate access boundary.</p>
+                </div>
+                <div class="export-buttons">
+                  <button id="downloadMarkdown" type="button" disabled>Engineering Report HTML</button>
+                  <button id="printPublicReport" class="secondary-action" type="button" disabled>Print Public Summary PDF</button>
+                  <button id="downloadPublicVerificationManifest" class="secondary-action" type="button" disabled>Verification Manifest</button>
+                  <button id="downloadRawData" type="button">Raw Evidence Package / Sign in</button>
+                  <button id="downloadCsv" type="button">Roofline CSV / Sign in</button>
+                  <button id="downloadMermaid" type="button">Mermaid Stage Graph / Sign in</button>
+                  <button id="downloadVisualPngs" type="button">Visual PNGs / Sign in</button>
+                  <button id="downloadEngineeringBundle" class="secondary-action" type="button" disabled>Engineering Bundle ZIP / Sign in</button>
+                </div>
+              </details>
+
+              <div class="local-reports-panel" id="localReportsPanel">
+                <div class="local-reports-head">
+                  <div>
+                    <span>Local Reports</span>
+                    <h3>Audit snapshots saved in this browser <em class="maturity-badge maturity-stable">Stable</em></h3>
+                    <p>When local history is enabled, compact artifact-audit snapshots are stored in this browser (identity, counts, contracts, quantization, delegation, and hotspots — never artifact bytes). Re-open, re-run, or compare two artifact versions by SHA-256.</p>
+                  </div>
+                  <div class="local-reports-actions">
+                    <label class="local-history-control"><input id="saveReportHistory" type="checkbox" checked> Save completed audits</label>
+                    <label class="local-history-control">Retention
+                      <select id="reportHistoryRetention">
+                        <option value="30">30 days</option>
+                        <option value="90" selected>90 days</option>
+                        <option value="365">1 year</option>
+                        <option value="0">Until deleted</option>
+                      </select>
+                    </label>
+                    <button id="compareReportsBtn" class="secondary-action" type="button" disabled title="Select two snapshots to compare">Compare selected (0)</button>
+                    <button id="clearReportsBtn" class="secondary-action" type="button">Clear all</button>
+                  </div>
+                </div>
+                <div class="local-reports-list" id="localReportsList"></div>
+                <div class="comparison-result" id="comparisonResult" hidden>
+                  <div class="comparison-head">
+                    <strong>Artifact Version Comparison</strong>
+                    <div class="comparison-actions">
+                      <button id="downloadComparison" class="secondary-action" type="button">Download</button>
+                      <button id="closeComparison" class="secondary-action" type="button">Close</button>
+                    </div>
+                  </div>
+                  <pre id="comparisonPre"></pre>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="module-panel" data-module-panel="export_contracts">
+            <div class="export-contract-workspace">
+              <header class="export-contract-head">
+                <div>
+                  <span>Deployment contract exports</span>
+                  <h2>Machine-readable release evidence</h2>
+                  <p>Artifact observations remain distinct from declarations, inferred lineage, conditional runtime consequences, and unassessed fields.</p>
+                </div>
+                <em id="exportContractStatus">No analyzed artifact</em>
+              </header>
+              <div class="export-contract-binding" aria-label="Export subject binding">
+                <div>
+                  <span>Artifact</span>
+                  <strong id="exportContractModel">Run a static audit</strong>
+                </div>
+                <div>
+                  <span>Active target</span>
+                  <strong id="exportContractTarget">No analyzed target</strong>
+                </div>
+              </div>
+              <section class="interface-contract-checker" aria-labelledby="productionContractTitle">
+                <header>
+                  <div>
+                    <span>Release binding</span>
+                    <h3 id="productionContractTitle">Production interface contract</h3>
+                  </div>
+                  <strong id="productionContractStatus" data-state="unbound">Unbound</strong>
+                </header>
+                <div class="interface-contract-actions">
+                  <label class="bundle-action" for="productionContractInput">Import contract</label>
+                  <input id="productionContractInput" type="file" accept=".json,.cdx.json,application/json,application/vnd.cyclonedx+json">
+                  <button id="clearProductionContract" type="button" disabled>Clear</button>
+                  <span id="productionContractSummary">No production declaration loaded</span>
+                </div>
+                <div class="contract-evidence-grid">
+                  <div>
+                    <h4>Field comparison</h4>
+                    <div class="contract-table-scroll">
+                      <table class="contract-diff-table">
+                        <thead><tr><th>Parameter</th><th>Field</th><th>Expected</th><th>Declared</th></tr></thead>
+                        <tbody id="productionContractDiffBody"><tr><td colspan="4">Not assessed</td></tr></tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div>
+                    <h4>Trust boundaries</h4>
+                    <div id="trustBoundaryBody" class="trust-boundary-list"></div>
+                  </div>
+                </div>
+              </section>
+              <div class="export-contract-list export-contract-primary-list">
+                <article class="export-contract-row export-contract-primary">
+                  <div class="export-contract-code">
+                    <span>CycloneDX 1.7</span>
+                    <strong>Artifact Contract</strong>
+                  </div>
+                  <div>
+                    <h3>Standalone machine-readable artifact record</h3>
+                    <p>Available without sign-in: exact file identity, format and graph totals, plus the complete external I/O contract ledger.</p>
+                  </div>
+                  <button id="downloadCycloneDxEvidence" class="bundle-action" type="button" disabled>Download CDX JSON</button>
+                </article>
+                <article class="export-contract-row">
+                  <div class="export-contract-code">
+                    <span>CycloneDX 2.0 proposal fixture</span>
+                    <strong>Parameter Contracts</strong>
+                  </div>
+                  <div>
+                    <h3>Commit-pinned, non-conformant parameter-binding fixture</h3>
+                    <p>Available without sign-in: named external I/O affine facts projected onto the active 2.0 AI/ML draft without inferring symmetry.</p>
+                  </div>
+                  <button id="downloadCycloneDx20Preview" type="button" disabled>Download fixture</button>
+                </article>
+              </div>
+              <details class="export-contract-companions">
+                <summary>
+                  <strong>Companion evidence</strong> / formulation, runtime, and lineage
+                </summary>
+                <div class="export-contract-list">
+                  <article class="export-contract-row">
+                    <div class="export-contract-code">
+                      <span>CycloneDX 1.7</span>
+                      <strong>Formulation</strong>
+                    </div>
+                    <div>
+                      <h3>Observed versus declared formulation</h3>
+                    </div>
+                    <button id="downloadObservedFormulation" type="button" disabled>Download formulation</button>
+                  </article>
+                  <article class="export-contract-row">
+                    <div class="export-contract-code">
+                      <span>DEEPBOM schema v1.2</span>
+                      <strong>Runtime Manifest</strong>
+                    </div>
+                    <div>
+                      <h3>Runtime requirement manifest</h3>
+                    </div>
+                    <button id="downloadRuntimeRequirements" type="button" disabled>Download manifest</button>
+                  </article>
+                  <article class="export-contract-row">
+                    <div class="export-contract-code">
+                      <span>DEEPBOM schema v1.2</span>
+                      <strong>Lineage Field Specification</strong>
+                    </div>
+                    <div>
+                      <h3>Missing provenance field specification</h3>
+                    </div>
+                    <button id="downloadMissingProvenance" type="button" disabled>Download field spec</button>
+                  </article>
+                </div>
+              </details>
+              <details class="export-document-inventory">
+                <summary><strong>7-document inventory</strong> / exact Contract Pack contents</summary>
+                <ol>
+                  <li><strong>CycloneDX artifact evidence</strong><span>Canonical artifact record and evidence references</span></li>
+                  <li><strong>CycloneDX 2.0 proposal fixture</strong><span>Named external I/O affine contracts; not a conformance claim</span></li>
+                  <li><strong>Artifact evidence envelope</strong><span>Canonical hash-bound analysis facts</span></li>
+                  <li><strong>Interface contract ledger</strong><span>Complete external parameter contract</span></li>
+                  <li><strong>Observed formulation BOM</strong><span>Observed and declared formulation evidence</span></li>
+                  <li><strong>Runtime requirement manifest</strong><span>Runtime floor and deployment requirements</span></li>
+                  <li><strong>Missing provenance field specification</strong><span>Explicitly absent or partial release metadata</span></li>
+                </ol>
+                <p>The ZIP adds a member-digest manifest and a detached ES256 signature made with a <strong>LOCAL_BROWSER_KEY</strong>. It proves package integrity, not DEEPBOM authorship. Official release evidence uses an <strong>OFFICIAL_RELEASE_KEY</strong> resolved through the fixed <a href="https://deepbom.org/.well-known/deepbom-signing-keys.json" target="_blank" rel="noreferrer">signing-key registry</a>, including scope, validity, rotation, and revocation checks.</p>
+              </details>
+              <section class="export-contract-pack">
+                <div>
+                  <span>Consolidated package</span>
+                  <h3>Deployment Contract Pack</h3>
+                  <p>CycloneDX record, interface ledger, formulation, runtime, provenance, member digest, and detached ES256 signature.</p>
+                </div>
+                <button id="downloadContractPack" class="bundle-action" type="button" disabled>Contract Pack ZIP</button>
+              </section>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="summary-grid" id="summary" hidden></section>
+
+      <section class="insight-dashboard" id="insightDashboard" hidden>
+        <div class="section-head">
+          <div>
+            <h2 id="insightTitle">DEEPBOM Evidence Dashboard</h2>
+            <p id="insightDescription">Format-applicable artifact evidence and explicitly bounded deployment signals.</p>
+          </div>
+          <span id="insightSubtitle"></span>
+        </div>
+
+        <div class="target-condition-summary" id="targetConditionSummary"></div>
+        <div class="model-glance-panel" id="modelGlancePanel" hidden></div>
+
+        <div class="insight-layout">
+          <div class="readiness-card">
+            <div class="triage-mark" id="readinessRing">
+              <span>Signals</span>
+            </div>
+            <div>
+              <span class="score-card-caption">Static Triage Signals <em class="maturity-badge maturity-beta">HEURISTIC</em></span>
+              <strong id="readinessLabel">Waiting for artifact</strong>
+              <p id="readinessRationale">Load a supported artifact or package to resolve its format-specific evidence depth.</p>
+              <details class="triage-index-details">
+                <summary>Evidence boundary</summary>
+                <p id="readinessScore">Component signals are reported separately. No context-free 0–100 quality or readiness score is shown.</p>
+              </details>
+            </div>
+          </div>
+          <div class="insight-grid" id="insightGrid"></div>
+        </div>
+
+        <div class="professional-panels">
+          <div class="mini-panel">
+            <div class="mini-panel-head">
+              <h3>Static Roofline Mix</h3>
+              <span id="rooflineTotal"></span>
+            </div>
+            <div class="roofline-bars" id="rooflineBars"></div>
+          </div>
+          <div class="mini-panel">
+            <div class="mini-panel-head">
+              <h3>Top Signals</h3>
+              <span>evidence</span>
+            </div>
+            <p class="mini-panel-description">Observed or derived conditions that deserve attention; no remediation is implied.</p>
+            <ul class="signal-list" id="topSignals"></ul>
+          </div>
+          <div class="mini-panel">
+            <div class="mini-panel-head">
+              <h3>Recommended Follow-up</h3>
+              <span>verify / bind / change</span>
+            </div>
+            <p class="mini-panel-description">Verification, contract binding, or changes grouped by decision axis; modeled impact is shown only where available.</p>
+            <ul class="signal-list" id="recommendationList"></ul>
+          </div>
+          <div class="mini-panel">
+            <div class="mini-panel-head">
+              <h3>Fallback Traffic</h3>
+              <span>by op family</span>
+            </div>
+            <ul class="signal-list" id="fallbackTrafficList"></ul>
+          </div>
+          <div class="mini-panel onnx-domain-panel" id="onnxDomainPanel" hidden>
+            <div class="mini-panel-head">
+              <h3>ONNX Domain Registry</h3>
+              <span data-onnx-domain-count>Not assessed</span>
+            </div>
+            <div data-onnx-domain-body></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="perf-visuals" id="perfVisuals" hidden>
+        <div class="section-head">
+          <div>
+            <h2 id="perfVisualTitle">Performance Visuals</h2>
+            <p id="perfVisualSubtitle">Flame-style summaries for compute concentration, static bottlenecks, predicted delegate segments, quantization risk, and target fit.</p>
+          </div>
+          <span id="perfVisualStatus">static preflight</span>
+        </div>
+        <div class="perf-visual-grid">
+          <article class="perf-panel wide llm-evidence-panel" id="llmEvidencePanel" data-visual-scope="llm" data-format-scope="tflite onnx gguf safetensors"></article>
+          <article class="perf-panel wide" data-visual-scope="overview roofline stage" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Modeled Op Contribution</h3>
+              <span id="perfTimelineSubtitle">static target model · not device-calibrated</span>
+            </div>
+            <div class="fc-legend">
+              <span class="fc-legend-item fc-tone-compute">high-intensity</span>
+              <span class="fc-legend-item fc-tone-memory">low-intensity</span>
+              <span class="fc-legend-item fc-tone-overhead">overhead</span>
+              <span class="fc-legend-item fc-tone-fallback">CPU fallback</span>
+            </div>
+            <div class="fc-container" id="perfTimeline"></div>
+          </article>
+          <article class="perf-panel" id="performanceMacPanel" data-visual-scope="overview stage" data-format-scope="tflite onnx coreml">
+            <div class="mini-panel-head">
+              <h3>MAC Distribution</h3>
+              <span>op share · color = static bound type</span>
+            </div>
+            <div class="flame-strip" id="macFlame"></div>
+            <ul class="visual-list" id="macTopList"></ul>
+          </article>
+          <article class="perf-panel" data-visual-scope="overview" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Modeled Bottleneck Contribution</h3>
+              <span>ESTIMATED · not device-calibrated</span>
+            </div>
+            <div class="flame-strip" id="bottleneckFlame"></div>
+            <ul class="visual-list" id="bottleneckList"></ul>
+          </article>
+          <article class="perf-panel wide" data-visual-scope="overview roofline" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Target Comparison</h3>
+              <span>reference set + active target</span>
+            </div>
+            <div class="target-compare-grid" id="targetCompareGrid"></div>
+          </article>
+          <article class="perf-panel wide execution-placement-panel" id="executionPlacementPanel" data-visual-scope="overview accelerator" hidden></article>
+          <article class="perf-panel wide deployment-frontier-panel" id="deploymentFrontierPanel" data-visual-scope="overview" data-format-scope="tflite onnx">
+            <div class="mini-panel-head">
+              <h3>Deployment Frontier Lab</h3>
+              <div class="frontier-head-actions">
+                <span id="deploymentFrontierStatus">not assessed</span>
+                <button id="downloadDeploymentFrontier" class="secondary-action" type="button" title="Download the current deployment frontier as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="frontier-summary" id="deploymentFrontierSummary"></div>
+            <div class="frontier-tabs" role="tablist" aria-label="Deployment frontier view">
+              <button class="active" type="button" role="tab" aria-selected="true" data-frontier-view="frontier">Frontier</button>
+              <button type="button" role="tab" aria-selected="false" data-frontier-view="levers">Levers</button>
+              <button type="button" role="tab" aria-selected="false" data-frontier-view="divergence">Divergence</button>
+            </div>
+            <div class="frontier-body" id="deploymentFrontierBody"></div>
+          </article>
+          <article class="perf-panel wide deployment-delta-panel" id="deploymentDeltaPanel" data-visual-scope="overview" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Deployment Delta Lab</h3>
+              <div class="delta-head-actions">
+                <span id="deploymentDeltaStatus">baseline not pinned</span>
+                <button id="pinDeploymentBaseline" class="secondary-action" type="button" title="Pin the current TFLite audit as the in-memory baseline" disabled>Pin baseline</button>
+                <button id="clearDeploymentBaseline" class="secondary-action" type="button" title="Clear the in-memory deployment baseline" disabled>Clear</button>
+                <button id="downloadDeploymentDelta" class="secondary-action" type="button" title="Download the validated deployment delta as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="delta-summary" id="deploymentDeltaSummary"></div>
+            <div class="delta-body" id="deploymentDeltaBody"></div>
+          </article>
+          <article class="perf-panel wide" data-visual-scope="xnnpack">
+            <div class="mini-panel-head">
+              <h3>TFLite / XNNPACK Predicted Partition Flow</h3>
+              <span>source-pinned conditional assignment</span>
+            </div>
+            <div class="chain-flow" id="chainFlow"></div>
+          </article>
+          <article class="perf-panel wide" data-visual-scope="xnnpack">
+            <div class="mini-panel-head">
+              <h3>XNNPACK Conditional Assignment Map</h3>
+              <span id="xnnpackFallbackCount">per-op support</span>
+            </div>
+            <div class="quant-legend">
+              <span class="ql-item xnn-delegated">compute conditionally delegatable</span>
+              <span class="ql-item xnn-structural">zero-MAC conditionally delegatable</span>
+              <span class="ql-item xnn-structural-break">structural zero-MAC break</span>
+              <span class="ql-item xnn-nonstructural-break">zero-MAC non-structural break</span>
+              <span class="ql-item xnn-membreak">memory-traffic break</span>
+              <span class="ql-item xnn-compbreak" title="The break is adjacent to a predicted candidate segment with high MAC share; the break op itself is not necessarily compute-heavy.">high-exposure break</span>
+              <span class="ql-item neutral">non-delegated</span>
+            </div>
+            <div class="quant-heatmap" id="xnnpackFallbackMap"></div>
+          </article>
+          <article class="perf-panel wide" data-visual-scope="xnnpack">
+            <div class="mini-panel-head">
+              <h3>Predicted Partition Break Exposure</h3>
+              <span>graph-derived impact · setup prior disclosed separately</span>
+            </div>
+            <div class="break-cost-wrap" id="xnnpackBreakTable"></div>
+          </article>
+          <article class="perf-panel wide delegation-repair-panel" id="delegationRepairPanel" data-visual-scope="xnnpack" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Delegation Repair Lab</h3>
+              <div class="repair-head-actions">
+                <span id="delegationRepairStatus">not assessed</span>
+                <button id="downloadDelegationRepair" class="secondary-action" type="button" title="Download the validated delegation counterfactual ledger as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="repair-summary" id="delegationRepairSummary"></div>
+            <div class="repair-body" id="delegationRepairBody"></div>
+          </article>
+          <article class="perf-panel wide" id="quantRiskHeatmapPanel" data-visual-scope="quant">
+            <div class="mini-panel-head">
+              <h3>Quantization State &amp; Risk Map</h3>
+              <span id="quantHeatmapCount">graph-op scope</span>
+            </div>
+              <div class="quant-legend">
+                <span class="ql-item good">8-bit arithmetic</span>
+                <span class="ql-item mixed">boundary / weight-only</span>
+                <span class="ql-item signal-warn">border: warn signal</span>
+                <span class="ql-item signal-risk">border: risk signal</span>
+                <span class="ql-item neutral">unquantized</span>
+            </div>
+            <div class="quant-heatmap" id="quantHeatmap"></div>
+            <div class="quant-state-breakdown" id="quantStateBreakdown"></div>
+          </article>
+          <article class="perf-panel wide evidence-map-panel" id="quantExposureMapPanel" data-visual-scope="quant">
+            <div id="quantExposureMap"></div>
+          </article>
+          <article class="perf-panel wide" id="quantScaleDistributionPanel" data-visual-scope="quant">
+            <div class="mini-panel-head">
+              <h3>Per-Axis Scale Distribution</h3>
+              <span>serialized contract first · log-scale spread second</span>
+            </div>
+            <div class="scale-scatter-wrap" id="quantScaleScatter"></div>
+          </article>
+          <article class="perf-panel wide" id="quantRiskDetailPanel" data-visual-scope="quant">
+            <div class="mini-panel-head">
+              <h3>Quant Risk Detail</h3>
+              <span id="quantRiskCount">risk / review categories</span>
+            </div>
+            <div class="quant-risk-table-wrap" id="quantRiskTable"></div>
+          </article>
+          <article class="perf-panel wide" id="quantHolesPanel" data-visual-scope="quant">
+            <div class="mini-panel-head">
+              <h3>Activation Precision Boundaries</h3>
+              <span id="quantHoleCount"></span>
+            </div>
+            <div id="quantHoleList"></div>
+          </article>
+          <article class="perf-panel wide quantization-lattice-panel" id="quantizationLatticePanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Quantization Lattice Lab</h3>
+              <div class="lattice-head-actions">
+                <span id="quantizationLatticeStatus">not assessed</span>
+                <button id="downloadQuantizationLattice" class="secondary-action" type="button" title="Download the validated ADD, SUB, MUL, MAXIMUM, MINIMUM, and CONCATENATION lattice ledger as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="lattice-summary" id="quantizationLatticeSummary"></div>
+            <div class="lattice-body" id="quantizationLatticeBody"></div>
+          </article>
+          <article class="perf-panel wide accumulator-atlas-panel" id="accumulatorAtlasPanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Accumulator Headroom Lab</h3>
+              <div class="accumulator-head-actions">
+                <span id="accumulatorAtlasStatus">not assessed</span>
+                <button id="downloadAccumulatorAtlas" class="secondary-action" type="button" title="Download the validated per-channel accumulator ledger as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="accumulator-summary" id="accumulatorAtlasSummary"></div>
+            <div class="accumulator-body" id="accumulatorAtlasBody"></div>
+          </article>
+          <article class="perf-panel wide requantization-fidelity-panel" id="requantizationFidelityPanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Requantization Fidelity Lab</h3>
+              <div class="requant-head-actions">
+                <span id="requantizationFidelityStatus">not assessed</span>
+                <button id="downloadRequantizationFidelity" class="secondary-action" type="button" title="Download the validated channel requantization ledger as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="requant-summary" id="requantizationFidelitySummary"></div>
+            <div class="requant-body" id="requantizationFidelityBody"></div>
+          </article>
+          <article class="perf-panel wide kernel-witness-panel" id="kernelWitnessPanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Quantized Kernel Witness Lab</h3>
+              <div class="kernel-witness-head-actions">
+                <span id="kernelWitnessStatus">not assessed</span>
+                <button id="downloadKernelWitness" class="secondary-action" type="button" title="Download the independently validated kernel extremum-witness ledger as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="kernel-witness-summary" id="kernelWitnessSummary"></div>
+            <div class="kernel-witness-body" id="kernelWitnessBody"></div>
+          </article>
+          <article class="perf-panel wide channel-vitality-panel" id="channelVitalityPanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Quantized Channel Vitality Atlas</h3>
+              <div class="channel-vitality-head-actions">
+                <span id="channelVitalityStatus">not assessed</span>
+                <button id="downloadChannelVitality" class="secondary-action" type="button" title="Download the independently validated per-channel vitality ledger as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="channel-vitality-summary" id="channelVitalitySummary"></div>
+            <div class="channel-vitality-body" id="channelVitalityBody"></div>
+          </article>
+          <article class="perf-panel wide rounding-equivalence-panel" id="roundingEquivalencePanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Fixed-Point Rounding Equivalence Lab</h3>
+              <div class="rounding-equivalence-head-actions">
+                <span id="roundingEquivalenceStatus">not assessed</span>
+                <button id="downloadRoundingEquivalence" class="secondary-action" type="button" title="Download the independently validated build-mode equivalence certificate as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="rounding-equivalence-summary" id="roundingEquivalenceSummary"></div>
+            <div class="rounding-equivalence-body" id="roundingEquivalenceBody"></div>
+          </article>
+          <article class="perf-panel wide accumulator-reachability-panel" id="accumulatorReachabilityPanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Accumulator Reachability Lattice</h3>
+              <div class="reachability-head-actions">
+                <span id="accumulatorReachabilityStatus">not assessed</span>
+                <button id="downloadAccumulatorReachability" class="secondary-action" type="button" title="Download the independently reconstructable bounded-sum reachability ledger as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="reachability-summary" id="accumulatorReachabilitySummary"></div>
+            <div class="reachability-body" id="accumulatorReachabilityBody"></div>
+          </article>
+          <article class="perf-panel wide abi-propagation-panel" id="numericalAbiPropagationPanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Numerical ABI Propagation Atlas</h3>
+              <div class="abi-propagation-head-actions">
+                <span id="numericalAbiPropagationStatus">not assessed</span>
+                <button id="downloadNumericalAbiPropagation" class="secondary-action" type="button" title="Download the independently validated numerical ABI propagation ledger as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="abi-propagation-summary" id="numericalAbiPropagationSummary"></div>
+            <div class="abi-propagation-body" id="numericalAbiPropagationBody"></div>
+          </article>
+          <article class="perf-panel wide input-witness-panel" id="inputCounterexamplePanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Model Input Tensor ABI Witness</h3>
+              <div class="input-witness-head-actions">
+                <span id="inputCounterexampleStatus">not assessed</span>
+                <button id="downloadInputCounterexample" class="secondary-action" type="button" title="Download the independently validated model-input counterexample portfolio as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="input-witness-summary" id="inputCounterexampleSummary"></div>
+            <div class="input-witness-body" id="inputCounterexampleBody"></div>
+          </article>
+          <article class="perf-panel wide preprocess-lab-panel" id="preprocessingRealizabilityPanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Pixel-to-Tensor Contract Lab</h3>
+              <div class="preprocess-lab-head-actions">
+                <span id="preprocessingRealizabilityStatus">not assessed</span>
+                <button id="downloadPreprocessingRealizability" class="secondary-action" type="button" title="Download the independently validated preprocessing counterfactual portfolio as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="preprocess-lab-summary" id="preprocessingRealizabilitySummary"></div>
+            <div class="preprocess-lab-body" id="preprocessingRealizabilityBody"></div>
+          </article>
+          <article class="perf-panel wide consequence-panel" id="preprocessingConsequencePanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Preprocessing Consequence Atlas</h3>
+              <div class="consequence-head-actions">
+                <span id="preprocessingConsequenceStatus">not run</span>
+                <button id="runPreprocessingConsequence" class="secondary-action" type="button" title="Replay every preprocessing contract tensor twice through the local LiteRT.js WASM runtime" disabled>Run local replay</button>
+                <button id="downloadPreprocessingConsequence" class="secondary-action" type="button" title="Download the independently verified local replay ledger as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="consequence-summary" id="preprocessingConsequenceSummary"></div>
+            <div class="consequence-body" id="preprocessingConsequenceBody"></div>
+          </article>
+          <article class="perf-panel wide contract-migration-panel" id="contractMigrationPanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Contract Migration Impact Lab</h3>
+              <div class="migration-head-actions">
+                <span id="contractMigrationStatus">not assessed</span>
+                <button id="downloadContractMigration" class="secondary-action" type="button" title="Download the independently validated contract-migration ledger as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="migration-summary" id="contractMigrationSummary"></div>
+            <div class="migration-body" id="contractMigrationBody"></div>
+          </article>
+          <article class="perf-panel wide residual-step-response-panel" id="residualStepResponsePanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Residual Step Response Lab</h3>
+              <div class="step-response-head-actions">
+                <span id="residualStepResponseStatus">not assessed</span>
+                <button id="downloadResidualStepResponse" class="secondary-action" type="button" title="Download the independently validated residual step-response ledger as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="step-response-summary" id="residualStepResponseSummary"></div>
+            <div class="step-response-body" id="residualStepResponseBody"></div>
+          </article>
+          <article class="perf-panel wide residual-distortion-panel" id="residualContractDistortionPanel" data-visual-scope="quant" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <h3>Residual Contract Distortion Atlas</h3>
+              <div class="step-response-head-actions">
+                <span id="residualContractDistortionStatus">not assessed</span>
+                <button id="downloadResidualContractDistortion" class="secondary-action" type="button" title="Download the independently validated residual contract-distortion ledger as JSON" disabled>JSON</button>
+              </div>
+            </div>
+            <div class="step-response-summary" id="residualContractDistortionSummary"></div>
+            <div class="step-response-body" id="residualContractDistortionBody"></div>
+          </article>
+          <article class="perf-panel wide core-isolation-panel" id="coreIsolationPanel" data-visual-scope="roofline" data-format-scope="tflite">
+            <div class="mini-panel-head">
+              <div>
+                <h3>Core Allocation Roofline</h3>
+                <p>Static resource-partition scenarios with imported OS affinity evidence kept separate.</p>
+              </div>
+              <span id="coreIsolationStatus">not assessed</span>
+            </div>
+            <div class="core-isolation-controls" id="coreIsolationControls"></div>
+            <div class="core-isolation-summary" id="coreIsolationSummary"></div>
+            <div class="core-isolation-chart" id="coreIsolationChart"></div>
+            <div class="table-wrap core-isolation-table-wrap">
+              <table class="core-isolation-table">
+                <thead>
+                  <tr>
+                    <th>AI cores</th>
+                    <th>Housekeeping</th>
+                    <th>Allocation</th>
+                    <th>INT8 / FP32 ceiling</th>
+                    <th>Roofline floor</th>
+                    <th>Steady estimate</th>
+                    <th>Cold estimate</th>
+                    <th>1-core ratio</th>
+                  </tr>
+                </thead>
+                <tbody id="coreIsolationBody"></tbody>
+              </table>
+            </div>
+            <p class="core-isolation-boundary" id="coreIsolationBoundary"></p>
+          </article>
+          <article class="perf-panel wide" data-visual-scope="roofline" data-format-scope="tflite onnx">
+            <div class="mini-panel-head">
+              <h3>Roofline Scatter</h3>
+              <span id="rooflineChartLegend"></span>
+            </div>
+            <div id="rooflineChart"></div>
+          </article>
+          <article class="perf-panel wide" data-visual-scope="overview roofline stage" data-format-scope="tflite onnx coreml">
+            <div class="mini-panel-head">
+              <h3>Stage Memory Mix</h3>
+              <span>roofline by stage</span>
+            </div>
+            <div class="stage-mix-list" id="stageMemoryMix"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="inference-panel" id="inferencePanel" hidden>
+        <div class="section-head">
+          <div>
+            <h2>Inference Benchmark</h2>
+            <p>Measures local browser runtime latency with warmup separated from steady-state runs.</p>
+          </div>
+          <span id="runtimeStatus">Runtime not loaded</span>
+        </div>
+        <div class="controls">
+          <label>
+            <span>Backend</span>
+            <select id="backendSelect">
+              <option value="auto">Auto: WebNN/WebGPU/WASM</option>
+              <option value="wasm">WASM</option>
+              <option value="webgpu">WebGPU</option>
+              <option value="webnn">WebNN</option>
+            </select>
+          </label>
+          <label>
+            <span>Warmup runs</span>
+            <input id="warmupInput" type="number" min="0" max="100" value="1" />
+          </label>
+          <label>
+            <span>Measured runs</span>
+            <input id="runsInput" type="number" min="1" max="500" value="50" />
+          </label>
+          <button id="runInference" type="button">Run Benchmark</button>
+        </div>
+        <div class="runtime-signals" id="runtimeNotes"></div>
+        <div class="table-wrap compact" id="benchmarkWrap" hidden>
+          <table>
+            <thead>
+              <tr>
+                <th>Backend</th>
+                <th>Compile</th>
+                <th>First (cold)</th>
+                <th>p50</th>
+                <th>p90</th>
+                <th>p95</th>
+                <th title="Nearest-rank p99 is descriptive below 100 measured runs; sample count remains visible in the evidence record.">p99</th>
+                <th>Mean</th>
+                <th title="Median after removing top+bottom 10% of runs">Trimmed p50</th>
+                <th title="CV = stddev/mean">Jitter</th>
+                <th title="Linear trend across runs — positive means getting slower">Trend</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="benchmarkBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="findings-panel" id="findingsPanel" hidden>
+        <div class="section-head">
+          <div>
+            <h2>Findings</h2>
+            <p>Artifact findings ranked by priority; each card separates evidence, possible effects, interpretation limits, and recommended action.</p>
+          </div>
+        </div>
+        <div class="findings-body" id="findingsBody">
+          <p class="findings-empty">Run the static audit to generate findings.</p>
+        </div>
+      </section>
+
+      <section class="graph-explorer" id="graphExplorer" hidden>
+        <div class="section-head">
+          <div>
+            <h2>Graph and Tensor Explorer</h2>
+            <p>Connected operators and tensor contracts with deployment evidence overlays.</p>
+          </div>
+          <span id="graphStats"></span>
+        </div>
+        <div class="explorer-tab-bar" role="tablist" aria-label="Graph explorer views">
+          <button class="explorer-tab active" type="button" data-explorer-tab="node">Graph</button>
+          <button class="explorer-tab" type="button" data-explorer-tab="resource">Resource Map</button>
+          <button class="explorer-tab" type="button" data-explorer-tab="blocks">Blocks</button>
+          <button class="explorer-tab" type="button" data-explorer-tab="ops">Operator Table</button>
+          <button class="explorer-tab" type="button" data-explorer-tab="tensors">Tensors</button>
+          <button class="explorer-tab" type="button" data-explorer-tab="quant">Quant Evidence</button>
+          <button class="explorer-tab" type="button" data-explorer-tab="kernels">Kernel &amp; Runtime</button>
+          <button class="explorer-tab" type="button" data-explorer-tab="cache">Cache</button>
+          <button class="explorer-tab" type="button" data-explorer-tab="layered" title="Compact architecture runs; use Graph for connected model inspection">Architecture Runs</button>
+        </div>
+        <div class="xr-explorer-panel evidence-map-panel" id="resourceMapPanel" hidden></div>
+        <div class="xr-explorer-panel" id="blocksExplorerPanel" hidden></div>
+        <div class="xr-explorer-panel" id="quantEvidencePanel" hidden></div>
+        <div class="xr-explorer-panel" id="nodeViewPanel"></div>
+        <div class="xr-explorer-panel" id="cacheExplorerPanel" hidden></div>
+        <div id="graphOpsView" hidden>
+        <div class="graph-scenario-banner" id="graphScenarioBanner" role="status" hidden>
+          <div>
+            <span>WHAT-IF PREVIEW</span>
+            <strong id="graphScenarioLabel">No scenario</strong>
+            <small id="graphScenarioDetail">Viewer-only counterfactual; the bound analysis and report remain unchanged.</small>
+          </div>
+          <button id="clearGraphScenario" class="secondary-action" type="button">Clear scenario</button>
+        </div>
+        <div class="graph-tools compact-graph-tools">
+          <label>
+            <span>Search</span>
+            <input id="graphSearch" type="search" placeholder="op name, index, tensor id" />
+          </label>
+          <label class="graph-depth-control">
+            <span>Depth</span>
+            <select id="graphDepth">
+              <option value="1">1-hop</option>
+              <option value="2" selected>2-hop</option>
+              <option value="3">3-hop</option>
+              <option value="4">4-hop</option>
+              <option value="all">Full graph</option>
+            </select>
+          </label>
+          <div class="graph-map-toolbar">
+            <button id="graphZoomOut" type="button" title="Zoom out">-</button>
+            <button id="graphZoomIn" type="button" title="Zoom in">+</button>
+            <button id="graphFit" type="button">Fit</button>
+            <button id="downloadGraphSvg" type="button">SVG</button>
+          </div>
+          <span id="graphMapStatus"></span>
+        </div>
+        <div class="op-filter-bar" id="opFilterBar">
+          <span class="filter-label">Bound:</span>
+          <button class="filter-chip active" type="button" data-filter-group="bound" data-filter-value="">All</button>
+          <button class="filter-chip" type="button" data-filter-group="bound" data-filter-value="compute-bound">Compute</button>
+          <button class="filter-chip" type="button" data-filter-group="bound" data-filter-value="mixed">Mixed</button>
+          <button class="filter-chip" type="button" data-filter-group="bound" data-filter-value="memory-bound">Memory</button>
+          <span class="filter-sep format-tflite">│</span>
+          <span class="filter-label format-tflite">XNNPACK:</span>
+          <button class="filter-chip active format-tflite" type="button" data-filter-group="xnn" data-filter-value="">All</button>
+          <button class="filter-chip format-tflite" type="button" data-filter-group="xnn" data-filter-value="delegated">Conditionally delegatable</button>
+          <button class="filter-chip format-tflite" type="button" data-filter-group="xnn" data-filter-value="break">Breaks</button>
+          <button class="filter-chip format-tflite" type="button" data-filter-group="xnn" data-filter-value="fallback">Fallback</button>
+          <span class="filter-sep format-tflite">│</span>
+          <span class="filter-label">Quant:</span>
+          <button class="filter-chip active" type="button" data-filter-group="quant" data-filter-value="">All</button>
+          <button class="filter-chip" type="button" data-filter-group="quant" data-filter-value="compute">INT8</button>
+          <button class="filter-chip" type="button" data-filter-group="quant" data-filter-value="warn">≥Warn</button>
+          <button class="filter-chip" type="button" data-filter-group="quant" data-filter-value="risk">Risk</button>
+          <span id="opFilterCount" class="filter-count"></span>
+        </div>
+        <div class="graph-mode-bar">
+          <span class="graph-mode-label">View</span>
+          <button class="graph-mode-btn active" type="button" data-graph-mode="deploy" title="Deployment overlay: bound type, XNNPACK chain, quant risk">Deploy</button>
+          <button class="graph-mode-btn" type="button" data-graph-mode="raw" title="Raw structure: tensor dtype coloring, no deployment overlays">Raw</button>
+          <button class="graph-mode-btn" type="button" data-graph-mode="stage" title="Stage grouping: nodes colored by processing stage">Stage</button>
+          <span class="graph-mode-legend">
+            <span class="gml-item gml-merge" role="img" aria-label="Branch merge point, Add or Concat" title="Branch merge point (Add / Concat)">⋈ Merge</span>
+            <span class="gml-item gml-split" role="img" aria-label="Branch split, tensor fan-out greater than one" title="Branch split (tensor fan-out > 1)">⑂ Split</span>
+            <span class="gml-item gml-quant" role="img" aria-label="Quantization boundary, Quantize or Dequantize" title="Quantization boundary (QUANTIZE / DEQUANTIZE)">Q↕ Quant</span>
+            <span class="gml-sep" aria-hidden="true">·</span>
+            <span class="gml-item gml-residual" role="img" aria-label="Residual skip connection" title="Residual skip connection — branch depth gap ≥3 ops">↺ Res</span>
+            <span class="gml-item gml-fpn" role="img" aria-label="Feature pyramid multi-scale merge" title="FPN multi-scale merge — RESIZE detected in one branch">⬦ FPN</span>
+            <span class="gml-item gml-qdq" role="img" aria-label="Quantize Dequantize floating-point region" title="Q/DQ float island — FP32 compute between QUANTIZE/DEQUANTIZE">⚡ QDQ</span>
+            <span class="gml-item gml-attn" role="img" aria-label="Attention block" title="Attention block — SOFTMAX between MATMUL/FC ops">◇ Attn</span>
+          </span>
+          <span class="graph-mode-hint" id="graphModeHint">Deployment overlay: bound type, XNNPACK chain, quant risk</span>
+        </div>
+        <div class="graph-map-panel">
+          <div class="graph-map-viewport" id="graphMapViewport">
+            <svg id="graphMapSvg" role="img" aria-label="Interactive op graph neighborhood"></svg>
+          </div>
+        </div>
+        <div class="op-insight-strip" id="opTimeline"></div>
+        <div class="op-insight-strip" id="xnnSegmentBar"></div>
+        <div class="op-insight-strip" id="opParetoBar"></div>
+        </div>
+        <div class="graph-layout" id="graphDetailLayout" hidden>
+          <div class="table-wrap graph-list-wrap">
+            <table class="graph-op-table">
+              <thead>
+                <tr id="graphOpHead">
+                  <th class="sortable-col" data-sort-key="index" title="Sort by position">#</th>
+                  <th class="sortable-col" data-sort-key="name" title="Sort by name">Op</th>
+                  <th>Out</th>
+                  <th title="Spatial kernel size">Kernel</th>
+                  <th class="sortable-col" data-sort-key="macs" title="Sort by MACs">MACs</th>
+                  <th class="sortable-col format-tflite" data-sort-key="bottleneck_total_us" title="Static, target-conditioned per-op latency model; not a device measurement. One-time weight packing is shown separately">Modeled steady µs</th>
+                  <th class="sortable-col" data-sort-key="static_bound_guess" title="Sort by bound type">Bound</th>
+                  <th class="format-tflite">XNNPACK</th>
+                  <th class="sortable-col" data-sort-key="quant_risk" title="Sort by quant risk">Quant</th>
+                  <th class="graph-optional-col format-tflite">Align</th>
+                  <th class="graph-optional-col format-tflite">Pack</th>
+                  <th class="graph-optional-col">Fusion</th>
+                  <th title="Decoded low-norm filter ratio (L2 norm &lt; 2% of layer maximum); distinct from scale-vector near-zero representable channels">Low-norm filters</th>
+                </tr>
+              </thead>
+              <tbody id="graphOpBody"></tbody>
+            </table>
+          </div>
+          <div class="table-wrap layered-view-wrap" id="layeredViewPanel" hidden></div>
+          <div class="table-wrap tensor-list-wrap" id="tensorExplorerPanel" hidden>
+            <div class="tensor-memory-timeline" id="tensorMemoryTimeline"></div>
+            <div class="tensor-stats-bar" id="tensorStatsBar"></div>
+            <div class="tensor-filter-bar">
+              <input id="tensorSearch" type="search" placeholder="name, index, shape, dtype…" autocomplete="off" />
+              <button class="filter-chip active" type="button" data-tfilter="all" title="Show all tensors">All</button>
+              <button class="filter-chip" type="button" data-tfilter="kernel" title="Constant tensors consumed at kernel input positions">Kernels</button>
+              <button class="filter-chip" type="button" data-tfilter="bias" title="Constant tensors consumed at bias input positions">Biases</button>
+              <button class="filter-chip" type="button" data-tfilter="activation" title="Runtime activation tensors — can show quant boundary locations">Activations</button>
+              <button class="filter-chip" type="button" data-tfilter="metadata" title="Constant tensors not uniquely classified as kernel or bias">Metadata</button>
+              <button class="filter-chip" type="button" data-tfilter="fanout" title="Tensors consumed by 2+ ops — residual/FPN branch points, memory pressure if large">Fan-out &gt;1</button>
+              <button class="filter-chip" type="button" data-tfilter="quant" title="Tensors with quantization scale/zero-point — scale accuracy directly affects INT8 delegation">Quantized</button>
+            </div>
+            <table class="tensor-table">
+              <thead>
+                <tr>
+                  <th>T#</th>
+                  <th>Name</th>
+                  <th>Shape</th>
+                  <th>DType</th>
+                  <th>Role</th>
+                  <th title="Producer op index">Prod</th>
+                  <th title="Number of consumer ops">Fan</th>
+                  <th title="Consumer op indices — click a chip to jump to that op">Consumers</th>
+                  <th title="Per-channel or per-tensor quantization scale">Quant</th>
+                </tr>
+              </thead>
+              <tbody id="tensorBody"></tbody>
+            </table>
+          </div>
+          <div class="table-wrap kernel-inspector-wrap" id="kernelInspectorPanel" hidden>
+            <section class="explorer-execution-placement execution-placement-panel" id="explorerExecutionPlacementPanel" aria-label="Execution placement evidence topology"></section>
+            <section class="runtime-evidence-closure" id="runtimeEvidenceClosure" hidden>
+              <div class="runtime-closure-head">
+                <div>
+                  <span>Predicted to observed</span>
+                  <strong>Runtime evidence closure</strong>
+                </div>
+                <div class="runtime-closure-actions">
+                  <button id="downloadRuntimeCapturePlan" class="secondary-action" type="button">Capture plan</button>
+                  <button id="downloadRuntimeEvidenceSidecar" class="secondary-action" type="button" disabled>Evidence sidecar</button>
+                </div>
+              </div>
+              <p data-runtime-closure-status>Static placement evidence is available; no observed runtime assignment is bound.</p>
+              <progress max="100" value="0" aria-label="Observed runtime assignment coverage"></progress>
+              <div class="runtime-closure-grid">
+                <div><span>Placement</span><strong data-runtime-closure-placement>Not assessed</strong></div>
+                <div><span>Binary identity</span><strong data-runtime-closure-identity>Runtime binary unbound</strong></div>
+                <div><span>Selector closure</span><strong data-runtime-closure-selector>Not observed</strong></div>
+                <div><span>Collector</span><strong data-runtime-closure-collector>No collector manifest</strong></div>
+              </div>
+            </section>
+            <div class="kernel-inspector-toolbar">
+              <input id="kernelInspectorSearch" type="search" placeholder="op, provider, kernel, reason" autocomplete="off" />
+              <button class="filter-chip active" type="button" data-kernel-filter="all">All</button>
+              <button class="filter-chip" type="button" data-kernel-filter="boundary" title="Show producer and consumer ops for graph edges crossing predicted or observed execution domains">Boundary edges</button>
+              <button class="filter-chip" type="button" data-kernel-filter="mismatch" title="Show ops where an imported runtime assignment differs from the static prediction">Mismatches</button>
+              <button class="filter-chip" type="button" data-kernel-filter="selector" title="Show ops with unresolved source selector branches or a source-enumerated no-match">Selector gaps</button>
+              <button class="filter-chip" type="button" data-kernel-filter="tail">Tail</button>
+              <button class="filter-chip" type="button" data-kernel-filter="packing">Packing</button>
+              <label class="secondary-action kernel-runtime-import" title="Import DeepBOM assignment JSON, ONNX Runtime Chrome-trace JSON, TFLite ModelRuntimeDetails, or TFLite BenchmarkProfilingData protobuf">
+                Import runtime evidence
+                <input id="runtimeAssignmentInput" type="file" accept="application/json,application/octet-stream,.json,.pb,.bin" hidden />
+              </label>
+              <button id="downloadRuntimeAssignmentTemplate" class="secondary-action" type="button" title="Download a schema template bound to this model and target profile">Runtime template</button>
+              <button id="clearRuntimeAssignment" class="secondary-action" type="button" hidden>Clear runtime</button>
+            </div>
+            <div class="kernel-inspector-summary" id="kernelInspectorSummary"></div>
+            <div class="runtime-assignment-comparison" id="runtimeAssignmentComparison" hidden></div>
+            <div class="kernel-boundary-inventory" id="kernelBoundaryInventory" hidden></div>
+            <div class="kernel-runtime-status" id="runtimeAssignmentStatus">No runtime assignment evidence imported.</div>
+            <table class="kernel-inspector-table">
+              <thead>
+                <tr>
+                  <th>#</th><th>Op / path</th><th>Kernel / provider evidence</th><th>Tile / occupancy</th><th>Static assignment</th><th>Interface payload</th><th>Preparation / packing</th><th>Observed runtime</th><th>Evidence</th>
+                </tr>
+              </thead>
+              <tbody id="kernelInspectorBody"></tbody>
+            </table>
+          </div>
+          <div class="op-detail-nav">
+            <button class="op-nav-btn" id="opNavPrev" title="Previous op (↑)">&#8593;</button>
+            <span id="opNavLabel">—</span>
+            <button class="op-nav-btn" id="opNavNext" title="Next op (↓)">&#8595;</button>
+          </div>
+          <aside class="op-detail" id="opDetail">
+            <h3>Select an op</h3>
+            <p>Details will appear here.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="xr-redesign-workspace" id="redesignPanel" hidden aria-label="Redesign structural projection"></section>
+
+      <section class="diagram-section" id="diagramSection" hidden>
+        <div class="section-head">
+          <h2>Stage View</h2>
+          <span id="stageCount"></span>
+        </div>
+        <div class="stage-strip" id="stageStrip"></div>
+      </section>
+
+      <section class="tables" id="tables" hidden>
+        <div>
+          <div class="section-head">
+            <h2>Operator Histogram</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Op</th>
+                  <th>Count</th>
+                </tr>
+              </thead>
+              <tbody id="histogramBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-head">
+            <h2>Top MAC Ops</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Op</th>
+                  <th>Output</th>
+                  <th>MACs</th>
+                  <th>Bytes</th>
+                </tr>
+              </thead>
+              <tbody id="topMacBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-head">
+            <h2>Static Roofline</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Op</th>
+                  <th>Intensity</th>
+                  <th title="Logical input plus output tensor bytes for the complete operator invocation.">Logical traffic</th>
+                  <th title="Local input strip plus output row payload used for the target L1 cache-residency watch.">Row working set</th>
+                  <th>Modeled posture</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="rooflineBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./lib/citation-ui.js"></script>
+    <script type="module" src="./bootstrap.js"></script>
+
+    <!-- Search engine and AI crawler content — not shown to interactive users -->
+    <footer class="seo-footer" aria-label="About DEEPBOM">
+      <h2>About DEEPBOM</h2>
+      <p>DEEPBOM is a browser-native deployment artifact analyzer. TFLite receives deep graph, quantization, memory, and target-rule analysis; ONNX receives graph, tensor, shape, compatibility, and runtime-evidence analysis; GGUF and SafeTensors receive container, tensor, payload, and shard-contract analysis; Core ML receives model or package inspection and serialized graph evidence when present. The UI states the applicable depth for every run. Artifact files are analyzed locally and are not uploaded.</p>
+      <h3>Key capabilities</h3>
+      <ul>
+        <li><strong>INT8 quantization audit:</strong> identifies static anomalies and contract discontinuities (per-channel scale/zero-point anomalies and serialized activation precision boundaries) that may increase the risk of numerical or task-level regression and warrant reference-data testing. Boundary-operator counts are not presented as runtime float-island counts.</li>
+        <li><strong>XNNPACK partition prediction:</strong> uses a pinned static rulepack to predict partition boundaries and transition-cost signals for TFLite. Runtime assignment and tensor-copy materialization require target profiling.</li>
+        <li><strong>Roofline model:</strong> classifies each op into low/mixed/high-intensity static posture bands against configurable target profiles (Cortex-A55, Cortex-A72, AVX2, WASM SIMD).</li>
+        <li><strong>Artifact perturbation geometry proxy:</strong> evaluates RMS synthetic-output drift over filter-normalized 2D weight perturbations. The result discloses the deterministic input basis, scalar functional, seeds, radius, centered finite-difference stencil, included constant policy, and quantized-weight dequantization policy. It is not a training-loss or generalization certificate.</li>
+        <li><strong>Multi-projection geometry summary:</strong> K independently seeded 2D slices summarize directional variation around the artifact parameters. Raw directional λ_max CV is reported without converting it into a validated reliability or isotropy score; no 3D reconstruction is claimed.</li>
+        <li><strong>Haar wavelet decomposition:</strong> LL/LH/HL/HH energy fractions describe the spatial-frequency composition of stored convolutional kernels and synthetic or observed activation maps. Sensitivity or robustness interpretation requires separate perturbation and output evidence.</li>
+        <li><strong>Artifact Viewer:</strong> sidebar layer navigator with per-layer filter spatial visualization, on-demand per-layer perturbation surface, and L2-per-channel bar chart.</li>
+        <li><strong>Runtime benchmark:</strong> measures WASM, WebGPU, and WebNN inference latency with warmup isolation, p50/p90/p95/p99 statistics, explicit p99 sample-strength disclosure, and jitter.</li>
+        <li><strong>Engineering report export:</strong> editable HTML engineering report, raw JSON, roofline CSV, and ML-BOM in CycloneDX format.</li>
+      </ul>
+      <h3>How to cite</h3>
+      <p>Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts (Version 1.94.0) [Computer software]. Zenodo. <a href="https://doi.org/10.5281/zenodo.21834509" rel="noopener" target="_blank">https://doi.org/10.5281/zenodo.21834509</a></p>
+      <h3>Privacy and data handling</h3>
+      <p>Analysis runs locally in the browser using Rust/WebAssembly and format-specific JavaScript runtimes. Artifact bytes, tensor values, inputs, outputs, and reports are never uploaded. De-identified structural telemetry is sent only after explicit opt-in and can be disabled at any time; structural patterns may still be distinctive. Synthetic Device Benchmark is a separate explicit queue path: a registered device agent receives a zero-weight reconstruction from consented structure metadata, not the original artifact or weights.</p>
+      <h3>Technical implementation</h3>
+      <p>The TFLite analysis core is written in Rust and compiled to WebAssembly via wasm-pack. ONNX graph parsing and static shape/MAC assessment are implemented in browser JavaScript, while ONNX inference uses ONNX Runtime Web's WebAssembly backend. Viewer rendering is JavaScript. Account-bound report formatters and controlled WASM assets use server-side authorization checks and are not fetched for unauthorized sessions; any code delivered to an authorized browser remains inspectable and is not cryptographically secret.</p>
+      <h3>Research context</h3>
+      <p>DEEPBOM is developed by Jun-Hwan Kwon, Ph.D., Research Assistant Professor at the Anesthesia and Pain Research Institute, Yonsei University College of Medicine, Republic of Korea. It supports structured characterization of deployment-relevant artifact properties, runtime assumptions, and target-specific engineering signals for medical and general on-device AI.</p>
+    </footer>
+  </body>
+</html>

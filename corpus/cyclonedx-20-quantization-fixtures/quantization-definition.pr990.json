@@ -1,0 +1,125 @@
+{
+  "type": "object",
+  "title": "Quantization",
+  "description": "The quantization applied to a model parameter. The scheme parameters recorded here describe how quantized values relate to real values. The scale and zero point tensors themselves are model data and are distributed with the model artefact, not with the BOM. Additional scheme specific details may be recorded in the `properties` of the model parameter.",
+  "additionalProperties": false,
+  "properties": {
+    "method": {
+      "type": "string",
+      "title": "Method",
+      "description": "The quantization method or algorithm applied.",
+      "examples": [
+        "gptq",
+        "awq",
+        "rtn",
+        "k-quant"
+      ]
+    },
+    "bits": {
+      "type": "number",
+      "title": "Bits",
+      "description": "The nominal bit width per value. Fractional widths are permitted, for example 1.58 for ternary quantization.",
+      "exclusiveMinimum": 0,
+      "examples": [
+        8,
+        4,
+        1.58
+      ]
+    },
+    "scheme": {
+      "title": "Scheme",
+      "description": "The mapping between quantized values and real values.",
+      "oneOf": [
+        {
+          "title": "Predefined Quantization Scheme",
+          "type": "string",
+          "enum": [
+            "affine",
+            "symmetric"
+          ],
+          "meta:enum": {
+            "affine": "Asymmetric mapping using a scale and a zero point.",
+            "symmetric": "Symmetric mapping using a scale with the zero point fixed at zero."
+          }
+        },
+        {
+          "type": "object",
+          "title": "Custom Quantization Scheme",
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "Name",
+              "description": "The name of the custom quantization scheme."
+            },
+            "description": {
+              "type": "string",
+              "title": "Description",
+              "description": "A description of the custom quantization scheme."
+            }
+          }
+        }
+      ]
+    },
+    "granularity": {
+      "title": "Granularity",
+      "description": "The level at which scales and zero points are assigned.",
+      "oneOf": [
+        {
+          "title": "Predefined Quantization Granularity",
+          "type": "string",
+          "enum": [
+            "per-tensor",
+            "per-channel",
+            "per-group"
+          ],
+          "meta:enum": {
+            "per-tensor": "One scale and zero point applies to the entire tensor.",
+            "per-channel": "Scales and zero points are assigned along one tensor axis.",
+            "per-group": "Scales and zero points are assigned to fixed size groups of elements along one tensor axis."
+          }
+        },
+        {
+          "type": "object",
+          "title": "Custom Quantization Granularity",
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "Name",
+              "description": "The name of the custom quantization granularity."
+            },
+            "description": {
+              "type": "string",
+              "title": "Description",
+              "description": "A description of the custom quantization granularity."
+            }
+          }
+        }
+      ]
+    },
+    "groupSize": {
+      "type": "integer",
+      "title": "Group Size",
+      "description": "The number of elements sharing one scale and zero point when the granularity is `per-group`.",
+      "minimum": 1,
+      "examples": [
+        32,
+        64,
+        128
+      ]
+    },
+    "axis": {
+      "type": "integer",
+      "title": "Axis",
+      "description": "The tensor axis along which scales and zero points are assigned when the granularity is `per-channel` or `per-group`.",
+      "minimum": 0
+    }
+  }
+}

@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 3.16)
+project(deepbom_runtime_trace LANGUAGES CXX)
+
+add_library(deepbom_runtime_trace STATIC deepbom_runtime_trace.cc)
+target_compile_features(deepbom_runtime_trace PUBLIC cxx_std_17)
+target_include_directories(deepbom_runtime_trace PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(deepbom_runtime_trace PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+if(MSVC)
+  target_compile_options(deepbom_runtime_trace PRIVATE /W4 /WX)
+else()
+  target_compile_options(deepbom_runtime_trace PRIVATE -Wall -Wextra -Werror -pedantic)
+endif()
+
+include(CTest)
+if(BUILD_TESTING)
+  add_executable(deepbom_runtime_trace_test deepbom_runtime_trace_test.cc)
+  target_link_libraries(deepbom_runtime_trace_test PRIVATE deepbom_runtime_trace)
+  add_test(NAME deepbom_runtime_trace_test COMMAND deepbom_runtime_trace_test)
+endif()

@@ -1,0 +1,1704 @@
+{
+  "schema": "deepbom.cyclonedx_generalization_evidence.v1",
+  "population": {
+    "manifest_schema": "deepbom.public_multiformat_corpus.v1",
+    "manifest_sha256": "661e1299babfdea8c29396c47e4d5cccf6b4ccf5423bb5e044e13c47f39a9837",
+    "measurement_completed_at": "2026-08-18T02:27:03.356Z",
+    "selection_boundary": "A declared mixed-frame validation population of immutable public artifacts: purposeful size-bounded ONNX/GGUF/SafeTensors strata plus every asset linked from the Apple Developer Core ML catalog snapshot on 2026-08-18. Counts describe only their declared frame and are not ecosystem prevalence estimates.",
+    "inference_boundary": "Exact counts describe the declared hash-identified frame only. ONNX, GGUF, and SafeTensors are purposeful strata; Core ML enumerates the public Apple catalog snapshot dated 2026-08-18. No cross-ecosystem prevalence or confidence interval is claimed.",
+    "path_record_count": 113,
+    "unique_primary_artifact_count": 113,
+    "repeat_count": 2,
+    "deterministic_pass_count": 113,
+    "source_file_count": 145,
+    "declared_download_bytes": 2926971262
+  },
+  "format_populations": {
+    "onnx": {
+      "unique_artifact_count": 48,
+      "path_record_count": 48,
+      "repository_or_catalog_source_count": 40,
+      "architecture_strata": {
+        "BertForMaskedLM": 1,
+        "BertForSequenceClassification": 1,
+        "BertModel": 1,
+        "CohereAsrForConditionalGeneration": 1,
+        "depth_anything": 1,
+        "DepthAnythingForDepthEstimation": 1,
+        "DINOv3ConvNextModel": 1,
+        "DINOv3ViTModel": 1,
+        "EdgeTamModel": 1,
+        "Gemma4ForConditionalGeneration": 1,
+        "GPT2LMHeadModel": 1,
+        "Idefics3ForConditionalGeneration": 1,
+        "JinaEmbeddingsV5OmniModel": 1,
+        "Lfm2ForCausalLM": 1,
+        "Lfm2VlForConditionalGeneration": 1,
+        "LlamaForCausalLM": 1,
+        "MetaCLIP2Model": 1,
+        "mobilenet_v3": 1,
+        "mobilenet_v4": 1,
+        "ModernBertDecoderForCausalLM": 1,
+        "ModernBertForMaskedLM": 1,
+        "PatchTSMixerForPrediction": 1,
+        "Qwen2ForCausalLM": 1,
+        "Qwen3_5ForConditionalGeneration": 1,
+        "RobertaModel": 1,
+        "SamModel": 1,
+        "style_text_to_speech_2": 2,
+        "supertonic": 1,
+        "Swin2SRForImageSuperResolution": 1,
+        "unclassified": 5,
+        "VitPoseForPoseEstimation": 1,
+        "VoxtralForConditionalGeneration": 1,
+        "WhisperForAudioClassification": 1,
+        "WhisperForConditionalGeneration": 7,
+        "XLMRobertaForQuestionAnswering": 1,
+        "XLMRobertaForTokenClassification": 1,
+        "yolov10": 1
+      },
+      "task_strata": {
+        "any-to-any": 1,
+        "audio-text-to-text": 1,
+        "automatic-speech-recognition": 8,
+        "depth-estimation": 2,
+        "feature-extraction": 2,
+        "fill-mask": 2,
+        "image-classification": 1,
+        "image-feature-extraction": 2,
+        "image-segmentation": 1,
+        "image-text-to-text": 3,
+        "image-to-image": 1,
+        "keypoint-detection": 1,
+        "mask-generation": 1,
+        "object-detection": 1,
+        "question-answering": 1,
+        "sentence-similarity": 1,
+        "text-classification": 1,
+        "text-generation": 3,
+        "text-to-speech": 4,
+        "time-series-forecasting": 1,
+        "token-classification": 1,
+        "translation": 1,
+        "unclassified": 6,
+        "voice-activity-detection": 1,
+        "zero-shot-image-classification": 1
+      },
+      "precision_strata": {
+        "bnb4": 3,
+        "fp16": 8,
+        "int4": 1,
+        "int8_or_quantized": 7,
+        "q4": 3,
+        "q4f16": 5,
+        "uint8": 2,
+        "unspecified_in_filename": 19
+      },
+      "graph_presence": {
+        "serialized_graph_present": 48
+      },
+      "external_data_status": {
+        "assessed_absent": 17,
+        "not_assessed_payload_not_supplied": 17,
+        "verified_payloads": 14
+      },
+      "quantization_classification": {
+        "dynamic_range_or_weight_only": 3,
+        "integer_internal_float_io": 1,
+        "not_quantized_float": 27,
+        "quantization_signals_partial_mac_assessment": 17
+      },
+      "serialized_contract_status": {
+        "assessed_no_checked_contract_issue": 48
+      },
+      "serialized_contract_issue_codes": {},
+      "external_parameter_count": 679,
+      "affine_external_parameter_count": 0,
+      "unquantized_or_undeclared_external_parameter_count": 679,
+      "model_scheme_set": [
+        "affine",
+        "onnx_integer_operator_or_scale_graph"
+      ],
+      "model_granularity_set": [
+        "operation-scoped",
+        "per-tensor"
+      ],
+      "model_axis_set": [],
+      "singleton_model_quantization_lossy_count": 2,
+      "singleton_model_quantization_applicable_count": 2
+    },
+    "gguf": {
+      "unique_artifact_count": 20,
+      "path_record_count": 20,
+      "repository_or_catalog_source_count": 16,
+      "architecture_strata": {
+        "falcon": 1,
+        "falcon40b": 1,
+        "gpt2": 1,
+        "gptneox": 1,
+        "internlm2": 1,
+        "llama": 5,
+        "llama-onnx-origin": 1,
+        "llama2-kv": 1,
+        "llama3": 1,
+        "mistral": 1,
+        "mistral-small": 1,
+        "mpt": 1,
+        "olmo": 1,
+        "phi3-small": 1,
+        "qwen3": 1,
+        "stablelm": 1
+      },
+      "task_strata": {
+        "text_generation_storage": 20
+      },
+      "precision_strata": {
+        "IQ4_NL": 1,
+        "Q2_K": 4,
+        "Q2_K_filename_candidate": 12,
+        "Q4_0": 1,
+        "Q8_0": 1,
+        "TQ2_0": 1
+      },
+      "graph_presence": {
+        "not_serialized_in_container": 20
+      },
+      "external_data_status": {
+        "not_applicable": 20
+      },
+      "quantization_classification": {
+        "block_or_tensor_encoded_weights": 20
+      },
+      "serialized_contract_status": {
+        "assessed_no_checked_contract_issue": 19,
+        "partial_serialized_contract_issue_observed": 1
+      },
+      "serialized_contract_issue_codes": {
+        "GGUF_INVALID_TENSOR_BLOCK_CARDINALITY": 1
+      },
+      "external_parameter_count": 0,
+      "affine_external_parameter_count": 0,
+      "unquantized_or_undeclared_external_parameter_count": 0,
+      "model_scheme_set": [
+        "ggml_block_encoding"
+      ],
+      "model_granularity_set": [
+        "block"
+      ],
+      "model_axis_set": [],
+      "singleton_model_quantization_lossy_count": 20,
+      "singleton_model_quantization_applicable_count": 20
+    },
+    "safetensors": {
+      "unique_artifact_count": 18,
+      "path_record_count": 18,
+      "repository_or_catalog_source_count": 18,
+      "architecture_strata": {
+        "cohere": 1,
+        "cohere2": 1,
+        "exaone4": 1,
+        "gemma": 1,
+        "gemma2": 1,
+        "granite": 1,
+        "llama": 1,
+        "mamba": 1,
+        "ministral": 1,
+        "mistral": 1,
+        "mixtral": 1,
+        "nemotron": 1,
+        "olmo": 1,
+        "olmo2": 1,
+        "phi3": 1,
+        "qwen2": 1,
+        "qwen3": 1,
+        "smollm3": 1
+      },
+      "task_strata": {
+        "on_device_llm_weight_contract": 18
+      },
+      "precision_strata": {
+        "serialized_tensor_dtypes": 18
+      },
+      "graph_presence": {
+        "not_serialized_in_container": 18
+      },
+      "external_data_status": {
+        "not_applicable": 18
+      },
+      "quantization_classification": {
+        "weight_container": 18
+      },
+      "serialized_contract_status": {
+        "assessed_no_checked_contract_issue": 18
+      },
+      "serialized_contract_issue_codes": {},
+      "external_parameter_count": 0,
+      "affine_external_parameter_count": 0,
+      "unquantized_or_undeclared_external_parameter_count": 0,
+      "model_scheme_set": [],
+      "model_granularity_set": [],
+      "model_axis_set": [],
+      "singleton_model_quantization_lossy_count": 0,
+      "singleton_model_quantization_applicable_count": 0
+    },
+    "coreml": {
+      "unique_artifact_count": 27,
+      "path_record_count": 27,
+      "repository_or_catalog_source_count": 1,
+      "architecture_strata": {
+        "bert_squad": 1,
+        "deeplabv3": 3,
+        "depth_anything_v2": 2,
+        "detr_resnet50": 2,
+        "fastvit_ma36": 2,
+        "fastvit_t8": 2,
+        "mnist_classifier": 1,
+        "mobilenetv2": 3,
+        "resnet50": 4,
+        "updatable_drawing_classifier": 1,
+        "yolov3": 3,
+        "yolov3_tiny": 3
+      },
+      "task_strata": {
+        "depth_estimation": 2,
+        "drawing_classification": 2,
+        "image_classification": 8,
+        "image_feature_extraction": 3,
+        "image_segmentation": 5,
+        "object_detection": 6,
+        "question_answering": 1
+      },
+      "precision_strata": {
+        "float16": 6,
+        "float32": 6,
+        "float32_headless": 1,
+        "int8_lut_weight_storage": 5,
+        "mlprogram_float16": 4,
+        "mlprogram_float16_headless": 2,
+        "mlprogram_float16_palettized_6bit": 1,
+        "mlprogram_float16_palettized_8bit": 1,
+        "updatable_pipeline": 1
+      },
+      "graph_presence": {
+        "serialized_graph_payload_not_decoded": 5,
+        "serialized_graph_present": 22
+      },
+      "external_data_status": {
+        "not_applicable": 27
+      },
+      "quantization_classification": {
+        "coreml_legacy_non_quantized_weights": 6,
+        "coreml_legacy_weight_quantization": 3,
+        "coreml_mlprogram_no_serialized_quantization_transform": 6,
+        "coreml_mlprogram_serialized_quantization_transforms": 2,
+        "coreml_payload_not_decoded": 5,
+        "coreml_pipeline_mixed_model_contracts": 5
+      },
+      "serialized_contract_status": {
+        "assessed_no_checked_contract_issue": 25,
+        "partial_serialized_contract_issue_observed": 2
+      },
+      "serialized_contract_issue_codes": {
+        "COREML_PREPROCESSING_FEATURE_NAME_MISSING": 2
+      },
+      "external_parameter_count": 84,
+      "affine_external_parameter_count": 0,
+      "unquantized_or_undeclared_external_parameter_count": 84,
+      "model_scheme_set": [
+        "coreml_serialized_quantization_transform",
+        "coreml_weightparams_quantized_storage"
+      ],
+      "model_granularity_set": [
+        "operation-scoped",
+        "unspecified_or_per-tensor"
+      ],
+      "model_axis_set": [],
+      "singleton_model_quantization_lossy_count": 5,
+      "singleton_model_quantization_applicable_count": 5
+    }
+  },
+  "cross_format_schema_findings": [
+    {
+      "id": "external-affine-contract-availability",
+      "support_type": "DIRECT_POPULATION_MEASUREMENT",
+      "conclusion": "External affine values must be represented as optional named-parameter contracts rather than inferred from an integer dtype or a model-level precision label.",
+      "observed_numerator": 0,
+      "observed_denominator": 763,
+      "population_unit": "serialized external parameters",
+      "measurement_interpretation": "0/763 parameters in this non-TFLite population carried a complete extracted affine mapping. This count is an availability result, not evidence that parameter binding is unnecessary; the separate TFLite interface population supplies positive affine examples."
+    },
+    {
+      "id": "external-parameter-collection-cardinality",
+      "support_type": "DIRECT_STRUCTURAL_COUNTEREXAMPLE",
+      "conclusion": "External interface contracts require a repeatable parameter collection with stable direction and parameter identity; one model-level parameter object cannot represent a multi-input/output interface without loss of binding.",
+      "observed_numerator": 75,
+      "observed_denominator": 75,
+      "population_unit": "artifacts with serialized external parameters",
+      "serialized_external_parameter_count": 763,
+      "measurement_interpretation": "75/75 artifacts with a serialized interface exposed more than one parameter. This establishes cardinality pressure in the measured frame; the separate TFLite affine corpus establishes that dtype and shape do not uniquely determine scale and zero-point."
+    },
+    {
+      "id": "model-quantization-multiplicity",
+      "support_type": "DIRECT_REPRESENTATIONAL_COUNTEREXAMPLE",
+      "conclusion": "A repeatable, scoped representation is required when one artifact contains mixed encodings, granularities, axes, or non-affine storage families.",
+      "observed_numerator": 27,
+      "observed_denominator": 27,
+      "population_unit": "unique primary artifacts with an applicable singleton-losslessness assessment",
+      "measurement_interpretation": "The numerator counts artifacts whose extracted tensor/block-scoped numerical contract cannot be flattened into one model-level scheme/granularity/bits/axis tuple without information loss."
+    },
+    {
+      "id": "applicability-availability-and-zero-are-distinct",
+      "support_type": "DIRECT_FIELD_STATE_COUNTEREXAMPLE",
+      "conclusion": "A portable evidence schema must distinguish an observed serialized graph, a graph that is applicable but unavailable to the bounded decoder, and a graph that the container does not serialize. None of these states is numerical zero.",
+      "observed_numerator": 113,
+      "observed_denominator": 113,
+      "population_unit": "unique primary artifacts with a conserved graph evidence state",
+      "observed_state_counts": {
+        "NOT_APPLICABLE": 38,
+        "OBSERVED": 70,
+        "UNAVAILABLE": 5
+      },
+      "measurement_interpretation": "70 OBSERVED, 5 UNAVAILABLE, and 38 NOT_APPLICABLE graph states reconstruct the full 113-artifact denominator without null-to-zero coercion."
+    },
+    {
+      "id": "compound-artifact-identity",
+      "support_type": "DIRECT_EXTERNAL_PAYLOAD_MEASUREMENT",
+      "conclusion": "Formats with externally stored tensor payloads need a content-set identity and explicit dependency binding in addition to the primary model-file hash.",
+      "observed_numerator": 14,
+      "observed_denominator": 48,
+      "population_unit": "ONNX primary artifacts",
+      "measurement_interpretation": "14/48 ONNX records required and verified a separately hashed external tensor payload. The count proves the existence of compound artifacts in this bounded frame, not their ecosystem prevalence."
+    },
+    {
+      "id": "artifact-source-and-license-provenance-separation",
+      "support_type": "DIRECT_PROVENANCE_STATE_MEASUREMENT",
+      "conclusion": "Artifact byte identity, source revision, and externally declared license metadata are independent provenance fields; a missing revision or license declaration must not invalidate an observed artifact hash or be inferred from bytes.",
+      "observed_numerator": 113,
+      "observed_denominator": 113,
+      "population_unit": "hash-identified unique primary artifacts",
+      "source_revision_external_count": 86,
+      "source_license_external_count": 44,
+      "measurement_interpretation": "All 113 records are byte-hash bound, while 86 carry an external source revision and 44 carry external license metadata. These are field-availability counts within distinct source frames, not license grants or prevalence estimates."
+    },
+    {
+      "id": "model-axis-observation-boundary",
+      "support_type": "DIRECT_NULL_RESULT",
+      "conclusion": "This population does not establish that one model-level axis is universally sufficient; an axis is meaningful only with tensor scope and a rank-aware normalization rule.",
+      "observed_numerator": 0,
+      "observed_denominator": 46,
+      "population_unit": "artifacts with extracted model-quantization representations",
+      "multiple_axis_artifact_count": 0,
+      "measurement_interpretation": "0/46 applicable artifacts yielded an explicit axis in the current extraction. The null result is retained and no multi-axis prevalence claim is made from this population."
+    },
+    {
+      "id": "storage-contract-is-not-affine-interface-contract",
+      "support_type": "DIRECT_FORMAT_CONTRACT_SEPARATION",
+      "conclusion": "Weight-container dtype or block encoding must remain distinct from a named input/output affine mapping and from an executable graph claim.",
+      "observed_numerator": 38,
+      "observed_denominator": 38,
+      "population_unit": "GGUF and SafeTensors artifacts",
+      "measurement_interpretation": "GGUF block encodings and SafeTensors dtypes were retained as scoped storage representations; neither was promoted to an external scale/zero-point contract."
+    },
+    {
+      "id": "evidence-class-separation",
+      "support_type": "DIRECT_FIELD_STATE_MEASUREMENT",
+      "conclusion": "Observed bytes, deterministic derivations, external declarations, unavailable values, and runtime-required claims need distinct machine-readable states.",
+      "observed_numerator": 113,
+      "observed_denominator": 113,
+      "population_unit": "unique primary artifacts",
+      "measurement_interpretation": "The numerator counts records carrying at least four distinct evidence classes without null-to-zero or static-to-runtime promotion."
+    },
+    {
+      "id": "static-artifact-does-not-bind-runtime-assignment",
+      "support_type": "DIRECT_CLAIM_BOUNDARY_MEASUREMENT",
+      "conclusion": "Runtime provider, delegate, backend, or device assignment must be a separately bound observation rather than a property inferred from serialized model bytes.",
+      "observed_numerator": 113,
+      "observed_denominator": 113,
+      "population_unit": "unique primary artifacts",
+      "measurement_interpretation": "Every record retained deployment assignment as RUNTIME_REQUIRED. This is a claim-boundary result across four formats, not evidence that a particular runtime cannot execute an artifact."
+    },
+    {
+      "id": "validity-is-not-availability-or-runtime-evidence",
+      "support_type": "DIRECT_SERIALIZED_CONTRACT_MEASUREMENT",
+      "conclusion": "A readable artifact can carry a source-rule contract defect; validity, missing metadata, external dependency completeness, and runtime observation require separate states.",
+      "observed_numerator": 3,
+      "observed_denominator": 113,
+      "population_unit": "unique primary artifacts",
+      "observed_issue_codes": {
+        "COREML_PREPROCESSING_FEATURE_NAME_MISSING": 2,
+        "GGUF_INVALID_TENSOR_BLOCK_CARDINALITY": 1
+      },
+      "measurement_interpretation": "Issue-bearing artifacts remain in the denominator and retain their exact issue codes instead of being silently dropped or reported as fully assessed."
+    }
+  ],
+  "records": {
+    "path": "corpus/cyclonedx-generalization-evidence.records.v1.json.gz",
+    "media_type": "application/json",
+    "content_encoding": "gzip",
+    "schema": "deepbom.cyclonedx_generalization_records.v1",
+    "record_count": 113,
+    "uncompressed_bytes": 1527896,
+    "uncompressed_sha256": "f826c8d0f3d1f332f9c6a059fa18aa23271a9e3756fe28c27ac0e56bb01fc777",
+    "compressed_bytes": 70928,
+    "compressed_sha256": "127f93a234f9b71ea0918f10bcc259fbab84e3fa990bf2cc4e0fd55311329558",
+    "ledger_sha256": "1c2a324bf40104009ce66dadb398663cd8c2c98c0b723db1696a2e757e4f8685"
+  },
+  "artifact_index": [
+    {
+      "artifact_id": "coreml-bert-squad-fp16",
+      "format": "coreml",
+      "artifact_sha256": "471c12bb311a0a00d26d89bd55efa3ab4ee865b6664a2f851ccb185ceab55ad5",
+      "analysis_sha256": "e4fe39329af4888943cb70099bff41d30c036539d1f373e31d30707a69f503e7",
+      "receipt_sha256": "9c01a5391f3b9ea8f7902f532a35e94169eb9db8cc4fa809953cc51a5407a256",
+      "graph_presence": "serialized_graph_payload_not_decoded",
+      "quantization_classification": "coreml_payload_not_decoded",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-deeplabv3-f32",
+      "format": "coreml",
+      "artifact_sha256": "4ce025917bcdd9f99eb776d3cb964c78622d4551e031d024f564bc997ad5ffc5",
+      "analysis_sha256": "aa6ab4d8b3187e4f1c5278bab7188d8ace97353c28e4164efb231038b9d469d3",
+      "receipt_sha256": "a61644ddde411d522556d9bf1547fdbf4985ab40773274d39f16c00cbcd57a1b",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_legacy_non_quantized_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-deeplabv3-fp16",
+      "format": "coreml",
+      "artifact_sha256": "6c2c8cbe1c2d765f231408458b8c273976039ae04a05b112d748fc21cb3bfe95",
+      "analysis_sha256": "d0abb08794ea85c04c2e4203c559a37c4d98c8227329966f6333d7ceb1bad1b5",
+      "receipt_sha256": "8c0dea47b6cd7bddd3e9caf34927fac8f06a3e9bd96d5d4401d51bca410fd8d1",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_legacy_non_quantized_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-deeplabv3-int8-lut",
+      "format": "coreml",
+      "artifact_sha256": "935d8c71cdf1e6c2f7941d5ee8c5f4cc4e93363e785d2da7f0ca83cc44981ae2",
+      "analysis_sha256": "3ee3c456dea5950441fbecdc55f94b3eaedd1e4b421dfd1315b86859d791761e",
+      "receipt_sha256": "6421d1817e9f451faaa81137ec470d08b7a75bdc00d84e875c9ba2b6854a5f40",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_legacy_weight_quantization",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-depth-anything-v2-small-fp16",
+      "format": "coreml",
+      "artifact_sha256": "8e875979ec82fa46f292468a7567a520b2aa07c41008c32141f3396da05a4067",
+      "analysis_sha256": "51f7c3e9294209ac0b84a55d9a40f09113d2b1f09c16fae2b988dfcea217be89",
+      "receipt_sha256": "97d25ea035e64d5870c95429be932abdb31c6f6987db8352b75169f8aa1d69c4",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_mlprogram_no_serialized_quantization_transform",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-depth-anything-v2-small-fp16-p6",
+      "format": "coreml",
+      "artifact_sha256": "0268456a2c388d73bc36ef8e8e2d7ecffbbb6afeb1d73e79030c84cb5e7f3594",
+      "analysis_sha256": "21412e7f1e13260791d3719460cf1ab6fbe7b762bc0927f5ffe1b3cfac0c9cec",
+      "receipt_sha256": "51731a9e9d0ad93c9266cb9cb33d24de60663a5d8dbbf1bcc7221dd089281d6a",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_mlprogram_serialized_quantization_transforms",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-detr-resnet50-semantic-segmentation-fp16",
+      "format": "coreml",
+      "artifact_sha256": "4060ed589dd7d7f6f42418aab818846d2c1fc61a9336623c01a2f49ff8ee62a7",
+      "analysis_sha256": "2850b86783f8e7cc3f83c998b9296bdfae7a3a9a0f17b5996656bfbbaa3fe9b8",
+      "receipt_sha256": "9622d1e46838c4102bda823bf2b90739ec4d6b5609fef410b313bd6cf5e24783",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_mlprogram_no_serialized_quantization_transform",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-detr-resnet50-semantic-segmentation-fp16-p8",
+      "format": "coreml",
+      "artifact_sha256": "9436f344d7e935ef8f54025a43e760888a058ab9192f18248c3745d25fced4a7",
+      "analysis_sha256": "e6f1a6c1ee69108a9158e4a88dcebb307152ad2a852228b2a8d1ed6cd62e35ec",
+      "receipt_sha256": "3af0a3ba6e4a4057f5d528356698c3dddcf9d655e7f960a06b6c257b3ec0e3ea",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_mlprogram_serialized_quantization_transforms",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-fastvit-ma36-fp16",
+      "format": "coreml",
+      "artifact_sha256": "b898f6ebe3c734883b05a38258bd3855aaa5e74f96e98c88d312899c8ee925cb",
+      "analysis_sha256": "f34eee72d51bd4495601a701b981fcaf42e4b8cbda587658b9ebe333cc20e420",
+      "receipt_sha256": "d977ee44921e830eacd5b0ef285e3eff500586cf727cc985fda2f296e75bc70f",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_mlprogram_no_serialized_quantization_transform",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-fastvit-ma36-fp16-headless",
+      "format": "coreml",
+      "artifact_sha256": "5d1da33e9ea069c773b78920ae4d050c053fbbc354209f5a773459b7253a5797",
+      "analysis_sha256": "ce86403483dc2f783d82cbbb838dc6782120a07126215a106bdd757eb093f6f9",
+      "receipt_sha256": "241c69df37c8fc590443c09a435f90c75fa5b621a8e5196c1e528b71810a9cab",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_mlprogram_no_serialized_quantization_transform",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-fastvit-t8-fp16",
+      "format": "coreml",
+      "artifact_sha256": "156df7e15dd384af30727f1eee4982602924b7e8ae37a65cefa1cfb325261508",
+      "analysis_sha256": "0749c4e7cf251158c1030e24d4becdbe5c76e9b3c14e78ee48cb6641359f5aa5",
+      "receipt_sha256": "071e9dd14060578610f23ec9136f5c00e32af6031a21f97eb899a0e2003e8920",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_mlprogram_no_serialized_quantization_transform",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-fastvit-t8-fp16-headless",
+      "format": "coreml",
+      "artifact_sha256": "cd669710c737dab9749a7eecdd0567abd0fef5f4f37f3dccd30c718b5bc0bb87",
+      "analysis_sha256": "b02d350e0fe65705d515219d26105120505c6edab2cf1841ccb04500ec7dd0d5",
+      "receipt_sha256": "92f90747b527350e26c7d9b4a7c22b9e58b5844a44975d8d319d10c08fbe8d01",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_mlprogram_no_serialized_quantization_transform",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-mnist-classifier",
+      "format": "coreml",
+      "artifact_sha256": "816d1a222d5272109166ffc819d7ce44aff923a673884e34d982aa74985ba587",
+      "analysis_sha256": "ceda250262aeb063560c2ad8a950be5517186317c7453b150d79487cc56eb605",
+      "receipt_sha256": "7e7a9b79478be579ca96680a01f4ea96556a2f4ff1293e4662755bae497ca358",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_legacy_non_quantized_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-mobilenetv2-f32",
+      "format": "coreml",
+      "artifact_sha256": "cb5a35f593582232140556bbfa4618e66b37b8ff2fc33ba17db909e1050fd144",
+      "analysis_sha256": "6132b4fd64ac243deedb7718e0f58c436497167f6d2e9d294594f6ae2d51c801",
+      "receipt_sha256": "fb2181199e0636c99a7b7e4e301423734dcce23a4542b6c993676b9f0e819234",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_legacy_non_quantized_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-mobilenetv2-fp16",
+      "format": "coreml",
+      "artifact_sha256": "c76832208ff4c936365f0f2609f7b77f7f1a6caf62b0b429056d5ad7e48635ad",
+      "analysis_sha256": "c5ca48100a67dbaa425c1c97839f77d4f5efb603eb045e31720c64b9c2e2f6f0",
+      "receipt_sha256": "83b33435ee57315faeee32d2b6510de6fa7c5508802e2534bb7ef8ee099018f6",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_legacy_non_quantized_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-mobilenetv2-int8-lut",
+      "format": "coreml",
+      "artifact_sha256": "ee53bca4c5042d77aed5c093cba31c2ef229d1cc4c027300af9cc8bf9e240409",
+      "analysis_sha256": "b25e79cf2ef44672fa4548cd483dc11fe184d1467e5ed1b71c87a3824b47bc81",
+      "receipt_sha256": "efefad1224d14dbfbb6911b2269bbfa299b20ba98cbea488ddb8bdd2b0812ed4",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_legacy_weight_quantization",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-resnet50-f32",
+      "format": "coreml",
+      "artifact_sha256": "39432f8a20fd16ff311278b95a0953e345c18c907f856ade91cbcadac81bcc07",
+      "analysis_sha256": "72472335b5b201774ac9ae2598f8845642d4886383e628bc3662fa0147cd57c7",
+      "receipt_sha256": "7039b2775c0878166b469fa76564c5eea7f6b53b247a81e75d37811bb702ec11",
+      "graph_presence": "serialized_graph_payload_not_decoded",
+      "quantization_classification": "coreml_payload_not_decoded",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-resnet50-fp16",
+      "format": "coreml",
+      "artifact_sha256": "0ece88983f014e40a108285c0852b626443cb18e1302d525321f3d564e72725b",
+      "analysis_sha256": "8aaab394e9239ababd5ecd47478a69d0da67a0ba4d4661fc9813d019a9dcea01",
+      "receipt_sha256": "b9d13321fdf86fd93b82716ebbabc52b39002be638b139669d219069d2923ca4",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_legacy_non_quantized_weights",
+      "serialized_contract_status": "partial_serialized_contract_issue_observed",
+      "serialized_contract_issue_codes": [
+        "COREML_PREPROCESSING_FEATURE_NAME_MISSING"
+      ]
+    },
+    {
+      "artifact_id": "coreml-resnet50-headless",
+      "format": "coreml",
+      "artifact_sha256": "67c0252e458e27e18fdf47d9f71c39f5f207d1e3f92540fb7b4240f7051e7494",
+      "analysis_sha256": "2406cb3c22b2c07c0c3d683942cd1e08c718ac4702348bc0e68bb9adfac0825a",
+      "receipt_sha256": "6caa02ea48005b4fdd5341b225d013d70e936cfd6aef16283f01cee4df739a7e",
+      "graph_presence": "serialized_graph_payload_not_decoded",
+      "quantization_classification": "coreml_payload_not_decoded",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-resnet50-int8-lut",
+      "format": "coreml",
+      "artifact_sha256": "5de1d906095f67c4ca85f778ac04a70830b34e90ff86ab33897cfe3b4edff4c0",
+      "analysis_sha256": "19bcb4ab4f01d8ba49d3ac01e313dbc29dbbad1501ed839089aab95353fc310f",
+      "receipt_sha256": "34c514a74ad504edefd953817b15530d0b455fbbb9f0e313c2e422e1d6c1e4fd",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_legacy_weight_quantization",
+      "serialized_contract_status": "partial_serialized_contract_issue_observed",
+      "serialized_contract_issue_codes": [
+        "COREML_PREPROCESSING_FEATURE_NAME_MISSING"
+      ]
+    },
+    {
+      "artifact_id": "coreml-updatable-drawing-classifier",
+      "format": "coreml",
+      "artifact_sha256": "d2310a43f60dee043dda4b1367365dfb4735611688089d72b7cc083015e28925",
+      "analysis_sha256": "38ce6a43c0a86d664e5cc7451efa546c9e86a62c7d7c80e07dfaf6914f2c6f6d",
+      "receipt_sha256": "67d766e75af9769a1469e461a169f76bed32ad003289d606488d1cecbf3230aa",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_pipeline_mixed_model_contracts",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-yolov3-f32",
+      "format": "coreml",
+      "artifact_sha256": "7fea1f2b83b303e7fc6acf08c05a062793229de474587da336d8724e5bf16e38",
+      "analysis_sha256": "5c54677be0231247b3abd21a905269d8791da5f1fcd90e765873c2a58529d154",
+      "receipt_sha256": "e7f5ad85abae38a9588f69aa3f9a54a137f1584199ca16ab2a0afb0a7314189e",
+      "graph_presence": "serialized_graph_payload_not_decoded",
+      "quantization_classification": "coreml_payload_not_decoded",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-yolov3-fp16",
+      "format": "coreml",
+      "artifact_sha256": "276afae53da362e25ad21c827f8a929a8512254b1343433d970e725a0de57d8f",
+      "analysis_sha256": "dd1bef2bd32ea4eaf272df6661a1549a326b2d0b3a00b1ce3686ba9a15d7c73d",
+      "receipt_sha256": "45c0a2fe0a2aad6bf7b112d00e0af5aa8b83c2ba1392e9e369bb85870699a9b8",
+      "graph_presence": "serialized_graph_payload_not_decoded",
+      "quantization_classification": "coreml_payload_not_decoded",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-yolov3-int8-lut",
+      "format": "coreml",
+      "artifact_sha256": "0e32f297ad9cfc0ea8e67276867956488c7ee10dc87c057da4debc939e20b76d",
+      "analysis_sha256": "ae34888cf19025fcc1f8c3145de38e718181c6307ecffaae0c1fc9122d88604e",
+      "receipt_sha256": "f4bbf3e4d9b78f8cb79833e0c75182f4b037b6afad5605bbb578ba57f1d80c5c",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_pipeline_mixed_model_contracts",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-yolov3-tiny-f32",
+      "format": "coreml",
+      "artifact_sha256": "ed41d7f0c1652994944b4e3578b907f8634a98c2f3feaf33eab8f1c67df44e3f",
+      "analysis_sha256": "976240c47c7e4435ec22a7b31775434a28e16cee83af05a3e4d63c5890bf0af4",
+      "receipt_sha256": "8c06c5594d8884fd51c874df477e22381e0b0be9a7033b94ec49daa7591cb6ba",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_pipeline_mixed_model_contracts",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-yolov3-tiny-fp16",
+      "format": "coreml",
+      "artifact_sha256": "73406178d0f5793d0d5d1e38274acd146a744c2245c9b63a11998a5015925dda",
+      "analysis_sha256": "d93230517322d47a37a292aeabe357a3f4fd7f9aae2bff76805f238910f4aedc",
+      "receipt_sha256": "07b19ae92905cce2edf03d849ed7e6802142b333ddda89e9a5d555bf28c82cad",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_pipeline_mixed_model_contracts",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "coreml-yolov3-tiny-int8-lut",
+      "format": "coreml",
+      "artifact_sha256": "cde8af2528d6eca1d1580fdd0f0147cb6613d40ba962656b5f683c65f571870e",
+      "analysis_sha256": "5c8dc47ff8fc135f91854ab68797dc844f4db1f4d591e518f8cc8316102f7651",
+      "receipt_sha256": "8de95d866f5b11a0431ef65793d370ea55d0b9082ed1c81d59563d51afb06537",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "coreml_pipeline_mixed_model_contracts",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-falcon",
+      "format": "gguf",
+      "artifact_sha256": "469001c1f53b82b5cc8b78e888029721d165fb3eabd9ebcc257e29087289b132",
+      "analysis_sha256": "b055699a8802858c3391660f4063537788ddb59c56ea1a96715862c9a526d73b",
+      "receipt_sha256": "605ff8a685fc7f460133f942b776ab23c4a81879c021e661432bbd326e99359a",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-falcon40b",
+      "format": "gguf",
+      "artifact_sha256": "0a59856150bee29bd533ecd924f6ee3cb7e01ea04065b297a5e0d498b01b1d95",
+      "analysis_sha256": "b2d3cf96e4cac5f765ec16ec413d4b2897413dc5e9f3866c56fb2f2001e16020",
+      "receipt_sha256": "a1257bf7cddbcf4a9db95d09ef8f72bc7f83cce6e88ff4cff64c2314e5bd047e",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-gpt2-family-q2-k",
+      "format": "gguf",
+      "artifact_sha256": "8393b803d7b11df6f8618e89938ad6a1fc26e06a79e6ca154634116df3eeed94",
+      "analysis_sha256": "2787a3d4b1bc35370d7834c3b5906a414e3b3a9b01068e0c461c897666061c2e",
+      "receipt_sha256": "1bd3f79ac5adc6cd254dcc54fb97afba5824dd6bb758b077e7328e216b7fd3e7",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-gptneox",
+      "format": "gguf",
+      "artifact_sha256": "44c628e7345dc30df17ca4a9e5be7cf1b2e22baf9e252367b8acd29d90275305",
+      "analysis_sha256": "cd3982647e274e3aeeb17433445d4e4c4d195515210c045c1d205a0dd8bdfcff",
+      "receipt_sha256": "db14fed4b4518e99fcd83c89e50f1d60944113c710c53d339f6f479319253d1d",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-internlm2",
+      "format": "gguf",
+      "artifact_sha256": "9e64f76c0994b8940a54d15fdb546219172fe96e7ee88161def9da2cf4dd3244",
+      "analysis_sha256": "e3740ba5c6062930f3aa37d0f2355e146ed76ecfd44612e1470fbc03a230b7ca",
+      "receipt_sha256": "9502f355d00835183af70e8b6354ad95033f2db7083eb04bcb31d23f4ba236a4",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-llama-onnx-origin",
+      "format": "gguf",
+      "artifact_sha256": "26f0172dd7e3fc4b3b7c68771665931343c41b6e596d3b26b784e72415542a85",
+      "analysis_sha256": "8fb72b5636337a2c737cf05719a0c053bff9589b77247574b997a566a96e9370",
+      "receipt_sha256": "29d765f6411649b6a3e0cea4720f7f924b5957c6d3c71c776fbae22d01c00fb4",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-llama2-kv",
+      "format": "gguf",
+      "artifact_sha256": "17b638445eb0272abd5c524b69c8cf84dcf23b20142db309595218b93a4424e7",
+      "analysis_sha256": "021aba999787a59bee49ca437b452be9718d22a333a52a38ed63c6856966295c",
+      "receipt_sha256": "410a7a554fb5a95d4ff4c435bf14553b79d75cba85f8056ce303e267dd3aa0ea",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-llama3",
+      "format": "gguf",
+      "artifact_sha256": "56447375eaf9b972706d7d4712021b0528d1ea265f43e210f21ca96c2a8dfe9d",
+      "analysis_sha256": "7586d02aa1534d07a1d3fefbd8cc0f800147a4b3f0b2619354bd8eec0e219e14",
+      "receipt_sha256": "eb7da45af2d4a06843ccebd4b0ef0d7314aef1848e69d4db6872e24c0ed63bb2",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "partial_serialized_contract_issue_observed",
+      "serialized_contract_issue_codes": [
+        "GGUF_INVALID_TENSOR_BLOCK_CARDINALITY"
+      ]
+    },
+    {
+      "artifact_id": "gguf-mistral",
+      "format": "gguf",
+      "artifact_sha256": "7e9a4a0c28be6bfd2aec15050954f3476674ca763e5aa6381a9fda91f1ccaf09",
+      "analysis_sha256": "c3b0de59cbb4272cf9d1f6b189bb713c3b6e62b9d3384b924339f0b7f76589f2",
+      "receipt_sha256": "fadea7ab8a4ebe9c89cf4c9e70637c4d108edc7d257cda654992d30363055127",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-mistral-small",
+      "format": "gguf",
+      "artifact_sha256": "4454d69be2ad0dee002b2b29eba254ee6e865a1bf4b0cd78b228644af88f5987",
+      "analysis_sha256": "b48bf94a18b473bc68ee7482397eaddfe86d0f8c8010f95e98e11d3470456709",
+      "receipt_sha256": "ffe2623b2171254f4285361f1f860389f6d50105a473de1d764db496a6201bbe",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-mpt",
+      "format": "gguf",
+      "artifact_sha256": "5627dcb0ff18f6f7200f83c0aed2056a6a7c86b5f2d865833e1b5f00b00e4daa",
+      "analysis_sha256": "0fd29d376fc13ef063363416f50855e34a92e4343ef35a0920c11788ec8b1b14",
+      "receipt_sha256": "fda47e42afde4d29b227bbd9fba67ffad3c657718a52ed3090ff82445654ff93",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-olmo-family-q2-k",
+      "format": "gguf",
+      "artifact_sha256": "be1c5a22ac0e75cd5874467ffd80bcd2c8500609d3bf7ccdb5b269373e4d6da4",
+      "analysis_sha256": "6bb62bf944d6b4cde759a8bb6527e861d5eb1369b44d18c4fba2c5c2ca53cf6f",
+      "receipt_sha256": "2f804372bbb70514e16c4b1f1eeff7f87c43f0cef69fe85de1a3948c759627e5",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-phi3-small",
+      "format": "gguf",
+      "artifact_sha256": "23571e23676807915c6f46725efe32ebbbbcfb988fb7cca12505bca579165694",
+      "analysis_sha256": "ef193ac369bb677f4d71a0f8de09844d4d9a73532aa447efcfb5ce8b799d688c",
+      "receipt_sha256": "51ec8ada5c048a5fbc2f9426772e1f98fa8be6d9cc6e994470efcbf7a6d6b625",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-qwen3",
+      "format": "gguf",
+      "artifact_sha256": "ea33aa937989b0bd230157c89116d8356ea37f3ed039490ca4e340b650e47a78",
+      "analysis_sha256": "abac3006a15919b98da639cd44a146f306f40bc7bf471ac9e60087bb42c20c8f",
+      "receipt_sha256": "0182f2f6c9958b2640e72bd4f39e378e8254ed29e8799ba5f5cfcb3f2bd21e92",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-stablelm-family-q2-k",
+      "format": "gguf",
+      "artifact_sha256": "4f838d275618ea4ddf8f2a91c84a601774f720c015713d43b0355c2d53ed1ce5",
+      "analysis_sha256": "3bf42846de579caf833109b32d12cecc327e6cf69385e0c0b951d937411164a9",
+      "receipt_sha256": "7b71db5fb03abc541a5d57fe7da8d0c047a9c29eb53c73ea2fed2883fe27059b",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-tinymqa-iq4-nl",
+      "format": "gguf",
+      "artifact_sha256": "d8e9e534fa1d2d32a39e79519c051d269580154f3da5d66301d78b7afa726a6f",
+      "analysis_sha256": "3469f96e1619abdc3b84596aa1700c5dee237866bca3b49dbc686846c385ffa0",
+      "receipt_sha256": "a79153844d3b630fe47da8784e424eb308af390fc71cf56e57f8eea7d7e4b3bf",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-tinymqa-q2-k",
+      "format": "gguf",
+      "artifact_sha256": "83a2ee31b9f6013e4e0b3345abefaeb9a3231437f559e03124497b1191264003",
+      "analysis_sha256": "7524e11f446cfd974eaa7906622374d5e2fea416f4e0760597481f9de3a88a2f",
+      "receipt_sha256": "bd4e06f3368e43461f8588c6fdcb9a620bbc741ca4f5e8bc3b0ae608c246ab55",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-tinymqa-q4-0",
+      "format": "gguf",
+      "artifact_sha256": "cb95a6e10f28b76a1dd71c15560dec5a5eee8943f591ef45d11c129786b22cff",
+      "analysis_sha256": "6d39856effed15a4ff53d64b08c2dc4b6e3e00eac723914e96c0a3090b9e7bde",
+      "receipt_sha256": "ba20d4d03ce62bde5954e69a0338565610f93ae631b19be4b4a5e06f3d46f5ad",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-tinymqa-q8-0",
+      "format": "gguf",
+      "artifact_sha256": "66bd8d5a03589e40e1d0656b90220fd29f699512122af7170c7612c364b7c835",
+      "analysis_sha256": "43cbfa87d67b7afe1c57735e8170cb881f88ed3c3912004a7001192b2494052e",
+      "receipt_sha256": "237c7da853aff7d524995f1828566debd2f611cee80c7b7749e3096d944e0f38",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "gguf-tinymqa-tq2-0",
+      "format": "gguf",
+      "artifact_sha256": "fc11758d577ae6a2ebb2600dc9179890fe89d23e8c310858308b12e35a96e427",
+      "analysis_sha256": "de2000201262c4c5190b84cfd1b2a86bfd4ccdcd00fe9f3df320650b073d1a43",
+      "receipt_sha256": "1a0b1603da03edc198065fdb737ce8b9f7503bddd85391d5aa758640cbd29268",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "block_or_tensor_encoded_weights",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-arch-function-1-5b-onnx-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "25806e647cc065149d677c4139ac90c7691ef2d980baf0e2d0590cf27c01e675",
+      "analysis_sha256": "38dd407be3eac66029543c5711e125109baaffa57863df2caf2cc658757da764",
+      "receipt_sha256": "04da014cde27c93d30e80259bdf1d163185875727519cfe96f6e96fbc13f054c",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-bert-base-cased-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "f6dbed3dd673f937095e164dafa9ba2fe0202ddc3e40f30ced35763bb34ffe3b",
+      "analysis_sha256": "47c848ccf66e11e3e6b9ffd7d6c594a87d42e68738b6a7717991b2e436d91f5a",
+      "receipt_sha256": "27477c80ace1ffc9f83102c72052a72c4bd91f679db864c3293ef23d9a178e16",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-bert-tiny-raid-onnx-onnx-model-int8-onnx",
+      "format": "onnx",
+      "artifact_sha256": "1c06c10cc1b8c1be81e863e11c92fb65deb2f39deb3647284ebe590483266760",
+      "analysis_sha256": "aa925f62fa13b24c9de11d4f8cc1817ac00beaab84523c9cded7c5b1745cd645",
+      "receipt_sha256": "048077e57901a019c45d904d58ef8c51886c46e3d91e6e370233420042db5790",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-chatterbox-multilingual-onnx-onnx-language-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "861a34585605e8ad671051788afc495dcbeaee833a41523a1b33aded9c3babc7",
+      "analysis_sha256": "fa3a34aad7d40ab7d72e6d862d10d3569f323215dbfec2290bbd6faa13fab0f6",
+      "receipt_sha256": "d7485b7c8c8683b10197d08e8de612baa7375117ce35d80fe25362f52233bbc9",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-cohere-transcribe-03-2026-onnx-onnx-decoder-model-merged-onnx",
+      "format": "onnx",
+      "artifact_sha256": "6b2d74354ef2d3257991356b6ca290f4e261551323af09a6f33ca99f094bcd42",
+      "analysis_sha256": "152984ca47f8394b9bdbb3c845e77a6c2bb8e1449ae76872d71706cb6a211d2f",
+      "receipt_sha256": "642caccdbc40a67295dfbbb79d41f5f57aaad4e43817927baefbbd7fe97867e3",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-depth-anything-v2-base-onnx-onnx-model-fp16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "0cb2451b5253813a92461b233f061323d9f19c72f6ecba61f1d8788e4e8b78b8",
+      "analysis_sha256": "d531c3e0ac7761594acdb3b2e06050d29438e816456aaa785689c42c7f10f8b2",
+      "receipt_sha256": "17e470d0723598e620f35c6ebadc42d0c292f8922281a9208019a16a6a9039a0",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-depth-anything-v2-small-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "345f249eda90f33e0548890f2fe1e89662c1dbb5a8b7c10a50492558f65e85a3",
+      "analysis_sha256": "8cec2c00cce046266e1009c8e9103b64c972b4ae4aa2f8f6fc7a927faa5d66c9",
+      "receipt_sha256": "2949d65b1e5a2f082fbe7476f03eb901830339efcb0a0ff19464a27d75cb39cc",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-dinov3-convnext-tiny-pretrain-lvd1689m-onnx-onnx-model-quantized-onnx",
+      "format": "onnx",
+      "artifact_sha256": "b07072716a326173200a599546629a49575443aaa72c28ba6797057290f142bd",
+      "analysis_sha256": "51241121eebc81583f33ee098676e04c6930eee0ef03c354cc908513f7e1d395",
+      "receipt_sha256": "a9c15e50498bd90cedeac91ae8654fd888cd8a08cc0cd019a646d06a0ff84d57",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-dinov3-vits16-pretrain-lvd1689m-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "bb75e9e30ff382ecdbd150266445ab41272be4acc85fd3563218dd89781e36da",
+      "analysis_sha256": "adb8df711df61048a483403b1c86233bb5e12f2c3fcae8604401373fba42b6cb",
+      "receipt_sha256": "96e676504b3200e2b4a920bb0539f3bdda9f2bd13c932f9331ccdaa6461af260",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-edgetam-onnx-onnx-vision-encoder-fp16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "d8f560849085892866a5c652a600cafbbd301e11c15ff0d89c81e15fe91264ac",
+      "analysis_sha256": "dfd3b143ee4b530bb21b5b5c6f5cf56cb85e45101d7400e22d9e9504ee3391c2",
+      "receipt_sha256": "a0a3a4a02fc2d1e977c92e300f8257b00f4bc53d0ca956a715952ebf09f4d547",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-ettin-decoder-32m-onnx-onnx-model-q4-onnx",
+      "format": "onnx",
+      "artifact_sha256": "7f0d913bb44aa9936100489b4a0544479b2ebf459691dac259b8b437b78425d7",
+      "analysis_sha256": "532e9d5035aae58b6afdfbf2b6fc02ac9e65f8e19d6578bae42a3f5d93c8b311",
+      "receipt_sha256": "6e95228979a88ef0a4beb93c95a756f5af16e518b60e2210fcdaa9a1f1019c92",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-ettin-encoder-32m-onnx-onnx-model-q4-onnx",
+      "format": "onnx",
+      "artifact_sha256": "d9e33ac973131592536e2461318cdff3c5fb3101b86e3a9c9b3229c9afc6440b",
+      "analysis_sha256": "7b7db8ee4a89e7d4e2100858221733301f929557d2b44e5263e0423a954d8e8c",
+      "receipt_sha256": "f30e1e00facbe253d9dc72865caffa8badb7b29d5adddc2cce44b71877af16c4",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-eu-pii-safeguard-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "2296fbc6d8b1ad737385a51aa0dfebfee7ac6f77efa1f9dee4cd38b574b06333",
+      "analysis_sha256": "67c20340332551980c81843178b2566ec3a60ac0fe7209dcea91ae7abe7a4858",
+      "receipt_sha256": "eb00725bce500c2047256000a4413734a0a98657fa9d97ff6a23ead53328f97a",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-gemma-4-e2b-it-onnx-onnx-vision-encoder-fp16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "2e8a95ce26015f10bf7249c2f36ab593fa630bd8b9fd9cb4deb6c308a7e75712",
+      "analysis_sha256": "dd906b7d7edfe82cc54568f3f6245d95777d7272b559cb352abad0f74135dd3e",
+      "receipt_sha256": "2d88e41887535ebed587091ad2d0b196d21e47175d27d73c50adccacad4e2625",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-gpt2-onnx-gqa-onnx-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "062fd401cf810cf6c5030e5e2d29119595fa753caa9aacb096443f5478325fd4",
+      "analysis_sha256": "6ba435f5f891930a0e3e09b47082181fdd759178ab9ba6edf225e8e61c469572",
+      "receipt_sha256": "64f3dc1e68d0316a2a32fa857bdbe6f6d92c1e91ba9c43ce3ced0459a964e42d",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-granite-docling-258m-onnx-onnx-vision-encoder-bnb4-onnx",
+      "format": "onnx",
+      "artifact_sha256": "122544ada267e170359523ff55cf03574222da2955c3463558142c70a01191a9",
+      "analysis_sha256": "63fb52816f73c23046f33af8b0ba934d16e4cd34d48e2658d13dad49564a389f",
+      "receipt_sha256": "22b317640bb8638ad9abc5179ba938ee8ee5102b4e3370a196a85dd2732975f2",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-granite-embedding-30m-english-onnx-onnx-model-q4f16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "15cb1e7f48f9013fc772c02d1d2b07de8bbbe46ae693c132fcb95fdaa441a4d7",
+      "analysis_sha256": "bc66a168a830059f02c0c5ad61b03cf8dd176150a9f009290fed5b4ec66e4629",
+      "receipt_sha256": "1ded84077f57de26f980c19ae9a2bda4814488797cd74e8a03594ef3ac5e40cc",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "dynamic_range_or_weight_only",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-granite-timeseries-patchtsmixer-onnx-model-bnb4-onnx",
+      "format": "onnx",
+      "artifact_sha256": "1e1d880a11e5666a41219749707c80a1c618e47e2d7d01b3af7131d0b520a6fe",
+      "analysis_sha256": "cead2d92a7449594ffc5d4e87e294512845e1577597034b7befe95252dbe025b",
+      "receipt_sha256": "0dbf6b669b157774b199cb35b9fb0cb0164cd86f277a7a77b3f9831198bb09e4",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "dynamic_range_or_weight_only",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-jina-embeddings-v5-omni-nano-onnx-onnx-text-model-fp16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "f59419cb1d33e7bf66e11b336c618b61f1430349bdbd09180c49f7c934956cfe",
+      "analysis_sha256": "26ead5992bd7a175a1f540d734548a67ed23c61d3ac46e0eaf764c3ec844e955",
+      "receipt_sha256": "5579599b6bff58d0dad9da5feade566f77bdcef66c8334a501a8adcf51f1165a",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-kittentts-nano-v0-8-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "320564d2615f235de972ca27a7f39551c94185cfa24ca85b07a29084135f1e5e",
+      "analysis_sha256": "f37e6054bb23f6ce181fc7645dcd083318964180d7e080b2e7a0c3192aac2aa1",
+      "receipt_sha256": "3a48ee98f3e48cb0aea3283f022772d4bad920154c0bd1d8a1651899101646b9",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-kokoro-82m-onnx-onnx-model-quantized-onnx",
+      "format": "onnx",
+      "artifact_sha256": "0d55b15d4b735d61a21b0105136bc81b8768c4db94753193c19354fa863cd556",
+      "analysis_sha256": "19aaaafdee08d19029978a63282b95fc4ec7e2fc3e1680d0c10ea74dbed2d2b6",
+      "receipt_sha256": "03f79b03d6e05dd1850f4d220554f598d8a6ddf4fd78d93b590c6937aa7e40c7",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-lfm2-350m-enjp-mt-onnx-onnx-model-fp16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "365bdb4414cd83f002d183414ca2e6b99e05f6eebd3dd7373c6aca5ce31f52e9",
+      "analysis_sha256": "18701feeeba8b356e11d5b7d44c2f617e1dc71d514644a4a896c0fac396fd671",
+      "receipt_sha256": "285a149873d9a4bb33b7a55a40d86d90400bc4c763b8381138cf95a7405914cb",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-lfm2-vl-450m-onnx-onnx-decoder-model-merged-fp16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "730e7cdeb56f569c73be29e5201d3824c5542ee64c4da95143e9bfd7962345f5",
+      "analysis_sha256": "6151f0027152f7bd87931d953fb41d764041705ddee181f0d176d5899ed3ba37",
+      "receipt_sha256": "4f000470cb4bee478531f2cdac07d537305df0879a825153ccd715f3dfef97c3",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-llama-3-2-1b-instruct-genai-onnx-cuda-cuda-int4-rtn-block-32-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "386bc0de954b822215fb7d25111ae65ec68b2268443795e24d134eb0c894a000",
+      "analysis_sha256": "f285f51e804c75cb1ce9c0de0a19b368277fa8c1af30684e25a078a76131a85e",
+      "receipt_sha256": "cf2e42b22e3dbaf76db610b11a58433b4a950c8540eb2cc98490c12e1bd22c96",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "dynamic_range_or_weight_only",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-mdbr-leaf-ir-onnx-onnx-model-fp16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "fc5500b7995c736f56b12329d38f8efc376a35532cdf359a07f5e5e3b1c1210a",
+      "analysis_sha256": "a2efbf7a43b3d3d501e376189c46ca7078398da4225ec0dc6aecb97cba5bd892",
+      "receipt_sha256": "24244d967d988db9e2b2eafce92064b104ac6c13ac1c59b1da92442234b84322",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-mediapipe-selfie-segmentation-landscape-onnx-model-int8-onnx",
+      "format": "onnx",
+      "artifact_sha256": "add5ba17fd92b28d2b0fa5d95e4a58cfa9df8a88cff19a1f2ff9906086f6597f",
+      "analysis_sha256": "148c47cb3cd57694d3b2ba1ea86afbf73c1d98f8f62b160fd63491286ddf60b5",
+      "receipt_sha256": "485918e8ba7fa173db4d7c9bfcf0fbf304239f2538fde9366554e4d344e15d25",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-metaclip-2-worldwide-huge-378-onnx-onnx-vision-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "f121390a7356a1cb1e5ba9ed65d58e677e2d0c1cd7ddd55fe8b7d999cd62530a",
+      "analysis_sha256": "7aa7a9bfc5999356aaa6303807bcc601f8838ea2cac7806185af024381f462ed",
+      "receipt_sha256": "1f0d1b67a0a6704a1a4759bff9bdc31be31f3516628c2f72368b2e5125f18590",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-mobilenetv4s-webnn-onnx-model-int8-onnx",
+      "format": "onnx",
+      "artifact_sha256": "502f8929335a6bcc1f6800618424a0d6d0c65a83d82eb020e98a4df447af1080",
+      "analysis_sha256": "4e478d222621d65408c3a198c49378d76a1bc3a947cbe9fb4d95f47c2800d68f",
+      "receipt_sha256": "a7df9ab32f8cc95988ebedb156f131d728173a4c2e416199e9bf57a10eecf958",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-perth-watermarker-onnx-onnx-implicit-watermarker-16000-onnx",
+      "format": "onnx",
+      "artifact_sha256": "062acb662446910093bc600cbfc7f4f3b9d87d8564fe904178852e0cb913f833",
+      "analysis_sha256": "be31bb6a141d743956c0b870743b4d41e7e4322170ca0e429565f892abe9820d",
+      "receipt_sha256": "e1bda62c61b0c24242ed6046367014af331db26ceb3558e46da092546c649750",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-perth-watermarker-onnx-onnx-implicit-watermarker-24000-onnx",
+      "format": "onnx",
+      "artifact_sha256": "de8e938bedcaf3eecd65f4b1d673e6a19e2568f74ad1201ca5d81b19c1db8b51",
+      "analysis_sha256": "3637585ac57f1cdddf387e3f68e4daa468461e981397211e5b9412bf3f96f9b1",
+      "receipt_sha256": "257c9761afe9824157607cd90760a70ba85daf98b9bdc0c574d83bc37af92b9e",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-perth-watermarker-onnx-onnx-implicit-watermarker-44100-onnx",
+      "format": "onnx",
+      "artifact_sha256": "3c86b35d2a784aec97fe6e0ab3941be5d89eb0f12562b974313c122904b4f626",
+      "analysis_sha256": "fdba808f6497e1046f8c62b74daed773d06d6aeb8fd2825166ba072fe929c0b3",
+      "receipt_sha256": "a1282483cd42288fbf08a33534e58f24688dd74e8821bca6c64d2cb9d662fbd8",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-perth-watermarker-onnx-onnx-implicit-watermarker-48000-onnx",
+      "format": "onnx",
+      "artifact_sha256": "d05ad65caacdc2b2b63cbec348f528bcb7baadeecd76ec9eb7bf1d30b4e107c0",
+      "analysis_sha256": "853ec3b2f20518c9277dfec857c2e1716a0fcc0e24237d7b4ac6c43e320de198",
+      "receipt_sha256": "2a1776695f29115bde2832bacffef12088c954e2faaaaceebdd82eaa7420715c",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-qwen3-5-0-8b-onnx-onnx-vision-encoder-onnx",
+      "format": "onnx",
+      "artifact_sha256": "3886f774f640e7689dc33d928260e6295e903ed757b1048675ede4a001abf588",
+      "analysis_sha256": "5f3339ab8780e361b870b10f0a005b044c42d2a596fb7aa2692c44cdd6c9e620",
+      "receipt_sha256": "049f906adb33b614503aa79a0cfe9d0a8774b61f66e729b27b202f561b0a6f83",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-sam-vit-base-onnx-onnx-prompt-encoder-mask-decoder-q4f16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "2310795584322034c56f9bb413338282c1d850cb3d44f0b043e69014f90df359",
+      "analysis_sha256": "427d63dd37d88c12c5773f9dd37d28d2a71b96543f279581430f46c8424e85de",
+      "receipt_sha256": "1b5221f4e32424d0a72de3aba6b39573429361feefc1a15d4967db1df5a56a99",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-smart-turn-v3-onnx-onnx-model-q4f16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "ad9e637bead2c54dd1ccba26b70be80a851b13d7c65722644ad557fe91a36111",
+      "analysis_sha256": "43660d2a8b3d745a0a447126e64e7afb96ac0312785fb1c93d67bef08f38102e",
+      "receipt_sha256": "87a2afa3e1fc632a7f62d5a170d0ecc08e7c2a39809ca0ac711d67eaf5b88ad4",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-supertonic-tts-2-onnx-onnx-text-encoder-onnx",
+      "format": "onnx",
+      "artifact_sha256": "3a53aa40a2073a7f25a8dd98dddcebff38f25d3aad9c112f5bd750f4cc7c2167",
+      "analysis_sha256": "9f2c26f812c772e3c3f37c0490405d77374b5bce1593ff165be09ee4c9c1d969",
+      "receipt_sha256": "ef3ec4bf2d45991cc975ba3158671243eea71e42bf8dc296404d40cfde177abb",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-swin2sr-realworld-sr-x4-64-bsrgan-psnr-onnx-onnx-model-q4f16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "94561159849a4d3145daf15d2a54dd6ef7cbd9cf7b9e99525d78a494f9556d0d",
+      "analysis_sha256": "3fefe36a0880733512b1782fc92388ea256b9b2cf8135190b402071ee7f698f1",
+      "receipt_sha256": "783379f75e96ff461a673262de89b44345d623ef64e2c9af8c67a10a91f07728",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-vitpose-plus-huge-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "a3fe87de99f9c7de1b64e8b500f4b4825c6a298ff3c81d82367d2f9d18a37a24",
+      "analysis_sha256": "cd9ca8c2fe62fdcddcaa8b5fbb1c918dbc0bc940b280b6415ae8f2f2c894125f",
+      "receipt_sha256": "52ec64cde555fecf1daa43e49809de436a0bb0dcac13eda799d2880d6626f472",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-voxtral-mini-3b-2507-onnx-onnx-audio-encoder-uint8-onnx",
+      "format": "onnx",
+      "artifact_sha256": "644e50318802c691623b85fd940ac60164cd904b72d1d81f658fbbab22c6506d",
+      "analysis_sha256": "3538a875a0478b2f4e77136614cfe2e984635bfaa5b99cbfbbd7ec275968a1ac",
+      "receipt_sha256": "00ad063a0805ef57825d435bdc42c6d457ac23b15728619f1fd9c1a593575bba",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-whisper-tiny-onnx-encoder-model-bnb4-onnx",
+      "format": "onnx",
+      "artifact_sha256": "c8596d911d020092caa4d80bf06929f4a0c5f573701a6882bc37dd761dc383bf",
+      "analysis_sha256": "926eeec9572bf0dbdbac8e268841fd106b4c616c5124582491a51945a6e8eb33",
+      "receipt_sha256": "47f67143f10ece8d49fbb65b7ca4e73034f62d0a712e9a4071c7d32a16b325cb",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-whisper-tiny-onnx-encoder-model-fp16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "fc4bf9f3fadc450b128c3ef0711a4e61a55797447b6a700abe7fb97d9f549518",
+      "analysis_sha256": "abe20c65977c2da1368becf7cfd70bfb964ff226147dfd003d3a91bd70a67ae2",
+      "receipt_sha256": "33b5ea0e4652a7a06be66615f2af01bb6b9ca991c18ffe25fe11be2814fa38c6",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-whisper-tiny-onnx-encoder-model-int8-onnx",
+      "format": "onnx",
+      "artifact_sha256": "03ff3c99ce804f79a42afd6212c9492eb75e55625926de66f8fc192e9567d336",
+      "analysis_sha256": "1f0610895d35f5e7f4db70378f1300d0ed197f52a9a3ba68d7e3e85873c66658",
+      "receipt_sha256": "ba3afa0ff631f03377c529c928cd72586117e7f23ebdd58ac1d303654f35b0aa",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-whisper-tiny-onnx-encoder-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "6642befb640f950d4a8cbbd17834d59e7e75f575b81ccf213e06b050623ab1dd",
+      "analysis_sha256": "2c47a0849ac321d32c7e218c12263d613e69d8dfae8cd4e6366fc701fcec474a",
+      "receipt_sha256": "885e5e5313f223119e2ccfb2c81d8a3e7d328639f52a3cb61739ca798fc3b619",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-whisper-tiny-onnx-encoder-model-q4-onnx",
+      "format": "onnx",
+      "artifact_sha256": "45a55cedf1ff46606520f5938ed40c94bd4f6b38beb2a646eed8636225342488",
+      "analysis_sha256": "528e27e98e423f31225b03ff27ace0bafbcfbc8b66a1f90d954ceb2dc5265642",
+      "receipt_sha256": "63a92874d25d551d08a0db37dab5ff536cb66b9326829f429cd13e9d49908d56",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-whisper-tiny-onnx-encoder-model-uint8-onnx",
+      "format": "onnx",
+      "artifact_sha256": "2af4a414ca47aa30f61246017e5fe82b0a8d229281d1255ba666a2a7f6b84d19",
+      "analysis_sha256": "dd37291cb64ba31be38f716fba6c48fb453a3eb579dac04d4e6992a4c1a56a13",
+      "receipt_sha256": "af85b81d438b9fb394097b5ea8cc807c500b4cd4e61e4bf52711f841443b8856",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-whisper-tiny-onnx-onnx-encoder-model-q4f16-onnx",
+      "format": "onnx",
+      "artifact_sha256": "236f9f7d8bf038df0b4cc92daa33eb7ef71770d664ceac10b78c545665e82373",
+      "analysis_sha256": "160e2e7139e113d3391e9c0761e408d94096163339ebe2b87661bdac6f1a1be8",
+      "receipt_sha256": "ca5ff11a251c9872cedfc0b074a26910eb89ed09c606cc06ecaac27fdda4dbf2",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "quantization_signals_partial_mac_assessment",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-xlm-roberta-large-qa-multilingual-finedtuned-ru-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "artifact_sha256": "5769cbe5f1a667692294ceff085d5e49f200577af626cb3083e6558bc2a0c199",
+      "analysis_sha256": "38e332bb59c445424cd930ed6c3d631662dc370edab329e6933b746a04fd476d",
+      "receipt_sha256": "2b1e3d8bfaa4399752ee0356acf0bd343f068b830b497862ae1ce09ed6476359",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "not_quantized_float",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "onnx-onnx-community-yolov10n-onnx-model-int8-onnx",
+      "format": "onnx",
+      "artifact_sha256": "81c48fd65516dd8b58c9b4f3e8922e8b4b08b63b30dae9a57173552b1f7751fa",
+      "analysis_sha256": "7e8abbc35bf8ff5620280bbee54d20a6ced2c8dc68325b88f14667ab19c25356",
+      "receipt_sha256": "cfd90e289ead1f0421c2b521b9760f1f3a2491b7a04f9e57f435a52f5ea160e7",
+      "graph_presence": "serialized_graph_present",
+      "quantization_classification": "integer_internal_float_io",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-hf-tiny-v2-tiny-random-cohere2forcausallm",
+      "format": "safetensors",
+      "artifact_sha256": "f2fb23e3df9e5f18bea2c43d86722a4e5626c63a1a552d07bd1fce4a710e8e9f",
+      "analysis_sha256": "6bf6ccd58ed711fb410901d3318c8d8fd4c3dd64135c41f2cf3f8ff3805c65c7",
+      "receipt_sha256": "fc448eb9c8fb70b8360048dcc54fc436aad25ef14c306227a3d8fabb32bbd1aa",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-hf-tiny-v2-tiny-random-cohereforcausallm",
+      "format": "safetensors",
+      "artifact_sha256": "f210308b3ffdda9d7a2930bb042251447cb256dcd8924cc82a48010270f7a52e",
+      "analysis_sha256": "bef40057dacfaf81967dd65a974c9749c045021738b46899dc8445e2c784b675",
+      "receipt_sha256": "b380da2829ef4caeb2635c79ad135338e8f77408f22b076909283ea72b059d5e",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-hf-tiny-v2-tiny-random-ministralfortokenclassification",
+      "format": "safetensors",
+      "artifact_sha256": "1e60986313be1d308edad0f538d874eb0f542e904ec6138cce9729d62f234745",
+      "analysis_sha256": "6b9712ce7d37aad69da33bd1f4e65a55349d990f6f1537d4c9a8d3ea7d3a4c25",
+      "receipt_sha256": "c878256c5133f44757267592221e158b69592360048e63c4e1bdbdfe90e198a2",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-katuni4ka-tiny-random-granite",
+      "format": "safetensors",
+      "artifact_sha256": "3c416f19943f4d760680cf4921cb6c5a76016e48596cb4c911033bce010ac176",
+      "analysis_sha256": "296d80fd77d6e4faa7c22065ddcb00f4cc84ad0e21a7d757c01644af6da19d5f",
+      "receipt_sha256": "95a9b676669c2c3af66d9ee4c1fba661cfc5bb647cc21f3838949db4207b93d2",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-katuni4ka-tiny-random-olmo-hf",
+      "format": "safetensors",
+      "artifact_sha256": "49a5bd767851581f9b87b36527418f03697daa0e6a7855f9afe2263c7ec04e0f",
+      "analysis_sha256": "e9aa65b634fa04945dfbb2220524e3e3850b5ed158a196c1f4f4b739d015e30c",
+      "receipt_sha256": "188d0590ce90c0382268809760f0db2d656b1e701c79ccbc3f4932fac16ca2c2",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-onnx-internal-testing-tiny-random-nemotronforcausallm",
+      "format": "safetensors",
+      "artifact_sha256": "d0daa5424cea4fed98ed363f95f0ab7a6309a5db6ad889d17a772e81b444deb1",
+      "analysis_sha256": "ae8ff0d19fb30afdc0cd2ace1123b7cb9bdb172a60af6c78ea2acb4f15a6b022",
+      "receipt_sha256": "334034494217036095539fdefbc37b5af93757ff5d3d2e79e5c4084abf8f56a6",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-optimum-intel-internal-testing-tiny-random-exaone4",
+      "format": "safetensors",
+      "artifact_sha256": "09d3dccba2ed5de1e820caafc839ed78f1cbbd02336ed74ef61e604759dca454",
+      "analysis_sha256": "40cc4f66f1f92d91be7aefa394fedb36006f440d365a81726b436c40a8c374d2",
+      "receipt_sha256": "d64f6d49aaee8a16da70105658dfd1b859641708fe6ae7c509d268565b6dd97f",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-optimum-intel-internal-testing-tiny-random-olmo2",
+      "format": "safetensors",
+      "artifact_sha256": "217faebc00ab0271b2d7cb545dac16d7095c290534c9bf5fc957802d678a2d14",
+      "analysis_sha256": "eef53ec64abb5e078370a0038373cef951357ae0f52df1b9f93f0b36d3c273db",
+      "receipt_sha256": "6fc990f30caa19bd8de6effeb0baae22db724ca1b04ef81f80f20ca622c168a0",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-yujiepan-gemma-2-tiny-random",
+      "format": "safetensors",
+      "artifact_sha256": "b822fb4bd70ba7c075fd4ce0c4c16fa31946a1f52f95df3e6868c70fbf915f30",
+      "analysis_sha256": "b256030b4b282b614b483adfb42a5c4ea1cbfb538cf372707fe4103e5df9d468",
+      "receipt_sha256": "08e8645015b1f80e48a52c4449b115e5c079787b448a51cb88b2c2d2094e9c34",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-yujiepan-gemma-tiny-random",
+      "format": "safetensors",
+      "artifact_sha256": "799285f7411c820e40eca071a2991a2a553c9931ebd854f35283fffbdf5c97c7",
+      "analysis_sha256": "dc91d823adb1cd471d52f15dd83d8e2f573273a7ffec39b18913f9e4e19ec354",
+      "receipt_sha256": "b247df4057a26ee123c7c0db37a46ad782fa7aff4160ad73a2791541ab2baaee",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-yujiepan-llama-2-tiny-random",
+      "format": "safetensors",
+      "artifact_sha256": "5b933502925c364d8961d8eabc9b2992c6f131df36c972654c90682bc167d828",
+      "analysis_sha256": "fd728c9b605eef3e13f5306fb889bd3a065d018899c6b0ebdf677d6766728761",
+      "receipt_sha256": "fc7a06d52a91fbac890ea4df019c9f0375a9468a0ed46116e296035f9bbeabc1",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-yujiepan-mamba-tiny-random",
+      "format": "safetensors",
+      "artifact_sha256": "dda3cbb122b916339e098328b1f09506d276e2be8d65f01a3555c44e40ab5a13",
+      "analysis_sha256": "198e6988fbdbe86324bd2531588728c491690fe0569da1ffac2d50caefffbe90",
+      "receipt_sha256": "b6f2126f046c00534ee36b8be0b32035a98b2ca9814a06920dd74d66b33250cb",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-yujiepan-mistral-tiny-random",
+      "format": "safetensors",
+      "artifact_sha256": "6f69953dc8b7ca873d282f6e1687df3462145d899fd561a0716cfbae9b84a2f3",
+      "analysis_sha256": "e494be8c543cfa635e86728274004ceb2fdc52dbd12f408d0018be9d9a8b54d4",
+      "receipt_sha256": "2b04f830d55e0f25b801f6dfd21d2267225b7c5c3c4145cc5f1eea7a0a0d7ee2",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-yujiepan-mixtral-tiny-random",
+      "format": "safetensors",
+      "artifact_sha256": "cac5af0aa32d322c4dbd8e2fa6460e74749ca8b6d58632f794f7f3af1192b271",
+      "analysis_sha256": "f7eda96d0036cf3b2345a7a02e6997c923a83fda858d209b9a957b4ecd83fdbe",
+      "receipt_sha256": "7af3660af320c8056534f69642256b229744043e7bed7a1b9ca6a98ae88467cc",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-yujiepan-phi-3-tiny-random",
+      "format": "safetensors",
+      "artifact_sha256": "739beff3f8b771d06fdc4d8a7e01dc230ef9e73e4f3f8e9e082aabaee983cd57",
+      "analysis_sha256": "02f04b006054a19453ba4c371ab03c878a94543b60398b3e83a01e6db0c1d830",
+      "receipt_sha256": "b1246e94ff945012cc79e60bf80d783f0d19922ee371dade9dab91999bccef58",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-yujiepan-qwen1-5-tiny-random",
+      "format": "safetensors",
+      "artifact_sha256": "c7e84dace652a2f283e69247a4c8ca5338f0793fae2ff7876f1e57cdf21a2f56",
+      "analysis_sha256": "8cea4bb8c91e9b4956d5a9a4958ee1a014d1b0f48a6cae5aa761cfe70b34b649",
+      "receipt_sha256": "4acc3f1a833021546fef63f6bac483351db9c60b5f2a7a9a823a6ff2dcc1f376",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-yujiepan-qwen3-tiny-random",
+      "format": "safetensors",
+      "artifact_sha256": "795fc013f2c5f6082d5c1719eb68c78e40d7e61cc660924802e926744232d5f4",
+      "analysis_sha256": "668b5e64902beadde52ca106b95472d1ba922b88c89be97700271ba4f0c6e0f5",
+      "receipt_sha256": "d722835f1a94ec7277e8d10187e8cc103f8904ee4caf2cf69cb2792a8c40e7d6",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    },
+    {
+      "artifact_id": "safetensors-yujiepan-smollm3-tiny-random",
+      "format": "safetensors",
+      "artifact_sha256": "3b9eeff558ffba042b2780e6fb4926c2aec2769b9d918458f1f5d7f20aaeafad",
+      "analysis_sha256": "23eb486b20c16d726593ccf2a257a345f0e34511fc1d41d4b26cc2f5ce830446",
+      "receipt_sha256": "c1993dcb62514ac17aab14dc4e9d60f2bdf0c0b01453b589c023cb2343cb53eb",
+      "graph_presence": "not_serialized_in_container",
+      "quantization_classification": "weight_container",
+      "serialized_contract_status": "assessed_no_checked_contract_issue",
+      "serialized_contract_issue_codes": []
+    }
+  ],
+  "non_claims": [
+    "Repository or catalog license metadata is external provenance and is not inferred from artifact bytes or treated as a license grant.",
+    "Static graph eligibility, source rules, and serialized precision do not establish observed runtime placement, latency, energy, or memory.",
+    "Artifact inspection does not establish preprocessing behavior that is absent from the container, task accuracy, clinical validity, or release readiness.",
+    "GGUF and SafeTensors serialize weight/storage contracts rather than an executable deployment graph; their storage encodings are not recast as affine input/output mappings."
+  ],
+  "ledger_sha256": "17a4327120cde223872a74a4aeb9b989b7243d772a4d41f84b754c8bfd413c66"
+}

@@ -1,0 +1,67 @@
+{
+  "schema": "deepbom.huggingface_community_corpus_summary.v1",
+  "corpus_schema": "deepbom.huggingface_community_corpus.v1",
+  "classifier_schema": "deepbom.model_scale_tier_classifier.v1",
+  "generated_at": "2026-07-29T03:28:46.947Z",
+  "source": {
+    "api": "https://huggingface.co/api/models",
+    "revision_policy": "Every repository and download URL is bound to the observed 40-hex commit SHA.",
+    "file_identity_policy": "LFS/Xet files retain upstream SHA-256; Git files retain blob SHA-1 and are verified with the canonical Git blob header after download.",
+    "license_policy": "Metadata is provenance only. Download and use remain subject to each repository license and access policy."
+  },
+  "summary": {
+    "repository_count": 1542,
+    "organization_counts": {
+      "litert-community": 282,
+      "onnx-community": 1260
+    },
+    "tier_counts": {
+      "large": 1040,
+      "micro": 21,
+      "mid": 481
+    },
+    "tier_confidence_counts": {
+      "large:derived": 579,
+      "large:explicit": 461,
+      "micro:candidate": 21,
+      "mid:derived": 481
+    },
+    "runtime_family_counts": {
+      "future_or_metadata_only": 12,
+      "litert": 208,
+      "litert_lm": 63,
+      "mediapipe_tasks": 7,
+      "mixed_tflite_onnx": 1,
+      "onnxruntime": 1217,
+      "onnxruntime_genai": 34
+    },
+    "file_count": 27666,
+    "known_size_file_count": 27666,
+    "unknown_size_file_count": 0,
+    "known_file_bytes": 9410529843168,
+    "model_file_count": 14014,
+    "analyzer_supported_file_count": 13852,
+    "analyzer_supported_bytes": 3900853892583,
+    "default_sweep_eligible_file_count": 9535,
+    "default_sweep_eligible_bytes": 838947234020,
+    "format_counts": {
+      "litertlm": 101,
+      "mediapipe_task": 61,
+      "onnx": 13258,
+      "tflite": 594
+    }
+  },
+  "tiers": {
+    "micro": "Explicit TFLite Micro/TinyML/MCU evidence, or a <=16 MiB-per-TFLite MCU candidate. Candidate status is not a memory-fit proof.",
+    "mid": "Standalone TFLite/ONNX or other per-model runtime artifact without large-model evidence.",
+    "large": "LLM/VLM/generative runtime, large-model container, shard evidence, or >=1 GiB repository model payload."
+  },
+  "current_analyzer_formats": [
+    "tflite",
+    "onnx"
+  ],
+  "download_policy": "Metadata snapshot is tracked; model bytes remain in the user-local cache and are never deployed.",
+  "snapshot_file": "huggingface-community-corpus.v1.json.gz",
+  "snapshot_sha256": "6afa933143a19879752007612f2431124d1db40857937628ccdae836faa62765",
+  "snapshot_bytes": 2265251
+}

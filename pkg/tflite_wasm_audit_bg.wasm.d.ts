@@ -1,0 +1,31 @@
+/* tslint:disable */
+/* eslint-disable */
+export const memory: WebAssembly.Memory;
+export const analyze_tflite: (a: number, b: number, c: number, d: number, e: number) => void;
+export const analyze_tflite_for_target: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+export const compute_activation_haar: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+export const compute_delegation_repair: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+export const compute_deployment_delta: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => void;
+export const compute_deployment_frontier: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+export const compute_input_influence: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+export const compute_kernel_haar_decomposition: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+export const compute_model_tomography: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+export const compute_output_influence: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+export const compute_quick_low_norm_stat: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+export const compute_static_runtime_calibration: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+export const compute_weight_histogram: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+export const explore_tflite_redesign_pareto: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+export const landscape_directions: (a: number, b: number, c: number, d: number, e: number) => void;
+export const landscape_tomography: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+export const layer_landscape_grid: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+export const preprocess_rgba_to_float32: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number) => void;
+export const preprocess_rgba_to_int8: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => void;
+export const preprocess_rgba_to_uint8: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => void;
+export const project_tflite_redesign: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => void;
+export const runtime_guard: () => number;
+export const synthetic_landscape_grid: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+export const target_profiles: (a: number) => void;
+export const __wbindgen_export: (a: number, b: number) => number;
+export const __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
+export const __wbindgen_export3: (a: number) => void;
+export const __wbindgen_add_to_stack_pointer: (a: number) => number;

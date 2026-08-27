@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: "Please cite DEEPBOM as: Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts (Version 1.94.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.21834509"
+title: "DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts"
+type: software
+version: 1.94.0
+date-released: "2026-08-07"
+doi: "10.5281/zenodo.21834509"
+authors:
+  - family-names: "Kwon"
+    given-names: "Jun-Hwan"
+    orcid: "https://orcid.org/0000-0002-6464-3895"
+    affiliation: "Anesthesia and Pain Research Institute, Yonsei University College of Medicine"
+    email: "kjh0442@yuhs.ac"
+abstract: >-
+  DEEPBOM is a browser-native static analyzer for deployment artifacts in
+  TFLite, ONNX, GGUF, SafeTensors, and Core ML formats. It derives graph,
+  tensor, quantization, memory, execution-provider, XNNPACK delegation, and
+  target-fit evidence where the serialized contract and source-pinned rules
+  permit deterministic assessment. Runtime-dependent claims remain explicitly
+  separated from observed and derived static evidence. Model bytes and weights
+  remain in the user's browser during analysis. This citation record preserves
+  release identity and provenance for the hosted software. Repository contents
+  and release artifacts remain governed by the license included with each
+  version.
+url: "https://deepbom.org/"
+keywords:
+  - on-device AI
+  - neural network deployment
+  - static analysis
+  - quantization
+  - TFLite
+  - ONNX
+  - GGUF
+  - SafeTensors
+  - Core ML
+  - XNNPACK
+  - SIMD
+  - NEON
+  - delegation
+  - CycloneDX
+  - ML-BOM
+  - WebAssembly

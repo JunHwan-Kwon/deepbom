@@ -1,0 +1,3147 @@
+{
+  "schema": "deepbom.public_multiformat_corpus.v1",
+  "generated_at": "2026-08-18T00:00:00.000Z",
+  "population_boundary": "A declared mixed-frame validation population of immutable public artifacts: purposeful size-bounded ONNX/GGUF/SafeTensors strata plus every asset linked from the Apple Developer Core ML catalog snapshot on 2026-08-18. Counts describe only their declared frame and are not ecosystem prevalence estimates.",
+  "selection_protocol": {
+    "status": "purposeful_stratified_non_probability_sample",
+    "onnx": "Preserve the four still-public Perth baseline path records, replace prior sources that now require authentication, then add public revision-bound graph files across task, architecture, exporter, and precision filename strata from the tracked Hugging Face snapshot. A matching external-data sidecar is included when it is no larger than 100,000,000 bytes; larger payloads remain explicitly unbound.",
+    "gguf": "Preserve the prior eight real GGUF anchors and add public revision-bound small checkpoints from additional serialized architecture families. File labels are candidates only; encodings are measured from tensor headers.",
+    "safetensors": "Select one public revision-bound small checkpoint for each architecture family currently decoded by the DeepBOM on-device LLM contract adapter. Random initialization is retained as a task-quality limitation, not hidden.",
+    "coreml": "Enumerate every model asset linked from the public Apple Developer Core ML model catalog snapshot on 2026-08-18. The frame spans legacy NeuralNetwork and ML Program packages, task families, headless variants, weight precision variants, palettization, and an updatable pipeline. Apple URLs are content-bound because the catalog exposes no source revision.",
+    "exclusions": "Gated files, unresolved byte identities, unsupported package layouts, and transfers outside the declared sidecar bound are excluded from payload-complete strata. Exclusion is not evidence that a format or feature is absent from the ecosystem."
+  },
+  "source_policy": {
+    "revision_binding": "Hugging Face sources use immutable 40-hex repository revisions. Apple Developer assets expose stable publisher URLs but no public source revision, so their downloaded bytes are bound by size and SHA-256 and the missing revision remains explicit.",
+    "license_boundary": "License metadata is recorded as provenance only. Null means no license was declared in the selected repository metadata; it does not grant reuse rights.",
+    "byte_retention": "Original model bytes remain in the user-local DeepBOM corpus cache and are not committed or deployed.",
+    "deduplication": "Population-level artifact denominators use the primary model/package SHA-256. Path aliases remain visible but do not inflate unique-byte counts.",
+    "onnx_external_data": "Matching sidecars no larger than 100000000 bytes are downloaded and hash-bound. Larger or absent sidecars remain explicit unbound external dependencies and are never counted as decoded weight payload."
+  },
+  "summary": {
+    "path_record_count": 113,
+    "unique_primary_artifact_count": 113,
+    "format_path_counts": {
+      "coreml": 27,
+      "gguf": 20,
+      "onnx": 48,
+      "safetensors": 18
+    },
+    "format_unique_counts": {
+      "onnx": 48,
+      "gguf": 20,
+      "safetensors": 18,
+      "coreml": 27
+    },
+    "source_kind_counts": {
+      "apple_developer_asset": 27,
+      "huggingface_repository": 86
+    },
+    "declared_license_record_count": 44,
+    "total_declared_download_bytes": 2926971262,
+    "source_file_count": 145,
+    "bound_onnx_sidecar_record_count": 14
+  },
+  "artifacts": [
+    {
+      "id": "coreml-bert-squad-fp16",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "bert_squad",
+        "task": "question_answering",
+        "precision": "float16"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "BERTSQUADFP16.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Text/QuestionAnswering/BERT_SQUAD/BERTSQUADFP16.mlmodel",
+          "size_bytes": 217828474,
+          "sha256": "471c12bb311a0a00d26d89bd55efa3ab4ee865b6664a2f851ccb185ceab55ad5"
+        }
+      ]
+    },
+    {
+      "id": "coreml-deeplabv3-f32",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "deeplabv3",
+        "task": "image_segmentation",
+        "precision": "float32"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "DeepLabV3.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageSegmentation/DeepLabV3/DeepLabV3.mlmodel",
+          "size_bytes": 8636475,
+          "sha256": "4ce025917bcdd9f99eb776d3cb964c78622d4551e031d024f564bc997ad5ffc5"
+        }
+      ]
+    },
+    {
+      "id": "coreml-deeplabv3-fp16",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "deeplabv3",
+        "task": "image_segmentation",
+        "precision": "float16"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "DeepLabV3FP16.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageSegmentation/DeepLabV3/DeepLabV3FP16.mlmodel",
+          "size_bytes": 4342971,
+          "sha256": "6c2c8cbe1c2d765f231408458b8c273976039ae04a05b112d748fc21cb3bfe95"
+        }
+      ]
+    },
+    {
+      "id": "coreml-deeplabv3-int8-lut",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "deeplabv3",
+        "task": "image_segmentation",
+        "precision": "int8_lut_weight_storage"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "DeepLabV3Int8LUT.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageSegmentation/DeepLabV3/DeepLabV3Int8LUT.mlmodel",
+          "size_bytes": 2252685,
+          "sha256": "935d8c71cdf1e6c2f7941d5ee8c5f4cc4e93363e785d2da7f0ca83cc44981ae2"
+        }
+      ]
+    },
+    {
+      "id": "coreml-depth-anything-v2-small-fp16",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "depth_anything_v2",
+        "task": "depth_estimation",
+        "precision": "mlprogram_float16"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "DepthAnythingV2SmallF16.mlpackage.zip",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/DepthEstimation/DepthAnything/DepthAnythingV2SmallF16.mlpackage.zip",
+          "size_bytes": 45828566,
+          "sha256": "8e875979ec82fa46f292468a7567a520b2aa07c41008c32141f3396da05a4067"
+        }
+      ]
+    },
+    {
+      "id": "coreml-depth-anything-v2-small-fp16-p6",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "depth_anything_v2",
+        "task": "depth_estimation",
+        "precision": "mlprogram_float16_palettized_6bit"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "DepthAnythingV2SmallF16P6.mlpackage.zip",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/DepthEstimation/DepthAnything/DepthAnythingV2SmallF16P6.mlpackage.zip",
+          "size_bytes": 18183346,
+          "sha256": "0268456a2c388d73bc36ef8e8e2d7ecffbbb6afeb1d73e79030c84cb5e7f3594"
+        }
+      ]
+    },
+    {
+      "id": "coreml-detr-resnet50-semantic-segmentation-fp16",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "detr_resnet50",
+        "task": "image_segmentation",
+        "precision": "mlprogram_float16"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "DETRResnet50SemanticSegmentationF16.mlpackage.zip",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/Segmentation/DETR/DETRResnet50SemanticSegmentationF16.mlpackage.zip",
+          "size_bytes": 78605496,
+          "sha256": "4060ed589dd7d7f6f42418aab818846d2c1fc61a9336623c01a2f49ff8ee62a7"
+        }
+      ]
+    },
+    {
+      "id": "coreml-detr-resnet50-semantic-segmentation-fp16-p8",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "detr_resnet50",
+        "task": "image_segmentation",
+        "precision": "mlprogram_float16_palettized_8bit"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "DETRResnet50SemanticSegmentationF16P8.mlpackage.zip",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/Segmentation/DETR/DETRResnet50SemanticSegmentationF16P8.mlpackage.zip",
+          "size_bytes": 40257844,
+          "sha256": "9436f344d7e935ef8f54025a43e760888a058ab9192f18248c3745d25fced4a7"
+        }
+      ]
+    },
+    {
+      "id": "coreml-fastvit-ma36-fp16",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "fastvit_ma36",
+        "task": "image_classification",
+        "precision": "mlprogram_float16"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "FastViTMA36F16.mlpackage.zip",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageClassification/FastViT/FastViTMA36F16.mlpackage.zip",
+          "size_bytes": 81552218,
+          "sha256": "b898f6ebe3c734883b05a38258bd3855aaa5e74f96e98c88d312899c8ee925cb"
+        }
+      ]
+    },
+    {
+      "id": "coreml-fastvit-ma36-fp16-headless",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "fastvit_ma36",
+        "task": "image_feature_extraction",
+        "precision": "mlprogram_float16_headless"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "FastViTMA36F16Headless.mlpackage.zip",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageClassification/FastViT/FastViTMA36F16Headless.mlpackage.zip",
+          "size_bytes": 79288819,
+          "sha256": "5d1da33e9ea069c773b78920ae4d050c053fbbc354209f5a773459b7253a5797"
+        }
+      ]
+    },
+    {
+      "id": "coreml-fastvit-t8-fp16",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "fastvit_t8",
+        "task": "image_classification",
+        "precision": "mlprogram_float16"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "FastViTT8F16.mlpackage.zip",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageClassification/FastViT/FastViTT8F16.mlpackage.zip",
+          "size_bytes": 7467627,
+          "sha256": "156df7e15dd384af30727f1eee4982602924b7e8ae37a65cefa1cfb325261508"
+        }
+      ]
+    },
+    {
+      "id": "coreml-fastvit-t8-fp16-headless",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "fastvit_t8",
+        "task": "image_feature_extraction",
+        "precision": "mlprogram_float16_headless"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "FastViTT8F16Headless.mlpackage.zip",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageClassification/FastViT/FastViTT8F16Headless.mlpackage.zip",
+          "size_bytes": 6032923,
+          "sha256": "cd669710c737dab9749a7eecdd0567abd0fef5f4f37f3dccd30c718b5bc0bb87"
+        }
+      ]
+    },
+    {
+      "id": "coreml-mnist-classifier",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "mnist_classifier",
+        "task": "drawing_classification",
+        "precision": "float32"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "MNISTClassifier.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/DrawingClassification/MNISTClassifier/MNISTClassifier.mlmodel",
+          "size_bytes": 395695,
+          "sha256": "816d1a222d5272109166ffc819d7ce44aff923a673884e34d982aa74985ba587"
+        }
+      ]
+    },
+    {
+      "id": "coreml-mobilenetv2-f32",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "mobilenetv2",
+        "task": "image_classification",
+        "precision": "float32"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "MobileNetV2.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageClassification/MobileNetV2/MobileNetV2.mlmodel",
+          "size_bytes": 24716685,
+          "sha256": "cb5a35f593582232140556bbfa4618e66b37b8ff2fc33ba17db909e1050fd144"
+        }
+      ]
+    },
+    {
+      "id": "coreml-mobilenetv2-fp16",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "mobilenetv2",
+        "task": "image_classification",
+        "precision": "float16"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "MobileNetV2FP16.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageClassification/MobileNetV2/MobileNetV2FP16.mlmodel",
+          "size_bytes": 12393551,
+          "sha256": "c76832208ff4c936365f0f2609f7b77f7f1a6caf62b0b429056d5ad7e48635ad"
+        }
+      ]
+    },
+    {
+      "id": "coreml-mobilenetv2-int8-lut",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "mobilenetv2",
+        "task": "image_classification",
+        "precision": "int8_lut_weight_storage"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "MobileNetV2Int8LUT.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageClassification/MobileNetV2/MobileNetV2Int8LUT.mlmodel",
+          "size_bytes": 6257335,
+          "sha256": "ee53bca4c5042d77aed5c093cba31c2ef229d1cc4c027300af9cc8bf9e240409"
+        }
+      ]
+    },
+    {
+      "id": "coreml-resnet50-f32",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "resnet50",
+        "task": "image_classification",
+        "precision": "float32"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "Resnet50.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageClassification/Resnet50/Resnet50.mlmodel",
+          "size_bytes": 102586812,
+          "sha256": "39432f8a20fd16ff311278b95a0953e345c18c907f856ade91cbcadac81bcc07"
+        }
+      ]
+    },
+    {
+      "id": "coreml-resnet50-fp16",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "resnet50",
+        "task": "image_classification",
+        "precision": "float16"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "Resnet50FP16.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageClassification/Resnet50/Resnet50FP16.mlmodel",
+          "size_bytes": 51313342,
+          "sha256": "0ece88983f014e40a108285c0852b626443cb18e1302d525321f3d564e72725b"
+        }
+      ]
+    },
+    {
+      "id": "coreml-resnet50-headless",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "resnet50",
+        "task": "image_feature_extraction",
+        "precision": "float32_headless"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "Resnet50Headless.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageClassification/Resnet50/Resnet50Headless.mlmodel",
+          "size_bytes": 94367931,
+          "sha256": "67c0252e458e27e18fdf47d9f71c39f5f207d1e3f92540fb7b4240f7051e7494"
+        }
+      ]
+    },
+    {
+      "id": "coreml-resnet50-int8-lut",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "resnet50",
+        "task": "image_classification",
+        "precision": "int8_lut_weight_storage"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "Resnet50Int8LUT.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ImageClassification/Resnet50/Resnet50Int8LUT.mlmodel",
+          "size_bytes": 25677037,
+          "sha256": "5de1d906095f67c4ca85f778ac04a70830b34e90ff86ab33897cfe3b4edff4c0"
+        }
+      ]
+    },
+    {
+      "id": "coreml-updatable-drawing-classifier",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "updatable_drawing_classifier",
+        "task": "drawing_classification",
+        "precision": "updatable_pipeline"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "UpdatableDrawingClassifier.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/DrawingClassification/UpdatableDrawingClassifier/UpdatableDrawingClassifier.mlmodel",
+          "size_bytes": 391495,
+          "sha256": "d2310a43f60dee043dda4b1367365dfb4735611688089d72b7cc083015e28925"
+        }
+      ]
+    },
+    {
+      "id": "coreml-yolov3-f32",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "yolov3",
+        "task": "object_detection",
+        "precision": "float32"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "YOLOv3.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ObjectDetection/YOLOv3/YOLOv3.mlmodel",
+          "size_bytes": 248381690,
+          "sha256": "7fea1f2b83b303e7fc6acf08c05a062793229de474587da336d8724e5bf16e38"
+        }
+      ]
+    },
+    {
+      "id": "coreml-yolov3-fp16",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "yolov3",
+        "task": "object_detection",
+        "precision": "float16"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "YOLOv3FP16.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ObjectDetection/YOLOv3/YOLOv3FP16.mlmodel",
+          "size_bytes": 124207764,
+          "sha256": "276afae53da362e25ad21c827f8a929a8512254b1343433d970e725a0de57d8f"
+        }
+      ]
+    },
+    {
+      "id": "coreml-yolov3-int8-lut",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "yolov3",
+        "task": "object_detection",
+        "precision": "int8_lut_weight_storage"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "YOLOv3Int8LUT.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ObjectDetection/YOLOv3/YOLOv3Int8LUT.mlmodel",
+          "size_bytes": 62200325,
+          "sha256": "0e32f297ad9cfc0ea8e67276867956488c7ee10dc87c057da4debc939e20b76d"
+        }
+      ]
+    },
+    {
+      "id": "coreml-yolov3-tiny-f32",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "yolov3_tiny",
+        "task": "object_detection",
+        "precision": "float32"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "YOLOv3Tiny.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ObjectDetection/YOLOv3Tiny/YOLOv3Tiny.mlmodel",
+          "size_bytes": 35527626,
+          "sha256": "ed41d7f0c1652994944b4e3578b907f8634a98c2f3feaf33eab8f1c67df44e3f"
+        }
+      ]
+    },
+    {
+      "id": "coreml-yolov3-tiny-fp16",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "yolov3_tiny",
+        "task": "object_detection",
+        "precision": "float16"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "YOLOv3TinyFP16.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ObjectDetection/YOLOv3Tiny/YOLOv3TinyFP16.mlmodel",
+          "size_bytes": 17769580,
+          "sha256": "73406178d0f5793d0d5d1e38274acd146a744c2245c9b63a11998a5015925dda"
+        }
+      ]
+    },
+    {
+      "id": "coreml-yolov3-tiny-int8-lut",
+      "format": "coreml",
+      "stratum": {
+        "architecture_class": "yolov3_tiny",
+        "task": "object_detection",
+        "precision": "int8_lut_weight_storage"
+      },
+      "source": {
+        "kind": "apple_developer_asset",
+        "publisher": "Apple",
+        "repository": null,
+        "revision": null,
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "No artifact license is asserted by this corpus; publisher page provenance is recorded separately.",
+        "catalog_url": "https://developer.apple.com/machine-learning/models/"
+      },
+      "files": [
+        {
+          "path": "YOLOv3TinyInt8LUT.mlmodel",
+          "source_url": "https://ml-assets.apple.com/coreml/models/Image/ObjectDetection/YOLOv3Tiny/YOLOv3TinyInt8LUT.mlmodel",
+          "size_bytes": 8913366,
+          "sha256": "cde8af2528d6eca1d1580fdd0f0147cb6613d40ba962656b5f683c65f571870e"
+        }
+      ]
+    },
+    {
+      "id": "gguf-falcon",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "falcon",
+        "task": "text_generation_storage",
+        "precision": "Q2_K_filename_candidate"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/tiny_random_falcon-GGUF",
+        "revision": "446328422aa16c25a4b3aa3cee45bae6c27069e6",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "unknown",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny_random_falcon-Q2_K.gguf",
+          "size_bytes": 6758304,
+          "sha256": "469001c1f53b82b5cc8b78e888029721d165fb3eabd9ebcc257e29087289b132"
+        }
+      ]
+    },
+    {
+      "id": "gguf-falcon40b",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "falcon40b",
+        "task": "text_generation_storage",
+        "precision": "Q2_K_filename_candidate"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/tiny-random-falcon-40b-GGUF",
+        "revision": "391ccaf3b3d221811908a7f6158b2d4baf286fa1",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-random-falcon-40b-Q2_K.gguf",
+          "size_bytes": 11322816,
+          "sha256": "0a59856150bee29bd533ecd924f6ee3cb7e01ea04065b297a5e0d498b01b1d95"
+        }
+      ]
+    },
+    {
+      "id": "gguf-gpt2-family-q2-k",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "gpt2",
+        "task": "text_generation_storage",
+        "precision": "Q2_K"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/tiny-random-gpt2-GGUF",
+        "revision": "7d078a5dca1e6cec7f402072a7a184a495eec70f",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-random-gpt2-Q2_K.gguf",
+          "size_bytes": 12964480,
+          "sha256": "8393b803d7b11df6f8618e89938ad6a1fc26e06a79e6ca154634116df3eeed94"
+        }
+      ]
+    },
+    {
+      "id": "gguf-gptneox",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "gptneox",
+        "task": "text_generation_storage",
+        "precision": "Q2_K_filename_candidate"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/tiny-random-gpt_neox-GGUF",
+        "revision": "b2324868bcb057be9c464614682321ecc725c0b1",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-random-gpt_neox-Q2_K.gguf",
+          "size_bytes": 35119936,
+          "sha256": "44c628e7345dc30df17ca4a9e5be7cf1b2e22baf9e252367b8acd29d90275305"
+        }
+      ]
+    },
+    {
+      "id": "gguf-internlm2",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "internlm2",
+        "task": "text_generation_storage",
+        "precision": "Q2_K_filename_candidate"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/optimum-internal-testing_tiny-random-internlm2-GGUF",
+        "revision": "b7fd1b38d1486897ec1649c1051862e1125068e0",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-random-internlm2-Q2_K.gguf",
+          "size_bytes": 21584640,
+          "sha256": "9e64f76c0994b8940a54d15fdb546219172fe96e7ee88161def9da2cf4dd3244"
+        }
+      ]
+    },
+    {
+      "id": "gguf-llama-onnx-origin",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "llama-onnx-origin",
+        "task": "text_generation_storage",
+        "precision": "Q2_K_filename_candidate"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/tiny-random-LlamaForCausalLM-ONNX-GGUF",
+        "revision": "f90ef2d2ee0901bc246869e8cab456adf18cd19d",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-random-LlamaForCausalLM-ONNX-Q2_K.gguf",
+          "size_bytes": 12189792,
+          "sha256": "26f0172dd7e3fc4b3b7c68771665931343c41b6e596d3b26b784e72415542a85"
+        }
+      ]
+    },
+    {
+      "id": "gguf-llama2-kv",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "llama2-kv",
+        "task": "text_generation_storage",
+        "precision": "Q2_K_filename_candidate"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/llama-2-tiny-4kv-heads-4layers-random-GGUF",
+        "revision": "6b5bada4acb618950e4951542a0989917e1ca17c",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "llama-2-tiny-4kv-heads-4layers-random-Q2_K.gguf",
+          "size_bytes": 7581728,
+          "sha256": "17b638445eb0272abd5c524b69c8cf84dcf23b20142db309595218b93a4424e7"
+        }
+      ]
+    },
+    {
+      "id": "gguf-llama3",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "llama3",
+        "task": "text_generation_storage",
+        "precision": "Q2_K_filename_candidate"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/tiny-random-Llama-3-GGUF",
+        "revision": "e9033fa865c48c7277cd384b2cf5152400e9a556",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-random-Llama-3-Q2_K.gguf",
+          "size_bytes": 14118400,
+          "sha256": "56447375eaf9b972706d7d4712021b0528d1ea265f43e210f21ca96c2a8dfe9d"
+        }
+      ]
+    },
+    {
+      "id": "gguf-mistral",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "mistral",
+        "task": "text_generation_storage",
+        "precision": "Q2_K_filename_candidate"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/tiny-random-mistral-GGUF",
+        "revision": "6d261f12f947716905af57eafe119507ea835a44",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-random-mistral-Q2_K.gguf",
+          "size_bytes": 22336992,
+          "sha256": "7e9a4a0c28be6bfd2aec15050954f3476674ca763e5aa6381a9fda91f1ccaf09"
+        }
+      ]
+    },
+    {
+      "id": "gguf-mistral-small",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "mistral-small",
+        "task": "text_generation_storage",
+        "precision": "Q2_K_filename_candidate"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/illuin_tiny-random-MistralForCausalLM-GGUF",
+        "revision": "a2852b499771f7da42d1f6fe0bc228aca295b332",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-random-MistralForCausalLM-Q2_K.gguf",
+          "size_bytes": 2391648,
+          "sha256": "4454d69be2ad0dee002b2b29eba254ee6e865a1bf4b0cd78b228644af88f5987"
+        }
+      ]
+    },
+    {
+      "id": "gguf-mpt",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "mpt",
+        "task": "text_generation_storage",
+        "precision": "Q2_K_filename_candidate"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/tiny-mpt-random-remote-code-GGUF",
+        "revision": "c151eb3f349485ee8ae72841d7d90b9121d5baa2",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-mpt-random-remote-code-Q2_K.gguf",
+          "size_bytes": 8734304,
+          "sha256": "5627dcb0ff18f6f7200f83c0aed2056a6a7c86b5f2d865833e1b5f00b00e4daa"
+        }
+      ]
+    },
+    {
+      "id": "gguf-olmo-family-q2-k",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "olmo",
+        "task": "text_generation_storage",
+        "precision": "Q2_K"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/tiny-random-olmo-GGUF",
+        "revision": "d0ee9498d082d6dc3e730b9765e6e87a9bb5d995",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-random-olmo-Q2_K.gguf",
+          "size_bytes": 33860576,
+          "sha256": "be1c5a22ac0e75cd5874467ffd80bcd2c8500609d3bf7ccdb5b269373e4d6da4"
+        }
+      ]
+    },
+    {
+      "id": "gguf-phi3-small",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "phi3-small",
+        "task": "text_generation_storage",
+        "precision": "Q2_K_filename_candidate"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/tiny-random-Phi3ForCausalLM-GGUF",
+        "revision": "642c29131c8fb7594571b5a110c2fe912c37e26b",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-random-Phi3ForCausalLM-Q2_K.gguf",
+          "size_bytes": 2406528,
+          "sha256": "23571e23676807915c6f46725efe32ebbbbcfb988fb7cca12505bca579165694"
+        }
+      ]
+    },
+    {
+      "id": "gguf-qwen3",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "qwen3",
+        "task": "text_generation_storage",
+        "precision": "Q2_K_filename_candidate"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/optimum-internal-testing_tiny-random-qwen3-GGUF",
+        "revision": "ee3df48d1cfc942bf1ab147042713ca158245547",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-random-qwen3-Q2_K.gguf",
+          "size_bytes": 16309120,
+          "sha256": "ea33aa937989b0bd230157c89116d8356ea37f3ed039490ca4e340b650e47a78"
+        }
+      ]
+    },
+    {
+      "id": "gguf-stablelm-family-q2-k",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "stablelm",
+        "task": "text_generation_storage",
+        "precision": "Q2_K"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "tensorblock",
+        "repository": "tensorblock/tiny-random-stablelm-2-GGUF",
+        "revision": "64d7b3e2e3ef8484da504b743bca769cd7699e9f",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tiny-random-stablelm-2-Q2_K.gguf",
+          "size_bytes": 71498240,
+          "sha256": "4f838d275618ea4ddf8f2a91c84a601774f720c015713d43b0355c2d53ed1ce5"
+        }
+      ]
+    },
+    {
+      "id": "gguf-tinymqa-iq4-nl",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "llama",
+        "task": "text_generation_storage",
+        "precision": "IQ4_NL"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "shibatch",
+        "repository": "shibatch/tinymqa1m",
+        "revision": "403668777b2a2708d2529f8913cabfcaf3d6b385",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "mit",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tinymqa1m.IQ4_NL.gguf",
+          "size_bytes": 524320,
+          "sha256": "d8e9e534fa1d2d32a39e79519c051d269580154f3da5d66301d78b7afa726a6f"
+        }
+      ]
+    },
+    {
+      "id": "gguf-tinymqa-q2-k",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "llama",
+        "task": "text_generation_storage",
+        "precision": "Q2_K"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "shibatch",
+        "repository": "shibatch/tinymqa1m",
+        "revision": "403668777b2a2708d2529f8913cabfcaf3d6b385",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "mit",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tinymqa1m.Q2_K.gguf",
+          "size_bytes": 523296,
+          "sha256": "83a2ee31b9f6013e4e0b3345abefaeb9a3231437f559e03124497b1191264003"
+        }
+      ]
+    },
+    {
+      "id": "gguf-tinymqa-q4-0",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "llama",
+        "task": "text_generation_storage",
+        "precision": "Q4_0"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "shibatch",
+        "repository": "shibatch/tinymqa1m",
+        "revision": "403668777b2a2708d2529f8913cabfcaf3d6b385",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "mit",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tinymqa1m.Q4_0.gguf",
+          "size_bytes": 521248,
+          "sha256": "cb95a6e10f28b76a1dd71c15560dec5a5eee8943f591ef45d11c129786b22cff"
+        }
+      ]
+    },
+    {
+      "id": "gguf-tinymqa-q8-0",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "llama",
+        "task": "text_generation_storage",
+        "precision": "Q8_0"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "shibatch",
+        "repository": "shibatch/tinymqa1m",
+        "revision": "403668777b2a2708d2529f8913cabfcaf3d6b385",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "mit",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tinymqa1m.Q8_0.gguf",
+          "size_bytes": 906272,
+          "sha256": "66bd8d5a03589e40e1d0656b90220fd29f699512122af7170c7612c364b7c835"
+        }
+      ]
+    },
+    {
+      "id": "gguf-tinymqa-tq2-0",
+      "format": "gguf",
+      "stratum": {
+        "architecture_class": "llama",
+        "task": "text_generation_storage",
+        "precision": "TQ2_0"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "shibatch",
+        "repository": "shibatch/tinymqa1m",
+        "revision": "403668777b2a2708d2529f8913cabfcaf3d6b385",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "mit",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "tinymqa1m.TQ2_0.gguf",
+          "size_bytes": 529440,
+          "sha256": "fc11758d577ae6a2ebb2600dc9179890fe89d23e8c310858308b12e35a96e427"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-arch-function-1-5b-onnx-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "Qwen2ForCausalLM",
+        "task": "text-generation",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/Arch-Function-1.5B",
+        "revision": "7d7f36ee1f6a26820d5b8200c58234cfb2dac0ce",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "other",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model.onnx",
+          "role": "model",
+          "size_bytes": 155203,
+          "sha256": "25806e647cc065149d677c4139ac90c7691ef2d980baf0e2d0590cf27c01e675"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-bert-base-cased-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "BertForMaskedLM",
+        "task": "fill-mask",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/bert-base-cased-ONNX",
+        "revision": "1e8d507c100d9db33a82fa5803c0048c72d464b5",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model.onnx",
+          "role": "model",
+          "size_bytes": 107823,
+          "sha256": "f6dbed3dd673f937095e164dafa9ba2fe0202ddc3e40f30ced35763bb34ffe3b"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-bert-tiny-raid-onnx-onnx-model-int8-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "BertForSequenceClassification",
+        "task": "text-classification",
+        "precision": "int8_or_quantized"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/BERT-tiny-RAID-ONNX",
+        "revision": "8f5741a3d45781899100c9a299b25624b5afa914",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "mit",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_int8.onnx",
+          "role": "model",
+          "size_bytes": 4476244,
+          "sha256": "1c06c10cc1b8c1be81e863e11c92fb65deb2f39deb3647284ebe590483266760"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-chatterbox-multilingual-onnx-onnx-language-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "unclassified",
+        "task": "text-to-speech",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/chatterbox-multilingual-ONNX",
+        "revision": "452d3f434aa592098f1eedac9099f33642ab2da5",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "mit",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/language_model.onnx",
+          "role": "model",
+          "size_bytes": 171387,
+          "sha256": "861a34585605e8ad671051788afc495dcbeaee833a41523a1b33aded9c3babc7"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-cohere-transcribe-03-2026-onnx-onnx-decoder-model-merged-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "CohereAsrForConditionalGeneration",
+        "task": "automatic-speech-recognition",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/cohere-transcribe-03-2026-ONNX",
+        "revision": "31b1c6211c9000d76b077ddd23b74c9090badeba",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/decoder_model_merged.onnx",
+          "role": "model",
+          "size_bytes": 153483,
+          "sha256": "6b2d74354ef2d3257991356b6ca290f4e261551323af09a6f33ca99f094bcd42"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-depth-anything-v2-base-onnx-onnx-model-fp16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "depth_anything",
+        "task": "depth-estimation",
+        "precision": "fp16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/depth-anything-v2-base-ONNX",
+        "revision": "2453e8147a1c8825da30b2b1a7d51467332f1710",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "cc-by-nc-4.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_fp16.onnx",
+          "role": "model",
+          "size_bytes": 129526,
+          "sha256": "0cb2451b5253813a92461b233f061323d9f19c72f6ecba61f1d8788e4e8b78b8"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-depth-anything-v2-small-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "DepthAnythingForDepthEstimation",
+        "task": "depth-estimation",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/depth-anything-v2-small-ONNX",
+        "revision": "c3b67641fd837b2368757101311e5d21e511441e",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model.onnx",
+          "role": "model",
+          "size_bytes": 127382,
+          "sha256": "345f249eda90f33e0548890f2fe1e89662c1dbb5a8b7c10a50492558f65e85a3"
+        },
+        {
+          "path": "onnx/model.onnx_data",
+          "role": "external_data",
+          "size_bytes": 98798080,
+          "sha256": "c4fba31e921953367d8c5348b92296b2bf41f9cef9745ffaca01e2b1653e6d08"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-dinov3-convnext-tiny-pretrain-lvd1689m-onnx-onnx-model-quantized-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "DINOv3ConvNextModel",
+        "task": "image-feature-extraction",
+        "precision": "int8_or_quantized"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/dinov3-convnext-tiny-pretrain-lvd1689m-ONNX",
+        "revision": "1e428344662d6c83da98fed9d8f4548efea5fe85",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "other",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_quantized.onnx",
+          "role": "model",
+          "size_bytes": 120892,
+          "sha256": "b07072716a326173200a599546629a49575443aaa72c28ba6797057290f142bd"
+        },
+        {
+          "path": "onnx/model_quantized.onnx_data",
+          "role": "external_data",
+          "size_bytes": 27991008,
+          "sha256": "89ac9ce0d82ff376eea0bd7b8ac449d8e05178e30e77c333fe5686d99a0ee0c4"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-dinov3-vits16-pretrain-lvd1689m-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "DINOv3ViTModel",
+        "task": "image-feature-extraction",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/dinov3-vits16-pretrain-lvd1689m-ONNX",
+        "revision": "48988dfe73065df8d6f5ccc0edc7c8bcf307de41",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "other",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model.onnx",
+          "role": "model",
+          "size_bytes": 137969,
+          "sha256": "bb75e9e30ff382ecdbd150266445ab41272be4acc85fd3563218dd89781e36da"
+        },
+        {
+          "path": "onnx/model.onnx_data",
+          "role": "external_data",
+          "size_bytes": 86347776,
+          "sha256": "1eff0bb9f4fdef831ca61c8bc2b5c88d8cc21ef4756d3b483d9b9c15d8d5d27f"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-edgetam-onnx-onnx-vision-encoder-fp16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "EdgeTamModel",
+        "task": "unclassified",
+        "precision": "fp16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/EdgeTAM-ONNX",
+        "revision": "9c77c7bff7fd0f3079585fa17af7f730ddc531ed",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/vision_encoder_fp16.onnx",
+          "role": "model",
+          "size_bytes": 167617,
+          "sha256": "d8f560849085892866a5c652a600cafbbd301e11c15ff0d89c81e15fe91264ac"
+        },
+        {
+          "path": "onnx/vision_encoder_fp16.onnx_data",
+          "role": "external_data",
+          "size_bytes": 9739536,
+          "sha256": "6a6741eb00b3049939675569818b207953cb13113a80ca9580c9c714d8646b38"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-ettin-decoder-32m-onnx-onnx-model-q4-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "ModernBertDecoderForCausalLM",
+        "task": "text-generation",
+        "precision": "q4"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/ettin-decoder-32m-ONNX",
+        "revision": "756b5085a2da9a57123acb95763297260fa2a4a1",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "mit",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_q4.onnx",
+          "role": "model",
+          "size_bytes": 101490,
+          "sha256": "7f0d913bb44aa9936100489b4a0544479b2ebf459691dac259b8b437b78425d7"
+        },
+        {
+          "path": "onnx/model_q4.onnx_data",
+          "role": "external_data",
+          "size_bytes": 89621760,
+          "sha256": "d00806e246117fcabbb588addab03e5eee7da52f58db98aa617f212a52dbc527"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-ettin-encoder-32m-onnx-onnx-model-q4-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "ModernBertForMaskedLM",
+        "task": "fill-mask",
+        "precision": "q4"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/ettin-encoder-32m-ONNX",
+        "revision": "37b0e13e959679e9bd8a5cf4b7b49eda17cd5042",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "mit",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_q4.onnx",
+          "role": "model",
+          "size_bytes": 109333,
+          "sha256": "d9e33ac973131592536e2461318cdff3c5fb3101b86e3a9c9b3229c9afc6440b"
+        },
+        {
+          "path": "onnx/model_q4.onnx_data",
+          "role": "external_data",
+          "size_bytes": 89621760,
+          "sha256": "d68841f1e01a07e375367029684ca4a7cb7aca00551205e93b489ae05b965a95"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-eu-pii-safeguard-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "XLMRobertaForTokenClassification",
+        "task": "token-classification",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/eu-pii-safeguard-ONNX",
+        "revision": "2eb13b1eabe7ce6abdc5359d48ed0e80184e6aeb",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "other",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model.onnx",
+          "role": "model",
+          "size_bytes": 488579,
+          "sha256": "2296fbc6d8b1ad737385a51aa0dfebfee7ac6f77efa1f9dee4cd38b574b06333"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-gemma-4-e2b-it-onnx-onnx-vision-encoder-fp16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "Gemma4ForConditionalGeneration",
+        "task": "any-to-any",
+        "precision": "fp16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/gemma-4-E2B-it-ONNX",
+        "revision": "9f4bef82ea6e296bc69f8a2f5939f73af81b07a6",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/vision_encoder_fp16.onnx",
+          "role": "model",
+          "size_bytes": 150672,
+          "sha256": "2e8a95ce26015f10bf7249c2f36ab593fa630bd8b9fd9cb4deb6c308a7e75712"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-gpt2-onnx-gqa-onnx-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "GPT2LMHeadModel",
+        "task": "unclassified",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/gpt2-ONNX-GQA",
+        "revision": "4968f66abc29f02e3edbf40a5bffd1b627c1c61f",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "mit",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model.onnx",
+          "role": "model",
+          "size_bytes": 102730,
+          "sha256": "062fd401cf810cf6c5030e5e2d29119595fa753caa9aacb096443f5478325fd4"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-granite-docling-258m-onnx-onnx-vision-encoder-bnb4-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "Idefics3ForConditionalGeneration",
+        "task": "image-text-to-text",
+        "precision": "bnb4"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/granite-docling-258M-ONNX",
+        "revision": "e8602580df77443fc3421cf3bae0601da601e5c6",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/vision_encoder_bnb4.onnx",
+          "role": "model",
+          "size_bytes": 314758,
+          "sha256": "122544ada267e170359523ff55cf03574222da2955c3463558142c70a01191a9"
+        },
+        {
+          "path": "onnx/vision_encoder_bnb4.onnx_data",
+          "role": "external_data",
+          "size_bytes": 57750528,
+          "sha256": "cd4269fc279cdb2e8a0d78cb349578561b6cf1017d7ac9b428a05b8e99d30d29"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-granite-embedding-30m-english-onnx-onnx-model-q4f16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "RobertaModel",
+        "task": "sentence-similarity",
+        "precision": "q4f16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/granite-embedding-30m-english-ONNX",
+        "revision": "a141ffafe5810d8ee499de14086b5259527ed6ff",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_q4f16.onnx",
+          "role": "model",
+          "size_bytes": 111144,
+          "sha256": "15cb1e7f48f9013fc772c02d1d2b07de8bbbe46ae693c132fcb95fdaa441a4d7"
+        },
+        {
+          "path": "onnx/model_q4f16.onnx_data",
+          "role": "external_data",
+          "size_bytes": 44990208,
+          "sha256": "870d15f56269abfc775ae2123d274a821a3fbc282c70fd4cfda9ce5db7f6ffea"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-granite-timeseries-patchtsmixer-onnx-model-bnb4-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "PatchTSMixerForPrediction",
+        "task": "time-series-forecasting",
+        "precision": "bnb4"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/granite-timeseries-patchtsmixer",
+        "revision": "598e9a6739ec5fa8b3134e82102d000ad8171bc5",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_bnb4.onnx",
+          "role": "model",
+          "size_bytes": 182902,
+          "sha256": "1e1d880a11e5666a41219749707c80a1c618e47e2d7d01b3af7131d0b520a6fe"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-jina-embeddings-v5-omni-nano-onnx-onnx-text-model-fp16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "JinaEmbeddingsV5OmniModel",
+        "task": "feature-extraction",
+        "precision": "fp16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/jina-embeddings-v5-omni-nano-ONNX",
+        "revision": "e3bbd1a1da40fd3ef586d4ed18e53123724fd832",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "cc-by-nc-4.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/text_model_fp16.onnx",
+          "role": "model",
+          "size_bytes": 125318,
+          "sha256": "f59419cb1d33e7bf66e11b336c618b61f1430349bdbd09180c49f7c934956cfe"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-kittentts-nano-v0-8-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "style_text_to_speech_2",
+        "task": "text-to-speech",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/KittenTTS-Nano-v0.8-ONNX",
+        "revision": "6078af30aab083436023d04ba845aedd9d1a9206",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model.onnx",
+          "role": "model",
+          "size_bytes": 56767095,
+          "sha256": "320564d2615f235de972ca27a7f39551c94185cfa24ca85b07a29084135f1e5e"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-kokoro-82m-onnx-onnx-model-quantized-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "style_text_to_speech_2",
+        "task": "text-to-speech",
+        "precision": "int8_or_quantized"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/Kokoro-82M-ONNX",
+        "revision": "f46687f7e41512228ae953af24a11b2640ea0f22",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_quantized.onnx",
+          "role": "model",
+          "size_bytes": 92360543,
+          "sha256": "0d55b15d4b735d61a21b0105136bc81b8768c4db94753193c19354fa863cd556"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-lfm2-350m-enjp-mt-onnx-onnx-model-fp16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "Lfm2ForCausalLM",
+        "task": "translation",
+        "precision": "fp16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/LFM2-350M-ENJP-MT-ONNX",
+        "revision": "29e6195eb1f63ddb3fa29c320edd4f4b25fa4ae7",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "other",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_fp16.onnx",
+          "role": "model",
+          "size_bytes": 142736,
+          "sha256": "365bdb4414cd83f002d183414ca2e6b99e05f6eebd3dd7373c6aca5ce31f52e9"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-lfm2-vl-450m-onnx-onnx-decoder-model-merged-fp16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "Lfm2VlForConditionalGeneration",
+        "task": "image-text-to-text",
+        "precision": "fp16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/LFM2-VL-450M-ONNX",
+        "revision": "308cf784b35ce25274540e1bf5592c33a0433469",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "other",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/decoder_model_merged_fp16.onnx",
+          "role": "model",
+          "size_bytes": 141856,
+          "sha256": "730e7cdeb56f569c73be29e5201d3824c5542ee64c4da95143e9bfd7962345f5"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-llama-3-2-1b-instruct-genai-onnx-cuda-cuda-int4-rtn-block-32-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "LlamaForCausalLM",
+        "task": "text-generation",
+        "precision": "int4"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/Llama-3.2-1B-Instruct-GENAI-ONNX",
+        "revision": "e983c740a38fcfa57fb4d124b18b644974c3d966",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "llama3.2,mit",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "cuda/cuda-int4-rtn-block-32/model.onnx",
+          "role": "model",
+          "size_bytes": 105158,
+          "sha256": "386bc0de954b822215fb7d25111ae65ec68b2268443795e24d134eb0c894a000"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-mdbr-leaf-ir-onnx-onnx-model-fp16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "BertModel",
+        "task": "feature-extraction",
+        "precision": "fp16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/mdbr-leaf-ir-ONNX",
+        "revision": "c3b74d66ba58329ddf06bfa8f807c4076702f2e9",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_fp16.onnx",
+          "role": "model",
+          "size_bytes": 100962,
+          "sha256": "fc5500b7995c736f56b12329d38f8efc376a35532cdf359a07f5e5e3b1c1210a"
+        },
+        {
+          "path": "onnx/model_fp16.onnx_data",
+          "role": "external_data",
+          "size_bytes": 45679104,
+          "sha256": "e90acb605423040c7cf94d085a6bd9747af654e44081979a33e9fd3e57e67a9d"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-mediapipe-selfie-segmentation-landscape-onnx-model-int8-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "mobilenet_v3",
+        "task": "image-segmentation",
+        "precision": "int8_or_quantized"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/mediapipe_selfie_segmentation_landscape",
+        "revision": "2497d5bec26c626c7b3c4edc6e1fefc21b64f6c3",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_int8.onnx",
+          "role": "model",
+          "size_bytes": 223963,
+          "sha256": "add5ba17fd92b28d2b0fa5d95e4a58cfa9df8a88cff19a1f2ff9906086f6597f"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-metaclip-2-worldwide-huge-378-onnx-onnx-vision-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "MetaCLIP2Model",
+        "task": "zero-shot-image-classification",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/metaclip-2-worldwide-huge-378-ONNX",
+        "revision": "0785ba7e1584dfd7880dab0e13816357974167a2",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "cc-by-nc-4.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/vision_model.onnx",
+          "role": "model",
+          "size_bytes": 496578,
+          "sha256": "f121390a7356a1cb1e5ba9ed65d58e677e2d0c1cd7ddd55fe8b7d999cd62530a"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-mobilenetv4s-webnn-onnx-model-int8-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "mobilenet_v4",
+        "task": "image-classification",
+        "precision": "int8_or_quantized"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/mobilenetv4s-webnn",
+        "revision": "4d0797f67ae5973e65432967711289f4f2f47190",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_int8.onnx",
+          "role": "model",
+          "size_bytes": 3931745,
+          "sha256": "502f8929335a6bcc1f6800618424a0d6d0c65a83d82eb020e98a4df447af1080"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-perth-watermarker-onnx-onnx-implicit-watermarker-16000-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "unclassified",
+        "task": "unclassified",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/perth-watermarker-ONNX",
+        "revision": "2997df2497116bfd2f964718ca7becf6e289d74a",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/implicit_watermarker_16000.onnx",
+          "role": "model",
+          "size_bytes": 35342,
+          "sha256": "062acb662446910093bc600cbfc7f4f3b9d87d8564fe904178852e0cb913f833"
+        },
+        {
+          "path": "onnx/implicit_watermarker_16000.onnx_data",
+          "role": "external_data",
+          "size_bytes": 26253312,
+          "sha256": "6b302e52a6813158ba15a77fa1cc80bf51c282b2727f9df5e1a802074116e771"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-perth-watermarker-onnx-onnx-implicit-watermarker-24000-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "unclassified",
+        "task": "unclassified",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/perth-watermarker-ONNX",
+        "revision": "2997df2497116bfd2f964718ca7becf6e289d74a",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/implicit_watermarker_24000.onnx",
+          "role": "model",
+          "size_bytes": 36064,
+          "sha256": "de8e938bedcaf3eecd65f4b1d673e6a19e2568f74ad1201ca5d81b19c1db8b51"
+        },
+        {
+          "path": "onnx/implicit_watermarker_24000.onnx_data",
+          "role": "external_data",
+          "size_bytes": 26253312,
+          "sha256": "6b302e52a6813158ba15a77fa1cc80bf51c282b2727f9df5e1a802074116e771"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-perth-watermarker-onnx-onnx-implicit-watermarker-44100-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "unclassified",
+        "task": "unclassified",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/perth-watermarker-ONNX",
+        "revision": "2997df2497116bfd2f964718ca7becf6e289d74a",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/implicit_watermarker_44100.onnx",
+          "role": "model",
+          "size_bytes": 35749,
+          "sha256": "3c86b35d2a784aec97fe6e0ab3941be5d89eb0f12562b974313c122904b4f626"
+        },
+        {
+          "path": "onnx/implicit_watermarker_44100.onnx_data",
+          "role": "external_data",
+          "size_bytes": 27430008,
+          "sha256": "39f7de6fd3f52f1c9a5eab10937f38ce34dd796053ded27a0cec14d2abf696bb"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-perth-watermarker-onnx-onnx-implicit-watermarker-48000-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "unclassified",
+        "task": "unclassified",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/perth-watermarker-ONNX",
+        "revision": "2997df2497116bfd2f964718ca7becf6e289d74a",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/implicit_watermarker_48000.onnx",
+          "role": "model",
+          "size_bytes": 35832,
+          "sha256": "d05ad65caacdc2b2b63cbec348f528bcb7baadeecd76ec9eb7bf1d30b4e107c0"
+        },
+        {
+          "path": "onnx/implicit_watermarker_48000.onnx_data",
+          "role": "external_data",
+          "size_bytes": 26253312,
+          "sha256": "6b302e52a6813158ba15a77fa1cc80bf51c282b2727f9df5e1a802074116e771"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-qwen3-5-0-8b-onnx-onnx-vision-encoder-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "Qwen3_5ForConditionalGeneration",
+        "task": "image-text-to-text",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/Qwen3.5-0.8B-ONNX",
+        "revision": "c0d619322dad7c4441a8841a53fc59772ddddcc0",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/vision_encoder.onnx",
+          "role": "model",
+          "size_bytes": 159260,
+          "sha256": "3886f774f640e7689dc33d928260e6295e903ed757b1048675ede4a001abf588"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-sam-vit-base-onnx-onnx-prompt-encoder-mask-decoder-q4f16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "SamModel",
+        "task": "mask-generation",
+        "precision": "q4f16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/sam-vit-base-ONNX",
+        "revision": "0a968b695af3aa98829b5daadc574daf7231c778",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/prompt_encoder_mask_decoder_q4f16.onnx",
+          "role": "model",
+          "size_bytes": 2834872,
+          "sha256": "2310795584322034c56f9bb413338282c1d850cb3d44f0b043e69014f90df359"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-smart-turn-v3-onnx-onnx-model-q4f16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "WhisperForAudioClassification",
+        "task": "voice-activity-detection",
+        "precision": "q4f16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/smart-turn-v3-ONNX",
+        "revision": "dbd03130e87854011fa8c2f203077f2cbfc3adad",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "bsd-2-clause",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_q4f16.onnx",
+          "role": "model",
+          "size_bytes": 5712765,
+          "sha256": "ad9e637bead2c54dd1ccba26b70be80a851b13d7c65722644ad557fe91a36111"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-supertonic-tts-2-onnx-onnx-text-encoder-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "supertonic",
+        "task": "text-to-speech",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/Supertonic-TTS-2-ONNX",
+        "revision": "68d4d9420d0e0e51d14656e1ec5c9b091490b49e",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "openrail",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/text_encoder.onnx",
+          "role": "model",
+          "size_bytes": 433173,
+          "sha256": "3a53aa40a2073a7f25a8dd98dddcebff38f25d3aad9c112f5bd750f4cc7c2167"
+        },
+        {
+          "path": "onnx/text_encoder.onnx_data",
+          "role": "external_data",
+          "size_bytes": 28530432,
+          "sha256": "8cea29265492576cc96bc9ebcd3ff9b4b8c5780dcbe09b57e937f5775e679354"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-swin2sr-realworld-sr-x4-64-bsrgan-psnr-onnx-onnx-model-q4f16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "Swin2SRForImageSuperResolution",
+        "task": "image-to-image",
+        "precision": "q4f16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/swin2SR-realworld-sr-x4-64-bsrgan-psnr-ONNX",
+        "revision": "9b3baf051f6708d0b697580489e4415b64c7378e",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_q4f16.onnx",
+          "role": "model",
+          "size_bytes": 15249949,
+          "sha256": "94561159849a4d3145daf15d2a54dd6ef7cbd9cf7b9e99525d78a494f9556d0d"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-vitpose-plus-huge-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "VitPoseForPoseEstimation",
+        "task": "keypoint-detection",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/vitpose-plus-huge-ONNX",
+        "revision": "41d9ef6b66ae72f8939150b9d850f0f0360877b1",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model.onnx",
+          "role": "model",
+          "size_bytes": 888362,
+          "sha256": "a3fe87de99f9c7de1b64e8b500f4b4825c6a298ff3c81d82367d2f9d18a37a24"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-voxtral-mini-3b-2507-onnx-onnx-audio-encoder-uint8-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "VoxtralForConditionalGeneration",
+        "task": "audio-text-to-text",
+        "precision": "uint8"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/Voxtral-Mini-3B-2507-ONNX",
+        "revision": "d2c87bb634d1dfaeea8b5eb388704d657f2ff8e9",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "apache-2.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/audio_encoder_uint8.onnx",
+          "role": "model",
+          "size_bytes": 601155,
+          "sha256": "644e50318802c691623b85fd940ac60164cd904b72d1d81f658fbbab22c6506d"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-whisper-tiny-onnx-encoder-model-bnb4-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "WhisperForConditionalGeneration",
+        "task": "automatic-speech-recognition",
+        "precision": "bnb4"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/whisper-tiny",
+        "revision": "ff4177021cc41f7db950912b73ea4fdf7d01d8e7",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/encoder_model_bnb4.onnx",
+          "role": "model",
+          "size_bytes": 8578451,
+          "sha256": "c8596d911d020092caa4d80bf06929f4a0c5f573701a6882bc37dd761dc383bf"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-whisper-tiny-onnx-encoder-model-fp16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "WhisperForConditionalGeneration",
+        "task": "automatic-speech-recognition",
+        "precision": "fp16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/whisper-tiny",
+        "revision": "ff4177021cc41f7db950912b73ea4fdf7d01d8e7",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/encoder_model_fp16.onnx",
+          "role": "model",
+          "size_bytes": 16519192,
+          "sha256": "fc4bf9f3fadc450b128c3ef0711a4e61a55797447b6a700abe7fb97d9f549518"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-whisper-tiny-onnx-encoder-model-int8-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "WhisperForConditionalGeneration",
+        "task": "automatic-speech-recognition",
+        "precision": "int8_or_quantized"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/whisper-tiny",
+        "revision": "ff4177021cc41f7db950912b73ea4fdf7d01d8e7",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/encoder_model_int8.onnx",
+          "role": "model",
+          "size_bytes": 10124977,
+          "sha256": "03ff3c99ce804f79a42afd6212c9492eb75e55625926de66f8fc192e9567d336"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-whisper-tiny-onnx-encoder-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "WhisperForConditionalGeneration",
+        "task": "automatic-speech-recognition",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/whisper-tiny",
+        "revision": "ff4177021cc41f7db950912b73ea4fdf7d01d8e7",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/encoder_model.onnx",
+          "role": "model",
+          "size_bytes": 32904992,
+          "sha256": "6642befb640f950d4a8cbbd17834d59e7e75f575b81ccf213e06b050623ab1dd"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-whisper-tiny-onnx-encoder-model-q4-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "WhisperForConditionalGeneration",
+        "task": "automatic-speech-recognition",
+        "precision": "q4"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/whisper-tiny",
+        "revision": "ff4177021cc41f7db950912b73ea4fdf7d01d8e7",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/encoder_model_q4.onnx",
+          "role": "model",
+          "size_bytes": 9020667,
+          "sha256": "45a55cedf1ff46606520f5938ed40c94bd4f6b38beb2a646eed8636225342488"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-whisper-tiny-onnx-encoder-model-uint8-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "WhisperForConditionalGeneration",
+        "task": "automatic-speech-recognition",
+        "precision": "uint8"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/whisper-tiny",
+        "revision": "ff4177021cc41f7db950912b73ea4fdf7d01d8e7",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/encoder_model_uint8.onnx",
+          "role": "model",
+          "size_bytes": 10124990,
+          "sha256": "2af4a414ca47aa30f61246017e5fe82b0a8d229281d1255ba666a2a7f6b84d19"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-whisper-tiny-onnx-onnx-encoder-model-q4f16-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "WhisperForConditionalGeneration",
+        "task": "automatic-speech-recognition",
+        "precision": "q4f16"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/whisper-tiny-ONNX",
+        "revision": "ea7c447ab3780e36818661384dea74a8e6b82fc6",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/encoder_model_q4f16.onnx",
+          "role": "model",
+          "size_bytes": 6296073,
+          "sha256": "236f9f7d8bf038df0b4cc92daa33eb7ef71770d664ceac10b78c545665e82373"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-xlm-roberta-large-qa-multilingual-finedtuned-ru-onnx-onnx-model-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "XLMRobertaForQuestionAnswering",
+        "task": "question-answering",
+        "precision": "unspecified_in_filename"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/xlm-roberta-large-qa-multilingual-finedtuned-ru-ONNX",
+        "revision": "dbe8fefaa086aca6ea24a199694e8c5148806a31",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model.onnx",
+          "role": "model",
+          "size_bytes": 656666,
+          "sha256": "5769cbe5f1a667692294ceff085d5e49f200577af626cb3083e6558bc2a0c199"
+        }
+      ]
+    },
+    {
+      "id": "onnx-onnx-community-yolov10n-onnx-model-int8-onnx",
+      "format": "onnx",
+      "stratum": {
+        "architecture_class": "yolov10",
+        "task": "object-detection",
+        "precision": "int8_or_quantized"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-community",
+        "repository": "onnx-community/yolov10n",
+        "revision": "57657320425ee34056408a57ad9d29c4d4815bd8",
+        "repository_visibility": "public_ungated",
+        "license_metadata": "agpl-3.0",
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "onnx/model_int8.onnx",
+          "role": "model",
+          "size_bytes": 2650684,
+          "sha256": "81c48fd65516dd8b58c9b4f3e8922e8b4b08b63b30dae9a57173552b1f7751fa"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-hf-tiny-v2-tiny-random-cohere2forcausallm",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "cohere2",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "hf-tiny-v2",
+        "repository": "hf-tiny-v2/tiny-random-Cohere2ForCausalLM",
+        "revision": "709c2ca452b7db08191229c9a6da993405f0b252",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 926,
+          "sha256": "735071f9fc9bdd757f617aea60da64396408354f48cf1f4b2de434afbbd79f33"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 32707200,
+          "sha256": "f2fb23e3df9e5f18bea2c43d86722a4e5626c63a1a552d07bd1fce4a710e8e9f"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-hf-tiny-v2-tiny-random-cohereforcausallm",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "cohere",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "hf-tiny-v2",
+        "repository": "hf-tiny-v2/tiny-random-CohereForCausalLM",
+        "revision": "eede22648ac3ab862cdef94b2880ebc7f40477ac",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 833,
+          "sha256": "a718b3a7fc33b5b9c1de78ce26d03a31a84882e47bc6ec4d5ffa6a29ed08e02e"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 32707200,
+          "sha256": "f210308b3ffdda9d7a2930bb042251447cb256dcd8924cc82a48010270f7a52e"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-hf-tiny-v2-tiny-random-ministralfortokenclassification",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "ministral",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "hf-tiny-v2",
+        "repository": "hf-tiny-v2/tiny-random-MinistralForTokenClassification",
+        "revision": "b3977454729f79e079717534b29dc5a893db76f7",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 764,
+          "sha256": "664c00244cb1682eaa25f181018c6a48b9bd1c2781b545c412a0eac007f22e09"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 73088,
+          "sha256": "1e60986313be1d308edad0f538d874eb0f542e904ec6138cce9729d62f234745"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-katuni4ka-tiny-random-granite",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "granite",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "katuni4ka",
+        "repository": "katuni4ka/tiny-random-granite",
+        "revision": "705ce2cc1b5acc4a57f24bb6cea5cbec0089388c",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 838,
+          "sha256": "a142199d402e01fd48924ab1918095efa039590dcd23d8664974b9045b7fbcad"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 6668040,
+          "sha256": "3c416f19943f4d760680cf4921cb6c5a76016e48596cb4c911033bce010ac176"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-katuni4ka-tiny-random-olmo-hf",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "olmo",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "katuni4ka",
+        "repository": "katuni4ka/tiny-random-olmo-hf",
+        "revision": "8f05f41b70736efb2a6e2b15d051eea02a34f052",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 707,
+          "sha256": "bde488dd0fa9d09fac11f1b3eca02958537a316b9d8aef66e6043d38d3e15e5b"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 26152632,
+          "sha256": "49a5bd767851581f9b87b36527418f03697daa0e6a7855f9afe2263c7ec04e0f"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-onnx-internal-testing-tiny-random-nemotronforcausallm",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "nemotron",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "onnx-internal-testing",
+        "repository": "onnx-internal-testing/tiny-random-NemotronForCausalLM",
+        "revision": "60d8a5d2d5e7e2b5a915d7b8f7babc0f256a5598",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 685,
+          "sha256": "e094329ea0c83780610976c97f7fe22073332f374c1b862792e6307886af23c5"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 65949416,
+          "sha256": "d0daa5424cea4fed98ed363f95f0ab7a6309a5db6ad889d17a772e81b444deb1"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-optimum-intel-internal-testing-tiny-random-exaone4",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "exaone4",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "optimum-intel-internal-testing",
+        "repository": "optimum-intel-internal-testing/tiny-random-exaone4",
+        "revision": "d0bcb89ba2b3d1a80d8ade88c9bc0ffa6a28f90c",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 923,
+          "sha256": "35351080dd2f34d3e7e3d1adb62452b16b4af96dddb4b594fc38d0484d1a10cc"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 27167128,
+          "sha256": "09d3dccba2ed5de1e820caafc839ed78f1cbbd02336ed74ef61e604759dca454"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-optimum-intel-internal-testing-tiny-random-olmo2",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "olmo2",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "optimum-intel-internal-testing",
+        "repository": "optimum-intel-internal-testing/tiny-random-olmo2",
+        "revision": "bcbd58e6547eda039f5afd2426de37e33193a443",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 617,
+          "sha256": "7967187d402640137d7914975a9c4914c6484e00eb311de09eeebd694b0879a5"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 25775856,
+          "sha256": "217faebc00ab0271b2d7cb545dac16d7095c290534c9bf5fc957802d678a2d14"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-yujiepan-gemma-2-tiny-random",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "gemma2",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "yujiepan",
+        "repository": "yujiepan/gemma-2-tiny-random",
+        "revision": "1cb969aa15c4f64185596f3410c5aa55381b21f2",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 907,
+          "sha256": "b1528b9df453a457cdb77cf17574f30c2d3392b8744b59e76284a0ed3ca808d4"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 4129424,
+          "sha256": "b822fb4bd70ba7c075fd4ce0c4c16fa31946a1f52f95df3e6868c70fbf915f30"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-yujiepan-gemma-tiny-random",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "gemma",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "yujiepan",
+        "repository": "yujiepan/gemma-tiny-random",
+        "revision": "f76bdd6124cfa8b854979ee851bed8f708e1fee6",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 653,
+          "sha256": "9a594ee635e9da0b2ca3341da99cdbe22430b2043ba8c9a4469124f567322066"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 4100464,
+          "sha256": "799285f7411c820e40eca071a2991a2a553c9931ebd854f35283fffbdf5c97c7"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-yujiepan-llama-2-tiny-random",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "llama",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "yujiepan",
+        "repository": "yujiepan/llama-2-tiny-random",
+        "revision": "74bb065d6381fdf9fcde5896cb32267ba2c0ee0a",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 647,
+          "sha256": "eac7ea3c1c3c0e3347f6b1fcbf9e7fa28e6e07cb6b447f4ea8d4afa5e422f1e6"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 1027424,
+          "sha256": "5b933502925c364d8961d8eabc9b2992c6f131df36c972654c90682bc167d828"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-yujiepan-mamba-tiny-random",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "mamba",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "yujiepan",
+        "repository": "yujiepan/mamba-tiny-random",
+        "revision": "6891e834f002b45f3c7f69cf6a8ce12b88e0707f",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 904,
+          "sha256": "ee16621b8161736f75fdc916c564979d88da704ed0ed231b092406334707968b"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 855760,
+          "sha256": "dda3cbb122b916339e098328b1f09506d276e2be8d65f01a3555c44e40ab5a13"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-yujiepan-mistral-tiny-random",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "mistral",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "yujiepan",
+        "repository": "yujiepan/mistral-tiny-random",
+        "revision": "cfcb3f89e224fddb33367793a307b4dee7339518",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 647,
+          "sha256": "e9b463e108ddb07232e50b1d59946473e15ac9674ee926476a4b222561af1280"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 1030080,
+          "sha256": "6f69953dc8b7ca873d282f6e1687df3462145d899fd561a0716cfbae9b84a2f3"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-yujiepan-mixtral-tiny-random",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "mixtral",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "yujiepan",
+        "repository": "yujiepan/mixtral-tiny-random",
+        "revision": "c2faa23d97931c5481999c382d79163b02c4793c",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 764,
+          "sha256": "b915b004443c4eb1aff3b1c9c1ae9f5e0e98e88ffd7e2407c42e14346ebe5bec"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 522688,
+          "sha256": "cac5af0aa32d322c4dbd8e2fa6460e74749ca8b6d58632f794f7f3af1192b271"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-yujiepan-phi-3-tiny-random",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "phi3",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "yujiepan",
+        "repository": "yujiepan/phi-3-tiny-random",
+        "revision": "45275d5d614ca60500c2312985d9a365f46361ad",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 1353,
+          "sha256": "32168c23fb069e474b6bec6d170fff1748e88b17213145b6896023ca9c0dfb4c"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 2064072,
+          "sha256": "739beff3f8b771d06fdc4d8a7e01dc230ef9e73e4f3f8e9e082aabaee983cd57"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-yujiepan-qwen1-5-tiny-random",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "qwen2",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "yujiepan",
+        "repository": "yujiepan/qwen1.5-tiny-random",
+        "revision": "e8c0ac76247de71d5f1b4163b8cd4886a0ade766",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 696,
+          "sha256": "ba98b241089fc874fa71274717b8a8c55416602947d6aeb51e50e7908e965515"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 2436328,
+          "sha256": "c7e84dace652a2f283e69247a4c8ca5338f0793fae2ff7876f1e57cdf21a2f56"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-yujiepan-qwen3-tiny-random",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "qwen3",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "yujiepan",
+        "repository": "yujiepan/qwen3-tiny-random",
+        "revision": "c5aa03d329380306bf4890b3715fecf0982efd52",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 725,
+          "sha256": "42b104013fba6355bd032b92ac86d4a2c1b33f3942444015ad8c1fefa4a78bda"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 19598752,
+          "sha256": "795fc013f2c5f6082d5c1719eb68c78e40d7e61cc660924802e926744232d5f4"
+        }
+      ]
+    },
+    {
+      "id": "safetensors-yujiepan-smollm3-tiny-random",
+      "format": "safetensors",
+      "stratum": {
+        "architecture_class": "smollm3",
+        "task": "on_device_llm_weight_contract",
+        "precision": "serialized_tensor_dtypes"
+      },
+      "source": {
+        "kind": "huggingface_repository",
+        "publisher": "yujiepan",
+        "repository": "yujiepan/smollm3-tiny-random",
+        "revision": "7397769fa1b4fb9d787bf51fcbc35946c0794324",
+        "repository_visibility": "public_ungated",
+        "license_metadata": null,
+        "license_evidence": "repository_card_metadata"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "size_bytes": 892,
+          "sha256": "ef529527f47ffda0c2c60ef2bdb1b5016d5304eea47c067498c1b276ccac0b5b"
+        },
+        {
+          "path": "model.safetensors",
+          "size_bytes": 16567032,
+          "sha256": "3b9eeff558ffba042b2780e6fb4926c2aec2769b9d918458f1f5d7f20aaeafad"
+        }
+      ]
+    }
+  ]
+}

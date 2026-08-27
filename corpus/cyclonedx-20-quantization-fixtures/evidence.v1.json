@@ -1,0 +1,503 @@
+{
+  "schema": "deepbom.cyclonedx20_quantization_fixture_evidence.v1",
+  "generated_at": "2026-08-18T00:00:00.000Z",
+  "upstream": {
+    "repository": "https://github.com/CycloneDX/specification",
+    "pull_request": 990,
+    "branch": "2.0-dev-ai-ml",
+    "head_commit": "49a945618811213e55686a23fa63b287940071c6",
+    "source_mode": "PINNED_UPSTREAM_SCHEMA_VENDORED_FOR_OFFLINE_REPLAY",
+    "ai_ml_schema_path": "schema/2.0/model/cyclonedx-ai-ml-2.0.schema.json",
+    "ai_ml_schema_sha256": "f3edf98916926daf5a0fb2d852e98f1ce68e5ad80ddeaace8014d90c9df84485",
+    "validation_root_schema_path": "schema/2.0/cyclonedx-2.0.schema.json",
+    "validation_root_schema_sha256": "75b519d94bdec50bb6b7800bff0eda3280cf5b2b20bbd4a79844b0f57a6132f9",
+    "validation_schema_set_sha256": "77ecb32df17b3b2b22d3b711782d9b80c12136bb6fdd92e2a724c39adff4e6d5",
+    "validation_schema_files": [
+      {
+        "path": "schema/2.0/cyclonedx-2.0-bundled.min.schema.json",
+        "sha256": "8c7e1800ed493c3b26e8ea511d7383bb901b41aa806489d20a912e7696e48fdf"
+      },
+      {
+        "path": "schema/2.0/cyclonedx-2.0-bundled.schema.json",
+        "sha256": "0bd659f9097d9adca53393a9b171df56238ee3ed9ecb401848fcec289f1c0e45"
+      },
+      {
+        "path": "schema/2.0/cyclonedx-2.0.schema.json",
+        "sha256": "75b519d94bdec50bb6b7800bff0eda3280cf5b2b20bbd4a79844b0f57a6132f9"
+      },
+      {
+        "path": "schema/2.0/cyclonedx-api-2.0.schema.json",
+        "sha256": "6812763ced3bbf40dc6639ae7b891105c6a276d1b62bc4fef002536950ef1507"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-ai-ml-2.0.schema.json",
+        "sha256": "f3edf98916926daf5a0fb2d852e98f1ce68e5ad80ddeaace8014d90c9df84485"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-annotation-2.0.schema.json",
+        "sha256": "d4d7845c681de69171991ad28d8ddcf1e9876ed516bcbf76a9337d8491cce98f"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-citation-2.0.schema.json",
+        "sha256": "f43b5c561acb69698d5bd89c4c1aa78f5a08e225d094193b2aca27c98efb0b01"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-common-2.0.schema.json",
+        "sha256": "4ef9b7f818aa39e4871a10f7e8faa1a0e1dccfa4c08bb3737fb1ff5bf56f2fff"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-component-2.0.schema.json",
+        "sha256": "b3e437cb5dfee8937089cbc04921bdd517334a48a7fd3149760ba47fe273fdaa"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-composition-2.0.schema.json",
+        "sha256": "d5ae9acfe8e5ad4a25014accd34efb0c132d69288541a6f55616bbde06e3da0b"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-cryptography-2.0.schema.json",
+        "sha256": "723b2eade662963c2b06f9f70208973cb575479680766fa3470caba2bc916a5c"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-data-2.0.schema.json",
+        "sha256": "c313a94ad0a57544767cd3043ec8379d0a2a16b17de70f9bbb70473b38b6d19e"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-declaration-2.0.schema.json",
+        "sha256": "495abc52f60813194a16c7fca5fc0721fba77b5020244ad3a87047dc85b2e856"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-definition-2.0.schema.json",
+        "sha256": "69a66e64ed320af11ffe97eba171c7564b85cbc24e0ad891d765ac2b38ad07d5"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-dependency-2.0.schema.json",
+        "sha256": "90a483b75c543e487d621e7067e62d0fa9de89b406febcb61b191295f2a24326"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-formulation-2.0.schema.json",
+        "sha256": "bb691eff03a0336c5eb1b8f2a18e211af2990dff4a4a8dcfb0727b880c783ff7"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-jss_X590_2023_10-2.0.schema.json",
+        "sha256": "8075623ec33017c67f8cdebc829517bb09ebd4d89a28117ce7fced17684f4e22"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-license-2.0.schema.json",
+        "sha256": "13bb89d891cc4fc7f5fdc1f9a2f1cf1675b78074569d43a53383f3c3081ff67a"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-metadata-2.0.schema.json",
+        "sha256": "e90f79560bcdbc6a7013e4dcb2bbfa6a3572682c0488372f2c19d6a45f84d319"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-party-2.0.schema.json",
+        "sha256": "e45f206f473d98fa50e6ea8bdeb6175ccb38aea2f954bc1eab353537f3726c9e"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-patent-2.0.schema.json",
+        "sha256": "41f951da45950cee8ee1a6db15336405040e90a13f81228823b6addadc8d6415"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-perspective-2.0.schema.json",
+        "sha256": "cc8f32d0a257f7147709feb60abb167145278e67eb6c752db9b76962bcaecc02"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-release-notes-2.0.schema.json",
+        "sha256": "d8bac54a8cd82ebf49b91c8c4412fec51e747c215857f60af1be6dbf26d1d633"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-service-2.0.schema.json",
+        "sha256": "0416109d404843e2d8a5a10f7afe899941e77e8d5ebe30bd33bfb4969ec59c53"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-standard-2.0.schema.json",
+        "sha256": "af925bd8c65f2c318222d3e01bebd30c94b42184f46d916737cc9f2e36103efc"
+      },
+      {
+        "path": "schema/2.0/model/cyclonedx-vulnerability-2.0.schema.json",
+        "sha256": "8561a52013350d3f7b1220ead63435829b47dc519845e8f201d5424ded0e53b3"
+      },
+      {
+        "path": "schema/cryptography-defs.schema.json",
+        "sha256": "fdc049faa55eacc7376e6dbcbed593074f5e68875791c7f29f2e04c56bf8fffb"
+      },
+      {
+        "path": "schema/spdx.schema.json",
+        "sha256": "26282a9a896dfbd608c6743ff42743c40d3b011f7d02d923fbe7c32627b8b458"
+      }
+    ],
+    "bundled_schema_observation": {
+      "path": "schema/2.0/cyclonedx-2.0-bundled.schema.json",
+      "sha256": "0bd659f9097d9adca53393a9b171df56238ee3ed9ecb401848fcec289f1c0e45",
+      "used_for_validation": false,
+      "contains_model_properties_keyword": false,
+      "reason": "The PR-head bundled file does not contain the draft modelProperties structure; validation uses the modular PR-head schema graph."
+    },
+    "quantization_json_pointer": "/$defs/quantization",
+    "quantization_definition_jcs_sha256": "7ead8196044549688fde082fba804210bb60ff61e7dd00d3f91fbca1bdb981cc"
+  },
+  "contribution_scope": {
+    "ready_valid_fixtures": [
+      "valid-ai-ml-quantization-per-channel-2.0.json",
+      "valid-ai-ml-quantization-custom-scheme-2.0.json"
+    ],
+    "ready_invalid_fixtures": [
+      "invalid-ai-ml-quantization-zero-bits-2.0.json",
+      "invalid-ai-ml-quantization-zero-group-size-2.0.json",
+      "invalid-ai-ml-quantization-unknown-scheme-2.0.json"
+    ],
+    "policy_questions_not_encoded_as_invalid_fixtures": [
+      "per-tensor with axis",
+      "per-tensor with groupSize",
+      "per-channel without axis",
+      "per-channel with groupSize",
+      "per-group without axis or groupSize",
+      "negative framework-native axis normalization"
+    ]
+  },
+  "fixture_results": [
+    {
+      "filename": "valid-ai-ml-quantization-per-channel-2.0.json",
+      "expected": "VALID",
+      "actual": "VALID",
+      "sha256": "e7abff8d89afa21832e5652d419b06cf13b769cb158e566e2471962ec98a03cf",
+      "errors": []
+    },
+    {
+      "filename": "valid-ai-ml-quantization-custom-scheme-2.0.json",
+      "expected": "VALID",
+      "actual": "VALID",
+      "sha256": "b98389694150e2014fb3048d9823f7f79105385e7fc22336d7e275f986ae143f",
+      "errors": []
+    },
+    {
+      "filename": "invalid-ai-ml-quantization-zero-bits-2.0.json",
+      "expected": "INVALID",
+      "actual": "INVALID",
+      "sha256": "129d857c33c84635c294a9a089f92afac310484c003a1a6498ea5543f1a9f536",
+      "errors": [
+        {
+          "instancePath": "/components/0/modelProperties/quantization/bits",
+          "schemaPath": "#/$defs/quantization/properties/bits/exclusiveMinimum",
+          "keyword": "exclusiveMinimum",
+          "message": "must be > 0"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/required",
+          "keyword": "required",
+          "message": "must have required property 'operator'"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/required",
+          "keyword": "required",
+          "message": "must have required property 'components'"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/additionalProperties",
+          "keyword": "additionalProperties",
+          "message": "must NOT have additional properties"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/additionalProperties",
+          "keyword": "additionalProperties",
+          "message": "must NOT have additional properties"
+        },
+        {
+          "instancePath": "/components/0/type",
+          "schemaPath": "#/properties/type/const",
+          "keyword": "const",
+          "message": "must be equal to constant"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/oneOf",
+          "keyword": "oneOf",
+          "message": "must match exactly one schema in oneOf"
+        }
+      ]
+    },
+    {
+      "filename": "invalid-ai-ml-quantization-zero-group-size-2.0.json",
+      "expected": "INVALID",
+      "actual": "INVALID",
+      "sha256": "c581f092656704457f3ef2e2d492c5fc849e4917402c098d49bffba75d68fd97",
+      "errors": [
+        {
+          "instancePath": "/components/0/modelProperties/quantization/groupSize",
+          "schemaPath": "#/$defs/quantization/properties/groupSize/minimum",
+          "keyword": "minimum",
+          "message": "must be >= 1"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/required",
+          "keyword": "required",
+          "message": "must have required property 'operator'"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/required",
+          "keyword": "required",
+          "message": "must have required property 'components'"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/additionalProperties",
+          "keyword": "additionalProperties",
+          "message": "must NOT have additional properties"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/additionalProperties",
+          "keyword": "additionalProperties",
+          "message": "must NOT have additional properties"
+        },
+        {
+          "instancePath": "/components/0/type",
+          "schemaPath": "#/properties/type/const",
+          "keyword": "const",
+          "message": "must be equal to constant"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/oneOf",
+          "keyword": "oneOf",
+          "message": "must match exactly one schema in oneOf"
+        }
+      ]
+    },
+    {
+      "filename": "invalid-ai-ml-quantization-unknown-scheme-2.0.json",
+      "expected": "INVALID",
+      "actual": "INVALID",
+      "sha256": "8dc02b73c7adc65cece2ed12ffa820a8feb4621f536023a2d76c661e5327a955",
+      "errors": [
+        {
+          "instancePath": "/components/0/modelProperties/quantization/scheme",
+          "schemaPath": "#/$defs/quantization/properties/scheme/oneOf/0/enum",
+          "keyword": "enum",
+          "message": "must be equal to one of the allowed values"
+        },
+        {
+          "instancePath": "/components/0/modelProperties/quantization/scheme",
+          "schemaPath": "#/$defs/quantization/properties/scheme/oneOf/1/type",
+          "keyword": "type",
+          "message": "must be object"
+        },
+        {
+          "instancePath": "/components/0/modelProperties/quantization/scheme",
+          "schemaPath": "#/$defs/quantization/properties/scheme/oneOf",
+          "keyword": "oneOf",
+          "message": "must match exactly one schema in oneOf"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/required",
+          "keyword": "required",
+          "message": "must have required property 'operator'"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/required",
+          "keyword": "required",
+          "message": "must have required property 'components'"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/additionalProperties",
+          "keyword": "additionalProperties",
+          "message": "must NOT have additional properties"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/additionalProperties",
+          "keyword": "additionalProperties",
+          "message": "must NOT have additional properties"
+        },
+        {
+          "instancePath": "/components/0/type",
+          "schemaPath": "#/properties/type/const",
+          "keyword": "const",
+          "message": "must be equal to constant"
+        },
+        {
+          "instancePath": "/components/0",
+          "schemaPath": "#/oneOf",
+          "keyword": "oneOf",
+          "message": "must match exactly one schema in oneOf"
+        }
+      ]
+    }
+  ],
+  "twelve_case_probe": {
+    "valid_count": 8,
+    "invalid_count": 4,
+    "rows": [
+      {
+        "id": "empty-object",
+        "expected": "VALID",
+        "actual": "VALID",
+        "value": {},
+        "errors": []
+      },
+      {
+        "id": "per-tensor-axis",
+        "expected": "VALID",
+        "actual": "VALID",
+        "value": {
+          "granularity": "per-tensor",
+          "axis": 0
+        },
+        "errors": []
+      },
+      {
+        "id": "per-tensor-group-size",
+        "expected": "VALID",
+        "actual": "VALID",
+        "value": {
+          "granularity": "per-tensor",
+          "groupSize": 32
+        },
+        "errors": []
+      },
+      {
+        "id": "per-channel-no-axis",
+        "expected": "VALID",
+        "actual": "VALID",
+        "value": {
+          "granularity": "per-channel"
+        },
+        "errors": []
+      },
+      {
+        "id": "per-channel-group-size",
+        "expected": "VALID",
+        "actual": "VALID",
+        "value": {
+          "granularity": "per-channel",
+          "groupSize": 32
+        },
+        "errors": []
+      },
+      {
+        "id": "per-group-no-axis-or-size",
+        "expected": "VALID",
+        "actual": "VALID",
+        "value": {
+          "granularity": "per-group"
+        },
+        "errors": []
+      },
+      {
+        "id": "custom-scheme-object",
+        "expected": "VALID",
+        "actual": "VALID",
+        "value": {
+          "scheme": {
+            "name": "ternary"
+          }
+        },
+        "errors": []
+      },
+      {
+        "id": "fractional-bits",
+        "expected": "VALID",
+        "actual": "VALID",
+        "value": {
+          "bits": 1.58
+        },
+        "errors": []
+      },
+      {
+        "id": "zero-bits",
+        "expected": "INVALID",
+        "actual": "INVALID",
+        "value": {
+          "bits": 0
+        },
+        "errors": [
+          {
+            "instancePath": "/bits",
+            "schemaPath": "#/properties/bits/exclusiveMinimum",
+            "keyword": "exclusiveMinimum",
+            "message": "must be > 0"
+          }
+        ]
+      },
+      {
+        "id": "negative-axis",
+        "expected": "INVALID",
+        "actual": "INVALID",
+        "value": {
+          "axis": -1
+        },
+        "errors": [
+          {
+            "instancePath": "/axis",
+            "schemaPath": "#/properties/axis/minimum",
+            "keyword": "minimum",
+            "message": "must be >= 0"
+          }
+        ]
+      },
+      {
+        "id": "zero-group-size",
+        "expected": "INVALID",
+        "actual": "INVALID",
+        "value": {
+          "groupSize": 0
+        },
+        "errors": [
+          {
+            "instancePath": "/groupSize",
+            "schemaPath": "#/properties/groupSize/minimum",
+            "keyword": "minimum",
+            "message": "must be >= 1"
+          }
+        ]
+      },
+      {
+        "id": "unknown-scheme-string",
+        "expected": "INVALID",
+        "actual": "INVALID",
+        "value": {
+          "scheme": "affine_asymmetric"
+        },
+        "errors": [
+          {
+            "instancePath": "/scheme",
+            "schemaPath": "#/properties/scheme/oneOf/0/enum",
+            "keyword": "enum",
+            "message": "must be equal to one of the allowed values"
+          },
+          {
+            "instancePath": "/scheme",
+            "schemaPath": "#/properties/scheme/oneOf/1/type",
+            "keyword": "type",
+            "message": "must be object"
+          },
+          {
+            "instancePath": "/scheme",
+            "schemaPath": "#/properties/scheme/oneOf",
+            "keyword": "oneOf",
+            "message": "must match exactly one schema in oneOf"
+          }
+        ]
+      }
+    ]
+  },
+  "empirical_basis": {
+    "external_interface_population": "quant-policy-boundary-public-50-2026-08-05",
+    "artifacts": 50,
+    "external_parameters": 114,
+    "complete_affine_parameters": 62,
+    "explicitly_unquantized_parameters": 52,
+    "inference_boundary": "The corpus supports parameter identity binding and an explicit not-quantized state. It is not a probability sample and does not establish ecosystem prevalence or per-group behavior."
+  },
+  "interpretation": "The fixture set is validated against the exact modular JSON Schema graph from the pinned PR head. The 12-case matrix records current schema behavior; accepted cross-field combinations are not relabeled as invalid until the working group decides whether quantization objects are partial metadata or complete normalized contracts.",
+  "ledger_sha256": "4e6d7bff1fbd1db6744e62f679b6e43f2e030a61687757834107db4d6501642c"
+}

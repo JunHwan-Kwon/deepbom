@@ -1,0 +1,53 @@
+{
+  "schema": "deepbom.coreml_legacy_quantization_contract_corpus.v1",
+  "format": "coreml_mlmodel",
+  "artifact_count": 1,
+  "population_scope": "One deterministic source-pinned legacy NeuralNetwork fixture establishes per-output-channel linear WeightParams parsing, packed-code conservation, and fail-closed channel cardinality. It is a conformance fixture, not a public-model sample or evidence of ecosystem prevalence, runtime placement, latency, or task quality.",
+  "generator_source": {
+    "repository": "apple/coremltools",
+    "release": "9.0",
+    "source_commit": "428d4b2658dfc44194f27f4f36870751be402ff7",
+    "neural_network_proto": "mlmodel/format/NeuralNetwork.proto",
+    "neural_network_proto_sha256": "ca97f083461e61f1cf708c0adb6c28f2110bad63fcea5648235a956b8e7b2497",
+    "neural_network_validator": "mlmodel/src/Validation/NeuralNetwork/NeuralNetworkLayerValidator.cpp",
+    "neural_network_validator_sha256": "c4e0d565368627b8bdd9dd46b7d132449d8277295c4ea7a978709493e4e9fc7e",
+    "neural_network_validator_utils": "mlmodel/src/Validation/NeuralNetwork/NeuralNetworkValidatorUtils.hpp",
+    "neural_network_validator_utils_sha256": "ad315304ff4d44623e9aa3ca3d3853995980114b47fc3a7a34ae7ff62148bcf8",
+    "quantization_implementation": "coremltools/models/neural_network/quantization_utils.py",
+    "quantization_implementation_sha256": "51af467b3b8bd483cd7e39eb13fb2f8814b0221cac556b6f6a68f1a38a544d2d"
+  },
+  "artifacts": [
+    {
+      "id": "per-output-channel-linear-int4",
+      "path": "corpus/coreml-legacy-quantization-corpus/per-output-channel-linear-int4.mlmodel",
+      "provenance_class": "source_pinned_generated_contract_fixture",
+      "ecosystem_prevalence_claim": false,
+      "semantic_granularity": "per_output_channel",
+      "baseline": {
+        "schema": "deepbom.coreml_legacy_quantization_corpus_receipt.v1",
+        "artifact_sha256": "475fb25ee644e14dcab7effc1847482f0ae507c2e05bf8b437870fb0ecc71614",
+        "artifact_size_bytes": 154,
+        "model_type": "neuralNetwork",
+        "operator_count": 1,
+        "tensor_count": 2,
+        "total_macs": 288,
+        "weight_storage": "raw_quantized",
+        "number_of_bits": 4,
+        "scheme": "linear",
+        "granularity": "per_axis",
+        "axis": 0,
+        "channel_count": 2,
+        "scale_count": 2,
+        "bias_count": 2,
+        "value_count": 18,
+        "decoded_value_count": 18,
+        "finite_count": 18,
+        "nonfinite_count": 0,
+        "quant_code_levels_used": 16,
+        "payload_sha256": "d20625e04e738a4aac25359ab05d1714e16d3e8bed86ac59b467ce72168df400",
+        "quantization_assessment_status": "assessed",
+        "per_axis_quantized_weight_parameter_count": 1
+      }
+    }
+  ]
+}

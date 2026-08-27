@@ -1,0 +1,13 @@
+{
+  "name": "DEEPBOM - Deployment Artifact Evidence Analyzer",
+  "short_name": "DEEPBOM",
+  "description": "Browser-native deployment-artifact analysis for TFLite, ONNX, GGUF, SafeTensors, and Core ML. Quantization, graph, package, runtime-contract, and format-specific evidence run locally in WebAssembly.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fffefa",
+  "theme_color": "#fffefa",
+  "categories": ["developer", "productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr"
+}

@@ -1,0 +1,556 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "serialNumber": "urn:uuid:e7d4f85a-9afb-85bc-8b0c-7d56848fa826",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-07-29T00:00:00.000Z",
+    "lifecycles": [
+      {
+        "phase": "post-build"
+      }
+    ],
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "deepbom",
+          "version": "1.94.0+git.684260dddf63.bundle.5c03ec024b99",
+          "bom-ref": "deepbom-analyzer-deepbom-1.94.0-684260dddf632240c31bee646581d9c4ae32623a",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "5c03ec024b99e9a73ac3b3f098cebdd8dc18ae5ec67d740de97dd21df4e5b34d"
+            }
+          ],
+          "externalReferences": [
+            {
+              "type": "evidence",
+              "url": "https://deepbom.org/reference/quant-policy-boundary-validation.v1.json",
+              "comment": "Hash-pinned validation profile for the external interface quantization-contract corpus; not evidence about the currently analyzed artifact.",
+              "hashes": [
+                {
+                  "alg": "SHA-256",
+                  "content": "991eb12596486da9841022efaf3b9a13a79f632d5c6349e7ad3dd677a55338f9"
+                }
+              ]
+            }
+          ],
+          "properties": [
+            {
+              "name": "deepbom:analyzer:buildVersion",
+              "value": "2026-08-03"
+            },
+            {
+              "name": "deepbom:analyzer:semanticVersion",
+              "value": "1.94.0"
+            },
+            {
+              "name": "deepbom:analyzer:buildCommit",
+              "value": "684260dddf632240c31bee646581d9c4ae32623a"
+            },
+            {
+              "name": "deepbom:analyzer:buildSourceState",
+              "value": "clean"
+            },
+            {
+              "name": "deepbom:analyzer:bundleContentHashMethod",
+              "value": "SHA-256 over RFC8785-JCS canonical deepbom.analyzer_build_file_digest_set.v1"
+            },
+            {
+              "name": "deepbom:analyzer:rulepackVersion",
+              "value": "deepbom.rulepack.2026-07-24.63"
+            },
+            {
+              "name": "deepbom:analyzer:rulepackSha256",
+              "value": "a1e0dc58a9dc742b4532448190410d89e04d56ab134a16a72cda6cae8b6a6d9f"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusProfileId",
+              "value": "quant-policy-boundary-public-50-2026-08-05"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusProfileSha256",
+              "value": "991eb12596486da9841022efaf3b9a13a79f632d5c6349e7ad3dd677a55338f9"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusManifestSha256",
+              "value": "9ec7fdf97c8fcc8e14d3b9b5a61ffafe05d0e90e5a58005cdca51a1d886f0540"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusVerifierSchema",
+              "value": "deepbom.interface_boundary_corpus_review.v1"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusVerifierImplementationSha256",
+              "value": "d316401f638ce32642c52afad59b33858326e852f9f63d94c84ebcaacf0ec5c6"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusReviewSha256",
+              "value": "617630133a28f10cb6d121e0a265e4d9fa051381357e0c32473eaf17aedc62c6"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusLedgerSha256",
+              "value": "3abd2f6148e150b6e1b6ed523c4f2ed037a972053a740ad2b0af1e8132577e12"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusAnalyzerWasmSha256",
+              "value": "95aec2444fa76c1ef6fd636c1003b7e01c78f79f24962a3180af0158fa454a1e"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusArtifactCount",
+              "value": "50"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusExternalParameterCount",
+              "value": "114"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusBoundary",
+              "value": "Pinned corpus validation evidence; it does not validate the current artifact or estimate ecosystem prevalence."
+            }
+          ]
+        }
+      ]
+    },
+    "authors": [
+      {
+        "bom-ref": "https://orcid.org/0000-0002-6464-3895",
+        "name": "Jun-Hwan Kwon"
+      }
+    ],
+    "component": {
+      "type": "machine-learning-model",
+      "name": "mobilenet_v2_1.0_224_quant.tflite",
+      "description": "TOCO Converted.",
+      "version": "sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+      "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d"
+        }
+      ],
+      "modelCard": {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:model-card",
+        "modelParameters": {
+          "inputs": [
+            {
+              "format": "UINT8 [1,224,224,3]; per-tensor; scale_count=1; zero_point_count=1; scale=0.0078125; zero_point=128"
+            }
+          ],
+          "outputs": [
+            {
+              "format": "UINT8 [1,1001]; per-tensor; scale_count=1; zero_point_count=1; scale=0.09889253973960876; zero_point=58"
+            }
+          ]
+        },
+        "properties": [
+          {
+            "name": "deepbom:modelCard:ioContractSchema",
+            "value": "deepbom.tensor_io_contract.v1"
+          },
+          {
+            "name": "deepbom:modelCard:interfaceContractLedger",
+            "value": "deepbom_interface_contracts.json"
+          },
+          {
+            "name": "deepbom:modelCard:interfaceContractLedgerSha256",
+            "value": "30c462341a9830ab81ec60bc3f27bc48a7cf826eea71a67b5abddf442150d38b"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "deepbom:contract:schema",
+          "value": "deepbom.cyclonedx_evidence_profile.v1.3"
+        },
+        {
+          "name": "deepbom:model:format",
+          "value": "tflite"
+        },
+        {
+          "name": "deepbom:model:versionBasis",
+          "value": "full_artifact_sha256"
+        },
+        {
+          "name": "deepbom:model:schemaOrOpset",
+          "value": "TFLite schema 3"
+        },
+        {
+          "name": "deepbom:model:fileSizeBytes",
+          "value": "3577760"
+        },
+        {
+          "name": "deepbom:model:hashBasis",
+          "value": "artifact_file_bytes_sha256"
+        },
+        {
+          "name": "deepbom:model:quantizationClassification",
+          "value": "full_integer"
+        },
+        {
+          "name": "deepbom:model:activationPath",
+          "value": "{\"inventory_basis\":\"all_graph_operators\",\"all_operator_denominator\":65,\"states\":[{\"state\":\"quantized_compute\",\"operator_count\":64},{\"state\":\"quantized_data_movement\",\"operator_count\":1}],\"compute_scope\":{\"basis\":\"MAC-bearing compute operators\",\"denominator\":53,\"quantized_operators\":53,\"quantized_mac_ratio\":1},\"explanation\":\"compute_ops counts MAC-bearing compute operators only; op_state_counts covers every graph operator, including zero-MAC data movement and quantization boundary ops. XNNPACK fallback/break counts are a delegate partition concept and can overlap with quantized_data_movement.\"}"
+        },
+        {
+          "name": "deepbom:model:fullIntegerQuantized",
+          "value": "true"
+        },
+        {
+          "name": "deepbom:model:quantizationClassificationBasis",
+          "value": "External I/O dtype, complete internal tensor dtype inventory, every MAC-bearing compute op's activation dtype path, and serialized Q/DQ inventory."
+        },
+        {
+          "name": "deepbom:model:int8TensorCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:uint8TensorCount",
+          "value": "119"
+        },
+        {
+          "name": "deepbom:model:floatTensorCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:serializedQuantizeOperatorCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:serializedDequantizeOperatorCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:perAxisTensorCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:perAxisQuantizationPresent",
+          "value": "false"
+        },
+        {
+          "name": "deepbom:model:tensorDtypeInventory",
+          "value": "{\"UINT8\":119,\"INT32\":54}"
+        },
+        {
+          "name": "deepbom:model:completeAffineInterfaceCount",
+          "value": "2"
+        },
+        {
+          "name": "deepbom:model:unquantizedInterfaceCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:invalidOrIncompleteInterfaceCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:primaryInputScale",
+          "value": "0.0078125"
+        },
+        {
+          "name": "deepbom:model:primaryInputZeroPoint",
+          "value": "128"
+        },
+        {
+          "name": "deepbom:model:tfliteSparseStorageSchema",
+          "value": "deepbom.tflite_sparse_storage_contract.v1"
+        },
+        {
+          "name": "deepbom:model:tfliteSparseTensorCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSparseLogicalElements",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSparseStoredElements",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSparseImplicitZeroElements",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSparseSerializedValueBytes",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphInventorySchema",
+          "value": "deepbom.tflite_subgraph_inventory.v1.3"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphCount",
+          "value": "1"
+        },
+        {
+          "name": "deepbom:model:tfliteSerializedOperatorCount",
+          "value": "65"
+        },
+        {
+          "name": "deepbom:model:tflitePrimaryOperatorCount",
+          "value": "65"
+        },
+        {
+          "name": "deepbom:model:tfliteControlFlowReferenceCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteControlFlowContractCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteControlFlowContractPartialCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphIntrinsicCostSchema",
+          "value": "deepbom.tflite_subgraph_intrinsic_cost.v1"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphIntrinsicAssessedCount",
+          "value": "1"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphIntrinsicPartialCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphDeepAnalysisSchema",
+          "value": "deepbom.tflite_subgraph_deep_analysis.v1"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphDeepAssessedCount",
+          "value": "1"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphDeepPredictedDelegateCount",
+          "value": "64"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphDeepPredictedFallbackCount",
+          "value": "1"
+        },
+        {
+          "name": "deepbom:finding:assessmentStatus",
+          "value": "assessed"
+        },
+        {
+          "name": "deepbom:finding:constantOutputChannels",
+          "value": "14"
+        },
+        {
+          "name": "deepbom:finding:exactZeroKernelSlices",
+          "value": "11"
+        },
+        {
+          "name": "deepbom:finding:buildModeDependentChannels",
+          "value": "1"
+        },
+        {
+          "name": "deepbom:finding:maxInt32UtilizationRatio",
+          "value": "0.000004461966457060523"
+        },
+        {
+          "name": "deepbom:finding:highSeverityCount",
+          "value": "5"
+        },
+        {
+          "name": "deepbom:finding:highSeverityFindings",
+          "value": "[{\"finding_id\":\"EA-IOC-0001\",\"title\":\"Preprocessing contract is not embedded\",\"category\":\"integration\",\"evidence_class\":\"OBSERVED\"},{\"finding_id\":\"EA-LIN-0001\",\"title\":\"Source checkpoint and conversion lineage were not provided\",\"category\":\"lineage\",\"evidence_class\":\"NOT_ASSESSABLE\"},{\"finding_id\":\"EA-WGT-0001\",\"title\":\"Exact-zero kernel slices converge with constant-output channel proof\",\"category\":\"numerical_structure_review\",\"evidence_class\":\"DERIVED\"},{\"finding_id\":\"EA-QNT-0112\",\"title\":\"Legal input-code domain cannot activate quantized output channels\",\"category\":\"quantization_design_review\",\"evidence_class\":\"DERIVED\"},{\"finding_id\":\"EA-DEL-0004\",\"title\":\"Required quantized XNNPACK build condition is not artifact-bound and conditional coverage collapses to zero\",\"category\":\"delegate\",\"evidence_class\":\"PREDICTED\"}]"
+        },
+        {
+          "name": "deepbom:conformance:profile",
+          "value": "litert_current_int8_operator_profile"
+        },
+        {
+          "name": "deepbom:conformance:profileScope",
+          "value": "Current LiteRT INT8 CONV_2D and DEPTHWISE_CONV_2D weight contracts"
+        },
+        {
+          "name": "deepbom:conformance:status",
+          "value": "nonconformant"
+        },
+        {
+          "name": "deepbom:conformance:violationCodes",
+          "value": "[\"weight_dtype_expected_int8\",\"weight_granularity_per_tensor_expected_per_axis\",\"weight_zero_point_nonzero_expected_zero\"]"
+        },
+        {
+          "name": "deepbom:conformance:violationCount",
+          "value": "159"
+        },
+        {
+          "name": "deepbom:conformance:legacyQu8Artifact",
+          "value": "true"
+        },
+        {
+          "name": "deepbom:conformance:source",
+          "value": "https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec"
+        },
+        {
+          "name": "deepbom:conformance:interpretationBoundary",
+          "value": "A legacy UINT8 asymmetric artifact can remain executable through a separately enabled legacy QU8 runtime path while being nonconformant to the current LiteRT INT8 operator profile."
+        },
+        {
+          "name": "deepbom:preprocessing:assessmentStatus",
+          "value": "assessed"
+        },
+        {
+          "name": "deepbom:preprocessing:exactContractIds",
+          "value": "[\"raw_storage_rgb\",\"raw_storage_bgr\",\"artifact_affine_rgb\",\"center_128_div_128_rgb\"]"
+        },
+        {
+          "name": "deepbom:preprocessing:portfolioLedgerSha256",
+          "value": "35a1ca877c09dd440ed75e7cfbe1789c6b3693ea6572da5069cf6a01aadd5bb5"
+        },
+        {
+          "name": "deepbom:runtime:name",
+          "value": "TensorFlow Lite / LiteRT"
+        },
+        {
+          "name": "deepbom:runtime:necessaryFloor",
+          "value": "1.5.0"
+        },
+        {
+          "name": "deepbom:runtime:floorStatus",
+          "value": "complete_for_observed_builtin_op_versions"
+        },
+        {
+          "name": "deepbom:runtime:floorEvidenceClass",
+          "value": "DERIVED_NECESSARY_MINIMUM"
+        },
+        {
+          "name": "deepbom:runtime:requirementsManifest",
+          "value": "deepbom_runtime_requirements.json"
+        },
+        {
+          "name": "deepbom:analyzer:semanticVersion",
+          "value": "1.94.0"
+        },
+        {
+          "name": "deepbom:analyzer:buildVersion",
+          "value": "2026-08-03"
+        },
+        {
+          "name": "deepbom:analyzer:rulepackVersion",
+          "value": "deepbom.rulepack.2026-07-24.63"
+        },
+        {
+          "name": "deepbom:analyzer:rulepackSha256",
+          "value": "a1e0dc58a9dc742b4532448190410d89e04d56ab134a16a72cda6cae8b6a6d9f"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "evidence",
+          "url": "deepbom_cyclonedx_evidence.cdx.json",
+          "comment": "Artifact evidence profile supporting the observed formulation. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "7f35e472523f677a5854cd94b8bacc51922426c1b819bf1f8c48bbcb3b2106f1"
+            }
+          ]
+        },
+        {
+          "type": "configuration",
+          "url": "deepbom_runtime_requirements.json",
+          "comment": "Runtime requirements derived from the observed artifact. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "95dc99081737dd3900617e2e8a6559136e994fe22398dad866a27e7691668dd5"
+            }
+          ]
+        },
+        {
+          "type": "evidence",
+          "url": "deepbom_missing_provenance_fields.json",
+          "comment": "Declared-lineage gaps constraining formulation comparison. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "f2fc13c1392519e022d88c01379f416d0758fac95e933f29ed561718223a728a"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "formulation": [
+    {
+      "bom-ref": "deepbom:formula:observed-artifact-export",
+      "properties": [
+        {
+          "name": "deepbom:formulation:kind",
+          "value": "observed"
+        },
+        {
+          "name": "deepbom:formulation:evidenceClass",
+          "value": "CONVERGENT_ARTIFACT_FINGERPRINT"
+        },
+        {
+          "name": "deepbom:formulation:converterFamily",
+          "value": "tensorflow-toco-legacy"
+        },
+        {
+          "name": "deepbom:formulation:converterFamilyEvidenceClass",
+          "value": "CONVERGENT_ARTIFACT_FINGERPRINT"
+        },
+        {
+          "name": "deepbom:formulation:exportFramework",
+          "value": "TensorFlow"
+        },
+        {
+          "name": "deepbom:formulation:exportFrameworkEvidenceClass",
+          "value": "DERIVED_FROM_CONVERGENT_CONVERTER_FAMILY"
+        },
+        {
+          "name": "deepbom:formulation:conversionMetadataStatus",
+          "value": "not_present"
+        },
+        {
+          "name": "deepbom:formulation:quantizationClassification",
+          "value": "full_integer"
+        },
+        {
+          "name": "deepbom:formulation:observedPayload",
+          "value": "{\"converter_family\":\"tensorflow-toco-legacy\",\"converter_family_evidence_class\":\"CONVERGENT_ARTIFACT_FINGERPRINT\",\"converter_version\":null,\"export_framework\":\"TensorFlow\",\"export_framework_evidence_class\":\"DERIVED_FROM_CONVERGENT_CONVERTER_FAMILY\",\"export_framework_version\":null,\"artifact_description\":\"TOCO Converted.\",\"conversion_metadata_status\":\"not_present\",\"conversion_metadata_entry_count\":0,\"quantization_classification\":\"full_integer\",\"quantization_evidence_class\":\"DERIVED_FROM_ARTIFACT_TENSOR_AND_OPERATOR_CONTRACTS\",\"structural_fingerprint\":{\"asymmetric_uint8_kernel_tensor_count\":53,\"per_tensor_depthwise_op_count\":17,\"per_axis_kernel_tensor_count\":0,\"conversion_metadata_status\":\"not_present\",\"artifact_description\":\"TOCO Converted.\",\"maximum_observed_op_version\":1,\"derived_runtime_floor\":\"1.5.0\"},\"evidence\":[{\"code\":\"artifact_description_toco\",\"evidence_class\":\"OBSERVED\",\"source_pointer\":\"/metadata_presence/description\",\"value\":\"TOCO Converted.\"},{\"code\":\"asymmetric_uint8_kernel_tensors\",\"evidence_class\":\"DERIVED\",\"source_pointer\":\"/tensors + /ops\",\"value\":53},{\"code\":\"per_tensor_depthwise_operators\",\"evidence_class\":\"DERIVED\",\"source_pointer\":\"/tensors + /ops\",\"value\":17},{\"code\":\"no_per_axis_kernel_tensors\",\"evidence_class\":\"DERIVED\",\"source_pointer\":\"/tensors + /ops\",\"value\":0},{\"code\":\"conversion_metadata_absent\",\"evidence_class\":\"OBSERVED\",\"source_pointer\":\"/metadata_presence/conversion_metadata_status\",\"value\":\"not_present\"}],\"interpretation_boundary\":\"The fingerprint can identify a converter family but not an exact converter binary, source commit, build configuration, or execution environment.\"}"
+        }
+      ]
+    }
+  ],
+  "properties": [
+    {
+      "name": "deepbom:documentAuthor:orcid",
+      "value": "https://orcid.org/0000-0002-6464-3895"
+    },
+    {
+      "name": "deepbom:formulation:documentSchema",
+      "value": "deepbom.observed_formulation_profile.v1.1"
+    },
+    {
+      "name": "deepbom:formulation:declaredInputSchema",
+      "value": "deepbom.declared_formulation_input.v1"
+    },
+    {
+      "name": "deepbom:formulation:declaredInputAcceptedForm",
+      "value": "A direct declared-formulation object or a CycloneDX 1.7 BOM containing formulation properties deepbom:formulation:kind=declared and deepbom:formulation:declaredPayload."
+    },
+    {
+      "name": "deepbom:formulation:comparisonStatus",
+      "value": "not_assessable_declared_formulation_not_provided"
+    },
+    {
+      "name": "deepbom:formulation:comparableFieldCount",
+      "value": "0"
+    },
+    {
+      "name": "deepbom:formulation:interpretationBoundary",
+      "value": "Observed formulation facts do not identify an exact converter binary when the artifact omits that identity. A mismatch is emitted only against supplied comparable declarations."
+    }
+  ]
+}

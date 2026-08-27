@@ -1,0 +1,794 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "serialNumber": "urn:uuid:3634cf3f-ae89-8a7d-a02d-f7ffaadd0910",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-07-29T00:00:00.000Z",
+    "lifecycles": [
+      {
+        "phase": "post-build"
+      }
+    ],
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "deepbom",
+          "version": "1.94.0+git.684260dddf63.bundle.5c03ec024b99",
+          "bom-ref": "deepbom-analyzer-deepbom-1.94.0-684260dddf632240c31bee646581d9c4ae32623a",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "5c03ec024b99e9a73ac3b3f098cebdd8dc18ae5ec67d740de97dd21df4e5b34d"
+            }
+          ],
+          "externalReferences": [
+            {
+              "type": "evidence",
+              "url": "https://deepbom.org/reference/quant-policy-boundary-validation.v1.json",
+              "comment": "Hash-pinned validation profile for the external interface quantization-contract corpus; not evidence about the currently analyzed artifact.",
+              "hashes": [
+                {
+                  "alg": "SHA-256",
+                  "content": "991eb12596486da9841022efaf3b9a13a79f632d5c6349e7ad3dd677a55338f9"
+                }
+              ]
+            }
+          ],
+          "properties": [
+            {
+              "name": "deepbom:analyzer:buildVersion",
+              "value": "2026-08-03"
+            },
+            {
+              "name": "deepbom:analyzer:semanticVersion",
+              "value": "1.94.0"
+            },
+            {
+              "name": "deepbom:analyzer:buildCommit",
+              "value": "684260dddf632240c31bee646581d9c4ae32623a"
+            },
+            {
+              "name": "deepbom:analyzer:buildSourceState",
+              "value": "clean"
+            },
+            {
+              "name": "deepbom:analyzer:bundleContentHashMethod",
+              "value": "SHA-256 over RFC8785-JCS canonical deepbom.analyzer_build_file_digest_set.v1"
+            },
+            {
+              "name": "deepbom:analyzer:rulepackVersion",
+              "value": "deepbom.rulepack.2026-07-24.63"
+            },
+            {
+              "name": "deepbom:analyzer:rulepackSha256",
+              "value": "a1e0dc58a9dc742b4532448190410d89e04d56ab134a16a72cda6cae8b6a6d9f"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusProfileId",
+              "value": "quant-policy-boundary-public-50-2026-08-05"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusProfileSha256",
+              "value": "991eb12596486da9841022efaf3b9a13a79f632d5c6349e7ad3dd677a55338f9"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusManifestSha256",
+              "value": "9ec7fdf97c8fcc8e14d3b9b5a61ffafe05d0e90e5a58005cdca51a1d886f0540"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusVerifierSchema",
+              "value": "deepbom.interface_boundary_corpus_review.v1"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusVerifierImplementationSha256",
+              "value": "d316401f638ce32642c52afad59b33858326e852f9f63d94c84ebcaacf0ec5c6"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusReviewSha256",
+              "value": "617630133a28f10cb6d121e0a265e4d9fa051381357e0c32473eaf17aedc62c6"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusLedgerSha256",
+              "value": "3abd2f6148e150b6e1b6ed523c4f2ed037a972053a740ad2b0af1e8132577e12"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusAnalyzerWasmSha256",
+              "value": "95aec2444fa76c1ef6fd636c1003b7e01c78f79f24962a3180af0158fa454a1e"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusArtifactCount",
+              "value": "50"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusExternalParameterCount",
+              "value": "114"
+            },
+            {
+              "name": "deepbom:validation:interfaceCorpusBoundary",
+              "value": "Pinned corpus validation evidence; it does not validate the current artifact or estimate ecosystem prevalence."
+            }
+          ]
+        }
+      ]
+    },
+    "authors": [
+      {
+        "bom-ref": "https://orcid.org/0000-0002-6464-3895",
+        "name": "Jun-Hwan Kwon"
+      }
+    ],
+    "component": {
+      "type": "machine-learning-model",
+      "name": "mobilenet_v2_1.0_224_quant.tflite",
+      "description": "TOCO Converted.",
+      "version": "sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+      "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d"
+        }
+      ],
+      "modelCard": {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:model-card",
+        "modelParameters": {
+          "inputs": [
+            {
+              "format": "UINT8 [1,224,224,3]; per-tensor; scale_count=1; zero_point_count=1; scale=0.0078125; zero_point=128"
+            }
+          ],
+          "outputs": [
+            {
+              "format": "UINT8 [1,1001]; per-tensor; scale_count=1; zero_point_count=1; scale=0.09889253973960876; zero_point=58"
+            }
+          ]
+        },
+        "properties": [
+          {
+            "name": "deepbom:modelCard:ioContractSchema",
+            "value": "deepbom.tensor_io_contract.v1"
+          },
+          {
+            "name": "deepbom:modelCard:interfaceContractLedger",
+            "value": "deepbom_interface_contracts.json"
+          },
+          {
+            "name": "deepbom:modelCard:interfaceContractLedgerSha256",
+            "value": "30c462341a9830ab81ec60bc3f27bc48a7cf826eea71a67b5abddf442150d38b"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "deepbom:contract:schema",
+          "value": "deepbom.cyclonedx_evidence_profile.v1.3"
+        },
+        {
+          "name": "deepbom:model:format",
+          "value": "tflite"
+        },
+        {
+          "name": "deepbom:model:versionBasis",
+          "value": "full_artifact_sha256"
+        },
+        {
+          "name": "deepbom:model:schemaOrOpset",
+          "value": "TFLite schema 3"
+        },
+        {
+          "name": "deepbom:model:fileSizeBytes",
+          "value": "3577760"
+        },
+        {
+          "name": "deepbom:model:hashBasis",
+          "value": "artifact_file_bytes_sha256"
+        },
+        {
+          "name": "deepbom:model:quantizationClassification",
+          "value": "full_integer"
+        },
+        {
+          "name": "deepbom:model:activationPath",
+          "value": "{\"inventory_basis\":\"all_graph_operators\",\"all_operator_denominator\":65,\"states\":[{\"state\":\"quantized_compute\",\"operator_count\":64},{\"state\":\"quantized_data_movement\",\"operator_count\":1}],\"compute_scope\":{\"basis\":\"MAC-bearing compute operators\",\"denominator\":53,\"quantized_operators\":53,\"quantized_mac_ratio\":1},\"explanation\":\"compute_ops counts MAC-bearing compute operators only; op_state_counts covers every graph operator, including zero-MAC data movement and quantization boundary ops. XNNPACK fallback/break counts are a delegate partition concept and can overlap with quantized_data_movement.\"}"
+        },
+        {
+          "name": "deepbom:model:fullIntegerQuantized",
+          "value": "true"
+        },
+        {
+          "name": "deepbom:model:quantizationClassificationBasis",
+          "value": "External I/O dtype, complete internal tensor dtype inventory, every MAC-bearing compute op's activation dtype path, and serialized Q/DQ inventory."
+        },
+        {
+          "name": "deepbom:model:int8TensorCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:uint8TensorCount",
+          "value": "119"
+        },
+        {
+          "name": "deepbom:model:floatTensorCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:serializedQuantizeOperatorCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:serializedDequantizeOperatorCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:perAxisTensorCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:perAxisQuantizationPresent",
+          "value": "false"
+        },
+        {
+          "name": "deepbom:model:tensorDtypeInventory",
+          "value": "{\"UINT8\":119,\"INT32\":54}"
+        },
+        {
+          "name": "deepbom:model:completeAffineInterfaceCount",
+          "value": "2"
+        },
+        {
+          "name": "deepbom:model:unquantizedInterfaceCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:invalidOrIncompleteInterfaceCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:primaryInputScale",
+          "value": "0.0078125"
+        },
+        {
+          "name": "deepbom:model:primaryInputZeroPoint",
+          "value": "128"
+        },
+        {
+          "name": "deepbom:model:tfliteSparseStorageSchema",
+          "value": "deepbom.tflite_sparse_storage_contract.v1"
+        },
+        {
+          "name": "deepbom:model:tfliteSparseTensorCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSparseLogicalElements",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSparseStoredElements",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSparseImplicitZeroElements",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSparseSerializedValueBytes",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphInventorySchema",
+          "value": "deepbom.tflite_subgraph_inventory.v1.3"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphCount",
+          "value": "1"
+        },
+        {
+          "name": "deepbom:model:tfliteSerializedOperatorCount",
+          "value": "65"
+        },
+        {
+          "name": "deepbom:model:tflitePrimaryOperatorCount",
+          "value": "65"
+        },
+        {
+          "name": "deepbom:model:tfliteControlFlowReferenceCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteControlFlowContractCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteControlFlowContractPartialCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphIntrinsicCostSchema",
+          "value": "deepbom.tflite_subgraph_intrinsic_cost.v1"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphIntrinsicAssessedCount",
+          "value": "1"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphIntrinsicPartialCount",
+          "value": "0"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphDeepAnalysisSchema",
+          "value": "deepbom.tflite_subgraph_deep_analysis.v1"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphDeepAssessedCount",
+          "value": "1"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphDeepPredictedDelegateCount",
+          "value": "64"
+        },
+        {
+          "name": "deepbom:model:tfliteSubgraphDeepPredictedFallbackCount",
+          "value": "1"
+        },
+        {
+          "name": "deepbom:finding:assessmentStatus",
+          "value": "assessed"
+        },
+        {
+          "name": "deepbom:finding:constantOutputChannels",
+          "value": "14"
+        },
+        {
+          "name": "deepbom:finding:exactZeroKernelSlices",
+          "value": "11"
+        },
+        {
+          "name": "deepbom:finding:buildModeDependentChannels",
+          "value": "1"
+        },
+        {
+          "name": "deepbom:finding:maxInt32UtilizationRatio",
+          "value": "0.000004461966457060523"
+        },
+        {
+          "name": "deepbom:finding:highSeverityCount",
+          "value": "5"
+        },
+        {
+          "name": "deepbom:finding:highSeverityFindings",
+          "value": "[{\"finding_id\":\"EA-IOC-0001\",\"title\":\"Preprocessing contract is not embedded\",\"category\":\"integration\",\"evidence_class\":\"OBSERVED\"},{\"finding_id\":\"EA-LIN-0001\",\"title\":\"Source checkpoint and conversion lineage were not provided\",\"category\":\"lineage\",\"evidence_class\":\"NOT_ASSESSABLE\"},{\"finding_id\":\"EA-WGT-0001\",\"title\":\"Exact-zero kernel slices converge with constant-output channel proof\",\"category\":\"numerical_structure_review\",\"evidence_class\":\"DERIVED\"},{\"finding_id\":\"EA-QNT-0112\",\"title\":\"Legal input-code domain cannot activate quantized output channels\",\"category\":\"quantization_design_review\",\"evidence_class\":\"DERIVED\"},{\"finding_id\":\"EA-DEL-0004\",\"title\":\"Required quantized XNNPACK build condition is not artifact-bound and conditional coverage collapses to zero\",\"category\":\"delegate\",\"evidence_class\":\"PREDICTED\"}]"
+        },
+        {
+          "name": "deepbom:conformance:profile",
+          "value": "litert_current_int8_operator_profile"
+        },
+        {
+          "name": "deepbom:conformance:profileScope",
+          "value": "Current LiteRT INT8 CONV_2D and DEPTHWISE_CONV_2D weight contracts"
+        },
+        {
+          "name": "deepbom:conformance:status",
+          "value": "nonconformant"
+        },
+        {
+          "name": "deepbom:conformance:violationCodes",
+          "value": "[\"weight_dtype_expected_int8\",\"weight_granularity_per_tensor_expected_per_axis\",\"weight_zero_point_nonzero_expected_zero\"]"
+        },
+        {
+          "name": "deepbom:conformance:violationCount",
+          "value": "159"
+        },
+        {
+          "name": "deepbom:conformance:legacyQu8Artifact",
+          "value": "true"
+        },
+        {
+          "name": "deepbom:conformance:source",
+          "value": "https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec"
+        },
+        {
+          "name": "deepbom:conformance:interpretationBoundary",
+          "value": "A legacy UINT8 asymmetric artifact can remain executable through a separately enabled legacy QU8 runtime path while being nonconformant to the current LiteRT INT8 operator profile."
+        },
+        {
+          "name": "deepbom:preprocessing:assessmentStatus",
+          "value": "assessed"
+        },
+        {
+          "name": "deepbom:preprocessing:exactContractIds",
+          "value": "[\"raw_storage_rgb\",\"raw_storage_bgr\",\"artifact_affine_rgb\",\"center_128_div_128_rgb\"]"
+        },
+        {
+          "name": "deepbom:preprocessing:portfolioLedgerSha256",
+          "value": "35a1ca877c09dd440ed75e7cfbe1789c6b3693ea6572da5069cf6a01aadd5bb5"
+        },
+        {
+          "name": "deepbom:runtime:name",
+          "value": "TensorFlow Lite / LiteRT"
+        },
+        {
+          "name": "deepbom:runtime:necessaryFloor",
+          "value": "1.5.0"
+        },
+        {
+          "name": "deepbom:runtime:floorStatus",
+          "value": "complete_for_observed_builtin_op_versions"
+        },
+        {
+          "name": "deepbom:runtime:floorEvidenceClass",
+          "value": "DERIVED_NECESSARY_MINIMUM"
+        },
+        {
+          "name": "deepbom:runtime:requirementsManifest",
+          "value": "deepbom_runtime_requirements.json"
+        },
+        {
+          "name": "deepbom:analyzer:semanticVersion",
+          "value": "1.94.0"
+        },
+        {
+          "name": "deepbom:analyzer:buildVersion",
+          "value": "2026-08-03"
+        },
+        {
+          "name": "deepbom:analyzer:rulepackVersion",
+          "value": "deepbom.rulepack.2026-07-24.63"
+        },
+        {
+          "name": "deepbom:analyzer:rulepackSha256",
+          "value": "a1e0dc58a9dc742b4532448190410d89e04d56ab134a16a72cda6cae8b6a6d9f"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "evidence",
+          "url": "deepbom_artifact_evidence_envelope.json",
+          "comment": "Canonical artifact evidence envelope. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "e9c5e4fae3147e4a9fa3e06fa93c49b44b1b24ab14cdbb40f7f74c79c19bff58"
+            }
+          ]
+        },
+        {
+          "type": "evidence",
+          "url": "deepbom_interface_contracts.json",
+          "comment": "Canonical external tensor numerical-contract ledger. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "a12d1308fc135d64e035a121e7e80118fdb87a11c091150851e1328e2c854158"
+            }
+          ]
+        },
+        {
+          "type": "evidence",
+          "url": "deepbom_cyclonedx_2_0_parameter_contract.preview.cdx.json",
+          "comment": "Commit-pinned CycloneDX 2.0 non-conformant proposal fixture; the pinned draft schema closure is unavailable and this is not a 2.0 conformance claim. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "c1ea5d6c84678fa6fd15d9342b7281e29bf87a612badbf3c2e790fa7540a33a0"
+            }
+          ]
+        },
+        {
+          "type": "formulation",
+          "url": "deepbom_observed_formulation.cdx.json",
+          "comment": "Artifact-observed formulation and declaration comparison. Relative URL resolves inside the Deployment Contract Pack. Integrity is bound by deepbom_contract_pack_manifest.json; no circular sibling hash is embedded here."
+        },
+        {
+          "type": "configuration",
+          "url": "deepbom_runtime_requirements.json",
+          "comment": "Machine-readable runtime requirement manifest. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "95dc99081737dd3900617e2e8a6559136e994fe22398dad866a27e7691668dd5"
+            }
+          ]
+        },
+        {
+          "type": "evidence",
+          "url": "deepbom_missing_provenance_fields.json",
+          "comment": "Machine-readable release-lineage field gap specification. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "f2fc13c1392519e022d88c01379f416d0758fac95e933f29ed561718223a728a"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "dependencies": [
+    {
+      "ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+      "dependsOn": []
+    }
+  ],
+  "declarations": {
+    "claims": [
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-IOC-0001",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Preprocessing contract is not embedded: The artifact exposes UINT8 1x224x224x3 input. Tensor layout is NHWC (DERIVED; derived_nhwc_from_direct_consumer_semantics); tensor numerical status is known_from_artifact_quantization_metadata with scalar real range [-1.00000000, 0.992187500]. Source decoding, resize policy, interpolation, RGB/BGR order, and normalization remain undocumented.",
+        "reasoning": "Evidence class OBSERVED; source class OBSERVED. The model artifact alone does not define the application-side input transformation needed for reproducible runtime or accuracy results.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-OUT-0001",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Output interpretation contract is not embedded: The graph output is produced by RESHAPE #064 as UINT8 1x1001; no terminal SOFTMAX is observed, so probability semantics are NOT_ASSESSABLE from the artifact alone. No semantic label map, class ordering, or application-side output contract is embedded. Output dequantization contract: real_value = scale 0.09889253973960876 * (q - zero_point 58); implied representable range [-5.7358e+0, 1.9482e+1]; include this in the application-side interpretation spec.",
+        "reasoning": "Evidence class OBSERVED; source class OBSERVED. The graph can expose mathematical tensor structure, but application semantics such as class ordering, label mapping, and consumer-side postprocessing are not established by shape and dtype alone.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-LIN-0001",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Source checkpoint and conversion lineage were not provided: The artifact/report context does not provide source checkpoint SHA-256, export framework/version, converter version, export configuration, quantization/calibration configuration, representative dataset ID, build pipeline ID, software release ID, model requirement ID, or previous released artifact SHA-256.",
+        "reasoning": "Evidence class NOT_ASSESSABLE; source class NOT_ASSESSABLE. The deployment artifact can be structurally analyzed, but it does not by itself establish traceability from training checkpoint to released runtime artifact.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-RUN-0001",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Bundled runtime version was not provided: Observed mapped-op necessary floor 1.5.0; builtin op-version map coverage 5/5 (complete_for_observed_builtin_op_versions); declared min_runtime_version not embedded; highest observed operator version 1; deployed LiteRT/TFLite runtime build not provided.",
+        "reasoning": "Evidence class NOT_ASSESSABLE; source class NOT_ASSESSABLE. Every observed builtin op code/version is covered by the pinned necessary-floor map, but compatibility of the application bundle still cannot be concluded without the exact runtime version and build flags.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-WGT-0001",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Exact-zero kernel slices converge with constant-output channel proof: 11 decoded kernel output slice(s) are near-zero after applying artifact quantization scale/zero-point metadata; 11 are exact-zero in stored centered-code space. MobilenetV2/Conv/weights_quant/FakeQuantWithMinMaxVars UINT8 32x3x3x3: near-zero decoded slice channel(s) 3, 7, 11, 12, 13, 16, 19, 28; exact-zero stored subset 3, 7, 11, 12, 13, 16, 19, 28; scale/zp 3.397e-2, 3.397e-2, 3.397e-2/122, 122, 122; MobilenetV2/Conv/Conv2D_Fold_bias INT32; real bias sample -1.216e+0, -2.543e+0, -2.988e-1; raw code sample -4,581, -9,582, -1,126; INT32 use 0.0002%, 0.0004%, 5.24e-5%; consumers #0 CONV_2D | MobilenetV2/expanded_conv/depthwise/weights_quant/FakeQuantWithMinMaxVars UINT8 1x3x3x32: near-zero decoded slice channel(s) 20; exact-zero stored subset 20; scale/zp 3.437e-1/165; MobilenetV2/expanded_conv/depthwise/depthwise_Fold_bias INT32; real bias sample 1.027e+0; raw code sample 127; INT32 use 5.91e-6%; consumers #1 DEPTHWISE_CONV_2D | MobilenetV2/expanded_conv_11/expand/weights_quant/FakeQuantWithMinMaxVars UINT8 576x1x1x96: near-zero decoded slice channel(s) 259; exact-zero stored subset 259; scale/zp 1.631e-3/134; MobilenetV2/expanded_conv_11/expand/Conv2D_Fold_bias INT32; real bias sample 2.276e+0; raw code sample 8,181; INT32 use 0.0004%; consumers #39 CONV_2D | MobilenetV2/expanded_conv_2/expand/weights_quant/FakeQuantWithMinMaxVars UINT8 144x1x1x24: near-zero decoded slice channel(s) 130; exact-zero stored subset 130; scale/zp 3.656e-3/144; MobilenetV2/expanded_conv_2/expand/Conv2D_Fold_bias INT32; real bias sample -1.846e+0; raw code sample -1,831; INT32 use 8.53e-5%; consumers #6 CONV_2D. Direct-consumer MAC share upper bound 12% (triage scope only; not zero-slice arithmetic, latency, or accuracy impact). Cross-ledger join proves 11 exact-zero coordinate(s) also emit one constant output code under both pinned fixed-point paths: T2/#000/ch3 bias -4,581 (0.0002% INT32), T2/#000/ch7 bias -9,582 (0.0004% INT32), T2/#000/ch11 bias -1,126 (5.24e-5% INT32), T2/#000/ch12 bias -736 (3.43e-5% INT32), T2/#000/ch13 bias -5,063 (0.0002% INT32), T2/#000/ch16 bias 26 (1.21e-6% INT32), T2/#000/ch19 bias -4,931 (0.0002% INT32), T2/#000/ch28 bias 330 (1.54e-5% INT32), T13/#001/ch20 bias 127 (5.91e-6% INT32), T41/#039/ch259 bias 8,181 (0.0004% INT32), T99/#006/ch130 bias -1,831 (8.53e-5% INT32).",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. The listed coordinates are exact local constant-output channels under both pinned TFLite fixed-point paths, not merely low-norm or scale-spread heuristics. This still does not prove the declared model outputs or task metric are invariant because downstream graph paths and representative inputs remain separate evidence.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0100",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Quantized constant grid utilization requires calibration review: Quantized constant grid scan: 53 tensor(s) decoded; all-size minimum 8-bit level utilization 20.3%; threshold-eligible minimum 20.3%; 53 tensor(s) with at least 256 elements assessed against the <25% threshold, of which 3 are below it; max qmin/qmax saturation 0.35%; 0 tensor(s) above 1% endpoint saturation. Alert threshold is HEURISTIC: <25% 8-bit level utilization for tensors with at least 256 elements, or >1% endpoint saturation.",
+        "reasoning": "Evidence class DERIVED_WITH_HEURISTIC_THRESHOLD; source class HEURISTIC. The utilization and saturation values are deterministically derived from artifact constants; the alert threshold is a methodology heuristic for calibration review, not a task-accuracy claim.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0101",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Depthwise convolution weights use per-tensor quantization: 17 quantized DEPTHWISE_CONV_2D op(s) use a single weight scale; per-channel tensors observed: 0. Complete affected-op inventory: #001 DEPTHWISE_CONV_2D, #004 DEPTHWISE_CONV_2D, #007 DEPTHWISE_CONV_2D, #011 DEPTHWISE_CONV_2D, #014 DEPTHWISE_CONV_2D, #018 DEPTHWISE_CONV_2D, #022 DEPTHWISE_CONV_2D, #025 DEPTHWISE_CONV_2D, #029 DEPTHWISE_CONV_2D, #033 DEPTHWISE_CONV_2D, #037 DEPTHWISE_CONV_2D, #040 DEPTHWISE_CONV_2D, #044 DEPTHWISE_CONV_2D, #048 DEPTHWISE_CONV_2D, #051 DEPTHWISE_CONV_2D, #055 DEPTHWISE_CONV_2D, #059 DEPTHWISE_CONV_2D.",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. Per-tensor depthwise weight quantization is a design-review signal for mobile CNNs because channel distributions are forced onto one shared scale; it is not a confirmed defect without representative accuracy or calibration evidence.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0108",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Residual ADD output contract does not contain the complete legal code domain: 10 / 10 assessed ADD output contract(s) exclude part of the uniform legal input-code sum domain. Top #027 has 14,923 / 65,536 endpoint escapes and 14,792 ideal projected clamps. Fixed-zero-point containment is 1.953x scale with 0 clamps; the globally finest full-containment contract is 1.896x scale with zero-point delta -4 and 0 clamps. Re-export impact is deterministically scoped to 2 direct parameter consumer(s): 384 kernel channel(s), 384 changed Q0.31 encoding(s), 384 changed shift(s), 384 changed bias code(s), 0 candidate INT32 bias overflow(s), and 2 changed direct-ADD parameter encoding(s). Its structural behavior radius is 37 reachable op(s) at maximum edge depth 19.",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. The counterfactual is exhaustive over uniform legal integer-code pairs. It proves output-contract geometry, not activation frequency, calibration quality, task accuracy, or executed fixed-point behavior.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0109",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Residual containment has an exact local step-visibility trade-off: Across 3,916,800 exhaustive adjacent branch transitions and 1,950,750 joint interior cells, both containment candidates remove 199,410 rounded clamp-pair instances in aggregate and add 511,902 silent transition instances versus their current contracts. Highest retention cost is #027: current has 14,792 clamp pairs and 34,984 silent transitions; globally finest containment has 0 and 65,375, respectively (+30,391 silent). Both-branch-visible interior cells change from 45,974 to 31,306.",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. This is exact local distinguishability over uniformly enumerated legal integer codes. It is not an activation distribution, entropy or mutual-information estimate, runtime branch-activity measurement, calibration verdict, or task-accuracy result.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0110",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Clamp containment redistributes residual projection error across the legal code domain: Across 1,310,720 exact current-versus-containment pair comparisons, the candidates rescue 199,410 current rounded-clamp instances and retain 0 candidate clamps. Ideal projection error decreases for 532,893 pairs, increases for 772,081, and is equal within the declared binary64 tolerance for 5,746; 3,764 represented-value sign classes change. Highest RMS displacement is #027. Its globally finest candidate rescues 14,792 clamps, changes 65,289 represented values, improves / worsens 28,006 / 37,283 pairs, and has RMS / p99 / maximum displacement 23.061 / 94.521 / 126.753 current output steps. Its uniform mean absolute ideal-projection error delta is -1.6358e+0 real units.",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. The candidates remove rare, large clamp errors while introducing smaller rounding changes over many interior code pairs. Pair counts are uniform-domain geometry, not activation probabilities; neither the lower mean error nor the larger worsened-pair count establishes task quality.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0111",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Pinned TFLite fixed-point build modes produce concrete endpoint code differences: 6,942,080 canonical legal-code term assignments and 72,228 pinned fixed-point endpoint executions expose 125 default-versus-TFLITE_SINGLE_ROUNDING output-code difference(s). Default versus direct ideal differs at 125 endpoint(s); single-rounding versus direct ideal differs at 0. The maximum absolute deltas are 1 and 0 output code(s), respectively. Reproducible witness: #055 channel 767 maximum; ideal/default/single output codes 137 / 138 / 137; pattern SHA-256 35445b96d727a11cf2bdeab9dc0df29210496ffb5cac395e59bff80c97f7e31c.",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. The artifact does not embed the runtime compile-time rounding mode. These are exact synthetic full-valid receptive-field endpoints under pinned TensorFlow source semantics, not an observed runtime mismatch, an activation frequency, a full-model input, or an accuracy estimate.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0112",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Legal input-code domain cannot activate quantized output channels: 18,057 channels were joined to exact stored-weight post-bias endpoints and both pinned TFLite fixed-point paths. 14 channel(s) are constant under both paths: 11 have a constant post-bias accumulator and 3 retain a variable accumulator yet collapse to one output code. Complete dual-mode constant-channel inventory: #000 CONV_2D [3, 7, 11, 12, 13, 16, 19, 28] / #001 DEPTHWISE_CONV_2D [3, 12, 16, 20] / #006 CONV_2D [130] / #039 CONV_2D [259]. Highest-ranked detailed coordinates at #001: ch 3: post-bias -320299..-19, default preclamp -110086..-7 -> output 0..0 (lower_code_clamp), single preclamp -110085..-7 -> output 0..0 (lower_code_clamp) / ch 12: post-bias -123474..-54, default preclamp -42438..-19 -> output 0..0 (lower_code_clamp), single preclamp -42437..-19 -> output 0..0 (lower_code_clamp) / ch 16: post-bias -110479..-64, default preclamp -37971..-22 -> output 0..0 (lower_code_clamp), single preclamp -37971..-22 -> output 0..0 (lower_code_clamp). 1 channel(s) change constant classification with TFLITE_SINGLE_ROUNDING; ch 26: post-bias -254..1, default preclamp -88..1 -> output 0..1 (nonconstant), single preclamp -87..0 -> output 0..0 (lower_code_clamp). Op vitality ledger SHA-256 d4b09fabf80bb0b6ac30e0686097e220720d918f59e1bec1cf6e84a5c2e3498d.",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. Equal endpoint outputs are an exact consequence of monotone positive-multiplier projection and clamp over the full-valid receptive-field legal-code domain. This is not observed runtime activation frequency, a full-model reachability claim, edge-padding behavior, delegate execution evidence, or a task-accuracy result.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0113",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Pinned TFLite rounding build modes are not bit-exact over the accumulator interval hull: 18,057 channels and 13,933,008,957 post-bias integer interval states were partitioned exactly into 7,280,734 maximal ordered-output-pair segments. 17,083 channel(s) across 52 op(s) contain 2,874,544 default-versus-TFLITE_SINGLE_ROUNDING state difference(s) (0.0206% of the interval-hull portfolio); 94.3% of divergent states are default-higher and 5.7% are default-lower; maximum absolute delta 1 output code. First ranked counterexample: #007 channel 37, accumulator 14, default/single outputs 3/2; last counterexample 1498; op certificate SHA-256 6b42280ab896789a75ce996634eb5251c01c8fbd554216f1cdaddbf3ee62e9ab.",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. This is an exact build-mode equivalence certificate over each closed post-bias int32 interval hull. Interior accumulator integers can be unreachable because legal dot products are discrete and correlated, so the state ratio is not an activation probability, observed mismatch rate, or accuracy estimate. The artifact does not embed the runtime compile-time rounding mode.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0115",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Pinned rounding build modes differ at constructively reachable kernel-local accumulator states: 18,057 channels were decomposed into bounded absolute-centered-weight denominations and intersected with the exact rounding pair partition. Of 2,874,544 interval-hull differences, 2,239,435 are constructively kernel-local reachable (77.9%), 3,585 are excluded by lattice residue, and 631,524 remain congruence-compatible but unproven. 13,320 channel(s) have complete integer coverage, 34 complete modular coverage, 4,692 endpoint-band proofs, and 11 singleton accumulators. Ranked exact counterexample: #058 channel 0, accumulator 27, default/single outputs 1/0; op reachability SHA-256 ed953ba2fc4fec5d1666cb2959ee629bc67a4bde3105965cac982a3ea0d55665.",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. The counterexample is exact for a full-valid kernel-local receptive field under independently selectable legal quantized input codes. It is stronger than interval-only exposure, but it is not proof that upstream model activations or a real model input realize the local assignment, that padding sites are free, that a declared output changes, or that the state occurs at runtime.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0114",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Exact kernel-local fixed-point counterexample has a structural path to declared model outputs: 52 of 52 divergent source op(s) contain at least one constructively reachable kernel-local counterexample and 52 of those have structural corridors to declared outputs. The divergent-state partition is 2,239,435 exact reachable, 3,585 residue-excluded, and 631,524 unresolved. Exact-qualified corridors span 64 ops, 65 tensors, and 2 predicted execution-domain edge(s) carrying 62.5 KiB. Ranked source #000 has 2,918 exact local difference(s) and reaches the output through 1,024 exact graph route(s); reachability SHA-256 67743dd329cabb5d6019924a46020b1ec59b6b69bb68f0136178184dfd1c4505; propagation SHA-256 0318b9ba433a62b8543aa3286130052cccea90769e0fe23d43106c54e2365229.",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. The source counterexample is exact for one full-valid kernel-local receptive field under independent legal input codes. Its downstream corridor is structural only: it does not prove that a full-model input realizes the local assignment or that cancellation, requantization, pooling, clamp, runtime lowering, and task semantics preserve a declared-output difference.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0116",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Pinned rounding ABI has a complete model-input counterexample: 1 of 52 exact-local divergent source op(s) is constructively realizable by a complete declared model-input tensor. The representative 1x224x224x3 UINT8 tensor contains 150,528 elements, fills all positions with zero-point code 128, and applies 26 unique overrides in a full-valid 3x3x3 patch. Its exact dot -13,115 plus bias 13,159 reaches accumulator 44, producing default/single-rounding output codes 1/0. The source has 18 constructive channel(s), 2,918 exact divergent state(s), and 1,024 structural declared-output route(s). Full tensor SHA-256 89265147c9669c94eccbbdd5593623e04f1ba76190054786d88989aa6e5d3035; witness ledger SHA-256 45cdbb1087d79e088d7830c0e1840daa39b420b8f29e7c78fbb7e7ba702d0ce5.",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. This is the action-bearing apex of the same rounding-build provenance chain documented by EA-QNT-0111, 0113, 0115, and 0114; those records remain Informational evidence stages rather than duplicate Medium actions. The certificate is exact at the quantized model tensor ABI, but it does not establish that an application's image or audio preprocessing can emit the tensor, that the deployed runtime selects either pinned rounding path, or that the one-code source difference survives to a declared model output or changes task behavior.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0117",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "The exact ABI witness depends materially on the source preprocessing contract: 8 explicit 8-bit image preprocessing counterfactual(s) were exhaustively evaluated over all 256 source codes per channel. 4 contract(s) reproduce all 150,528 witness elements exactly: raw_storage_rgb, raw_storage_bgr, artifact_affine_rgb, center_128_div_128_rgb. 4 do not. Best non-exact unit_interval_rgb leaves 18 element(s) unrealizable with minimum total absolute tensor-code error 2,304; imagenet_mean_std_rgb leaves 150,503 element(s) unrealizable. The [0,1] RGB convention reaches 128/256, 128/256, 128/256 tensor codes by channel and leaves 128, 128, 128 code holes. Artifact range matching and witness realizability answer different questions: the declared affine range matches the common [-1,1] endpoint convention within one artifact step, while exact code reproduction is achieved by `real = (pixel - 128) / 128`; the textbook `real = (2 * pixel - 255) / 255` formula leaves 150,502 witness element(s) one or more tensor codes away. Exact fixture SHA-256 89265147c9669c94eccbbdd5593623e04f1ba76190054786d88989aa6e5d3035; portfolio SHA-256 35a1ca877c09dd440ed75e7cfbe1789c6b3693ea6572da5069cf6a01aadd5bb5.",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. The finite-domain result is exact for each named formula, channel permutation, saturation rule, and half-away rounding equation. It does not reveal which preprocessing implementation the application deploys; the artifact does not bind decoder, resize, color order, normalization, or quantizer behavior. A candidate mismatch is not evidence that the production app is wrong unless its contract is independently matched to that row.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-QNT-0104",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Asymmetric UINT8 weight quantization observed: Invalid zero-points: 0. Symmetric INT8 violations: not applicable, no INT8 weight tensors. Asymmetric UINT8 weight tensors observed: 53. Representative example: MobilenetV2/Conv/weights_quant/FakeQuantWithMinMaxVars UINT8 zero-point(s) 122. Root-cause synthesis: artifact description is \"TOCO Converted.\"; CONVERSION_METADATA is absent; 53 asymmetric UINT8 kernel tensor(s), 17 per-tensor depthwise op(s), and 0 per-channel tensor(s) are observed; runtime floor is 1.5.0. These facts are jointly consistent with a legacy TOCO UINT8 export, while the exact converter binary/version remains unbound.",
+        "reasoning": "Evidence class DERIVED; source class DERIVED. The artifact directly joins a TOCO description with UINT8 asymmetric/per-tensor quantization evidence. This is a source-artifact lineage diagnosis, not proof of the exact TOCO release, command line, calibration data, or training provenance.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-DEL-0004",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Required quantized XNNPACK build condition is not artifact-bound and conditional coverage collapses to zero: `--define tflite_with_xnnpack_qu8=true; legacy QU8 support is experimental and runtime build configuration is not embedded` is required by the pinned rulepack but is not embedded in the model or bound runtime manifest. If the build condition is absent, conditionally delegatable coverage changes from 64 to 0 op(s), affecting 100% of modeled MACs and 2 predicted delegate segment(s).",
+        "reasoning": "Evidence class PREDICTED; source class PREDICTED. The model artifact does not identify the deployed runtime binary or its compile flags. This row states what the pinned rulepack requires and the assignment consequence if that requirement is absent; it does not observe that the deployed runtime lacks the flag. For legacy QU8, the pinned source describes support as experimental; static artifact eligibility must not be read as observed runtime assignment.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-DEL-0002",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Predicted partition boundaries requiring runtime confirmation: 1 non-structural predicted partition break; 0 predicted non-delegated shape operations; 2 graph-derived internal execution-domain edges. Graph-derived summed logical edge payload 62.5 KiB across 2 predicted internal partition edges: T4 MobilenetV2/Conv_1/Relu6 XNNPACK:C0->TFLITE_CPU 61.3 KiB / T6 MobilenetV2/Logits/AvgPool TFLITE_CPU->XNNPACK:C1 1.3 KiB.",
+        "reasoning": "Evidence class PREDICTED; source class PREDICTED. Producer/consumer tensor edges and logical payloads are graph-derived from the static predicted assignment. The artifact alone cannot determine whether the runtime materializes copies, aliases buffers, converts layouts, or incurs measurable latency.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-MEM-0001",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "L1 row working-set pressure: 36.8 KiB row working set / 32 KiB L1D = 1.15x; L2: 36.8 KiB / 128 KiB = 0.29x.",
+        "reasoning": "Evidence class ESTIMATED; source class ESTIMATED. Static row working-set estimate exceeds the selected target L1D reference. Code, other live data, associativity, and runtime scratch leave less usable capacity than the nominal cache size.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-PKG-0001",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Weight packing warmup cost watchlist: 22 ops exceeded the static packing-watch threshold; largest estimate 191.0 us. weight tensor T9 MobilenetV2/Logits/Conv2d_1c_1x1/weights_quant/FakeQuantWithMinMaxVars = 1281280 B (1.2 MiB); potential one-time packing cost 191.0 us on Android mid-range / Cortex-A55 (L1D 32 KiB default) during interpreter preparation or first invocation, depending on runtime implementation. Formula: 1281280 B / 7.0e9 B/s + setup 8.0 us = 191.0 us. Setup and bandwidth are rulepack heuristics, not device-calibrated measurements; criteria: estimated packing >= 10 us threshold",
+        "reasoning": "Evidence class ESTIMATED; source class ESTIMATED. Static weight-byte, setup, and target-bandwidth estimates indicate potential one-time interpreter preparation or first-invocation packing cost; this is not steady-state Invoke latency. Escalate only if the configured cold-start budget is tight.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-CHN-0001",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "SIMD/micro-kernel channel tail overhead: output channels 24 vs planning-profile assumed UINT8 output-channel candidate multiples x16: modeled inactive-lane range 25%; worst case is x16 padding to 32 channels (75% occupancy); runtime kernel selection and tail handling are not confirmed from the artifact. Modeled candidate-set lane utilization: 75%; op MAC share 2.4%; model-level impact not estimated.",
+        "reasoning": "Evidence class ESTIMATED; source class ESTIMATED. Actual overhead depends on runtime kernel selection, packing, and tail handling, and is not confirmed from the artifact alone.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      },
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:claim:EA-LIM-0001",
+        "target": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "predicate": "Representative-data validation not assessable: No training, validation, clinical, or representative calibration dataset is included in the deployment artifact.",
+        "reasoning": "Evidence class NOT_ASSESSABLE; source class NOT_ASSESSABLE. Accuracy, clinical benefit, bias, subgroup performance, and generalizability cannot be concluded from this artifact alone.",
+        "evidence": [
+          "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope"
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:evidence:artifact-envelope",
+        "description": "Hash-bound artifact evidence envelope produced by deterministic static analysis.",
+        "data": [
+          {
+            "name": "Artifact Evidence Envelope",
+            "contents": {
+              "url": "deepbom_artifact_evidence_envelope.json"
+            }
+          }
+        ],
+        "created": "2026-07-29T00:00:00.000Z",
+        "author": {
+          "name": "deepbom"
+        }
+      }
+    ]
+  },
+  "citations": [
+    {
+      "bom-ref": "deepbom-citation-f73988ea597cb242",
+      "pointers": [
+        "/metadata/component",
+        "/components",
+        "/dependencies",
+        "/declarations"
+      ],
+      "timestamp": "2026-07-29T00:00:00.000Z",
+      "attributedTo": "deepbom-analyzer-deepbom-1.94.0-684260dddf632240c31bee646581d9c4ae32623a",
+      "note": "Artifact identity, dependency edges, and static claims were projected by the referenced analyzer from the hash-bound evidence envelope."
+    }
+  ],
+  "properties": [
+    {
+      "name": "deepbom:documentAuthor:orcid",
+      "value": "https://orcid.org/0000-0002-6464-3895"
+    },
+    {
+      "name": "deepbom:profile",
+      "value": "artifact-numerical-and-runtime-contract-evidence"
+    },
+    {
+      "name": "deepbom:artifactEvidenceEnvelopeSchema",
+      "value": "deepbom.artifact_evidence_envelope.v1"
+    },
+    {
+      "name": "deepbom:artifactEvidenceEnvelopeSha256",
+      "value": "6bda36aacf2dd67461db6ccd138d947613cd6b81278e71235cb0fa6c00642484"
+    },
+    {
+      "name": "deepbom:evidenceBoundary",
+      "value": "Deployment artifact identity, graph totals, complete internal tensor dtype inventory, graph-level quantization state, deterministic static derivations, and serialized external I/O contracts. Runtime assignment, source-data preprocessing, task accuracy, clinical performance, and release readiness remain separately bound."
+    },
+    {
+      "name": "deepbom:bundle:relativeReferencePolicy",
+      "value": "Resolve relative externalReferences against the root of the Deployment Contract Pack."
+    }
+  ]
+}

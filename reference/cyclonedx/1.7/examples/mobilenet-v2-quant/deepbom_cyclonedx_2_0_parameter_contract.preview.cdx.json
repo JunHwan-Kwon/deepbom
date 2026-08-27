@@ -1,0 +1,177 @@
+{
+  "$schema": "https://raw.githubusercontent.com/CycloneDX/specification/58a7cc2d04105e7525b0ed369ccf0a4325dc34b2/schema/2.0/cyclonedx-2.0.schema.json",
+  "specFormat": "CycloneDX",
+  "specVersion": "2.0",
+  "serialNumber": "urn:uuid:0e216c87-9efb-8ab5-8a82-321bb94bba94",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-07-29T00:00:00.000Z",
+    "component": {
+      "type": "machine-learning-model",
+      "name": "mobilenet_v2_1.0_224_quant.tflite",
+      "version": "sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+      "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d"
+        }
+      ],
+      "modelCard": {
+        "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d-model-card",
+        "modelParameters": {
+          "inputs": [
+            {
+              "name": "input",
+              "format": {
+                "dataType": "uint8",
+                "encoding": "raw"
+              },
+              "shape": [
+                1,
+                224,
+                224,
+                3
+              ],
+              "properties": [
+                {
+                  "name": "deepbom:parameter:direction",
+                  "value": "input"
+                },
+                {
+                  "name": "deepbom:parameter:ordinal",
+                  "value": "0"
+                },
+                {
+                  "name": "deepbom:parameter:interfaceContractSha256",
+                  "value": "14f100754e65c865b32b905a74c2915bec5a9872707bee7be70080c218ba4b56"
+                },
+                {
+                  "name": "deepbom:parameter:shapeSignature",
+                  "value": "null"
+                },
+                {
+                  "name": "deepbom:parameter:affineMappingStatus",
+                  "value": "complete_affine_mapping"
+                },
+                {
+                  "name": "cdx:ai-ml:model:parameter:quantization:scheme",
+                  "value": "_undefined:affine"
+                },
+                {
+                  "name": "cdx:ai-ml:model:parameter:quantization:granularity",
+                  "value": "per-tensor"
+                },
+                {
+                  "name": "cdx:ai-ml:model:parameter:quantization:scale",
+                  "value": "0.0078125"
+                },
+                {
+                  "name": "cdx:ai-ml:model:parameter:quantization:zeroPoint",
+                  "value": "128"
+                }
+              ]
+            }
+          ],
+          "outputs": [
+            {
+              "name": "output",
+              "format": {
+                "dataType": "uint8",
+                "encoding": "raw"
+              },
+              "shape": [
+                1,
+                1001
+              ],
+              "properties": [
+                {
+                  "name": "deepbom:parameter:direction",
+                  "value": "output"
+                },
+                {
+                  "name": "deepbom:parameter:ordinal",
+                  "value": "0"
+                },
+                {
+                  "name": "deepbom:parameter:interfaceContractSha256",
+                  "value": "0082096ef3eec9047e04771015d849c58d08758f75fab4fd8944029a4fa35cad"
+                },
+                {
+                  "name": "deepbom:parameter:shapeSignature",
+                  "value": "null"
+                },
+                {
+                  "name": "deepbom:parameter:affineMappingStatus",
+                  "value": "complete_affine_mapping"
+                },
+                {
+                  "name": "cdx:ai-ml:model:parameter:quantization:scheme",
+                  "value": "_undefined:affine"
+                },
+                {
+                  "name": "cdx:ai-ml:model:parameter:quantization:granularity",
+                  "value": "per-tensor"
+                },
+                {
+                  "name": "cdx:ai-ml:model:parameter:quantization:scale",
+                  "value": "0.09889253973960876"
+                },
+                {
+                  "name": "cdx:ai-ml:model:parameter:quantization:zeroPoint",
+                  "value": "58"
+                }
+              ]
+            }
+          ],
+          "properties": [
+            {
+              "name": "deepbom:interfaceContract:schema",
+              "value": "deepbom.interface_quantization_contracts.v1.3"
+            },
+            {
+              "name": "deepbom:interfaceContract:ledgerSha256",
+              "value": "30c462341a9830ab81ec60bc3f27bc48a7cf826eea71a67b5abddf442150d38b"
+            }
+          ]
+        },
+        "properties": [
+          {
+            "name": "deepbom:preview:status",
+            "value": "NON_CONFORMANT_PROPOSAL_FIXTURE_SCHEMA_CLOSURE_UNAVAILABLE"
+          },
+          {
+            "name": "deepbom:preview:specificationCommit",
+            "value": "58a7cc2d04105e7525b0ed369ccf0a4325dc34b2"
+          },
+          {
+            "name": "deepbom:preview:taxonomyCommit",
+            "value": "1b380dfae8bf4a83646ae59ea3d3b42d466f3858"
+          },
+          {
+            "name": "deepbom:preview:interpretationBoundary",
+            "value": "Parameter binding follows the pinned CycloneDX 2.0 draft. Generic affine facts are not promoted to symmetric or asymmetric because the artifact does not encode that classification."
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "deepbom:contract:schema",
+          "value": "deepbom.cyclonedx_2_0_parameter_contract_preview.v1"
+        },
+        {
+          "name": "deepbom:model:versionBasis",
+          "value": "full_artifact_sha256"
+        },
+        {
+          "name": "deepbom:preview:specificationPr",
+          "value": "https://github.com/CycloneDX/specification/pull/990"
+        },
+        {
+          "name": "deepbom:preview:taxonomyPr",
+          "value": "https://github.com/CycloneDX/cyclonedx-property-taxonomy/pull/175"
+        }
+      ]
+    }
+  }
+}

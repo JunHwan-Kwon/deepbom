@@ -1,0 +1,12 @@
+{
+  "schema": "deepbom.cyclonedx_schema_lock.v1",
+  "spec_version": "1.7",
+  "retrieved_at": "2026-08-03",
+  "source_base_url": "https://cyclonedx.org/schema/",
+  "files": {
+    "bom-1.7.schema.json": "71152f97948eeeca2fd4a1434a9d29aab35d377be11828b504d029dfeeb1925a",
+    "spdx.schema.json": "c87aa7bb5eb503d40b52ec6bf00de8045df15da7a13cea48d290cf6d36a8d2ea",
+    "jsf-0.82.schema.json": "2faf5eb3651f2ae5f46091a131770d8d847bbd121139d19c85fc7051bfa58c46",
+    "cryptography-defs.schema.json": "95897594e42f7229523fd7a03272da284e0591b1c49550a8b62a355df6357249"
+  }
+}

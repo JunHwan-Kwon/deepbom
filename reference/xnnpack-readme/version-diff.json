@@ -1,0 +1,272 @@
+{
+  "schema": "deepbom.xnnpack_delegate_version_diff.v1",
+  "source_path": "tensorflow/lite/delegates/xnnpack/README.md",
+  "releases": [
+    {
+      "tag": "v2.10.0",
+      "bytes": 29425,
+      "sha256": "e9e0caab739e1be5b9a1ee4b0294542e29da381be4425b380bd3450cc0dde51c",
+      "fp32_operator_count": 37,
+      "fp16_operator_subsection_count": 36,
+      "fp16_contract": "operator_subsections_enumerated",
+      "quantized_operator_count": 20,
+      "changes_from_previous": null
+    },
+    {
+      "tag": "v2.11.0",
+      "bytes": 29968,
+      "sha256": "061e164140451778456961e80e69b6c158f114c94ef7c7a7855402f5e6a2aff4",
+      "fp32_operator_count": 38,
+      "fp16_operator_subsection_count": 37,
+      "fp16_contract": "operator_subsections_enumerated",
+      "quantized_operator_count": 21,
+      "changes_from_previous": {
+        "fp32": {
+          "added_operators": [
+            "SLICE"
+          ],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "quantized": {
+          "added_operators": [
+            "SLICE"
+          ],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "fp16_contract_changed": false
+      }
+    },
+    {
+      "tag": "v2.12.0",
+      "bytes": 28656,
+      "sha256": "7c638200d2ecea5fc34a9cf902472710fb44a3869d878fc00e77a78575aee423",
+      "fp32_operator_count": 40,
+      "fp16_operator_subsection_count": 0,
+      "fp16_contract": "inherits_fp32_feature_parity",
+      "quantized_operator_count": 23,
+      "changes_from_previous": {
+        "fp32": {
+          "added_operators": [
+            "SPACE_TO_DEPTH",
+            "STRIDED_SLICE"
+          ],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "quantized": {
+          "added_operators": [
+            "RESHAPE",
+            "SPACE_TO_DEPTH"
+          ],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "fp16_contract_changed": true
+      }
+    },
+    {
+      "tag": "v2.13.0",
+      "bytes": 28818,
+      "sha256": "9a70a18d2248fe352623df7598386d35ed50ad2923f7a690be96274c2a2e4250",
+      "fp32_operator_count": 41,
+      "fp16_operator_subsection_count": 0,
+      "fp16_contract": "inherits_fp32_feature_parity",
+      "quantized_operator_count": 24,
+      "changes_from_previous": {
+        "fp32": {
+          "added_operators": [
+            "TANH"
+          ],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "quantized": {
+          "added_operators": [
+            "TANH"
+          ],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "fp16_contract_changed": false
+      }
+    },
+    {
+      "tag": "v2.14.0",
+      "bytes": 28818,
+      "sha256": "9a70a18d2248fe352623df7598386d35ed50ad2923f7a690be96274c2a2e4250",
+      "fp32_operator_count": 41,
+      "fp16_operator_subsection_count": 0,
+      "fp16_contract": "inherits_fp32_feature_parity",
+      "quantized_operator_count": 24,
+      "changes_from_previous": {
+        "fp32": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "quantized": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "fp16_contract_changed": false
+      }
+    },
+    {
+      "tag": "v2.15.0",
+      "bytes": 30258,
+      "sha256": "84fe54dbf89375417b05a2880d9d8b27bb12959854b9c0377449721dc26aefec",
+      "fp32_operator_count": 41,
+      "fp16_operator_subsection_count": 0,
+      "fp16_contract": "inherits_fp32_feature_parity",
+      "quantized_operator_count": 24,
+      "changes_from_previous": {
+        "fp32": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "quantized": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "fp16_contract_changed": false
+      }
+    },
+    {
+      "tag": "v2.16.1",
+      "bytes": 30258,
+      "sha256": "84fe54dbf89375417b05a2880d9d8b27bb12959854b9c0377449721dc26aefec",
+      "fp32_operator_count": 41,
+      "fp16_operator_subsection_count": 0,
+      "fp16_contract": "inherits_fp32_feature_parity",
+      "quantized_operator_count": 24,
+      "changes_from_previous": {
+        "fp32": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "quantized": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "fp16_contract_changed": false
+      }
+    },
+    {
+      "tag": "v2.17.0",
+      "bytes": 30258,
+      "sha256": "84fe54dbf89375417b05a2880d9d8b27bb12959854b9c0377449721dc26aefec",
+      "fp32_operator_count": 41,
+      "fp16_operator_subsection_count": 0,
+      "fp16_contract": "inherits_fp32_feature_parity",
+      "quantized_operator_count": 24,
+      "changes_from_previous": {
+        "fp32": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "quantized": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "fp16_contract_changed": false
+      }
+    },
+    {
+      "tag": "v2.18.0",
+      "bytes": 30258,
+      "sha256": "84fe54dbf89375417b05a2880d9d8b27bb12959854b9c0377449721dc26aefec",
+      "fp32_operator_count": 41,
+      "fp16_operator_subsection_count": 0,
+      "fp16_contract": "inherits_fp32_feature_parity",
+      "quantized_operator_count": 24,
+      "changes_from_previous": {
+        "fp32": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "quantized": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "fp16_contract_changed": false
+      }
+    },
+    {
+      "tag": "v2.19.0",
+      "bytes": 29951,
+      "sha256": "75f1e4c8d10f224c441c3fa700647bdf98c26b55b13606a83fb27f75d714b498",
+      "fp32_operator_count": 41,
+      "fp16_operator_subsection_count": 0,
+      "fp16_contract": "inherits_fp32_feature_parity",
+      "quantized_operator_count": 24,
+      "changes_from_previous": {
+        "fp32": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "quantized": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "fp16_contract_changed": false
+      }
+    },
+    {
+      "tag": "v2.20.0",
+      "bytes": 29116,
+      "sha256": "64cb3c7971fb7209f80b954e2fbc89d0dd20e6f07221d824f4673cb94e70d4c1",
+      "fp32_operator_count": 41,
+      "fp16_operator_subsection_count": 0,
+      "fp16_contract": "inherits_fp32_feature_parity",
+      "quantized_operator_count": 24,
+      "changes_from_previous": {
+        "fp32": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "quantized": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "fp16_contract_changed": false
+      }
+    },
+    {
+      "tag": "v2.21.0",
+      "bytes": 32825,
+      "sha256": "85524b3e6acfe5429b9d8b7c1ef47dde79a4543ccbe2f73a0e276f8e7e0eb93c",
+      "fp32_operator_count": 41,
+      "fp16_operator_subsection_count": 0,
+      "fp16_contract": "inherits_fp32_feature_parity",
+      "quantized_operator_count": 24,
+      "changes_from_previous": {
+        "fp32": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "quantized": {
+          "added_operators": [],
+          "removed_operators": [],
+          "changed_operator_constraints": []
+        },
+        "fp16_contract_changed": false
+      }
+    }
+  ]
+}

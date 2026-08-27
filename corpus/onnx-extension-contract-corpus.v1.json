@@ -1,0 +1,140 @@
+{
+  "schema": "deepbom.onnx_extension_contract_corpus.v1",
+  "purpose": "Positive contract coverage for ONNX per-axis Q/DQ and non-ORT external custom-domain handling.",
+  "population_boundary": "Purposeful conformance corpus; counts do not estimate ecosystem prevalence or runtime support.",
+  "source_pins": [
+    {
+      "repository": "onnx/onnx",
+      "commit": "2bb50465112feca9003e1ed654d77f01ff1415ca",
+      "license": "Apache-2.0",
+      "license_path": "corpus/onnx-extension-contract-corpus/onnx.LICENSE",
+      "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "repository": "microsoft/onnxruntime-extensions",
+      "commit": "bd0e21c11187e0b8a2385d1c61122a4d259a53a0",
+      "license": "MIT",
+      "license_path": "corpus/onnx-extension-contract-corpus/onnxruntime-extensions.LICENSE",
+      "license_sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "onnx-quantize-linear-runtime-per-axis",
+      "path": "corpus/onnx-extension-contract-corpus/onnx-quantize-linear-runtime-per-axis.onnx",
+      "size_bytes": 257,
+      "sha256": "07003bb694c94bb527f07ed3bff447f2a63f683e914ff6cc0e2a8dec6c37f287",
+      "provenance": {
+        "origin": "source_derived_conformance_fixture",
+        "source_repository": "onnx/onnx",
+        "source_commit": "2bb50465112feca9003e1ed654d77f01ff1415ca",
+        "source_path": "onnx/backend/test/case/node/quantizelinear.py",
+        "source_sha256": "89c33d77c460c39f16f706a0e182fcada5efd29d6b478907fb8cdd9237f181e8",
+        "license": "Apache-2.0"
+      },
+      "measurement": {
+        "operator_count": 1,
+        "tensor_count": 4,
+        "explicit_qdq_boundary_count": 1,
+        "binding_status": "partial",
+        "valid_binding_count": 0,
+        "unresolved_binding_count": 1,
+        "per_axis_tensor_count": 1,
+        "external_custom_node_count": 0,
+        "external_custom_domains": []
+      }
+    },
+    {
+      "id": "onnx-dequantize-linear-runtime-per-axis",
+      "path": "corpus/onnx-extension-contract-corpus/onnx-dequantize-linear-runtime-per-axis.onnx",
+      "size_bytes": 265,
+      "sha256": "3b395d4162190e17d6499622a0c9daf289869dd481e7e3c687162d1d37072d5f",
+      "provenance": {
+        "origin": "source_derived_conformance_fixture",
+        "source_repository": "onnx/onnx",
+        "source_commit": "2bb50465112feca9003e1ed654d77f01ff1415ca",
+        "source_path": "onnx/backend/test/case/node/dequantizelinear.py",
+        "source_sha256": "66787951091ebb1972188d00e4df539fc89394182e6480c2b1be9b2b2fd5c751",
+        "license": "Apache-2.0"
+      },
+      "measurement": {
+        "operator_count": 1,
+        "tensor_count": 4,
+        "explicit_qdq_boundary_count": 1,
+        "binding_status": "partial",
+        "valid_binding_count": 0,
+        "unresolved_binding_count": 1,
+        "per_axis_tensor_count": 1,
+        "external_custom_node_count": 0,
+        "external_custom_domains": []
+      }
+    },
+    {
+      "id": "deepbom-static-per-axis-qdq",
+      "path": "corpus/onnx-extension-contract-corpus/deepbom-static-per-axis-qdq.onnx",
+      "size_bytes": 289,
+      "sha256": "c19f7155f030dc396aad04909b7429b8a4d6d1cb51fcd53a84e3c97ae9678d0e",
+      "provenance": {
+        "origin": "deepbom_conformance_fixture",
+        "source_repository": null,
+        "source_commit": null,
+        "source_path": "scripts/build-onnx-extension-contract-corpus.mjs",
+        "source_sha256": "c59091c3eb253ab0717ddacb55a08d8e10080375e8616a5d746296dc5a2902d3",
+        "license": "All-rights-reserved test fixture; no model weights or learned parameters"
+      },
+      "measurement": {
+        "operator_count": 2,
+        "tensor_count": 5,
+        "explicit_qdq_boundary_count": 2,
+        "binding_status": "pass",
+        "valid_binding_count": 2,
+        "unresolved_binding_count": 0,
+        "per_axis_tensor_count": 1,
+        "external_custom_node_count": 0,
+        "external_custom_domains": []
+      }
+    },
+    {
+      "id": "onnxruntime-extensions-custom-op-test",
+      "path": "corpus/onnx-extension-contract-corpus/onnxruntime-extensions-custom-op-test.onnx",
+      "size_bytes": 223,
+      "sha256": "3c35f6d0ba40415670605a533e3231ab3dfb9f0dd6761d56ad93ecf950527282",
+      "provenance": {
+        "origin": "upstream_binary_test_artifact",
+        "source_repository": "microsoft/onnxruntime-extensions",
+        "source_commit": "bd0e21c11187e0b8a2385d1c61122a4d259a53a0",
+        "source_path": "test/data/custom_op_test.onnx",
+        "source_sha256": "3c35f6d0ba40415670605a533e3231ab3dfb9f0dd6761d56ad93ecf950527282",
+        "license": "MIT"
+      },
+      "measurement": {
+        "operator_count": 2,
+        "tensor_count": 4,
+        "explicit_qdq_boundary_count": 0,
+        "binding_status": "not_applicable",
+        "valid_binding_count": 0,
+        "unresolved_binding_count": 0,
+        "per_axis_tensor_count": 0,
+        "external_custom_node_count": 2,
+        "external_custom_domains": [
+          "ai.onnx.contrib"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "artifact_count": 4,
+    "per_axis_qdq_artifact_count": 3,
+    "complete_static_affine_artifact_count": 1,
+    "runtime_value_unresolved_artifact_count": 2,
+    "external_custom_domain_artifact_count": 1,
+    "total_operator_count": 6
+  },
+  "limitations": [
+    "The two ONNX source-derived fixtures establish schema-default per-axis structure while affine values remain runtime inputs.",
+    "The complete static fixture establishes deterministic decoding and cardinality checks, not ecosystem frequency.",
+    "The custom-domain artifact establishes unresolved external-registry handling, not availability of its runtime library or device kernel.",
+    "Observed execution-provider assignment, task accuracy, and latency remain outside this static corpus."
+  ],
+  "ledger_sha256": "67c0a3f2b567814992b9acafc4a88936cdb7bfb4a31cd6ef063868eff74c2d35"
+}

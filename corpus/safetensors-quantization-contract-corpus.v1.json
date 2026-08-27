@@ -1,0 +1,483 @@
+{
+  "schema": "deepbom.safetensors_quantization_contract_corpus.v1",
+  "purpose": "Source-bound structural validation of public AWQ and GPTQ SafeTensors repositories without redistributing model payloads.",
+  "population_boundary": "Two purposeful public architecture anchors. Counts establish parser and contract behavior only; they are not ecosystem prevalence estimates.",
+  "acquisition": "The complete SafeTensors header is fetched by immutable-revision HTTP range request. Full model size and LFS SHA-256 are independently checked against repository metadata. Weight payload bytes are not downloaded or redistributed.",
+  "artifact_count": 2,
+  "artifacts": [
+    {
+      "id": "teeny-tiny-llama-460m-awq",
+      "method": "awq",
+      "repository": "nicholasKluge/TeenyTinyLlama-460m-awq",
+      "revision": "1fcff3df8d6c30d380868dddc0ff1f543de68081",
+      "model_path": "model.safetensors",
+      "model_size_bytes": 340424488,
+      "model_sha256": "288b8529802a8f5c03052d010f5e08f2f5e7fb9a988ec486883f5e3dea4122ae",
+      "license": "Apache-2.0",
+      "license_status": "declared_in_repository_card_and_license_file",
+      "header_length_bytes": 61216,
+      "header_sha256": "54466eea341c9fe0a92ee86060d7a6e13222ece14ae91525c8a03ebf669f61ea",
+      "config_files": [
+        {
+          "path": "config.json",
+          "size_bytes": 918,
+          "sha256": "9323a94c20e2c4f0c491f5892b8d28fe1675e63826e5224da608578f3a02f596"
+        },
+        {
+          "path": "quant_config.json",
+          "size_bytes": 90,
+          "sha256": "039890acc208cdd893274a337f9df00dbe6047c46beac36a5e7fd77537cfce8b"
+        }
+      ],
+      "measurement": {
+        "status": "assessed",
+        "evidence_class": "OBSERVED/DERIVED_FROM_PINNED_FORMAT_SOURCE",
+        "bits": 4,
+        "group_size": 128,
+        "module_count": 168,
+        "valid_module_count": 168,
+        "invalid_module_count": 0,
+        "logical_weight_element_count": "402653184",
+        "packed_weight_code_capacity": "402653184",
+        "scale_element_count": "3145728",
+        "zero_point_code_capacity": "3145728",
+        "packed_tensor_bytes": 209190912,
+        "module_ledger_sha256": "1804bfa148a5b29b90a3ff158d785df0fbac3770236631dd36fff92bf1f0f23e",
+        "representative_modules": [
+          {
+            "name": "model.layers.0.mlp.down_proj",
+            "status": "pass",
+            "issues": [],
+            "input_features": 4096,
+            "output_features": 1024,
+            "bits": 4,
+            "group_size": 128,
+            "group_count": 32,
+            "logical_weight_axis": 1,
+            "stored_group_axis": 0,
+            "logical_weight_element_count": "4194304",
+            "packed_weight_code_capacity": "4194304",
+            "logical_weight_bits": "16777216",
+            "packed_weight_storage_bits": "16777216",
+            "packing_padding_bits": "0",
+            "packing_conservation_status": "exact_no_padding",
+            "scale_element_count": "32768",
+            "zero_point_code_capacity": "32768",
+            "zero_point_storage_transform": "packed_unsigned_zero_code",
+            "packed_tensor_bytes": 2179072,
+            "tensors": {
+              "qweight": {
+                "tensor_index": 0,
+                "tensor_name": "model.layers.0.mlp.down_proj.qweight",
+                "dtype": "I32",
+                "shape": [
+                  4096,
+                  128
+                ],
+                "byte_length": 2097152,
+                "shard_path": null
+              },
+              "qzeros": {
+                "tensor_index": 1,
+                "tensor_name": "model.layers.0.mlp.down_proj.qzeros",
+                "dtype": "I32",
+                "shape": [
+                  32,
+                  128
+                ],
+                "byte_length": 16384,
+                "shard_path": null
+              },
+              "scales": {
+                "tensor_index": 339,
+                "tensor_name": "model.layers.0.mlp.down_proj.scales",
+                "dtype": "F16",
+                "shape": [
+                  32,
+                  1024
+                ],
+                "byte_length": 65536,
+                "shard_path": null
+              }
+            }
+          },
+          {
+            "name": "model.layers.0.mlp.gate_proj",
+            "status": "pass",
+            "issues": [],
+            "input_features": 1024,
+            "output_features": 4096,
+            "bits": 4,
+            "group_size": 128,
+            "group_count": 8,
+            "logical_weight_axis": 1,
+            "stored_group_axis": 0,
+            "logical_weight_element_count": "4194304",
+            "packed_weight_code_capacity": "4194304",
+            "logical_weight_bits": "16777216",
+            "packed_weight_storage_bits": "16777216",
+            "packing_padding_bits": "0",
+            "packing_conservation_status": "exact_no_padding",
+            "scale_element_count": "32768",
+            "zero_point_code_capacity": "32768",
+            "zero_point_storage_transform": "packed_unsigned_zero_code",
+            "packed_tensor_bytes": 2179072,
+            "tensors": {
+              "qweight": {
+                "tensor_index": 2,
+                "tensor_name": "model.layers.0.mlp.gate_proj.qweight",
+                "dtype": "I32",
+                "shape": [
+                  1024,
+                  512
+                ],
+                "byte_length": 2097152,
+                "shard_path": null
+              },
+              "qzeros": {
+                "tensor_index": 3,
+                "tensor_name": "model.layers.0.mlp.gate_proj.qzeros",
+                "dtype": "I32",
+                "shape": [
+                  8,
+                  512
+                ],
+                "byte_length": 16384,
+                "shard_path": null
+              },
+              "scales": {
+                "tensor_index": 340,
+                "tensor_name": "model.layers.0.mlp.gate_proj.scales",
+                "dtype": "F16",
+                "shape": [
+                  8,
+                  4096
+                ],
+                "byte_length": 65536,
+                "shard_path": null
+              }
+            }
+          },
+          {
+            "name": "model.layers.0.mlp.up_proj",
+            "status": "pass",
+            "issues": [],
+            "input_features": 1024,
+            "output_features": 4096,
+            "bits": 4,
+            "group_size": 128,
+            "group_count": 8,
+            "logical_weight_axis": 1,
+            "stored_group_axis": 0,
+            "logical_weight_element_count": "4194304",
+            "packed_weight_code_capacity": "4194304",
+            "logical_weight_bits": "16777216",
+            "packed_weight_storage_bits": "16777216",
+            "packing_padding_bits": "0",
+            "packing_conservation_status": "exact_no_padding",
+            "scale_element_count": "32768",
+            "zero_point_code_capacity": "32768",
+            "zero_point_storage_transform": "packed_unsigned_zero_code",
+            "packed_tensor_bytes": 2179072,
+            "tensors": {
+              "qweight": {
+                "tensor_index": 4,
+                "tensor_name": "model.layers.0.mlp.up_proj.qweight",
+                "dtype": "I32",
+                "shape": [
+                  1024,
+                  512
+                ],
+                "byte_length": 2097152,
+                "shard_path": null
+              },
+              "qzeros": {
+                "tensor_index": 5,
+                "tensor_name": "model.layers.0.mlp.up_proj.qzeros",
+                "dtype": "I32",
+                "shape": [
+                  8,
+                  512
+                ],
+                "byte_length": 16384,
+                "shard_path": null
+              },
+              "scales": {
+                "tensor_index": 341,
+                "tensor_name": "model.layers.0.mlp.up_proj.scales",
+                "dtype": "F16",
+                "shape": [
+                  8,
+                  4096
+                ],
+                "byte_length": 65536,
+                "shard_path": null
+              }
+            }
+          }
+        ],
+        "source": {
+          "repository": "casper-hansen/AutoAWQ",
+          "commit": "5f3785dcaa107ca76f5fa5355f459370c86f82d6",
+          "path": "awq/modules/linear/gemm.py",
+          "sha256": "073e1faa28ce167349606ee2d0ad6362a1f978fe08ca07298da3c6b977123081",
+          "layout": "WQLinear_GEMM"
+        },
+        "payload_value_scan": "not_performed_header_only_corpus"
+      }
+    },
+    {
+      "id": "tiny-llama-1.1b-chat-v1-gptq",
+      "method": "gptq",
+      "repository": "TheBloke/TinyLlama-1.1B-Chat-v1.0-GPTQ",
+      "revision": "9d4580af0f21bccafd762dcc50d0c7bac6273584",
+      "model_path": "model.safetensors",
+      "model_size_bytes": 768148704,
+      "model_sha256": "ceef7773c19f5cbda3e5f688f99e045e07a879e70c19ecdb5d069b27c2d45b37",
+      "license": "Apache-2.0",
+      "license_status": "declared_in_repository_card",
+      "header_length_bytes": 89304,
+      "header_sha256": "1af673aef5b9935857f08292e026485d19af502bdc4c54c8c78f420bcf164522",
+      "config_files": [
+        {
+          "path": "config.json",
+          "size_bytes": 1536,
+          "sha256": "587fd916d1a083c43f393fa62eaf7c84e362a44489c9d94bd36c99296908af09"
+        },
+        {
+          "path": "quantize_config.json",
+          "size_bytes": 212,
+          "sha256": "2576141a3b05252fbda29e98c42b4af118b99d97e2decad0c938ff19e59976e2"
+        }
+      ],
+      "measurement": {
+        "status": "assessed",
+        "evidence_class": "OBSERVED/DERIVED_FROM_PINNED_FORMAT_SOURCE",
+        "bits": 4,
+        "group_size": 128,
+        "module_count": 154,
+        "valid_module_count": 154,
+        "invalid_module_count": 0,
+        "logical_weight_element_count": "968884224",
+        "packed_weight_code_capacity": "968884224",
+        "scale_element_count": "7569408",
+        "zero_point_code_capacity": "7569408",
+        "packed_tensor_bytes": 504942592,
+        "module_ledger_sha256": "a5a39ad2f482b797c2ac8d0d6d61d38ef646ed8a86e8225056782219db33ac20",
+        "representative_modules": [
+          {
+            "name": "model.layers.0.mlp.down_proj",
+            "status": "pass",
+            "issues": [],
+            "input_features": 5632,
+            "output_features": 2048,
+            "bits": 4,
+            "group_size": 128,
+            "group_count": 44,
+            "logical_weight_axis": 1,
+            "stored_group_axis": 0,
+            "logical_weight_element_count": "11534336",
+            "packed_weight_code_capacity": "11534336",
+            "logical_weight_bits": "46137344",
+            "packed_weight_storage_bits": "46137344",
+            "packing_padding_bits": "0",
+            "packing_conservation_status": "exact_no_padding",
+            "scale_element_count": "90112",
+            "zero_point_code_capacity": "90112",
+            "zero_point_storage_transform": "packed_zero_code_minus_one",
+            "packed_tensor_bytes": 6014976,
+            "tensors": {
+              "qweight": {
+                "tensor_index": 1,
+                "tensor_name": "model.layers.0.mlp.down_proj.qweight",
+                "dtype": "I32",
+                "shape": [
+                  704,
+                  2048
+                ],
+                "byte_length": 5767168,
+                "shard_path": null
+              },
+              "qzeros": {
+                "tensor_index": 2,
+                "tensor_name": "model.layers.0.mlp.down_proj.qzeros",
+                "dtype": "I32",
+                "shape": [
+                  44,
+                  256
+                ],
+                "byte_length": 45056,
+                "shard_path": null
+              },
+              "scales": {
+                "tensor_index": 510,
+                "tensor_name": "model.layers.0.mlp.down_proj.scales",
+                "dtype": "F16",
+                "shape": [
+                  44,
+                  2048
+                ],
+                "byte_length": 180224,
+                "shard_path": null
+              },
+              "g_idx": {
+                "tensor_index": 0,
+                "tensor_name": "model.layers.0.mlp.down_proj.g_idx",
+                "dtype": "I32",
+                "shape": [
+                  5632
+                ],
+                "byte_length": 22528,
+                "shard_path": null
+              }
+            }
+          },
+          {
+            "name": "model.layers.0.mlp.gate_proj",
+            "status": "pass",
+            "issues": [],
+            "input_features": 2048,
+            "output_features": 5632,
+            "bits": 4,
+            "group_size": 128,
+            "group_count": 16,
+            "logical_weight_axis": 1,
+            "stored_group_axis": 0,
+            "logical_weight_element_count": "11534336",
+            "packed_weight_code_capacity": "11534336",
+            "logical_weight_bits": "46137344",
+            "packed_weight_storage_bits": "46137344",
+            "packing_padding_bits": "0",
+            "packing_conservation_status": "exact_no_padding",
+            "scale_element_count": "90112",
+            "zero_point_code_capacity": "90112",
+            "zero_point_storage_transform": "packed_zero_code_minus_one",
+            "packed_tensor_bytes": 6000640,
+            "tensors": {
+              "qweight": {
+                "tensor_index": 4,
+                "tensor_name": "model.layers.0.mlp.gate_proj.qweight",
+                "dtype": "I32",
+                "shape": [
+                  256,
+                  5632
+                ],
+                "byte_length": 5767168,
+                "shard_path": null
+              },
+              "qzeros": {
+                "tensor_index": 5,
+                "tensor_name": "model.layers.0.mlp.gate_proj.qzeros",
+                "dtype": "I32",
+                "shape": [
+                  16,
+                  704
+                ],
+                "byte_length": 45056,
+                "shard_path": null
+              },
+              "scales": {
+                "tensor_index": 512,
+                "tensor_name": "model.layers.0.mlp.gate_proj.scales",
+                "dtype": "F16",
+                "shape": [
+                  16,
+                  5632
+                ],
+                "byte_length": 180224,
+                "shard_path": null
+              },
+              "g_idx": {
+                "tensor_index": 3,
+                "tensor_name": "model.layers.0.mlp.gate_proj.g_idx",
+                "dtype": "I32",
+                "shape": [
+                  2048
+                ],
+                "byte_length": 8192,
+                "shard_path": null
+              }
+            }
+          },
+          {
+            "name": "model.layers.0.mlp.up_proj",
+            "status": "pass",
+            "issues": [],
+            "input_features": 2048,
+            "output_features": 5632,
+            "bits": 4,
+            "group_size": 128,
+            "group_count": 16,
+            "logical_weight_axis": 1,
+            "stored_group_axis": 0,
+            "logical_weight_element_count": "11534336",
+            "packed_weight_code_capacity": "11534336",
+            "logical_weight_bits": "46137344",
+            "packed_weight_storage_bits": "46137344",
+            "packing_padding_bits": "0",
+            "packing_conservation_status": "exact_no_padding",
+            "scale_element_count": "90112",
+            "zero_point_code_capacity": "90112",
+            "zero_point_storage_transform": "packed_zero_code_minus_one",
+            "packed_tensor_bytes": 6000640,
+            "tensors": {
+              "qweight": {
+                "tensor_index": 7,
+                "tensor_name": "model.layers.0.mlp.up_proj.qweight",
+                "dtype": "I32",
+                "shape": [
+                  256,
+                  5632
+                ],
+                "byte_length": 5767168,
+                "shard_path": null
+              },
+              "qzeros": {
+                "tensor_index": 8,
+                "tensor_name": "model.layers.0.mlp.up_proj.qzeros",
+                "dtype": "I32",
+                "shape": [
+                  16,
+                  704
+                ],
+                "byte_length": 45056,
+                "shard_path": null
+              },
+              "scales": {
+                "tensor_index": 514,
+                "tensor_name": "model.layers.0.mlp.up_proj.scales",
+                "dtype": "F16",
+                "shape": [
+                  16,
+                  5632
+                ],
+                "byte_length": 180224,
+                "shard_path": null
+              },
+              "g_idx": {
+                "tensor_index": 6,
+                "tensor_name": "model.layers.0.mlp.up_proj.g_idx",
+                "dtype": "I32",
+                "shape": [
+                  2048
+                ],
+                "byte_length": 8192,
+                "shard_path": null
+              }
+            }
+          }
+        ],
+        "source": {
+          "repository": "ModelCloud/GPTQModel",
+          "release": "7.3.5",
+          "commit": "a752a7cebeaa5feb499e0b038895f745572ab0fa",
+          "path": "gptqmodel/nn_modules/qlinear/__init__.py",
+          "sha256": "63c03283af6a1452b1427f88340e992795dfc8169e06f52a4500d692b01486d4",
+          "layout": "GPTQQuantLinear classic INT32-compatible packed state"
+        },
+        "payload_value_scan": "not_performed_header_only_corpus"
+      }
+    }
+  ],
+  "ledger_sha256": "759a690d50bb5cf1e5a8a07a0ca6da634520981bc97cb16a9f9c1b30f8d081c0"
+}

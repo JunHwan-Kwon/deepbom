@@ -1,0 +1,22 @@
+{
+  "$schema": "https://cyclonedx.org/schema/2.0/cyclonedx-2.0.schema.json",
+  "specFormat": "CycloneDX",
+  "specVersion": "2.0",
+  "serialNumber": "urn:uuid:588fadb1-ac6f-41fb-8268-e81c4a846386",
+  "version": 1,
+  "components": [
+    {
+      "type": "machine-learning-model",
+      "bom-ref": "quant-fixture-invalid-ai-ml-quantization-unknown-scheme-2.0",
+      "name": "invalid-ai-ml-quantization-unknown-scheme-2.0",
+      "version": "1.0.0",
+      "modelProperties": {
+        "quantization": {
+          "bits": 8,
+          "scheme": "affine_asymmetric",
+          "granularity": "per-tensor"
+        }
+      }
+    }
+  ]
+}

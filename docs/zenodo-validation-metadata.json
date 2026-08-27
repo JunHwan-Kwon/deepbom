@@ -1,0 +1,31 @@
+{
+  "creators": [
+    {
+      "name": "Kwon, Jun-Hwan",
+      "orcid": "0000-0002-6464-3895",
+      "affiliation": "Anesthesia and Pain Research Institute, Yonsei University College of Medicine",
+      "type": "DataCollector"
+    }
+  ],
+  "title": "DEEPBOM 1.94.0 Supported-Format Validation Evidence",
+  "description": "Hash-bound validation evidence for the DEEPBOM 1.94.0 open research software snapshot. The dataset contains deterministic parser results, actual browser UI captures, export availability records, and one public engineering artifact bundle for each advertised TFLite, ONNX, GGUF, SafeTensors, Core ML model, Core ML package, and sharded SafeTensors path. Coverage is limited to the identified public or deterministically derived fixtures and is not a claim of universal producer or runtime coverage.",
+  "version": "1.94.0",
+  "access_right": "open",
+  "license": "cc-by-4.0",
+  "upload_type": "dataset",
+  "language": "eng",
+  "keywords": [
+    "on-device AI",
+    "model deployment validation",
+    "static analysis",
+    "quantization",
+    "TFLite",
+    "ONNX",
+    "GGUF",
+    "SafeTensors",
+    "Core ML",
+    "XNNPACK",
+    "CycloneDX",
+    "ML-BOM"
+  ]
+}

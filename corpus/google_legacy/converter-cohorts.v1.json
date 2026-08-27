@@ -1,0 +1,104 @@
+{
+  "schema": "deepbom.converter_cohorts.v1",
+  "as_of": "2026-07-29",
+  "research_question": "Do channel-degeneracy and integer-contract findings track architecture, converter generation, quantization recipe, or their interaction?",
+  "classification_rule": "Artifact-level class is a coarse routing label. Per-op and per-tensor quantization states remain the measurement unit for selective or mixed-scheme artifacts.",
+  "cohorts": [
+    {
+      "id": "legacy_google_hosted",
+      "label": "Legacy Google-hosted quantized artifacts",
+      "status": "downloadable_and_measured",
+      "converter_attribution_strength": "candidate",
+      "members": [
+        "mobilenet-v1-1.0-224-quant",
+        "mobilenet-v2-1.0-224-quant",
+        "inception-v3-quant",
+        "ssd-mobilenet-v1-quant"
+      ],
+      "method": "Use immutable artifact SHA-256 identities. Do not infer an exact converter binary from year alone."
+    },
+    {
+      "id": "mlir_converter",
+      "label": "TensorFlow MLIR converter",
+      "status": "recipe_required",
+      "converter_attribution_strength": "confirmed_only_for_regenerated_artifacts",
+      "candidate_architectures": [
+        "MobileNetV3 Large and Small",
+        "EfficientNet-Lite0 through Lite4",
+        "EfficientNet-EdgeTPU",
+        "MobileDet",
+        "EfficientDet-Lite",
+        "DeepLabV3 with MobileNetV2",
+        "MoveNet"
+      ],
+      "admission_gate": "Pin source checkpoint SHA, TensorFlow package and wheel hash, converter flags, representative dataset identity, random seeds, output SHA-256, and numerical parity results."
+    },
+    {
+      "id": "litert_torch",
+      "label": "LiteRT Torch direct PyTorch conversion",
+      "status": "harness_ready_conversion_not_run",
+      "converter_attribution_strength": "confirmed_when_recipe_record_is_complete",
+      "package": {
+        "name": "litert-torch",
+        "version": "0.9.2",
+        "wheel_filename": "litert_torch-0.9.2-py3-none-any.whl",
+        "wheel_sha256": "e6688f08ded25dc4b8d7018260f3722b03cabc4a022c3f02cdfd9dadf500e3b3",
+        "released_at": "2026-07-27T23:09:31Z",
+        "deprecated_alias": "ai-edge-torch"
+      },
+      "official_sources": [
+        "https://developers.google.com/edge/litert/conversion/pytorch/overview",
+        "https://pypi.org/project/litert-torch/0.9.2/"
+      ],
+      "verified_claim": "A torch.export-compatible PyTorch model can be converted directly to a .tflite artifact.",
+      "rejected_overstatement": "This does not prove that every PyTorch model previously required a PyTorch-to-ONNX-to-TensorFlow-to-TensorFlow.js chain, nor that all dynamic shapes are categorically unsupported.",
+      "admission_gate": "Record source repository and revision, checkpoint hash, model factory, example input shapes and dtypes, dynamic-shape policy, package inventory, converter options, output hash, and source-versus-LiteRT parity."
+    },
+    {
+      "id": "ai_edge_quantizer",
+      "label": "AI Edge Quantizer selective and mixed schemes",
+      "status": "harness_ready_conversion_not_run",
+      "converter_attribution_strength": "confirmed_when_recipe_record_is_complete",
+      "package": {
+        "name": "ai-edge-quantizer",
+        "version": "0.8.0",
+        "sdist_filename": "ai_edge_quantizer-0.8.0.tar.gz",
+        "sdist_sha256": "b9cef6fc13c5460a29f8ac2be1a640e6a5bcf4289811eda8120686cb25772650",
+        "released_at": "2026-07-13"
+      },
+      "official_sources": [
+        "https://pypi.org/project/ai-edge-quantizer/0.8.0/",
+        "https://github.com/google-ai-edge/ai-edge-quantizer"
+      ],
+      "verified_claim": "Recipes can scope dynamic, weight-only, or static quantization to selected operators; unspecified operators can remain FP32.",
+      "engine_implication": "A single artifact label is not a sufficient research denominator. Persist per-op compute precision, explicit dequantization, tensor storage dtype, granularity, symmetry, and scale-axis state.",
+      "admission_gate": "Pin the FP32 source artifact hash, quantizer package, recipe source and hash, all calibration sample identities and ordering, random seeds, output hash, and FP32-versus-quantized quality metrics."
+    }
+  ],
+  "runtime_validation": {
+    "litert_js": {
+      "official_announcement": "https://developers.googleblog.com/en/litertjs-googles-high-performance-web-ai-inference/",
+      "announcement_date": "2026-07-09",
+      "verified_backends": {
+        "cpu": "XNNPACK",
+        "gpu": "ML Drift over WebGPU",
+        "npu": "experimental WebNN"
+      },
+      "deepbom_status": "The browser runtime path is implemented with @litertjs/core and a WASM accelerator request. A report remains not_assessed until the user runs the local consequence experiment.",
+      "project_pin": "@litertjs/core 2.5.2",
+      "observed_registry_latest_at_as_of": "@litertjs/core 2.5.3"
+    }
+  },
+  "tensorflow_2_21_correction": {
+    "official_release": "https://github.com/tensorflow/tensorflow/releases/tag/v2.21.0",
+    "verified_low_precision_changes": [
+      "int8 and int16x8 SQRT support",
+      "int16x8 EQUAL and NOT_EQUAL support",
+      "int2 support and int2/int4 tfl.cast",
+      "SRQ int2 fully-connected support",
+      "int4 slice support",
+      "uint4 support"
+    ],
+    "not_established_by_release_notes": "The release notes do not by themselves prove that previously CPU-fallback operators are delegated to a particular quantized accelerator. Runtime delegation and hardware execution require backend-specific evidence."
+  }
+}

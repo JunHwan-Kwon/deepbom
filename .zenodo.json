@@ -1,0 +1,42 @@
+{
+  "creators": [
+    {
+      "name": "Kwon, Jun-Hwan",
+      "orcid": "0000-0002-6464-3895",
+      "affiliation": "Anesthesia and Pain Research Institute, Yonsei University College of Medicine",
+      "type": "ProjectLeader"
+    }
+  ],
+  "title": "DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts",
+  "description": "DEEPBOM is a browser-native static analyzer for TFLite, ONNX, GGUF, SafeTensors, and Core ML deployment artifacts. It reports deterministic graph, tensor, quantization, memory, execution-provider, XNNPACK delegation, and target-fit evidence when supported by the serialized artifact and source-pinned rules, while keeping runtime-dependent claims explicit. This record provides a persistent, versioned citation and provenance identity for the hosted software. Implementation source, executable artifacts, protected WebAssembly, production credentials, and model files are not included in this deposit.",
+  "version": "1.94.0",
+  "access_right": "restricted",
+  "access_conditions": "Files are retained as a restricted release-provenance dossier. The deposited files do not include implementation source or executables. Research collaboration or independent review access may be considered separately by the rights holder.",
+  "upload_type": "software",
+  "language": "eng",
+  "keywords": [
+    "on-device AI",
+    "neural network deployment",
+    "static analysis",
+    "quantization",
+    "TFLite",
+    "ONNX",
+    "GGUF",
+    "SafeTensors",
+    "Core ML",
+    "XNNPACK",
+    "SIMD",
+    "NEON",
+    "delegation",
+    "CycloneDX",
+    "ML-BOM",
+    "WebAssembly"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://deepbom.org/",
+      "relation": "isSupplementedBy",
+      "resource_type": "other"
+    }
+  ]
+}

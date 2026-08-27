@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Compare a DEEPBOM report fingerprint</title>
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://deepbom.org/verify" />
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #0b1220; color: #e2e8f0; font-family: "Segoe UI", system-ui, sans-serif; line-height: 1.5; }
+      .wrap { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+      a { color: #56b4e9; }
+      h1 { font-size: 30px; margin: 0 0 4px; }
+      .sub { color: #94a3b8; margin: 0 0 28px; }
+      .card { background: rgba(15, 23, 42, 0.6); border: 1px solid #1e293b; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+      label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 6px; }
+      input[type="text"] { width: 100%; padding: 10px 12px; background: #0f1623; border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-family: ui-monospace, monospace; font-size: 15px; letter-spacing: 0.05em; }
+      .drop { border: 2px dashed #334155; border-radius: 8px; padding: 26px; text-align: center; color: #94a3b8; cursor: pointer; transition: border-color .15s; }
+      .drop.over { border-color: #56b4e9; color: #e2e8f0; }
+      button { margin-top: 14px; padding: 9px 18px; background: #b8860b; color: #0b1220; border: 0; border-radius: 6px; font-weight: 600; cursor: pointer; }
+      .result { margin-top: 10px; padding: 14px 16px; border-radius: 8px; font-size: 14px; display: none; }
+      .result.ok { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.4); }
+      .result.bad { background: rgba(220,38,38,0.12); border: 1px solid rgba(220,38,38,0.4); }
+      .result.info { background: rgba(59,130,246,0.10); border: 1px solid rgba(59,130,246,0.35); }
+      .kv { font-family: ui-monospace, monospace; font-size: 12px; color: #94a3b8; word-break: break-all; }
+      .foot { color: #64748b; font-size: 12px; margin-top: 30px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p style="letter-spacing:.2em;color:#f59e0b;font-size:12px;margin:0">DEEPBOM</p>
+      <h1>Compare a report fingerprint</h1>
+      <p class="sub">Hash a report locally and compare it with a fingerprint previously registered by a signed-in user. A match confirms byte integrity against that registry record; it does not prove that DEEPBOM generated or issued the report.</p>
+
+      <div class="card">
+        <label for="code">Registration code (from the report's "Report Fingerprint Registry" section)</label>
+        <input id="code" type="text" placeholder="DB-XXXX-XXXX" autocomplete="off" spellcheck="false" />
+        <button id="lookupBtn" type="button">Look up code</button>
+        <div id="lookupResult" class="result"></div>
+      </div>
+
+      <div class="card">
+        <label>Report file (.md as downloaded from DEEPBOM)</label>
+        <div id="drop" class="drop">Drop the report file here, or click to choose</div>
+        <input id="file" type="file" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden />
+        <div id="matchResult" class="result"></div>
+      </div>
+
+      <p class="foot">The registry stores only the report fingerprint (SHA-256), the audited model's hash, and analyzer/rulepack versions — never the report body, the model, or any filename. <a href="/">Back to DEEPBOM</a></p>
+    </div>
+
+    <script>
+      const SENTINEL = "<!-- deepbom-verification -->";
+      const codeEl = document.getElementById("code");
+      const lookupBtn = document.getElementById("lookupBtn");
+      const lookupResult = document.getElementById("lookupResult");
+      const matchResult = document.getElementById("matchResult");
+      const drop = document.getElementById("drop");
+      const fileInput = document.getElementById("file");
+      let registered = null; // { report_hash, ... }
+      let fileHash = null;
+
+      function show(el, cls, message, details = []) {
+        el.className = "result " + cls;
+        el.style.display = "block";
+        const text = document.createElement("div");
+        text.textContent = message;
+        el.replaceChildren(text);
+        if (details.length) {
+          const values = document.createElement("span");
+          values.className = "kv";
+          values.style.whiteSpace = "pre-line";
+          values.textContent = details.join("\n");
+          el.append(values);
+        }
+      }
+
+      async function sha256Hex(bytes) {
+        const buf = await crypto.subtle.digest("SHA-256", bytes);
+        return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+      function bodyForFingerprint(text) {
+        const i = text.indexOf(SENTINEL);
+        return (i >= 0 ? text.slice(0, i) : text).replace(/\s+$/, "");
+      }
+
+      const params = new URLSearchParams(location.search);
+      if (params.get("code")) { codeEl.value = params.get("code"); }
+
+      async function lookup() {
+        const code = codeEl.value.trim().toUpperCase();
+        if (!/^DB-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)) { show(lookupResult, "bad", "Enter a code like DB-7F3K-9Q2M."); return; }
+        show(lookupResult, "info", "Looking up…");
+        try {
+          const res = await fetch("/api/report/verify?code=" + encodeURIComponent(code));
+          if (res.status === 404) { registered = null; show(lookupResult, "bad", "No report is registered under this code."); return; }
+          if (!res.ok) throw new Error(res.status);
+          registered = await res.json();
+          show(lookupResult, "ok", "Fingerprint registration found.", [
+            "fingerprint " + registered.report_hash,
+            "artifact " + (registered.artifact_sha256 || "n/a"),
+            "analyzer " + (registered.analyzer_version || "?") + " / " + (registered.rulepack_version || "?"),
+            "registered " + registered.registered_at,
+            "registry tag " + (registered.authentication_algorithm || "none"),
+          ]);
+          checkMatch();
+        } catch (e) { show(lookupResult, "bad", "Lookup failed. Try again."); }
+      }
+      lookupBtn.addEventListener("click", lookup);
+      if (params.get("code")) lookup();
+
+      function checkMatch() {
+        if (!fileHash) return;
+        if (!registered) { show(matchResult, "info", "Look up a registration code to compare this local fingerprint.", ["file " + fileHash]); return; }
+        if (fileHash === registered.report_hash) {
+          show(matchResult, "ok", "Fingerprint match. The report body matches the registered value. This does not certify report origin or analytical correctness.");
+        } else {
+          show(matchResult, "bad", "Fingerprint mismatch. The report body differs from this registry record or belongs to another code.", ["file " + fileHash]);
+        }
+      }
+
+      async function handleFile(file) {
+        const text = await file.text();
+        fileHash = await sha256Hex(new TextEncoder().encode(bodyForFingerprint(text)));
+        checkMatch();
+      }
+      drop.addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", (e) => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+      drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+      drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+      drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+    </script>
+  </body>
+</html>

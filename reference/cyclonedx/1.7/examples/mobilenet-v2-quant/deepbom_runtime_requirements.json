@@ -1,0 +1,1954 @@
+{
+  "schema": "deepbom.runtime_requirement_manifest.v1.3",
+  "document_type": "runtime-requirement-manifest",
+  "generated_at": "2026-07-29T00:00:00.000Z",
+  "subject": {
+    "name": "mobilenet_v2_1.0_224_quant.tflite",
+    "format": "tflite",
+    "sha256": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+    "hash_basis": "artifact_file_bytes_sha256",
+    "byte_length": 3577760,
+    "schema_or_opset": "TFLite schema 3",
+    "declared_version": null,
+    "component_bom_ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d"
+  },
+  "target_independent_requirements": {
+    "necessary_runtime_floor": {
+      "runtime": "TensorFlow Lite / LiteRT",
+      "declared_minimum_version": null,
+      "derived_minimum_version": "1.5.0",
+      "minimum_version": "1.5.0",
+      "status": "complete_for_observed_builtin_op_versions",
+      "evidence_class": "DERIVED_NECESSARY_MINIMUM",
+      "basis": "Necessary floor derived from the pinned TensorFlow runtime-version map with complete observed builtin op-code coverage (5/5); driver(s): ADD v1, AVERAGE_POOL_2D v1, CONV_2D v1, DEPTHWISE_CONV_2D v1, RESHAPE v1. This is not an execution-compatibility guarantee.",
+      "coverage_complete": true
+    },
+    "current_litert_int8_profile_conformance": {
+      "profile": "litert_current_int8_operator_profile",
+      "profile_scope": "Current LiteRT INT8 CONV_2D and DEPTHWISE_CONV_2D weight contracts",
+      "status": "nonconformant",
+      "evidence_class": "OBSERVED_ARTIFACT_CONTRACT_VIOLATION",
+      "candidate_operator_count": 53,
+      "assessed_operator_count": 53,
+      "unassessed_operator_count": 0,
+      "violation_count": 159,
+      "violation_codes": [
+        "weight_dtype_expected_int8",
+        "weight_granularity_per_tensor_expected_per_axis",
+        "weight_zero_point_nonzero_expected_zero"
+      ],
+      "violations": [
+        {
+          "op_index": 0,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 2,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 0,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 2,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 0,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 2,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 122,
+          "observed_max": 122,
+          "expected": 0
+        },
+        {
+          "op_index": 1,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 13,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 1,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 13,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 1,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 13,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 165,
+          "observed_max": 165,
+          "expected": 0
+        },
+        {
+          "op_index": 2,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 16,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 2,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 16,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 2,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 16,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 140,
+          "observed_max": 140,
+          "expected": 0
+        },
+        {
+          "op_index": 3,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 22,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 3,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 22,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 3,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 22,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 127,
+          "observed_max": 127,
+          "expected": 0
+        },
+        {
+          "op_index": 4,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 19,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 4,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 19,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 4,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 19,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 109,
+          "observed_max": 109,
+          "expected": 0
+        },
+        {
+          "op_index": 5,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 25,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 5,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 25,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 5,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 25,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 156,
+          "observed_max": 156,
+          "expected": 0
+        },
+        {
+          "op_index": 6,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 99,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 6,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 99,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 6,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 99,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 144,
+          "observed_max": 144,
+          "expected": 0
+        },
+        {
+          "op_index": 7,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 96,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 7,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 96,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 7,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 96,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 52,
+          "observed_max": 52,
+          "expected": 0
+        },
+        {
+          "op_index": 8,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 102,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 8,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 102,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 8,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 102,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 122,
+          "observed_max": 122,
+          "expected": 0
+        },
+        {
+          "op_index": 10,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 108,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 10,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 108,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 10,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 108,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 104,
+          "observed_max": 104,
+          "expected": 0
+        },
+        {
+          "op_index": 11,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 105,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 11,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 105,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 11,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 105,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 143,
+          "observed_max": 143,
+          "expected": 0
+        },
+        {
+          "op_index": 12,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 111,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 12,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 111,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 12,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 111,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 111,
+          "observed_max": 111,
+          "expected": 0
+        },
+        {
+          "op_index": 13,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 118,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 13,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 118,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 13,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 118,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 128,
+          "observed_max": 128,
+          "expected": 0
+        },
+        {
+          "op_index": 14,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 115,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 14,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 115,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 14,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 115,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 118,
+          "observed_max": 118,
+          "expected": 0
+        },
+        {
+          "op_index": 15,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 121,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 15,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 121,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 15,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 121,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 146,
+          "observed_max": 146,
+          "expected": 0
+        },
+        {
+          "op_index": 17,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 128,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 17,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 128,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 17,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 128,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 135,
+          "observed_max": 135,
+          "expected": 0
+        },
+        {
+          "op_index": 18,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 125,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 18,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 125,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 18,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 125,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 95,
+          "observed_max": 95,
+          "expected": 0
+        },
+        {
+          "op_index": 19,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 131,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 19,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 131,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 19,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 131,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 128,
+          "observed_max": 128,
+          "expected": 0
+        },
+        {
+          "op_index": 21,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 137,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 21,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 137,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 21,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 137,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 127,
+          "observed_max": 127,
+          "expected": 0
+        },
+        {
+          "op_index": 22,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 134,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 22,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 134,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 22,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 134,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 127,
+          "observed_max": 127,
+          "expected": 0
+        },
+        {
+          "op_index": 23,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 140,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 23,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 140,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 23,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 140,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 147,
+          "observed_max": 147,
+          "expected": 0
+        },
+        {
+          "op_index": 24,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 147,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 24,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 147,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 24,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 147,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 125,
+          "observed_max": 125,
+          "expected": 0
+        },
+        {
+          "op_index": 25,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 144,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 25,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 144,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 25,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 144,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 110,
+          "observed_max": 110,
+          "expected": 0
+        },
+        {
+          "op_index": 26,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 150,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 26,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 150,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 26,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 150,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 124,
+          "observed_max": 124,
+          "expected": 0
+        },
+        {
+          "op_index": 28,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 157,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 28,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 157,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 28,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 157,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 134,
+          "observed_max": 134,
+          "expected": 0
+        },
+        {
+          "op_index": 29,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 154,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 29,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 154,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 29,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 154,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 133,
+          "observed_max": 133,
+          "expected": 0
+        },
+        {
+          "op_index": 30,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 160,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 30,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 160,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 30,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 160,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 125,
+          "observed_max": 125,
+          "expected": 0
+        },
+        {
+          "op_index": 32,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 167,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 32,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 167,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 32,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 167,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 127,
+          "observed_max": 127,
+          "expected": 0
+        },
+        {
+          "op_index": 33,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 164,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 33,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 164,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 33,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 164,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 155,
+          "observed_max": 155,
+          "expected": 0
+        },
+        {
+          "op_index": 34,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 170,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 34,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 170,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 34,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 170,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 144,
+          "observed_max": 144,
+          "expected": 0
+        },
+        {
+          "op_index": 36,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 31,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 36,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 31,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 36,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 31,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 131,
+          "observed_max": 131,
+          "expected": 0
+        },
+        {
+          "op_index": 37,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 28,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 37,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 28,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 37,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 28,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 143,
+          "observed_max": 143,
+          "expected": 0
+        },
+        {
+          "op_index": 38,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 34,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 38,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 34,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 38,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 34,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 129,
+          "observed_max": 129,
+          "expected": 0
+        },
+        {
+          "op_index": 39,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 41,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 39,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 41,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 39,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 41,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 134,
+          "observed_max": 134,
+          "expected": 0
+        },
+        {
+          "op_index": 40,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 38,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 40,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 38,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 40,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 38,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 66,
+          "observed_max": 66,
+          "expected": 0
+        },
+        {
+          "op_index": 41,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 44,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 41,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 44,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 41,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 44,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 136,
+          "observed_max": 136,
+          "expected": 0
+        },
+        {
+          "op_index": 43,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 51,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 43,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 51,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 43,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 51,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 138,
+          "observed_max": 138,
+          "expected": 0
+        },
+        {
+          "op_index": 44,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 48,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 44,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 48,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 44,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 48,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 159,
+          "observed_max": 159,
+          "expected": 0
+        },
+        {
+          "op_index": 45,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 54,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 45,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 54,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 45,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 54,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 154,
+          "observed_max": 154,
+          "expected": 0
+        },
+        {
+          "op_index": 47,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 60,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 47,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 60,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 47,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 60,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 123,
+          "observed_max": 123,
+          "expected": 0
+        },
+        {
+          "op_index": 48,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 57,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 48,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 57,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 48,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 57,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 92,
+          "observed_max": 92,
+          "expected": 0
+        },
+        {
+          "op_index": 49,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 63,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 49,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 63,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 49,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 63,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 140,
+          "observed_max": 140,
+          "expected": 0
+        },
+        {
+          "op_index": 50,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 70,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 50,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 70,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 50,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 70,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 135,
+          "observed_max": 135,
+          "expected": 0
+        },
+        {
+          "op_index": 51,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 67,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 51,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 67,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 51,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 67,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 147,
+          "observed_max": 147,
+          "expected": 0
+        },
+        {
+          "op_index": 52,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 73,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 52,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 73,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 52,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 73,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 139,
+          "observed_max": 139,
+          "expected": 0
+        },
+        {
+          "op_index": 54,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 80,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 54,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 80,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 54,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 80,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 127,
+          "observed_max": 127,
+          "expected": 0
+        },
+        {
+          "op_index": 55,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 77,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 55,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 77,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 55,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 77,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 102,
+          "observed_max": 102,
+          "expected": 0
+        },
+        {
+          "op_index": 56,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 83,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 56,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 83,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 56,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 83,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 131,
+          "observed_max": 131,
+          "expected": 0
+        },
+        {
+          "op_index": 58,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 89,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 58,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 89,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 58,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 89,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 135,
+          "observed_max": 135,
+          "expected": 0
+        },
+        {
+          "op_index": 59,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 86,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 59,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 86,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 59,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 86,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 201,
+          "observed_max": 201,
+          "expected": 0
+        },
+        {
+          "op_index": 60,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 92,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 60,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 92,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 60,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 92,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 111,
+          "observed_max": 111,
+          "expected": 0
+        },
+        {
+          "op_index": 61,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 5,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 61,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 5,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 61,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 5,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 125,
+          "observed_max": 125,
+          "expected": 0
+        },
+        {
+          "op_index": 63,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 9,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 63,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 9,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 63,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 9,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 113,
+          "observed_max": 113,
+          "expected": 0
+        }
+      ],
+      "legacy_qu8_artifact": true,
+      "source": "https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec",
+      "interpretation_boundary": "A legacy UINT8 asymmetric artifact can remain executable through a separately enabled legacy QU8 runtime path while being nonconformant to the current LiteRT INT8 operator profile."
+    },
+    "backend_build_requirements": [
+      {
+        "id": "xnnpack_required_build_configuration_unbound_0",
+        "backend": "XNNPACK",
+        "required_configuration": "--define tflite_with_xnnpack_qu8=true; legacy QU8 support is experimental and runtime build configuration is not embedded",
+        "binding": {
+          "status": "pending_runtime_evidence_not_imported",
+          "evidence_class": "NOT_ASSESSED",
+          "value": null
+        },
+        "evidence_class": "CONDITIONAL_SOURCE_BACKED_CONFIGURATION_SCENARIO",
+        "interpretation_boundary": "The model artifact does not identify the deployed runtime binary or its compile flags. This row states what the pinned rulepack requires and the assignment consequence if that requirement is absent; it does not observe that the deployed runtime lacks the flag."
+      }
+    ],
+    "numerical_abi_requirements": [
+      {
+        "id": "tflite_single_rounding",
+        "compile_definition": "TFLITE_SINGLE_ROUNDING",
+        "binding_status": "pending",
+        "declared_mode": null,
+        "evidence_class": "NOT_ASSESSED",
+        "release_gate_required": true,
+        "interpretation_boundary": "Static evidence proves build-mode sensitivity over the assessed integer domain; it does not identify the deployed compile flag or observed task-level impact."
+      }
+    ],
+    "preprocessing_contract": {
+      "status": "assessed",
+      "exact_contract_ids": [
+        "raw_storage_rgb",
+        "raw_storage_bgr",
+        "artifact_affine_rgb",
+        "center_128_div_128_rgb"
+      ],
+      "portfolio_ledger_sha256": "35a1ca877c09dd440ed75e7cfbe1789c6b3693ea6572da5069cf6a01aadd5bb5",
+      "production_binding": {
+        "status": "pending_production_preprocessing_binding",
+        "contract_id": null,
+        "implementation_sha256": null,
+        "exact_contract_match": null
+      }
+    },
+    "interface_quantization_contract": {
+      "schema": "deepbom.interface_quantization_contracts.v1.3",
+      "status": "binding_required",
+      "ledger_sha256": "30c462341a9830ab81ec60bc3f27bc48a7cf826eea71a67b5abddf442150d38b",
+      "external_parameter_count": 2,
+      "complete_affine_parameter_count": 2,
+      "unquantized_parameter_count": 0,
+      "invalid_or_incomplete_parameter_count": 0,
+      "parameters": [
+        {
+          "direction": "input",
+          "ordinal": 0,
+          "tensor_name": "input",
+          "dtype": "UINT8",
+          "shape": [
+            1,
+            224,
+            224,
+            3
+          ],
+          "shape_signature": null,
+          "affine_mapping_status": "complete_affine_mapping",
+          "granularity": "per_tensor",
+          "parameterization": "per_tensor",
+          "scales": [
+            0.0078125
+          ],
+          "zero_points": [
+            128
+          ],
+          "axis": null,
+          "block_size": null,
+          "interface_contract_sha256": "14f100754e65c865b32b905a74c2915bec5a9872707bee7be70080c218ba4b56"
+        },
+        {
+          "direction": "output",
+          "ordinal": 0,
+          "tensor_name": "output",
+          "dtype": "UINT8",
+          "shape": [
+            1,
+            1001
+          ],
+          "shape_signature": null,
+          "affine_mapping_status": "complete_affine_mapping",
+          "granularity": "per_tensor",
+          "parameterization": "per_tensor",
+          "scales": [
+            0.09889253973960876
+          ],
+          "zero_points": [
+            58
+          ],
+          "axis": null,
+          "block_size": null,
+          "interface_contract_sha256": "0082096ef3eec9047e04771015d849c58d08758f75fab4fd8944029a4fa35cad"
+        }
+      ],
+      "production_binding": {
+        "status": "unbound",
+        "artifact_sha256": null,
+        "implementation_sha256": null,
+        "declared_parameter_count": 0,
+        "missing_parameter_count": 0,
+        "mismatched_parameter_count": 0,
+        "gate_result": "pending",
+        "mismatch_details": [],
+        "declaration_validation": {
+          "source_kind": "none",
+          "valid": true,
+          "errors": []
+        }
+      },
+      "comparison": {
+        "schema": "deepbom.interface_contract_comparison.v1",
+        "status": "unbound",
+        "evidence_class": "NOT_ASSESSED",
+        "expected_artifact_sha256": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+        "declared_artifact_sha256": null,
+        "implementation_sha256": null,
+        "expected_parameter_count": 2,
+        "declared_parameter_count": 0,
+        "mismatch_count": 0,
+        "mismatches": [],
+        "declaration_validation": {
+          "source_kind": "none",
+          "valid": true,
+          "errors": []
+        },
+        "gate_result": "pending",
+        "interpretation_boundary": "A mismatch is an observed deployment-configuration integrity contradiction. An absent declaration is unbound evidence, not a vulnerability or proof of incorrect inference."
+      },
+      "interpretation_boundary": "The binding compares a hash-identified application encoder/decoder declaration with every artifact-derived external interface contract, including interfaces with no affine mapping. Passing proves declared contract identity, not preprocessing correctness or model suitability."
+    }
+  },
+  "target_specific_impact": {
+    "target_profile": {
+      "id": "android_mid_a55",
+      "label": "Android mid-range / Cortex-A55 (L1D 32 KiB default)",
+      "profile_sha256": "0d4b792fbf7f54dfbc4edd482af6d689822b1ca974c081d0364d27ee6dd1c093"
+    },
+    "backend_build_requirement_impacts": [
+      {
+        "id": "xnnpack_required_build_configuration_unbound_0",
+        "conditional_impact": {
+          "baseline_conditionally_delegatable_ops": 64,
+          "affected_conditionally_delegatable_ops": 64,
+          "affected_conditionally_delegatable_mac_ratio": 1,
+          "affected_conditionally_delegatable_mac_percent": 100,
+          "absent_condition_remaining_conditionally_delegatable_ops": 0,
+          "absent_condition_remaining_predicted_delegate_segments": 0
+        }
+      }
+    ],
+    "numerical_abi_impact": {
+      "assessed_channels": 18057,
+      "divergent_channels": 17083,
+      "divergent_interval_states": "2874544",
+      "maximum_absolute_output_delta_codes": 1,
+      "multiplier_encoding_divergence_channels": 0,
+      "build_mode_dependent_constant_channels": 1,
+      "representative_witness": {
+        "op_index": 1,
+        "op_name": "DEPTHWISE_CONV_2D",
+        "channel_index": 26,
+        "default_output_code_interval": [
+          0,
+          1
+        ],
+        "single_rounding_output_code_interval": [
+          0,
+          0
+        ],
+        "default_constant": false,
+        "single_rounding_constant": true,
+        "vitality_ledger_sha256": "d4b09fabf80bb0b6ac30e0686097e220720d918f59e1bec1cf6e84a5c2e3498d"
+      }
+    }
+  },
+  "necessary_runtime_floor": {
+    "runtime": "TensorFlow Lite / LiteRT",
+    "declared_minimum_version": null,
+    "derived_minimum_version": "1.5.0",
+    "minimum_version": "1.5.0",
+    "status": "complete_for_observed_builtin_op_versions",
+    "evidence_class": "DERIVED_NECESSARY_MINIMUM",
+    "basis": "Necessary floor derived from the pinned TensorFlow runtime-version map with complete observed builtin op-code coverage (5/5); driver(s): ADD v1, AVERAGE_POOL_2D v1, CONV_2D v1, DEPTHWISE_CONV_2D v1, RESHAPE v1. This is not an execution-compatibility guarantee.",
+    "coverage_complete": true,
+    "observed_runtime_version": null,
+    "observed_floor_satisfied": null
+  },
+  "backend_build_requirements": [
+    {
+      "id": "xnnpack_required_build_configuration_unbound_0",
+      "backend": "XNNPACK",
+      "required_configuration": "--define tflite_with_xnnpack_qu8=true; legacy QU8 support is experimental and runtime build configuration is not embedded",
+      "binding": {
+        "status": "pending_runtime_evidence_not_imported",
+        "evidence_class": "NOT_ASSESSED",
+        "value": null
+      },
+      "conditional_impact": {
+        "baseline_conditionally_delegatable_ops": 64,
+        "affected_conditionally_delegatable_ops": 64,
+        "affected_conditionally_delegatable_mac_ratio": 1,
+        "affected_conditionally_delegatable_mac_percent": 100,
+        "absent_condition_remaining_conditionally_delegatable_ops": 0,
+        "absent_condition_remaining_predicted_delegate_segments": 0
+      },
+      "evidence_class": "CONDITIONAL_SOURCE_BACKED_CONFIGURATION_SCENARIO",
+      "interpretation_boundary": "The model artifact does not identify the deployed runtime binary or its compile flags. This row states what the pinned rulepack requires and the assignment consequence if that requirement is absent; it does not observe that the deployed runtime lacks the flag."
+    }
+  ],
+  "numerical_abi_requirements": [
+    {
+      "id": "tflite_single_rounding",
+      "compile_definition": "TFLITE_SINGLE_ROUNDING",
+      "binding_status": "pending",
+      "declared_mode": null,
+      "evidence_class": "NOT_ASSESSED",
+      "exact_static_impact": {
+        "assessed_channels": 18057,
+        "divergent_channels": 17083,
+        "divergent_interval_states": "2874544",
+        "maximum_absolute_output_delta_codes": 1,
+        "multiplier_encoding_divergence_channels": 0,
+        "build_mode_dependent_constant_channels": 1,
+        "representative_witness": {
+          "op_index": 1,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "channel_index": 26,
+          "default_output_code_interval": [
+            0,
+            1
+          ],
+          "single_rounding_output_code_interval": [
+            0,
+            0
+          ],
+          "default_constant": false,
+          "single_rounding_constant": true,
+          "vitality_ledger_sha256": "d4b09fabf80bb0b6ac30e0686097e220720d918f59e1bec1cf6e84a5c2e3498d"
+        }
+      },
+      "release_gate_required": true,
+      "interpretation_boundary": "Static evidence proves build-mode sensitivity over the assessed integer domain; it does not identify the deployed compile flag or observed task-level impact."
+    }
+  ],
+  "preprocessing_contract_requirement": {
+    "status": "assessed",
+    "exact_contract_ids": [
+      "raw_storage_rgb",
+      "raw_storage_bgr",
+      "artifact_affine_rgb",
+      "center_128_div_128_rgb"
+    ],
+    "exact_candidate_count": 4,
+    "portfolio_ledger_sha256": "35a1ca877c09dd440ed75e7cfbe1789c6b3693ea6572da5069cf6a01aadd5bb5",
+    "production_binding": {
+      "status": "pending_production_preprocessing_binding",
+      "contract_id": null,
+      "implementation_sha256": null,
+      "exact_contract_match": null
+    },
+    "interpretation_boundary": "Exact candidates are finite-domain artifact realizability proofs. They do not identify which preprocessing implementation the production application executes."
+  },
+  "interface_contract_requirement": {
+    "schema": "deepbom.interface_quantization_contracts.v1.3",
+    "status": "binding_required",
+    "ledger_sha256": "30c462341a9830ab81ec60bc3f27bc48a7cf826eea71a67b5abddf442150d38b",
+    "external_parameter_count": 2,
+    "complete_affine_parameter_count": 2,
+    "unquantized_parameter_count": 0,
+    "invalid_or_incomplete_parameter_count": 0,
+    "parameters": [
+      {
+        "direction": "input",
+        "ordinal": 0,
+        "tensor_name": "input",
+        "dtype": "UINT8",
+        "shape": [
+          1,
+          224,
+          224,
+          3
+        ],
+        "shape_signature": null,
+        "affine_mapping_status": "complete_affine_mapping",
+        "granularity": "per_tensor",
+        "parameterization": "per_tensor",
+        "scales": [
+          0.0078125
+        ],
+        "zero_points": [
+          128
+        ],
+        "axis": null,
+        "block_size": null,
+        "interface_contract_sha256": "14f100754e65c865b32b905a74c2915bec5a9872707bee7be70080c218ba4b56"
+      },
+      {
+        "direction": "output",
+        "ordinal": 0,
+        "tensor_name": "output",
+        "dtype": "UINT8",
+        "shape": [
+          1,
+          1001
+        ],
+        "shape_signature": null,
+        "affine_mapping_status": "complete_affine_mapping",
+        "granularity": "per_tensor",
+        "parameterization": "per_tensor",
+        "scales": [
+          0.09889253973960876
+        ],
+        "zero_points": [
+          58
+        ],
+        "axis": null,
+        "block_size": null,
+        "interface_contract_sha256": "0082096ef3eec9047e04771015d849c58d08758f75fab4fd8944029a4fa35cad"
+      }
+    ],
+    "production_binding": {
+      "status": "unbound",
+      "artifact_sha256": null,
+      "implementation_sha256": null,
+      "declared_parameter_count": 0,
+      "missing_parameter_count": 0,
+      "mismatched_parameter_count": 0,
+      "gate_result": "pending",
+      "mismatch_details": [],
+      "declaration_validation": {
+        "source_kind": "none",
+        "valid": true,
+        "errors": []
+      }
+    },
+    "comparison": {
+      "schema": "deepbom.interface_contract_comparison.v1",
+      "status": "unbound",
+      "evidence_class": "NOT_ASSESSED",
+      "expected_artifact_sha256": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+      "declared_artifact_sha256": null,
+      "implementation_sha256": null,
+      "expected_parameter_count": 2,
+      "declared_parameter_count": 0,
+      "mismatch_count": 0,
+      "mismatches": [],
+      "declaration_validation": {
+        "source_kind": "none",
+        "valid": true,
+        "errors": []
+      },
+      "gate_result": "pending",
+      "interpretation_boundary": "A mismatch is an observed deployment-configuration integrity contradiction. An absent declaration is unbound evidence, not a vulnerability or proof of incorrect inference."
+    },
+    "interpretation_boundary": "The binding compares a hash-identified application encoder/decoder declaration with every artifact-derived external interface contract, including interfaces with no affine mapping. Passing proves declared contract identity, not preprocessing correctness or model suitability."
+  },
+  "onnx_execution_provider_source_profiles": {
+    "status": "not_applicable_non_onnx_artifact",
+    "profiles": []
+  },
+  "tflite_delegate_source_profiles": {
+    "status": "not_assessed",
+    "profiles": []
+  },
+  "runtime_binding": {
+    "status": "not_imported",
+    "evidence_class": "NOT_ASSESSED"
+  },
+  "artifact_static_gate": {
+    "policy": "block_on_incomplete_deterministic_runtime_floor",
+    "result": "review",
+    "items": [
+      {
+        "code": "current_litert_int8_profile_nonconformance",
+        "severity": "high",
+        "requirement": "litert_current_int8_operator_profile: weight_dtype_expected_int8, weight_granularity_per_tensor_expected_per_axis, weight_zero_point_nonzero_expected_zero",
+        "status": "review",
+        "evidence_class": "OBSERVED_ARTIFACT_CONTRACT_VIOLATION"
+      }
+    ]
+  },
+  "runtime_binding_gate": {
+    "policy": "pending_until_runtime_and_application_bindings_are_imported; block_only_on_observed_contradiction",
+    "result": "pending",
+    "items": [
+      {
+        "code": "runtime_floor_unbound",
+        "severity": "medium",
+        "requirement": "TensorFlow Lite / LiteRT >= 1.5.0",
+        "status": "pending",
+        "evidence_class": "NOT_ASSESSED"
+      },
+      {
+        "code": "required_build_configuration",
+        "severity": "critical",
+        "requirement": "--define tflite_with_xnnpack_qu8=true; legacy QU8 support is experimental and runtime build configuration is not embedded",
+        "status": "pending",
+        "evidence_class": "NOT_ASSESSED"
+      },
+      {
+        "code": "numerical_abi_mode",
+        "severity": "high",
+        "requirement": "TFLITE_SINGLE_ROUNDING",
+        "status": "pending",
+        "evidence_class": "NOT_ASSESSED"
+      },
+      {
+        "code": "production_preprocessing_binding",
+        "severity": "high",
+        "requirement": "Bind production preprocessing implementation SHA-256 to one exact contract: raw_storage_rgb, raw_storage_bgr, artifact_affine_rgb, center_128_div_128_rgb",
+        "status": "pending",
+        "evidence_class": "NOT_ASSESSED"
+      },
+      {
+        "code": "production_interface_contract_binding",
+        "severity": "high",
+        "requirement": "Bind the production tensor encoder/decoder SHA-256 to 2 artifact external interface contract(s)",
+        "status": "pending",
+        "evidence_class": "NOT_ASSESSED"
+      }
+    ]
+  },
+  "ci_gate": {
+    "policy": "two_stage_artifact_and_runtime_binding_gate",
+    "result": "pending",
+    "blocker_count": 0,
+    "pending_count": 5,
+    "blockers": [],
+    "pending_requirements": [
+      {
+        "code": "runtime_floor_unbound",
+        "severity": "medium",
+        "requirement": "TensorFlow Lite / LiteRT >= 1.5.0",
+        "status": "pending",
+        "evidence_class": "NOT_ASSESSED"
+      },
+      {
+        "code": "required_build_configuration",
+        "severity": "critical",
+        "requirement": "--define tflite_with_xnnpack_qu8=true; legacy QU8 support is experimental and runtime build configuration is not embedded",
+        "status": "pending",
+        "evidence_class": "NOT_ASSESSED"
+      },
+      {
+        "code": "numerical_abi_mode",
+        "severity": "high",
+        "requirement": "TFLITE_SINGLE_ROUNDING",
+        "status": "pending",
+        "evidence_class": "NOT_ASSESSED"
+      },
+      {
+        "code": "production_preprocessing_binding",
+        "severity": "high",
+        "requirement": "Bind production preprocessing implementation SHA-256 to one exact contract: raw_storage_rgb, raw_storage_bgr, artifact_affine_rgb, center_128_div_128_rgb",
+        "status": "pending",
+        "evidence_class": "NOT_ASSESSED"
+      },
+      {
+        "code": "production_interface_contract_binding",
+        "severity": "high",
+        "requirement": "Bind the production tensor encoder/decoder SHA-256 to 2 artifact external interface contract(s)",
+        "status": "pending",
+        "evidence_class": "NOT_ASSESSED"
+      }
+    ],
+    "review_count": 1,
+    "review_items": [
+      {
+        "code": "current_litert_int8_profile_nonconformance",
+        "severity": "high",
+        "requirement": "litert_current_int8_operator_profile: weight_dtype_expected_int8, weight_granularity_per_tensor_expected_per_axis, weight_zero_point_nonzero_expected_zero",
+        "status": "review",
+        "evidence_class": "OBSERVED_ARTIFACT_CONTRACT_VIOLATION"
+      }
+    ],
+    "evaluation_boundary": "Review is a deterministic artifact finding under the default compatibility policy. Pending means required runtime or application evidence has not been imported. Block means a strict artifact policy failed or imported evidence contradicts a requirement."
+  },
+  "related_documents": [
+    {
+      "role": "subject_evidence_bom",
+      "path": "deepbom_cyclonedx_evidence.cdx.json",
+      "component_bom_ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+      "integrity_binding": "The evidence BOM hashes this manifest; the complete ZIP member set is bound by deepbom_contract_pack_manifest.json."
+    }
+  ],
+  "provenance": {
+    "analyzer": "deepbom",
+    "analyzer_semantic_version": "1.94.0",
+    "analyzer_build_version": "2026-08-03",
+    "analyzer_build_commit": "684260dddf632240c31bee646581d9c4ae32623a",
+    "analyzer_build_source_state": "clean",
+    "analyzer_bundle_content_sha256": "5c03ec024b99e9a73ac3b3f098cebdd8dc18ae5ec67d740de97dd21df4e5b34d",
+    "analyzer_bundle_content_hash_method": "SHA-256 over RFC8785-JCS canonical deepbom.analyzer_build_file_digest_set.v1",
+    "rulepack_version": "deepbom.rulepack.2026-07-24.63",
+    "rulepack_sha256": "a1e0dc58a9dc742b4532448190410d89e04d56ab134a16a72cda6cae8b6a6d9f",
+    "rulepack_hash_basis": [
+      "web/lib/report-metadata.js (report metadata/provenance)",
+      "web/lib/reason-codes.js (reason-code labels)",
+      "web/lib/xnnpack-rulepack-metadata.js (generated XNNPACK delegate provenance)",
+      "src/xnnpack_delegate.rs (source-mapped XNNPACK delegate evaluator)",
+      "src/xnnpack_rulepack_generated.rs (generated XNNPACK delegate documentary rules)",
+      "reference/xnnpack-readme/README-v2.21.0.md (pinned XNNPACK delegate README snapshot)",
+      "reference/xnnpack-readme/rule-manifest-v2.21.0.json (XNNPACK delegate semantic rule manifest)",
+      "scripts/generate-xnnpack-delegate-rulepack.mjs (XNNPACK delegate rule generator and source digest contract)",
+      "src/lib.rs (target profiles and XNNPACK support rules)",
+      "src/lib.rs (TFLite runtime-version floor derivation)",
+      "src/runtime_version.rs (pinned TFLite runtime-version floor map)",
+      "src/tflite_metadata.rs (TFLite M001 metadata contract parser)",
+      "src/accumulator_atlas.rs (exact stored-weight accumulator envelope)",
+      "web/lib/accumulator-atlas.js (independent browser accumulator validator)",
+      "src/requantization_fidelity.rs (pinned TFLite requantization fidelity solver)",
+      "web/lib/requantization-fidelity.js (independent browser requantization validator)",
+      "src/kernel_witness.rs (exact quantized kernel extremum witness solver)",
+      "web/lib/kernel-witness.js (independent browser kernel witness validator and viewer)",
+      "web/lib/kernel-witness-worker.js (independent browser kernel witness verification worker)",
+      "src/channel_vitality.rs (exact monotone quantized channel vitality solver)",
+      "web/lib/channel-vitality.js (independent browser channel vitality validator and viewer)",
+      "web/lib/channel-vitality-worker.js (independent browser channel vitality verification worker)",
+      "src/rounding_equivalence.rs (exact fixed-point rounding equivalence solver)",
+      "web/lib/rounding-equivalence.js (independent browser rounding equivalence validator and viewer)",
+      "web/lib/rounding-equivalence-worker.js (independent browser rounding equivalence verification worker)",
+      "src/numerical_abi_propagation.rs (exact numerical ABI graph propagation solver)",
+      "web/lib/numerical-abi-propagation.js (independent browser numerical ABI propagation validator)",
+      "web/lib/numerical-abi-propagation-viewer.js (numerical ABI propagation atlas viewer and export renderer)",
+      "src/quantization_lattice.rs (exhaustive residual output-contract design solver)",
+      "web/lib/quantization-lattice.js (independent browser residual contract validator)",
+      "src/quantization_math.rs (shared pinned quantization arithmetic)",
+      "web/lib/quantization-math.js (independent browser quantization arithmetic)",
+      "src/contract_migration.rs (residual contract migration impact solver)",
+      "web/lib/contract-migration.js (independent browser migration validator)",
+      "src/residual_step_response.rs (exhaustive residual adjacent-code step-response solver)",
+      "web/lib/residual-step-response.js (independent browser residual step-response validator)",
+      "web/lib/residual-step-response-worker.js (independent browser residual step-response worker)",
+      "src/residual_contract_distortion.rs (exhaustive residual contract-distortion solver)",
+      "web/lib/residual-contract-distortion.js (independent browser residual contract-distortion validator)",
+      "web/lib/residual-contract-distortion-worker.js (independent browser residual contract-distortion worker)",
+      "scripts/generate-ort-rulepack.mjs (pinned ORT rule generator and source digest contract)",
+      "web/lib/xnnpack-selector-evidence.js (public XNNPACK evidence identity and arithmetic adapter)",
+      "web/lib/ort-compatibility-evidence.js (public ORT evidence identity and conservation adapter)",
+      "web/onnx.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-container-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-domain-analysis.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-external-data.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-extended-shape-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-imputer-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-imputer.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-label-encoder-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-label-encoder.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-linear-model-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-linear-model.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-normalizer-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-normalizer.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-one-hot-encoder-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-one-hot-encoder.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-scaler-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-scaler.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-svm-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-svm.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-tree-ensemble-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-tree-ensemble.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ml-value-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-ort-extension-shape-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-opset-imports.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-schema-legality.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-shape-inference.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-runtime-shape-binding.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-shape-ops.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-shape-schema-generated.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-sparse-tensor.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-static-value-evidence.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-tfidf-vectorizer-conformance.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-tfidf-vectorizer.js (ONNX rule/reconstruction)",
+      "web/lib/onnx-type-proto.js (ONNX rule/reconstruction)",
+      "web/lib/report-findings.js (authoritative finding rules)",
+      "web/lib/finding-contract.js (finding evidence-pointer contract)",
+      "protected authenticated rule source set (3 owners; implementation paths withheld; included in RULEPACK_SHA256)"
+    ]
+  }
+}

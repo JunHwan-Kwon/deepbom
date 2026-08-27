@@ -1,0 +1,105 @@
+{
+  "schema": "deepbom.gguf_architecture_encoding_corpus.v1",
+  "format": "gguf",
+  "artifact_count": 8,
+  "population_scope": "Eight immutable public GGUF files selected to separate serialized architecture coverage from GGML tensor-storage coverage. Five MIT-licensed TinyMQA files exercise Q2_K, Q4_0, Q8_0, IQ4_NL, and TQ2_0 strata; GPT-2, OLMo, and StableLM files expand serialized architecture coverage. Actual tensor encodings are read from GGUF tensor headers and may differ from filename labels.",
+  "redistribution_boundary": "Model bytes remain in the user-local DeepBOM cache and are not redistributed by the corpus runner. TinyMQA declares MIT in its model card; the selected TensorBlock conversion cards do not currently declare license metadata, so this corpus makes no reuse-license claim for those three files.",
+  "artifacts": [
+    {
+      "id": "tinymqa-q2-k",
+      "purpose": "encoding_stratum",
+      "model_family": "llama",
+      "declared_quantization_label": "Q2_K",
+      "repository": "shibatch/tinymqa1m",
+      "revision": "403668777b2a2708d2529f8913cabfcaf3d6b385",
+      "repository_visibility": "public_ungated",
+      "license_metadata_status": "declared_mit",
+      "file": { "path": "tinymqa1m.Q2_K.gguf", "size_bytes": 523296, "sha256": "83a2ee31b9f6013e4e0b3345abefaeb9a3231437f559e03124497b1191264003" },
+      "baseline": { "artifact_sha256": "83a2ee31b9f6013e4e0b3345abefaeb9a3231437f559e03124497b1191264003", "architecture": "llama", "tensor_count": 39, "payload_byte_length": 509440, "payload_coverage_status": "complete_without_gaps_or_overlaps", "numerical_integrity_status": "assessed", "unsupported_encoding_tensor_count": 0, "encoding_histogram": [{ "encoding": "F32", "tensor_count": 9 }, { "encoding": "Q4_0", "tensor_count": 25 }, { "encoding": "Q5_0", "tensor_count": 4 }, { "encoding": "Q8_0", "tensor_count": 1 }], "semantic_contract_status": "assessed", "analysis_receipt_sha256": "488028418523d524bdbf12ba1cb57e4d375c816e65505d627db002a42d5ceba9" }
+    },
+    {
+      "id": "tinymqa-q4-0",
+      "purpose": "encoding_stratum",
+      "model_family": "llama",
+      "declared_quantization_label": "Q4_0",
+      "repository": "shibatch/tinymqa1m",
+      "revision": "403668777b2a2708d2529f8913cabfcaf3d6b385",
+      "repository_visibility": "public_ungated",
+      "license_metadata_status": "declared_mit",
+      "file": { "path": "tinymqa1m.Q4_0.gguf", "size_bytes": 521248, "sha256": "cb95a6e10f28b76a1dd71c15560dec5a5eee8943f591ef45d11c129786b22cff" },
+      "baseline": { "artifact_sha256": "cb95a6e10f28b76a1dd71c15560dec5a5eee8943f591ef45d11c129786b22cff", "architecture": "llama", "tensor_count": 39, "payload_byte_length": 507392, "payload_coverage_status": "complete_without_gaps_or_overlaps", "numerical_integrity_status": "assessed", "unsupported_encoding_tensor_count": 0, "encoding_histogram": [{ "encoding": "F32", "tensor_count": 9 }, { "encoding": "Q4_0", "tensor_count": 29 }, { "encoding": "Q8_0", "tensor_count": 1 }], "semantic_contract_status": "assessed", "analysis_receipt_sha256": "87ad7917b24a3a610852a94d92fe3a7afbd1e22d4b5a8a97f1ac2e9247a3e99c" }
+    },
+    {
+      "id": "tinymqa-q8-0",
+      "purpose": "encoding_stratum",
+      "model_family": "llama",
+      "declared_quantization_label": "Q8_0",
+      "repository": "shibatch/tinymqa1m",
+      "revision": "403668777b2a2708d2529f8913cabfcaf3d6b385",
+      "repository_visibility": "public_ungated",
+      "license_metadata_status": "declared_mit",
+      "file": { "path": "tinymqa1m.Q8_0.gguf", "size_bytes": 906272, "sha256": "66bd8d5a03589e40e1d0656b90220fd29f699512122af7170c7612c364b7c835" },
+      "baseline": { "artifact_sha256": "66bd8d5a03589e40e1d0656b90220fd29f699512122af7170c7612c364b7c835", "architecture": "llama", "tensor_count": 39, "payload_byte_length": 892416, "payload_coverage_status": "complete_without_gaps_or_overlaps", "numerical_integrity_status": "assessed", "unsupported_encoding_tensor_count": 0, "encoding_histogram": [{ "encoding": "F32", "tensor_count": 9 }, { "encoding": "Q8_0", "tensor_count": 30 }], "semantic_contract_status": "assessed", "analysis_receipt_sha256": "6e4b6ced235cc5caf56afd9bc85002d1a1acea8a89ad48ae8292eb1a5a6b13b5" }
+    },
+    {
+      "id": "tinymqa-iq4-nl",
+      "purpose": "encoding_stratum",
+      "model_family": "llama",
+      "declared_quantization_label": "IQ4_NL",
+      "repository": "shibatch/tinymqa1m",
+      "revision": "403668777b2a2708d2529f8913cabfcaf3d6b385",
+      "repository_visibility": "public_ungated",
+      "license_metadata_status": "declared_mit",
+      "file": { "path": "tinymqa1m.IQ4_NL.gguf", "size_bytes": 524320, "sha256": "d8e9e534fa1d2d32a39e79519c051d269580154f3da5d66301d78b7afa726a6f" },
+      "baseline": { "artifact_sha256": "d8e9e534fa1d2d32a39e79519c051d269580154f3da5d66301d78b7afa726a6f", "architecture": "llama", "tensor_count": 39, "payload_byte_length": 510464, "payload_coverage_status": "complete_without_gaps_or_overlaps", "numerical_integrity_status": "assessed", "unsupported_encoding_tensor_count": 0, "encoding_histogram": [{ "encoding": "F32", "tensor_count": 9 }, { "encoding": "IQ4_NL", "tensor_count": 25 }, { "encoding": "Q5_1", "tensor_count": 4 }, { "encoding": "Q8_0", "tensor_count": 1 }], "semantic_contract_status": "assessed", "analysis_receipt_sha256": "c6c8bebe7497f0a28f2cffcb0b11ccbfb785f5df80063bec4f144fd5a8decfa2" }
+    },
+    {
+      "id": "tinymqa-tq2-0",
+      "purpose": "encoding_stratum",
+      "model_family": "llama",
+      "declared_quantization_label": "TQ2_0",
+      "repository": "shibatch/tinymqa1m",
+      "revision": "403668777b2a2708d2529f8913cabfcaf3d6b385",
+      "repository_visibility": "public_ungated",
+      "license_metadata_status": "declared_mit",
+      "file": { "path": "tinymqa1m.TQ2_0.gguf", "size_bytes": 529440, "sha256": "fc11758d577ae6a2ebb2600dc9179890fe89d23e8c310858308b12e35a96e427" },
+      "baseline": { "artifact_sha256": "fc11758d577ae6a2ebb2600dc9179890fe89d23e8c310858308b12e35a96e427", "architecture": "llama", "tensor_count": 39, "payload_byte_length": 515584, "payload_coverage_status": "complete_without_gaps_or_overlaps", "numerical_integrity_status": "assessed", "unsupported_encoding_tensor_count": 0, "encoding_histogram": [{ "encoding": "F32", "tensor_count": 9 }, { "encoding": "Q4_0", "tensor_count": 28 }, { "encoding": "Q5_0", "tensor_count": 1 }, { "encoding": "Q8_0", "tensor_count": 1 }], "semantic_contract_status": "assessed", "analysis_receipt_sha256": "8cb7f2a11a0e67785b6d927559fc9a793458793952be759821b3da4303a25c3d" }
+    },
+    {
+      "id": "gpt2-family-q2-k",
+      "purpose": "architecture_stratum",
+      "model_family": "gpt2",
+      "declared_quantization_label": "Q2_K",
+      "repository": "tensorblock/tiny-random-gpt2-GGUF",
+      "revision": "7d078a5dca1e6cec7f402072a7a184a495eec70f",
+      "repository_visibility": "public_ungated",
+      "license_metadata_status": "not_declared",
+      "file": { "path": "tiny-random-gpt2-Q2_K.gguf", "size_bytes": 12964480, "sha256": "8393b803d7b11df6f8618e89938ad6a1fc26e06a79e6ca154634116df3eeed94" },
+      "baseline": { "artifact_sha256": "8393b803d7b11df6f8618e89938ad6a1fc26e06a79e6ca154634116df3eeed94", "architecture": "gpt2", "tensor_count": 29, "payload_byte_length": 11195904, "payload_coverage_status": "complete_with_alignment_padding", "numerical_integrity_status": "assessed", "unsupported_encoding_tensor_count": 0, "encoding_histogram": [{ "encoding": "F32", "tensor_count": 19 }, { "encoding": "IQ4_NL", "tensor_count": 7 }, { "encoding": "Q3_K", "tensor_count": 2 }, { "encoding": "Q8_0", "tensor_count": 1 }], "semantic_contract_status": "assessed", "analysis_receipt_sha256": "5e37edbaa026ee2d443c6a19d732cd0afc3f2cc9d014bd70fb0e7920c7fea942" }
+    },
+    {
+      "id": "olmo-family-q2-k",
+      "purpose": "architecture_stratum",
+      "model_family": "olmo",
+      "declared_quantization_label": "Q2_K",
+      "repository": "tensorblock/tiny-random-olmo-GGUF",
+      "revision": "d0ee9498d082d6dc3e730b9765e6e87a9bb5d995",
+      "repository_visibility": "public_ungated",
+      "license_metadata_status": "not_declared",
+      "file": { "path": "tiny-random-olmo-Q2_K.gguf", "size_bytes": 33860576, "sha256": "be1c5a22ac0e75cd5874467ffd80bcd2c8500609d3bf7ccdb5b269373e4d6da4" },
+      "baseline": { "artifact_sha256": "be1c5a22ac0e75cd5874467ffd80bcd2c8500609d3bf7ccdb5b269373e4d6da4", "architecture": "olmo", "tensor_count": 16, "payload_byte_length": 32090624, "payload_coverage_status": "complete_without_gaps_or_overlaps", "numerical_integrity_status": "assessed", "unsupported_encoding_tensor_count": 0, "encoding_histogram": [{ "encoding": "IQ4_NL", "tensor_count": 2 }, { "encoding": "Q2_K", "tensor_count": 9 }, { "encoding": "Q3_K", "tensor_count": 4 }, { "encoding": "Q6_K", "tensor_count": 1 }], "semantic_contract_status": "assessed", "analysis_receipt_sha256": "2b89fb02d56b0d19b734c0b7b9b742d75d68108aa2c229ad4ce9faaf16d5a5d9" }
+    },
+    {
+      "id": "stablelm-family-q2-k",
+      "purpose": "architecture_stratum",
+      "model_family": "stablelm",
+      "declared_quantization_label": "Q2_K",
+      "repository": "tensorblock/tiny-random-stablelm-2-GGUF",
+      "revision": "64d7b3e2e3ef8484da504b743bca769cd7699e9f",
+      "repository_visibility": "public_ungated",
+      "license_metadata_status": "not_declared",
+      "file": { "path": "tiny-random-stablelm-2-Q2_K.gguf", "size_bytes": 71498240, "sha256": "4f838d275618ea4ddf8f2a91c84a601774f720c015713d43b0355c2d53ed1ce5" },
+      "baseline": { "artifact_sha256": "4f838d275618ea4ddf8f2a91c84a601774f720c015713d43b0355c2d53ed1ce5", "architecture": "stablelm", "tensor_count": 92, "payload_byte_length": 67952640, "payload_coverage_status": "complete_without_gaps_or_overlaps", "numerical_integrity_status": "assessed", "unsupported_encoding_tensor_count": 0, "encoding_histogram": [{ "encoding": "F32", "tensor_count": 34 }, { "encoding": "Q2_K", "tensor_count": 33 }, { "encoding": "Q3_K", "tensor_count": 16 }, { "encoding": "Q4_K", "tensor_count": 8 }, { "encoding": "Q6_K", "tensor_count": 1 }], "semantic_contract_status": "assessed", "analysis_receipt_sha256": "f04ea733108021784f2238de9eb05a44b48449a91e8a6a88e7cdc25248f72744" }
+    }
+  ]
+}

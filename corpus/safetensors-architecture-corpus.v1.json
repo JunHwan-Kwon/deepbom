@@ -1,0 +1,95 @@
+{
+  "schema": "deepbom.safetensors_architecture_corpus.v1",
+  "format": "safetensors",
+  "artifact_count": 3,
+  "population_scope": "Three public, randomly initialized, size-bounded Hugging Face checkpoints selected to exercise one registered dense decoder, sparse-MoE decoder, and recurrent SSM family. This validation set establishes byte-bound parser and architecture-contract behavior only; it is not a prevalence, quality, accuracy, runtime, or license-generalization sample.",
+  "redistribution_boundary": "Model bytes remain in the user-local DeepBOM cache and are not redistributed by this repository. The selected repositories do not declare a license in their current Hugging Face card metadata, so this corpus makes no reuse-license claim.",
+  "artifacts": [
+    {
+      "id": "mistral-tiny-random-dense",
+      "architecture_class": "dense_decoder",
+      "expected_model_type": "mistral",
+      "repository": "yujiepan/mistral-tiny-random",
+      "revision": "cfcb3f89e224fddb33367793a307b4dee7339518",
+      "repository_visibility": "public_ungated",
+      "license_metadata_status": "not_declared",
+      "files": [
+        { "path": "config.json", "size_bytes": 647, "sha256": "e9b463e108ddb07232e50b1d59946473e15ac9674ee926476a4b222561af1280" },
+        { "path": "model.safetensors", "size_bytes": 1030080, "sha256": "6f69953dc8b7ca873d282f6e1687df3462145d899fd561a0716cfbae9b84a2f3" }
+      ],
+      "baseline": {
+        "status": "assessed",
+        "architecture_kind": "dense_decoder",
+        "tensor_count": 21,
+        "payload_byte_length": 1027920,
+        "canonical_tensor_shape_mismatch_count": 0,
+        "canonical_tensor_missing_count": 0,
+        "canonical_tensor_unexpected_count": 0,
+        "bundle_sha256": "f539049792aa4c96a5c4fd31e51a88172cddc5e21a2e2411722cbb6f2141be16",
+        "analysis_receipt_sha256": "fc9e99368a17d2bfda99e8ab2da21a5a510273a6ec6893aef2250fa27e091e5b",
+        "projection": {
+          "kv_elements_per_token_all_layers": "16",
+          "dense_projection_macs_all_layers_per_token": "1920"
+        }
+      }
+    },
+    {
+      "id": "mixtral-tiny-random-moe",
+      "architecture_class": "sparse_moe_decoder",
+      "expected_model_type": "mixtral",
+      "repository": "yujiepan/mixtral-tiny-random",
+      "revision": "c2faa23d97931c5481999c382d79163b02c4793c",
+      "repository_visibility": "public_ungated",
+      "license_metadata_status": "not_declared",
+      "files": [
+        { "path": "config.json", "size_bytes": 764, "sha256": "b915b004443c4eb1aff3b1c9c1ae9f5e0e98e88ffd7e2407c42e14346ebe5bec" },
+        { "path": "model.safetensors", "size_bytes": 522688, "sha256": "cac5af0aa32d322c4dbd8e2fa6460e74749ca8b6d58632f794f7f3af1192b271" }
+      ],
+      "baseline": {
+        "status": "assessed",
+        "architecture_kind": "sparse_moe_decoder",
+        "tensor_count": 65,
+        "payload_byte_length": 515432,
+        "canonical_tensor_shape_mismatch_count": 0,
+        "canonical_tensor_missing_count": 0,
+        "canonical_tensor_unexpected_count": 0,
+        "bundle_sha256": "215654c01010faa8c01b749c878bcd5f50771eba69bde162eecb7f84a977379c",
+        "analysis_receipt_sha256": "d9d24688e0de9293d1479cf4bfb877ded9ff1fdb6544a2143d11a2e0f2bf9155",
+        "projection": {
+          "expert_count": 8,
+          "active_experts_per_token": 2,
+          "active_projection_macs_per_layer_per_token": "272"
+        }
+      }
+    },
+    {
+      "id": "mamba-tiny-random-ssm",
+      "architecture_class": "ssm_recurrent",
+      "expected_model_type": "mamba",
+      "repository": "yujiepan/mamba-tiny-random",
+      "revision": "6891e834f002b45f3c7f69cf6a8ce12b88e0707f",
+      "repository_visibility": "public_ungated",
+      "license_metadata_status": "not_declared",
+      "files": [
+        { "path": "config.json", "size_bytes": 904, "sha256": "ee16621b8161736f75fdc916c564979d88da704ed0ed231b092406334707968b" },
+        { "path": "model.safetensors", "size_bytes": 855760, "sha256": "dda3cbb122b916339e098328b1f09506d276e2be8d65f01a3555c44e40ab5a13" }
+      ],
+      "baseline": {
+        "status": "assessed",
+        "architecture_kind": "ssm_recurrent",
+        "tensor_count": 22,
+        "payload_byte_length": 853552,
+        "canonical_tensor_shape_mismatch_count": 0,
+        "canonical_tensor_missing_count": 0,
+        "canonical_tensor_unexpected_count": 0,
+        "bundle_sha256": "b39c597b8a0e4aaebc11152263427a6e6aed6f77a85c4853b8f31d1256aaf610",
+        "analysis_receipt_sha256": "e69a282de24158c6bec29cd1ef46b7367957b1f63e3799177433fe961dfacbea",
+        "projection": {
+          "state_size": 8,
+          "recurrent_state_elements_all_layers_per_batch": "768",
+          "accounted_macs_per_layer_per_token": "11648"
+        }
+      }
+    }
+  ]
+}

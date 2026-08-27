@@ -1,0 +1,56 @@
+target/
+node_modules/
+dist/
+.wrangler/
+.wrangler-deploy.json
+web/lib/build-metadata.js
+
+# Local editor and OS noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Local runtime outputs
+reports/
+reference/
+!reference/
+reference/*
+!reference/xnnpack-readme/
+!reference/xnnpack-readme/**
+!reference/cyclonedx/
+!reference/cyclonedx/**
+*.log
+*.tmp
+__pycache__/
+*.pyc
+.deepbom-native-runtime/
+.local-validation/
+
+# The Starlight documentation site is an independent, unfinished deployment.
+docs-site/
+
+# Local environment files
+.env
+.env.*
+
+# Local-only planning notes. Do not publish unreleased research/IP details.
+*.local.md
+docs/private/
+
+# Keep pkg/ committed so the browser app can load the built WASM package
+# after npm install without requiring every viewer to run wasm-pack first.
+pkg/README.md
+
+# Protected optional modules are built on demand and should not be bundled into
+# the public app until their entitlement and UI surfaces are intentionally wired.
+protected/target_inversion_wasm/pkg/
+protected/target_inversion_wasm/target*/
+protected/target_inversion_wasm/
+*.tflite
+# Public reference sample models (Apache-2.0 upstream releases) are the one
+# deliberate exception — never place user or research models here.
+!web/samples/*.tflite
+!web/samples/*.onnx

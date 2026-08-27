@@ -1,0 +1,341 @@
+import { ANALYZER_SEMANTIC_VERSION } from "./app-config.js";
+import { RULEPACK_SHA256 } from "./build-metadata.js";
+
+export const PUBLIC_SAMPLE_MANIFEST_SCHEMA = "deepbom.public_sample_expected_evidence.v1";
+
+const scopes = Object.freeze({
+  tflite: Object.freeze({
+    applicable: Object.freeze(["serialized graph", "affine quantization", "static MACs", "graph liveness", "ArenaPlanner projection", "source-rule XNNPACK prediction"]),
+    outside: Object.freeze(["observed delegate assignment", "executed microkernel", "device latency", "task accuracy"]),
+  }),
+  onnx: Object.freeze({
+    applicable: Object.freeze(["serialized graph", "shape inference", "initializer payload", "static MACs", "ORT source compatibility", "optional identity-bound TensorRT parser capability"]),
+    outside: Object.freeze(["engine build and tactic selection", "observed EP assignment", "runtime kernel", "device latency", "task accuracy"]),
+  }),
+  gguf: Object.freeze({
+    applicable: Object.freeze(["container metadata", "tensor inventory", "GGML storage encoding", "payload bounds", "numerical decode"]),
+    outside: Object.freeze(["operator graph", "MACs", "Q/DQ topology", "runtime compute dtype", "kernel assignment"]),
+  }),
+  safetensors: Object.freeze({
+    applicable: Object.freeze(["tensor inventory", "dtype and shape", "payload bounds", "scalar numerical decode"]),
+    outside: Object.freeze(["operator graph", "MACs", "inference quantization", "runtime assignment", "task accuracy"]),
+  }),
+  coreml: Object.freeze({
+    applicable: Object.freeze(["model type", "typed interface", "decoded NeuralNetwork graph", "weight payload", "static MACs", "graph liveness"]),
+    outside: Object.freeze(["compiled model identity", "CPU/GPU/ANE assignment", "device latency", "task accuracy"]),
+  }),
+});
+
+function sample(value) {
+  const scope = scopes[value.format];
+  return Object.freeze({
+    ...value,
+    companions: Object.freeze((value.companions || []).map((entry) => Object.freeze({ ...entry }))),
+    expectedEvidence: Object.freeze({
+      ...value.expectedEvidence,
+      applicableMetricFamilies: scope.applicable,
+      notApplicableMetricFamilies: scope.outside,
+      runtimeAssignment: "not_observed",
+      intentionallyMalformedFields: Object.freeze([]),
+    }),
+  });
+}
+
+export const PUBLIC_SAMPLE_MODELS = Object.freeze([
+  sample({
+    id: "tflite-mobilenet-v2-int8",
+    label: "TFLite - MobileNet V2 UINT8 (3.4 MiB)",
+    format: "tflite",
+    path: "samples/mobilenet_v2_1.0_224_quant.tflite",
+    filename: "mobilenet_v2_1.0_224_quant.tflite",
+    byteLength: 3_577_760,
+    sha256: "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+    license: "Apache-2.0",
+    source: "https://storage.googleapis.com/download.tensorflow.org/models/tflite_11_05_08/mobilenet_v2_1.0_224_quant.tgz",
+    sourceRevision: "published archive; member SHA-256 pinned",
+    purpose: "Full-integer baseline with no serialized Q/DQ boundary and legacy per-tensor UINT8 weights.",
+    analysisDepth: "Deep TFLite static audit",
+    focus: "Quantization coverage, integer ledgers, graph memory, and predicted XNNPACK continuity",
+    coverageNote: "Does not demonstrate per-axis scales, float islands, or observed runtime assignment.",
+    expectedEvidence: {
+      artifactClass: "full_integer_uint8",
+      operatorCount: 65, tensorCount: 173, totalMacs: 300_775_552,
+      constantBytes: 3_543_276, peakLiveBytes: 1_505_280, arenaBytes: 1_655_808,
+      quantizeOps: 0, dequantizeOps: 0, xnnpackSourceSupportedOps: 64, predictedBreakOps: 1,
+    },
+  }),
+  sample({
+    id: "tflite-efficientnet-lite0-int8",
+    label: "TFLite - EfficientNet-Lite0 per-axis INT8 (5.2 MiB)",
+    format: "tflite",
+    path: "https://storage.googleapis.com/mediapipe-models/image_classifier/efficientnet_lite0/int8/1/efficientnet_lite0.tflite?generation=1682480006900522",
+    filename: "efficientnet_lite0_int8.tflite",
+    byteLength: 5_434_517,
+    sha256: "bc2ffe19c1118de0c0c2a9088992da5589722656e0fba81421385300a4a34b16",
+    license: "Apache-2.0",
+    source: "https://developers.google.com/edge/mediapipe/solutions/vision/image_classifier#models",
+    sourceRevision: "GCS generation 1682480006900522",
+    delivery: "remote",
+    purpose: "Modern per-axis integer example for scale cardinality, residual ADD contracts, and metadata-bound preprocessing.",
+    analysisDepth: "Deep TFLite static audit",
+    focus: "Per-axis scales, ADD lattice, embedded normalization, labels, and predicted partitions",
+    coverageNote: "The two QUANTIZE ops are integer-domain requantizations, not float-island boundaries.",
+    expectedEvidence: {
+      artifactClass: "full_integer_per_axis",
+      operatorCount: 64, tensorCount: 166, totalMacs: 385_187_552,
+      constantBytes: 4_697_032, peakLiveBytes: 1_505_280, arenaBytes: 1_655_808,
+      quantizeOps: 2, dequantizeOps: 0, xnnpackSourceSupportedOps: 60, predictedBreakOps: 2,
+    },
+  }),
+  sample({
+    id: "tflite-efficientdet-lite0-int8",
+    label: "TFLite - EfficientDet-Lite0 INT8 + float outputs (4.4 MiB)",
+    format: "tflite",
+    path: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite?generation=1682636013497226",
+    filename: "efficientdet_lite0_int8.tflite",
+    byteLength: 4_602_795,
+    sha256: "0720bf247bd76e6594ea28fa9c6f7c5242be774818997dbbeffc4da460c723bb",
+    license: "Not embedded (remote official asset)",
+    source: "https://developers.google.com/edge/mediapipe/solutions/vision/object_detector#models",
+    sourceRevision: "GCS generation 1682636013497226",
+    delivery: "remote",
+    purpose: "Integer core with float outputs for external ABI, activation boundaries, CONCAT, and delegate-fragmentation review.",
+    analysisDepth: "Deep TFLite static audit",
+    focus: "INT8 core, float output boundaries, ADD/CONCAT contracts, graph memory, and predicted breaks",
+    coverageNote: "Shows two 8-bit-to-float boundaries; it is not a generic mixed-precision float-island corpus.",
+    expectedEvidence: {
+      artifactClass: "integer_internal_float_outputs",
+      operatorCount: 266, tensorCount: 597, totalMacs: 973_589_696,
+      constantBytes: 3_304_688, peakLiveBytes: 8_719_524, arenaBytes: 9_026_884,
+      quantizeOps: 1, dequantizeOps: 2, xnnpackSourceSupportedOps: 251, predictedBreakOps: 14,
+    },
+  }),
+  sample({
+    id: "tflite-blazeface-short-fp16",
+    label: "TFLite - BlazeFace FP16 weight storage (224 KiB)",
+    format: "tflite",
+    path: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite?generation=1682480001338381",
+    filename: "blaze_face_short_range_fp16.tflite",
+    byteLength: 229_746,
+    sha256: "b4578f35940bf5a1a655214a1cce5cab13eba73c1297cd78e1a04c2380b0152f",
+    license: "Apache-2.0",
+    source: "https://developers.google.com/edge/mediapipe/solutions/vision/face_detector#models",
+    sourceRevision: "GCS generation 1682480001338381",
+    delivery: "remote",
+    purpose: "FP16 constant-storage example that separates serialized weight precision from FP32 activation compute.",
+    analysisDepth: "Deep TFLite static audit",
+    focus: "FP16 constant expansion, explicit preprocessing, static cost, graph memory, and predicted breaks",
+    coverageNote: "DEQUANTIZE nodes expand FP16 constants; they are not 8-bit activation Q/DQ holes.",
+    expectedEvidence: {
+      artifactClass: "fp16_weight_storage_fp32_compute",
+      operatorCount: 164, tensorCount: 250, totalMacs: 30_760_960,
+      constantBytes: 203_132, peakLiveBytes: 1_376_256, arenaBytes: 1_769_472,
+      quantizeOps: 0, dequantizeOps: 74, xnnpackSourceSupportedOps: 53, predictedBreakOps: 20,
+    },
+  }),
+  sample({
+    id: "onnx-mnist-8",
+    label: "ONNX - MNIST-8 (25.8 KiB)",
+    format: "onnx",
+    path: "samples/mnist-8.onnx",
+    filename: "mnist-8.onnx",
+    byteLength: 26_454,
+    sha256: "2f06e72de813a8635c9bc0397ac447a601bdbfa7df4bebc278723b958831c9bf",
+    license: "Apache-2.0",
+    source: "https://huggingface.co/onnxmodelzoo/mnist-8",
+    sourceRevision: "a19f9a8c2333de1df9b03f10f5739f468b699a1a",
+    purpose: "Compact dense ONNX graph for initializer, shape, static-cost, and ORT source-compatibility evidence.",
+    analysisDepth: "Static ONNX graph audit",
+    focus: "Graph structure, deterministic shape inference, initializer conservation, and ORT compatibility",
+    coverageNote: "Does not demonstrate symbolic shapes, external data, control flow, custom domains, or observed EP assignment.",
+    expectedEvidence: {
+      artifactClass: "dense_static_onnx",
+      operatorCount: 12, tensorCount: 21, totalMacs: 786_560,
+      constantBytes: 24_008, storedScalarElements: 5_998, peakLiveBytes: 60_416, peakLiveAtOp: 2,
+    },
+  }),
+  sample({
+    id: "onnx-tensorrt-supported-probe",
+    label: "ONNX - TensorRT supported GPU probe (1.4 KiB)",
+    format: "onnx",
+    path: "samples/tensorrt_supported_probe.onnx",
+    filename: "tensorrt_supported_probe.onnx",
+    byteLength: 1_394,
+    sha256: "15e9cd555dfdedcc4ef6a313e40efcaaf3d18dd2ee502018f335fec084118e47",
+    license: "Apache-2.0",
+    source: "https://github.com/JunHwan-Kwon/deepbom/blob/main/scripts/generate-accelerator-llm-samples.py",
+    sourceRevision: "deterministic generator v1.0.0; artifact SHA-256 pinned",
+    companions: [
+      { role: "tensorrt_build_profile", path: "samples/evidence/tensorrt-8.6.1-rtx4060.profile.json", byteLength: 3_944, sha256: "4162a34889d56c3adad54bfb22e611558918323ed5ff64bfdfcc2aeb8d8b1876" },
+      { role: "tensorrt_parser_observation", path: "samples/evidence/tensorrt_supported_probe.observation.json", byteLength: 5_646, sha256: "0b70b2e788341f6cb09e71185e72d44e89304be806729ffc60e72f964cf048b8" },
+    ],
+    purpose: "Small Conv-to-Gemm graph with an identity-bound native TensorRT parser capability observation.",
+    analysisDepth: "ONNX graph + TensorRT parser capability",
+    focus: "Complete static graph arithmetic plus 5/5 nodes in the TensorRT 8.6.1 supported-subgraph collection",
+    coverageNote: "Parser acceptance is not engine-build success, tactic selection, execution, latency, or accuracy evidence.",
+    expectedEvidence: {
+      artifactClass: "onnx_tensorrt_supported_probe",
+      operatorCount: 5, tensorCount: 10, totalMacs: 6_928,
+      constantBytes: 528, peakLiveBytes: 2_048, peakLiveAtOp: 1,
+      tensorRtConditionallyEligibleOps: 5, tensorRtDefiniteExclusionOps: 0, tensorRtUnresolvedOps: 0,
+    },
+  }),
+  sample({
+    id: "onnx-tensorrt-boundary-probe",
+    label: "ONNX - TensorRT partition boundary probe (1.3 KiB)",
+    format: "onnx",
+    path: "samples/gpu_partition_probe.onnx",
+    filename: "gpu_partition_probe.onnx",
+    byteLength: 1_350,
+    sha256: "82a2feef00eb6ab03d82f2b30cd17f4d826e2d8307cb059eccd6a0f3120059b2",
+    license: "Apache-2.0",
+    source: "https://github.com/JunHwan-Kwon/deepbom/blob/main/scripts/generate-accelerator-llm-samples.py",
+    sourceRevision: "deterministic generator v1.0.0; artifact SHA-256 pinned",
+    companions: [
+      { role: "tensorrt_build_profile", path: "samples/evidence/tensorrt-8.6.1-rtx4060.profile.json", byteLength: 3_944, sha256: "4162a34889d56c3adad54bfb22e611558918323ed5ff64bfdfcc2aeb8d8b1876" },
+      { role: "tensorrt_parser_observation", path: "samples/evidence/gpu_partition_probe.observation.json", byteLength: 5_884, sha256: "47f4ca813a9b6a22ed7707e32fd2e528ce700bd41416f807fc352998697191f9" },
+    ],
+    purpose: "Dynamic NonZero boundary probe that separates parser-observed supported regions from an uncovered node.",
+    analysisDepth: "ONNX graph + TensorRT parser partition boundary",
+    focus: "Two supported-subgraph regions covering 4/5 nodes with the serialized NonZero node left explicitly unresolved",
+    coverageNote: "An uncovered parser node is unresolved capability evidence, not a measured CPU fallback or transfer event.",
+    expectedEvidence: {
+      artifactClass: "onnx_tensorrt_partition_probe",
+      operatorCount: 5, tensorCount: 9, totalMacs: 6_912,
+      constantBytes: 464, peakLiveBytes: 2_048, peakLiveAtOp: 1,
+      tensorRtConditionallyEligibleOps: 4, tensorRtDefiniteExclusionOps: 0, tensorRtUnresolvedOps: 1,
+    },
+  }),
+  sample({
+    id: "onnx-tiny-decoder-llm",
+    label: "ONNX - Tiny decoder LLM graph + TensorRT (5.7 KiB)",
+    format: "onnx",
+    path: "samples/tiny_decoder_llm.onnx",
+    filename: "tiny_decoder_llm.onnx",
+    byteLength: 5_798,
+    sha256: "1fa4d75584011ef9223c6ccf815bc2c1830424b637533bc560a5be2f518f22ee",
+    license: "Apache-2.0",
+    source: "https://github.com/JunHwan-Kwon/deepbom/blob/main/scripts/generate-accelerator-llm-samples.py",
+    sourceRevision: "deterministic generator v1.0.0; artifact SHA-256 pinned",
+    companions: [
+      { role: "tensorrt_build_profile", path: "samples/evidence/tensorrt-8.6.1-rtx4060.profile.json", byteLength: 3_944, sha256: "4162a34889d56c3adad54bfb22e611558918323ed5ff64bfdfcc2aeb8d8b1876" },
+      { role: "tensorrt_parser_observation", path: "samples/evidence/tiny_decoder_llm.observation.json", byteLength: 5_672, sha256: "07dcd52f5c55f8943a64d20ce21f3faebeb4850bf3b6d0f378853a740f50be57" },
+    ],
+    purpose: "Decomposed decoder-attention fixture for LLM motif, serialized state, static MAC, and TensorRT parser evidence.",
+    analysisDepth: "ONNX LLM graph + TensorRT parser capability",
+    focus: "Eight MatMul nodes, Softmax, two normalizations, two state-name candidates, 2,304 MACs, and 18/18 parser-observed nodes",
+    coverageNote: "The motif is a heuristic candidate and does not establish architecture identity, tokenizer, generation policy, model quality, or clinical validity.",
+    expectedEvidence: {
+      artifactClass: "onnx_tiny_decoder_llm_probe",
+      operatorCount: 18, tensorCount: 32, totalMacs: 2_304,
+      constantBytes: 3_204, peakLiveBytes: 704, peakLiveAtOp: 4,
+      tensorRtConditionallyEligibleOps: 18, tensorRtDefiniteExclusionOps: 0, tensorRtUnresolvedOps: 0,
+      llmMatrixMultiplyOps: 8, llmSoftmaxOps: 1, llmNormalizationOps: 2, llmExternalStateCandidates: 2,
+    },
+  }),
+  sample({
+    id: "gguf-tinymqa-q4",
+    label: "GGUF - TinyMQA 1M Q4_0 (509 KiB)",
+    format: "gguf",
+    path: "samples/tinymqa1m.Q4_0.gguf",
+    filename: "tinymqa1m.Q4_0.gguf",
+    byteLength: 521_248,
+    sha256: "cb95a6e10f28b76a1dd71c15560dec5a5eee8943f591ef45d11c129786b22cff",
+    license: "MIT",
+    source: "https://huggingface.co/shibatch/tinymqa1m",
+    sourceRevision: "403668777b2a2708d2529f8913cabfcaf3d6b385",
+    purpose: "Weight-container example for source-pinned Q4_0 decode and exact tensor-payload conservation.",
+    analysisDepth: "GGUF container and payload audit",
+    focus: "Tensor inventory, GGML block decode, offsets, payload coverage, and numerical integrity",
+    coverageNote: "Storage encoding is observed; runtime compute dtype, graph, MACs, and kernels are not inferred.",
+    expectedEvidence: {
+      artifactClass: "gguf_v3_q4_0_container",
+      operatorCount: null, tensorCount: 39, totalMacs: null,
+      payloadBytes: 507_392, decodedValueCount: 836_736, nonfiniteValueCount: 0,
+    },
+  }),
+  sample({
+    id: "safetensors-nanofable-fp16",
+    label: "SafeTensors - NanoFable 1M FP16 (2.6 MiB)",
+    format: "safetensors",
+    path: "samples/nanofable-1m-fp16.safetensors",
+    filename: "nanofable-1m-fp16.safetensors",
+    byteLength: 2_758_256,
+    sha256: "a35fd03f52c12f4e78a246bec1927e9a169377fbb8905dc13165d285010e7a44",
+    license: "MIT",
+    source: "https://huggingface.co/adrahmana/NanoFable-1M-fp16",
+    sourceRevision: "0647a8c41e06c97e057eb6aceafe3d859eba853b",
+    purpose: "Single-file checkpoint example for dtype, shape, byte-range, and full FP16 payload validation.",
+    analysisDepth: "SafeTensors checkpoint audit",
+    focus: "Tensor namespace, FP16 payload bounds, scalar decode, and numerical integrity",
+    coverageNote: "This fixture is not sharded and does not establish an inference graph or quantization contract.",
+    expectedEvidence: {
+      artifactClass: "single_file_fp16_checkpoint",
+      operatorCount: null, tensorCount: 38, totalMacs: null,
+      payloadBytes: 2_754_816, decodedValueCount: 1_377_408, nonfiniteValueCount: 0,
+    },
+  }),
+  sample({
+    id: "coreml-mnist-classifier",
+    label: "Core ML - MNIST Classifier (386 KiB)",
+    format: "coreml",
+    path: "samples/MNISTClassifier.mlmodel",
+    filename: "MNISTClassifier.mlmodel",
+    byteLength: 395_695,
+    sha256: "816d1a222d5272109166ffc819d7ce44aff923a673884e34d982aa74985ba587",
+    license: "MIT",
+    source: "https://developer.apple.com/machine-learning/models/",
+    sourceRevision: "Apple-hosted artifact; exact SHA-256 pinned",
+    purpose: "Legacy NeuralNetworkClassifier example for typed interfaces, graph cost, weights, and liveness.",
+    analysisDepth: "Core ML serialized-model audit",
+    focus: "Model type, classifier outputs, decoded graph, weight conservation, static MACs, and liveness",
+    coverageNote: "Does not demonstrate ML Program package binding, flexible shapes, or observed compute-unit assignment.",
+    expectedEvidence: {
+      artifactClass: "coreml_neural_network_classifier",
+      operatorCount: 14, tensorCount: 16, totalMacs: 1_994_240,
+      constantBytes: 393_768, peakLiveBytes: 100_352, inputCount: 1, outputCount: 2,
+    },
+  }),
+]);
+
+const SAMPLE_BY_ID = new Map(PUBLIC_SAMPLE_MODELS.map((entry) => [entry.id, entry]));
+
+export function publicSampleModel(id) {
+  return SAMPLE_BY_ID.get(String(id || "")) || null;
+}
+
+function snakeCaseKeys(value) {
+  if (Array.isArray(value)) return value.map(snakeCaseKeys);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [
+    key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`),
+    snakeCaseKeys(item),
+  ]));
+}
+
+export function publicSampleManifestDocument() {
+  return {
+    schema: PUBLIC_SAMPLE_MANIFEST_SCHEMA,
+    analyzer_semantic_version: ANALYZER_SEMANTIC_VERSION,
+    analyzer_rulepack_sha256: RULEPACK_SHA256,
+    interpretation: "Expected values are regression baselines for the exact hash-identified artifacts, not claims about model quality or runtime performance.",
+    examples: PUBLIC_SAMPLE_MODELS.map((entry) => ({
+      example_id: entry.id,
+      format: entry.format,
+      purpose: entry.purpose,
+      analysis_depth: entry.analysisDepth,
+      source: entry.source,
+      source_revision: entry.sourceRevision,
+      license: entry.license,
+      artifact: { filename: entry.filename, byte_length: entry.byteLength, sha256: entry.sha256 },
+      companions: entry.companions.map((companion) => ({
+        role: companion.role,
+        path: companion.path,
+        byte_length: companion.byteLength,
+        sha256: companion.sha256,
+      })),
+      expected: snakeCaseKeys(entry.expectedEvidence),
+      coverage_note: entry.coverageNote,
+    })),
+  };
+}

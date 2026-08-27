@@ -1,0 +1,196 @@
+{
+  "schema": "deepbom.public_tflite_corpus.v1",
+  "corpus_id": "mediapipe-models-generation-pinned-20",
+  "artifact_count": 20,
+  "format": "tflite",
+  "target_profile_id": "android_mid_a55",
+  "source_policy": {
+    "publisher": "Google MediaPipe",
+    "bucket": "mediapipe-models",
+    "object_versioning": "Every URL binds the immutable GCS object generation.",
+    "distribution": "Model bytes are downloaded to a local cache and are never committed or included in the web deployment.",
+    "license_boundary": "The corpus manifest records technical provenance only. Model use remains subject to the upstream model and repository terms."
+  },
+  "models": [
+    {
+      "id": "audio-classifier-yamnet-f32",
+      "task": "audio_classification",
+      "published_precision": "float32",
+      "object": "audio_classifier/yamnet/float32/1/yamnet.tflite",
+      "generation": "1682545011401633",
+      "size_bytes": 4126810,
+      "sha256": "4d8b4a53282dc83ef04e3e7dbc4fbc98082e34e44ed798e16c3a0cdd4c584faf"
+    },
+    {
+      "id": "audio-embedder-yamnet-f32",
+      "task": "audio_embedding",
+      "published_precision": "float32",
+      "object": "audio_embedder/yamnet/float32/1/yamnet.tflite",
+      "generation": "1682545011764862",
+      "size_bytes": 12900090,
+      "sha256": "5e357e61672b6ef7ef27b1804ad01daaa759586f9d63f23125303ca415883bec"
+    },
+    {
+      "id": "face-detector-full-f16",
+      "task": "face_detection",
+      "published_precision": "float16",
+      "object": "face_detector/blaze_face_full_range/float16/1/blaze_face_full_range.tflite",
+      "generation": "1773262466468674",
+      "size_bytes": 1083786,
+      "sha256": "3698b18f063835bc609069ef052228fbe86d9c9a6dc8dcb7c7c2d69aed2b181b"
+    },
+    {
+      "id": "face-detector-full-sparse-f16",
+      "task": "face_detection",
+      "published_precision": "float16_sparse",
+      "object": "face_detector/blaze_face_full_range/float16/1/blaze_face_full_range_sparse.tflite",
+      "generation": "1773262466329200",
+      "size_bytes": 676746,
+      "sha256": "2c3728e6da56f21e21a320433396fb06d40d9088f2247c05e5635a688d45dfe1"
+    },
+    {
+      "id": "face-detector-short-f16",
+      "task": "face_detection",
+      "published_precision": "float16",
+      "object": "face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite",
+      "generation": "1682480001338381",
+      "size_bytes": 229746,
+      "sha256": "b4578f35940bf5a1a655214a1cce5cab13eba73c1297cd78e1a04c2380b0152f"
+    },
+    {
+      "id": "efficientnet-lite0-f32",
+      "task": "image_classification",
+      "published_precision": "float32",
+      "object": "image_classifier/efficientnet_lite0/float32/1/efficientnet_lite0.tflite",
+      "generation": "1682480007106905",
+      "size_bytes": 18582189,
+      "sha256": "6c7ab0a6e5dcbf38a8c33b960996a55a3b4300b36a018c4545801de3a3c8bde0"
+    },
+    {
+      "id": "efficientnet-lite0-int8",
+      "task": "image_classification",
+      "published_precision": "int8",
+      "object": "image_classifier/efficientnet_lite0/int8/1/efficientnet_lite0.tflite",
+      "generation": "1682480006900522",
+      "size_bytes": 5434517,
+      "sha256": "bc2ffe19c1118de0c0c2a9088992da5589722656e0fba81421385300a4a34b16"
+    },
+    {
+      "id": "efficientnet-lite2-int8",
+      "task": "image_classification",
+      "published_precision": "int8",
+      "object": "image_classifier/efficientnet_lite2/int8/1/efficientnet_lite2.tflite",
+      "generation": "1682480011960953",
+      "size_bytes": 7165461,
+      "sha256": "7fc3a7dbc1cd2833b162a54577afb47ab531d9c4b799ef11d90a4c56fe4ed5ad"
+    },
+    {
+      "id": "mobilenet-v3-large-embedder-f32",
+      "task": "image_embedding",
+      "published_precision": "float32",
+      "object": "image_embedder/mobilenet_v3_large/float32/1/mobilenet_v3_large.tflite",
+      "generation": "1682480013169185",
+      "size_bytes": 10889458,
+      "sha256": "11af3c560dfeed7737cb4c03c23bf52a8403020784192d4dea0b74862a12828d"
+    },
+    {
+      "id": "mobilenet-v3-small-embedder-f32",
+      "task": "image_embedding",
+      "published_precision": "float32",
+      "object": "image_embedder/mobilenet_v3_small/float32/1/mobilenet_v3_small.tflite",
+      "generation": "1682480013737984",
+      "size_bytes": 4117670,
+      "sha256": "bbbb4c51a55a53905af1daec995ca1aae355046f8839bb8c9f5ce9271394bc40"
+    },
+    {
+      "id": "deeplab-v3-f32",
+      "task": "image_segmentation",
+      "published_precision": "float32",
+      "object": "image_segmenter/deeplab_v3/float32/1/deeplab_v3.tflite",
+      "generation": "1682480020051142",
+      "size_bytes": 2780176,
+      "sha256": "ff36e24d40547fe9e645e2f4e8745d1876d6e38b332d39a82f0bf0f5d1d561b3"
+    },
+    {
+      "id": "hair-segmenter-f32",
+      "task": "image_segmentation",
+      "published_precision": "float32",
+      "object": "image_segmenter/hair_segmenter/float32/1/hair_segmenter.tflite",
+      "generation": "1682480017484953",
+      "size_bytes": 781618,
+      "sha256": "2628cf3ce5f695f604cbea2841e00befcaa3624bf80caf3664bef2656d59bf84"
+    },
+    {
+      "id": "selfie-segmenter-f16",
+      "task": "image_segmentation",
+      "published_precision": "float16",
+      "object": "image_segmenter/selfie_segmenter/float16/1/selfie_segmenter.tflite",
+      "generation": "1683436452886295",
+      "size_bytes": 249537,
+      "sha256": "191ac9529ae506ee0beefa6b2c945a172dab9d07d1e802a290a4e4038226658b"
+    },
+    {
+      "id": "magic-touch-segmenter-f32",
+      "task": "interactive_segmentation",
+      "published_precision": "float32",
+      "object": "interactive_segmenter/magic_touch/float32/1/magic_touch.tflite",
+      "generation": "1683146867404767",
+      "size_bytes": 6227884,
+      "sha256": "e24338a717c1b7ad8d159666677ef400babb7f33b8ad60c4d96db4ecf694cd25"
+    },
+    {
+      "id": "language-detector-f32",
+      "task": "language_detection",
+      "published_precision": "float32",
+      "object": "language_detector/language_detector/float32/1/language_detector.tflite",
+      "generation": "1682624733160468",
+      "size_bytes": 315294,
+      "sha256": "7db4f23dfe1ad8966b050b419a865da451143fd43eb6b606a256aadeeb1e5417"
+    },
+    {
+      "id": "efficientdet-lite0-f16",
+      "task": "object_detection",
+      "published_precision": "float16",
+      "object": "object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
+      "generation": "1682636011592726",
+      "size_bytes": 7254339,
+      "sha256": "4b59100025bea1235a84c1038879a6cccc9f6c49f5e41144e91e74d99e780993"
+    },
+    {
+      "id": "efficientdet-lite0-int8",
+      "task": "object_detection",
+      "published_precision": "int8",
+      "object": "object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite",
+      "generation": "1682636013497226",
+      "size_bytes": 4602795,
+      "sha256": "0720bf247bd76e6594ea28fa9c6f7c5242be774818997dbbeffc4da460c723bb"
+    },
+    {
+      "id": "ssd-mobilenet-v2-f16",
+      "task": "object_detection",
+      "published_precision": "float16",
+      "object": "object_detector/ssd_mobilenet_v2/float16/1/ssd_mobilenet_v2.tflite",
+      "generation": "1683072057787186",
+      "size_bytes": 5918749,
+      "sha256": "ee21e12bfdc464100c6008c865ab8294f6a04162e6ed2e11986f1175b02cfab2"
+    },
+    {
+      "id": "average-word-classifier-f32",
+      "task": "text_classification",
+      "published_precision": "float32",
+      "object": "text_classifier/average_word_classifier/float32/1/average_word_classifier.tflite",
+      "generation": "1682480022502271",
+      "size_bytes": 775706,
+      "sha256": "13bf6f7f35964f1e85d6cc762ee7b1952009b532b233baa5bdb4bf7441097f34"
+    },
+    {
+      "id": "universal-sentence-encoder-f32",
+      "task": "text_embedding",
+      "published_precision": "float32",
+      "object": "text_embedder/universal_sentence_encoder/float32/1/universal_sentence_encoder.tflite",
+      "generation": "1682480025058456",
+      "size_bytes": 6120274,
+      "sha256": "89ad3c74175dd8caa398cc22b657296d94302d20c525c12b58b29420f7249749"
+    }
+  ]
+}

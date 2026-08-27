@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/native-capture-run.v1.2.json",
+  "title": "DeepBOM Native Capture Run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "capture_mode", "artifact_path", "output_dir", "target_profile", "runtime", "device", "build", "invocation", "instrumentation"],
+  "properties": {
+    "schema": { "const": "deepbom.native_capture_run.v1.2" },
+    "capture_mode": { "enum": ["runtime_capture", "synthetic_contract_probe"] },
+    "artifact_path": { "type": "string", "minLength": 1 },
+    "output_dir": { "type": "string", "minLength": 1 },
+    "target_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sha256"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "backend", "build", "binary_path", "arguments"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "backend": { "type": "string", "pattern": "[Xx][Nn][Nn][Pp][Aa][Cc][Kk]" },
+        "build": { "type": "string", "minLength": 1 },
+        "binary_path": { "type": "string", "minLength": 1 },
+        "arguments": { "type": "array", "items": { "type": "string" } },
+        "environment": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean"] } },
+        "build_command": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["command", "arguments"],
+          "properties": {
+            "command": { "type": "string", "minLength": 1 },
+            "arguments": { "type": "array", "items": { "type": "string" } },
+            "cwd": { "type": "string" },
+            "environment": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean"] } }
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "collected_at": { "type": "string", "format": "date-time" },
+        "capture_id": { "type": "string", "minLength": 1 },
+        "collector_source_commit": { "type": "string", "minLength": 1 }
+      }
+    },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity"],
+      "properties": {
+        "identity": { "type": "string", "minLength": 1 },
+        "nnapi_runtime_feature_level": { "type": "integer", "minimum": 27 },
+        "nnapi_accelerator_identity": { "type": "string", "minLength": 1 },
+        "nnapi_capability_source": { "enum": ["android_nnapi_runtime_query", "declared_capture_configuration"] }
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "xnnpack_source_commit", "microkernel_build_identifier_path", "compile_definitions", "toolchain"],
+      "properties": {
+        "source": {
+          "type": "object",
+          "required": ["tensorflow_commit"],
+          "properties": { "tensorflow_commit": { "const": "87bbf65b8d23d3f06912b1b2183587e1884bc45c" } }
+        },
+        "xnnpack_source_commit": { "const": "23a67314f7afdbb76191589ae090d82bf55afbfa" },
+        "cmake_system_name": { "type": "string", "minLength": 1 },
+        "microkernel_build_identifier_path": { "type": "string", "minLength": 1 },
+        "debug_symbols_path": { "type": "string", "minLength": 1 },
+        "compile_definitions": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "value": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "toolchain": { "type": "object", "minProperties": 1 }
+      }
+    },
+    "invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputs", "thread_count", "runtime_options"],
+      "properties": {
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tensor_index", "name", "shape"],
+            "properties": {
+              "tensor_index": { "type": "integer", "minimum": 0 },
+              "name": { "type": "string", "minLength": 1 },
+              "shape": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 1 } }
+            }
+          }
+        },
+        "thread_count": { "type": "integer", "minimum": 1 },
+        "resource_partition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["requested_cpu_ids", "affinity_mode", "isolation_expectation"],
+          "properties": {
+            "requested_cpu_ids": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "type": "integer", "minimum": 0 }
+            },
+            "affinity_mode": { "const": "taskset_process_and_descendants" },
+            "isolation_expectation": { "enum": ["affinity_only", "exclusive_cpuset"] }
+          }
+        },
+        "runtime_options": { "type": "object" }
+      }
+    },
+    "instrumentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lowering_ids", "microkernel_ids", "arena_allocations"],
+      "properties": {
+        "lowering_ids": { "type": "boolean" },
+        "microkernel_ids": { "type": "boolean" },
+        "arena_allocations": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://cyclonedx.org/schema/2.0/cyclonedx-2.0.schema.json",
+  "specFormat": "CycloneDX",
+  "specVersion": "2.0",
+  "serialNumber": "urn:uuid:657a9897-ec0e-423b-8d26-5f6ccdf84bd8",
+  "version": 1,
+  "components": [
+    {
+      "type": "machine-learning-model",
+      "bom-ref": "quant-fixture-valid-ai-ml-quantization-per-channel-2.0",
+      "name": "valid-ai-ml-quantization-per-channel-2.0",
+      "version": "1.0.0",
+      "modelProperties": {
+        "inputs": [
+          {
+            "name": "image",
+            "dataType": "uint8",
+            "shape": [
+              1,
+              224,
+              224,
+              3
+            ],
+            "quantization": {
+              "bits": 8,
+              "scheme": "affine",
+              "granularity": "per-channel",
+              "axis": 3
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

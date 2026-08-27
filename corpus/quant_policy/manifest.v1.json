@@ -1,0 +1,81 @@
+{
+  "schema": "deepbom.quant_policy_boundary_corpus.v1",
+  "corpus_id": "quant-policy-boundary-public-50-2026-07-30",
+  "target_profile_id": "android_mid_a55",
+  "public_artifact_count": 50,
+  "case_study_anchor_count": 1,
+  "selection_policy": "The public target combines complete, predeclared subcohorts rather than selecting artifacts after observing findings. Counts are reported by workflow-provenance and quantization-granularity strata. A missing QAT declaration is unknown provenance, not a PTQ label.",
+  "subcohorts": [
+    {
+      "id": "mediapipe-public",
+      "kind": "public_manifest",
+      "manifest": "corpus/public-tflite-corpus.v1.json",
+      "selection": "all",
+      "expected_count": 20,
+      "workflow_provenance": "embedded_metadata_or_unknown"
+    },
+    {
+      "id": "mcunet-curated-ptq",
+      "kind": "curated_micro_manifest",
+      "manifest": "corpus/curated-micro-corpus.v1.json",
+      "selection": "all",
+      "expected_count": 11,
+      "workflow_provenance": "official_repository_declared_ptq"
+    },
+    {
+      "id": "google-legacy-quantized",
+      "kind": "google_legacy_manifest",
+      "manifest": "corpus/google_legacy/manifest.v1.json",
+      "selection": "cohort=legacy_quantized",
+      "expected_count": 4,
+      "workflow_provenance": "two_official_qat_and_two_unknown"
+    },
+    {
+      "id": "litert-modern-static-int8",
+      "kind": "huggingface_pinned_manifest",
+      "manifest": "corpus/quant_policy/expanded-modern-static-int8.v1.json",
+      "selection": "all",
+      "expected_count": 15,
+      "workflow_provenance": "model_card_static_recipe_qat_not_declared"
+    }
+  ],
+  "case_study_anchors": [
+    {
+      "id": "deeplab-tf214-per-axis-qat",
+      "sha256": "9ab6f552f6f8f54e431bc019bc9f687347b4c8d7388ad10761f8bd4acf201ab3",
+      "redistributable": false,
+      "local_path_env": "DEEPBOM_CASE_STUDY_TFLITE",
+      "expected_provenance": {
+        "tensorflow_version": "2.14.0",
+        "optimization_modes": [1003, 2000],
+        "evidence_class": "OBSERVED_EMBEDDED_CONVERSION_METADATA"
+      }
+    }
+  ],
+  "primary_outcomes": [
+    {
+      "id": "bias_half_range_exceedance",
+      "definition": "abs(stored_int32_bias_code) > floor(INT32_MAX/2)",
+      "artifact_evidence_class": "DERIVED",
+      "policy_interpretation_evidence_class": "SOURCE_BACKED_REFERENCE"
+    },
+    {
+      "id": "bias_half_range_material_exceedance",
+      "definition": "abs(stored_int32_bias_code) - floor(INT32_MAX/2) > 129 codes; 129 = ceil(2 * 2^-24 * floor(INT32_MAX/2)) + 1",
+      "artifact_evidence_class": "DERIVED_WITH_NUMERIC_TOLERANCE",
+      "policy_interpretation_evidence_class": "SOURCE_BACKED_REFERENCE"
+    },
+    {
+      "id": "exact_zero_centered_kernel",
+      "definition": "all centered stored weight codes in one output-channel slice equal zero",
+      "artifact_evidence_class": "DERIVED"
+    },
+    {
+      "id": "full_code_domain_int32_envelope_exceedance",
+      "definition": "the exact full-receptive-field envelope exceeds INT32 when every input element may independently take any code in the input tensor's declared storage domain",
+      "artifact_evidence_class": "DERIVED",
+      "interpretation_boundary": "This is not proof that the upstream graph can reach the witness codes or that an executed runtime kernel overflows. Graph reachability, fused activation constraints, lowering, accumulator width, and arithmetic order require separate evidence."
+    }
+  ],
+  "interpretation_boundary": "The sweep detects serialized bias encodings and exact centered-code predicates. It does not observe converter pass execution. Association with mutable or immutable quantizer policy is stratified by independently recorded provenance and remains inferred without a targeted converter intervention."
+}

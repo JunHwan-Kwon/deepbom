@@ -1,0 +1,339 @@
+{
+  "schema": "deepbom.coreml_mlprogram_contract_corpus.v1",
+  "format": "coreml_mlpackage",
+  "artifact_count": 5,
+  "population_scope": "Five deterministic source-pinned MLProgram package fixtures establish parser, package binding, flexible-interface, blockwise affine, and LUT palettization contract behavior. They are conformance fixtures, not public-model samples and not evidence of ecosystem prevalence, runtime device placement, latency, or task quality.",
+  "generator_source": {
+    "repository": "apple/coremltools",
+    "revision": "02c736ddca4668a13626c96912939bc83ff55172",
+    "model_proto": "mlmodel/format/Model.proto",
+    "model_proto_sha256": "c731d0202acecd54f20eaf97c94a2a4764fe541ba92311485a9c36d3c3c3b544",
+    "feature_types_proto": "mlmodel/format/FeatureTypes.proto",
+    "feature_types_proto_sha256": "01f12c1220ce0cb19496b0497ca4e733a37ff12294382885bd25a6903d9547b7",
+    "mil_proto": "mlmodel/format/MIL.proto",
+    "mil_proto_sha256": "eba3c58155319ffc9532aa9723c849e1b57eedc92942516e194a0779baa4fe6c",
+    "compression_ios18_definition": "coremltools/converters/mil/mil/ops/defs/iOS18/compression.py",
+    "compression_ios18_definition_sha256": "a48dfcb3d24f77bfbf1a5c3d1c27e813de344064b38afa9ea143386b9d8ca804"
+  },
+  "artifacts": [
+    {
+      "id": "mlprogram-static-blob",
+      "contract_class": "static_external_blob",
+      "provenance_class": "source_pinned_generated_contract_fixture",
+      "ecosystem_prevalence_claim": false,
+      "baseline": {
+        "status": "assessed",
+        "contract_class": "static_external_blob",
+        "model_type": "mlProgram",
+        "specification_version": 8,
+        "files": [
+          {
+            "path": "mlprogram-static-blob.mlpackage/Manifest.json",
+            "size_bytes": 265,
+            "sha256": "7e28ee291b42a4987852e67e3585f652a2d8dc0f4335d95b853197614cc43db6"
+          },
+          {
+            "path": "mlprogram-static-blob.mlpackage/Data/com.deepbom.fixture/model.mlmodel",
+            "size_bytes": 369,
+            "sha256": "0c6458ae5fc67d229a7cde693fe5dfd75a490705319ac1c6ebfbda9ded6ffcf4"
+          },
+          {
+            "path": "mlprogram-static-blob.mlpackage/Data/com.deepbom.fixture/weights/weight.bin",
+            "size_bytes": 200,
+            "sha256": "51473cc5753c8102bb0744d7d1623f76285a1d0b9252df48d738e7db38408e03"
+          }
+        ],
+        "bundle_sha256": "7fdb4774ccba83fd32d9f16b891b66b189b24a44238e669ae9e6d29ce46f3824",
+        "operator_count": 2,
+        "tensor_count": 3,
+        "total_macs": 72,
+        "mac_assessment_status": "assessed_all_decoded_compute_ops",
+        "tensor_liveness_status": "assessed",
+        "tensor_liveness_peak_bytes": 96,
+        "input_flexibility": {
+          "kind": "fixed"
+        },
+        "output_flexibility": {
+          "kind": "fixed"
+        },
+        "unknown_mil_dimension_count": 0,
+        "external_blob_reference_count": 1,
+        "weight_integrity_status": "assessed",
+        "weight_payload_bytes": 72,
+        "compression_contract_status": "not_applicable_no_serialized_compression_transform",
+        "compression_transform_count": 0,
+        "compression_exact_contract_count": 0,
+        "byte_conservation": true,
+        "analysis_receipt_sha256": "4d28b13589c744a9dbd85c9754045e8f09c8e3673f87aaa9baa7be2715078cb1"
+      }
+    },
+    {
+      "id": "mlprogram-enumerated-shape",
+      "contract_class": "enumerated_shape",
+      "provenance_class": "source_pinned_generated_contract_fixture",
+      "ecosystem_prevalence_claim": false,
+      "baseline": {
+        "status": "assessed",
+        "contract_class": "enumerated_shape",
+        "model_type": "mlProgram",
+        "specification_version": 8,
+        "files": [
+          {
+            "path": "mlprogram-enumerated-shape.mlpackage/Manifest.json",
+            "size_bytes": 265,
+            "sha256": "7e28ee291b42a4987852e67e3585f652a2d8dc0f4335d95b853197614cc43db6"
+          },
+          {
+            "path": "mlprogram-enumerated-shape.mlpackage/Data/com.deepbom.fixture/model.mlmodel",
+            "size_bytes": 258,
+            "sha256": "28c00303db44571c526e16df3d0feef8e6438516abf5e0fc5c4479de3c4bf57c"
+          }
+        ],
+        "bundle_sha256": "efc3bebf42c95d5fa9255ff3a523c66d708ca3e5a5e703c8e1e0d9c45adf4645",
+        "operator_count": 1,
+        "tensor_count": 2,
+        "total_macs": 0,
+        "mac_assessment_status": "assessed_all_decoded_compute_ops",
+        "tensor_liveness_status": "not_assessed",
+        "tensor_liveness_peak_bytes": null,
+        "input_flexibility": {
+          "kind": "enumerated",
+          "shapes": [
+            [
+              1,
+              3,
+              224,
+              224
+            ],
+            [
+              1,
+              3,
+              256,
+              256
+            ]
+          ]
+        },
+        "output_flexibility": {
+          "kind": "enumerated",
+          "shapes": [
+            [
+              1,
+              3,
+              224,
+              224
+            ],
+            [
+              1,
+              3,
+              256,
+              256
+            ]
+          ]
+        },
+        "unknown_mil_dimension_count": 4,
+        "external_blob_reference_count": 0,
+        "weight_integrity_status": "not_applicable_no_serialized_constants",
+        "weight_payload_bytes": 0,
+        "compression_contract_status": "not_applicable_no_serialized_compression_transform",
+        "compression_transform_count": 0,
+        "compression_exact_contract_count": 0,
+        "byte_conservation": true,
+        "analysis_receipt_sha256": "2db0ef757472e62ca7390fd5488188f1f1e2675fb9e8a1ba05964aaea995acf7"
+      }
+    },
+    {
+      "id": "mlprogram-bounded-range",
+      "contract_class": "bounded_shape_range",
+      "provenance_class": "source_pinned_generated_contract_fixture",
+      "ecosystem_prevalence_claim": false,
+      "baseline": {
+        "status": "assessed",
+        "contract_class": "bounded_shape_range",
+        "model_type": "mlProgram",
+        "specification_version": 8,
+        "files": [
+          {
+            "path": "mlprogram-bounded-range.mlpackage/Manifest.json",
+            "size_bytes": 265,
+            "sha256": "7e28ee291b42a4987852e67e3585f652a2d8dc0f4335d95b853197614cc43db6"
+          },
+          {
+            "path": "mlprogram-bounded-range.mlpackage/Data/com.deepbom.fixture/model.mlmodel",
+            "size_bytes": 274,
+            "sha256": "198a77fafe262d9d21f623fc3268b675755428741f5e6737d6ab2c27730d625e"
+          }
+        ],
+        "bundle_sha256": "688223521fa75869f37a36de24db9dd08357ebb446384396fcb889e71b4f80b8",
+        "operator_count": 1,
+        "tensor_count": 2,
+        "total_macs": 0,
+        "mac_assessment_status": "assessed_all_decoded_compute_ops",
+        "tensor_liveness_status": "not_assessed",
+        "tensor_liveness_peak_bytes": null,
+        "input_flexibility": {
+          "kind": "range",
+          "dimensions": [
+            {
+              "lower_bound": 1,
+              "upper_bound": 1,
+              "upper_bound_unbounded": false,
+              "serialized_upper_bound": 1
+            },
+            {
+              "lower_bound": 3,
+              "upper_bound": 3,
+              "upper_bound_unbounded": false,
+              "serialized_upper_bound": 3
+            },
+            {
+              "lower_bound": 128,
+              "upper_bound": 512,
+              "upper_bound_unbounded": false,
+              "serialized_upper_bound": 512
+            },
+            {
+              "lower_bound": 128,
+              "upper_bound": 512,
+              "upper_bound_unbounded": false,
+              "serialized_upper_bound": 512
+            }
+          ],
+          "width": null,
+          "height": null
+        },
+        "output_flexibility": {
+          "kind": "range",
+          "dimensions": [
+            {
+              "lower_bound": 1,
+              "upper_bound": 1,
+              "upper_bound_unbounded": false,
+              "serialized_upper_bound": 1
+            },
+            {
+              "lower_bound": 3,
+              "upper_bound": 3,
+              "upper_bound_unbounded": false,
+              "serialized_upper_bound": 3
+            },
+            {
+              "lower_bound": 128,
+              "upper_bound": 512,
+              "upper_bound_unbounded": false,
+              "serialized_upper_bound": 512
+            },
+            {
+              "lower_bound": 128,
+              "upper_bound": 512,
+              "upper_bound_unbounded": false,
+              "serialized_upper_bound": 512
+            }
+          ],
+          "width": null,
+          "height": null
+        },
+        "unknown_mil_dimension_count": 4,
+        "external_blob_reference_count": 0,
+        "weight_integrity_status": "not_applicable_no_serialized_constants",
+        "weight_payload_bytes": 0,
+        "compression_contract_status": "not_applicable_no_serialized_compression_transform",
+        "compression_transform_count": 0,
+        "compression_exact_contract_count": 0,
+        "byte_conservation": true,
+        "analysis_receipt_sha256": "ce3f17e527f11cce5e664fb34a9c0506b3c9c4cc14fa5f49173cbe5e9358c889"
+      }
+    },
+    {
+      "id": "mlprogram-blockwise-affine",
+      "contract_class": "blockwise_affine_compression",
+      "provenance_class": "source_pinned_generated_contract_fixture",
+      "ecosystem_prevalence_claim": false,
+      "baseline": {
+        "status": "assessed",
+        "contract_class": "blockwise_affine_compression",
+        "model_type": "mlProgram",
+        "specification_version": 9,
+        "files": [
+          {
+            "path": "mlprogram-blockwise-affine.mlpackage/Manifest.json",
+            "size_bytes": 265,
+            "sha256": "7e28ee291b42a4987852e67e3585f652a2d8dc0f4335d95b853197614cc43db6"
+          },
+          {
+            "path": "mlprogram-blockwise-affine.mlpackage/Data/com.deepbom.fixture/model.mlmodel",
+            "size_bytes": 249,
+            "sha256": "666a8abf5c953ee983740b586598e1d2476b71f5c7ee3f0fb47ecf44035c6598"
+          }
+        ],
+        "bundle_sha256": "23ff6b803ae748606a8865e280a2d5e6fc9a1604f2f9fbfc6e2cebfd742b52b7",
+        "operator_count": 1,
+        "tensor_count": 3,
+        "total_macs": 0,
+        "mac_assessment_status": "assessed_all_decoded_compute_ops",
+        "tensor_liveness_status": "assessed",
+        "tensor_liveness_peak_bytes": 64,
+        "input_flexibility": {
+          "kind": "fixed"
+        },
+        "output_flexibility": {
+          "kind": "fixed"
+        },
+        "unknown_mil_dimension_count": 0,
+        "external_blob_reference_count": 0,
+        "weight_integrity_status": "partial",
+        "weight_payload_bytes": 16,
+        "compression_contract_status": "assessed_exact_serialized_contracts",
+        "compression_transform_count": 1,
+        "compression_exact_contract_count": 1,
+        "byte_conservation": true,
+        "analysis_receipt_sha256": "878ddf730700fc5b77be7e6aaa160fd31eb4f7b54f9b52e95dcb570cdc5d123e"
+      }
+    },
+    {
+      "id": "mlprogram-lut-palettization",
+      "contract_class": "lut_palettization_compression",
+      "provenance_class": "source_pinned_generated_contract_fixture",
+      "ecosystem_prevalence_claim": false,
+      "baseline": {
+        "status": "assessed",
+        "contract_class": "lut_palettization_compression",
+        "model_type": "mlProgram",
+        "specification_version": 9,
+        "files": [
+          {
+            "path": "mlprogram-lut-palettization.mlpackage/Manifest.json",
+            "size_bytes": 265,
+            "sha256": "7e28ee291b42a4987852e67e3585f652a2d8dc0f4335d95b853197614cc43db6"
+          },
+          {
+            "path": "mlprogram-lut-palettization.mlpackage/Data/com.deepbom.fixture/model.mlmodel",
+            "size_bytes": 291,
+            "sha256": "d064c3560dc4777d312ba67ce70c195848a06e607390a53cb2f51694092ee585"
+          }
+        ],
+        "bundle_sha256": "b1a1e4da3113bf1313ac81db77c055ae60cddcb18516f71a4617846b49da0ab9",
+        "operator_count": 1,
+        "tensor_count": 4,
+        "total_macs": 0,
+        "mac_assessment_status": "assessed_all_decoded_compute_ops",
+        "tensor_liveness_status": "assessed",
+        "tensor_liveness_peak_bytes": 16,
+        "input_flexibility": {
+          "kind": "fixed"
+        },
+        "output_flexibility": {
+          "kind": "fixed"
+        },
+        "unknown_mil_dimension_count": 0,
+        "external_blob_reference_count": 0,
+        "weight_integrity_status": "partial",
+        "weight_payload_bytes": null,
+        "compression_contract_status": "assessed_exact_serialized_contracts",
+        "compression_transform_count": 1,
+        "compression_exact_contract_count": 1,
+        "byte_conservation": false,
+        "analysis_receipt_sha256": "de6a0e5c6bb3b5609358ae34c98ec87ba6ad5dc3b734a7fe85f02b05b97b5aa1"
+      }
+    }
+  ]
+}

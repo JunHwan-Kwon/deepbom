@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>External Test Access / DEEPBOM</title>
+    <link rel="stylesheet" href="/web/styles.css" />
+  </head>
+  <body class="test-access-page">
+    <header class="topbar test-access-topbar">
+      <div>
+        <p class="eyebrow">ON-DEVICE Pipeline</p>
+        <h1>DEEPBOM</h1>
+      </div>
+      <a class="admin-link" href="/web/">Workbench</a>
+    </header>
+
+    <main class="test-access-shell">
+      <section class="test-access-intro" aria-labelledby="testAccessTitle">
+        <p class="eyebrow">Private-link evaluation</p>
+        <h2 id="testAccessTitle">External test access</h2>
+        <p>An administrator-issued link opens the existing Workbench with Engineering, Research, Medical AI, report, and export capabilities. No account sign-in is required.</p>
+        <dl class="test-access-boundary">
+          <div><dt>Model handling</dt><dd>Local browser memory</dd></div>
+          <div><dt>Product access</dt><dd>Medical AI evaluation</dd></div>
+          <div><dt>Admin operations</dt><dd>Never granted</dd></div>
+          <div><dt>Link lifetime</dt><dd>Exactly 24 hours</dd></div>
+        </dl>
+      </section>
+
+      <section class="test-access-controls" aria-labelledby="testAccessStatusTitle">
+        <div>
+          <p class="eyebrow">Access status</p>
+          <h2 id="testAccessStatusTitle">Checking access</h2>
+          <p id="testAccessIdentity">Checking the current browser session.</p>
+        </div>
+        <div class="test-access-actions">
+          <button id="testActivate" type="button" hidden>Retry activation</button>
+          <a id="testOpenWorkbench" class="test-access-link-button" href="/web/?test=active" hidden>Open Workbench</a>
+          <button id="testDeactivate" class="secondary-action" type="button" hidden>End test session</button>
+        </div>
+        <p class="status" id="testAccessStatus" role="status" aria-live="polite">Loading</p>
+      </section>
+    </main>
+
+    <script type="module" src="/web/test.js"></script>
+  </body>
+</html>
