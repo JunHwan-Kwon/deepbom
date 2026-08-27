@@ -17,8 +17,9 @@ class PlatformWheel(bdist_wheel):
 
     def get_tag(self):
         platform = environ.get("DEEPBOM_WHEEL_PLATFORM_TAG", "").strip()
-        if platform and not fullmatch(r"manylinux_2_28_(?:x86_64|aarch64)", platform):
-            raise RuntimeError("DEEPBOM_WHEEL_PLATFORM_TAG must be a supported manylinux_2_28 tag")
+        supported_override = r"(?:manylinux_2_28_(?:x86_64|aarch64)|macosx_14_0_(?:x86_64|arm64))"
+        if platform and not fullmatch(supported_override, platform):
+            raise RuntimeError("DEEPBOM_WHEEL_PLATFORM_TAG must be a supported manylinux_2_28 or macOS 14 tag")
         if not platform:
             platform = get_platform().replace("-", "_").replace(".", "_")
         return "py3", "none", platform

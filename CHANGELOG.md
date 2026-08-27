@@ -26,6 +26,11 @@ All notable archival releases of DEEPBOM are documented here.
   new LLM contracts while retaining per-file, private-code, documentation,
   native-tooling, corpus-evidence, and development-check budgets.
 
+## 1.94.2 - 2026-08-27
+
+- Bound macOS wheels to the architecture of their embedded standalone engine
+  and a conservative macOS 14 compatibility floor.
+
 ## 1.94.1 - 2026-08-27
 
 - Published the Apache-2.0 public source boundary and installation channels.

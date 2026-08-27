@@ -4,4 +4,4 @@ version = 4
 
 [[package]]
 name = "deepbom-channel"
-version = "1.94.1"
+version = "1.94.2"
