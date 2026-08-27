@@ -1,6 +1,6 @@
 [package]
 name = "deepbom-channel"
-version = "1.94.2"
+version = "1.94.3"
 edition = "2021"
 description = "Native launcher for the canonical DEEPBOM multi-format analysis engine"
 license = "Apache-2.0"

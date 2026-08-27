@@ -183,4 +183,4 @@ jobs:
             }
           ' "$npm_version"
       - name: Publish verified package
-        run: npm publish dist/deepbom-${{ inputs.expected_version }}.tgz --access public
+        run: npm publish ./dist/deepbom-${{ inputs.expected_version }}.tgz --access public

@@ -26,6 +26,11 @@ All notable archival releases of DEEPBOM are documented here.
   new LLM contracts while retaining per-file, private-code, documentation,
   native-tooling, corpus-evidence, and development-check budgets.
 
+## 1.94.3 - 2026-08-27
+
+- Corrected the npm publication command so the verified tarball is resolved as
+  a local file rather than a GitHub package shorthand.
+
 ## 1.94.2 - 2026-08-27
 
 - Bound macOS wheels to the architecture of their embedded standalone engine

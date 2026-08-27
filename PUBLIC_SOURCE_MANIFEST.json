@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "f1a7a5ef62e613632384f134d712ab99ba278827",
+  "source_commit": "81b792a9f8d33547d6e1732857cf4dd68cdd2979",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 844,
@@ -17,8 +17,8 @@
     },
     {
       "path": ".github/workflows/release-channels.yml",
-      "byte_length": 6090,
-      "sha256": "4ba201e73f9cad07283d99de48270bd2b12da833682aa4269211d2d3c113e33c"
+      "byte_length": 6092,
+      "sha256": "c77e024cb2c559ab82d55549c237afb7dc5d11de58e03c1ac5817323de1cd2ba"
     },
     {
       "path": ".gitignore",
@@ -32,8 +32,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 3088,
-      "sha256": "ecba24dffc2cb5e7e088fb08235a9871d8c2badedc8f7986da95b975ec1a4f9c"
+      "byte_length": 3247,
+      "sha256": "b12161488931870fb9769189ac4b3dfc9af3ae3b6633f5182f17e3317f121e2d"
     },
     {
       "path": "CITATION.cff",
@@ -73,7 +73,7 @@
     {
       "path": "bin/deepbom.mjs",
       "byte_length": 22167,
-      "sha256": "6ddf4a4f52dbe5f0336148ab72974d4557b2953baca19d005c3e744cba393d07"
+      "sha256": "74579f829e121bfae6ebc69f822cdbd58f8bc6dd5981fef568a595e077fb9191"
     },
     {
       "path": "build.rs",
@@ -93,12 +93,12 @@
     {
       "path": "channels/cargo/Cargo.lock",
       "byte_length": 160,
-      "sha256": "6246d6bd1d00f80a259d6f9c19bcc7bf3f8bb6050cc654c5240c369d3d97c149"
+      "sha256": "9d9d7e5842f6abde5bd60a1ead31379fdc5cb94eda07a33fa8a57efc261596d5"
     },
     {
       "path": "channels/cargo/Cargo.toml",
       "byte_length": 244,
-      "sha256": "5f5527421d1375463c6f8ac4dbc59e053aa8f571b65f7d113cdbbdb40c35400d"
+      "sha256": "cbee90f47e9ea4b0c546d92c4d5755d0d70982a6f7972a93c2fac21f3c054e86"
     },
     {
       "path": "channels/cargo/src/main.rs",
@@ -133,7 +133,7 @@
     {
       "path": "channels/python/pyproject.toml",
       "byte_length": 752,
-      "sha256": "2b0cd2f4b5a647885ff0c25f22546721fa96e870bf30ae2964e15da88eb2d4ed"
+      "sha256": "95aa465ef80a8bcb6ae25fd7481f2cbeb265b662cdcaf46a0bb977816f557c11"
     },
     {
       "path": "channels/python/requirements-build.txt",
@@ -148,7 +148,7 @@
     {
       "path": "channels/python/src/deepbom/__init__.py",
       "byte_length": 94,
-      "sha256": "e35d5c518f359d2fcf5f648fa95a4c645d4ca6f1853b46f6cba9cb1f07dc5bd0"
+      "sha256": "8378e990b63cf913ba8e26fe0410ee62fa6df0aed96e2e6c9130aa2c1fec5caa"
     },
     {
       "path": "channels/python/src/deepbom/__main__.py",
@@ -568,12 +568,12 @@
     {
       "path": "package-lock.json",
       "byte_length": 39995,
-      "sha256": "186c81686e68bf503ecfdcb40e6789770b681de495d007af448bd247cfc3916c"
+      "sha256": "1a74bae52f210466a26baeb1818ac335afe086754c43026e983ef0221797a495"
     },
     {
       "path": "package.json",
       "byte_length": 19280,
-      "sha256": "379b04f78540e0ac80763332c5c57798c175c66f1c7ee1770a8789106a12c4b9"
+      "sha256": "17a3b954a4d867f9694a0868a11d91e47510a34c5bc6fb0685fd9bb6e1c24ecc"
     },
     {
       "path": "pkg/LICENSE",
@@ -967,8 +967,8 @@
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
-      "byte_length": 26050,
-      "sha256": "567b77201dcaeb59363fafb035edc210ea2a567d1c8d433a943374d44c5a0405"
+      "byte_length": 26054,
+      "sha256": "35b45259da60e70a45e094260040d214d72aad46b65e327335ce918f77358ac2"
     },
     {
       "path": "scripts/check-cli.mjs",
