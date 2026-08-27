@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "0110e863ad0b2bed58a52e69f8d38f566951084d",
+  "source_commit": "206454dfb05263ea1f121ed93cc693f315e8da41",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 844,
@@ -32,8 +32,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 2604,
-      "sha256": "afa98653e274ba3ae6980db845077469797aa74b043d6e6b8a8629317661525a"
+      "byte_length": 2935,
+      "sha256": "a2270cdf49ce647302b666f4b52a4283a7518c52705e04aa89ef22a3bd12cf00"
     },
     {
       "path": "CITATION.cff",
@@ -73,7 +73,7 @@
     {
       "path": "bin/deepbom.mjs",
       "byte_length": 22167,
-      "sha256": "ebf4c42ef2a758e6653857e561b62ede7bd58affd0909e2d13cc258ae636b9fd"
+      "sha256": "03520e158916c9cba72c473310df6fd71a940945b39180b5772342da68858b72"
     },
     {
       "path": "build.rs",
@@ -93,12 +93,12 @@
     {
       "path": "channels/cargo/Cargo.lock",
       "byte_length": 160,
-      "sha256": "1e1276d9182c1eba877e44a67ab7020d7cc0460e53742839a3936a2adb7702f5"
+      "sha256": "fc61e9a414b20e763fc363c7aed279b1ee9e46682088e0669616b49a2390b954"
     },
     {
       "path": "channels/cargo/Cargo.toml",
       "byte_length": 244,
-      "sha256": "9af442d891efc68c82f47f7f397b03c574130a732fc32a4470fdc0f183937538"
+      "sha256": "5cb953aec3e8ddf203c05c92166a272aff0de17ec19ad3ef3d5f6b3e5698bbb9"
     },
     {
       "path": "channels/cargo/src/main.rs",
@@ -133,7 +133,7 @@
     {
       "path": "channels/python/pyproject.toml",
       "byte_length": 752,
-      "sha256": "9fef07bad0b58d004ab09e1fa5316a4f8253d78e7333788165f947338bf86c28"
+      "sha256": "f4fd42b6260a3f537438fbf87aab9f0c489041df4297b5f2041dc7d9a55903b9"
     },
     {
       "path": "channels/python/requirements-build.txt",
@@ -148,7 +148,7 @@
     {
       "path": "channels/python/src/deepbom/__init__.py",
       "byte_length": 94,
-      "sha256": "326a191067b7240c03c8398c7731d74b67bc5c94f8023fbffeaeb18d93d392ff"
+      "sha256": "db0f5bc53483affa64470d7a6e8a9b725af510e92cbc9dffe57758cbd7f8603e"
     },
     {
       "path": "channels/python/src/deepbom/__main__.py",
@@ -568,12 +568,12 @@
     {
       "path": "package-lock.json",
       "byte_length": 39995,
-      "sha256": "484872d449f472afb817afdff2f21e645c8ca97cf971fed25cd23024bf97132d"
+      "sha256": "8744f660f27698aba43bb75a0ec9c0e41cc43243bf1ba0e8bfbd5e17cc250a14"
     },
     {
       "path": "package.json",
       "byte_length": 19280,
-      "sha256": "869bb6b7a8b0765d03133517792ac633c10daba29e5f7a33ea09c229e50fff06"
+      "sha256": "676a872174c4c3b74f77711ba5d3faf8b851d18d8004a2cbc66ef45e9fc35ed0"
     },
     {
       "path": "pkg/LICENSE",
@@ -767,8 +767,8 @@
     },
     {
       "path": "scripts/build-channel-artifacts.mjs",
-      "byte_length": 15146,
-      "sha256": "ae23c73adedecb3ca743caed62fccdb4598ac5fc23e6a6f9d63e743f4895ba49"
+      "byte_length": 15051,
+      "sha256": "0bacb72041088d1f6582ae737a1db0b496d8119cdbd6cb1f94ec7dfd7b817fa2"
     },
     {
       "path": "scripts/build-coreml-legacy-quantization-corpus.mjs",
@@ -952,8 +952,8 @@
     },
     {
       "path": "scripts/check-channel-equivalence.mjs",
-      "byte_length": 7448,
-      "sha256": "e2ef6cc5224c9adef25422e52548f9f1519b088945a7e54eaa021f90fc0a2d76"
+      "byte_length": 7442,
+      "sha256": "8449ad4d2f85f1f3c50fb746de9defdf7805e10cad8fa3b3eba3be45e405a50f"
     },
     {
       "path": "scripts/check-channel-vitality-viewer.mjs",
@@ -2152,8 +2152,8 @@
     },
     {
       "path": "scripts/run-utils.mjs",
-      "byte_length": 1361,
-      "sha256": "948d5d958affeeeb0e9faa3f1b7d999b2fafaa594389b3a88117b47014610313"
+      "byte_length": 1495,
+      "sha256": "b9f1101a1bdcc59c6cb4e88bede9315cf3e689086f996900a3e377d216a53b77"
     },
     {
       "path": "scripts/rust-source-utils.mjs",

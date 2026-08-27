@@ -5,6 +5,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { resolveNpmCommand } from "./run-utils.mjs";
 import { writeBuildMetadata } from "./write-build-metadata.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -71,7 +72,8 @@ await writeFile(path.join(npmRoot, "pkg", "release-manifest.json"), `${JSON.stri
   public_bundle_input_count: Object.keys(npmBuildResult.metafile.inputs).length,
   supported_inputs: ["tflite", "onnx", "onnx_external_data", "gguf", "safetensors", "safetensors_sharded_repository", "coreml_mlmodel", "coreml_mlpackage", "tensorrt_evidence", "tensorrt_llm_contract"],
 }, null, 2)}\n`);
-runNpm(["pack", npmRoot, "--pack-destination", path.join(output, "npm")]);
+const npmPack = resolveNpmCommand(["pack", npmRoot, "--pack-destination", path.join(output, "npm")]);
+run(npmPack.command, npmPack.args);
 
 const engineRoot = path.join(output, "engine", `${process.platform}-${process.arch}`);
 await mkdir(path.join(engineRoot, "pkg"), { recursive: true });
@@ -203,12 +205,6 @@ function run(command, args) {
   if (result.status !== 0) throw new Error(`${command} ${args.join(" ")} failed\n${result.error?.message || ""}\n${result.stdout || ""}\n${result.stderr || ""}`);
   if (result.stdout.trim()) console.log(result.stdout.trim());
   if (result.stderr.trim()) console.error(result.stderr.trim());
-}
-
-function runNpm(args) {
-  const npmCli = process.env.npm_execpath?.trim();
-  if (npmCli) return run(process.execPath, [npmCli, ...args]);
-  return run(process.platform === "win32" ? "npm.cmd" : "npm", args);
 }
 
 function runCapture(command, args) {

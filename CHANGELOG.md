@@ -26,6 +26,13 @@ All notable archival releases of DEEPBOM are documented here.
   new LLM contracts while retaining per-file, private-code, documentation,
   native-tooling, corpus-evidence, and development-check budgets.
 
+## 1.94.1 - 2026-08-27
+
+- Published the Apache-2.0 public source boundary and installation channels.
+- Made npm invocation deterministic across GitHub-hosted Linux, macOS, and
+  Windows runners without assuming an npm installation beside the Node binary.
+- Added exact public-source manifest verification in a clean Git checkout.
+
 ## 1.94.0 - 2026-08-07
 
 Initial DOI-oriented research software release.

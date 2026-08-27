@@ -29,14 +29,15 @@ export async function runNode(script, args = [], options = {}) {
 }
 
 export async function runNpm(args) {
-  const npmExecPath = process.env.npm_execpath || "";
-  if (npmExecPath) {
-    await runCommand(process.execPath, [npmExecPath, ...args]);
-    return;
-  }
+  const invocation = resolveNpmCommand(args);
+  await runCommand(invocation.command, invocation.args);
+}
+
+export function resolveNpmCommand(args) {
+  const npmExecPath = process.env.npm_execpath?.trim();
+  if (npmExecPath) return { command: process.execPath, args: [npmExecPath, ...args] };
   if (process.platform === "win32") {
-    await runCommand(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", "npm.cmd", ...args]);
-    return;
+    return { command: process.env.ComSpec || "cmd.exe", args: ["/d", "/s", "/c", "npm.cmd", ...args] };
   }
-  await runCommand("npm", args);
+  return { command: "npm", args };
 }

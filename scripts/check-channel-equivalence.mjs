@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { resolveNpmCommand } from "./run-utils.mjs";
 
 const root = process.cwd();
 const releaseRoot = path.join(root, ".local-validation", "channel-release");
@@ -64,8 +65,8 @@ async function installNpmPackage(release) {
   await mkdir(directory, { recursive: true });
   await writeFile(path.join(directory, "package.json"), '{"private":true}\n');
   const tarball = path.join(releaseRoot, release.channels.npm.package);
-  const npmScript = path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js");
-  run(process.execPath, [npmScript, "install", "--ignore-scripts", "--no-audit", "--no-fund", tarball], {}, true, directory);
+  const npmInstall = resolveNpmCommand(["install", "--ignore-scripts", "--no-audit", "--no-fund", tarball]);
+  run(npmInstall.command, npmInstall.args, {}, true, directory);
   const cli = path.join(directory, "node_modules", "deepbom", "bin", "deepbom.mjs");
   assert.equal(run(process.execPath, [cli, "--version"]).stdout.trim(), release.version);
   return cli;
