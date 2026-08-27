@@ -26,6 +26,28 @@ All notable archival releases of DEEPBOM are documented here.
   new LLM contracts while retaining per-file, private-code, documentation,
   native-tooling, corpus-evidence, and development-check budgets.
 
+## 1.94.6 - 2026-08-27
+
+- Made the default CLI audit output a bounded, human-readable projection while
+  preserving complete JSON through `--json`, `--compact`, and `--output`.
+- Replaced the accidental exhaustive web deployment gate with a bounded
+  production preflight and recorded measured workflow budgets and retry rules.
+- Excluded generated Cargo and Python build trees from channel source copies,
+  keeping local and CI channel builds deterministic and bounded.
+- Documented and mechanically checked the shared public web/CLI boundary, the
+  reproducible public corpus, and the private research and source-generation
+  boundary.
+
+## 1.94.5 - 2026-08-27
+
+- Hardened the Cargo bootstrap download path and verified a fresh Windows
+  installation against the immutable engine manifest and a real ONNX audit.
+
+## 1.94.4 - 2026-08-27
+
+- Added the verified Cargo installation channel and its registry publication
+  contract alongside npm and PyPI.
+
 ## 1.94.3 - 2026-08-27
 
 - Corrected the npm publication command so the verified tarball is resolved as

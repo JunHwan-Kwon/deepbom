@@ -28,6 +28,9 @@ cargo install deepbom
 deepbom audit model.gguf --compact
 ```
 
+The default is a terminal-sized evidence summary. `--json`, `--compact`, and
+`--format cyclonedx` expose the complete machine-readable contracts.
+
 The Cargo launcher downloads only the engine matching its exact package version
 and platform from the corresponding immutable GitHub Release. It validates the
 release matrix, byte lengths, and SHA-256 digests before caching or execution.

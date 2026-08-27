@@ -79,7 +79,11 @@ jobs:
         run: npm run build:channels
       - name: Verify public package boundary
         run: npm run check:public-package-boundary
-      - name: Verify installed channel equivalence
+      - name: Verify platform engine and wheel smoke
+        if: matrix.id != 'linux-x64'
+        run: npm run check:channels -- --no-build --platform-smoke
+      - name: Verify full installed channel equivalence
+        if: matrix.id == 'linux-x64'
         run: npm run check:channels -- --no-build
       - name: Verify current wheel
         shell: bash
@@ -124,6 +128,7 @@ jobs:
     name: Verify complete wheel matrix
     needs: build-wheel
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
         with:
@@ -146,6 +151,7 @@ jobs:
     name: Verify immutable engine release
     needs: build-wheel
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
         with:
@@ -178,6 +184,7 @@ jobs:
     if: inputs.publish
     needs: [verify-matrix, verify-engine-release]
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
@@ -227,6 +234,7 @@ jobs:
     if: inputs.publish
     needs: smoke-cargo-release
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     environment: crates-io
     steps:
       - uses: actions/checkout@v5
@@ -242,6 +250,7 @@ jobs:
     if: inputs.publish
     needs: smoke-cargo-release
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     environment: pypi
     permissions:
       actions: read
@@ -259,6 +268,7 @@ jobs:
     if: inputs.publish
     needs: smoke-cargo-release
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
     environment: npm
     permissions:
       actions: read

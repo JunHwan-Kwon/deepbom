@@ -1,0 +1,204 @@
+{
+  "schema": "deepbom.delivery_operations.v1",
+  "recorded_at": "2026-08-27T09:10:00.000Z",
+  "scope": "Public installation channels and private web delivery",
+  "observations": [
+    {
+      "kind": "installation_channel_release",
+      "version": "1.94.4",
+      "repository": "JunHwan-Kwon/deepbom",
+      "workflow": "release-channels.yml",
+      "run_id": 33046238513,
+      "run_url": "https://github.com/JunHwan-Kwon/deepbom/actions/runs/33046238513",
+      "attempt": 1,
+      "critical_path_seconds": 443,
+      "conclusion": "published_then_superseded",
+      "qualification": "The six platform builds and three registry publications completed, but a fresh crates.io installation later exposed Windows stack pressure in the Cargo bootstrap downloader. This run is a timing observation, not a release-quality baseline."
+    },
+    {
+      "kind": "installation_channel_release",
+      "version": "1.94.5",
+      "repository": "JunHwan-Kwon/deepbom",
+      "workflow": "release-channels.yml",
+      "run_id": 33050003944,
+      "run_url": "https://github.com/JunHwan-Kwon/deepbom/actions/runs/33050003944",
+      "attempt": 1,
+      "critical_path_seconds": 529,
+      "conclusion": "registry_auth_failure_after_all_product_gates",
+      "failed_job": "Publish Cargo bootstrap release",
+      "failure_class": "credential_scope",
+      "successful_conditions": [
+        "six_platform_engine_and_wheel_builds",
+        "complete_wheel_matrix_and_record_integrity",
+        "immutable_engine_matrix_and_sha256",
+        "windows_remote_cargo_engine_smoke",
+        "npm_trusted_publication",
+        "pypi_trusted_publication"
+      ]
+    },
+    {
+      "kind": "failed_job_retry",
+      "version": "1.94.5",
+      "repository": "JunHwan-Kwon/deepbom",
+      "workflow": "release-channels.yml",
+      "run_id": 33050003944,
+      "run_url": "https://github.com/JunHwan-Kwon/deepbom/actions/runs/33050003944",
+      "attempt": 2,
+      "job": "Publish Cargo bootstrap release",
+      "elapsed_seconds": 21,
+      "conclusion": "success",
+      "qualification": "Only the failed Cargo publication job was rerun after the crate-scoped token gained publish-update permission."
+    },
+    {
+      "kind": "fresh_registry_smoke",
+      "version": "1.94.5",
+      "channel": "crates.io",
+      "platform": "windows-x64",
+      "conclusion": "success",
+      "conditions": [
+        "cargo_install_locked",
+        "local_version_without_engine_download",
+        "immutable_engine_sha256_verification",
+        "real_onnx_compact_analysis"
+      ]
+    },
+    {
+      "kind": "web_preflight_wiring_defect",
+      "command": "npm run check:deploy",
+      "elapsed_seconds_before_timeout": 604,
+      "conclusion": "timed_out",
+      "cause": "package_script_selected_full_release_tier_instead_of_scripts/check-deploy.mjs",
+      "resolution": "check:deploy now invokes the bounded non-browser production gate; check:release retains the exhaustive tier"
+    },
+    {
+      "kind": "private_web_preflight",
+      "version": "1.94.5",
+      "command": "npm run check:deploy",
+      "elapsed_seconds": 140.6,
+      "check_count": 58,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "parser_and_format_routing_contracts",
+        "export_and_cyclonedx_contracts",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy",
+        "no_full_corpus_or_browser_matrix"
+      ]
+    },
+    {
+      "kind": "local_channel_build_source_contamination",
+      "version": "1.94.5",
+      "elapsed_seconds_before_timeout": 604,
+      "conclusion": "timed_out",
+      "cause": "recursive_source_copy_included_channels_cargo_target",
+      "excluded_generated_file_count": 3989,
+      "excluded_generated_mebibytes": 1380,
+      "resolution": "channel source copies exclude Cargo target and Python build, dist, cache, and egg-info directories"
+    },
+    {
+      "kind": "private_web_preflight",
+      "version": "1.94.6",
+      "command": "npm run check:deploy",
+      "elapsed_seconds": 147.4,
+      "check_count": 58,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "parser_and_format_routing_contracts",
+        "export_and_cyclonedx_contracts",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy",
+        "no_full_corpus_or_browser_matrix"
+      ]
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.94.5",
+      "platform": "windows-x64",
+      "elapsed_seconds": 145.757,
+      "conclusion": "success",
+      "conditions": [
+        "generated_source_directories_excluded",
+        "npm_tarball",
+        "single_executable_engine",
+        "python_wheel",
+        "cargo_launcher_source"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.94.5",
+      "platform": "windows-x64",
+      "elapsed_seconds": 198.7,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "tflite_wasm_parity",
+        "onnx_execution_parity"
+      ]
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.94.6",
+      "platform": "windows-x64",
+      "elapsed_seconds": 225.2,
+      "conclusion": "success",
+      "conditions": [
+        "generated_source_directories_excluded",
+        "npm_tarball",
+        "single_executable_engine",
+        "python_wheel",
+        "cargo_launcher_source"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.94.6",
+      "platform": "windows-x64",
+      "elapsed_seconds": 194.1,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "tflite_wasm_parity",
+        "onnx_execution_parity"
+      ]
+    },
+    {
+      "kind": "full_channel_equivalence",
+      "version": "1.94.5",
+      "platform": "windows-x64",
+      "elapsed_seconds": 327,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_tarball",
+        "installed_python_wheel",
+        "standalone_and_cargo_parity",
+        "five_file_formats_and_two_package_formats",
+        "packaged_wasm_tamper_rejection"
+      ]
+    }
+  ],
+  "budgets": {
+    "installation_release_critical_path_seconds": 720,
+    "failed_registry_job_retry_seconds": 120,
+    "private_web_preflight_seconds": 240,
+    "local_channel_build_seconds": 300,
+    "platform_channel_smoke_seconds": 300,
+    "full_channel_equivalence_seconds": 480,
+    "private_web_workflow_minutes": 15,
+    "public_pull_request_quality_minutes": 25
+  },
+  "execution_policy": {
+    "automatic_public_push_workflows": false,
+    "automatic_private_push_workflows": false,
+    "public_quality": "pull_request_with_code_paths_or_manual",
+    "private_full_quality": "manual_only_and_repository_opt_in",
+    "private_web_deploy": "manual_only_and_repository_opt_in",
+    "installation_release": "manual_only_exact_tag_and_version",
+    "retry": "rerun_failed_jobs_only_when_prior_artifacts_and_dependencies_remain_successful",
+    "cross_platform_equivalence": "native_engine_and_wheel_smoke_on_all_six_targets; full npm_python_standalone_cargo_and_format_equivalence_once_on_linux_x64"
+  }
+}

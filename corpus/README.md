@@ -1,5 +1,13 @@
 # Public TFLite Corpus
 
+Public corpus records are reproducibility assets, not an unbounded model mirror.
+They contain pinned identities, small redistributable fixtures, deterministic
+verification code, and reviewed evidence. Original large model bytes remain in
+the verified local cache. Restricted artifacts, user models, raw private traces,
+and unreleased research populations stay behind the private boundary described
+in `docs/PUBLIC_PRIVATE_BOUNDARY.md` and are never silently promoted into public
+prevalence claims.
+
 ## Public Cross-Format Measured Corpus
 
 `public-multiformat-corpus.v1.json` expands the real-file validation population

@@ -139,7 +139,10 @@ const engineManifest = {
 await writeFile(path.join(engineRoot, "manifest.json"), `${JSON.stringify(engineManifest, null, 2)}\n`);
 
 const pythonRoot = path.join(output, "python");
-await cp(path.join(root, "channels", "python"), pythonRoot, { recursive: true });
+await copySourceTree(path.join(root, "channels", "python"), pythonRoot, {
+  directoryNames: new Set(["build", "dist", "__pycache__", ".pytest_cache"]),
+  suffixes: [".egg-info"],
+});
 await copyFile(publicLicense, path.join(pythonRoot, "LICENSE"));
 const pythonEngineRoot = path.join(pythonRoot, "src", "deepbom", "_engine");
 await mkdir(path.join(pythonEngineRoot, "pkg"), { recursive: true });
@@ -155,7 +158,9 @@ if (!process.argv.includes("--skip-wheel")) {
 const wheelName = (await readdir(pythonDist)).find((name) => name.endsWith(".whl")) || null;
 
 const cargoRoot = path.join(output, "cargo");
-await cp(path.join(root, "channels", "cargo"), cargoRoot, { recursive: true });
+await copySourceTree(path.join(root, "channels", "cargo"), cargoRoot, {
+  directoryNames: new Set(["target"]),
+});
 
 const hfRoot = path.join(output, "huggingface-space");
 await cp(path.join(root, "channels", "huggingface"), hfRoot, { recursive: true });
@@ -198,6 +203,19 @@ function resolveOutput(args) {
 function assertLocalOutput(candidate) {
   const allowed = path.join(root, ".local-validation") + path.sep;
   if (!candidate.startsWith(allowed)) throw new Error(`Channel output must stay under ${allowed}`);
+}
+
+async function copySourceTree(source, destination, { directoryNames = new Set(), suffixes = [] } = {}) {
+  const sourceRoot = path.resolve(source);
+  await cp(sourceRoot, destination, {
+    recursive: true,
+    filter(candidate) {
+      const relativePath = path.relative(sourceRoot, candidate);
+      if (!relativePath) return true;
+      return relativePath.split(path.sep).every((part) =>
+        !directoryNames.has(part) && !suffixes.some((suffix) => part.endsWith(suffix)));
+    },
+  });
 }
 
 function run(command, args) {

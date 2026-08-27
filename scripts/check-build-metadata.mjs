@@ -6,6 +6,7 @@ import {
   ANALYZER_BUNDLE_CONTENT_SHA256,
   ANALYZER_BUILD_COMMIT,
   ANALYZER_BUILD_SOURCE_STATE,
+  ANALYZER_SOURCE_DISTRIBUTION,
   RULEPACK_HASH_BASIS,
   RULEPACK_SHA256,
 } from "../web/lib/build-metadata.js";
@@ -30,9 +31,15 @@ if (observedRulepack.sha256 !== RULEPACK_SHA256
   || canonicalJson(publicRulepackHashBasis(observedRulepack.basis)) !== canonicalJson(RULEPACK_HASH_BASIS)) {
   throw new Error("Rulepack SHA-256 or source basis does not match the current pinned rule sources.");
 }
-if (RULEPACK_HASH_BASIS.some((item) => item.includes("protected/deepbom_wasm/src/"))
-  || !RULEPACK_HASH_BASIS.some((item) => item.includes("implementation paths withheld"))) {
-  throw new Error("Public rulepack provenance leaks protected implementation ownership paths.");
+const hasProtectedPath = RULEPACK_HASH_BASIS.some((item) => item.includes("protected/deepbom_wasm/src/"));
+const hasWithheldPrivateBasis = RULEPACK_HASH_BASIS.some((item) => item.includes("implementation paths withheld"));
+if (hasProtectedPath
+  || (ANALYZER_SOURCE_DISTRIBUTION === "private_monorepo" && !hasWithheldPrivateBasis)
+  || (ANALYZER_SOURCE_DISTRIBUTION === "public_channel" && hasWithheldPrivateBasis)) {
+  throw new Error("Rulepack provenance does not match its declared source distribution.");
+}
+if (!["private_monorepo", "public_channel"].includes(ANALYZER_SOURCE_DISTRIBUTION)) {
+  throw new Error(`Unknown analyzer source distribution ${ANALYZER_SOURCE_DISTRIBUTION}.`);
 }
 
 const observedFiles = [];
@@ -64,10 +71,14 @@ if (process.env.DEEPBOM_RELEASE_BUILD && [manifest.release_inputs?.app_expires_a
 }
 
 const packageMetadata = JSON.parse(await readFile("package.json", "utf8"));
+const wasmPackageMetadata = JSON.parse(await readFile("pkg/package.json", "utf8"));
+const cargoManifest = await readFile("Cargo.toml", "utf8");
+const cargoVersion = cargoManifest.match(/^version\s*=\s*"([^"]+)"/m)?.[1] || "";
 const html = await readFile("web/index.html", "utf8");
 const htmlRelease = html.match(/<meta\s+name="deepbom-release"\s+content="([^"]+)"\s*\/>/)?.[1] || "";
-if (packageMetadata.version !== ANALYZER_SEMANTIC_VERSION || htmlRelease !== ANALYZER_SEMANTIC_VERSION) {
-  throw new Error(`Release identity drift: package=${packageMetadata.version}, html=${htmlRelease}, app=${ANALYZER_SEMANTIC_VERSION}.`);
+if ([packageMetadata.version, wasmPackageMetadata.version, cargoVersion, htmlRelease]
+  .some((version) => version !== ANALYZER_SEMANTIC_VERSION)) {
+  throw new Error(`Release identity drift: package=${packageMetadata.version}, wasm=${wasmPackageMetadata.version}, cargo=${cargoVersion}, html=${htmlRelease}, app=${ANALYZER_SEMANTIC_VERSION}.`);
 }
 if (ANALYZER_METADATA.version !== ANALYZER_VERSION
   || ANALYZER_METADATA.semanticVersion !== ANALYZER_SEMANTIC_VERSION

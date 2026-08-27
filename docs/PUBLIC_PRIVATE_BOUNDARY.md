@@ -62,3 +62,22 @@ release. It does not establish that an analyzer is correct, that an upstream
 runtime selected a predicted backend, or that a model is clinically valid.
 Those claims remain governed by their own observed, derived, predicted, or
 not-assessable evidence classes.
+
+## Corpus boundary
+
+Public corpus material is selected for independent reproduction: pinned source
+identities, content hashes, licenses or explicit license gaps, compact fixtures,
+deterministic sweep programs, and reviewed aggregate or per-artifact evidence.
+Committing a manifest does not grant redistribution rights for the referenced
+model bytes.
+
+The private corpus boundary retains large downloaded bytes, restricted-license
+artifacts, user-provided models, negative robustness inputs, raw runtime traces,
+and unreleased research populations. Clinical or personally identifying data is
+not committed to either repository. Private GitHub stores code, manifests, and
+non-sensitive receipts; large or restricted bytes remain in access-controlled
+object storage or verified local caches.
+
+Public and private measurements must share the same schema, analyzer identity,
+and deterministic verifier. A private result may be published only as a reviewed
+aggregate or hash-bound record that does not disclose protected model content.

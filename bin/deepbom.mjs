@@ -30,7 +30,7 @@ import {
 } from "../pkg/tflite_wasm_audit.js";
 
 const DEFAULT_TARGET = "android_mid_a55";
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.94.5";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.94.6";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 
 async function main(argv) {
@@ -116,7 +116,10 @@ async function main(argv) {
         } : {}),
       })
     : analysis;
-  const text = `${JSON.stringify(document, bigintReplacer, parsed.compact ? 0 : 2)}\n`;
+  const machineReadable = parsed.json || parsed.compact || Boolean(parsed.output) || parsed.outputFormat === "cyclonedx";
+  const text = machineReadable
+    ? `${JSON.stringify(document, bigintReplacer, parsed.compact ? 0 : 2)}\n`
+    : buildHumanSummary(analysis, artifact);
   if (parsed.output) await writeFile(path.resolve(parsed.output), text, "utf8");
   else process.stdout.write(text);
 }
@@ -295,6 +298,122 @@ function isPositiveSafeInteger(value) {
   return Number.isSafeInteger(value) && value > 0;
 }
 
+function buildHumanSummary(analysis, artifact) {
+  const format = String(analysis?.format || artifact?.format || "unknown").toUpperCase();
+  const operators = nonNegativeInteger(analysis?.operator_count);
+  const tensors = nonNegativeInteger(analysis?.tensor_count);
+  const macs = exactDecimal(analysis?.total_macs_decimal ?? analysis?.total_macs);
+  const quantized = nonNegativeInteger(analysis?.quantized_tensors);
+  const quantization = analysis?.quantization_status;
+  const findings = Array.isArray(analysis?.findings) ? analysis.findings : [];
+  const target = analysis?.target_profile;
+  const segments = Array.isArray(analysis?.xnnpack_chains) ? analysis.xnnpack_chains.length : null;
+  const breaks = nonNegativeInteger(analysis?.xnnpack_effective_chain_breaks);
+  const lines = [
+    `DEEPBOM ${VERSION} deployment-artifact audit`,
+    `Artifact: ${artifact.filename}`,
+    `Identity: sha256:${artifact.sha256}`,
+    `Format: ${format} | Size: ${formatBytes(artifact.size)}`,
+  ];
+
+  if (operators !== null || tensors !== null || macs !== null) {
+    const graph = [];
+    if (operators !== null) graph.push(`${formatInteger(operators)} operators`);
+    if (tensors !== null) graph.push(`${formatInteger(tensors)} tensors`);
+    graph.push(macs === null ? "MACs not assessable" : `${formatInteger(macs)} MACs`);
+    lines.push(`Graph: ${graph.join(" | ")}`);
+  }
+  if (quantization?.classification || quantized !== null) {
+    const detail = [];
+    if (quantization?.label || quantization?.classification) detail.push(String(quantization.label || quantization.classification));
+    if (quantized !== null && tensors !== null) detail.push(`${formatInteger(quantized)}/${formatInteger(tensors)} tensors quantized`);
+    if (Number.isFinite(Number(quantization?.quantized_compute_mac_percent))) {
+      detail.push(`${formatPercent(quantization.quantized_compute_mac_percent)} MAC-bearing compute coverage`);
+    }
+    lines.push(`Quantization: ${detail.join(" | ")}`);
+  }
+  if (target?.id || target?.label) lines.push(`Target: ${target.label || target.id} (${target.id || "profile-bound"})`);
+  if (format === "TFLITE" && (segments !== null || breaks !== null || Number.isFinite(Number(analysis?.delegated_mac_percent)))) {
+    const placement = [];
+    if (segments !== null) placement.push(`${segments} predicted XNNPACK segment${segments === 1 ? "" : "s"}`);
+    if (breaks !== null) placement.push(`${breaks} predicted break${breaks === 1 ? "" : "s"}`);
+    if (Number.isFinite(Number(analysis?.delegated_mac_percent))) {
+      placement.push(`${formatPercent(analysis.delegated_mac_percent)} of MACs conditionally delegatable`);
+    }
+    lines.push(`Placement: ${placement.join(" | ")} under the stated rulepack and build conditions`);
+  }
+  appendMemoryScenario(lines, analysis?.cli_context_scenario?.memory_feasibility);
+  if (findings.length) {
+    lines.push(`Findings: ${findings.length}`);
+    for (const finding of findings.slice(0, 5)) lines.push(`  - ${finding.title || finding.finding_id || finding.id || "Unnamed finding"}`);
+    if (findings.length > 5) lines.push(`  - ${findings.length - 5} more; use --json for the complete evidence ledger`);
+  } else {
+    lines.push("Findings: none emitted by the applicable static checks");
+  }
+  lines.push(`Evidence boundary: ${evidenceBoundary(format)}`);
+  lines.push("Machine output: rerun with --json, --compact, --format cyclonedx, or --output <path>.");
+  return `${lines.join("\n")}\n`;
+}
+
+function appendMemoryScenario(lines, memory) {
+  if (!memory || typeof memory !== "object") return;
+  const lowerBound = exactDecimal(memory.static_lower_bound_bytes?.decimal ?? memory.static_lower_bound_bytes?.value);
+  const capacity = exactDecimal(memory.declared_capacity_bytes?.decimal ?? memory.declared_capacity_bytes?.value);
+  if (lowerBound === null) return;
+  const parts = [`${formatBytes(lowerBound)} static resident-set lower bound`];
+  if (capacity !== null) parts.push(`${formatBytes(capacity)} declared capacity`);
+  if (memory.status) parts.push(String(memory.status).replaceAll("_", " "));
+  lines.push(`Memory scenario: ${parts.join(" | ")}`);
+}
+
+function evidenceBoundary(format) {
+  if (format === "GGUF" || format === "SAFETENSORS") {
+    return "the container does not serialize an executable DAG; runtime lowering, placement, latency, and task quality require separate evidence.";
+  }
+  if (format === "COREML") {
+    return "serialized program evidence does not establish observed device placement, latency, task quality, or release readiness.";
+  }
+  return "static compatibility and cost results do not establish observed runtime assignment, latency, task quality, clinical validity, or release readiness.";
+}
+
+function nonNegativeInteger(value) {
+  const number = Number(value);
+  return Number.isSafeInteger(number) && number >= 0 ? number : null;
+}
+
+function exactDecimal(value) {
+  if (typeof value === "bigint") return value >= 0n ? value.toString() : null;
+  if (typeof value === "string" && /^\d+$/.test(value)) return value;
+  return nonNegativeInteger(value);
+}
+
+function formatInteger(value) {
+  if (typeof value === "string") return value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value);
+}
+
+function formatPercent(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "not assessable";
+  const percent = Math.abs(number) <= 1 ? number * 100 : number;
+  return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(percent)}%`;
+}
+
+function formatBytes(value) {
+  const bytes = Number(value);
+  if (!Number.isFinite(bytes) || bytes < 0) return "not assessable";
+  if (bytes < 1024) return `${formatInteger(Math.round(bytes))} B`;
+  const units = ["KiB", "MiB", "GiB", "TiB"];
+  let scaled = bytes;
+  let unit = "B";
+  for (const candidate of units) {
+    scaled /= 1024;
+    unit = candidate;
+    if (scaled < 1024) break;
+  }
+  return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: scaled < 10 ? 2 : 1 }).format(scaled)} ${unit}`;
+}
+
 function parseArguments(argv) {
   const values = [...argv];
   const first = values[0] || "";
@@ -318,6 +437,7 @@ function parseArguments(argv) {
     tensorrtLlmBinding: "",
     llmMemoryProfile: "",
     externalDataRoot: "",
+    json: false,
     compact: false,
   };
   while (values.length) {
@@ -336,6 +456,7 @@ function parseArguments(argv) {
     else if (token === "--format") parsed.outputFormat = requiredValue(values, token).toLowerCase();
     else if (token === "--output" || token === "-o") parsed.output = requiredValue(values, token);
     else if (token === "--timestamp") parsed.timestamp = normalizeTimestamp(requiredValue(values, token));
+    else if (token === "--json") parsed.json = true;
     else if (token === "--compact") parsed.compact = true;
     else if (token === "--help" || token === "-h") parsed.help = true;
     else if (token === "--version" || token === "-v") parsed.version = true;
@@ -403,7 +524,7 @@ async function readJsonSidecar(filePath, role) {
 }
 
 function printHelp() {
-  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     GGUF context-length scenario\n  --batch <count>        GGUF scenario batch size (default: 1)\n  --state-bits <bits>    GGUF KV-state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the static lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis or cyclonedx (default: analysis)\n  --timestamp <iso>      Fixed CycloneDX generation timestamp\n  --output, -o <path>    Write JSON to a file\n  --compact              Emit compact JSON\n  --version              Print version\n  --help                 Show this help\n`);
+  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     GGUF context-length scenario\n  --batch <count>        GGUF scenario batch size (default: 1)\n  --state-bits <bits>    GGUF KV-state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the static lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis or cyclonedx (default: analysis)\n  --timestamp <iso>      Fixed CycloneDX generation timestamp\n  --output, -o <path>    Write the complete JSON document to a file\n  --json                 Emit the complete formatted analysis JSON\n  --compact              Emit the complete compact analysis JSON\n  --version              Print version\n  --help                 Show this help\n`);
 }
 
 main(process.argv.slice(2)).catch((error) => {

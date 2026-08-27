@@ -10,6 +10,9 @@ npx deepbom audit Model.mlpackage --compact
 npx deepbom audit safetensors-repository/ --compact
 ```
 
+The default output is a bounded human-readable summary. Use `--json` or
+`--compact` for the complete analysis document.
+
 The package contains one generated JavaScript analysis bundle and the canonical
 TFLite WebAssembly module. It does not send model bytes or results over the
 network. TensorRT parser observations and build profiles can be imported with

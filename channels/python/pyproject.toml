@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deepbom"
-version = "1.94.5"
+version = "1.94.6"
 description = "Local deployment-artifact analysis for on-device AI models"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -16,6 +16,8 @@ keywords = ["tflite", "onnx", "gguf", "safetensors", "coreml", "tensorrt", "quan
 
 [project.urls]
 Homepage = "https://deepbom.org"
+Repository = "https://github.com/JunHwan-Kwon/deepbom"
+Issues = "https://github.com/JunHwan-Kwon/deepbom/issues"
 DOI = "https://doi.org/10.5281/zenodo.21834509"
 
 [project.scripts]

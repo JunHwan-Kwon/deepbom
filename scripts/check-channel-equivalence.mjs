@@ -9,21 +9,25 @@ import { resolveNpmCommand } from "./run-utils.mjs";
 const root = process.cwd();
 const releaseRoot = path.join(root, ".local-validation", "channel-release");
 const manifestPath = path.join(releaseRoot, "channel-release-manifest.json");
+const platformSmoke = process.argv.includes("--platform-smoke");
 if (!process.argv.includes("--no-build")) run(process.execPath, ["scripts/build-channel-artifacts.mjs"]);
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 assert.equal(manifest.schema, "deepbom.channel_release.v1");
 
 const engine = path.join(releaseRoot, manifest.artifacts.standalone_engine.path);
 const cargoManifest = path.join(releaseRoot, "cargo", "Cargo.toml");
-const npmCli = await installNpmPackage(manifest);
+const npmCli = platformSmoke ? null : await installNpmPackage(manifest);
 const python = installPythonWheel(manifest);
-const fixtures = await packageFixtures();
-const cases = [
+const fixtures = platformSmoke ? null : await packageFixtures();
+const fileCases = [
   { path: "web/samples/mobilenet_v2_1.0_224_quant.tflite", format: "tflite" },
   { path: "web/samples/tiny_decoder_llm.onnx", format: "onnx" },
   { path: "web/samples/tinymqa1m.Q4_0.gguf", format: "gguf" },
   { path: "web/samples/nanofable-1m-fp16.safetensors", format: "safetensors" },
   { path: "web/samples/MNISTClassifier.mlmodel", format: "coreml" },
+];
+const cases = platformSmoke ? fileCases.slice(0, 2) : [
+  ...fileCases,
   { path: fixtures.mlpackage, format: "coreml", bundle: "coreml_mlpackage" },
   { path: fixtures.sharded, format: "safetensors", bundle: "safetensors_sharded_repository" },
 ];
@@ -31,45 +35,51 @@ const cases = [
 for (const item of cases) {
   const args = ["audit", item.path, "--compact"];
   const canonical = json(run(process.execPath, ["bin/deepbom.mjs", ...args]).stdout);
-  const npm = json(run(process.execPath, [npmCli, ...args]).stdout);
   const standalone = json(run(engine, args).stdout);
   const pip = json(run(python, ["-m", "deepbom", ...args]).stdout);
   assert.equal(canonical.format, item.format, `${item.path}: canonical format`);
   if (item.bundle) assert.equal(canonical.artifact_bundle?.kind, item.bundle, `${item.path}: bundle kind`);
-  assert.deepEqual(npm, canonical, `${item.path}: installed npm package diverged from canonical CLI`);
+  if (npmCli) {
+    const npm = json(run(process.execPath, [npmCli, ...args]).stdout);
+    assert.deepEqual(npm, canonical, `${item.path}: installed npm package diverged from canonical CLI`);
+  }
   assert.deepEqual(standalone, canonical, `${item.path}: standalone engine diverged from canonical CLI`);
   assert.deepEqual(pip, canonical, `${item.path}: installed Python wheel diverged from canonical CLI`);
 }
 
-const cargoResult = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"], {
-  DEEPBOM_ENGINE: engine,
-  DEEPBOM_ENGINE_SHA256: createHash("sha256").update(await readFile(engine)).digest("hex"),
-  DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
-});
-assert.deepEqual(json(cargoResult.stdout), json(run(process.execPath, ["bin/deepbom.mjs", "audit", cases[1].path, "--compact"]).stdout), "Cargo launcher diverged from canonical CLI");
-const unboundCargo = run(
-  "cargo",
-  ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"],
-  { DEEPBOM_ENGINE: engine },
-  false,
-);
-assert.notEqual(unboundCargo.status, 0);
-assert.match(unboundCargo.stderr, /DEEPBOM_ENGINE_SHA256/);
+if (platformSmoke) {
+  console.log("Platform channel smoke passed (native standalone engine and installed Python wheel; TFLite/WASM and ONNX execution parity)." );
+} else {
+  const cargoResult = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"], {
+    DEEPBOM_ENGINE: engine,
+    DEEPBOM_ENGINE_SHA256: createHash("sha256").update(await readFile(engine)).digest("hex"),
+    DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
+  });
+  assert.deepEqual(json(cargoResult.stdout), json(run(process.execPath, ["bin/deepbom.mjs", "audit", cases[1].path, "--compact"]).stdout), "Cargo launcher diverged from canonical CLI");
+  const unboundCargo = run(
+    "cargo",
+    ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"],
+    { DEEPBOM_ENGINE: engine },
+    false,
+  );
+  assert.notEqual(unboundCargo.status, 0);
+  assert.match(unboundCargo.stderr, /DEEPBOM_ENGINE_SHA256/);
 
-const npmWasm = path.join(path.dirname(npmCli), "..", "pkg", "tflite_wasm_audit_bg.wasm");
-await corruptLastByte(npmWasm);
-const corruptNpm = run(process.execPath, [npmCli, "audit", cases[0].path, "--compact"], {}, false);
-assert.notEqual(corruptNpm.status, 0);
-assert.match(corruptNpm.stderr, /release SHA-256 check/);
+  const npmWasm = path.join(path.dirname(npmCli), "..", "pkg", "tflite_wasm_audit_bg.wasm");
+  await corruptLastByte(npmWasm);
+  const corruptNpm = run(process.execPath, [npmCli, "audit", cases[0].path, "--compact"], {}, false);
+  assert.notEqual(corruptNpm.status, 0);
+  assert.match(corruptNpm.stderr, /release SHA-256 check/);
 
-const installedRoot = run(python, ["-c", "import pathlib,deepbom;print(pathlib.Path(deepbom.__file__).parent)"]).stdout.trim();
-await corruptLastByte(path.join(installedRoot, "_engine", "pkg", "tflite_wasm_audit_bg.wasm"));
-const corruptPip = run(python, ["-m", "deepbom", "--version"], {}, false);
-assert.notEqual(corruptPip.status, 0);
-assert.match(corruptPip.stderr, /failed its SHA-256 check/);
+  const installedRoot = run(python, ["-c", "import pathlib,deepbom;print(pathlib.Path(deepbom.__file__).parent)"]).stdout.trim();
+  await corruptLastByte(path.join(installedRoot, "_engine", "pkg", "tflite_wasm_audit_bg.wasm"));
+  const corruptPip = run(python, ["-m", "deepbom", "--version"], {}, false);
+  assert.notEqual(corruptPip.status, 0);
+  assert.match(corruptPip.stderr, /failed its SHA-256 check/);
 
-assert.equal(manifest.channels.cargo.status, "launcher_ready_for_immutable_engine_matrix");
-console.log("Channel equivalence passed (installed npm tarball and Python wheel; five file formats, Core ML package, sharded SafeTensors, standalone/Cargo parity, and packaged-WASM tamper rejection)." );
+  assert.equal(manifest.channels.cargo.status, "launcher_ready_for_immutable_engine_matrix");
+  console.log("Channel equivalence passed (installed npm tarball and Python wheel; five file formats, Core ML package, sharded SafeTensors, standalone/Cargo parity, and packaged-WASM tamper rejection)." );
+}
 
 async function installNpmPackage(release) {
   const directory = path.join(releaseRoot, "install-probe", "npm");

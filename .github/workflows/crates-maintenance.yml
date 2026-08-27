@@ -1,0 +1,58 @@
+name: Maintain DEEPBOM crate versions
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Yank or restore one already-published deepbom version
+        required: true
+        type: choice
+        options:
+          - yank
+          - unyank
+      version:
+        description: Exact semver version, without a v prefix
+        required: true
+        type: string
+      confirmation:
+        description: Type the exact phrase shown in the workflow documentation
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deepbom-crates-maintenance
+  cancel-in-progress: false
+
+jobs:
+  maintain:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: crates-io
+    steps:
+      - name: Validate bounded maintenance request
+        shell: bash
+        env:
+          OPERATION: ${{ inputs.operation }}
+          VERSION: ${{ inputs.version }}
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$ ]]
+          expected="${OPERATION} deepbom@${VERSION}"
+          test "$CONFIRMATION" = "$expected"
+      - name: Apply crates.io version state
+        shell: bash
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          OPERATION: ${{ inputs.operation }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ "$OPERATION" = "yank" ]]; then
+            cargo yank --version "$VERSION" deepbom
+          else
+            cargo yank --undo --version "$VERSION" deepbom
+          fi

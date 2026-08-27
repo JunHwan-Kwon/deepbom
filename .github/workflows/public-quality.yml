@@ -3,6 +3,20 @@ name: DeepBOM Public Core Quality
 on:
   pull_request:
     branches: [main]
+    paths:
+      - ".github/workflows/**"
+      - "bin/**"
+      - "channels/**"
+      - "config/**"
+      - "corpus/**"
+      - "pkg/**"
+      - "scripts/**"
+      - "src/**"
+      - "web/**"
+      - "Cargo.lock"
+      - "Cargo.toml"
+      - "package-lock.json"
+      - "package.json"
   workflow_dispatch:
 
 permissions:
@@ -16,7 +30,7 @@ jobs:
   public-core:
     if: github.event.repository.private == false
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v5
         with:

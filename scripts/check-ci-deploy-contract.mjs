@@ -15,6 +15,38 @@ import { privateModuleValidationCases } from "./private-wasm-modules.mjs";
 const { done, expect, expectDeepEqual, expectEqual } = createCheck("CI deploy contract check");
 const publicQualityWorkflow = readFileSync(".github/workflows/public-quality.yml", "utf8");
 const channelReleaseWorkflow = readFileSync(".github/workflows/release-channels.yml", "utf8");
+const cratesMaintenanceWorkflow = readFileSync(".github/workflows/crates-maintenance.yml", "utf8");
+const packageManifest = JSON.parse(readFileSync("package.json", "utf8"));
+const deliveryOperations = JSON.parse(readFileSync("config/delivery-operations.v1.json", "utf8"));
+expectEqual(deliveryOperations.schema, "deepbom.delivery_operations.v1", "delivery operations schema");
+expect(deliveryOperations.observations?.some((row) => row.run_id === 33050003944 && row.attempt === 2 && row.elapsed_seconds === 21),
+  "Delivery operations must retain the measured failed-job-only Cargo retry.");
+expect(deliveryOperations.execution_policy?.retry === "rerun_failed_jobs_only_when_prior_artifacts_and_dependencies_remain_successful",
+  "Delivery operations must retain the bounded retry rule.");
+expect(deliveryOperations.execution_policy?.cross_platform_equivalence?.includes("all_six_targets"),
+  "Delivery operations must preserve six-target platform execution.");
+const successfulWebPreflight = deliveryOperations.observations?.find((row) =>
+  row.kind === "private_web_preflight" && row.version === packageManifest.version && row.conclusion === "success");
+expect(successfulWebPreflight?.check_count === 58,
+  "Delivery operations must retain the measured bounded web-preflight check count.");
+expect(Number(successfulWebPreflight?.elapsed_seconds) > 0
+  && Number(successfulWebPreflight.elapsed_seconds) <= Number(deliveryOperations.budgets?.private_web_preflight_seconds),
+"The measured private web preflight must remain inside its recorded wall-time budget.");
+for (const [kind, budgetKey] of [
+  ["local_channel_build", "local_channel_build_seconds"],
+  ["platform_channel_smoke", "platform_channel_smoke_seconds"],
+  ["full_channel_equivalence", "full_channel_equivalence_seconds"],
+]) {
+  const observation = deliveryOperations.observations?.find((row) => row.kind === kind && row.conclusion === "success");
+  expect(Number(observation?.elapsed_seconds) > 0
+    && Number(observation.elapsed_seconds) <= Number(deliveryOperations.budgets?.[budgetKey]),
+  `${kind} must retain a successful observation inside its wall-time budget.`);
+}
+for (const kind of ["local_channel_build", "platform_channel_smoke"]) {
+  const currentObservation = deliveryOperations.observations?.find((row) =>
+    row.kind === kind && row.version === packageManifest.version && row.conclusion === "success");
+  expect(Boolean(currentObservation), `${kind} must include a successful observation for the current source version.`);
+}
 const privateWorkflowPaths = [
   ".github/workflows/pages.yml",
   ".github/workflows/quality.yml",
@@ -38,7 +70,6 @@ const deployGateSource = readFileSync("scripts/check-deploy.mjs", "utf8");
 const releaseBuildSource = readFileSync("scripts/build-release.mjs", "utf8");
 const buildPagesSource = readFileSync("scripts/build-pages.mjs", "utf8");
 const buildMetadataSource = readFileSync("scripts/write-build-metadata.mjs", "utf8");
-const packageManifest = JSON.parse(readFileSync("package.json", "utf8"));
 const releaseGeneratedSource = readFileSync("scripts/release-generated-artifacts.mjs", "utf8");
 const wasmBuildSource = readFileSync("scripts/build-wasm.mjs", "utf8");
 const privateModuleCases = privateModuleValidationCases();
@@ -63,6 +94,8 @@ expect(!/^\s+push:/m.test(publicQualityWorkflow)
 "Public core quality should run on pull requests and manual dispatch, not every direct push.");
 expect(publicQualityWorkflow.includes("if: github.event.repository.private == false"),
   "Public core quality must consume no private-repository runner minutes.");
+expect(publicQualityWorkflow.includes("paths:") && publicQualityWorkflow.includes('      - "corpus/**"'),
+  "Public pull-request quality must skip documentation-only changes while retaining corpus changes.");
 for (const snippet of [
   "actions/checkout@v5",
   "actions/setup-node@v6",
@@ -137,6 +170,7 @@ for (const snippet of [
   "actions/upload-artifact@v6",
   "actions/download-artifact@v6",
   "node-version: 24.12.0",
+  "npm run check:channels -- --no-build --platform-smoke",
   "npm run check:channels -- --no-build",
   "npm run check:public-package-boundary",
   "verify-python-wheel-matrix.py",
@@ -160,13 +194,21 @@ expect(!channelReleaseWorkflow.includes("NPM_TOKEN"), "npm Trusted Publishing mu
 expect(!channelReleaseWorkflow.includes("PYPI_API_TOKEN"), "PyPI Trusted Publishing must not retain a long-lived publication token.");
 expect(!channelReleaseWorkflow.includes("--provenance=false"), "The package workflow must not permanently suppress provenance when the repository later becomes public.");
 expect(!/(?:npm_[A-Za-z0-9]{20,}|pypi-[A-Za-z0-9_-]{20,})/.test(channelReleaseWorkflow), "Registry credentials must be referenced from GitHub Secrets, never embedded in the workflow.");
+checkCratesMaintenanceContract();
 for (const snippet of ["resolveWindowsSignTool", '["remove", "/s", executable]', '["--remove-signature", executable]', '["--force", "--sign", "-", executable]']) {
   expect(channelBuildSource.includes(snippet), `Channel engine assembly should contain: ${snippet}`);
+}
+for (const snippet of ["copySourceTree", 'new Set(["target"])', 'new Set(["build", "dist", "__pycache__", ".pytest_cache"])', 'suffixes: [".egg-info"]']) {
+  expect(channelBuildSource.includes(snippet), `Channel source assembly must exclude generated build trees: ${snippet}`);
 }
 expect(!deployGateSource.includes("-viewer.mjs"), "Deployment gate must not restore repeated browser viewer checks.");
 expect(deployGateSource.includes("check-parser-robustness.mjs"), "Deployment gate must reject parser robustness regressions.");
 expect(deployGateSource.includes("check-format-routing.mjs"), "Deployment gate must exercise the production format gate.");
 expect(deployGateSource.includes("check-onnx-shape-inference.mjs"), "Deployment gate should retain deterministic ONNX inference coverage.");
+expect(
+  packageManifest.scripts?.["check:deploy"] === "node scripts/check-deploy.mjs",
+  "Cloudflare deployment must invoke the bounded production gate, not the exhaustive release tier.",
+);
 expect(
   !workflow.includes("deploy --config wrangler.jsonc"),
   "CI must not reconcile dashboard-managed production routes during a Worker code deployment.",
@@ -312,7 +354,7 @@ for (const moduleCase of privateModuleCases) {
 for (const stepName of [
   "Prepare Rust WASM target",
   "Install pinned wasm-pack binary",
-]) expectStepIf(stepName, "steps.deployable.outputs.changed == 'true' || steps.deployable.outputs.private_wasm_check == 'true'");
+]) expectStepIf(stepName, "steps.deployable.outputs.private_wasm_check == 'true'");
 expectStepIf("Run private WASM build/load smoke", "steps.deployable.outputs.private_wasm_check == 'true'");
 for (const stepName of [
   "Set rolling build expiry",
@@ -340,6 +382,8 @@ function checkPublicDistributionCiContract() {
     publicQualityWorkflow.includes("if: github.event.repository.private == false"),
     "Public core quality must consume no private-repository runner minutes.",
   );
+  expect(publicQualityWorkflow.includes("paths:") && publicQualityWorkflow.includes('      - "corpus/**"'),
+    "Public pull-request quality must skip documentation-only changes while retaining corpus changes.");
   for (const snippet of [
     "actions/checkout@v5",
     "actions/setup-node@v6",
@@ -376,6 +420,7 @@ function checkPublicDistributionCiContract() {
     "actions/upload-artifact@v6",
     "actions/download-artifact@v6",
     "node-version: 24.12.0",
+    "npm run check:channels -- --no-build --platform-smoke",
     "npm run check:channels -- --no-build",
     "npm run check:public-package-boundary",
     "verify-python-wheel-matrix.py",
@@ -407,6 +452,28 @@ function checkPublicDistributionCiContract() {
     !/(?:npm_[A-Za-z0-9]{20,}|pypi-[A-Za-z0-9_-]{20,})/.test(channelReleaseWorkflow),
     "Registry credentials must never be embedded in the release workflow.",
   );
+  expect(
+    packageManifest.scripts?.["check:deploy"] === "node scripts/check-deploy.mjs",
+    "The public source must retain the bounded private-web deployment command for source alignment.",
+  );
+  checkCratesMaintenanceContract();
+}
+
+function checkCratesMaintenanceContract() {
+  expect(
+    /^on:\s*\r?\n\s+workflow_dispatch:/m.test(cratesMaintenanceWorkflow)
+      && !/^\s+(?:push|pull_request|schedule|workflow_run):/m.test(cratesMaintenanceWorkflow),
+    "Crate maintenance must remain manual-only.",
+  );
+  for (const snippet of [
+    "environment: crates-io",
+    "timeout-minutes: 5",
+    'expected="${OPERATION} deepbom@${VERSION}"',
+    'cargo yank --version "$VERSION" deepbom',
+    'cargo yank --undo --version "$VERSION" deepbom',
+    "CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}",
+  ]) expect(cratesMaintenanceWorkflow.includes(snippet), `Crate maintenance should contain: ${snippet}`);
+  expect(!/^\s+crate:/m.test(cratesMaintenanceWorkflow), "Crate maintenance must not accept an arbitrary crate name.");
 }
 
 function packageText({

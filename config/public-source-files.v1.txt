@@ -1,4 +1,5 @@
 .gitattributes
+.github/workflows/crates-maintenance.yml
 .github/workflows/public-quality.yml
 .github/workflows/release-channels.yml
 .gitignore
@@ -28,6 +29,7 @@ channels/python/requirements-build.txt
 channels/python/setup.py
 channels/python/src/deepbom/__init__.py
 channels/python/src/deepbom/__main__.py
+config/delivery-operations.v1.json
 config/public-source-files.v1.txt
 corpus/README.md
 corpus/coreml-legacy-quantization-corpus.v1.json
@@ -82,6 +84,7 @@ corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.con
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.quantize_config.json
 corpus/standardization-evidence.v1.json
 docs/CYCLONEDX_20_QUANTIZATION_CONTRIBUTION.md
+docs/DELIVERY_OPERATIONS.md
 docs/PROJECT_STATUS.md
 docs/PUBLIC_MULTIFORMAT_CORPUS.md
 docs/PUBLIC_PRIVATE_BOUNDARY.md

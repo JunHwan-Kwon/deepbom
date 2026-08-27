@@ -142,7 +142,7 @@ try {
     || !firstVisit.glance.includes("0 / 0") || !firstVisit.glance.includes("Predicted break ops1")
     || !firstVisit.context.includes("Why this matters for medical AI")
     || !firstVisit.context.includes("zero-weight, shape/op/dtype/quantization-equivalent synthetic reconstruction")
-    || !firstVisit.build.includes("Application 1.94.0 · source") || !firstVisit.build.includes("· content")
+    || !firstVisit.build.includes("Application 1.94.6 · source") || !firstVisit.build.includes("· content")
     || !firstVisit.buildVisible || firstVisit.authorSummaryPresent || !firstVisit.citationVisible || !firstVisit.doiVisible
     || !firstVisit.affiliationVisible || !firstVisit.linkedinVisible
     || !firstVisit.evidenceSummaryVisible

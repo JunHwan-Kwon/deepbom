@@ -27,6 +27,14 @@ assert.equal(streamedGgufInput.kind, "file", "GGUF CLI input kind");
 assert.equal(Object.hasOwn(streamedGgufInput, "bytes"), false, "GGUF input must remain disk-backed before analysis");
 assert.equal(streamedGgufInput.prefix.byteLength <= 4096, true, "CLI format sniff is bounded");
 
+const humanSummary = run(["audit", cases[1][0]]).stdout;
+assert.match(humanSummary, /^DEEPBOM \S+ deployment-artifact audit/m, "default CLI output is human-readable");
+assert.match(humanSummary, /Graph: 9 operators \| 16 tensors \| 6,488,384 MACs/, "human summary projects exact graph totals");
+assert.match(humanSummary, /Evidence boundary:/, "human summary states its evidence boundary");
+assert.equal(Buffer.byteLength(humanSummary, "utf8") < 8192, true, "human summary remains terminal-sized");
+assert.equal(JSON.parse(run(["audit", cases[1][0], "--json"]).stdout).format, "onnx", "--json retains complete formatted machine output");
+assert.match(run(["--help"]).stdout, /--json\s+Emit the complete formatted analysis JSON/, "JSON mode is discoverable");
+
 for (const [artifact, expectedFormat] of cases) {
   const result = run(["audit", artifact, "--compact"]);
   const document = JSON.parse(result.stdout);

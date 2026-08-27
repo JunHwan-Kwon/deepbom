@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "1.94.5",
+  "version": "1.94.6",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
   "private": true,
   "bin": {
@@ -88,7 +88,7 @@
     "check:cargo-engine-release": "node scripts/check-cargo-engine-release.mjs",
     "check:public-package-boundary": "node scripts/check-public-package-boundary.mjs",
     "check:zenodo": "node scripts/check-zenodo-release.mjs",
-    "check:deploy": "node scripts/check-tier.mjs release",
+    "check:deploy": "node scripts/check-deploy.mjs",
     "check:smoke": "node scripts/check-tier.mjs smoke",
     "check:formats": "node scripts/check-tier.mjs formats",
     "check:format-evidence": "node scripts/check-tier.mjs format-evidence",
