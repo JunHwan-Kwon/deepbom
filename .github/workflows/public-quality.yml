@@ -37,6 +37,8 @@ jobs:
         run: |
           npm ci
           python -m pip install --disable-pip-version-check -r channels/python/requirements-build.txt
+      - name: Install pinned browser runtime
+        run: npx playwright install --with-deps chromium
       - name: Audit public dependency graph
         run: npm audit --audit-level=high
       - name: Verify clean public source boundary

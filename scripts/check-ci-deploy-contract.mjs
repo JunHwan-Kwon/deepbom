@@ -53,6 +53,7 @@ for (const snippet of [
   "actions/setup-node@v6",
   "actions/setup-python@v6",
   "npm run check:public-source",
+  "npx playwright install --with-deps chromium",
   "npm run check:public-package-boundary",
   "npm run check:channels -- --no-build",
   "npm run check:rust",

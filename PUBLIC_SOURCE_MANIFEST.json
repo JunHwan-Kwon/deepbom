@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "200c26249247bf56ca7a56e87eb34e47a6ec96a4",
+  "source_commit": "8d5c3c2635351b626b386a6d21aefd9d59b3a63f",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 844,
@@ -12,8 +12,8 @@
     },
     {
       "path": ".github/workflows/public-quality.yml",
-      "byte_length": 1672,
-      "sha256": "c514eb0edaa68445fe93dd2f6365f522c40244536be778906872c33272398566"
+      "byte_length": 1774,
+      "sha256": "d6594a26598358a41cacd6b26d3d622abd071e7f9bcb9ad1b6f53a38c13f4e4a"
     },
     {
       "path": ".github/workflows/release-channels.yml",
@@ -967,8 +967,8 @@
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
-      "byte_length": 22145,
-      "sha256": "f92e0ee483e8c95ab1c37da9471ed10c1249abc864a08aedba9dc78775cb1b52"
+      "byte_length": 22194,
+      "sha256": "fd12794aeb28dee4e727665450e7919f58b4a31eb503bb7fe08dee16797e0478"
     },
     {
       "path": "scripts/check-cli.mjs",
