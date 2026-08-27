@@ -19,6 +19,19 @@ npm ci
 node bin/deepbom.mjs audit web/samples/mobilenet_v2_1.0_224_quant.tflite --compact
 ```
 
+Verified release channels expose the same analysis implementation:
+
+```bash
+npx deepbom audit model.onnx --format cyclonedx
+python -m pip install deepbom
+cargo install deepbom
+deepbom audit model.gguf --compact
+```
+
+The Cargo launcher downloads only the engine matching its exact package version
+and platform from the corresponding immutable GitHub Release. It validates the
+release matrix, byte lengths, and SHA-256 digests before caching or execution.
+
 Build the npm, standalone, Python, and Cargo launcher channels:
 
 ```bash

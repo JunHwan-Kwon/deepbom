@@ -16,6 +16,7 @@ channels/LICENSE
 channels/README.md
 channels/cargo/Cargo.lock
 channels/cargo/Cargo.toml
+channels/cargo/README.md
 channels/cargo/src/main.rs
 channels/huggingface/Dockerfile
 channels/huggingface/README.md
@@ -149,6 +150,7 @@ reference/xnnpack-readme/rule-manifest-v2.21.0.json
 reference/xnnpack-readme/version-diff.json
 scripts/bootstrap-instrumented-runtime.mjs
 scripts/browser-launch.mjs
+scripts/build-cargo-engine-release.mjs
 scripts/build-channel-artifacts.mjs
 scripts/build-coreml-legacy-quantization-corpus.mjs
 scripts/build-cyclonedx-20-quantization-evidence.mjs
@@ -186,6 +188,7 @@ scripts/check-browser-import-contract.mjs
 scripts/check-build-metadata.mjs
 scripts/check-calibration-validation-ledger.mjs
 scripts/check-calibration-validation-viewer.mjs
+scripts/check-cargo-engine-release.mjs
 scripts/check-channel-equivalence.mjs
 scripts/check-channel-vitality-viewer.mjs
 scripts/check-channel-vitality.mjs

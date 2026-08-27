@@ -51,6 +51,8 @@ jobs:
           npm run check:formats
       - name: Build public installation channels
         run: npm run build:channels
+      - name: Verify Cargo engine release contract
+        run: npm run check:cargo-engine-release
       - name: Verify package disclosure boundary
         run: npm run check:public-package-boundary
       - name: Verify installed channel equivalence

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
@@ -42,8 +43,13 @@ for (const item of cases) {
 
 const cargoResult = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"], {
   DEEPBOM_ENGINE: engine,
+  DEEPBOM_ENGINE_SHA256: createHash("sha256").update(await readFile(engine)).digest("hex"),
+  DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
 });
 assert.deepEqual(json(cargoResult.stdout), json(run(process.execPath, ["bin/deepbom.mjs", "audit", cases[1].path, "--compact"]).stdout), "Cargo launcher diverged from canonical CLI");
+const unboundCargo = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "--version"], { DEEPBOM_ENGINE: engine }, false);
+assert.notEqual(unboundCargo.status, 0);
+assert.match(unboundCargo.stderr, /DEEPBOM_ENGINE_SHA256/);
 
 const npmWasm = path.join(path.dirname(npmCli), "..", "pkg", "tflite_wasm_audit_bg.wasm");
 await corruptLastByte(npmWasm);
@@ -57,7 +63,7 @@ const corruptPip = run(python, ["-m", "deepbom", "--version"], {}, false);
 assert.notEqual(corruptPip.status, 0);
 assert.match(corruptPip.stderr, /failed its SHA-256 check/);
 
-assert.equal(manifest.channels.cargo.status, "launcher_built_publication_blocked_until_signed_engine_matrix");
+assert.equal(manifest.channels.cargo.status, "launcher_ready_for_immutable_engine_matrix");
 console.log("Channel equivalence passed (installed npm tarball and Python wheel; five file formats, Core ML package, sharded SafeTensors, standalone/Cargo parity, and packaged-WASM tamper rejection)." );
 
 async function installNpmPackage(release) {

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deepbom"
-version = "1.94.3"
+version = "1.94.4"
 description = "Local deployment-artifact analysis for on-device AI models"
 readme = "README.md"
 requires-python = ">=3.9"

@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       publish:
-        description: Publish verified artifacts to npm and PyPI
+        description: Publish verified artifacts to GitHub Releases, npm, PyPI, and crates.io
         required: true
         default: false
         type: boolean
@@ -112,6 +112,13 @@ jobs:
           path: .local-validation/channel-release/npm/deepbom-*.tgz
           if-no-files-found: error
           retention-days: 7
+      - name: Upload standalone engine
+        uses: actions/upload-artifact@v6
+        with:
+          name: deepbom-engine-${{ matrix.id }}
+          path: .local-validation/channel-release/engine/
+          if-no-files-found: error
+          retention-days: 7
 
   verify-matrix:
     name: Verify complete wheel matrix
@@ -135,10 +142,77 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  verify-engine-release:
+    name: Verify immutable engine release
+    needs: build-wheel
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v6
+        with:
+          pattern: deepbom-engine-*
+          path: engines
+          merge-multiple: true
+      - name: Build the six-target release matrix
+        run: node scripts/build-cargo-engine-release.mjs --input engines --output release --version "${{ inputs.expected_version }}"
+      - name: Verify release checksums
+        working-directory: release
+        run: sha256sum --check SHA256SUMS
+      - name: Install declared Cargo MSRV
+        run: rustup toolchain install 1.85.0 --profile minimal --no-self-update
+      - name: Test and package the Cargo launcher
+        run: |
+          cargo +1.85.0 test --locked --manifest-path channels/cargo/Cargo.toml
+          cargo +1.85.0 package --locked --manifest-path channels/cargo/Cargo.toml
+      - uses: actions/upload-artifact@v6
+        with:
+          name: deepbom-engine-release
+          path: release/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish-github-release:
+    name: Publish immutable engine assets
+    if: inputs.publish
+    needs: [verify-matrix, verify-engine-release]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          name: deepbom-engine-release
+          path: release
+      - name: Create draft, attach all assets, then publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: channels-v${{ inputs.expected_version }}
+        run: |
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "DEEPBOM ${{ inputs.expected_version }}" --notes "Verified DEEPBOM installation-channel engines for Windows, Linux, and macOS on x86-64 and ARM64. Asset identities are recorded in engine-matrix.v1.json and SHA256SUMS."
+          gh release upload "$RELEASE_TAG" release/* --repo "$GITHUB_REPOSITORY"
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+
+  publish-cargo:
+    name: Publish Cargo bootstrap release
+    if: inputs.publish
+    needs: publish-github-release
+    runs-on: ubuntu-24.04
+    environment: crates-io
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Publish verified launcher
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --locked --manifest-path channels/cargo/Cargo.toml
+
   publish-pypi:
     name: Publish PyPI with Trusted Publishing
     if: inputs.publish
-    needs: verify-matrix
+    needs: publish-github-release
     runs-on: ubuntu-24.04
     environment: pypi
     permissions:
@@ -155,7 +229,7 @@ jobs:
   publish-npm:
     name: Publish npm with Trusted Publishing
     if: inputs.publish
-    needs: verify-matrix
+    needs: publish-github-release
     runs-on: ubuntu-24.04
     environment: npm
     permissions:

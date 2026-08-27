@@ -176,7 +176,7 @@ const manifest = {
   channels: {
     npm: { status: "built", runtime: "node>=20", package: relative(output, path.join(output, "npm", `deepbom-${packageDocument.version}.tgz`)) },
     python: { status: wheelName ? "platform_wheel_built" : "platform_wheel_source_built", runtime: "packaged_single_executable_engine", path: wheelName ? relative(output, path.join(pythonDist, wheelName)) : relative(output, pythonRoot) },
-    cargo: { status: "launcher_built_publication_blocked_until_signed_engine_matrix", runtime: "verified_external_engine", path: relative(output, cargoRoot) },
+    cargo: { status: "launcher_ready_for_immutable_engine_matrix", runtime: "sha256_verified_release_engine", path: relative(output, cargoRoot) },
     huggingface: { status: withDist ? "static_space_built" : "recipe_built", runtime: "browser", path: relative(output, hfRoot) },
   },
   artifacts: {
