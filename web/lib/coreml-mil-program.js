@@ -499,11 +499,20 @@ function exactBinding(inputBindings, tensors, argument) {
   if (!Array.isArray(bindings) || bindings.length !== 1) return null;
   const binding = bindings[0];
   if (Number.isSafeInteger(binding.tensor_index)) return tensors[binding.tensor_index] || null;
-  if (binding.kind !== "value" || binding.value?.type?.kind !== "tensor") return null;
+  if (binding.kind !== "value") return null;
+  return tensorFromMilValue(binding.value);
+}
+
+function tensorFromMilValue(value) {
+  if (value?.type?.kind !== "tensor") return null;
   return {
-    dtype: binding.value.type.dtype, shape: binding.value.type.shape,
-    immediate_value: binding.value.immediate, blob_reference: binding.value.blob,
+    dtype: value.type.dtype, shape: value.type.shape,
+    immediate_value: value.immediate, blob_reference: value.blob,
   };
+}
+
+function exactAttributeBinding(attributes, argument) {
+  return tensorFromMilValue(attributes?.[argument]);
 }
 
 function exactScalarBinding(inputBindings, tensors, argument) {
@@ -513,9 +522,127 @@ function exactScalarBinding(inputBindings, tensors, argument) {
     ? immediate.values[0] : null;
 }
 
-function exactCompressionContract(type, outputShapes, outputIds, inputBindings, tensors) {
+function coreMlOpsetGeneration(opset) {
+  const match = /^CoreML(\d+)$/.exec(String(opset || ""));
+  return match ? Number(match[1]) : null;
+}
+
+function exactImmediateShape(tensor) {
+  const immediate = tensor?.immediate_value;
+  if (tensor?.dtype !== "UINT32" || tensor.shape?.length !== 1 || !immediate) return null;
+  const count = tensor.shape[0];
+  let values = null;
+  if (immediate.kind === "bytes" && immediate.byte_length === count * 4 && immediate.values.length === immediate.byte_length) {
+    const bytes = Uint8Array.from(immediate.values);
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    values = Array.from({ length: count }, (_, index) => view.getUint32(index * 4, true));
+  } else if (!immediate.truncated && immediate.count === count && immediate.values.length === count) {
+    values = [...immediate.values];
+  }
+  return values?.every((value) => Number.isSafeInteger(value) && value > 0) ? values : null;
+}
+
+function exactLegacyLutContract(outputShapes, outputIds, inputBindings, tensors, attributes) {
+  const indices = exactBinding(inputBindings, tensors, "indices") || exactAttributeBinding(attributes, "indices");
+  const lut = exactBinding(inputBindings, tensors, "lut") || exactAttributeBinding(attributes, "lut");
+  const shapeTensor = exactBinding(inputBindings, tensors, "shape") || exactAttributeBinding(attributes, "shape");
+  if (!indices || !lut || !shapeTensor) {
+    throw new Error(`Core ML MIL CoreML6 constexpr_lut_to_dense is missing indices, LUT, or shape binding; serialized arguments: ${Object.keys(inputBindings || {}).sort().join(", ") || "none"}; attributes: ${Object.keys(attributes || {}).sort().join(", ") || "none"}`);
+  }
+  const outputShape = exactImmediateShape(shapeTensor);
+  if (indices.dtype !== "UINT8" || indices.shape.length !== 1) {
+    throw new Error(`Core ML MIL CoreML6 constexpr_lut_to_dense indices must be rank-1 UINT8, observed ${indices.dtype} ${JSON.stringify(indices.shape)}`);
+  }
+  if (!["INT8", "UINT8", "FLOAT16", "FLOAT32"].includes(lut.dtype) || lut.shape.length !== 1) {
+    throw new Error(`Core ML MIL CoreML6 constexpr_lut_to_dense LUT must be a supported rank-1 tensor, observed ${lut.dtype} ${JSON.stringify(lut.shape)}`);
+  }
+  if (!outputShape) {
+    const immediate = shapeTensor.immediate_value;
+    throw new Error(`Core ML MIL CoreML6 constexpr_lut_to_dense shape must be a complete positive UINT32 vector; observed ${shapeTensor.dtype} ${JSON.stringify(shapeTensor.shape)}, immediate ${immediate ? `${immediate.count}/${immediate.values?.length || 0}${immediate.truncated ? " truncated" : ""}` : "absent"}`);
+  }
+  const paletteCount = lut.shape[0];
+  if (![2, 4, 16, 64, 256].includes(paletteCount)) {
+    throw new Error(`Core ML MIL CoreML6 constexpr_lut_to_dense palette cardinality ${paletteCount} is outside the pinned set`);
+  }
+  const outputElements = safeProduct(outputShape);
+  const indexBits = Math.log2(paletteCount);
+  const packedIndexBytes = Math.ceil(indexBits * outputElements / 8);
+  if (indices.shape[0] !== packedIndexBytes) {
+    throw new Error(`Core ML MIL CoreML6 constexpr_lut_to_dense packed index length ${indices.shape[0]} contradicts ${packedIndexBytes} bytes derived from shape and palette`);
+  }
+  if (!sameStaticShape(outputShapes[0], outputShape) || tensors[outputIds[0]]?.dtype !== lut.dtype) {
+    throw new Error("Core ML MIL CoreML6 constexpr_lut_to_dense output ValueType contradicts pinned type inference");
+  }
+  return {
+    schema: "deepbom.coreml.mil_compression_transform.v1", status: "assessed_exact_serialized_contract",
+    evidence_class: "OBSERVED/SOURCE_PINNED/DERIVED", transform: "constexpr_lut_to_dense", representation: "packed_index_lut_palettization",
+    logical_index_elements: outputElements, logical_output_elements: outputElements,
+    serialized_index_bytes: packedIndexBytes, index_bits: indexBits, palette_count: paletteCount,
+    vector_size: 1, vector_axis: null, index_shape: [...indices.shape], lut_shape: [...lut.shape], output_shape: outputShape,
+    source_file: COREML_MIL_SOURCE.constexpr_ios16_definition,
+    source_sha256: COREML_MIL_SOURCE.constexpr_ios16_definition_sha256,
+    boundary: "Serialized iOS 16 packed-index palette cardinality and output type/shape contract only. LUT usage distribution, decompressed numerical quality, physical runtime storage, device placement, and timing are not inferred.",
+  };
+}
+
+function exactLegacySparseContract(outputShapes, outputIds, inputBindings, tensors, attributes) {
+  const data = exactBinding(inputBindings, tensors, "nonzero_data") || exactAttributeBinding(attributes, "nonzero_data");
+  const mask = exactBinding(inputBindings, tensors, "mask") || exactAttributeBinding(attributes, "mask");
+  const shapeTensor = exactBinding(inputBindings, tensors, "shape") || exactAttributeBinding(attributes, "shape");
+  if (!data || !mask || !shapeTensor) {
+    throw new Error("Core ML MIL CoreML6 constexpr_sparse_to_dense is missing nonzero_data, mask, or shape binding");
+  }
+  const outputShape = exactImmediateShape(shapeTensor);
+  if (!outputShape || data.shape.length !== 1 || mask.dtype !== "UINT8" || mask.shape.length !== 1
+    || !["INT8", "UINT8", "FLOAT16", "FLOAT32"].includes(data.dtype)) {
+    throw new Error("Core ML MIL CoreML6 constexpr_sparse_to_dense violates pinned rank, dtype, mask, or shape constraints");
+  }
+  const outputElements = safeProduct(outputShape);
+  const packedMaskBytes = Math.ceil(outputElements / 8);
+  if (mask.shape[0] !== packedMaskBytes || !sameStaticShape(outputShapes[0], outputShape)
+    || tensors[outputIds[0]]?.dtype !== data.dtype) {
+    throw new Error("Core ML MIL CoreML6 constexpr_sparse_to_dense packed mask or output ValueType contradicts pinned type inference");
+  }
+  const immediate = mask.immediate_value;
+  const maskPopulation = immediate?.kind === "bytes" && immediate.byte_length === packedMaskBytes
+    && Number.isSafeInteger(immediate.byte_popcount) ? immediate.byte_popcount : null;
+  if (maskPopulation != null && maskPopulation !== data.shape[0]) {
+    throw new Error("Core ML MIL CoreML6 constexpr_sparse_to_dense mask population does not equal nonzero_data cardinality");
+  }
+  const paddingBits = packedMaskBytes * 8 - outputElements;
+  if (immediate?.kind === "bytes" && immediate.byte_length === packedMaskBytes && paddingBits > 0) {
+    const usedLowBits = 8 - paddingBits;
+    const paddingMask = 0xff ^ (2 ** usedLowBits - 1);
+    if ((immediate.last_byte & paddingMask) !== 0) {
+      throw new Error("Core ML MIL CoreML6 constexpr_sparse_to_dense has non-zero padding bits");
+    }
+  }
+  return {
+    schema: "deepbom.coreml.mil_compression_transform.v1",
+    status: maskPopulation == null ? "assessed_shape_contract_mask_population_unresolved" : "assessed_exact_serialized_contract",
+    evidence_class: "OBSERVED/SOURCE_PINNED/DERIVED", transform: "constexpr_sparse_to_dense",
+    representation: "packed_unstructured_sparse_bitmask", stored_nonzero_elements: data.shape[0],
+    logical_output_elements: outputElements, serialized_mask_bytes: packedMaskBytes, mask_shape: [...mask.shape],
+    output_shape: outputShape, mask_population: maskPopulation, padding_bits: paddingBits,
+    mask_population_status: maskPopulation == null ? "not_decoded_at_mil_contract_layer" : "assessed_exact_immediate_payload",
+    source_file: COREML_MIL_SOURCE.constexpr_ios16_definition,
+    source_sha256: COREML_MIL_SOURCE.constexpr_ios16_definition_sha256,
+    boundary: maskPopulation == null
+      ? "Serialized iOS 16 packed-mask cardinality and output type/shape are exact. Mask population remains unresolved until its payload is decoded."
+      : "Serialized iOS 16 packed-mask cardinality, little-endian mask population, zero padding, and output type/shape are exact. Runtime storage, placement, and timing are not inferred.",
+  };
+}
+
+function exactCompressionContract(type, outputShapes, outputIds, inputBindings, tensors, opset, attributes) {
   const name = String(type || "").toLowerCase();
+  const opsetGeneration = coreMlOpsetGeneration(opset);
+  if (name.startsWith("constexpr_") && opsetGeneration == null) {
+    throw new Error(`Core ML MIL ${name} has no recognized CoreML<N> opset binding`);
+  }
   if (name === "constexpr_blockwise_shift_scale") {
+    if (opsetGeneration < 8) {
+      throw new Error("Core ML MIL constexpr_blockwise_shift_scale is unavailable before the pinned CoreML8 opset");
+    }
     const data = exactBinding(inputBindings, tensors, "data");
     const scale = exactBinding(inputBindings, tensors, "scale");
     const offset = exactBinding(inputBindings, tensors, "offset");
@@ -545,15 +672,27 @@ function exactCompressionContract(type, outputShapes, outputIds, inputBindings, 
     };
   }
   if (name === "constexpr_lut_to_dense") {
+    if (opsetGeneration < 8) return exactLegacyLutContract(outputShapes, outputIds, inputBindings, tensors, attributes);
     const indices = exactBinding(inputBindings, tensors, "indices");
     const lut = exactBinding(inputBindings, tensors, "lut");
     const vectorAxisRaw = exactScalarBinding(inputBindings, tensors, "vector_axis");
-    if (!indices || !lut || indices.shape.length < 1 || lut.shape.length !== indices.shape.length + 2
-      || !IOS18_LUT_INDEX_DTYPES.has(indices.dtype)
-      || !["INT8", "UINT8", "FLOAT16", "FLOAT32"].includes(lut.dtype)
-      || indices.shape.some((value, index) => !Number.isSafeInteger(value) || value <= 0
-        || !Number.isSafeInteger(lut.shape[index]) || lut.shape[index] <= 0 || value % lut.shape[index] !== 0)) {
-      throw new Error("Core ML MIL constexpr_lut_to_dense violates pinned rank, dtype, or block divisibility constraints");
+    if (!indices || !lut) throw new Error("Core ML MIL constexpr_lut_to_dense is missing a serialized indices or LUT binding");
+    if (indices.shape.length < 1 || lut.shape.length !== indices.shape.length + 2) {
+      throw new Error(`Core ML MIL constexpr_lut_to_dense rank contract failed: indices rank ${indices.shape.length}, LUT rank ${lut.shape.length}`);
+    }
+    if (!IOS18_LUT_INDEX_DTYPES.has(indices.dtype)) {
+      throw new Error(`Core ML MIL constexpr_lut_to_dense index dtype ${indices.dtype} is outside the pinned iOS 18 type domain`);
+    }
+    if (!["INT8", "UINT8", "FLOAT16", "FLOAT32"].includes(lut.dtype)) {
+      throw new Error(`Core ML MIL constexpr_lut_to_dense LUT dtype ${lut.dtype} is outside the pinned iOS 18 type domain`);
+    }
+    for (let index = 0; index < indices.shape.length; index += 1) {
+      const indexDimension = indices.shape[index];
+      const lutDimension = lut.shape[index];
+      if (!Number.isSafeInteger(indexDimension) || indexDimension <= 0
+        || !Number.isSafeInteger(lutDimension) || lutDimension <= 0 || indexDimension % lutDimension !== 0) {
+        throw new Error(`Core ML MIL constexpr_lut_to_dense block grid failed at dimension ${index}: indices ${indexDimension}, LUT ${lutDimension}`);
+      }
     }
     const paletteCount = lut.shape.at(-2);
     const vectorSize = lut.shape.at(-1);
@@ -586,6 +725,7 @@ function exactCompressionContract(type, outputShapes, outputIds, inputBindings, 
     };
   }
   if (name === "constexpr_sparse_to_dense") {
+    if (opsetGeneration < 8) return exactLegacySparseContract(outputShapes, outputIds, inputBindings, tensors, attributes);
     const data = exactBinding(inputBindings, tensors, "nonzero_data");
     const mask = exactBinding(inputBindings, tensors, "mask");
     if (!data || !mask || data.shape.length !== 1 || mask.shape.length < 1 || mask.dtype !== "UINT1"
@@ -975,7 +1115,7 @@ export function graphFromCoreMlMilProgram(program, preferredFunction = null) {
       const inputShapes = inputIds.map((id) => tensors[id].shape);
       const outputShapes = outputIds.map((id) => tensors[id].shape);
       const arithmetic = macsForMil(operation.type, inputShapes, outputShapes, inputBindings, tensors);
-      const compression = exactCompressionContract(operation.type, outputShapes, outputIds, inputBindings, tensors);
+      const compression = exactCompressionContract(operation.type, outputShapes, outputIds, inputBindings, tensors, fn.opset, operation.attributes);
       const outputBytes = outputIds.reduce((sum, id) => {
         if (sum == null) return null;
         const tensor = tensors[id];

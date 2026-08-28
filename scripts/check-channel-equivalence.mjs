@@ -1,15 +1,18 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { resolveNpmCommand } from "./run-utils.mjs";
+import { buildInterfaceQuantizationContractLedger } from "../web/lib/quantization-contract-summary.js";
 
 const root = process.cwd();
 const releaseRoot = path.join(root, ".local-validation", "channel-release");
 const manifestPath = path.join(releaseRoot, "channel-release-manifest.json");
 const platformSmoke = process.argv.includes("--platform-smoke");
+const releaseContract = process.argv.includes("--release-contract");
+if (platformSmoke && releaseContract) throw new Error("--platform-smoke and --release-contract are mutually exclusive.");
 if (!process.argv.includes("--no-build")) run(process.execPath, ["scripts/build-channel-artifacts.mjs"]);
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 assert.equal(manifest.schema, "deepbom.channel_release.v1");
@@ -17,7 +20,7 @@ assert.equal(manifest.schema, "deepbom.channel_release.v1");
 const engine = path.join(releaseRoot, manifest.artifacts.standalone_engine.path);
 const cargoManifest = path.join(releaseRoot, "cargo", "Cargo.toml");
 const npmCli = platformSmoke ? null : await installNpmPackage(manifest);
-const python = installPythonWheel(manifest);
+const python = platformSmoke || releaseContract ? await installPythonWheel(manifest) : null;
 const fixtures = platformSmoke ? null : await packageFixtures();
 const fileCases = [
   { path: "web/samples/mobilenet_v2_1.0_224_quant.tflite", format: "tflite" },
@@ -31,39 +34,67 @@ const cases = platformSmoke ? fileCases.slice(0, 2) : [
   { path: fixtures.mlpackage, format: "coreml", bundle: "coreml_mlpackage" },
   { path: fixtures.sharded, format: "safetensors", bundle: "safetensors_sharded_repository" },
 ];
+const canonicalByPath = new Map();
 
-for (const item of cases) {
+for (const [caseIndex, item] of cases.entries()) {
   const args = ["audit", item.path, "--compact"];
   const canonical = json(run(process.execPath, ["bin/deepbom.mjs", ...args]).stdout);
-  const standalone = json(run(engine, args).stdout);
-  const pip = json(run(python, ["-m", "deepbom", ...args]).stdout);
+  canonicalByPath.set(item.path, canonical);
   assert.equal(canonical.format, item.format, `${item.path}: canonical format`);
   if (item.bundle) assert.equal(canonical.artifact_bundle?.kind, item.bundle, `${item.path}: bundle kind`);
   if (npmCli) {
     const npm = json(run(process.execPath, [npmCli, ...args]).stdout);
     assert.deepEqual(npm, canonical, `${item.path}: installed npm package diverged from canonical CLI`);
   }
-  assert.deepEqual(standalone, canonical, `${item.path}: standalone engine diverged from canonical CLI`);
-  assert.deepEqual(pip, canonical, `${item.path}: installed Python wheel diverged from canonical CLI`);
+  // The standalone engine and Python adapter both forward to the same immutable
+  // engine. Two format-diverse executions prove that boundary without repeating
+  // every expensive parser case in every wrapper channel.
+  if ((platformSmoke || releaseContract) && caseIndex < 2) {
+    assert.deepEqual(json(run(engine, args).stdout), canonical, `${item.path}: standalone engine diverged from canonical CLI`);
+    assert.deepEqual(json(run(python, ["-m", "deepbom", ...args]).stdout), canonical, `${item.path}: installed Python wheel diverged from canonical CLI`);
+  }
+}
+
+if (!platformSmoke) {
+  const tfliteAnalysis = canonicalByPath.get(fileCases[0].path);
+  const interfaceLedger = buildInterfaceQuantizationContractLedger(tfliteAnalysis);
+  const interfaceContract = path.join(releaseRoot, "install-probe", "interface-contract.json");
+  await writeFile(interfaceContract, `${JSON.stringify({
+    schema: "deepbom.production_interface_contract.v1",
+    artifact_sha256: tfliteAnalysis.model_sha256,
+    implementation_sha256: "a".repeat(64),
+    parameters: interfaceLedger.parameters,
+  })}\n`);
+  const lightweightTflite = "web/samples/mobilenet_v1_025_224_float.tflite";
+  for (const [label, args] of [
+    ["verify", ["verify", fileCases[0].path, "--contract", interfaceContract, "--compact"]],
+    ["diff", ["diff", lightweightTflite, lightweightTflite, "--compact"]],
+    ["explore", ["explore", lightweightTflite, "--compact"]],
+  ]) {
+    const canonical = json(run(process.execPath, ["bin/deepbom.mjs", ...args]).stdout);
+    assert.deepEqual(json(run(process.execPath, [npmCli, ...args]).stdout), canonical, `${label}: installed npm package diverged`);
+  }
 }
 
 if (platformSmoke) {
   console.log("Platform channel smoke passed (native standalone engine and installed Python wheel; TFLite/WASM and ONNX execution parity)." );
 } else {
-  const cargoResult = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"], {
-    DEEPBOM_ENGINE: engine,
-    DEEPBOM_ENGINE_SHA256: createHash("sha256").update(await readFile(engine)).digest("hex"),
-    DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
-  });
-  assert.deepEqual(json(cargoResult.stdout), json(run(process.execPath, ["bin/deepbom.mjs", "audit", cases[1].path, "--compact"]).stdout), "Cargo launcher diverged from canonical CLI");
-  const unboundCargo = run(
-    "cargo",
-    ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"],
-    { DEEPBOM_ENGINE: engine },
-    false,
-  );
-  assert.notEqual(unboundCargo.status, 0);
-  assert.match(unboundCargo.stderr, /DEEPBOM_ENGINE_SHA256/);
+  if (releaseContract) {
+    const cargoResult = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"], {
+      DEEPBOM_ENGINE: engine,
+      DEEPBOM_ENGINE_SHA256: createHash("sha256").update(await readFile(engine)).digest("hex"),
+      DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
+    });
+    assert.deepEqual(json(cargoResult.stdout), canonicalByPath.get(cases[1].path), "Cargo launcher diverged from canonical CLI");
+    const unboundCargo = run(
+      "cargo",
+      ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"],
+      { DEEPBOM_ENGINE: engine },
+      false,
+    );
+    assert.notEqual(unboundCargo.status, 0);
+    assert.match(unboundCargo.stderr, /DEEPBOM_ENGINE_SHA256/);
+  }
 
   const npmWasm = path.join(path.dirname(npmCli), "..", "pkg", "tflite_wasm_audit_bg.wasm");
   await corruptLastByte(npmWasm);
@@ -71,18 +102,23 @@ if (platformSmoke) {
   assert.notEqual(corruptNpm.status, 0);
   assert.match(corruptNpm.stderr, /release SHA-256 check/);
 
-  const installedRoot = run(python, ["-c", "import pathlib,deepbom;print(pathlib.Path(deepbom.__file__).parent)"]).stdout.trim();
-  await corruptLastByte(path.join(installedRoot, "_engine", "pkg", "tflite_wasm_audit_bg.wasm"));
-  const corruptPip = run(python, ["-m", "deepbom", "--version"], {}, false);
-  assert.notEqual(corruptPip.status, 0);
-  assert.match(corruptPip.stderr, /failed its SHA-256 check/);
+  if (python) {
+    const installedRoot = run(python, ["-c", "import pathlib,deepbom;print(pathlib.Path(deepbom.__file__).parent)"]).stdout.trim();
+    await corruptLastByte(path.join(installedRoot, "_engine", "pkg", "tflite_wasm_audit_bg.wasm"));
+    const corruptPip = run(python, ["-m", "deepbom", "--version"], {}, false);
+    assert.notEqual(corruptPip.status, 0);
+    assert.match(corruptPip.stderr, /failed its SHA-256 check/);
+  }
 
   assert.equal(manifest.channels.cargo.status, "launcher_ready_for_immutable_engine_matrix");
-  console.log("Channel equivalence passed (installed npm tarball and Python wheel; five file formats, Core ML package, sharded SafeTensors, standalone/Cargo parity, and packaged-WASM tamper rejection)." );
+  const cargoStatus = releaseContract ? "Cargo execution and unbound-engine rejection" : "Cargo execution reserved for --release-contract";
+  const nativeStatus = releaseContract ? "standalone/Python TFLite and ONNX execution parity" : "native/Python execution reserved for platform release smoke";
+  console.log(`Channel equivalence passed (installed npm tarball across five formats and two package forms; ${nativeStatus}; verify/diff/explore npm parity; ${cargoStatus}; packaged-WASM tamper rejection).`);
 }
 
 async function installNpmPackage(release) {
   const directory = path.join(releaseRoot, "install-probe", "npm");
+  await rm(directory, { recursive: true, force: true });
   await mkdir(directory, { recursive: true });
   await writeFile(path.join(directory, "package.json"), '{"private":true}\n');
   const tarball = path.join(releaseRoot, release.channels.npm.package);
@@ -93,8 +129,9 @@ async function installNpmPackage(release) {
   return cli;
 }
 
-function installPythonWheel(release) {
+async function installPythonWheel(release) {
   const directory = path.join(releaseRoot, "install-probe", "python");
+  await rm(directory, { recursive: true, force: true });
   run("python", ["-m", "venv", directory]);
   const python = path.join(directory, process.platform === "win32" ? "Scripts/python.exe" : "bin/python");
   const wheel = path.join(releaseRoot, release.channels.python.path);

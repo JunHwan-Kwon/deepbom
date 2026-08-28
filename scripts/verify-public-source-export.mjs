@@ -1,10 +1,13 @@
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
 const root = process.cwd();
-const exportRoot = path.resolve(process.argv[2] || path.join(root, ".local-validation", "public-source-final"));
+const defaultExportRoot = existsSync(path.join(root, "PUBLIC_SOURCE_MANIFEST.json"))
+  ? root : path.join(root, ".local-validation", "public-source");
+const exportRoot = path.resolve(process.argv[2] || defaultExportRoot);
 const manifestPath = path.join(exportRoot, "PUBLIC_SOURCE_MANIFEST.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 assert(manifest.schema === "deepbom.public_source_export.v1", "Unexpected public source manifest schema.");
@@ -42,6 +45,9 @@ const lockDocument = JSON.parse(await readFile(path.join(exportRoot, "package-lo
 const wasmPackageDocument = JSON.parse(await readFile(path.join(exportRoot, "pkg", "package.json"), "utf8"));
 assert(packageDocument.private === true, "Public source root must retain the accidental-publication guard.");
 assert(packageDocument.license === "Apache-2.0", "Public source package metadata license drifted.");
+assert(packageDocument.homepage === "https://deepbom.org", "Public source homepage metadata drifted.");
+assert(packageDocument.repository?.url === "git+https://github.com/JunHwan-Kwon/deepbom.git", "Public source repository metadata drifted.");
+assert(packageDocument.bugs?.url === "https://github.com/JunHwan-Kwon/deepbom/issues", "Public source issue-tracker metadata drifted.");
 assert(lockDocument.packages?.[""]?.license === "Apache-2.0", "Public source lockfile root license drifted.");
 assert(wasmPackageDocument.license === "Apache-2.0", "Public WASM package metadata license drifted.");
 assert(sha256(await readFile(path.join(exportRoot, "pkg", "LICENSE"))) === sha256(publicLicense), "Public WASM package license differs from the root Apache-2.0 license.");

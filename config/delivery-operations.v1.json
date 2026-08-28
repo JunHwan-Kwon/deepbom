@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-08-27T09:10:00.000Z",
+  "recorded_at": "2026-08-28T07:35:30.000Z",
   "scope": "Public installation channels and private web delivery",
   "observations": [
     {
@@ -179,6 +179,54 @@
         "five_file_formats_and_two_package_formats",
         "packaged_wasm_tamper_rejection"
       ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.94.6",
+      "platform": "windows-x64",
+      "elapsed_seconds": 446.3,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "verify_diff_explore_npm_parity",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "npm_and_python_packaged_wasm_tamper_rejection"
+      ]
+    },
+    {
+      "kind": "public_pr_channel_equivalence",
+      "version": "1.94.6",
+      "platform": "windows-x64",
+      "elapsed_seconds": 51.7,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "verify_diff_explore_npm_parity",
+        "npm_packaged_wasm_tamper_rejection",
+        "native_python_and_cargo_execution_reserved_for_manual_release"
+      ]
+    },
+    {
+      "kind": "packaged_public_cli_corpus_sweep",
+      "version": "1.94.6",
+      "platform": "windows-x64",
+      "elapsed_seconds": 403.9,
+      "conclusion": "success",
+      "artifact_count": 113,
+      "format_counts": {
+        "coreml": 27,
+        "gguf": 20,
+        "onnx": 48,
+        "safetensors": 18
+      },
+      "conditions": [
+        "cached_bytes_verified_against_manifest_size_and_sha256",
+        "fresh_process_bounded_human_output",
+        "fresh_process_compact_json_output",
+        "format_identity_and_positive_size_conservation",
+        "local_ignored_result_ledger"
+      ]
     }
   ],
   "budgets": {
@@ -187,6 +235,8 @@
     "private_web_preflight_seconds": 240,
     "local_channel_build_seconds": 300,
     "platform_channel_smoke_seconds": 300,
+    "public_pr_channel_equivalence_seconds": 90,
+    "packaged_public_cli_corpus_sweep_seconds": 600,
     "full_channel_equivalence_seconds": 480,
     "private_web_workflow_minutes": 15,
     "public_pull_request_quality_minutes": 25
@@ -198,7 +248,8 @@
     "private_full_quality": "manual_only_and_repository_opt_in",
     "private_web_deploy": "manual_only_and_repository_opt_in",
     "installation_release": "manual_only_exact_tag_and_version",
+    "packaged_public_cli_corpus_sweep": "local_release_qualification_only_when_shared_parser_cli_or_corpus_contract_changes",
     "retry": "rerun_failed_jobs_only_when_prior_artifacts_and_dependencies_remain_successful",
-    "cross_platform_equivalence": "native_engine_and_wheel_smoke_on_all_six_targets; full npm_python_standalone_cargo_and_format_equivalence_once_on_linux_x64"
+    "cross_platform_equivalence": "public PRs run npm full-format and command equivalence only; native_engine_and_wheel_smoke_on_all_six_targets; full npm_python_standalone_cargo_and_format equivalence runs once on release linux-x64"
   }
 }

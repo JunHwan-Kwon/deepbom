@@ -92,17 +92,19 @@ const coreFiles = [
   file("Fixture.mlpackage/Data/com.apple.CoreML/model.mlmodel", coreMlBytes),
   file("Fixture.mlpackage/Data/com.apple.CoreML/weights/weight.bin", Uint8Array.from([9, 8, 7, 6])),
   file("Fixture.mlpackage/Info.plist", "fixture package metadata", "text/plain"),
+  file("__MACOSX/._Fixture.mlpackage", "appledouble metadata"),
 ];
 const corePlan = await inspectArtifactBundle(coreFiles);
 expect(corePlan.rootFile.name === "model.mlmodel", "Core ML root manifest binding");
 const coreBundle = await readArtifactBundle(coreFiles);
-expect(coreBundle.analysis.artifact_bundle.files.length === 4, "Core ML package inventory includes selected unmanifested files");
+expect(coreBundle.analysis.artifact_bundle.files.length === 5, "Core ML package inventory includes every selected unmanifested file, including entries outside the package root");
 expect(coreBundle.analysis.artifact_bundle.files.some((item) => item.role === "weights"), "Core ML weights role");
 expect(coreBundle.analysis.artifact_bundle.files.some((item) => item.role === "unreferenced_package_file" && item.required === false), "Core ML unmanifested file remains hash-bound without becoming a required package item");
+expect(coreBundle.analysis.artifact_bundle.files.some((item) => item.path === "__MACOSX/._Fixture.mlpackage"), "Core ML package inventory hash-binds selected AppleDouble metadata instead of silently dropping it");
 expect(/^[a-f0-9]{64}$/.test(coreBundle.analysis.model_sha256), "Core ML canonical bundle digest");
 const coreDocuments = buildDeploymentContractDocuments(coreBundle.analysis, { generatedAt: "2026-08-03T00:00:00.000Z" });
 assertCycloneDx17(coreDocuments.documents.cyclonedx_evidence, "Core ML package evidence BOM");
-expect(coreDocuments.documents.cyclonedx_evidence.dependencies[0].dependsOn.length === 4, "Core ML subject dependency completeness");
+expect(coreDocuments.documents.cyclonedx_evidence.dependencies[0].dependsOn.length === 5, "Core ML subject dependency completeness");
 const coreMlBom = buildMlBomDocument(coreBundle.analysis, { timestamp: "2026-08-03T00:00:00.000Z" });
 assertCycloneDx17(coreMlBom, "Core ML canonical ML-BOM");
 expect(!coreMlBom.components.some((item) => item.name === "training-dataset" || item.name === "browser-local-inference-runtime"), "unobserved components stay absent");

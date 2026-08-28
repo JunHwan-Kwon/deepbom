@@ -8,8 +8,12 @@ import process from "node:process";
 import { detectModelFormat } from "../web/lib/model-file.js";
 import { analyzeOnnxModel } from "../web/onnx.js";
 import { analyzeExecuTorchModel } from "../web/executorch.js";
-import { readMetadataModelFile } from "../web/lib/metadata-model-adapters.js";
+import { parseStrictJson, readMetadataModelFile } from "../web/lib/metadata-model-adapters.js";
 import { readCoreMlModelFile } from "../web/lib/coreml-metadata-adapter.js";
+import { validateCustomTargetSpec } from "../web/lib/custom-targets.js";
+import { buildInterfaceQuantizationContractLedger } from "../web/lib/quantization-contract-summary.js";
+import { compareInterfaceContracts } from "../web/lib/interface-contract.js";
+import { canonicalJson } from "../web/lib/report-utils.js";
 import { buildMlBomDocument } from "../web/lib/report-mlbom.js";
 import { buildTensorRtStaticPreflight } from "../web/lib/tensorrt-static-preflight.js";
 import { buildOnDeviceLlmContract } from "../web/lib/on-device-llm-contract.js";
@@ -26,10 +30,15 @@ import {
 } from "../web/lib/llm-memory-feasibility.js";
 import {
   analyze_tflite_for_target,
+  compute_deployment_delta,
+  explore_tflite_redesign_pareto,
   initSync as initTfliteWasm,
 } from "../pkg/tflite_wasm_audit.js";
 
 const DEFAULT_TARGET = "android_mid_a55";
+const DEFAULT_DELTA_TARGETS = Object.freeze([DEFAULT_TARGET, "rpi4_a72", "x86_avx2", "wasm_simd"]);
+const MAX_TARGET_PROFILE_BYTES = 16_384;
+const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.94.6";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 
@@ -38,20 +47,34 @@ async function main(argv) {
   if (parsed.help) return printHelp();
   if (parsed.version) return process.stdout.write(`${VERSION}\n`);
   if (!parsed.input) throw new Error("An artifact path is required.");
+  validateInvocation(parsed);
+  const targetBinding = await resolveTargetBinding(parsed);
+  if (parsed.command === "diff") return runDiffCommand(parsed, targetBinding);
 
   const inputPath = path.resolve(parsed.input);
   const input = await loadCliInput(inputPath);
   const filename = input.filename;
   const detectedFormat = input.kind === "file" ? detectModelFormat(filename, input.prefix) : "package";
+  if ((parsed.targetProfile || parsed.targetExplicit) && input.kind === "file" && detectedFormat !== "tflite") {
+    throw new Error(`${parsed.targetProfile ? "--target-profile" : "--target"} applies only to TFLite artifacts, received ${detectedFormat}.`);
+  }
   if (parsed.externalDataRoot && input.kind !== "file") throw new Error("--external-data-dir applies only to an ONNX or ExecuTorch PTE file.");
   if (input.kind === "file" && ["unsupported", "pytorch_pickle"].includes(detectedFormat)) {
     throw new Error(`Unsupported artifact format: ${detectedFormat}`);
   }
-  let analysis = await analyzeArtifact({ input, filename, format: detectedFormat, target: parsed.target, externalDataRoot: parsed.externalDataRoot });
+  let analysis = await analyzeArtifact({ input, filename, format: detectedFormat, target: targetBinding.value, externalDataRoot: parsed.externalDataRoot });
   const format = String(analysis.format || detectedFormat).toLowerCase();
   if (["unsupported", "pytorch_pickle"].includes(format)) {
     throw new Error(`Unsupported artifact format: ${format}`);
   }
+  if (parsed.targetProfile && format !== "tflite") {
+    throw new Error(`--target-profile applies only to TFLite artifacts, received ${format}.`);
+  }
+  if (parsed.targetExplicit && format !== "tflite") {
+    throw new Error(`--target applies only to TFLite artifacts, received ${format}.`);
+  }
+  if (parsed.contract && parsed.command !== "verify") throw new Error("--contract is valid only with the verify command.");
+  if (parsed.request && parsed.command !== "explore") throw new Error("--request is valid only with the explore command.");
   if (parsed.externalDataRoot && !["onnx", "executorch"].includes(format)) {
     throw new Error("--external-data-dir applies only to an ONNX or ExecuTorch PTE file.");
   }
@@ -74,6 +97,13 @@ async function main(argv) {
     ? { ...(await identifyCliFile(input)), format }
     : packageIdentity(analysis, format, filename);
   enforceArtifactIdentity(analysis, artifact);
+  if (targetBinding.evidence) {
+    analysis.cli_target_profile_input = {
+      ...targetBinding.evidence,
+      resolved_target_id: analysis.target_profile?.id || null,
+      resolved_target_profile_sha256: analysis.target_profile?.profile_sha256 || null,
+    };
+  }
   const artifactSha256 = artifact.sha256;
   if (["onnx", "tflite"].includes(format)) analysis.on_device_llm = buildOnDeviceLlmContract(analysis);
   if (parsed.llmMemoryProfile && !["gguf", "safetensors"].includes(format)) {
@@ -105,6 +135,9 @@ async function main(argv) {
     analysis.tensorrt_static_preflight = buildTensorRtStaticPreflight(analysis, buildProfile, parserEvidence);
   }
 
+  if (parsed.command === "verify") return runVerifyCommand(parsed, analysis, artifact);
+  if (parsed.command === "explore") return runExploreCommand(parsed, analysis, artifact, input, targetBinding.value);
+
   const document = parsed.outputFormat === "cyclonedx"
     ? buildMlBomDocument(analysis, {
         hash: artifactSha256,
@@ -116,12 +149,170 @@ async function main(argv) {
         } : {}),
       })
     : analysis;
+  return emitDocument(parsed, document, () => buildHumanSummary(analysis, artifact));
+}
+
+async function resolveTargetBinding(parsed) {
+  if (!parsed.targetProfile) return { value: parsed.target || DEFAULT_TARGET, evidence: null };
+  if (parsed.targetExplicit) throw new Error("--target and --target-profile are mutually exclusive.");
+  const sidecar = await readJsonSidecar(parsed.targetProfile, "target_profile", MAX_TARGET_PROFILE_BYTES);
+  const validated = validateCustomTargetSpec(sidecar.document);
+  const normalized = canonicalJson(validated);
+  return {
+    value: JSON.stringify(validated),
+    evidence: {
+      schema: "deepbom.cli_target_profile_input.v1",
+      filename: sidecar.path,
+      byte_length: sidecar.byte_length,
+      source_sha256: sidecar.sha256,
+      normalized_profile_sha256: createHash("sha256").update(normalized, "utf8").digest("hex"),
+      duplicate_key_validation: "complete",
+    },
+  };
+}
+
+function validateInvocation(parsed) {
+  if (parsed.targetProfile && parsed.targetExplicit) throw new Error("--target and --target-profile are mutually exclusive.");
+  if (parsed.contract && parsed.command !== "verify") throw new Error("--contract is valid only with the verify command.");
+  if (parsed.request && parsed.command !== "explore") throw new Error("--request is valid only with the explore command.");
+  if (parsed.command === "verify" && !parsed.contract) throw new Error("The verify command requires --contract <json>.");
+  if (parsed.command === "diff" && !parsed.candidate) throw new Error("The diff command requires baseline and candidate TFLite artifacts.");
+  if (["verify", "diff", "explore"].includes(parsed.command)) assertCommandOutputFormat(parsed, parsed.command);
+}
+
+async function runDiffCommand(parsed, targetBinding) {
+  assertCommandOutputFormat(parsed, "diff");
+  assertNoOptions(parsed, [
+    "contract", "request", "context", "batch", "stateBits", "memoryMib", "tensorrtProfile", "tensorrtParserEvidence",
+    "tensorrtLlmConfig", "tensorrtLlmBinding", "llmMemoryProfile", "externalDataRoot",
+  ], "diff");
+  const baselineInput = await loadCliInput(path.resolve(parsed.input));
+  const candidateInput = await loadCliInput(path.resolve(parsed.candidate));
+  if (baselineInput.kind !== "file" || candidateInput.kind !== "file") {
+    throw new Error("The diff command requires two standalone TFLite files.");
+  }
+  const baselineFormat = detectModelFormat(baselineInput.filename, baselineInput.prefix);
+  const candidateFormat = detectModelFormat(candidateInput.filename, candidateInput.prefix);
+  if (baselineFormat !== "tflite" || candidateFormat !== "tflite") {
+    throw new Error(`The diff command supports TFLite artifacts only, received ${baselineFormat} and ${candidateFormat}.`);
+  }
+  await initializeTfliteWasm();
+  const baselineBytes = await readCliFileBytes(baselineInput);
+  const candidateBytes = await readCliFileBytes(candidateInput);
+  const targetIds = parsed.targetProfile
+    ? [targetBinding.value, ...DEFAULT_DELTA_TARGETS]
+    : parsed.targetExplicit
+      ? [targetBinding.value, ...DEFAULT_DELTA_TARGETS.filter((id) => id !== parsed.target)]
+      : [...DEFAULT_DELTA_TARGETS];
+  const delta = compute_deployment_delta(
+    baselineBytes,
+    baselineInput.filename,
+    candidateBytes,
+    candidateInput.filename,
+    JSON.stringify(targetIds),
+  );
+  if (targetBinding.evidence) delta.cli_target_profile_input = targetBinding.evidence;
+  return emitDocument(parsed, delta, () => buildDiffSummary(delta));
+}
+
+async function runVerifyCommand(parsed, analysis, artifact) {
+  assertCommandOutputFormat(parsed, "verify");
+  const ledger = buildInterfaceQuantizationContractLedger(analysis);
+  if (!Array.isArray(ledger.parameters) || ledger.parameters.length === 0) {
+    throw new Error(`${artifact.format} does not expose a serialized external interface contract for verification.`);
+  }
+  const sidecar = await readJsonSidecar(parsed.contract, "production_interface_contract", MAX_JSON_SIDECAR_BYTES);
+  const comparison = compareInterfaceContracts(ledger, sidecar.document, artifact.sha256);
+  const document = {
+    schema: "deepbom.cli_interface_contract_verification.v1",
+    command: "verify",
+    artifact,
+    target_profile: analysis.target_profile || null,
+    declaration: {
+      filename: sidecar.path,
+      byte_length: sidecar.byte_length,
+      sha256: sidecar.sha256,
+      duplicate_key_validation: "complete",
+    },
+    interface_contract_ledger: ledger,
+    comparison,
+    interpretation_boundary: "This command compares serialized external tensor ABI facts with one supplied declaration. It does not establish preprocessing semantics that are absent from both sources, runtime assignment, inference correctness, task accuracy, clinical validity, or release readiness.",
+  };
+  await emitDocument(parsed, document, () => buildVerifySummary(document));
+  process.exitCode = comparison.gate_result === "pass" ? 0 : comparison.gate_result === "block" ? 2 : 3;
+}
+
+async function runExploreCommand(parsed, analysis, artifact, input, target) {
+  assertCommandOutputFormat(parsed, "explore");
+  if (artifact.format !== "tflite" || input.kind !== "file") {
+    throw new Error(`The explore command supports standalone TFLite artifacts only, received ${artifact.format}.`);
+  }
+  const requestSidecar = parsed.request
+    ? await readJsonSidecar(parsed.request, "redesign_request", MAX_JSON_SIDECAR_BYTES)
+    : null;
+  const request = requestSidecar?.document || {
+    schema: "deepbom.redesign_request.v1",
+    source_sha256: artifact.sha256,
+    input_height: null,
+    input_width: null,
+    width_multiplier: 1,
+    activation_dtype: "source",
+    block_edits: [],
+  };
+  if (!request || typeof request !== "object" || Array.isArray(request)) {
+    throw new Error("The redesign request must be a JSON object.");
+  }
+  const boundRequest = { ...request, source_sha256: request.source_sha256 || artifact.sha256 };
+  const bytes = await readCliFileBytes(input);
+  const pareto = explore_tflite_redesign_pareto(bytes, artifact.filename, target, boundRequest);
+  pareto.artifact = artifact;
+  pareto.target_profile = analysis.target_profile || null;
+  if (requestSidecar) {
+    pareto.request_input = {
+      filename: requestSidecar.path,
+      byte_length: requestSidecar.byte_length,
+      sha256: requestSidecar.sha256,
+      duplicate_key_validation: "complete",
+    };
+  }
+  if (analysis.cli_target_profile_input) pareto.cli_target_profile_input = analysis.cli_target_profile_input;
+  return emitDocument(parsed, pareto, () => buildExploreSummary(pareto));
+}
+
+async function initializeTfliteWasm() {
+  const wasm = await readFile(await resolveRuntimeAsset("tflite_wasm_audit_bg.wasm"));
+  if (EXPECTED_TFLITE_WASM_SHA256 && createHash("sha256").update(wasm).digest("hex") !== EXPECTED_TFLITE_WASM_SHA256) {
+    throw new Error("Packaged TFLite WASM failed its release SHA-256 check.");
+  }
+  initTfliteWasm({ module: wasm });
+}
+
+async function emitDocument(parsed, document, humanBuilder) {
   const machineReadable = parsed.json || parsed.compact || Boolean(parsed.output) || parsed.outputFormat === "cyclonedx";
   const text = machineReadable
     ? `${JSON.stringify(document, bigintReplacer, parsed.compact ? 0 : 2)}\n`
-    : buildHumanSummary(analysis, artifact);
+    : humanBuilder();
   if (parsed.output) await writeFile(path.resolve(parsed.output), text, "utf8");
   else process.stdout.write(text);
+}
+
+function assertCommandOutputFormat(parsed, command) {
+  if (parsed.outputFormat !== "analysis") {
+    throw new Error(`The ${command} command emits its own evidence schema; --format cyclonedx is not supported.`);
+  }
+}
+
+function assertNoOptions(parsed, names, command) {
+  const used = names.filter((name) => {
+    const value = parsed[name];
+    return Boolean(value) && value !== 1 && value !== 16;
+  });
+  if (used.length) throw new Error(`The ${command} command does not accept: ${used.map(optionName).join(", ")}.`);
+}
+
+function optionName(name) {
+  if (name === "externalDataRoot") return "--external-data-dir";
+  return `--${name.replace(/[A-Z]/g, (character) => `-${character.toLowerCase()}`)}`;
 }
 
 async function analyzeArtifact({ input, filename, format, target, externalDataRoot }) {
@@ -132,11 +323,7 @@ async function analyzeArtifact({ input, filename, format, target, externalDataRo
   }
   if (format === "tflite") {
     const bytes = await readCliFileBytes(input);
-    const wasm = await readFile(await resolveRuntimeAsset("tflite_wasm_audit_bg.wasm"));
-    if (EXPECTED_TFLITE_WASM_SHA256 && createHash("sha256").update(wasm).digest("hex") !== EXPECTED_TFLITE_WASM_SHA256) {
-      throw new Error("Packaged TFLite WASM failed its release SHA-256 check.");
-    }
-    initTfliteWasm({ module: wasm });
+    await initializeTfliteWasm();
     return analyze_tflite_for_target(bytes, filename, target || DEFAULT_TARGET);
   }
   if (format === "onnx") {
@@ -355,6 +542,86 @@ function buildHumanSummary(analysis, artifact) {
   return `${lines.join("\n")}\n`;
 }
 
+function buildVerifySummary(document) {
+  const comparison = document.comparison;
+  const lines = [
+    `DEEPBOM ${VERSION} external-interface contract verification`,
+    `Artifact: ${document.artifact.filename}`,
+    `Identity: sha256:${document.artifact.sha256}`,
+    `Declaration: ${document.declaration.filename} | sha256:${document.declaration.sha256}`,
+    `Result: ${comparison.gate_result.toUpperCase()} | ${comparison.status}`,
+    `Parameters: ${comparison.declared_parameter_count}/${comparison.expected_parameter_count} declared/expected`,
+    `Mismatches: ${comparison.mismatch_count}`,
+  ];
+  for (const mismatch of comparison.mismatches.slice(0, 8)) {
+    lines.push(`  - ${mismatch.parameter_id || "document"}: ${mismatch.field} expected=${displayValue(mismatch.expected)} declared=${displayValue(mismatch.declared)}`);
+  }
+  if (comparison.mismatches.length > 8) lines.push(`  - ${comparison.mismatches.length - 8} more; use --json for the complete ledger`);
+  lines.push(`Evidence boundary: ${document.interpretation_boundary}`);
+  lines.push("Exit codes: 0 exact pass, 2 contradiction/invalid declaration, 3 incomplete release binding.");
+  return `${lines.join("\n")}\n`;
+}
+
+function buildDiffSummary(delta) {
+  const alignment = delta.alignment || {};
+  const worst = delta.target_deltas?.find((row) => row.target_id === delta.worst_relative_delta_target_id) || null;
+  const lines = [
+    `DEEPBOM ${VERSION} deterministic TFLite deployment delta`,
+    `Baseline: ${delta.baseline.filename} | sha256:${delta.baseline.sha256}`,
+    `Candidate: ${delta.candidate.filename} | sha256:${delta.candidate.sha256}`,
+    `Relation: ${alignment.artifact_relation || "not assessed"}`,
+    `Alignment: ${alignment.matched_op_count ?? 0} matched | ${alignment.added_op_count ?? 0} added | ${alignment.removed_op_count ?? 0} removed`,
+    `Targets: ${delta.target_count}`,
+  ];
+  for (const target of delta.target_deltas || []) {
+    lines.push(`  - ${target.target_id}: ${formatSigned(target.signed_delta_us, " us")} | ${formatSignedPercent(target.relative_delta)}`);
+  }
+  if (worst) lines.push(`Largest relative modeled delta: ${worst.target_id} (${formatSignedPercent(worst.relative_delta)})`);
+  lines.push(`Evidence boundary: ${delta.interpretation_boundary}`);
+  lines.push("The alignment is a deterministic comparison coordinate and does not establish model lineage or semantic layer identity.");
+  return `${lines.join("\n")}\n`;
+}
+
+function buildExploreSummary(pareto) {
+  const frontier = (pareto.candidates || []).filter((candidate) => candidate.pareto_optimal);
+  const lines = [
+    `DEEPBOM ${VERSION} deterministic TFLite redesign exploration`,
+    `Artifact: ${pareto.artifact.filename} | sha256:${pareto.source_sha256}`,
+    `Target: ${pareto.target_profile?.label || pareto.target_id} (${pareto.target_id})`,
+    `Candidates: ${pareto.evaluated_candidate_count} evaluated | ${pareto.accepted_candidate_count} accepted | ${pareto.rejected_candidate_count} rejected`,
+    `Pareto frontier: ${pareto.frontier_candidate_count}`,
+  ];
+  for (const candidate of frontier.slice(0, 8)) {
+    const request = candidate.request || {};
+    lines.push(`  - ${candidate.candidate_id}: ${request.input_height}x${request.input_width}, width ${formatDecimal(request.width_multiplier, 3)} | ${formatDecimal(candidate.modeled_latency_ms, 3)} ms modeled | ${formatInteger(candidate.parameter_elements)} parameters`);
+  }
+  if (frontier.length > 8) lines.push(`  - ${frontier.length - 8} more; use --json for the complete candidate ledger`);
+  lines.push(`Evidence boundary: ${pareto.interpretation_boundary}`);
+  return `${lines.join("\n")}\n`;
+}
+
+function displayValue(value) {
+  if (typeof value === "string") return value;
+  return JSON.stringify(value, bigintReplacer);
+}
+
+function formatSigned(value, suffix = "") {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "not assessable";
+  return `${number > 0 ? "+" : ""}${formatDecimal(number, 3)}${suffix}`;
+}
+
+function formatSignedPercent(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "not assessable";
+  const percent = number * 100;
+  return `${percent > 0 ? "+" : ""}${formatDecimal(percent, 1)}%`;
+}
+
+function formatDecimal(value, maximumFractionDigits = 3) {
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits }).format(Number(value));
+}
+
 function appendMemoryScenario(lines, memory) {
   if (!memory || typeof memory !== "object") return;
   const lowerBound = exactDecimal(memory.static_lower_bound_bytes?.decimal ?? memory.static_lower_bound_bytes?.value);
@@ -419,11 +686,16 @@ function parseArguments(argv) {
   const first = values[0] || "";
   if (["-h", "--help", "help"].includes(first)) return { help: true };
   if (["-v", "--version", "version"].includes(first)) return { version: true };
-  const command = ["audit", "gguf"].includes(first) ? values.shift() : "audit";
+  const command = ["audit", "gguf", "verify", "diff", "explore"].includes(first) ? values.shift() : "audit";
   const parsed = {
     command,
     input: "",
+    candidate: "",
     target: DEFAULT_TARGET,
+    targetExplicit: false,
+    targetProfile: "",
+    contract: "",
+    request: "",
     outputFormat: "analysis",
     output: "",
     timestamp: "",
@@ -442,7 +714,13 @@ function parseArguments(argv) {
   };
   while (values.length) {
     const token = values.shift();
-    if (token === "--target") parsed.target = requiredValue(values, token);
+    if (token === "--target") {
+      parsed.target = requiredValue(values, token);
+      parsed.targetExplicit = true;
+    }
+    else if (token === "--target-profile") parsed.targetProfile = requiredValue(values, token);
+    else if (token === "--contract") parsed.contract = requiredValue(values, token);
+    else if (token === "--request") parsed.request = requiredValue(values, token);
     else if (token === "--context") parsed.context = positiveInteger(requiredValue(values, token), token);
     else if (token === "--batch") parsed.batch = positiveInteger(requiredValue(values, token), token);
     else if (token === "--state-bits") parsed.stateBits = stateBits(requiredValue(values, token));
@@ -462,6 +740,7 @@ function parseArguments(argv) {
     else if (token === "--version" || token === "-v") parsed.version = true;
     else if (token.startsWith("-")) throw new Error(`Unknown option: ${token}`);
     else if (!parsed.input) parsed.input = token;
+    else if (parsed.command === "diff" && !parsed.candidate) parsed.candidate = token;
     else throw new Error(`Unexpected positional argument: ${token}`);
   }
   if (!new Set(["analysis", "cyclonedx"]).has(parsed.outputFormat)) {
@@ -499,24 +778,21 @@ function bigintReplacer(_key, value) {
 }
 
 async function readJsonDocument(filePath) {
-  const resolved = path.resolve(filePath);
-  try {
-    return JSON.parse(await readFile(resolved, "utf8"));
-  } catch (error) {
-    throw new Error(`Cannot read JSON document ${resolved}: ${error?.message || error}`);
-  }
+  return (await readJsonSidecar(filePath, "JSON document", MAX_JSON_SIDECAR_BYTES)).document;
 }
 
-async function readJsonSidecar(filePath, role) {
+async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_BYTES) {
   const resolved = path.resolve(filePath);
   try {
     const bytes = await readFile(resolved);
+    if (bytes.byteLength > maximumBytes) throw new Error(`byte length ${bytes.byteLength} exceeds the ${maximumBytes}-byte limit`);
+    const source = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     return {
       role,
       path: path.basename(resolved),
       byte_length: bytes.byteLength,
       sha256: createHash("sha256").update(bytes).digest("hex"),
-      document: JSON.parse(bytes.toString("utf8")),
+      document: parseStrictJson(source, role),
     };
   } catch (error) {
     throw new Error(`Cannot read ${role} JSON ${resolved}: ${error?.message || error}`);
@@ -524,7 +800,7 @@ async function readJsonSidecar(filePath, role) {
 }
 
 function printHelp() {
-  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     GGUF context-length scenario\n  --batch <count>        GGUF scenario batch size (default: 1)\n  --state-bits <bits>    GGUF KV-state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the static lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis or cyclonedx (default: analysis)\n  --timestamp <iso>      Fixed CycloneDX generation timestamp\n  --output, -o <path>    Write the complete JSON document to a file\n  --json                 Emit the complete formatted analysis JSON\n  --compact              Emit the complete compact analysis JSON\n  --version              Print version\n  --help                 Show this help\n`);
+  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     GGUF context-length scenario\n  --batch <count>        GGUF scenario batch size (default: 1)\n  --state-bits <bits>    GGUF KV-state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the static lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis or cyclonedx (default: analysis; audit/gguf only)\n  --timestamp <iso>      Fixed CycloneDX generation timestamp\n  --output, -o <path>    Write the complete JSON document to a file\n  --json                 Emit the complete formatted evidence JSON\n  --compact              Emit the complete compact evidence JSON\n  --version              Print version\n  --help                 Show this help\n\nverify exit codes:\n  0 exact pass; 2 contradiction or invalid declaration; 3 incomplete release binding\n`);
 }
 
 main(process.argv.slice(2)).catch((error) => {

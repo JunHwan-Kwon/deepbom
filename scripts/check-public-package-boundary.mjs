@@ -28,6 +28,8 @@ assert(packageDocument.name === "deepbom", "Unexpected npm package name.");
 assert(packageDocument.license === "Apache-2.0", "Public npm package must use Apache-2.0.");
 assert(packageDocument.private !== true, "Generated npm package must not inherit the private monorepo publication guard.");
 assert(packageDocument.repository?.url === "git+https://github.com/JunHwan-Kwon/deepbom.git", "npm repository identity drifted.");
+assert(packageDocument.homepage === "https://deepbom.org", "npm homepage identity drifted.");
+assert(packageDocument.bugs?.url === "https://github.com/JunHwan-Kwon/deepbom/issues", "npm issue-tracker identity drifted.");
 assert(packageDocument.publishConfig?.access === "public", "npm package access must be explicit.");
 assert(packageDocument.bin?.deepbom === "bin/deepbom.mjs", "npm CLI entry point drifted.");
 

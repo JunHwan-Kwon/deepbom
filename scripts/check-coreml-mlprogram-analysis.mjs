@@ -40,7 +40,16 @@ function int32Value(value) { return concat(message(2, tensorType(23, [])), messa
 function int32ListValue(values) { return concat(message(2, tensorType(23, [values.length])), message(3, message(1, message(2, packedUint(1, values))))); }
 function valueBinding(value) { return message(1, concat(message(2, value), uint(99, 1))); }
 function argument(binding) { return message(2, concat(string(1, binding[0]), message(2, binding[1]))); }
-function operation(type, inputs, outputs, blocks = []) { return concat(string(1, type), inputs.map(argument), outputs.map((output) => message(3, named(...output))), blocks.map((block) => message(4, block))); }
+function attribute(binding) { return message(5, concat(string(1, binding[0]), message(2, binding[1]))); }
+function operation(type, inputs, outputs, blocks = [], attributes = []) {
+  return concat(string(1, type), inputs.map(argument), outputs.map((output) => message(3, named(...output))),
+    blocks.map((block) => message(4, block)), attributes.map(attribute));
+}
+function uint32Payload(values) {
+  const result = Buffer.alloc(values.length * 4);
+  values.forEach((value, index) => result.writeUInt32LE(value, index * 4));
+  return result;
+}
 
 function mlProgramModel({ forwardReference = false } = {}) {
   const weightShape = [2, 1, 3, 3];
@@ -154,7 +163,7 @@ function immediateBytesProgramModel() {
   return concat(uint(1, 8), message(2, description), message(502, program));
 }
 
-function compressionProgramModel(kind, { invalidBlock = false, invalidPalette = false, vector = false, invalidSparse = false, invalidPadding = false } = {}) {
+function compressionProgramModel(kind, { invalidBlock = false, invalidPalette = false, vector = false, invalidSparse = false, invalidPadding = false, opset = "CoreML8" } = {}) {
   let op;
   let outputShape;
   let outputDtype;
@@ -188,11 +197,42 @@ function compressionProgramModel(kind, { invalidBlock = false, invalidPalette = 
     ], [["output", outputDtype, outputShape]]);
   }
   const block = concat(string(2, "output"), message(3, op));
-  const fn = concat(string(2, "CoreML8"), message(3, concat(string(1, "CoreML8"), message(2, block))));
+  const fn = concat(string(2, opset), message(3, concat(string(1, opset), message(2, block))));
   const program = concat(uint(1, 1), message(2, concat(string(1, "main"), message(2, fn))));
   const array = (shape) => message(5, concat(packedUint(1, shape), uint(2, outputDtype === 10 ? 65552 : 65568)));
   const description = message(10, concat(string(1, "output"), message(3, array(outputShape))));
   return concat(uint(1, 9), message(2, description), message(502, program));
+}
+
+function legacyCompressionProgramModel(kind, { invalidPacked = false, invalidSparse = false, invalidPadding = false } = {}) {
+  const outputShape = kind === "lut" ? [2, 4] : [2, 3];
+  let outputDtype;
+  let attributes;
+  if (kind === "lut") {
+    outputDtype = 10;
+    attributes = [
+      ["indices", immediateBytesValue(31, [invalidPacked ? 5 : 6], Buffer.alloc(invalidPacked ? 5 : 6, 0x12))],
+      ["lut", immediateBytesValue(10, [64], Buffer.alloc(128))],
+      ["shape", immediateBytesValue(33, [2], uint32Payload(outputShape))],
+    ];
+  } else {
+    outputDtype = 21;
+    const mask = invalidPadding ? 0xa5 : invalidSparse ? 0x05 : 0x25;
+    const nonzeroCount = invalidPadding ? 4 : 3;
+    attributes = [
+      ["nonzero_data", immediateBytesValue(21, [nonzeroCount], Buffer.alloc(nonzeroCount, 1))],
+      ["mask", immediateBytesValue(31, [1], Buffer.from([mask]))],
+      ["shape", immediateBytesValue(33, [2], uint32Payload(outputShape))],
+    ];
+  }
+  const op = operation(`constexpr_${kind === "lut" ? "lut_to_dense" : "sparse_to_dense"}`, [],
+    [["output", outputDtype, outputShape]], [], attributes);
+  const block = concat(string(2, "output"), message(3, op));
+  const fn = concat(string(2, "CoreML6"), message(3, concat(string(1, "CoreML6"), message(2, block))));
+  const program = concat(uint(1, 1), message(2, concat(string(1, "main"), message(2, fn))));
+  const array = (shape) => message(5, concat(packedUint(1, shape), uint(2, outputDtype === 10 ? 65552 : 65568)));
+  const description = message(10, concat(string(1, "output"), message(3, array(outputShape))));
+  return concat(uint(1, 8), message(2, description), message(502, program));
 }
 
 function blobFile(dtype, payload, paddingBits = 0, { sentinel = 0xdeadbeef } = {}) {
@@ -300,6 +340,26 @@ assert(sparseRow?.status === "assessed_exact_serialized_contract"
   && sparseRow.logical_output_elements === 6 && sparseRow.mask_population_status === "assessed_exact_immediate_payload",
 "Core ML iOS 18 sparse mask population and nonzero-data cardinality contract is incorrect");
 
+const legacyLutModel = legacyCompressionProgramModel("lut");
+const legacyLut = (await readCoreMlModelFile(new File([legacyLutModel], "legacy-lut.mlmodel"))).analysis;
+const legacyLutRow = legacyLut.coreml?.mil_compression_contract?.transforms?.[0];
+assert(legacyLutRow?.status === "assessed_exact_serialized_contract"
+  && legacyLutRow.representation === "packed_index_lut_palettization"
+  && legacyLutRow.index_bits === 6 && legacyLutRow.palette_count === 64
+  && legacyLutRow.serialized_index_bytes === 6 && legacyLutRow.logical_output_elements === 8
+  && legacyLutRow.source_file?.includes("iOS16/constexpr_ops.py"),
+"Core ML iOS 16 attribute-based packed LUT contract is incorrect");
+
+const legacySparseModel = legacyCompressionProgramModel("sparse");
+const legacySparse = (await readCoreMlModelFile(new File([legacySparseModel], "legacy-sparse.mlmodel"))).analysis;
+const legacySparseRow = legacySparse.coreml?.mil_compression_contract?.transforms?.[0];
+assert(legacySparseRow?.status === "assessed_exact_serialized_contract"
+  && legacySparseRow.representation === "packed_unstructured_sparse_bitmask"
+  && legacySparseRow.serialized_mask_bytes === 1 && legacySparseRow.mask_population === 3
+  && legacySparseRow.padding_bits === 2 && legacySparseRow.logical_output_elements === 6
+  && legacySparseRow.source_file?.includes("iOS16/constexpr_ops.py"),
+"Core ML iOS 16 attribute-based packed sparse contract is incorrect");
+
 blockwiseCompression.model_sha256 = createHash("sha256").update(blockwiseCompressionModel).digest("hex");
 const blockwiseReport = buildEngineeringReport(blockwiseCompression, { generatedAt: "2026-08-07T00:00:00.000Z" });
 assert(blockwiseReport.includes("Core ML Serialized Compression Contracts")
@@ -316,6 +376,10 @@ let invalidBlockRejected = false;
 try { await readCoreMlModelFile(new File([compressionProgramModel("blockwise", { invalidBlock: true })], "invalid-blockwise.mlmodel")); }
 catch (error) { invalidBlockRejected = /block divisibility constraints/.test(String(error?.message)); }
 assert(invalidBlockRejected, "Core ML non-divisible blockwise scale shape did not fail closed");
+let invalidBlockOpsetRejected = false;
+try { await readCoreMlModelFile(new File([compressionProgramModel("blockwise", { opset: "CoreML7" })], "invalid-blockwise-opset.mlmodel")); }
+catch (error) { invalidBlockOpsetRejected = /unavailable before the pinned CoreML8 opset/.test(String(error?.message)); }
+assert(invalidBlockOpsetRejected, "Core ML iOS 18 blockwise compression was interpreted under an earlier opset");
 let invalidPaletteRejected = false;
 try { await readCoreMlModelFile(new File([compressionProgramModel("lut", { invalidPalette: true })], "invalid-lut.mlmodel")); }
 catch (error) { invalidPaletteRejected = /palette cardinality/.test(String(error?.message)); }
@@ -328,6 +392,18 @@ let invalidSparsePaddingRejected = false;
 try { await readCoreMlModelFile(new File([compressionProgramModel("sparse", { invalidPadding: true })], "invalid-sparse-padding.mlmodel")); }
 catch (error) { invalidSparsePaddingRejected = /non-zero padding bits/.test(String(error?.message)); }
 assert(invalidSparsePaddingRejected, "Core ML sparse UINT1 immediate padding corruption did not fail closed");
+let invalidLegacyLutRejected = false;
+try { await readCoreMlModelFile(new File([legacyCompressionProgramModel("lut", { invalidPacked: true })], "invalid-legacy-lut.mlmodel")); }
+catch (error) { invalidLegacyLutRejected = /packed index length/.test(String(error?.message)); }
+assert(invalidLegacyLutRejected, "Core ML iOS 16 LUT packed-index contradiction did not fail closed");
+let invalidLegacySparseRejected = false;
+try { await readCoreMlModelFile(new File([legacyCompressionProgramModel("sparse", { invalidSparse: true })], "invalid-legacy-sparse.mlmodel")); }
+catch (error) { invalidLegacySparseRejected = /mask population does not equal/.test(String(error?.message)); }
+assert(invalidLegacySparseRejected, "Core ML iOS 16 sparse population contradiction did not fail closed");
+let invalidLegacySparsePaddingRejected = false;
+try { await readCoreMlModelFile(new File([legacyCompressionProgramModel("sparse", { invalidPadding: true })], "invalid-legacy-sparse-padding.mlmodel")); }
+catch (error) { invalidLegacySparsePaddingRejected = /non-zero padding bits/.test(String(error?.message)); }
+assert(invalidLegacySparsePaddingRejected, "Core ML iOS 16 sparse padding contradiction did not fail closed");
 
 const matmulParsed = (await readCoreMlModelFile(new File([matmulProgramModel()], "matmul.mlmodel"))).analysis;
 assert(matmulParsed.total_macs === 24 && matmulParsed.ops[0].macs_status === "derived_exact_mil_matmul", "Core ML MIL transposed matmul MAC derivation is incorrect");

@@ -8,10 +8,17 @@ npx deepbom audit model.onnx --format cyclonedx
 npx deepbom gguf model.gguf --context 8192 --memory-mib 8192
 npx deepbom audit Model.mlpackage --compact
 npx deepbom audit safetensors-repository/ --compact
+npx deepbom verify model.tflite --contract production-interface.json
+npx deepbom diff baseline.tflite candidate.tflite
+npx deepbom explore model.tflite --target-profile target-profile.json
 ```
 
 The default output is a bounded human-readable summary. Use `--json` or
 `--compact` for the complete analysis document.
+
+`verify` fails closed on interface contradictions, `diff` preserves the
+canonical multi-target TFLite delta ledger, and `explore` exposes deterministic
+WASM Pareto candidates. These commands do not add a second analysis engine.
 
 The package contains one generated JavaScript analysis bundle and the canonical
 TFLite WebAssembly module. It does not send model bytes or results over the

@@ -21,6 +21,9 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 | Local Windows 1.94.6 channel rebuild | version-aligned npm, executable, Python wheel, and Cargo launcher source | 225.2 s |
 | Local Windows 1.94.6 platform smoke | installed Python and standalone TFLite/WASM plus ONNX parity | 194.1 s |
 | Local Windows full channel equivalence | installed npm and Python, five formats, two package forms, standalone/Cargo parity, and WASM tamper rejection | 327 s |
+| Local Windows 1.94.6 release-contract equivalence | npm full-format and command parity, native/Python execution, Cargo binding, and npm/Python WASM tamper rejection | 446.3 s |
+| Local Windows 1.94.6 public-PR channel equivalence | npm full-format and command parity plus npm WASM tamper rejection; native/Python/Cargo execution reserved for release | 51.7 s |
+| Packaged public CLI corpus sweep | 113 hash-bound artifacts; bounded human and compact JSON output in fresh processes | 403.9 s |
 
 The 1.94.4 run is retained as timing and incident evidence. It is not a known-good
 quality baseline. A registry success is never treated as sufficient without a
@@ -42,6 +45,9 @@ build, dist, cache, and egg-info directories before packaging.
 - Private Cloudflare delivery is manual-only and requires
   `DEEPBOM_ENABLE_DEPLOY=true`.
 - Documentation-only commits do not consume the public browser/package matrix.
+- The downloaded 113-artifact packaged CLI sweep runs locally for release
+  qualification when shared parser, CLI, or corpus contracts change. It is not
+  part of ordinary pull-request or web-deployment workflows.
 
 ## Gate ownership
 
@@ -49,7 +55,7 @@ build, dist, cache, and egg-info directories before packaging.
 | --- | --- | --- |
 | Web layout, copy, or browser orchestration | `npm run check:deploy`, `npm run build:release`, dist asset and budget checks | Manual private web deploy |
 | Parser or shared analysis calculation | `npm run check:cli`, `npm run check:formats`, affected exact check, then `npm run check:release` before publication | Public PR quality; private full quality when hosted UI is affected |
-| Public package adapter | package boundary, channel build, channel equivalence | Manual channel release |
+| Public package adapter | package boundary, channel build, npm full-format/command equivalence | Public PR quality; `--release-contract` only in the manual channel release |
 | Private WASM or rulepack generator | private WASM/rulepack checks plus public boundary checks | Manual private full quality and web deploy |
 | Corpus manifest or aggregate evidence | corpus-specific deterministic verifier | Public PR quality only when public evidence changes |
 
@@ -65,7 +71,10 @@ Windows, Linux, and macOS for x86-64 and ARM64. Platform jobs run TFLite/WASM
 and ONNX parity. The platform-independent npm package, Cargo adapter, five file
 formats, Core ML package, sharded SafeTensors repository, and WASM tamper checks
 run once on Linux x64. This removes duplicate work without reducing platform
-execution coverage.
+execution coverage. Public pull requests run the 51.7-second npm package gate;
+they do not rebuild and launch the same 92 MiB native engine through standalone,
+Python, and Cargo adapters. The manual release invokes `--release-contract` to
+close those adapter execution contracts exactly once.
 
 ## Retry rule
 

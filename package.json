@@ -2,6 +2,14 @@
   "name": "deepbom",
   "version": "1.94.6",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
+  "homepage": "https://deepbom.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JunHwan-Kwon/deepbom.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JunHwan-Kwon/deepbom/issues"
+  },
   "private": true,
   "bin": {
     "deepbom": "./bin/deepbom.mjs"
@@ -55,6 +63,7 @@
     "build:public-multiformat-corpus": "node scripts/build-public-multiformat-corpus-manifest.mjs",
     "corpus:multiformat:download": "node scripts/download-public-multiformat-corpus.mjs",
     "corpus:multiformat:sweep": "node scripts/sweep-public-multiformat-corpus.mjs",
+    "corpus:multiformat:cli-sweep": "node scripts/sweep-public-cli-corpus.mjs",
     "build:cyclonedx-generalization-evidence": "node scripts/build-cyclonedx-generalization-evidence.mjs",
     "check:public-multiformat-corpus": "node scripts/check-public-multiformat-corpus.mjs",
     "check:onnx-extension-contract-corpus": "node scripts/check-onnx-extension-contract-corpus.mjs",

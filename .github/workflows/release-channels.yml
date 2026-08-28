@@ -84,7 +84,7 @@ jobs:
         run: npm run check:channels -- --no-build --platform-smoke
       - name: Verify full installed channel equivalence
         if: matrix.id == 'linux-x64'
-        run: npm run check:channels -- --no-build
+        run: npm run check:channels -- --no-build --release-contract
       - name: Verify current wheel
         shell: bash
         run: |

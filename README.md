@@ -26,10 +26,20 @@ npx deepbom audit model.onnx --format cyclonedx
 python -m pip install deepbom
 cargo install deepbom
 deepbom audit model.gguf --compact
+deepbom verify model.tflite --contract production-interface.json
+deepbom diff baseline.tflite candidate.tflite
+deepbom explore model.tflite
 ```
 
 The default is a terminal-sized evidence summary. `--json`, `--compact`, and
 `--format cyclonedx` expose the complete machine-readable contracts.
+
+`verify` compares the serialized external tensor ABI with a supplied,
+artifact-bound production declaration. `diff` uses the canonical deterministic
+multi-target TFLite deployment-delta ledger, and `explore` exposes the existing
+WASM redesign Pareto search without claiming trained-model accuracy. A strict
+custom TFLite target can be bound with `--target-profile profile.json`; the CLI
+records both the source-file SHA-256 and the resolved Rust profile SHA-256.
 
 The Cargo launcher downloads only the engine matching its exact package version
 and platform from the corresponding immutable GitHub Release. It validates the

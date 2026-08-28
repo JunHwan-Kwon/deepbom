@@ -218,7 +218,7 @@ function safeTensorsModelSourceDigest(records) {
 
 function unboundBundleRows(plan, covered, role) {
   return [...plan.entries]
-    .filter(([path]) => path.startsWith(plan.root) && !covered.has(path))
+    .filter(([path]) => !covered.has(path))
     .map(([path, file]) => ({ path, file, role, required: false }));
 }
 

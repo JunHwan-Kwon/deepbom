@@ -8,6 +8,7 @@ import { loadCliInput, loadOnnxExternalData } from "../bin/deepbom-input.mjs";
 import { createTensorRtBuildProfile, TENSORRT_PARSER_OBSERVATION_SCHEMA } from "../web/lib/tensorrt-static-preflight.js";
 import { canonicalJson } from "../web/lib/report-utils.js";
 import { sha256TextHex } from "../web/lib/sha256-sync.js";
+import { buildInterfaceQuantizationContractLedger } from "../web/lib/quantization-contract-summary.js";
 
 const cases = [
   ["web/samples/mobilenet_v2_1.0_224_quant.tflite", "tflite"],
@@ -33,7 +34,10 @@ assert.match(humanSummary, /Graph: 9 operators \| 16 tensors \| 6,488,384 MACs/,
 assert.match(humanSummary, /Evidence boundary:/, "human summary states its evidence boundary");
 assert.equal(Buffer.byteLength(humanSummary, "utf8") < 8192, true, "human summary remains terminal-sized");
 assert.equal(JSON.parse(run(["audit", cases[1][0], "--json"]).stdout).format, "onnx", "--json retains complete formatted machine output");
-assert.match(run(["--help"]).stdout, /--json\s+Emit the complete formatted analysis JSON/, "JSON mode is discoverable");
+assert.match(run(["--help"]).stdout, /--json\s+Emit the complete formatted (?:analysis|evidence) JSON/, "JSON mode is discoverable");
+assert.match(run(["--help"]).stdout, /deepbom verify <artifact> --contract <json>/, "verify command is discoverable");
+assert.match(run(["--help"]).stdout, /deepbom diff <baseline\.tflite> <candidate\.tflite>/, "diff command is discoverable");
+assert.match(run(["--help"]).stdout, /deepbom explore <artifact\.tflite>/, "explore command is discoverable");
 
 for (const [artifact, expectedFormat] of cases) {
   const result = run(["audit", artifact, "--compact"]);
@@ -132,6 +136,78 @@ try {
   );
 
   const onnxAnalysis = JSON.parse(run(["audit", cases[1][0], "--compact"]).stdout);
+  const tfliteAnalysis = JSON.parse(run(["audit", cases[0][0], "--compact"]).stdout);
+  const interfaceLedger = buildInterfaceQuantizationContractLedger(tfliteAnalysis);
+  const interfaceContractPath = path.join(temp, "interface-contract.json");
+  await writeFile(interfaceContractPath, JSON.stringify({
+    schema: "deepbom.production_interface_contract.v1",
+    artifact_sha256: tfliteAnalysis.model_sha256,
+    implementation_sha256: "a".repeat(64),
+    parameters: interfaceLedger.parameters,
+  }), "utf8");
+  const verified = JSON.parse(run(["verify", cases[0][0], "--contract", interfaceContractPath, "--compact"]).stdout);
+  assert.equal(verified.schema, "deepbom.cli_interface_contract_verification.v1", "verify evidence schema");
+  assert.equal(verified.comparison.status, "bound_exact_contract", "verify exact contract status");
+  assert.equal(verified.comparison.gate_result, "pass", "verify exact contract gate");
+  assert.match(run(["verify", cases[0][0], "--contract", interfaceContractPath]).stdout, /Result: PASS \| bound_exact_contract/, "verify human summary");
+
+  const mismatchedContractPath = path.join(temp, "interface-contract-mismatch.json");
+  const mismatchedParameters = structuredClone(interfaceLedger.parameters);
+  mismatchedParameters[0].dtype = mismatchedParameters[0].dtype === "UINT8" ? "INT8" : "UINT8";
+  await writeFile(mismatchedContractPath, JSON.stringify({
+    schema: "deepbom.production_interface_contract.v1",
+    artifact_sha256: tfliteAnalysis.model_sha256,
+    implementation_sha256: "a".repeat(64),
+    parameters: mismatchedParameters,
+  }), "utf8");
+  const mismatchRun = run(["verify", cases[0][0], "--contract", mismatchedContractPath, "--compact"], false);
+  assert.equal(mismatchRun.status, 2, "verify mismatch exit code");
+  const mismatch = JSON.parse(mismatchRun.stdout);
+  assert.equal(mismatch.comparison.gate_result, "block", "verify mismatch gate");
+  assert.equal(mismatch.comparison.mismatch_count > 0, true, "verify mismatch ledger");
+
+  const customTargetPath = path.join(temp, "custom-target.json");
+  await writeFile(customTargetPath, JSON.stringify({
+    base: "android_mid_a55",
+    id: "custom:cli-regression-a55",
+    label: "CLI regression A55",
+    evidence_class: "USER_DECLARED",
+    evidence_note: "CLI regression fixture",
+    overrides: { l2_bytes: 262144, compute_utilization_factor: 0.25 },
+  }), "utf8");
+  const customTarget = JSON.parse(run(["audit", cases[0][0], "--target-profile", customTargetPath, "--compact"]).stdout);
+  assert.equal(customTarget.target_profile.id, "custom:cli-regression-a55", "custom target resolved identity");
+  assert.match(customTarget.target_profile.profile_sha256, /^[a-f0-9]{64}$/, "custom target resolved SHA-256");
+  assert.match(customTarget.cli_target_profile_input.source_sha256, /^[a-f0-9]{64}$/, "custom target source file SHA-256");
+  assert.equal(customTarget.cli_target_profile_input.resolved_target_profile_sha256, customTarget.target_profile.profile_sha256,
+    "custom target input evidence binds the resolved Rust profile");
+  const duplicateTargetPath = path.join(temp, "duplicate-target.json");
+  await writeFile(duplicateTargetPath, '{"base":"android_mid_a55","base":"rpi4_a72","id":"custom:duplicate","label":"Duplicate","overrides":{}}', "utf8");
+  const duplicateTarget = run(["audit", cases[0][0], "--target-profile", duplicateTargetPath], false);
+  assert.notEqual(duplicateTarget.status, 0, "duplicate target JSON must fail closed");
+  assert.match(duplicateTarget.stderr, /duplicate JSON key base/);
+  const conflictingTarget = run(["audit", cases[0][0], "--target", "android_mid_a55", "--target-profile", customTargetPath], false);
+  assert.notEqual(conflictingTarget.status, 0, "target id/profile conflict must fail closed");
+  assert.match(conflictingTarget.stderr, /mutually exclusive/);
+
+  const delta = JSON.parse(run(["diff", "web/samples/mobilenet_v1_025_224_float.tflite", cases[0][0], "--compact"]).stdout);
+  assert.equal(delta.schema, "deepbom.deployment_delta.v1.1", "diff uses the canonical deployment-delta schema");
+  assert.equal(delta.target_count, 4, "diff default target denominator");
+  assert.equal(delta.alignment.matched_op_count + delta.alignment.removed_op_count, delta.baseline.operator_count,
+    "diff baseline op conservation");
+  assert.equal(delta.alignment.matched_op_count + delta.alignment.added_op_count, delta.candidate.operator_count,
+    "diff candidate op conservation");
+  assert.equal(delta.target_deltas.every((row) => Math.abs(row.conservation_error_us) <= 1e-8), true,
+    "diff target-ledger conservation");
+
+  const pareto = JSON.parse(run(["explore", cases[0][0], "--compact"]).stdout);
+  assert.equal(pareto.schema, "deepbom.redesign_pareto.v1", "explore uses the canonical Pareto schema");
+  assert.equal(pareto.source_sha256, tfliteAnalysis.model_sha256, "explore source SHA-256 binding");
+  assert.equal(pareto.evaluated_candidate_count,
+    pareto.accepted_candidate_count + pareto.rejected_candidate_count, "explore candidate conservation");
+  assert.equal(pareto.frontier_candidate_count, pareto.candidates.filter((row) => row.pareto_optimal).length,
+    "explore frontier denominator");
+
   const trtConfig = {
     execution_path: "native_tensorrt",
     expected_tensorrt_version: "10.14.1",
@@ -231,7 +307,7 @@ const orphanMemoryBudget = run(["gguf", cases[2][0], "--memory-mib", "1024"], fa
 assert.notEqual(orphanMemoryBudget.status, 0);
 assert.match(orphanMemoryBudget.stderr, /require --context/);
 
-console.log("CLI checks passed (six formats, ONNX/ExecuTorch external-data contracts, GGUF context/memory scenario, TensorRT profile/parser evidence, CycloneDX projection, deterministic TFLite output, fail-closed routing).");
+console.log("CLI checks passed (six formats, strict target profiles, interface verify, deployment diff, redesign explore, external-data contracts, LLM/TensorRT evidence, CycloneDX projection, deterministic output, and fail-closed routing).");
 
 function run(args, expectSuccess = true) {
   const result = spawnSync(process.execPath, ["bin/deepbom.mjs", ...args], {

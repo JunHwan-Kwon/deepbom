@@ -59,6 +59,7 @@ await writeFile(path.join(npmRoot, "package.json"), `${JSON.stringify({
   license: "Apache-2.0",
   homepage: "https://deepbom.org",
   repository: { type: "git", url: "git+https://github.com/JunHwan-Kwon/deepbom.git" },
+  bugs: { url: "https://github.com/JunHwan-Kwon/deepbom/issues" },
   author: "Jun-Hwan Kwon",
   publishConfig: { access: "public" },
   keywords: ["tflite", "onnx", "gguf", "safetensors", "coreml", "tensorrt", "quantization", "on-device", "ml-bom"],

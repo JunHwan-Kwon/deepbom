@@ -442,6 +442,7 @@ scripts/static-test-server.mjs
 scripts/sw-utils.mjs
 scripts/sweep-coreml-mlprogram-corpus.mjs
 scripts/sweep-gguf-architecture-encoding-corpus.mjs
+scripts/sweep-public-cli-corpus.mjs
 scripts/sweep-public-multiformat-corpus.mjs
 scripts/sweep-safetensors-architecture-corpus.mjs
 scripts/sync-huggingface-community-corpus.mjs

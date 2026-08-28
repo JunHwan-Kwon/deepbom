@@ -4,6 +4,23 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Added CLI `verify`, `diff`, and `explore` surfaces backed by the existing
+  interface-contract, deployment-delta, and redesign-Pareto implementations.
+- Added strict, duplicate-key-rejecting custom target-profile files with both
+  source-file and resolved-profile SHA-256 provenance.
+- Aligned public npm/source repository, homepage, and issue-tracker metadata.
+- Added a hash-verified 113-artifact public CLI sweep across ONNX, GGUF,
+  SafeTensors, and Core ML, exercising both bounded human and compact JSON
+  output in fresh processes.
+- Split Core ML ML Program compression validation by source-pinned opset:
+  CoreML6 packed-index LUT and packed sparse-mask contracts now remain distinct
+  from CoreML8 block/vector LUT and UINT1 sparse contracts. Package files
+  outside the selected `.mlpackage` root remain hash-bound as supporting
+  evidence instead of being silently omitted.
+- Reduced the measured public-PR channel-equivalence gate from 446.3 seconds to
+  51.7 seconds by retaining npm format, command, and tamper coverage there while
+  reserving native, Python, Cargo, and dual-WASM execution for the manual
+  release contract.
 - Added exact ONNX symbolic-dimension preservation and runtime I/O symbol
   binding without interpreting arbitrary exporter expressions.
 - Added immutable SafeTensors Dense/Mixtral/Mamba, GGUF architecture/encoding,
