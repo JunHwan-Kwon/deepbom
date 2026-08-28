@@ -1167,6 +1167,11 @@ textarea {
   box-shadow: none;
 }
 
+.lattice-family-tabs button.active strong,
+.lattice-family-tabs button.active small {
+  color: inherit;
+}
+
 .graph-explorer .graph-list-wrap,
 .graph-explorer .tensor-list-wrap {
   border-color: var(--line-strong);
@@ -1850,6 +1855,184 @@ textarea {
   .module-tabs {
     padding-inline: 10px;
   }
+}
+
+/* Quant Lab surfaces inherit the application theme; chart colors remain semantic. */
+.quant-lab-workbench,
+.quant-lab-workbench .perf-panel {
+  color: var(--ink);
+}
+
+.quant-lab-workbench .perf-panel,
+.quant-lab-workbench [class$="-metric"],
+.quant-lab-workbench [class$="-stage"],
+.quant-lab-workbench [class$="-definitions"],
+.quant-lab-workbench [class$="-canvas-panel"] {
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+.quant-lab-workbench [class$="-definition"],
+.quant-lab-workbench [class$="-definitions"] {
+  background: var(--surface-tint);
+}
+
+.quant-lab-workbench [class$="-metric"] span,
+.quant-lab-workbench [class$="-metric"] small,
+.quant-lab-workbench [class$="-section-head"] span,
+.quant-lab-workbench [class$="-definition"] dt,
+.quant-lab-workbench [class$="-definitions"] dt,
+.quant-lab-workbench [class$="-legend"],
+.quant-lab-workbench [class$="-message"],
+.quant-lab-workbench [class$="-boundary"],
+.quant-lab-workbench [class$="-proof"],
+.quant-lab-workbench [class$="-control"],
+.quant-lab-workbench [class$="-select-label"],
+.quant-lab-workbench [class$="-select"] > span {
+  color: var(--muted);
+}
+
+.quant-lab-workbench [class$="-metric"] strong,
+.quant-lab-workbench [class$="-section-head"] h4,
+.quant-lab-workbench [class$="-definition"] dd,
+.quant-lab-workbench [class$="-definitions"] dd,
+.quant-lab-workbench [class$="-stage"] strong,
+.quant-lab-workbench table td,
+.quant-lab-workbench table caption {
+  color: var(--ink);
+}
+
+.quant-lab-workbench h4 {
+  color: var(--ink);
+}
+
+.quant-lab-workbench [class$="-unassessed"],
+.quant-lab-workbench [class$="-unassessed"] p {
+  color: var(--muted);
+}
+
+.quant-lab-workbench select,
+.quant-lab-workbench input,
+.quant-lab-workbench [class$="-segments"] button,
+.quant-lab-workbench .abi-propagation-facet {
+  border-color: var(--line-strong);
+  background: var(--surface-elevated);
+  color: var(--ink);
+}
+
+.quant-lab-workbench [class$="-segments"] button:hover,
+.quant-lab-workbench [class$="-segments"] button:focus-visible,
+.quant-lab-workbench .abi-propagation-facet:hover,
+.quant-lab-workbench .abi-propagation-facet:focus-visible {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.quant-lab-workbench [class$="-segments"] button.active,
+.quant-lab-workbench [class$="-segments"] button[aria-selected="true"],
+.quant-lab-workbench .abi-propagation-facet.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: inset 0 -2px var(--accent);
+}
+
+.quant-lab-workbench select:focus-visible,
+.quant-lab-workbench input:focus-visible,
+.quant-lab-workbench button:focus-visible,
+.quant-lab-workbench a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.quant-lab-workbench [class$="-canvas-wrap"],
+.quant-lab-workbench canvas,
+.quant-lab-workbench .consequence-canvas {
+  border-color: var(--line);
+}
+
+.quant-lab-workbench [class$="-tooltip"] {
+  border-color: var(--line-strong);
+  background: var(--viz-panel-strong);
+  color: var(--viz-title);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.quant-lab-workbench [class$="-tooltip"] strong {
+  color: var(--viz-title);
+}
+
+.quant-lab-workbench table th {
+  border-color: var(--line);
+  background: var(--surface-elevated);
+  color: var(--muted);
+}
+
+.quant-lab-workbench table td,
+.quant-lab-workbench table th {
+  border-color: var(--line);
+}
+
+.quant-lab-workbench table button,
+.quant-lab-workbench .abi-propagation-link {
+  color: var(--accent);
+}
+
+.quant-lab-workbench table button.selected,
+.quant-lab-workbench .abi-propagation-link.selected {
+  color: var(--accent-2);
+}
+
+.quant-lab-workbench table code,
+.quant-lab-workbench .abi-propagation-ledger-cell code {
+  color: var(--ink-soft);
+}
+
+.quant-lab-workbench table tbody tr:hover td,
+.quant-lab-workbench table tbody tr.selected td,
+.quant-lab-workbench table tbody tr[data-selected="true"] td {
+  background: var(--surface-hover);
+}
+
+.quant-lab-workbench .table-link,
+.quant-lab-workbench .icon-action,
+.quant-lab-workbench .requant-graph-button,
+.quant-lab-workbench button[class$="-op"],
+.quant-lab-workbench button[class$="-row"],
+.quant-lab-workbench button[class$="-link"],
+.quant-lab-workbench a[class$="-link"],
+.quant-lab-workbench .migration-graph-button,
+.quant-lab-workbench .migration-sources a {
+  color: var(--accent);
+}
+
+.quant-lab-workbench .requant-shift-bar span {
+  color: var(--ink);
+}
+
+.quant-lab-workbench .table-link:hover,
+.quant-lab-workbench button[class$="-op"]:hover,
+.quant-lab-workbench button[class$="-row"]:hover,
+.quant-lab-workbench button[class$="-link"]:hover,
+.quant-lab-workbench a[class$="-link"]:hover {
+  color: var(--accent-2);
+}
+
+.quant-lab-workbench [data-tone="ok"],
+.quant-lab-workbench [data-tone="exact"],
+.quant-lab-workbench [class*="-message"].exact {
+  color: var(--good) !important;
+}
+
+.quant-lab-workbench [data-tone="watch"],
+.quant-lab-workbench [class*="-message"].watch,
+.quant-lab-workbench [class*="-message"].boundary {
+  color: var(--warn) !important;
+}
+
+.quant-lab-workbench [data-tone="risk"],
+.quant-lab-workbench [class*="-message"].risk {
+  color: var(--risk) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
