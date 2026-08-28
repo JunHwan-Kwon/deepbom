@@ -43,6 +43,12 @@ const FORMATS = [
   "scripts/check-format-capability-viewer.mjs",
 ];
 
+const FORMAT_UI = new Set([
+  "scripts/check-format-quant-viewer.mjs",
+  "scripts/check-format-capability-viewer.mjs",
+]);
+const FORMATS_CORE = FORMATS.filter((script) => !FORMAT_UI.has(script));
+
 if (!existsSync("web/protected/deepbom/pkg/deepbom_wasm.js")) {
   console.log("Public source boundary: protected model/rulepack integration check omitted; public CLI and format contracts remain enabled.");
 }
@@ -81,6 +87,7 @@ const RELEASE = [
 
 const TIERS = {
   smoke: SMOKE,
+  "formats-core": FORMATS_CORE,
   formats: FORMATS,
   "format-evidence": FORMAT_EVIDENCE,
   release: [...new Set(RELEASE)],

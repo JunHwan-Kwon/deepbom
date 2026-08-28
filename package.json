@@ -100,6 +100,7 @@
     "check:deploy": "node scripts/check-deploy.mjs",
     "check:smoke": "node scripts/check-tier.mjs smoke",
     "check:formats": "node scripts/check-tier.mjs formats",
+    "check:formats:core": "node scripts/check-tier.mjs formats-core",
     "check:format-evidence": "node scripts/check-tier.mjs format-evidence",
     "check:release": "node scripts/check-tier.mjs release",
     "check:deep": "node scripts/check-all.mjs",

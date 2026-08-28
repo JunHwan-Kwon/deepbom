@@ -99,13 +99,20 @@ expect(publicQualityWorkflow.includes("paths:") && publicQualityWorkflow.include
 for (const snippet of [
   "actions/checkout@v5",
   "actions/setup-node@v6",
-  "actions/setup-python@v6",
+  "timeout-minutes: 10",
+  "DEEPBOM_CHECK_TIMEOUT_MS: 120000",
   "npm run check:public-source",
-  "npx playwright install --with-deps chromium",
+  "npm run check:cli",
+  "npm run check:formats:core",
   "npm run check:public-package-boundary",
-  "npm run check:channels -- --no-build",
-  "npm run check:rust",
 ]) expect(publicQualityWorkflow.includes(snippet), `Public core quality should contain: ${snippet}`);
+for (const forbidden of [
+  "actions/setup-python",
+  "playwright install",
+  "npm run build:channels",
+  "npm run check:channels",
+  "npm run check:rust",
+]) expect(!publicQualityWorkflow.includes(forbidden), `Public pull-request quality must defer expensive release/UI work: ${forbidden}`);
 expect(
   /quality:\s*\r?\n\s+if: vars\.DEEPBOM_ENABLE_CI == 'true'/.test(qualityWorkflow),
   "Full Quality must require explicit repository opt-in before consuming hosted runner minutes.",
@@ -387,23 +394,29 @@ function checkPublicDistributionCiContract() {
   for (const snippet of [
     "actions/checkout@v5",
     "actions/setup-node@v6",
-    "actions/setup-python@v6",
     "node-version: 24.12.0",
+    "timeout-minutes: 10",
+    "DEEPBOM_CHECK_TIMEOUT_MS: 120000",
     "npm ci",
-    "npx playwright install --with-deps chromium",
     "npm audit --audit-level=high",
     "npm run check:public-source",
     "node scripts/verify-public-source-export.mjs .",
     "node scripts/check-git-privacy.mjs",
     "node scripts/check-ci-deploy-contract.mjs",
     "npm run check:cli",
-    "npm run check:formats",
-    "npm run build:channels",
+    "npm run check:formats:core",
     "npm run check:public-package-boundary",
-    "npm run check:channels -- --no-build",
-    "npm run check:rust",
   ]) {
     expect(publicQualityWorkflow.includes(snippet), `Public core quality should contain: ${snippet}`);
+  }
+  for (const forbidden of [
+    "actions/setup-python",
+    "playwright install",
+    "npm run build:channels",
+    "npm run check:channels",
+    "npm run check:rust",
+  ]) {
+    expect(!publicQualityWorkflow.includes(forbidden), `Public pull-request quality must defer expensive release/UI work: ${forbidden}`);
   }
   expect(
     /^on:\s*\r?\n\s+workflow_dispatch:/m.test(channelReleaseWorkflow),
