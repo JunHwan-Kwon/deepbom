@@ -140,10 +140,12 @@ function formatVersionEvidence(analysis, format) {
     const source = evidence.source || {};
     const planCount = Number(analysis.subgraphs || 0);
     const delegateCount = Number(analysis.executorch_program?.delegates?.length || 0);
+    const signatureCount = Number(analysis.executorch_program?.operator_signature_registry?.portable_operator_count || 0);
+    const buildStatus = analysis.executorch_program?.selected_build_binding?.status || "SOURCE_ONLY_SELECTED_BUILD_UNBOUND";
     return {
       value: `${pte ? "ET12 Program" : "FT01 FlatTensor"} v${analysis.version ?? "unknown"}`,
       detail: pte
-        ? `${formatNumber(planCount)} execution plan(s); ${formatNumber(analysis.operator_count || 0)} serialized instruction(s); ${formatNumber(delegateCount)} delegate declaration(s); operator argument direction and nominal MAC semantics remain unbound without the matching operator registry`
+        ? `${formatNumber(planCount)} execution plan(s); ${formatNumber(analysis.operator_count || 0)} serialized instruction(s); ${formatNumber(delegateCount)} delegate declaration(s); matching portable calls are bound to ${formatNumber(signatureCount)} pinned signatures; selected build ${buildStatus}`
         : `${formatNumber(analysis.tensor_count || 0)} named tensor/blob record(s); exact segment ranges and storage conservation assessed; no execution graph is serialized`,
       producerValue: "Not embedded",
       producerDetail: "ExecuTorch ET12/FT01 does not provide a mandatory converter-producer identity field; no producer is inferred from operator or tensor names",

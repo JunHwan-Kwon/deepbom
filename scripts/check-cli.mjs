@@ -9,6 +9,9 @@ import { createTensorRtBuildProfile, TENSORRT_PARSER_OBSERVATION_SCHEMA } from "
 import { canonicalJson } from "../web/lib/report-utils.js";
 import { sha256TextHex } from "../web/lib/sha256-sync.js";
 import { buildInterfaceQuantizationContractLedger } from "../web/lib/quantization-contract-summary.js";
+import { EXECUTORCH_BACKEND_REGISTRY_SOURCE, EXECUTORCH_SELECTED_BUILD_ATTESTATION_SCHEMA } from "../web/lib/executorch-build-binding.js";
+import { TENSORRT_ENGINE_INSPECTOR_EVIDENCE_SCHEMA, tensorRtParserObservationIdentity } from "../web/lib/tensorrt-engine-inspector.js";
+import { decodeFixtureBase64, EXECUTORCH_ADD_PTE_BASE64 } from "./fixtures/executorch-fixtures.mjs";
 
 const cases = [
   ["web/samples/mobilenet_v2_1.0_224_quant.tflite", "tflite"],
@@ -38,6 +41,8 @@ assert.match(run(["--help"]).stdout, /--json\s+Emit the complete formatted (?:an
 assert.match(run(["--help"]).stdout, /deepbom verify <artifact> --contract <json>/, "verify command is discoverable");
 assert.match(run(["--help"]).stdout, /deepbom diff <baseline\.tflite> <candidate\.tflite>/, "diff command is discoverable");
 assert.match(run(["--help"]).stdout, /deepbom explore <artifact\.tflite>/, "explore command is discoverable");
+assert.match(run(["--help"]).stdout, /--executorch-build <json>/, "ExecuTorch selected-build binding is discoverable");
+assert.match(run(["--help"]).stdout, /--tensorrt-engine-inspector <json>/, "TensorRT optimized-engine evidence import is discoverable");
 
 for (const [artifact, expectedFormat] of cases) {
   const result = run(["audit", artifact, "--compact"]);
@@ -117,6 +122,24 @@ try {
   const ptdCycloneDx = JSON.parse(run(["audit", ptdPath, "--format", "cyclonedx", "--compact"]).stdout);
   assert.equal(ptdCycloneDx.bomFormat, "CycloneDX", "ExecuTorch PTD CycloneDX export");
   assert.match(ptdCycloneDx.serialNumber, /^urn:uuid:/, "ExecuTorch PTD CycloneDX serial number");
+
+  const ptePath = path.join(temp, "add.pte");
+  await writeFile(ptePath, decodeFixtureBase64(EXECUTORCH_ADD_PTE_BASE64));
+  const execuTorchBuildPath = path.join(temp, "selected-build.json");
+  await writeFile(execuTorchBuildPath, JSON.stringify(buildExecuTorchAttestation()), "utf8");
+  const buildBoundPte = JSON.parse(run(["audit", ptePath, "--executorch-build", execuTorchBuildPath, "--compact"]).stdout);
+  assert.equal(buildBoundPte.executorch_program.selected_build_binding.status,
+    "SELECTED_BUILD_INVENTORY_SATISFIES_SERIALIZED_IDENTITIES", "ExecuTorch CLI selected-build inventory binding");
+  assert.equal(buildBoundPte.executorch_program.selected_build_binding.selected_build_input.path,
+    "selected-build.json", "ExecuTorch CLI selected-build source identity");
+  assert.equal(buildBoundPte.executorch_program.selected_build_binding.selected_build_input.duplicate_key_validation,
+    "complete", "ExecuTorch CLI selected-build duplicate-key validation");
+  const wrongExecuTorchBuildFormat = run(["audit", cases[1][0], "--executorch-build", execuTorchBuildPath], false);
+  assert.notEqual(wrongExecuTorchBuildFormat.status, 0);
+  assert.match(wrongExecuTorchBuildFormat.stderr, /applies only to an ExecuTorch PTE/);
+  const ptdExecuTorchBuild = run(["audit", ptdPath, "--executorch-build", execuTorchBuildPath], false);
+  assert.notEqual(ptdExecuTorchBuild.status, 0);
+  assert.match(ptdExecuTorchBuild.stderr, /PTD files do not accept|applies only to an ExecuTorch PTE/);
 
   const externalDataPath = path.join(temp, "weights.bin");
   await writeFile(externalDataPath, "external-weight-bytes", "utf8");
@@ -230,7 +253,7 @@ try {
   assert.equal(configured.tensorrt_static_preflight.status, "configuration_valid_parser_observation_required");
   assert.equal(configured.tensorrt_static_preflight.build_profile.profile_sha256, trtProfile.profile_sha256);
   const evidencePath = path.join(temp, "parser.json");
-  await writeFile(evidencePath, JSON.stringify({
+  const parserObservation = {
     schema: TENSORRT_PARSER_OBSERVATION_SCHEMA,
     artifact_sha256: onnxAnalysis.model_sha256,
     build_profile_sha256: trtProfile.profile_sha256,
@@ -254,10 +277,43 @@ try {
     plugins: [],
     subgraphs: [{ subgraph_index: 0, supported: true, sdk_reported_flag: true, node_indices: Array.from({ length: onnxAnalysis.ops.length }, (_, index) => index) }],
     errors: [],
-  }), "utf8");
+  };
+  await writeFile(evidencePath, JSON.stringify(parserObservation), "utf8");
   const observed = JSON.parse(run(["audit", cases[1][0], "--tensorrt-parser-evidence", evidencePath, "--compact"]).stdout);
   assert.equal(observed.tensorrt_static_preflight.status, "parser_observed_all_supported");
   assert.equal(observed.tensorrt_static_preflight.projection.state_counts.CONDITIONALLY_ELIGIBLE, onnxAnalysis.ops.length);
+  const engineInformation = {
+    Layers: [{
+      Name: "conv [ONNX Layer: Conv_0]", LayerType: "Convolution",
+      Inputs: [{ Name: "input", Dimensions: [1, 3, 32, 32], "Format/Datatype": "FP32" }],
+      Outputs: [{ Name: "output", Dimensions: [1, 8, 30, 30], "Format/Datatype": "FP32" }],
+      TacticName: "cli_fixture_tactic",
+    }],
+    Bindings: ["input", "output"],
+  };
+  const inspectorPath = path.join(temp, "engine-inspector.json");
+  await writeFile(inspectorPath, JSON.stringify({
+    schema: TENSORRT_ENGINE_INSPECTOR_EVIDENCE_SCHEMA,
+    artifact_sha256: onnxAnalysis.model_sha256,
+    build_profile_sha256: trtProfile.profile_sha256,
+    parser_observation_sha256: tensorRtParserObservationIdentity(parserObservation),
+    engine: { sha256: "d".repeat(64), byte_length: 4096 },
+    runtime: { tensorrt_version: "10.14.1", cuda_version: "13.0", device_id: 0, device_compute_capability: "8.7", device_identity: "CLI fixture CC 8.7" },
+    build_capture: {
+      evidence_class: "DECLARED_BUILD_CAPTURE", binding_method: "cli_fixture_files",
+      tool_name: "trtexec", tool_binary_sha256: "e".repeat(64), invocation_sha256: "f".repeat(64),
+      collector_source_set_sha256: null, model_input_sha256: onnxAnalysis.model_sha256, serialized_engine_sha256: "d".repeat(64),
+    },
+    inspector: {
+      source: "trtexec_exportLayerInfo", profiling_verbosity: "detailed", schema_generation: "tensorrt_10x",
+      execution_context_bound: false, source_file_sha256: "1".repeat(64), source_file_byte_length: 1024,
+      canonical_json_sha256: sha256TextHex(canonicalJson(engineInformation)), engine_information: engineInformation,
+    },
+  }), "utf8");
+  const engineInspected = JSON.parse(run(["audit", cases[1][0], "--tensorrt-profile", profilePath,
+    "--tensorrt-parser-evidence", evidencePath, "--tensorrt-engine-inspector", inspectorPath, "--compact"]).stdout);
+  assert.equal(engineInspected.tensorrt_static_preflight.status, "engine_inspected_parser_observed_all_supported");
+  assert.equal(engineInspected.tensorrt_static_preflight.engine_inspector_evidence.engine_layer_count, 1);
   const wrongFormatTrt = run(["audit", cases[0][0], "--tensorrt-profile", profilePath], false);
   assert.notEqual(wrongFormatTrt.status, 0);
   assert.match(wrongFormatTrt.stderr, /apply only to ONNX/);
@@ -308,6 +364,54 @@ assert.notEqual(orphanMemoryBudget.status, 0);
 assert.match(orphanMemoryBudget.stderr, /require --context/);
 
 console.log("CLI checks passed (six formats, strict target profiles, interface verify, deployment diff, redesign explore, external-data contracts, LLM/TensorRT evidence, CycloneDX projection, deterministic output, and fail-closed routing).");
+
+function buildExecuTorchAttestation() {
+  const hex = (character) => character.repeat(64);
+  const binaryInventory = [{ path: "bin/executorch_runner", byte_length: 4096, sha256: hex("a") }];
+  const normalized = {
+    schema: EXECUTORCH_SELECTED_BUILD_ATTESTATION_SCHEMA,
+    evidence_class: "REPRODUCIBLE_SELECTED_BUILD_ATTESTATION",
+    source: {
+      repository: "pytorch/executorch",
+      release: "v1.4.1",
+      commit: "e4d02f41f7909e8ed5bf4a14ffc520d733453d9f",
+      pristine_before_build: true,
+      submodule_status_sha256: hex("b"),
+      post_build_diff_sha256: hex("c"),
+      backend_registry_sha256: EXECUTORCH_BACKEND_REGISTRY_SOURCE.registry_sha256,
+    },
+    build: {
+      configuration: "cli-test-release",
+      cmake_options: {
+        EXECUTORCH_BUILD_COREML: false,
+        EXECUTORCH_BUILD_CUDA: false,
+        EXECUTORCH_BUILD_METAL: false,
+        EXECUTORCH_BUILD_MPS: false,
+        EXECUTORCH_BUILD_PORTABLE_OPS: true,
+        EXECUTORCH_BUILD_QNN: false,
+        EXECUTORCH_BUILD_VULKAN: false,
+        EXECUTORCH_BUILD_XNNPACK: false,
+      },
+      linked_backend_ids: [],
+      custom_backend_sources: [],
+      portable_operator_names: ["aten::add.out"],
+      custom_operator_names: [],
+      cmake_cache_sha256: hex("d"),
+      build_stdout_sha256: hex("e"),
+      build_stderr_sha256: hex("f"),
+    },
+    runtime: {
+      platform: "linux",
+      arch: "x86_64",
+      binary_inventory: binaryInventory,
+      binary_inventory_sha256: sha256TextHex(canonicalJson(binaryInventory)),
+      primary_binary_path: "bin/executorch_runner",
+      primary_binary_sha256: hex("a"),
+    },
+    boundary: null,
+  };
+  return { ...normalized, attestation_sha256: sha256TextHex(canonicalJson(normalized)) };
+}
 
 function run(args, expectSuccess = true) {
   const result = spawnSync(process.execPath, ["bin/deepbom.mjs", ...args], {

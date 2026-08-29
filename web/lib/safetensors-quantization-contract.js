@@ -484,6 +484,8 @@ function assessHqqModule(module, config, ownership = {}) {
     storageBits: layout?.storageBits ?? null, codesPerWord: layout?.codes ?? null, packing: layout?.name ?? null,
     tensors: ["W_q", "scale", "zero", "shape", "nbits", "group_size", "axis", "packing", "view_as_float"],
     logicalAxis: effectiveAxis, storedGroupAxis: effectiveAxis, zeroStorage: "floating_affine_zero",
+    payloadModule: { qweight: module.W_q, scales: module.scale, qzeros: module.zero },
+    zeroMode: "finite_affine_value", zeroCodeCapacity: zero ? product(zero) : 0n,
     ownership,
   });
 }
@@ -529,6 +531,8 @@ function assessCompressedTensorsModule(module, config, ownership = {}) {
     storageBits: 32, codesPerWord: null, packing: "dense_cross_element_int32",
     tensors: ["weight_packed", "weight_scale", "weight_shape", "weight_zero_point", "weight_g_idx"],
     logicalAxis: 1, storedGroupAxis: 1, zeroStorage: config.symmetric ? "omitted_symmetric_zero" : "packed_along_output_axis",
+    payloadModule: { qweight: module.weight_packed, scales: module.weight_scale, qzeros: module.weight_zero_point, g_idx: module.weight_g_idx },
+    zeroMode: config.symmetric ? "absent" : "packed_code", zeroCodeCapacity: zeroCardinality,
     symmetric: config.symmetric,
     ownership,
     activationContracts: activations,
@@ -547,6 +551,7 @@ function emptyPackedModule(module, issues, ownership = {}, activations = []) {
 }
 
 function packedModuleResult(module, issues, values) {
+  const quantizationPayloadIntegrity = validateQuantizationPayload(values.payloadModule || {}, values, issues);
   return {
     name: module.name, status: issues.length ? "fail" : "pass", issues,
     input_features: values.input, output_features: values.output,
@@ -564,6 +569,7 @@ function packedModuleResult(module, issues, values) {
     scale_element_count: values.scales.toString(), zero_point_code_capacity: values.zeroes.toString(),
     zero_point_storage_transform: values.zeroStorage,
     packed_tensor_bytes: values.tensors.filter((key) => module[key]).reduce((sum, key) => sum + Number(module[key].byte_length || 0), 0),
+    quantization_payload_integrity: quantizationPayloadIntegrity,
     tensors: Object.fromEntries(values.tensors.filter((key) => module[key]).map((key) => [key, tensorRef(module[key])])),
     ownership: values.ownership || null,
     activation_contracts: values.activationContracts || [],
@@ -694,11 +700,75 @@ function assessGptqModule(module, config) {
   return moduleResult(module, issues, { input, output, groups, groupSize, pack, bits: config.bits, qweight, scales, qzeros, gIdx, zeroStorage: "packed_zero_code_minus_one" });
 }
 
+function payloadIntegrity(tensor) {
+  const numerical = tensor?.numerical_integrity;
+  if (!tensor) return { status: "not_applicable_absent" };
+  if (numerical?.status !== "assessed_full_payload") return { status: "not_assessed_full_payload_unavailable" };
+  return {
+    status: "assessed_full_payload",
+    payload_sha256: numerical.payload_sha256 || null,
+    value_count: numerical.value_count ?? null,
+    finite_value_count: numerical.finite_value_count ?? null,
+    nonfinite_value_count: Number(numerical.nan_value_count || 0) + Number(numerical.positive_infinity_value_count || 0) + Number(numerical.negative_infinity_value_count || 0),
+    minimum_finite: numerical.minimum_finite ?? numerical.minimum_finite_decimal ?? null,
+    maximum_finite: numerical.maximum_finite ?? numerical.maximum_finite_decimal ?? null,
+    distinct_finite_values: numerical.distinct_finite_values ?? null,
+    distinct_value_status: numerical.distinct_value_status || null,
+    semantic: numerical.quantization_metadata_integrity || null,
+  };
+}
+
+function validateQuantizationPayload(module, values, issues) {
+  const result = Object.fromEntries(["qweight", "qzeros", "scales", "g_idx"].filter((role) => module[role])
+    .map((role) => [role, payloadIntegrity(module[role])]));
+  const scale = result.scales;
+  if (scale?.status === "assessed_full_payload") {
+    if (scale.nonfinite_value_count !== 0 || !(Number(scale.minimum_finite) > 0)
+      || (scale.semantic?.role === "scale" && scale.semantic.nonpositive_scale_count !== 0)) {
+      issues.push("scales_payload_must_be_finite_and_positive");
+    }
+  }
+  const groupIndex = result.g_idx;
+  if (groupIndex?.status === "assessed_full_payload") {
+    const minimum = Number(groupIndex.minimum_finite);
+    const maximum = Number(groupIndex.maximum_finite);
+    if (groupIndex.nonfinite_value_count !== 0 || groupIndex.semantic?.integer_value_contract === false
+      || !Number.isSafeInteger(minimum) || minimum < 0 || !Number.isSafeInteger(maximum)
+      || values.groups != null && maximum >= values.groups) issues.push("g_idx_payload_outside_group_domain");
+    if (values.groups != null && Number.isSafeInteger(groupIndex.distinct_finite_values)
+      && groupIndex.distinct_finite_values !== values.groups) issues.push("g_idx_group_cardinality_mismatch");
+  }
+  const zero = result.qzeros;
+  const zeroMode = values.zeroMode || (zero ? "packed_code" : "absent");
+  if (zero?.status === "assessed_full_payload" && zeroMode === "finite_affine_value" && zero.nonfinite_value_count !== 0) {
+    issues.push("zero_payload_must_be_finite");
+  }
+  if (zero?.status === "assessed_full_payload" && zeroMode === "packed_code" && values.bits) {
+    const profile = zero.semantic?.packed_lane_profiles?.find((row) => row.bits === values.bits);
+    const expectedBigInt = values.zeroCodeCapacity ?? (values.qzeros && values.pack ? product(values.qzeros) * BigInt(values.pack) : null);
+    const expected = typeof expectedBigInt === "bigint" && expectedBigInt <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(expectedBigInt) : null;
+    if (!profile || expected == null || profile.lane_count !== expected) issues.push("qzeros_packed_lane_cardinality_mismatch");
+    else zero.selected_packed_lane_profile = profile;
+  }
+  return {
+    schema: "deepbom.safetensors.quantization_payload_integrity.v1",
+    zero_point_payload_mode: zeroMode,
+    status: Object.values(result).some((row) => row.status === "not_assessed_full_payload_unavailable") ? "partial"
+      : issues.some((issue) => /payload|g_idx_group|qzeros_packed/.test(issue)) ? "fail" : "assessed",
+    tensors: result,
+  };
+}
+
 function moduleResult(module, issues, values) {
   const logical = values.input != null && values.output != null ? BigInt(values.input) * BigInt(values.output) : 0n;
   const packed = values.qweight && values.pack ? product(values.qweight) * BigInt(values.pack) : 0n;
   const scales = values.scales ? product(values.scales) : 0n;
   const zeroCapacity = values.qzeros && values.pack ? product(values.qzeros) * BigInt(values.pack) : 0n;
+  const quantizationPayloadIntegrity = validateQuantizationPayload(module, {
+    ...values,
+    zeroMode: module.qzeros ? "packed_code" : "absent",
+    zeroCodeCapacity: zeroCapacity,
+  }, issues);
   return {
     name: module.name,
     status: issues.length ? "fail" : "pass",
@@ -720,6 +790,7 @@ function moduleResult(module, issues, values) {
     zero_point_code_capacity: zeroCapacity.toString(),
     zero_point_storage_transform: values.zeroStorage,
     packed_tensor_bytes: [module.qweight, module.qzeros, module.scales, module.g_idx].filter(Boolean).reduce((sum, row) => sum + Number(row.byte_length || 0), 0),
+    quantization_payload_integrity: quantizationPayloadIntegrity,
     tensors: Object.fromEntries(["qweight", "qzeros", "scales", "g_idx"].filter((key) => module[key]).map((key) => [key, tensorRef(module[key])])),
   };
 }

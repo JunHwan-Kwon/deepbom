@@ -180,7 +180,7 @@ function serializedKey(operator) {
 }
 function nominalMacRule(operator) {
   if (["mm.out", "bmm.out", "addmm.out", "convolution.out"].includes(operator)) return operator.split(".")[0];
-  if (operator === "convolution_backward.out") return "unassessed_convolution_backward";
+  if (operator === "convolution_backward.out") return "convolution_backward";
   return "zero_nominal_tensor_contraction_macs";
 }
 async function sourceText(source, name) {

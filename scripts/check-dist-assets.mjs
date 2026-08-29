@@ -70,7 +70,7 @@ const protectedSelectorNeedles = [
   "L6088-L6112",
   "545f0fd6bab43186819199cf846a1f1cbb5eaa2b1df9b70e5e43431185f2b7f6",
   "F32 GEMM WASM relaxed SIMD",
-  "deepbom.ort_source_compatibility.v1.14",
+  "deepbom.ort_source_compatibility.v1.15",
   "deepbom.ort_ep_portability_frontier.v2",
   "SOURCE_ARTIFACT_CONDITION_DEFINITE_FAIL",
   "23ecda7c40bacc71f5362ec01f994f50eab809324587d3e8a2cac46ff707652c",

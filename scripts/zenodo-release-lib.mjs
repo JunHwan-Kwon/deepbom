@@ -100,15 +100,23 @@ export function repositoryState() {
 export function softwareVersion() {
   const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
   const cargo = readFileSync("Cargo.toml", "utf8");
-  const citation = readFileSync("CITATION.cff", "utf8");
-  const zenodo = JSON.parse(readFileSync(".zenodo.json", "utf8"));
   const cargoVersion = cargo.match(/^version\s*=\s*"([^"]+)"/m)?.[1];
-  const citationVersion = citation.match(/^version:\s*["']?([^\s"']+)/m)?.[1];
-  const versions = new Set([packageJson.version, cargoVersion, citationVersion, zenodo.version]);
+  const versions = new Set([packageJson.version, cargoVersion]);
   if (versions.size !== 1 || versions.has(undefined)) {
-    throw new Error(`Release versions disagree: ${JSON.stringify([...versions])}`);
+    throw new Error(`Current package versions disagree: ${JSON.stringify([...versions])}`);
   }
   return packageJson.version;
+}
+
+export function citationRecordVersion() {
+  const citation = readFileSync("CITATION.cff", "utf8");
+  const zenodo = JSON.parse(readFileSync(".zenodo.json", "utf8"));
+  const citationVersion = citation.match(/^version:\s*["']?([^\s"']+)/m)?.[1];
+  const versions = new Set([citationVersion, zenodo.version]);
+  if (versions.size !== 1 || versions.has(undefined)) {
+    throw new Error(`Published citation-record versions disagree: ${JSON.stringify([...versions])}`);
+  }
+  return citationVersion;
 }
 
 export function analyzerIdentity() {
@@ -333,6 +341,9 @@ export function buildZenodoArchive({
   validationRoot = ".local-validation/supported-formats/latest",
 } = {}) {
   if (!new Set(["software", "validation"]).has(kind)) throw new Error(`Unknown Zenodo package kind: ${kind}`);
+  if (citationRecordVersion() !== softwareVersion()) {
+    throw new Error(`Zenodo metadata is still pinned to published record ${citationRecordVersion()}; prepare and reserve a version-specific DOI for ${softwareVersion()} before building a new archive.`);
+  }
   const state = repositoryState();
   if (state.dirty && !allowDirty) {
     throw new Error(`Final Zenodo package requires a clean worktree. Dirty paths: ${state.dirty_paths.join(", ")}`);

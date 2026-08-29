@@ -34,6 +34,8 @@ import {
   buildTensorRtStaticPreflight,
   TENSORRT_PARSER_OBSERVATION_SCHEMA,
 } from "./tensorrt-static-preflight.js";
+import { TENSORRT_ENGINE_INSPECTOR_EVIDENCE_SCHEMA } from "./tensorrt-engine-inspector.js";
+import { parseStrictJson } from "./strict-json.js";
 
 export function installRuntimeEvidenceController({
   elements,
@@ -79,6 +81,19 @@ export function installRuntimeEvidenceController({
         ? new TextDecoder().decode(bytes)
         : null;
       const jsonValue = jsonText == null ? null : parseJsonForSchema(jsonText);
+      if (jsonValue?.schema === TENSORRT_ENGINE_INSPECTOR_EVIDENCE_SCHEMA) {
+        const existing = analysis.tensorrt_static_preflight;
+        if (!existing?.build_profile) throw new Error("TensorRT engine-inspector evidence requires a bound build profile.");
+        analysis.tensorrt_static_preflight = buildTensorRtStaticPreflight(
+          analysis,
+          existing.build_profile,
+          existing.parser_observation || null,
+          jsonValue,
+        );
+        onChanged();
+        setStatus("TensorRT engine-inspector evidence imported", "ok");
+        return;
+      }
       if (jsonValue?.schema === TENSORRT_PARSER_OBSERVATION_SCHEMA) {
         const buildProfile = jsonValue.build_profile || analysis.tensorrt_static_preflight?.build_profile;
         if (!buildProfile) throw new Error("TensorRT parser evidence requires its exact build_profile object.");
@@ -201,7 +216,7 @@ export function installRuntimeEvidenceController({
 
 function parseJsonForSchema(text) {
   try {
-    return JSON.parse(text);
+    return parseStrictJson(text, "runtime evidence JSON");
   } catch {
     throw new Error("Runtime evidence JSON is invalid.");
   }

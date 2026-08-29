@@ -193,7 +193,7 @@ function assertProtectedOrtImplementationBoundary() {
     "protected/deepbom_wasm/src/ort_rulepack_generated.rs",
   ];
   const patterns = [
-    { label: "ORT compatibility evidence schema", pattern: /deepbom\.ort_source_compatibility\.v1\.14/ },
+    { label: "ORT compatibility evidence schema", pattern: /deepbom\.ort_source_compatibility\.v1\.15/ },
     { label: "ORT EP portability frontier schema", pattern: /deepbom\.ort_ep_portability_frontier\.v2/ },
     { label: "pinned ORT source commit", pattern: /ORT_RULEPACK_SOURCE_COMMIT/ },
     { label: "generated EP rule table", pattern: /ORT_EP_RULES/ },

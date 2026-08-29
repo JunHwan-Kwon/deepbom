@@ -1,6 +1,13 @@
 import { ProtoReader } from "./tflite-runtime-info-adapter.js";
-import { COREML_NEURAL_NETWORK_SOURCE, parseCoreMlNeuralNetwork } from "./coreml-neural-network.js";
-import { COREML_MIL_SOURCE, graphFromCoreMlMilProgram, parseCoreMlMilProgram, refreshCoreMlMilCompressionEvidence } from "./coreml-mil-program.js";
+import {
+  COREML_NEURAL_NETWORK_SOURCE, finalizeCoreMlNeuralNetwork, parseCoreMlNeuralNetwork,
+  parseCoreMlNeuralNetworkLayer, parseCoreMlNeuralNetworkPreprocessing,
+} from "./coreml-neural-network.js";
+import {
+  COREML_MIL_SOURCE, finalizeCoreMlMilProgram, graphFromCoreMlMilProgram,
+  parseCoreMlMilAttributeEntry, parseCoreMlMilFunctionEntry, parseCoreMlMilProgram,
+  refreshCoreMlMilCompressionEvidence,
+} from "./coreml-mil-program.js";
 import { buildCoreMlDeploymentContract } from "./coreml-deployment-contract.js";
 import { coreMlExactLedger, multiplyCoreMlExactIntegers } from "./coreml-exact-integer.js";
 import {
@@ -11,10 +18,9 @@ import {
 const MAX_MODEL_DESCRIPTION_BYTES = 16 * 1024 * 1024;
 const MAX_PROTO_FIELDS = 1_000_000;
 const MAX_FEATURES = 100_000;
-const MAX_NEURAL_NETWORK_PAYLOAD_BYTES = 64 * 1024 * 1024;
-const MAX_ML_PROGRAM_PAYLOAD_BYTES = 64 * 1024 * 1024;
-const MAX_CLASSICAL_PAYLOAD_BYTES = 64 * 1024 * 1024;
 const MAX_PIPELINE_DEPTH = 32;
+const MAX_PIPELINE_MODELS = 4096;
+const RANGE_READ_CHUNK_BYTES = 1024 * 1024;
 
 export const COREML_FORMAT_SOURCE = Object.freeze({
   repository: "apple/coremltools",
@@ -1766,7 +1772,8 @@ function graphFromHeaderPayload(header, inputs, outputs, selectedFunction) {
     || graphFromPipeline(header.pipeline, inputs, outputs, header.is_updatable);
 }
 
-const MAX_COREML_FLEXIBLE_SHAPE_SCENARIOS = 256;
+const MAX_COREML_FLEXIBLE_SHAPE_RETAINED_SCENARIOS = 256;
+const MAX_COREML_FLEXIBLE_SHAPE_EVALUATIONS = 65_536;
 
 function coreMlFlexibleFeatureCases(feature) {
   const flexibility = feature?.constraints?.flexibility;
@@ -1817,22 +1824,49 @@ function buildCoreMlFlexibleInputScenarios(header, inputs, outputs, baselineGrap
     scenarios: [],
   };
   const caseSets = inputs.map(coreMlFlexibleFeatureCases);
-  const requestedScenarioCount = caseSets.reduce((count, rows) => count > Math.floor(MAX_COREML_FLEXIBLE_SHAPE_SCENARIOS / rows.length)
-    ? MAX_COREML_FLEXIBLE_SHAPE_SCENARIOS + 1 : count * rows.length, 1);
-  if (requestedScenarioCount > MAX_COREML_FLEXIBLE_SHAPE_SCENARIOS) return {
+  const requestedScenarioCount = caseSets.reduce((count, rows) => {
+    if (!Number.isSafeInteger(count) || !rows.length || count > Math.floor(Number.MAX_SAFE_INTEGER / rows.length)) return null;
+    return count * rows.length;
+  }, 1);
+  if (requestedScenarioCount == null || requestedScenarioCount > MAX_COREML_FLEXIBLE_SHAPE_EVALUATIONS) return {
     schema: "deepbom.coreml.flexible_input_scenarios.v1",
     status: "not_assessed_scenario_product_exceeds_bound",
     evidence_class: "NOT_ASSESSED",
-    requested_scenario_count_lower_bound: requestedScenarioCount,
-    scenario_limit: MAX_COREML_FLEXIBLE_SHAPE_SCENARIOS,
+    requested_scenario_count: requestedScenarioCount,
+    requested_scenario_count_lower_bound: requestedScenarioCount ?? Number.MAX_SAFE_INTEGER,
+    scenario_evaluation_limit: MAX_COREML_FLEXIBLE_SHAPE_EVALUATIONS,
     scenario_count: 0,
     scenarios: [],
-    reason: "The Cartesian product of serialized input-shape cases exceeds the explicit static-analysis bound; no subset is presented as complete.",
+    reason: "The Cartesian product of serialized input-shape cases exceeds the explicit exhaustive-evaluation bound; no sampled subset is presented as complete.",
   };
-  let combinations = [[]];
-  for (const rows of caseSets) combinations = combinations.flatMap((prefix) => rows.map((row) => [...prefix, row]));
-  const scenarios = combinations.map((combination, scenarioIndex) => {
+  const scenarios = [];
+  const statusCounts = new Map();
+  const envelope = {
+    total_macs_decimal_min: null,
+    total_macs_decimal_max: null,
+    input_logical_payload_bytes_min: null,
+    input_logical_payload_bytes_max: null,
+    output_logical_payload_bytes_min: null,
+    output_logical_payload_bytes_max: null,
+    peak_live_logical_payload_bytes_min: null,
+    peak_live_logical_payload_bytes_max: null,
+  };
+  const updateNumericEnvelope = (name, value) => {
+    if (!Number.isSafeInteger(value) || value < 0) return;
+    const minKey = `${name}_min`;
+    const maxKey = `${name}_max`;
+    envelope[minKey] = envelope[minKey] == null ? value : Math.min(envelope[minKey], value);
+    envelope[maxKey] = envelope[maxKey] == null ? value : Math.max(envelope[maxKey], value);
+  };
+  const updateDecimalEnvelope = (value) => {
+    if (!/^\d+$/.test(String(value ?? ""))) return;
+    const next = BigInt(value);
+    if (envelope.total_macs_decimal_min == null || next < BigInt(envelope.total_macs_decimal_min)) envelope.total_macs_decimal_min = next.toString();
+    if (envelope.total_macs_decimal_max == null || next > BigInt(envelope.total_macs_decimal_max)) envelope.total_macs_decimal_max = next.toString();
+  };
+  const evaluate = (combination, scenarioIndex) => {
     const scenarioInputs = inputs.map((feature, index) => combination[index].feature);
+    let row;
     try {
       const graph = combination.every((row) => row.kind === "default") && baselineGraph
         ? baselineGraph : graphFromNeuralNetwork(header.neural_network, scenarioInputs, outputs);
@@ -1841,7 +1875,7 @@ function buildCoreMlFlexibleInputScenarios(header, inputs, outputs, baselineGrap
       const outputPayload = coreMlKnownBytesForTensorSet(graph.output_tensor_indices || [], graph.tensors || []);
       const complete = graph.mac_assessment?.complete_macs_decimal != null && !inputPayload.unknown.length
         && !outputPayload.unknown.length && ["assessed", "assessed_static_control_flow_peak_envelope"].includes(liveness.status);
-      return {
+      row = {
         scenario_index: scenarioIndex,
         scenario_kind: combination.some((row) => row.kind.startsWith("range_")) ? "range_endpoint"
           : combination.some((row) => row.kind === "enumerated") ? "enumerated" : "default",
@@ -1861,7 +1895,7 @@ function buildCoreMlFlexibleInputScenarios(header, inputs, outputs, baselineGrap
         ],
       };
     } catch (error) {
-      return {
+      row = {
         scenario_index: scenarioIndex,
         scenario_kind: combination.some((row) => row.kind.startsWith("range_")) ? "range_endpoint"
           : combination.some((row) => row.kind === "enumerated") ? "enumerated" : "default",
@@ -1876,7 +1910,28 @@ function buildCoreMlFlexibleInputScenarios(header, inputs, outputs, baselineGrap
         residuals: [String(error?.message || error)],
       };
     }
-  });
+    statusCounts.set(row.status, (statusCounts.get(row.status) || 0) + 1);
+    updateDecimalEnvelope(row.total_macs_decimal);
+    updateNumericEnvelope("input_logical_payload_bytes", row.input_logical_payload_bytes);
+    updateNumericEnvelope("output_logical_payload_bytes", row.output_logical_payload_bytes);
+    updateNumericEnvelope("peak_live_logical_payload_bytes", row.peak_live_logical_payload_bytes);
+    if (scenarios.length < MAX_COREML_FLEXIBLE_SHAPE_RETAINED_SCENARIOS) scenarios.push(row);
+  };
+  const combination = new Array(caseSets.length);
+  let evaluatedScenarioCount = 0;
+  const visit = (depth) => {
+    if (depth === caseSets.length) {
+      evaluate(combination, evaluatedScenarioCount);
+      evaluatedScenarioCount += 1;
+      return;
+    }
+    for (const row of caseSets[depth]) {
+      combination[depth] = row;
+      visit(depth + 1);
+    }
+  };
+  visit(0);
+  if (evaluatedScenarioCount !== requestedScenarioCount) throw new Error("Core ML flexible-shape scenario enumeration did not conserve the serialized Cartesian product");
   const hasUnboundedRange = inputs.some((feature) => {
     const flex = feature.constraints?.flexibility;
     return flex?.kind === "range" && (flex.dimensions?.some((row) => row.upper_bound_unbounded)
@@ -1884,11 +1939,16 @@ function buildCoreMlFlexibleInputScenarios(header, inputs, outputs, baselineGrap
   });
   return {
     schema: "deepbom.coreml.flexible_input_scenarios.v1",
-    status: scenarios.every((row) => row.status === "assessed") && !hasUnboundedRange
+    status: statusCounts.size === 1 && statusCounts.get("assessed") === requestedScenarioCount && !hasUnboundedRange
       ? "assessed_all_serialized_cases" : "partial",
     evidence_class: "OBSERVED/SOURCE_PINNED/DERIVED",
-    scenario_count: scenarios.length,
-    assessed_scenario_count: scenarios.filter((row) => row.status === "assessed").length,
+    scenario_count: requestedScenarioCount,
+    evaluated_scenario_count: evaluatedScenarioCount,
+    retained_scenario_count: scenarios.length,
+    scenario_rows_truncated: scenarios.length < evaluatedScenarioCount,
+    assessed_scenario_count: statusCounts.get("assessed") || 0,
+    scenario_status_counts: [...statusCounts].map(([status, count]) => ({ status, count })),
+    exact_envelope: envelope,
     has_unbounded_range: hasUnboundedRange,
     range_interpretation: "Range endpoint rows are exact evaluations of those endpoint shapes, not a proof that an interior point cannot have a larger cost or payload.",
     scenarios,
@@ -2308,23 +2368,16 @@ function parseTopLevelBytes(bytes, depth = 0) {
       header.model_type_field = field;
       if (LEGACY_NEURAL_NETWORK_FIELDS.has(field)) {
         const payload = reader.bytesField(wire, `CoreML.${header.model_type}`);
-        if (payload.length > MAX_NEURAL_NETWORK_PAYLOAD_BYTES) {
-          header.neural_network_skip_reason = `payload exceeds ${MAX_NEURAL_NETWORK_PAYLOAD_BYTES} byte browser inspection limit`;
-        } else {
-          header.neural_network = parseCoreMlNeuralNetwork(new ProtoReader(payload, `CoreML.${header.model_type}`));
-        }
+        header.neural_network = parseCoreMlNeuralNetwork(new ProtoReader(payload, `CoreML.${header.model_type}`));
       } else if (field === 502) {
         const payload = reader.bytesField(wire, "CoreML.mlProgram");
-        if (payload.length > MAX_ML_PROGRAM_PAYLOAD_BYTES) header.ml_program_skip_reason = `payload exceeds ${MAX_ML_PROGRAM_PAYLOAD_BYTES} byte browser inspection limit`;
-        else header.ml_program = parseCoreMlMilProgram(new ProtoReader(payload, "CoreML.MIL.Program"));
+        header.ml_program = parseCoreMlMilProgram(new ProtoReader(payload, "CoreML.MIL.Program"));
       } else if (COREML_CLASSICAL_FIELDS.has(field)) {
         const payload = reader.bytesField(wire, `CoreML.${header.model_type}`);
-        if (payload.length > MAX_CLASSICAL_PAYLOAD_BYTES) header.classical_model_skip_reason = `payload exceeds ${MAX_CLASSICAL_PAYLOAD_BYTES} byte browser inspection limit`;
-        else header.classical_model = parseCoreMlClassicalModel(field, new ProtoReader(payload, `CoreML.${header.model_type}`));
+        header.classical_model = parseCoreMlClassicalModel(field, new ProtoReader(payload, `CoreML.${header.model_type}`));
       } else if (COREML_PIPELINE_FIELDS.has(field)) {
         const payload = reader.bytesField(wire, `CoreML.${header.model_type}`);
-        if (payload.length > MAX_CLASSICAL_PAYLOAD_BYTES) header.pipeline_skip_reason = `payload exceeds ${MAX_CLASSICAL_PAYLOAD_BYTES} byte browser inspection limit`;
-        else header.pipeline = parseCoreMlPipeline(field, new ProtoReader(payload, `CoreML.${header.model_type}`), parseTopLevelBytes, depth);
+        header.pipeline = parseCoreMlPipeline(field, new ProtoReader(payload, `CoreML.${header.model_type}`), parseTopLevelBytes, depth);
       } else reader.skip(wire);
     } else reader.skip(wire);
   }
@@ -2335,12 +2388,21 @@ function parseTopLevelBytes(bytes, depth = 0) {
 }
 
 class BlobProtoCursor {
-  constructor(file) { this.file = file; this.position = 0; this.cache = new Uint8Array(); this.cacheStart = 0; }
+  constructor(file, start = 0, end = file.size) {
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end < start || end > file.size) {
+      throw new Error("Core ML protobuf range is invalid");
+    }
+    this.file = file;
+    this.position = start;
+    this.end = end;
+    this.cache = new Uint8Array();
+    this.cacheStart = start;
+  }
   async byte() {
-    if (this.position >= this.file.size) throw new Error("Core ML protobuf is truncated");
+    if (this.position >= this.end) throw new Error("Core ML protobuf is truncated");
     if (this.position < this.cacheStart || this.position >= this.cacheStart + this.cache.length) {
       this.cacheStart = this.position;
-      this.cache = new Uint8Array(await this.file.slice(this.position, Math.min(this.file.size, this.position + 64 * 1024)).arrayBuffer());
+      this.cache = new Uint8Array(await this.file.slice(this.position, Math.min(this.end, this.position + 64 * 1024)).arrayBuffer());
     }
     return this.cache[this.position++ - this.cacheStart];
   }
@@ -2357,7 +2419,7 @@ class BlobProtoCursor {
     throw new Error("Core ML protobuf contains an overlong varint");
   }
   async bytes(length) {
-    if (!Number.isSafeInteger(length) || length < 0 || this.position + length > this.file.size) throw new Error("Core ML protobuf field exceeds the file boundary");
+    if (!Number.isSafeInteger(length) || length < 0 || this.position + length > this.end) throw new Error("Core ML protobuf field exceeds the message boundary");
     const bytes = new Uint8Array(await this.file.slice(this.position, this.position + length).arrayBuffer());
     this.position += length;
     return bytes;
@@ -2371,22 +2433,154 @@ class BlobProtoCursor {
     }
     else if (wire === 5) this.position += 4;
     else throw new Error(`Core ML protobuf contains unsupported wire type ${wire}`);
-    if (this.position > this.file.size) throw new Error("Core ML protobuf field exceeds the file boundary");
+    if (this.position > this.end) throw new Error("Core ML protobuf field exceeds the message boundary");
   }
 }
 
-export function parseCoreMlModel(bytes, filename = "model.mlmodel", fileSize = bytes.length) {
-  const header = parseTopLevelBytes(bytes);
-  return analysisFromHeader(header, filename, fileSize);
+async function readBlobMessageRange(cursor, wire, label) {
+  if (wire !== 2) throw new Error(`${label} has an invalid wire type`);
+  const length = await cursor.varint();
+  const start = cursor.position;
+  const end = start + length;
+  if (!Number.isSafeInteger(end) || end > cursor.end) throw new Error(`${label} exceeds the message boundary`);
+  cursor.position = end;
+  return { start, end, length };
 }
 
-export async function readCoreMlModelFile(file) {
-  if (!file?.size) throw new Error("Core ML model file is empty");
-  const cursor = new BlobProtoCursor(file);
+async function readRangeBytes(file, range) {
+  return new Uint8Array(await file.slice(range.start, range.end).arrayBuffer());
+}
+
+async function validateUtf8Range(file, range, label) {
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+  try {
+    for (let start = range.start; start < range.end; start += RANGE_READ_CHUNK_BYTES) {
+      const end = Math.min(range.end, start + RANGE_READ_CHUNK_BYTES);
+      decoder.decode(new Uint8Array(await file.slice(start, end).arrayBuffer()), { stream: end < range.end });
+    }
+    decoder.decode();
+  } catch { throw new Error(`${label} is not valid UTF-8`); }
+}
+
+async function decodeUtf8Range(file, range, label) {
+  if (range.length > MAX_MODEL_DESCRIPTION_BYTES) throw new Error(`${label} exceeds the bounded text limit`);
+  const bytes = await readRangeBytes(file, range);
+  try { return new TextDecoder("utf-8", { fatal: true }).decode(bytes); }
+  catch { throw new Error(`${label} is not valid UTF-8`); }
+}
+
+async function parseCoreMlNeuralNetworkRange(file, range, label) {
+  const cursor = new BlobProtoCursor(file, range.start, range.end);
+  const state = { layers: [], preprocessing: [], array_input_shape_mapping: 0, image_input_shape_mapping: 0 };
+  const singular = new Set();
+  let fields = 0;
+  while (cursor.position < cursor.end) {
+    if (++fields > MAX_PROTO_FIELDS) throw new Error("Core ML neural network contains too many protobuf fields");
+    const key = await cursor.varint();
+    const field = Math.floor(key / 8);
+    const wire = key % 8;
+    if (field <= 0) throw new Error("Core ML neural network contains an invalid protobuf field number");
+    if (field === 1 || field === 2) {
+      const recordLabel = field === 1 ? "CoreML.NeuralNetworkLayer" : "CoreML.NeuralNetworkPreprocessing";
+      const record = await readBlobMessageRange(cursor, wire, recordLabel);
+      const reader = new ProtoReader(await readRangeBytes(file, record), recordLabel);
+      if (field === 1) state.layers.push(parseCoreMlNeuralNetworkLayer(reader, state.layers.length));
+      else state.preprocessing.push(parseCoreMlNeuralNetworkPreprocessing(reader));
+    } else if (field === 5 || field === 6) {
+      if (wire !== 0) throw new Error(`${label} shape mapping has an invalid wire type`);
+      if (singular.has(field)) throw new Error(`${label} repeats shape mapping field ${field}`);
+      singular.add(field);
+      const value = await cursor.varint();
+      if (field === 5) state.array_input_shape_mapping = value;
+      else state.image_input_shape_mapping = value;
+    } else await cursor.skip(wire);
+  }
+  return finalizeCoreMlNeuralNetwork(state);
+}
+
+async function parseCoreMlMilProgramRange(file, range) {
+  const cursor = new BlobProtoCursor(file, range.start, range.end);
+  const result = { version: null, functions: {}, attributes: {}, source_basis: COREML_MIL_SOURCE };
+  const singular = new Set();
+  let fields = 0;
+  while (cursor.position < cursor.end) {
+    if (++fields > MAX_PROTO_FIELDS) throw new Error("Core ML MIL Program contains too many protobuf fields");
+    const key = await cursor.varint();
+    const field = Math.floor(key / 8);
+    const wire = key % 8;
+    if (field <= 0) throw new Error("Core ML MIL Program contains an invalid protobuf field number");
+    if (field === 1) {
+      if (wire !== 0 || singular.has(1)) throw new Error("Core ML MIL Program version is repeated or has an invalid wire type");
+      singular.add(1);
+      result.version = await cursor.varint();
+    } else if (field === 2 || field === 4) {
+      const label = field === 2 ? "MIL.Program.functions" : "MIL.Program.attributes";
+      const entryRange = await readBlobMessageRange(cursor, wire, label);
+      const [name, value] = field === 2
+        ? parseCoreMlMilFunctionEntry(new ProtoReader(await readRangeBytes(file, entryRange), label))
+        : parseCoreMlMilAttributeEntry(new ProtoReader(await readRangeBytes(file, entryRange), label));
+      const target = field === 2 ? result.functions : result.attributes;
+      if (Object.hasOwn(target, name)) throw new Error(`Core ML MIL program repeats ${field === 2 ? "function" : "attribute"} ${name}`);
+      target[name] = value;
+    } else if (field === 3) {
+      if (singular.has(3)) throw new Error("Core ML MIL Program repeats docString");
+      singular.add(3);
+      await validateUtf8Range(file, await readBlobMessageRange(cursor, wire, "MIL.Program.docString"), "MIL.Program.docString");
+    } else await cursor.skip(wire);
+  }
+  return finalizeCoreMlMilProgram(result);
+}
+
+async function parseCoreMlPipelineBodyRange(file, range, depth) {
+  const cursor = new BlobProtoCursor(file, range.start, range.end);
+  const models = [];
+  const names = [];
+  let fields = 0;
+  while (cursor.position < cursor.end) {
+    if (++fields > MAX_PROTO_FIELDS) throw new Error("Core ML Pipeline contains too many protobuf fields");
+    const key = await cursor.varint();
+    const field = Math.floor(key / 8);
+    const wire = key % 8;
+    if (field <= 0) throw new Error("Core ML Pipeline contains an invalid protobuf field number");
+    if (field === 1) {
+      if (models.length >= MAX_PIPELINE_MODELS) throw new Error(`Core ML pipeline exceeds ${MAX_PIPELINE_MODELS} nested models`);
+      const modelRange = await readBlobMessageRange(cursor, wire, "CoreML.Pipeline.models");
+      models.push(await parseCoreMlHeaderRange(file, modelRange, depth + 1));
+    } else if (field === 2) {
+      if (names.length >= MAX_PIPELINE_MODELS) throw new Error(`Core ML pipeline names exceed ${MAX_PIPELINE_MODELS} entries`);
+      names.push(await decodeUtf8Range(file, await readBlobMessageRange(cursor, wire, "CoreML.Pipeline.names"), "CoreML.Pipeline.names"));
+    } else await cursor.skip(wire);
+  }
+  if (!models.length) throw new Error("Core ML pipeline must contain at least one model");
+  if (names.length && names.length !== models.length) throw new Error("Core ML pipeline model-name count does not match model count");
+  if (new Set(names).size !== names.length) throw new Error("Core ML pipeline model names are not unique");
+  return { schema: "deepbom.coreml.pipeline.v1", models, names, source_validation: "pinned_PipelineValidator" };
+}
+
+async function parseCoreMlPipelineRange(file, range, field, depth) {
+  if (field === 202) return parseCoreMlPipelineBodyRange(file, range, depth);
+  const cursor = new BlobProtoCursor(file, range.start, range.end);
+  let pipeline = null;
+  while (cursor.position < cursor.end) {
+    const key = await cursor.varint();
+    const nestedField = Math.floor(key / 8);
+    const wire = key % 8;
+    if (nestedField === 1) {
+      if (pipeline) throw new Error("Core ML pipeline classifier/regressor repeats Pipeline");
+      pipeline = await parseCoreMlPipelineBodyRange(file, await readBlobMessageRange(cursor, wire, "CoreML.Pipeline"), depth);
+    } else await cursor.skip(wire);
+  }
+  if (!pipeline) throw new Error("Core ML pipeline classifier/regressor is missing Pipeline");
+  return pipeline;
+}
+
+async function parseCoreMlHeaderRange(file, range, depth = 0) {
+  if (depth > MAX_PIPELINE_DEPTH) throw new Error(`Core ML pipeline nesting exceeds ${MAX_PIPELINE_DEPTH} levels`);
+  const cursor = new BlobProtoCursor(file, range.start, range.end);
   const header = { specification_version: null, is_updatable: false, model_type: null, model_type_field: null, description: null, neural_network: null, ml_program: null, classical_model: null, pipeline: null };
   const seen = new Set();
   let fields = 0;
-  while (cursor.position < file.size) {
+  while (cursor.position < cursor.end) {
     if (++fields > MAX_PROTO_FIELDS) throw new Error("Core ML model contains too many protobuf fields");
     const key = await cursor.varint();
     const field = Math.floor(key / 8);
@@ -2400,55 +2594,42 @@ export async function readCoreMlModelFile(file) {
       if (wire !== 0) throw new Error("Core ML specificationVersion has an invalid wire type");
       header.specification_version = await cursor.varint();
     } else if (field === 2) {
-      if (wire !== 2) throw new Error("Core ML description has an invalid wire type");
-      const length = await cursor.varint();
-      if (length > MAX_MODEL_DESCRIPTION_BYTES) throw new Error("Core ML model description exceeds the bounded parser limit");
-      header.description = parseDescription(await cursor.bytes(length));
+      const descriptionRange = await readBlobMessageRange(cursor, wire, "Core ML description");
+      if (descriptionRange.length > MAX_MODEL_DESCRIPTION_BYTES) throw new Error("Core ML model description exceeds the bounded parser limit");
+      header.description = parseDescription(await readRangeBytes(file, descriptionRange));
     } else if (field === 10) {
       if (wire !== 0) throw new Error("Core ML isUpdatable has an invalid wire type");
       header.is_updatable = (await cursor.varint()) !== 0;
-    }
-    else if (MODEL_TYPES[field]) {
+    } else if (MODEL_TYPES[field]) {
       if (wire !== 2) throw new Error("Core ML model type has an invalid wire type");
       if (header.model_type_field != null) throw new Error("Core ML model contains multiple model types");
       header.model_type = MODEL_TYPES[field];
       header.model_type_field = field;
+      const payloadRange = await readBlobMessageRange(cursor, wire, `CoreML.${header.model_type}`);
       if (LEGACY_NEURAL_NETWORK_FIELDS.has(field)) {
-        const length = await cursor.varint();
-        if (length > MAX_NEURAL_NETWORK_PAYLOAD_BYTES) {
-          cursor.position += length;
-          if (cursor.position > file.size) throw new Error("Core ML neural-network payload exceeds the file boundary");
-          header.neural_network_skip_reason = `payload exceeds ${MAX_NEURAL_NETWORK_PAYLOAD_BYTES} byte browser inspection limit`;
-        } else {
-          header.neural_network = parseCoreMlNeuralNetwork(new ProtoReader(await cursor.bytes(length), `CoreML.${header.model_type}`));
-        }
+        header.neural_network = await parseCoreMlNeuralNetworkRange(file, payloadRange, `CoreML.${header.model_type}`);
       } else if (field === 502) {
-        const length = await cursor.varint();
-        if (length > MAX_ML_PROGRAM_PAYLOAD_BYTES) {
-          cursor.position += length;
-          if (cursor.position > file.size) throw new Error("Core ML ML Program payload exceeds the file boundary");
-          header.ml_program_skip_reason = `payload exceeds ${MAX_ML_PROGRAM_PAYLOAD_BYTES} byte browser inspection limit`;
-        } else header.ml_program = parseCoreMlMilProgram(new ProtoReader(await cursor.bytes(length), "CoreML.MIL.Program"));
+        header.ml_program = await parseCoreMlMilProgramRange(file, payloadRange);
       } else if (COREML_CLASSICAL_FIELDS.has(field)) {
-        const length = await cursor.varint();
-        if (length > MAX_CLASSICAL_PAYLOAD_BYTES) {
-          cursor.position += length;
-          if (cursor.position > file.size) throw new Error("Core ML classical-model payload exceeds the file boundary");
-          header.classical_model_skip_reason = `payload exceeds ${MAX_CLASSICAL_PAYLOAD_BYTES} byte browser inspection limit`;
-        } else header.classical_model = parseCoreMlClassicalModel(field, new ProtoReader(await cursor.bytes(length), `CoreML.${header.model_type}`));
+        header.classical_model = parseCoreMlClassicalModel(field, new ProtoReader(await readRangeBytes(file, payloadRange), `CoreML.${header.model_type}`));
       } else if (COREML_PIPELINE_FIELDS.has(field)) {
-        const length = await cursor.varint();
-        if (length > MAX_CLASSICAL_PAYLOAD_BYTES) {
-          cursor.position += length;
-          if (cursor.position > file.size) throw new Error("Core ML pipeline payload exceeds the file boundary");
-          header.pipeline_skip_reason = `payload exceeds ${MAX_CLASSICAL_PAYLOAD_BYTES} byte browser inspection limit`;
-        } else {
-          const payload = await cursor.bytes(length);
-          header.pipeline = parseCoreMlPipeline(field, new ProtoReader(payload, `CoreML.${header.model_type}`), parseTopLevelBytes, 0);
-        }
-      } else await cursor.skip(wire);
+        header.pipeline = await parseCoreMlPipelineRange(file, payloadRange, field, depth);
+      }
     } else await cursor.skip(wire);
   }
   if (header.specification_version == null || !header.description || !header.model_type) throw new Error("Core ML model is missing required identity, description, or type fields");
-  return { analysis: analysisFromHeader(header, file.name, file.size), retainedBytes: new Uint8Array(), payloadLoaded: false };
+  return header;
+}
+
+export function parseCoreMlModel(bytes, filename = "model.mlmodel", fileSize = bytes.length) {
+  const header = parseTopLevelBytes(bytes);
+  header.payload_read_strategy = "in_memory_source_bytes";
+  return analysisFromHeader(header, filename, fileSize);
+}
+
+export async function readCoreMlModelFile(file) {
+  if (!file?.size) throw new Error("Core ML model file is empty");
+  const header = await parseCoreMlHeaderRange(file, { start: 0, end: file.size, length: file.size });
+  header.payload_read_strategy = "range_streamed_top_level_records";
+  return { analysis: analysisFromHeader(header, file.name, file.size), retainedBytes: new Uint8Array(), payloadLoaded: false, payloadScanned: true };
 }

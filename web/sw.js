@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v526";
+const CACHE_NAME = "tflite-wasm-static-audit-v528";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -220,9 +220,12 @@ const APP_ASSETS = [
   "./lib/execution-placement-view.js",
   "./lib/backend-placement-projection.js",
   "./lib/tensorrt-source-metadata.js",
+  "./lib/tensorrt-engine-inspector.js",
+  "./lib/tensorrt-cyclonedx-properties.js",
   "./lib/tensorrt-static-preflight.js",
   "./lib/runtime-backend-evidence-ledger.js",
   "./lib/execution-placement-evidence.js",
+  "./lib/executorch-build-binding.js",
   "./lib/format-workflow-ui.js",
   "./lib/privacy-ui.js",
   "./lib/modal-accessibility.js",
@@ -266,11 +269,13 @@ const APP_ASSETS = [
   "./lib/runtime-profile-modal.js",
   "./lib/tflite-runtime-info-adapter.js",
   "./lib/tflite-profile-info-adapter.js",
+  "./lib/tflite-build-configuration-binding.js",
   "./lib/tflite-delegate-compatibility.js",
   "./lib/tflite-delegate-rulepack-metadata.js",
   "./lib/service-worker.js",
   "./lib/status.js",
   "./lib/storage.js",
+  "./lib/strict-json.js",
   "./lib/telemetry.js",
   "./lib/tflite-benchmark.js",
   "./lib/visual-export.js",

@@ -47,12 +47,13 @@ export function safeTensorsQuantizationMarkdown(analysis) {
     issueRows.length ? markdownTable(["Scope", "Issue", "Binding"], issueRows) : "",
     modules.length ? "### Complete Packed-module Ledger" : "",
     modules.length ? markdownTable(
-      ["Module", "Status", "Bits", "Input / output", "Groups / size", "Logical / packed codes", "Scale / zero capacity", "Selection", "Issues"],
+      ["Module", "Status", "Bits", "Input / output", "Groups / size", "Logical / packed codes", "Scale / zero capacity", "Payload integrity", "Selection", "Issues"],
       modules.map((row) => [
         code(row.name), row.status, row.bits ?? "not derived", `${formatNumber(row.input_features || 0)} / ${formatNumber(row.output_features || 0)}`,
         `${formatNumber(row.group_count || 0)} / ${formatNumber(row.group_size || 0)}`,
         `${exactInteger(row.logical_weight_element_count)} / ${exactInteger(row.packed_weight_code_capacity)}`,
         `${exactInteger(row.scale_element_count)} / ${exactInteger(row.zero_point_code_capacity)}`,
+        payloadIntegritySummary(row.quantization_payload_integrity),
         row.ownership?.target_precedence_match || row.ownership?.tag || "global",
         (row.issues || []).join(", ") || "none",
       ]),
@@ -77,4 +78,13 @@ function exactInteger(value) {
 
 function normalized(value) {
   return String(value || "not assessed").replaceAll("_", " ");
+}
+
+function payloadIntegritySummary(payload) {
+  if (!payload) return "not emitted";
+  const roles = Object.entries(payload.tensors || {}).map(([role, row]) => {
+    const digest = row?.payload_sha256 ? ` SHA-256 ${code(row.payload_sha256)}` : "";
+    return `${role}: ${normalized(row?.status)}${digest}`;
+  });
+  return `${normalized(payload.status)}${roles.length ? `; ${roles.join("; ")}` : ""}`;
 }

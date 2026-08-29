@@ -1,7 +1,7 @@
 # DEEPBOM CLI
 
-Local deployment-artifact analysis for TFLite, ONNX, GGUF, SafeTensors, and
-Core ML.
+Local deployment-artifact analysis for TFLite, ONNX, GGUF, SafeTensors, Core ML,
+and ExecuTorch.
 
 ```console
 npx deepbom audit model.onnx --format cyclonedx
@@ -11,6 +11,7 @@ npx deepbom audit safetensors-repository/ --compact
 npx deepbom verify model.tflite --contract production-interface.json
 npx deepbom diff baseline.tflite candidate.tflite
 npx deepbom explore model.tflite --target-profile target-profile.json
+npx deepbom audit model.pte --executorch-build deepbom.executorch-build.json --compact
 ```
 
 The default output is a bounded human-readable summary. Use `--json` or
@@ -27,6 +28,9 @@ network. TensorRT parser observations and build profiles can be imported with
 
 ONNX external data next to the model is discovered only from safe serialized
 references. Use `--external-data-dir` to bind a different explicit root.
+ExecuTorch PTE audits use the same option for PTD data; `--executorch-build`
+binds a duplicate-key-checked selected-build and binary inventory without
+promoting it to observed execution.
 Core ML packages and sharded SafeTensors repositories are hashed as canonical
 multi-file artifact sets rather than collapsed to one unqualified file hash.
 

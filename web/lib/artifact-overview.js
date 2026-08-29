@@ -555,7 +555,7 @@ function metadataPanel(analysis) {
     const program = analysis.executorch_program || {};
     const flatTensor = analysis.executorch_flat_tensor || {};
     const pte = analysis.executorch_container === "pte";
-    const node = panel(pte ? "ExecuTorch Program" : "ExecuTorch FlatTensor", pte ? "ET12 execution-plan, delegate, segment, and AOT memory identity." : "FT01 named external tensor/blob identity and segment conservation.", "metadata-signatures");
+    const node = panel(pte ? "ExecuTorch Program" : "ExecuTorch FlatTensor", pte ? "ET12 execution-plan, source/backend, selected-build, delegate-payload, segment, and AOT memory identity." : "FT01 named external tensor/blob identity and segment conservation.", "metadata-signatures");
     panelStatus(node, pte ? `${formatNumber(analysis.subgraphs || 0)} plans / ${formatNumber(analysis.operator_count || 0)} instructions` : `${formatNumber(analysis.tensor_count || 0)} named entries`, "OBSERVED");
     const ledger = element("dl", "artifact-metadata-ledger");
     const rows = pte ? [
@@ -564,6 +564,8 @@ function metadataPanel(analysis) {
       ["Execution plans", formatNumber(analysis.subgraphs || 0)],
       ["Kernel / delegate calls", `${formatNumber(program.kernel_instruction_count || 0)} / ${formatNumber(program.delegate_instruction_count || 0)}`],
       ["Backend delegates", (program.delegates || []).map((item) => item.backend_id).join(", ") || "none serialized"],
+      ["Processed payloads", `${formatNumber(program.processed_backend_payloads?.length || 0)} hashed / ${formatNumber((program.processed_backend_payloads || []).filter((row) => row.structural_status === "OBSERVED_BOUNDED_FLATBUFFER_ROOT_ENVELOPE").length)} public-schema root envelopes`],
+      ["Selected build", program.selected_build_binding?.status || "not assessed"],
       ["Appended segments", `${formatNumber(program.segments?.length || 0)} / ${analysis.size_breakdown?.appended_segment_bytes_decimal || "0"} B`],
       ["Planned non-constant memory", `${analysis.tensor_liveness?.planned_non_const_memory_decimal || "0"} B`],
       ["External PTD binding", program.external_tensor_data?.status || "not applicable"],

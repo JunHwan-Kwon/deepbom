@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.standardization_evidence.v1",
-  "snapshot_id": "standardization-6e50cb53b9d26cb2",
+  "snapshot_id": "standardization-ff90fd416d331ba7",
   "hash_contract": {
     "algorithm": "SHA-256",
     "canonicalization": "RFC8785-JCS",
@@ -1307,9 +1307,9 @@
     {
       "id": "ortRulepack",
       "path": "protected/deepbom_wasm/src/ort_rulepack_generated.rs",
-      "sha256": "04aeab43b79343ba4b672c42623e06aca2e89416da655abb1724aaed0df0ee32",
-      "byte_length": 1143645
+      "sha256": "5c6437c7630dd3b775e108d44c0881ed473c8a173c30037ee6b6f91593dffc51",
+      "byte_length": 1164077
     }
   ],
-  "ledger_sha256": "9af774e70882f7443887b3ab97bb39b8fd9eebd39b97c9c683b32ed680041173"
+  "ledger_sha256": "f8974157baca9f2537e5075efc8513988bdd86532fa537860a785e674dac708c"
 }

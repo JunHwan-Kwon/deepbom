@@ -4,6 +4,10 @@ import {
   EXECUTORCH_OPERATOR_SIGNATURE_SOURCE,
   EXECUTORCH_PORTABLE_OPERATOR_SIGNATURES,
 } from "./lib/executorch-operator-signatures.generated.js";
+import {
+  assessExecuTorchProcessedPayload,
+  buildExecuTorchSelectedBuildBinding,
+} from "./lib/executorch-build-binding.js";
 
 export const EXECUTORCH_SCHEMA_SOURCE = Object.freeze({
   repository: "pytorch/executorch",
@@ -17,6 +21,11 @@ export const EXECUTORCH_SCHEMA_SOURCE = Object.freeze({
   flat_tensor_schema_sha256: "c010f3f7a5afdb1118d3690248c399fc5b39577d6b3e17b3e436d7e199271db6",
   extended_header_path: "schema/extended_header.cpp",
   extended_header_sha256: "fee4a644efb026c8cf72847ad34ed4cce37fb7ac207b9e26c77059941855ba0a",
+  schema_version_path: "exir/version.py",
+  schema_version_sha256: "d1853272c0ed0cf026ecec49f2ad6932d924cbca7b03a46d2ed16e73227a2047",
+  runtime_loader_path: "runtime/executor/program.cpp",
+  runtime_loader_sha256: "d38be8eeec0fac0cea8f25d61820bc6f6d2bac4f07a89f3cb9ce175649260ca9",
+  exporter_schema_version: 0,
 });
 
 const LIMITS = Object.freeze({
@@ -66,8 +75,8 @@ function analyzeProgram(bytes, filename, options) {
     return { index, byte_length: storage?.length || 0 };
   });
   const delegateInlineData = reader.tableVector(root, 3, "Program.backend_delegate_data").map((table, index) => {
-    const data = reader.vector(table, 0, 1, `Program.backend_delegate_data[${index}].data`);
-    return { index, byte_length: data?.length || 0 };
+    const data = reader.byteVector(table, 0, `Program.backend_delegate_data[${index}].data`);
+    return { index, byte_length: data.length, bytes: data };
   });
   const constantSegment = parseSubsegment(reader, reader.tableField(root, 5, "Program.constant_segment"), "Program.constant_segment", segments);
   const mutableSegments = reader.tableVector(root, 6, "Program.mutable_data_segments")
@@ -86,6 +95,48 @@ function analyzeProgram(bytes, filename, options) {
     constantBuffers, delegateInlineData, constantSegment, mutableSegments, segments,
   }));
   assertUnique(state.plans.map((plan) => plan.name), "ExecutionPlan name");
+
+  const processedPayloadEvidence = state.delegates.map((delegate) => {
+    const payload = materializeDelegatePayload(delegate, delegateInlineData, segments, bytes);
+    return {
+      plan_index: delegate.plan_index,
+      delegate_index: delegate.index,
+      processed_location: delegate.processed_location,
+      processed_index: delegate.processed_index,
+      ...assessExecuTorchProcessedPayload(delegate.backend_id, payload),
+    };
+  });
+  for (const row of processedPayloadEvidence) {
+    if (row.structural_status === "CONTRADICTION_SOURCE_DECLARED_FLATBUFFER_ENVELOPE_INVALID") {
+      state.issues.push({
+        code: "EXECUTORCH_PROCESSED_BACKEND_PAYLOAD_CONTRADICTION",
+        plan_index: row.plan_index,
+        delegate_index: row.delegate_index,
+        backend_id: row.backend_id,
+        reason: row.structural_error,
+      });
+    }
+  }
+  const selectedBuildBinding = buildExecuTorchSelectedBuildBinding(
+    state.delegates,
+    state.ops,
+    options.selectedBuildAttestation || null,
+    options.selectedBuildInput || null,
+  );
+  if (selectedBuildBinding.status === "CONTRADICTION_SELECTED_BUILD_CANNOT_SATISFY_SERIALIZED_PROGRAM") {
+    state.issues.push({
+      code: "EXECUTORCH_SELECTED_BUILD_BINDING_CONTRADICTION",
+      delegate_contradiction_count: selectedBuildBinding.delegate_contradiction_count,
+      kernel_contradiction_count: selectedBuildBinding.kernel_contradiction_count,
+    });
+  }
+  if (version !== EXECUTORCH_SCHEMA_SOURCE.exporter_schema_version) {
+    state.issues.push({
+      code: "EXECUTORCH_SCHEMA_VERSION_PIN_CONTRADICTION",
+      observed_schema_version: version,
+      pinned_exporter_schema_version: EXECUTORCH_SCHEMA_SOURCE.exporter_schema_version,
+    });
+  }
 
   const externalTensors = state.tensors.filter((tensor) => tensor.external_data_name);
   const externalResolution = resolveExternalTensorData(externalTensors, options.externalDataFiles || []);
@@ -216,6 +267,8 @@ function analyzeProgram(bytes, filename, options) {
       extended_header: extendedHeader,
       plans: state.plans,
       delegates: state.delegates,
+      processed_backend_payloads: processedPayloadEvidence,
+      selected_build_binding: selectedBuildBinding,
       kernel_instruction_count: kernelInstructions,
       delegate_instruction_count: delegatedInstructions,
       segments,
@@ -227,12 +280,16 @@ function analyzeProgram(bytes, filename, options) {
       graph_boundary: "Instruction order and EValue identity are serialized. Portable KernelCall direction is reconstructed only when the serialized operator and argument vector match the pinned source registry. DelegateCall internals and unmatched/custom kernel semantics remain unbound and are not guessed.",
     },
     runtime_compat: {
-      min_runtime_version: "",
-      derived_min_runtime_version: "",
-      effective_min_runtime_version: "",
+      min_runtime_version: null,
+      derived_min_runtime_version: null,
+      effective_min_runtime_version: null,
+      min_runtime_version_status: "NOT_DERIVABLE_SCHEMA_VERSION_NOT_RELEASE_MONOTONIC",
+      schema_version_status: version === EXECUTORCH_SCHEMA_SOURCE.exporter_schema_version
+        ? "MATCHES_PINNED_EXPORTER_SCHEMA_VERSION"
+        : "CONTRADICTION_PINNED_EXPORTER_SCHEMA_VERSION_MISMATCH",
       max_op_version: 0,
       version_driving_ops: [`ET12 schema version ${version}`],
-      runtime_version_basis: `ExecuTorch schema pinned to ${EXECUTORCH_SCHEMA_SOURCE.release} @ ${EXECUTORCH_SCHEMA_SOURCE.commit}. Program version is observed but no version-to-runtime-floor matrix is asserted.`,
+      runtime_version_basis: `ExecuTorch schema and loader are pinned to ${EXECUTORCH_SCHEMA_SOURCE.release} @ ${EXECUTORCH_SCHEMA_SOURCE.commit}. Program schema version ${version} is observed; the pinned source does not expose a monotonic schema-version-to-minimum-release mapping, so no runtime floor is emitted.`,
       detail: "Serialized delegate IDs and compile specs are observed; backend availability and execution require the matching ExecuTorch runtime build.",
     },
     executorch_sections_suppressed: [
@@ -624,7 +681,6 @@ function signatureConflict(base, signature, context, reason, detail) {
 function assessKernelMac(signature, argumentRefs, values, tensors) {
   const rule = signature.nominal_mac_rule;
   if (rule === "zero_nominal_tensor_contraction_macs") return exactMac(0n, "assessed_zero_nominal_tensor_contraction_macs");
-  if (rule === "unassessed_convolution_backward") return unassessedMac("not_assessed_convolution_backward_execution_contract");
   const argumentTensor = (position) => {
     const value = values[argumentRefs[position]];
     return value?.kind === "Tensor" ? tensors[value.tensor_index] : null;
@@ -648,6 +704,25 @@ function assessKernelMac(signature, argumentRefs, values, tensors) {
         return transposedConvolutionMac(input, weight, output, groups, stride, padding, dilation, outputPadding);
       }
       return convolutionMac(input, weight, output, groups);
+    }
+    if (rule === "convolution_backward") {
+      const gradOutput = argumentTensor(0);
+      const input = argumentTensor(1);
+      const weight = argumentTensor(2);
+      const transposed = evalueBoolean(values[argumentRefs[7]]);
+      const groups = evaluePositiveInteger(values[argumentRefs[9]]);
+      const outputMask = evalueBooleanList(values[argumentRefs[10]], 3);
+      if (transposed == null || groups == null || !outputMask) {
+        return unassessedMac("not_assessed_convolution_backward_scalar_contract_unbound");
+      }
+      const outputs = [argumentTensor(11), argumentTensor(12), argumentTensor(13)];
+      return convolutionBackwardMac({
+        gradOutput, input, weight, outputs, outputMask, transposed, groups,
+        stride: evaluePositiveIntegerList(values[argumentRefs[4]]),
+        padding: evalueNonnegativeIntegerList(values[argumentRefs[5]]),
+        dilation: evaluePositiveIntegerList(values[argumentRefs[6]]),
+        outputPadding: evalueNonnegativeIntegerList(values[argumentRefs[8]]),
+      });
     }
   } catch (error) {
     return unassessedMac(`not_assessed_shape_contract_conflict:${error?.message || error}`);
@@ -718,6 +793,27 @@ function transposedConvolutionMac(input, weight, output, groups, stride, padding
   return exactMac(value, "assessed_source_bound_transposed_convolution_overlap");
 }
 
+function convolutionBackwardMac({ gradOutput, input, weight, outputs, outputMask, transposed, groups, stride, padding, dilation, outputPadding }) {
+  const inputShape = staticShape(input, "convolution backward input");
+  const weightShape = staticShape(weight, "convolution backward weight");
+  const gradOutputShape = staticShape(gradOutput, "convolution backward grad_output");
+  if (outputMask[0] && !sameShape(staticShape(outputs[0], "convolution backward grad_input"), inputShape)) throw new Error("grad_input_shape_mismatch");
+  if (outputMask[1] && !sameShape(staticShape(outputs[1], "convolution backward grad_weight"), weightShape)) throw new Error("grad_weight_shape_mismatch");
+  const outputChannels = transposed ? weightShape[1] * groups : weightShape[0];
+  if (outputMask[2] && !sameShape(staticShape(outputs[2], "convolution backward grad_bias"), [outputChannels])) throw new Error("grad_bias_shape_mismatch");
+  if (!outputMask[0] && !outputMask[1]) return exactMac(0n, "assessed_source_bound_convolution_backward_bias_only");
+  const forward = transposed
+    ? stride && padding && dilation && outputPadding
+      ? transposedConvolutionMac(input, weight, gradOutput, groups, stride, padding, dilation, outputPadding)
+      : null
+    : convolutionMac(input, weight, gradOutput, groups);
+  if (!forward) return unassessedMac("not_assessed_transposed_convolution_backward_spatial_contract_unbound");
+  const contractions = Number(outputMask[0]) + Number(outputMask[1]);
+  return exactMac(BigInt(forward.decimal) * BigInt(contractions), transposed
+    ? "assessed_source_bound_transposed_convolution_backward_overlap"
+    : "assessed_source_bound_convolution_backward");
+}
+
 function staticShape(tensor, label) {
   if (!tensor || tensor.shape_status !== "assessed" || !Array.isArray(tensor.shape)
     || tensor.shape.some((value) => !Number.isSafeInteger(value) || value < 0)) throw new Error(`${label}_not_static`);
@@ -725,6 +821,12 @@ function staticShape(tensor, label) {
 }
 
 function evalueBoolean(value) { return value?.kind === "Bool" && typeof value.value === "boolean" ? value.value : null; }
+function evalueBooleanList(value, expectedLength = null) {
+  if (value?.kind !== "BoolList" || !Array.isArray(value.values)
+    || value.values.some((item) => typeof item !== "boolean")
+    || expectedLength != null && value.values.length !== expectedLength) return null;
+  return [...value.values];
+}
 function evaluePositiveInteger(value) {
   if (value?.kind !== "Int" || !/^[1-9]\d*$/.test(String(value.value_decimal || ""))) return null;
   const result = BigInt(value.value_decimal);
@@ -748,6 +850,7 @@ function evalueNonnegativeIntegerList(value) { return evalueIntegerList(value, (
 function exactMac(value, status) { return { macs: safeNumber(value), decimal: value.toString(), status }; }
 function unassessedMac(status) { return { macs: null, decimal: null, status }; }
 function unique(values) { return [...new Set(values)]; }
+function sameShape(left, right) { return left.length === right.length && left.every((value, index) => value === right[index]); }
 
 function parseDelegate(reader, table, planIndex, planName, index, storage) {
   const backendId = reader.stringField(table, 0, `${planName}.delegates[${index}].id`);
@@ -766,6 +869,20 @@ function parseDelegate(reader, table, planIndex, planName, index, storage) {
   });
   assertUnique(compileSpecs.map((item) => item.key), `${planName}.delegates[${index}] compile-spec key`);
   return { plan_index: planIndex, index, backend_id: backendId, processed_location: DATA_LOCATIONS[locationValue], processed_index: dataIndex, compile_specs: compileSpecs };
+}
+
+function materializeDelegatePayload(delegate, inlineData, segments, artifactBytes) {
+  if (delegate.processed_location === "INLINE") {
+    const payload = inlineData[delegate.processed_index]?.bytes;
+    if (!(payload instanceof Uint8Array)) throw new Error(`ExecuTorch inline delegate payload ${delegate.processed_index} is unavailable.`);
+    return payload;
+  }
+  const segment = segments[delegate.processed_index];
+  if (!segment) throw new Error(`ExecuTorch delegate segment ${delegate.processed_index} is unavailable.`);
+  const start = BigInt(segment.absolute_offset);
+  const end = BigInt(segment.absolute_end);
+  if (start > BigInt(Number.MAX_SAFE_INTEGER) || end > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("ExecuTorch delegate payload range exceeds the JavaScript safe integer range.");
+  return artifactBytes.subarray(Number(start), Number(end));
 }
 
 function parseSegments(reader, root, fieldIndex, header, fileSize, label) {

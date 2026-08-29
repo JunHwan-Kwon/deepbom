@@ -25,6 +25,7 @@ import {
   interfaceCorpusValidationExternalReference,
   interfaceCorpusValidationProperties,
 } from "./corpus-validation-provenance.js";
+import { tensorRtCycloneDxPropertyEntries } from "./tensorrt-cyclonedx-properties.js";
 
 const CYCLONEDX_17_SCHEMA = "http://cyclonedx.org/schema/bom-1.7.schema.json";
 const AUTHOR = Object.freeze({
@@ -196,31 +197,7 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
     ["deepbom:model:medicalAiDeclarationCoverage", llm.medical_ai_claim_boundary?.declaration?.coverage ? `${llm.medical_ai_claim_boundary.declaration.coverage.declared}/${llm.medical_ai_claim_boundary.declaration.coverage.required}` : null],
     ["deepbom:model:llmEvidencePointer", "/evidence/static_analysis/on_device_llm"],
   ] : [];
-  const tensorRt = analysis?.tensorrt_static_preflight;
-  const tensorRtObservation = tensorRt?.parser_observation;
-  const tensorRtCounts = tensorRt?.projection?.state_counts || {};
-  const tensorRtProperties = tensorRt?.schema === "deepbom.tensorrt_static_preflight.v1" ? [
-    ["deepbom:model:tensorRtStaticPreflightSchema", tensorRt.schema],
-    ["deepbom:model:tensorRtStaticPreflightStatus", tensorRt.status],
-    ["deepbom:model:tensorRtStaticPreflightEvidenceClass", tensorRt.evidence_class],
-    ["deepbom:model:tensorRtBuildProfileSha256", tensorRt.build_profile?.profile_sha256],
-    ["deepbom:model:tensorRtExecutionPath", tensorRt.build_profile?.execution_path],
-    ["deepbom:model:tensorRtParserApiMethod", tensorRtObservation?.api_method],
-    ["deepbom:model:tensorRtVersion", tensorRtObservation?.tensorrt_version],
-    ["deepbom:model:tensorRtCudaVersion", tensorRtObservation?.cuda_version],
-    ["deepbom:model:tensorRtDeviceIdentity", tensorRtObservation?.device_identity],
-    ["deepbom:model:tensorRtConditionallyEligibleOperatorCount", tensorRtCounts.CONDITIONALLY_ELIGIBLE],
-    ["deepbom:model:tensorRtDefiniteExclusionOperatorCount", tensorRtCounts.DEFINITE_EXCLUSION],
-    ["deepbom:model:tensorRtUnresolvedOperatorCount", tensorRtCounts.UNRESOLVED],
-    ["deepbom:model:tensorRtCollectorBinarySha256", tensorRtObservation?.collector?.binary_sha256],
-    ["deepbom:model:tensorRtCollectorSourceSetSha256", tensorRtObservation?.collector?.source_set_sha256],
-    ["deepbom:model:tensorRtCollectorGitCommit", tensorRtObservation?.collector?.git_commit],
-    ["deepbom:model:tensorRtCollectorGitState", tensorRtObservation?.collector?.git_state],
-    ["deepbom:model:tensorRtOptimizationProfileCostSchema", tensorRt.optimization_profile_cost?.schema],
-    ["deepbom:model:tensorRtOptimizationProfileCostStatus", tensorRt.optimization_profile_cost?.status],
-    ["deepbom:model:tensorRtOptimizationProfileCostScenarioCount", tensorRt.optimization_profile_cost?.scenario_count],
-    ["deepbom:model:tensorRtEvidencePointer", "/format_extensions/onnx/tensorrt_static_preflight"],
-  ] : [];
+  const tensorRtProperties = tensorRtCycloneDxPropertyEntries(analysis);
   const component = {
     type: "machine-learning-model",
     name,

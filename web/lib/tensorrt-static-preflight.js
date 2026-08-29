@@ -3,6 +3,7 @@ import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { TENSORRT_SOURCE_METADATA } from "./tensorrt-source-metadata.js";
 import { buildTensorRtOptimizationProfileCost } from "./tensorrt-profile-cost.js";
+import { validateTensorRtEngineInspectorEvidence } from "./tensorrt-engine-inspector.js";
 
 export const TENSORRT_BUILD_PROFILE_SCHEMA = "deepbom.tensorrt_build_profile.v1";
 export const TENSORRT_STATIC_PREFLIGHT_SCHEMA = "deepbom.tensorrt_static_preflight.v1";
@@ -51,7 +52,12 @@ export function createTensorRtBuildProfile(configuration) {
   return profile;
 }
 
-export function buildTensorRtStaticPreflight(analysis, configuration = null, parserObservation = null) {
+export function buildTensorRtStaticPreflight(
+  analysis,
+  configuration = null,
+  parserObservation = null,
+  engineInspectorEvidence = null,
+) {
   const format = String(analysis?.format || "").toLowerCase();
   if (format !== "onnx") return notApplicable(analysis, format);
   if (!Array.isArray(analysis.ops) || !Array.isArray(analysis.tensors) || !Array.isArray(analysis.inputs)) {
@@ -64,6 +70,8 @@ export function buildTensorRtStaticPreflight(analysis, configuration = null, par
     "Bind an execution path, precision policy, device selection, optimization profiles, workspace policy, DLA fallback policy, plugins, and ORT EP options where applicable.",
   )];
   const observation = parserObservation ? validateParserObservation(analysis, profile, parserObservation) : null;
+  const engineInspector = engineInspectorEvidence
+    ? validateTensorRtEngineInspectorEvidence(analysis, profile, observation, engineInspectorEvidence) : null;
   const optimizationProfileCost = profile ? buildTensorRtOptimizationProfileCost(analysis, profile) : null;
   for (const conflict of optimizationProfileCost?.conflicts || []) issues.push(issue(
     "profile_symbol_binding_conflict", "BLOCKING",
@@ -101,26 +109,34 @@ export function buildTensorRtStaticPreflight(analysis, configuration = null, par
     method_version: "1.0.0",
     format: "onnx",
     artifact_sha256: String(analysis.model_sha256 || ""),
-    evidence_class: observation ? "PARSER_OBSERVED/CONFIGURATION_BOUND/DERIVED" : profile ? "DERIVED_CONFIGURATION_PREFLIGHT" : "NOT_ASSESSABLE_CONFIGURATION_UNBOUND",
+    evidence_class: engineInspector ? `${observation ? "PARSER_OBSERVED/" : ""}${engineInspector.evidence_class}/CONFIGURATION_BOUND/DERIVED`
+      : observation ? "PARSER_OBSERVED/CONFIGURATION_BOUND/DERIVED" : profile ? "DERIVED_CONFIGURATION_PREFLIGHT" : "NOT_ASSESSABLE_CONFIGURATION_UNBOUND",
     status: blocking.length ? "blocked" : observation
-      ? projection.state_counts.UNRESOLVED ? "parser_observed_partial" : projection.state_counts.DEFINITE_EXCLUSION ? "parser_observed_with_exclusions" : "parser_observed_all_supported"
-      : "configuration_valid_parser_observation_required",
+      ? engineInspector ? projection.state_counts.UNRESOLVED ? "engine_inspected_parser_observed_partial"
+        : projection.state_counts.DEFINITE_EXCLUSION ? "engine_inspected_parser_observed_with_exclusions" : "engine_inspected_parser_observed_all_supported"
+        : projection.state_counts.UNRESOLVED ? "parser_observed_partial" : projection.state_counts.DEFINITE_EXCLUSION ? "parser_observed_with_exclusions" : "parser_observed_all_supported"
+      : engineInspector ? "engine_inspected_parser_observation_unbound"
+        : "configuration_valid_parser_observation_required",
     build_profile: profile,
     input_contracts: inputContracts,
     issues,
     blocking_issue_count: blocking.length,
     unresolved_issue_count: unresolved.length,
     parser_observation: observation,
+    engine_inspector_evidence: engineInspector,
     optimization_profile_cost: optimizationProfileCost,
     projection,
     trust_boundary: {
       browser_engine_deserialization: "prohibited",
       browser_plan_execution: "prohibited",
       accepted_import: TENSORRT_PARSER_OBSERVATION_SCHEMA,
+      accepted_engine_inspector_import: engineInspector?.schema || "deepbom.tensorrt_engine_inspector_evidence.v1",
       reason: "TensorRT plan files are native executable runtime artifacts. DEEPBOM accepts identity-bound collector JSON and never deserializes an untrusted plan in the browser or public service.",
     },
     source_basis: TENSORRT_SOURCE_METADATA,
-    interpretation_boundary: "Static preflight validates artifact-visible ONNX contracts and an explicit build profile. TensorRT parser acceptance must be observed in the selected native build; engine build, tactic selection, memory allocation, device execution, accuracy, and latency remain separate evidence classes.",
+    interpretation_boundary: engineInspector
+      ? "Static preflight validates artifact-visible ONNX contracts and an explicit build profile. Parser acceptance and optimized engine-inspector rows are separate identity-bound evidence. Inspector tactic identifiers are selected engine metadata, not tactic timings, kernel execution, physical transfer, memory allocation, latency, accuracy, or original-op assignment."
+      : "Static preflight validates artifact-visible ONNX contracts and an explicit build profile. TensorRT parser acceptance must be observed in the selected native build; engine build, tactic selection, memory allocation, device execution, accuracy, and latency remain separate evidence classes.",
   };
 }
 
@@ -352,6 +368,7 @@ function notApplicable(analysis, format) {
     blocking_issue_count: 0,
     unresolved_issue_count: 0,
     parser_observation: null,
+    engine_inspector_evidence: null,
     optimization_profile_cost: null,
     projection: null,
     trust_boundary: { browser_engine_deserialization: "prohibited", browser_plan_execution: "prohibited", accepted_import: TENSORRT_PARSER_OBSERVATION_SCHEMA },

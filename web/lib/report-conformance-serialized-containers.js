@@ -407,6 +407,7 @@ function safeTensorsQuantizationContractValid(contract, reportText) {
     zeroes += zeroCapacity;
     const moduleBytes = Object.values(module.tensors || {}).reduce((sum, tensor) => sum + Number(tensor.byte_length || 0), 0);
     if (!Number.isSafeInteger(moduleBytes) || moduleBytes !== Number(module.packed_tensor_bytes)) return false;
+    if (!safeTensorsQuantizationPayloadValid(module, reportText)) return false;
     bytes += moduleBytes;
   }
   const status = issueCount ? "fail" : "assessed";
@@ -427,6 +428,27 @@ function safeTensorsQuantizationContractValid(contract, reportText) {
     && exactDecimalInteger(contract.zero_point_code_capacity) === zeroes
     && Number(contract.packed_tensor_bytes) === bytes
     && contract.packing_conservation_status === (paddingBits === 0n ? "exact_no_padding" : "exact_with_source_defined_padding");
+}
+
+function safeTensorsQuantizationPayloadValid(module, reportText) {
+  const payload = module.quantization_payload_integrity;
+  if (!payload || payload.schema !== "deepbom.safetensors.quantization_payload_integrity.v1"
+    || !["assessed", "partial", "fail"].includes(payload.status)) return false;
+  const rows = Object.values(payload.tensors || {});
+  if (rows.some((row) => !["assessed_full_payload", "not_assessed_full_payload_unavailable"].includes(row?.status))) return false;
+  if (payload.status === "partial") return rows.some((row) => row.status === "not_assessed_full_payload_unavailable");
+  if (rows.some((row) => row.status !== "assessed_full_payload" || !/^[0-9a-f]{64}$/i.test(String(row.payload_sha256 || "")))) return false;
+  const scale = payload.tensors?.scales;
+  if (scale && (Number(scale.nonfinite_value_count) !== 0 || !(Number(scale.minimum_finite) > 0)
+    || scale.semantic?.role !== "scale" || Number(scale.semantic.nonpositive_scale_count) !== 0)) return payload.status === "fail";
+  const groupIndex = payload.tensors?.g_idx;
+  if (groupIndex && (groupIndex.semantic?.role !== "group_index" || groupIndex.semantic.integer_value_contract !== true)) return payload.status === "fail";
+  const zero = payload.tensors?.qzeros;
+  if (zero && payload.zero_point_payload_mode === "packed_code"
+    && (!zero.selected_packed_lane_profile || Number(zero.selected_packed_lane_profile.bits) !== Number(module.bits)
+      || Number(zero.selected_packed_lane_profile.lane_count) !== Number(module.zero_point_code_capacity))) return payload.status === "fail";
+  if (zero && payload.zero_point_payload_mode === "finite_affine_value" && Number(zero.nonfinite_value_count) !== 0) return payload.status === "fail";
+  return payload.status === "assessed" && rows.every((row) => reportText.includes(String(row.payload_sha256)));
 }
 
 function quantizedZeroCapacity(contract, module) {

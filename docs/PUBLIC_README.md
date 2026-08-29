@@ -72,7 +72,7 @@ The browser workbench is available at [deepbom.org](https://deepbom.org/).
 | GGUF | Container and tensor-directory integrity, quantization encoding inventory, architecture metadata, and bounded LLM memory scenarios |
 | SafeTensors | Tensor-directory and sharding integrity, configuration-bound architecture contracts, AWQ/GPTQ/HQQ/compressed-tensors metadata, and bounded LLM memory scenarios |
 | Core ML | NeuralNetwork and ML Program serialized graphs, tensor/weight encodings, deployment floor, and imported compute-plan evidence boundaries |
-| ExecuTorch | Bounded ET12/FT01 program and segment metadata with fail-closed unsupported contracts |
+| ExecuTorch | Bounded ET12/FT01 plans, source-bound portable calls and processed payload identities, plus optional selected-build/backend/operator/binary attestation; execution remains external |
 
 Static compatibility does not establish observed execution-provider assignment,
 device latency, task accuracy, clinical validity, or release readiness. Runtime

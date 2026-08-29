@@ -33,6 +33,7 @@
     "capture:gguf-runtime": "node scripts/capture-gguf-runtime.mjs",
     "verify:gguf-runtime-capture": "node scripts/verify-gguf-runtime-capture.mjs",
     "capture:tensorrt": "node scripts/capture-tensorrt-parser.mjs",
+    "capture:tensorrt-inspector": "node scripts/capture-tensorrt-engine-inspector.mjs",
     "prepare:gguf-runtime": "node scripts/prepare-pinned-llama-runtime.mjs",
     "capture:coreml-plan": "python scripts/capture-coreml-compute-plan.py",
     "sweep:public-model-corpus": "node scripts/run-public-model-corpus-sweep.mjs",

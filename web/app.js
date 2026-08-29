@@ -3653,7 +3653,7 @@ function syncExternalDataControl(format) {
     status: onnxExternalDataStatus,
     format: ptdArtifact ? "" : normalized,
     files: currentExternalDataFiles,
-    evidence: normalized === "onnx" ? current?.onnx_external_data : current?.executorch_program?.external_tensor_data,
+    evidence: normalized === "onnx" ? current?.onnx_external_data : current?.executorch_program,
   });
 }
 
@@ -3667,7 +3667,7 @@ async function stageExternalDataSelection(files) {
   onnxExternalDataStatus.textContent = "Reading selected data";
   try {
     const records = await prepareExternalDataFiles(files, {
-      label: format === "onnx" ? "ONNX external data" : "ExecuTorch PTD sidecar",
+      label: format === "onnx" ? "ONNX external data" : "ExecuTorch PTD or selected-build sidecar",
       onProgress: ({ index, count, phase }) => {
         onnxExternalDataStatus.textContent = `${phase === "hashing" ? "Hashing" : "Reading"} ${formatNumber(index + 1)}/${formatNumber(count)}`;
       },
@@ -3692,7 +3692,7 @@ async function stageExternalDataSelection(files) {
     syncExternalDataControl(format);
     analysisPlanStatus.textContent = "External data ready; run audit";
     runAudit.textContent = formatAuditButtonLabel(format);
-    setStatus(`${format === "onnx" ? "ONNX external data" : "ExecuTorch PTD"} ready`, "ok");
+    setStatus(`${format === "onnx" ? "ONNX external data" : "ExecuTorch sidecar evidence"} ready`, "ok");
   } catch (error) {
     console.error("[artifactExternalData]", error);
     onnxExternalDataStatus.textContent = `Selection failed: ${shortError(error)}`;
@@ -3875,6 +3875,7 @@ async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = fal
       current,
       pendingPublicSampleCompanions?.tensorrt_build_profile || null,
       pendingPublicSampleCompanions?.tensorrt_parser_observation || null,
+      pendingPublicSampleCompanions?.tensorrt_engine_inspector || null,
     );
   }
   if (format === "tflite") {

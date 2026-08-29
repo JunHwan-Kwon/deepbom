@@ -97,9 +97,12 @@ upstream model license is absent, bytes remain cache-only and the row is marked
 as unsuitable for redistribution.
 
 `measurement-baseline.v1.json.gz` is the compact, committed historical result
-ledger for all 24 artifacts. It is tied to both a clean source commit and the
-executed analyzer WASM content hash; validation reads that exact WASM blob from
-the recorded commit instead of conflating the ledger with the current build.
+ledger for all 24 artifacts. It is tied to both its original clean source commit
+and the executed analyzer WASM content hash. Because the public repository has
+an intentionally independent root history, validation reads the exact gzip-
+archived WASM from `provenance/` and independently checks its decompressed byte
+length and SHA-256 instead of assuming that the historical private commit is an
+ancestor of the public tree or conflating the ledger with the current build.
 It records artifact identity, deterministic analysis hash, lab coverage,
 lab-specific channel denominators, and distinct zero-slice/range/constant-output
 signals. Regenerate it only from a clean worktree after both corpora complete

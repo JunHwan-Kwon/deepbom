@@ -995,6 +995,14 @@ execution APIs. ORT TensorRT EP requires a distinct identity-bound
 `GetCapability` and profile-assignment capture. No native parser observation is
 reused as ORT EP assignment.
 
+An optional `deepbom.tensorrt_engine_inspector_evidence.v1` import separately
+binds an existing serialized engine and TensorRT 10.x/11.x engine-information
+JSON to the ONNX artifact, build profile, runtime/device identity, capture tool,
+and invocation. It preserves optimized layer/tensor rows and selected tactic
+identifiers without promoting source-name metadata to original-op assignment or
+claiming tactic timing, kernel execution, physical transfer, allocation, latency,
+or omitted next-generation optimizer subgraphs.
+
 SafeTensors packages may include `tensorrt_llm_engine_config.json` and
 `deepbom.tensorrt-llm.json`. The static TensorRT-LLM contract validates exact
 world-size conservation across TP/PP/CP, explicit or quotient/remainder pipeline
@@ -1428,8 +1436,12 @@ Priority 5: model-family coverage expansion.
   registry covers 209 entries (200 operators plus nine functions), preserves
   source argument/return positions, validates EValue arity and input/output
   direction, and emits exact nominal MACs only for source-closed matrix and
-  non-transposed convolution signatures. Runtime delegate lowering, backend
-  kernels, allocation, and latency remain external evidence.
+  convolution signatures. Seven pinned backend IDs preserve processed payload
+  byte ranges and hashes; public-schema payloads receive a bounded FlatBuffer
+  root-envelope check. A strict `deepbom.executorch-build.json` can bind source,
+  CMake options, backend/operator inventories, and runtime binary digests in
+  both web and CLI. Delegate initialization, executed placement, kernels,
+  allocation, physical transfer, correctness, and latency remain external.
 - Continue expanding license-clear public populations before ranking ecosystem
   frequency or adding family-wide prevalence claims.
 - A hash-bound upstream `ai.onnx.contrib` custom-op conformance artifact now

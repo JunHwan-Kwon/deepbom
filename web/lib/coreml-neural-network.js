@@ -1018,7 +1018,7 @@ function parseTensorDescriptor(reader) {
   return dimensions;
 }
 
-function parseLayer(reader, index) {
+export function parseCoreMlNeuralNetworkLayer(reader, index) {
   const layer = { index, name: "", inputs: [], outputs: [], input_shapes: [], output_shapes: [], type: null, type_field: null, weights: [], attributes: {}, weight_scan_status: "not_assessed" };
   const singular = new Set();
   while (!reader.done) {
@@ -1042,7 +1042,7 @@ function parseLayer(reader, index) {
   return layer;
 }
 
-function parsePreprocessing(reader) {
+export function parseCoreMlNeuralNetworkPreprocessing(reader) {
   const result = { feature_name: "", kind: null };
   const singular = new Set();
   while (!reader.done) {
@@ -1103,23 +1103,9 @@ function parsePreprocessing(reader) {
   return result;
 }
 
-export function parseCoreMlNeuralNetwork(reader) {
-  const layers = [];
-  const preprocessing = [];
-  let array_input_shape_mapping = 0;
-  let image_input_shape_mapping = 0;
-  const singular = new Set();
-  while (!reader.done) {
-    const { field, wire } = reader.key();
-    if (field === 1) {
-      if (layers.length >= MAX_LAYERS) throw new Error(`Core ML neural network exceeds ${MAX_LAYERS} layers`);
-      layers.push(parseLayer(reader.message(wire, "CoreML.NeuralNetworkLayer"), layers.length));
-    } else if (field === 2) {
-      pushBounded(preprocessing, parsePreprocessing(reader.message(wire, "CoreML.NeuralNetworkPreprocessing")), "Core ML preprocessing entries");
-    } else if (field === 5) array_input_shape_mapping = reader.intField(wire, singular, 5, "arrayInputShapeMapping");
-    else if (field === 6) image_input_shape_mapping = reader.intField(wire, singular, 6, "imageInputShapeMapping");
-    else reader.skip(wire);
-  }
+export function finalizeCoreMlNeuralNetwork({
+  layers = [], preprocessing = [], array_input_shape_mapping = 0, image_input_shape_mapping = 0,
+}) {
   const names = new Set();
   const producers = new Set();
   for (const layer of layers) {
@@ -1136,4 +1122,21 @@ export function parseCoreMlNeuralNetwork(reader) {
     if (item.feature_name) preprocessingFeatures.add(item.feature_name);
   }
   return { layers, preprocessing, preprocessing_count: preprocessing.length, array_input_shape_mapping, image_input_shape_mapping };
+}
+
+export function parseCoreMlNeuralNetwork(reader) {
+  const state = { layers: [], preprocessing: [], array_input_shape_mapping: 0, image_input_shape_mapping: 0 };
+  const singular = new Set();
+  while (!reader.done) {
+    const { field, wire } = reader.key();
+    if (field === 1) {
+      if (state.layers.length >= MAX_LAYERS) throw new Error(`Core ML neural network exceeds ${MAX_LAYERS} layers`);
+      state.layers.push(parseCoreMlNeuralNetworkLayer(reader.message(wire, "CoreML.NeuralNetworkLayer"), state.layers.length));
+    } else if (field === 2) {
+      pushBounded(state.preprocessing, parseCoreMlNeuralNetworkPreprocessing(reader.message(wire, "CoreML.NeuralNetworkPreprocessing")), "Core ML preprocessing entries");
+    } else if (field === 5) state.array_input_shape_mapping = reader.intField(wire, singular, 5, "arrayInputShapeMapping");
+    else if (field === 6) state.image_input_shape_mapping = reader.intField(wire, singular, 6, "imageInputShapeMapping");
+    else reader.skip(wire);
+  }
+  return finalizeCoreMlNeuralNetwork(state);
 }

@@ -193,7 +193,7 @@ function safeLowPrecisionValue(kind, code) {
 }
 
 class NumericAccumulator {
-  constructor({ representation = "real", legalLevels = null, codebook = null, collectValues = false } = {}) {
+  constructor({ representation = "real", legalLevels = null, codebook = null, collectValues = false, semanticTracker = null } = {}) {
     this.representation = representation;
     this.legalLevels = legalLevels;
     this.count = 0;
@@ -223,9 +223,11 @@ class NumericAccumulator {
     this.nonfiniteScaleBlockCount = 0;
     this.collectValues = collectValues;
     this.decodedValues = [];
+    this.semanticTracker = semanticTracker;
   }
 
   add(value, { subnormal = false, code = null, codebookEntry = null } = {}) {
+    this.semanticTracker?.add(value, this.count);
     this.count += 1;
     if (this.collectValues) this.decodedValues.push(Number.isNaN(value) ? "NaN"
       : value === Number.POSITIVE_INFINITY ? "+Infinity"
@@ -302,9 +304,64 @@ class NumericAccumulator {
       nonfinite_scale_block_count: this.blockCount ? this.nonfiniteScaleBlockCount : null,
       decoded_values_status: this.collectValues ? "complete_binary_value_decoding" : "not_retained_above_small_tensor_limit",
       decoded_values: this.collectValues ? this.decodedValues : [],
+      ...(this.semanticTracker ? { quantization_metadata_integrity: this.semanticTracker.finish() } : {}),
       aggregation: "full_payload; compensated_sum; scaled_sum_of_squares; IEEE-754 round-to-nearest JS Number",
     };
   }
+}
+
+function safeTensorsQuantMetadataTracker(tensor, format) {
+  if (format !== "safetensors") return null;
+  const name = String(tensor?.name || "");
+  const role = /(?:^|[._])(g_idx)$/.test(name) ? "group_index"
+    : /(?:qzeros|zero[_\-.]?points?|zeros)(?:$|[._])/.test(name) ? "packed_zero_point"
+      : /(?:scales?|k_scale|v_scale)(?:$|[._])/.test(name) ? "scale" : null;
+  if (!role) return null;
+  let integer = true;
+  let nondecreasing = true;
+  let previous = null;
+  let transitions = 0;
+  let nonpositive = 0;
+  let nonfinite = 0;
+  const packedProfiles = role === "packed_zero_point" && tensor.dtype === "I32"
+    ? Object.fromEntries([2, 4, 8].map((bits) => [bits, new Array(2 ** bits).fill(0)])) : null;
+  return {
+    add(value) {
+      const numeric = typeof value === "bigint" ? Number(value) : value;
+      if (!Number.isFinite(numeric)) nonfinite += 1;
+      if (role === "scale" && Number.isFinite(numeric) && numeric <= 0) nonpositive += 1;
+      if (role === "group_index") {
+        if (!Number.isSafeInteger(numeric)) integer = false;
+        if (previous != null && numeric < previous) nondecreasing = false;
+        if (previous != null && numeric !== previous) transitions += 1;
+        previous = numeric;
+      }
+      if (packedProfiles && Number.isSafeInteger(numeric)) {
+        const word = numeric >>> 0;
+        for (const [bitsText, histogram] of Object.entries(packedProfiles)) {
+          const bits = Number(bitsText);
+          const mask = 2 ** bits - 1;
+          for (let shift = 0; shift < 32; shift += bits) histogram[word >>> shift & mask] += 1;
+        }
+      }
+    },
+    finish() {
+      return {
+        schema: "deepbom.safetensors.quantization_metadata_integrity.v1",
+        status: nonfinite || (role === "scale" && nonpositive) || (role === "group_index" && !integer) ? "fail" : "assessed_full_payload",
+        role,
+        nonfinite_value_count: nonfinite,
+        nonpositive_scale_count: role === "scale" ? nonpositive : null,
+        integer_value_contract: role === "group_index" ? integer : null,
+        nondecreasing: role === "group_index" ? nondecreasing : null,
+        transition_count: role === "group_index" ? transitions : null,
+        packed_lane_profiles: packedProfiles ? Object.entries(packedProfiles).map(([bits, histogram]) => ({
+          bits: Number(bits), lane_count: histogram.reduce((sum, count) => sum + count, 0),
+          levels_used: histogram.filter((count) => count > 0).length, histogram,
+        })) : [],
+      };
+    },
+  };
 }
 
 class ExactIntegerAccumulator {
@@ -1020,6 +1077,7 @@ async function scanTensor(source, analysis, tensor, decoder, { chunkBytes, onPro
   const expectedValueCount = expectedTensorValueCount(tensor);
   const collectValues = decoder.kind === "scalar" && expectedValueCount <= 64;
   const exactInteger = decoder.kind === "scalar" && ["bigint", "biguint"].includes(decoder.layout.kind);
+  const semanticTracker = safeTensorsQuantMetadataTracker(tensor, analysis.format);
   const accumulator = exactInteger
     ? new ExactIntegerAccumulator({ signed: decoder.layout.kind === "bigint", collectValues })
     : new NumericAccumulator({
@@ -1027,6 +1085,7 @@ async function scanTensor(source, analysis, tensor, decoder, { chunkBytes, onPro
       legalLevels: decoder.layout.levels || null,
       codebook: decoder.layout.codebook || null,
       collectValues,
+      semanticTracker,
     });
   const digest = new Sha256Accumulator();
   const alignedChunk = Math.max(unitBytes, Math.floor(chunkBytes / unitBytes) * unitBytes);

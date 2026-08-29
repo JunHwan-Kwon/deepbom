@@ -5,6 +5,7 @@ import init, {
 } from "../../pkg/tflite_wasm_audit.js";
 import { analyzeOnnxModel } from "../onnx.js";
 import { analyzeExecuTorchModel } from "../executorch.js";
+import { resolveExecuTorchSelectedBuildAttestation } from "../lib/executorch-build-binding.js";
 
 let modelBytes = null;
 let filename = "";
@@ -52,9 +53,12 @@ self.addEventListener("message", async ({ data }) => {
         externalDataFiles: payload.externalDataFiles || [],
       });
     } else if (operation === "executorch_analyze") {
-      status(id, "Validating ET12/FT01 tables, segments, tensors, and execution plans");
+      status(id, "Validating ET12/FT01 tables, segments, tensors, source identities, and selected-build evidence");
+      const selectedBuild = resolveExecuTorchSelectedBuildAttestation(payload.externalDataFiles || []);
       result = analyzeExecuTorchModel(modelBytes, filename, {
         externalDataFiles: payload.externalDataFiles || [],
+        selectedBuildAttestation: selectedBuild?.attestation || null,
+        selectedBuildInput: selectedBuild?.input || null,
       });
     } else {
       throw new Error(`Unknown static audit worker operation: ${operation}`);

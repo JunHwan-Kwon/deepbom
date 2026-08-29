@@ -905,7 +905,7 @@ export const EXECUTORCH_PORTABLE_OPERATOR_SIGNATURES = Object.freeze({
       13
     ],
     "tensor_inout_argument_positions": [],
-    "nominal_mac_rule": "unassessed_convolution_backward"
+    "nominal_mac_rule": "convolution_backward"
   },
   "aten::convolution.out": {
     "key": "aten::convolution.out",

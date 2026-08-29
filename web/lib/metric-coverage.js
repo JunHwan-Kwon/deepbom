@@ -1381,6 +1381,7 @@ const REQUIRED_REPORT_FIELD_PATTERNS = new Map([
     "/ort_compatibility_evidence/source_condition_inventory/cpu_registration_variant_with_signature_count",
     "/ort_compatibility_evidence/source_condition_inventory/cpu_registration_variant_with_type_constraint_count",
     "/ort_compatibility_evidence/source_condition_inventory/machine_condition_count",
+    "/ort_compatibility_evidence/source_condition_inventory/versioned_scalar_schema_default_binding_count",
     "/ort_compatibility_evidence/source_condition_inventory/unresolved_source_fragment_count",
     "/ort_compatibility_evidence/source_condition_inventory/informational_source_note_count",
     "/ort_compatibility_evidence/execution_providers/[]/artifact_condition_count",
@@ -1549,7 +1550,7 @@ const SPECS = [
     ],
     report: "## ExecuTorch Serialized Contract",
     viewer: ["Overview", "Explorer", "Reports"],
-    method: "Decode bounded ET12 Program or FT01 FlatTensor FlatBuffers against pinned pytorch/executorch schemas; bind matching KernelCall rows to a generated 209-operator portable signature registry; conserve argument/result aliases, plans, instructions, EValues, segments, constant ranges, exact nominal tensor-contraction MACs where semantics and shapes close, and AOT planned non-constant memory. Preserve custom or mismatched kernels, delegate internals, runtime allocation, executed placement, physical transfer, and latency as explicitly unassessed.",
+    method: "Decode bounded ET12 Program or FT01 FlatTensor FlatBuffers against pinned pytorch/executorch schemas; bind matching KernelCall rows to a generated 209-operator portable signature registry; preserve processed delegate payload byte ranges and SHA-256; validate public-schema FlatBuffer root envelopes; optionally bind a duplicate-key-checked selected-build attestation containing exact source/build inputs, backend/operator inventories, and runtime binary digests; conserve argument/result aliases, plans, instructions, EValues, segments, constant ranges, exact nominal tensor-contraction MACs where semantics and shapes close, and AOT planned non-constant memory. Preserve custom or mismatched kernels, delegate internals, runtime allocation, executed placement, physical transfer, and latency as explicitly unassessed.",
   }),
   spec("serialized.container_contract", "Serialized tensor-container contract", {
     formats: ["gguf", "safetensors"],
@@ -1718,8 +1719,7 @@ const SPECS = [
     method: "Sum exact tensor shape cardinalities and declared bytes once, group by stored encoding, and derive effective bits per element; reuse existing full-payload SHA-256 records for content-addressed duplicate candidates without rescanning payloads." }),
   spec("weights.safetensors_packed_quantization", "SafeTensors source-bound packed-weight contract", {
     formats: ["safetensors"], keys: [],
-    status: (a) => a?.safetensors?.quantization_contract?.status === "assessed" ? "assessed"
-      : a?.safetensors?.quantization_contract?.status === "fail" ? "invalid" : "not_assessed",
+    status: (a) => ["assessed", "fail"].includes(a?.safetensors?.quantization_contract?.status) ? "assessed" : "not_assessed",
     evidenceClass: "OBSERVED/DERIVED_FROM_PINNED_FORMAT_SOURCE",
     pointers: ["/evidence/static_analysis/safetensors/quantization_contract"],
     report: "## SafeTensors Packed-weight Quantization Contract",
@@ -1853,10 +1853,10 @@ const SPECS = [
     formats: ["onnx"], keys: ["ort_ep_portability_frontier"], status: (a) => objectStatus(a?.ort_ep_portability_frontier), evidenceClass: "DERIVED_FROM_PINNED_SOURCE_AND_ARTIFACT_VISIBLE_DEFINITE_EXCLUSIONS",
     pointers: ["/evidence/static_analysis/ort_ep_portability_frontier"], report: "## ONNX EP Portability Frontier", viewer: ["Deployment Sensitivity Proxy"],
     method: "Preserve source-version intersections and separately intersect the candidate sets remaining after deterministic artifact-visible definite exclusions." }),
-  spec("onnx.tensorrt_static_preflight", "TensorRT configuration and parser preflight", {
+  spec("onnx.tensorrt_static_preflight", "TensorRT configuration, parser, and optimized-engine inspector evidence", {
     formats: ["onnx"], keys: ["tensorrt_static_preflight"], status: (a) => objectStatus(a?.tensorrt_static_preflight), evidenceClass: "DERIVED_CONFIGURATION_PREFLIGHT/PARSER_OBSERVED_CONFIGURATION_BOUND",
     pointers: ["/evidence/static_analysis/tensorrt_static_preflight"], report: "## Execution Placement Evidence", viewer: ["Explorer", "Reports"],
-    method: "Validate an explicit native TensorRT or ORT TensorRT EP build profile; bind min/opt/max points to ONNX dimension expressions for exact conditional MAC, logical payload, and graph-live-payload scenarios; preserve unresolved parser acceptance until an identity-bound capture exists; and project observed parser subgraphs without claiming global extrema, engine build, tactics, execution, kernels, transfer, or latency." }),
+    method: "Validate an explicit native TensorRT or ORT TensorRT EP build profile; bind min/opt/max points to ONNX dimension expressions for exact conditional MAC, logical payload, and graph-live-payload scenarios; preserve unresolved parser acceptance until an identity-bound capture exists; project observed parser subgraphs; and optionally import identity-bound optimized-engine inspector rows and selected tactic identifiers without claiming tactic timing, kernel execution, physical transfer, memory allocation, latency, or original-op assignment." }),
   spec("onnx.tflite_non_applicability", "TFLite delegate placeholder isolation", {
     formats: ["onnx"], keys: ["xnnpack_assumption", "xnnpack_chains", "xnnpack_chain_breaks", "xnnpack_effective_chain_breaks", "xnnpack_structural_chain_breaks", "xnnpack_zero_mac_chain_breaks", "delegated_mac_percent", "fallback_byte_percent", "conv_packing_warn_ops", "fc_packing_warn_ops"],
     status: () => "suppressed", evidenceClass: "NOT_APPLICABLE", pointers: [], report: "## Analysis Completeness", viewer: ["Reports"],

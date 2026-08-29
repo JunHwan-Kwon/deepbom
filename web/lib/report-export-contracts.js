@@ -24,6 +24,11 @@ import {
   interfaceCorpusValidationExternalReference,
   interfaceCorpusValidationProperties,
 } from "./corpus-validation-provenance.js";
+import {
+  bindTfliteBuildRequirement,
+  bindTfliteDelegateRequirement,
+} from "./tflite-build-configuration-binding.js";
+import { tensorRtCycloneDxPropertyEntries } from "./tensorrt-cyclonedx-properties.js";
 
 const CYCLONEDX_SCHEMA = "http://cyclonedx.org/schema/bom-1.7.schema.json";
 const LITERT_INT8_SPEC = "https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec";
@@ -160,35 +165,6 @@ function llmCycloneDxPropertyEntries(analysis) {
     ["deepbom:model:medicalAiDeclarationSha256", llm.medical_ai_claim_boundary?.declaration?.sha256],
     ["deepbom:model:medicalAiDeclarationCoverage", llm.medical_ai_claim_boundary?.declaration?.coverage ? `${llm.medical_ai_claim_boundary.declaration.coverage.declared}/${llm.medical_ai_claim_boundary.declaration.coverage.required}` : null],
     ["deepbom:model:llmEvidencePointer", "/evidence/static_analysis/on_device_llm"],
-  ];
-}
-
-function tensorRtCycloneDxPropertyEntries(analysis) {
-  const preflight = analysis?.tensorrt_static_preflight;
-  if (preflight?.schema !== "deepbom.tensorrt_static_preflight.v1") return [];
-  const observation = preflight.parser_observation;
-  const counts = preflight.projection?.state_counts || {};
-  return [
-    ["deepbom:model:tensorRtStaticPreflightSchema", preflight.schema],
-    ["deepbom:model:tensorRtStaticPreflightStatus", preflight.status],
-    ["deepbom:model:tensorRtStaticPreflightEvidenceClass", preflight.evidence_class],
-    ["deepbom:model:tensorRtBuildProfileSha256", preflight.build_profile?.profile_sha256],
-    ["deepbom:model:tensorRtExecutionPath", preflight.build_profile?.execution_path],
-    ["deepbom:model:tensorRtParserApiMethod", observation?.api_method],
-    ["deepbom:model:tensorRtVersion", observation?.tensorrt_version],
-    ["deepbom:model:tensorRtCudaVersion", observation?.cuda_version],
-    ["deepbom:model:tensorRtDeviceIdentity", observation?.device_identity],
-    ["deepbom:model:tensorRtConditionallyEligibleOperatorCount", counts.CONDITIONALLY_ELIGIBLE],
-    ["deepbom:model:tensorRtDefiniteExclusionOperatorCount", counts.DEFINITE_EXCLUSION],
-    ["deepbom:model:tensorRtUnresolvedOperatorCount", counts.UNRESOLVED],
-    ["deepbom:model:tensorRtCollectorBinarySha256", observation?.collector?.binary_sha256],
-    ["deepbom:model:tensorRtCollectorSourceSetSha256", observation?.collector?.source_set_sha256],
-    ["deepbom:model:tensorRtCollectorGitCommit", observation?.collector?.git_commit],
-    ["deepbom:model:tensorRtCollectorGitState", observation?.collector?.git_state],
-    ["deepbom:model:tensorRtOptimizationProfileCostSchema", preflight.optimization_profile_cost?.schema],
-    ["deepbom:model:tensorRtOptimizationProfileCostStatus", preflight.optimization_profile_cost?.status],
-    ["deepbom:model:tensorRtOptimizationProfileCostScenarioCount", preflight.optimization_profile_cost?.scenario_count],
-    ["deepbom:model:tensorRtEvidencePointer", "/format_extensions/onnx/tensorrt_static_preflight"],
   ];
 }
 
@@ -1204,55 +1180,11 @@ function compileDefinition(runtimeEvidence, name) {
 }
 
 function buildConfigurationBinding(runtimeEvidence, requirement) {
-  if (!runtimeEvidence) {
-    return { status: "pending_runtime_evidence_not_imported", evidence_class: "NOT_ASSESSED", value: null };
-  }
-  const token = text(requirement).split(";")[0].trim();
-  const build = text(runtimeEvidence?.runtime?.build);
-  if (!build) {
-    return { status: "pending_imported_runtime_build_not_declared", evidence_class: "NOT_ASSESSED", value: null };
-  }
-  if (token && build.includes(token)) {
-    return { status: "declared_present", evidence_class: "DECLARED_RUNTIME_BUILD", value: token };
-  }
-  return { status: "contradiction_required_configuration_absent", evidence_class: "DECLARED_RUNTIME_BUILD", value: build };
+  return bindTfliteBuildRequirement(runtimeEvidence, requirement);
 }
 
 function tfliteDelegateRequirementBinding(runtimeEvidence, requirement) {
-  if (Number(requirement.affected_source_candidate_op_count || 0) === 0) {
-    return { status: "not_applicable_no_affected_source_candidates", evidence_class: "NOT_APPLICABLE", value: null };
-  }
-  if (!runtimeEvidence) return { status: "pending_runtime_evidence_not_imported", evidence_class: "NOT_ASSESSED", value: null };
-  const inventory = runtimeEvidence.tflite_delegate_build_inventory;
-  if (!inventory) return { status: "pending_delegate_build_inventory_not_imported", evidence_class: "NOT_ASSESSED", value: null };
-  if (requirement.id === "tflite_gpu_delegate_compiled") {
-    if (inventory.gpu.compiled_status === "enabled_by_declared_cmake_option") return {
-      status: "partial_gpu_delegate_compiled_target_backend_unobserved",
-      evidence_class: inventory.evidence_class,
-      value: inventory.gpu.compiled_status,
-    };
-    if (inventory.gpu.compiled_status.startsWith("disabled_")) return { status: "contradiction_gpu_delegate_not_compiled", evidence_class: inventory.evidence_class, value: inventory.gpu.compiled_status };
-    return { status: "pending_gpu_build_option_not_declared", evidence_class: "NOT_ASSESSED", value: inventory.gpu.compiled_status };
-  }
-  if (requirement.id === "tflite_gpu_allow_quant_ops") {
-    if (inventory.gpu.quantized_model_flag_status === "enabled_by_declared_runtime_option") return { status: "declared_present", evidence_class: inventory.evidence_class, value: inventory.gpu.experimental_flags };
-    if (inventory.gpu.quantized_model_flag_status === "disabled_by_declared_runtime_option") return { status: "contradiction_quantized_model_flag_disabled", evidence_class: inventory.evidence_class, value: inventory.gpu.experimental_flags };
-    return { status: "pending_gpu_runtime_option_not_declared", evidence_class: "NOT_ASSESSED", value: null };
-  }
-  if (requirement.id === "tflite_nnapi_delegate_compiled") {
-    if (inventory.nnapi.compiled_status === "enabled_by_declared_cmake_option_and_android_gate") return { status: "declared_present", evidence_class: inventory.evidence_class, value: inventory.nnapi.compiled_status };
-    if (inventory.nnapi.compiled_status.startsWith("disabled_")) return { status: "contradiction_nnapi_delegate_not_compiled", evidence_class: inventory.evidence_class, value: inventory.nnapi.compiled_status };
-    return { status: "pending_nnapi_build_gate_unresolved", evidence_class: "NOT_ASSESSED", value: inventory.nnapi.compiled_status };
-  }
-  const completeCapability = inventory.nnapi.runtime_feature_level != null && inventory.nnapi.accelerator_identity;
-  if (!completeCapability) return { status: "pending_nnapi_runtime_capability_query", evidence_class: "NOT_ASSESSED", value: null };
-  return {
-    status: inventory.nnapi.capability_source === "android_nnapi_runtime_query"
-      ? "observed_runtime_capability_present"
-      : "partial_declared_runtime_capability_not_observed",
-    evidence_class: inventory.nnapi.capability_source === "android_nnapi_runtime_query" ? "OBSERVED_RUNTIME_CAPABILITY" : inventory.evidence_class,
-    value: `${inventory.nnapi.runtime_feature_level}; ${inventory.nnapi.accelerator_identity}`,
-  };
+  return bindTfliteDelegateRequirement(runtimeEvidence, requirement);
 }
 
 function conditionallyDelegatableRatioAndPercent(value) {

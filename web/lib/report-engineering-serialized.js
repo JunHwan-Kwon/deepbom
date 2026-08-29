@@ -214,6 +214,11 @@ export function serializedFormatEvidenceMarkdown(analysis) {
     const segments = pte ? program?.segments || [] : flatTensor?.segments || [];
     const tensors = Array.isArray(analysis.tensors) ? analysis.tensors : [];
     const external = program?.external_tensor_data || {};
+    const buildBinding = program?.selected_build_binding || {};
+    const payloads = Array.isArray(program?.processed_backend_payloads) ? program.processed_backend_payloads : [];
+    const delegateBindings = Array.isArray(buildBinding.delegate_bindings) ? buildBinding.delegate_bindings : [];
+    const bindingByDelegate = new Map(delegateBindings.map((row) => [`${row.plan_index}:${row.delegate_index}`, row]));
+    const payloadByDelegate = new Map(payloads.map((row) => [`${row.plan_index}:${row.delegate_index}`, row]));
     return [
       "## ExecuTorch Serialized Contract (OBSERVED + SOURCE_PINNED + DERIVED)",
       "",
@@ -233,6 +238,12 @@ export function serializedFormatEvidenceMarkdown(analysis) {
           ? `${analysis.tensor_liveness?.peak_planned_live_allocation_status || "not assessed"}; no value promoted`
           : `${analysis.tensor_liveness.peak_planned_live_allocation_decimal} B; ${analysis.tensor_liveness.peak_planned_live_allocation_status}. Planned address union only, not runtime RSS.` : "not applicable to FT01"],
         ["External PTD resolution", pte ? `${external.status || "not applicable"}; ${formatNumber(external.verified_contract_count || 0)}/${formatNumber(external.required_name_count || 0)} exact name/dtype/shape/logical-byte/layout contracts; ${external.verified_logical_bytes_decimal || "0"} B verified` : "this artifact is FT01 data"],
+        ["Backend source registry", pte ? `${buildBinding.source_registry?.backend_count ?? 0} backend IDs / SHA-256 ${buildBinding.source_registry?.registry_sha256 || "not bound"}` : "not applicable to FT01"],
+        ["Selected runtime build", pte ? `${buildBinding.status || "not assessed"}${buildBinding.selected_build?.attestation_sha256 ? ` / attestation SHA-256 ${buildBinding.selected_build.attestation_sha256}` : " / no binary attestation bound"}` : "not applicable to FT01"],
+        ["Selected-build input identity", pte ? buildBinding.selected_build_input
+          ? `${code(buildBinding.selected_build_input.path)} / ${formatNumber(buildBinding.selected_build_input.byte_length)} B / file SHA-256 ${buildBinding.selected_build_input.file_sha256} / duplicate-key validation ${buildBinding.selected_build_input.duplicate_key_validation}`
+          : "not imported; API-supplied attestations remain semantic-hash bound but have no source-file identity" : "not applicable to FT01"],
+        ["Processed backend payloads", pte ? `${formatNumber(payloads.length)} payload(s); ${formatNumber(payloads.filter((row) => row.structural_status === "OBSERVED_BOUNDED_FLATBUFFER_ROOT_ENVELOPE").length)} bounded public-schema FlatBuffer envelope(s); ${formatNumber(payloads.filter((row) => String(row.structural_status || "").startsWith("CONTRADICTION_")).length)} contradiction(s)` : "not applicable to FT01"],
         ["Runtime compatibility boundary", `${analysis.runtime_compat?.runtime_version_basis || "No runtime-version basis emitted."} ${analysis.runtime_compat?.detail || ""}`.trim()],
         ["Claim boundary", pte ? program?.graph_boundary || "Argument direction, delegate-internal graphs, and runtime execution are not inferred." : "FT01 does not serialize an execution graph."],
       ]),
@@ -245,10 +256,14 @@ export function serializedFormatEvidenceMarkdown(analysis) {
         code(row.name), code(row.filename), row.status, `${row.dtype || "?"} / ${(row.shape || []).join("x") || "scalar"}`, `${row.logical_bytes_decimal || "?"} / ${row.serialized_span_bytes_decimal || "?"}`, (row.reasons || []).join(" / ") || "none",
       ])) : "",
       pte && program?.delegates?.length ? "### Serialized Backend Delegates" : "",
-      pte && program?.delegates?.length ? markdownTable(["Plan", "Backend", "Processed data", "Compile specs"], program.delegates.map((row) => [
-        formatNumber(row.plan_index), code(row.backend_id), `${row.processed_location}:${row.processed_index}`, (row.compile_specs || []).map((spec) => `${code(spec.key)} (${formatNumber(spec.value_bytes)} B)`).join(" / ") || "none",
-      ])) : "",
-      "> Serialized DelegateCall rows are AOT artifact evidence. Portable KernelCall direction is source-bound only when its argument vector matches the pinned registry; unmatched/custom KernelCall and DelegateCall internals remain unbound. Planned address occupancy does not establish runtime RSS, backend availability, successful delegate initialization, executed assignment, physical transfer, or latency.",
+      pte && program?.delegates?.length ? markdownTable(["Plan", "Backend", "Source / selected build", "Processed payload", "Compile specs"], program.delegates.map((row) => {
+        const binding = bindingByDelegate.get(`${row.plan_index}:${row.index}`) || {};
+        const payload = payloadByDelegate.get(`${row.plan_index}:${row.index}`) || {};
+        return [
+        formatNumber(row.plan_index), code(row.backend_id), `${binding.source_status || "source unbound"} / ${binding.selected_build_status || "build unbound"}`, `${row.processed_location}:${row.processed_index}; ${payload.byte_length ?? "?"} B; ${payload.structural_status || "not assessed"}; SHA-256 ${payload.sha256 || "not emitted"}`, (row.compile_specs || []).map((spec) => `${code(spec.key)} (${formatNumber(spec.value_bytes)} B)`).join(" / ") || "none",
+        ];
+      })) : "",
+      `> ${buildBinding.interpretation_boundary || "Serialized DelegateCall rows are AOT artifact evidence. Portable KernelCall direction is source-bound only when its argument vector matches the pinned registry; unmatched/custom KernelCall and DelegateCall internals remain unbound."} Planned address occupancy does not establish runtime RSS, successful delegate initialization, executed assignment, physical transfer, or latency.`,
     ].filter(Boolean).join("\n");
   }
   if (format === "gguf") {
@@ -413,13 +428,20 @@ export function serializedFormatEvidenceMarkdown(analysis) {
     row.representation || "not classified",
     row.status || "not assessed",
     row.logical_output_elements == null ? "not assessed" : formatNumber(row.logical_output_elements),
-    row.scale_elements != null
-      ? `${formatNumber(row.scale_elements)} scale(s); block ${code(`[${(row.block_shape || []).join(", ")}]`)}`
-      : row.palette_count != null
+    row.representation === "affine_constant_dequantization"
+      ? `${row.granularity}; ${formatNumber(row.scale_elements)} scale / ${formatNumber(row.zero_point_elements)} zero-point value(s); axis ${formatNumber(row.serialized_axis)} -> ${formatNumber(row.normalized_axis)}`
+      : row.scale_elements != null
+        ? `${formatNumber(row.scale_elements)} scale(s); block ${code(`[${(row.block_shape || []).join(", ")}]`)}`
+        : row.palette_count != null
         ? `${formatNumber(row.palette_count)} palette value(s); ${formatNumber(row.index_bits)}-bit index; vector ${formatNumber(row.vector_size)}${row.vector_axis == null ? "" : ` on axis ${formatNumber(row.vector_axis)}`}`
         : row.stored_nonzero_elements != null
           ? `${formatNumber(row.stored_nonzero_elements)} serialized nonzero value(s); mask population ${row.mask_population_status || "not assessed"}`
           : "source rule not implemented",
+    row.lut_usage?.status?.startsWith("assessed")
+      ? `${formatNumber(row.lut_usage.palette_entries_used)}/${formatNumber(row.lut_usage.palette_entries_total)} palette entries used across ${formatNumber(row.lut_usage.index_count)} index value(s); reconstruction ${row.reconstruction?.status || "not assessed"}`
+      : row.payload_integrity
+        ? `payloads ${Object.values(row.payload_integrity).map((value) => value?.status || "not assessed").join(" / ")}; reconstruction ${row.reconstruction?.status || "not assessed"}`
+        : "payload binding not emitted",
     row.source_file && row.source_sha256 ? `${row.source_file}; SHA-256 ${code(row.source_sha256)}` : "not source-bound",
   ]);
   const flexibleScenarioRows = (flexibleScenarios?.scenarios || []).map((row) => [
@@ -432,6 +454,15 @@ export function serializedFormatEvidenceMarkdown(analysis) {
     row.peak_live_logical_payload_bytes == null ? row.peak_live_status || "not assessed" : `${formatBytes(row.peak_live_logical_payload_bytes)}; ${row.peak_live_status}`,
     (row.residuals || []).join("; ") || "none",
   ]);
+  const flexibleEnvelope = flexibleScenarios?.exact_envelope || {};
+  const flexibleEnvelopeRows = flexibleScenarios?.scenario_count ? [
+    ["Evaluated cases", `${formatNumber(flexibleScenarios.evaluated_scenario_count ?? flexibleScenarios.scenario_count)}/${formatNumber(flexibleScenarios.scenario_count)}`],
+    ["Retained case rows", `${formatNumber(flexibleScenarios.retained_scenario_count ?? flexibleScenarioRows.length)}/${formatNumber(flexibleScenarios.scenario_count)}${flexibleScenarios.scenario_rows_truncated ? "; complete aggregate retained below" : ""}`],
+    ["Nominal MAC envelope", flexibleEnvelope.total_macs_decimal_min == null ? "not assessed" : `${flexibleEnvelope.total_macs_decimal_min} - ${flexibleEnvelope.total_macs_decimal_max} MACs`],
+    ["Input payload envelope", flexibleEnvelope.input_logical_payload_bytes_min == null ? "not assessed" : `${formatBytes(flexibleEnvelope.input_logical_payload_bytes_min)} - ${formatBytes(flexibleEnvelope.input_logical_payload_bytes_max)}`],
+    ["Output payload envelope", flexibleEnvelope.output_logical_payload_bytes_min == null ? "not assessed" : `${formatBytes(flexibleEnvelope.output_logical_payload_bytes_min)} - ${formatBytes(flexibleEnvelope.output_logical_payload_bytes_max)}`],
+    ["Peak-live payload envelope", flexibleEnvelope.peak_live_logical_payload_bytes_min == null ? "not assessed" : `${formatBytes(flexibleEnvelope.peak_live_logical_payload_bytes_min)} - ${formatBytes(flexibleEnvelope.peak_live_logical_payload_bytes_max)}`],
+  ] : [];
   const classicalSources = Array.isArray(source.classical_model_sources) ? source.classical_model_sources : [];
   return [
     "## Core ML Serialized Graph And Numerical Evidence (OBSERVED + SOURCE_PINNED)",
@@ -474,8 +505,8 @@ export function serializedFormatEvidenceMarkdown(analysis) {
       `#${formatNumber(row.index)}`, code(row.name), row.model_type, row.graph_status, row.op_count == null ? "not decoded" : formatNumber(row.op_count),
     ]))] : []),
     ...(milScopeRows.length ? ["", "### MIL One-Invocation Scope Ledger", markdownTable(["Class", "Scope", "Status", "Ops", "MAC coverage", "Nominal MACs", "Logical output payload", "Scope-local liveness"], milScopeRows), `> ${milScopes.method}`, `> ${milScopes.interpretation_boundary}`] : []),
-    ...(compressionRows.length ? ["", "### Core ML Serialized Compression Contracts", markdownTable(["Operation", "Transform", "Representation", "Assessment", "Logical output elements", "Serialized contract", "Pinned rule"], compressionRows), `> ${milCompression.boundary}`] : []),
-    ...(flexibleScenarioRows.length ? ["", "### Core ML Flexible Input Scenarios", markdownTable(["Case", "Kind", "Input shapes", "Nominal MACs", "Input payload", "Output payload", "Peak live payload", "Residual"], flexibleScenarioRows), `> ${flexibleScenarios.range_interpretation}`] : []),
+    ...(compressionRows.length ? ["", "### Core ML Serialized Compression Contracts", markdownTable(["Operation", "Transform", "Representation", "Assessment", "Logical output elements", "Serialized contract", "Payload evidence", "Pinned rule"], compressionRows), `> ${milCompression.boundary}`] : []),
+    ...(flexibleScenarioRows.length ? ["", "### Core ML Flexible Input Scenarios", markdownTable(["Field", "Value"], flexibleEnvelopeRows), markdownTable(["Case", "Kind", "Input shapes", "Nominal MACs", "Input payload", "Output payload", "Peak live payload", "Residual"], flexibleScenarioRows), `> ${flexibleScenarios.range_interpretation}`] : []),
     ...(layerRows.length ? [
       "",
       markdownTable(["Operation", "Type / name", "Inputs / outputs", "Output shape(s) / contract", "MAC assessment", "Parameters / bytes", "Stored encodings", "Quant state", "Numerical scan"], layerRows),

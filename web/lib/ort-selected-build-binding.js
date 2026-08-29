@@ -17,7 +17,7 @@ export function buildOrtSelectedBuildProviderBinding(analysis, runtime) {
   const compatibility = analysis?.ort_compatibility_evidence;
   const providers = compatibility?.execution_providers || [];
   const protectedRulepackAvailable = compatibility != null;
-  if (protectedRulepackAvailable && (compatibility.schema !== "deepbom.ort_source_compatibility.v1.14"
+  if (protectedRulepackAvailable && (compatibility.schema !== "deepbom.ort_source_compatibility.v1.15"
     || compatibility.source_commit !== runtime?.source_commit || !Array.isArray(providers) || !providers.length)) {
     throw new Error("Selected ORT build cannot be cross-referenced against mismatched protected source compatibility evidence.");
   }

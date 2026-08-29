@@ -43,7 +43,7 @@ const MATRIX = Object.freeze({
     label: "ExecuTorch",
     compact: "ET12 execution plans, EValue tensors, serialized delegate calls, AOT memory, and FT01 external data",
     cells: ["full", "dag", "tensor_contract", "serialized_delegate", "external"],
-    summary: "ET12 exposes ordered execution plans, operator/delegate calls, tensor shape/dtype/layout contracts, segment-backed constants, allocation offsets, and planned non-constant buffers. FT01 exposes named external tensor/blob segments. Delegate blobs, operator argument direction without a bound signature registry, runtime allocation, kernels, physical transfer, and latency remain external.",
+    summary: "ET12 exposes ordered execution plans, source-bound portable operator/delegate calls, tensor shape/dtype/layout contracts, segment-backed constants, processed payload identities, allocation offsets, and planned non-constant buffers. A selected-build sidecar can bind source/build options, backend/operator inventories, and runtime binary digests. FT01 exposes named external tensor/blob segments. Delegate-internal semantics, initialization, executed placement, runtime allocation, kernels, physical transfer, and latency remain external.",
   }),
 });
 
@@ -252,17 +252,24 @@ export function deriveCurrentArtifactCapabilityRow(format, analysis, runtimeEvid
   } else if (id === "executorch") {
     const pte = analysis.executorch_container === "pte";
     const program = analysis.executorch_program || {};
+    const buildBinding = program.selected_build_binding || {};
+    const selectedBuild = buildBinding.selected_build || null;
+    const payloads = Array.isArray(program.processed_backend_payloads) ? program.processed_backend_payloads : [];
+    const boundedPayloads = payloads.filter((row) => row.structural_status === "OBSERVED_BOUNDED_FLATBUFFER_ROOT_ENVELOPE").length;
+    const payloadContradictions = payloads.filter((row) => String(row.structural_status || "").startsWith("CONTRADICTION_")).length;
     artifact = cell("assessed", `The ${pte ? "ET12 program" : "FT01 tensor-data container"}, FlatBuffer boundaries, extended header, and ${pte ? "program" : "data"} segments were decoded and range-validated.`);
     graph = pte
-      ? cell("decoded", `${analysis.subgraphs || 0} execution plan(s), ${analysis.operator_count || 0} ordered instruction(s), and ${analysis.tensor_count || 0} Tensor EValue(s) were decoded. Input/output argument direction within individual calls is not guessed without an operator-signature registry.`)
+      ? cell("decoded", `${analysis.subgraphs || 0} execution plan(s), ${analysis.operator_count || 0} ordered instruction(s), and ${analysis.tensor_count || 0} Tensor EValue(s) were decoded. Matching portable KernelCall argument direction is bound to the pinned ${program.operator_signature_registry?.portable_operator_count || 0}-operator registry; custom and mismatched calls remain unassessed.`)
       : cell("na", "FT01 stores named external tensor/blob data and no execution plan.");
-    numeric = cell("partial", `${analysis.weight_integrity?.assessed_tensors || 0}/${analysis.tensor_count || 0} tensor storage contract(s) have statically assessable serialized spans. Shape/cardinality, sub-byte storage, dim order, and segment conservation are checked; delegate blobs are opaque.`);
+    numeric = cell(payloadContradictions ? "conflict" : "partial", `${analysis.weight_integrity?.assessed_tensors || 0}/${analysis.tensor_count || 0} tensor storage contract(s) have statically assessable serialized spans. Shape/cardinality, sub-byte storage, dim order, and segment conservation are checked. ${payloads.length} processed delegate payload(s) are byte-exact and SHA-256 bound; ${boundedPayloads} public-schema FlatBuffer root envelope(s) pass and ${payloadContradictions} contradict the pinned payload form. Delegate-internal semantics remain outside this decoder.`);
     deployment = pte && Number(program.delegate_instruction_count || 0) > 0
-      ? cell("serialized", `${program.delegate_instruction_count} delegate call(s) and ${program.delegates?.length || 0} backend declaration(s) are serialized. Backend availability and successful execution are not observed.`)
+      ? cell(buildBinding.status === "CONTRADICTION_SELECTED_BUILD_CANNOT_SATISFY_SERIALIZED_PROGRAM" ? "conflict" : selectedBuild ? "build_bound" : "serialized", `${program.delegate_instruction_count} delegate call(s) and ${program.delegates?.length || 0} backend declaration(s) are serialized and checked against the pinned ${buildBinding.source_registry?.backend_count || 0}-backend registry. ${selectedBuild ? `${buildBinding.status}; selected-build attestation ${selectedBuild.attestation_sha256}.` : "No selected build or binary inventory is bound."} Successful backend initialization and execution are not observed.`)
       : pte
         ? cell("unbound", "No serialized delegate call establishes an accelerator backend for this program; runtime-selected or portable-kernel execution remains external.")
         : cell("na", "FT01 contains no execution placement contract.");
-    runtime = cell("external", "Native ExecuTorch runtime/build identity, delegate loading, actual allocation, kernels, physical transfers, and latency are not imported in this audit.");
+    runtime = selectedBuild
+      ? cell("build_bound", `The selected source/build inputs, operator and backend inventories, binary inventory, and primary runtime binary digest are attested. This is build evidence, not proof of dead-strip behavior, backend initialization, executed placement, physical transfer, correctness, or latency.`)
+      : cell("import_ready", "Add deepbom.executorch-build.json in the web sidecar selector or use CLI --executorch-build to bind source/build inputs, operator and backend inventories, and runtime binary digests. Execution remains a separate native evidence layer.");
   } else if (id === "coreml") {
     const macs = analysis.mac_assessment || {};
     const live = analysis.tensor_liveness || {};

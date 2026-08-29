@@ -4,6 +4,25 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Added identity-bound TensorRT 10.x/11.x optimized-engine inspector evidence,
+  strict capture tooling, selected tactic-identifier inventory, and shared
+  report/CycloneDX projection without deserializing plans in the browser.
+- Added bounded Core ML nested-pipeline/package range decoding and strengthened
+  ML Program, legacy graph, blob-integrity, shape, MAC, and liveness contracts.
+- Added deterministic SafeTensors packed quantization ownership for AWQ, GPTQ,
+  HQQ, and compressed-tensors configurations, including exact bit conservation.
+- Imported source-pinned ONNX scalar attribute defaults into ORT prechecks and
+  bound TFLite XNNPACK/GPU/NNAPI conclusions to explicit selected-build facts.
+- Added source-pinned ExecuTorch backend/payload contracts and an optional
+  selected-build attestation path shared by the web sidecar selector and CLI,
+  while retaining backend initialization and execution as runtime evidence.
+- Raised the documentation source ceiling from 280 KiB to 288 KiB to retain
+  the current public delivery, corpus, reproducibility, and evidence-boundary
+  records without relaxing runtime, verification, native-tooling, or corpus budgets.
+- Raised the development-tooling ceiling from 1,280 KiB to 1,296 KiB for the
+  web/CLI selected-build sidecars, TensorRT engine-inspector capture, and
+  tamper-routing regression cases; runtime, generated-data, verification,
+  native-tooling, and corpus budgets are unchanged.
 - Added CLI `verify`, `diff`, and `explore` surfaces backed by the existing
   interface-contract, deployment-delta, and redesign-Pareto implementations.
 - Added strict, duplicate-key-rejecting custom target-profile files with both

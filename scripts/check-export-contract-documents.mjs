@@ -476,13 +476,16 @@ const boundRuntimeEvidence = {
     name: "TensorFlow Lite",
     version: "2.21.0",
     backend: "XNNPACK",
-    build: "bazel build --define tflite_with_xnnpack_qu8=true; TFLITE_SINGLE_ROUNDING=1",
+    build: "bazel build //tensorflow/lite:benchmark_model; TFLITE_SINGLE_ROUNDING=1",
     binary_sha256: "c".repeat(64),
   },
   source: { kind: "deepbom_native_runtime_capture" },
   selector_context: {
     build: {
-      compile_definitions: [{ name: "TFLITE_SINGLE_ROUNDING", value: "1" }],
+      compile_definitions: [
+        { name: "TFLITE_SINGLE_ROUNDING", value: "1" },
+        { name: "tflite_with_xnnpack_qu8", value: "true" },
+      ],
     },
   },
 };

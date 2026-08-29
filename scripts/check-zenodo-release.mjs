@@ -4,6 +4,7 @@ import {
   PROTECTED_PREFIXES,
   analyzerIdentity,
   collectSoftwareEntries,
+  citationRecordVersion,
   publicationBlockers,
   softwareVersion,
 } from "./zenodo-release-lib.mjs";
@@ -13,6 +14,7 @@ function expect(condition, message) {
 }
 
 const version = softwareVersion();
+const citationVersion = citationRecordVersion();
 const identity = analyzerIdentity();
 const citation = readFileSync("CITATION.cff", "utf8");
 const zenodo = JSON.parse(readFileSync(".zenodo.json", "utf8"));
@@ -24,7 +26,7 @@ const indexHtml = readFileSync("web/index.html", "utf8");
 const entries = collectSoftwareEntries();
 const names = new Set(entries.map((item) => item.path));
 const versionDoi = "10.5281/zenodo.21834509";
-const recommendedCitation = `Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts (Version ${version}) [Computer software]. Zenodo. https://doi.org/${versionDoi}`;
+const recommendedCitation = `Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts (Version ${citationVersion}) [Computer software]. Zenodo. https://doi.org/${versionDoi}`;
 
 expect(citation.includes("0000-0002-6464-3895"), "CITATION.cff must bind the creator ORCID.");
 expect(citation.includes(`doi: "${versionDoi}"`) && citation.includes(recommendedCitation), "CITATION.cff must bind the published version DOI and recommended citation.");
@@ -45,10 +47,10 @@ expect(
   "Zenodo metadata must describe a restricted citation dossier without implying that absent implementation components are distributed.",
 );
 expect(zenodo.creators?.[0]?.orcid === "0000-0002-6464-3895", "Zenodo metadata must bind the creator ORCID.");
-expect(datasetMetadata.version === version && datasetMetadata.upload_type === "dataset" && datasetMetadata.license === "cc-by-4.0", "Validation metadata must describe the matching CC BY 4.0 dataset.");
+expect(datasetMetadata.version === citationVersion && datasetMetadata.upload_type === "dataset" && datasetMetadata.license === "cc-by-4.0", "Validation metadata must describe the published citation-record version and CC BY 4.0 dataset.");
 expect(releaseGuide.includes("source code") && releaseGuide.includes("WebAssembly"), "Zenodo release guide must disclose code and executable exclusions.");
 expect(reproducibility.includes("OBSERVED") && reproducibility.includes("DERIVED") && reproducibility.includes("PREDICTED"), "Reproducibility guide must define evidence classes.");
-expect(identity.semantic_version === version, "Analyzer semantic version must match the Zenodo release version.");
+expect(identity.semantic_version === version, "Analyzer semantic version must match the current package version.");
 expect(
   JSON.stringify(publicationBlockers("validation", { dirty: true, commit: "release" }, {
     validation_git_worktree_dirty: true,
@@ -76,4 +78,4 @@ for (const name of names) {
   expect(!/\.(?:js|mjs|rs|wasm|tflite|onnx|gguf|safetensors|mlmodel)$/i.test(name), `Code, executable, or model content entered the citation record: ${name}.`);
 }
 
-console.log(`Zenodo release contract passed (${version}, ${entries.length} restricted non-code dossier files).`);
+console.log(`Zenodo citation contract passed (published ${citationVersion}; current software ${version}; ${entries.length} restricted non-code dossier files).`);

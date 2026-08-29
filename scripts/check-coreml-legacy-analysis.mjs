@@ -101,6 +101,17 @@ function flexibleImageConvFixture() {
   return concat(uint(1, 3), message(2, description), message(500, network));
 }
 
+function wideFlexibleImageFixture() {
+  const sizes = Array.from({ length: 17 }, (_, index) => [index + 1, index + 1]);
+  const network = concat(message(1, layer("copy", ["primary"], ["output"], 600, Buffer.alloc(0))));
+  const description = concat(
+    message(1, feature("primary", enumeratedImageType(1, 1, sizes))),
+    message(1, feature("context", enumeratedImageType(1, 1, sizes))),
+    message(10, feature("output", imageType(1, 1))),
+  );
+  return concat(uint(1, 3), message(2, description), message(500, network));
+}
+
 function fixture({ corruptWeights = false, nonfinite = false, unnamedPreprocessing = false } = {}) {
   const convValues = Array.from({ length: corruptWeights ? 17 : 18 }, (_, index) => nonfinite && index === 0 ? Number.NaN : (index + 1) / 32);
   const conv = concat(
@@ -206,6 +217,35 @@ async function analyze(payload) {
   return (await readCoreMlModelFile(new File([payload], "fixture.mlmodel"))).analysis;
 }
 
+class SparseModelFile {
+  constructor(prefix, size, name = "large-range-streamed.mlmodel") {
+    this.prefix = Buffer.from(prefix);
+    this.size = size;
+    this.name = name;
+    this.maximum_read_bytes = 0;
+  }
+  slice(start, end) {
+    const length = end - start;
+    this.maximum_read_bytes = Math.max(this.maximum_read_bytes, length);
+    if (length > 2 * 1024 * 1024) throw new Error(`Core ML range parser attempted a ${length}-byte contiguous read`);
+    const result = Buffer.alloc(length);
+    const copyStart = Math.max(start, 0);
+    const copyEnd = Math.min(end, this.prefix.length);
+    if (copyEnd > copyStart) this.prefix.copy(result, copyStart - start, copyStart, copyEnd);
+    return { arrayBuffer: async () => result.buffer.slice(result.byteOffset, result.byteOffset + result.byteLength) };
+  }
+}
+
+function largeRangeStreamedFixture() {
+  const paddingBytes = 64 * 1024 * 1024 + 1;
+  const copyLayer = message(1, layer("copy", ["input"], ["output"], 600, Buffer.alloc(0)));
+  const networkPrefix = concat(copyLayer, key(999, 2), varint(paddingBytes));
+  const networkLength = networkPrefix.length + paddingBytes;
+  const description = concat(message(1, feature("input", arrayType([1]))), message(10, feature("output", arrayType([1]))));
+  const prefix = concat(uint(1, 5), message(2, description), key(500, 2), varint(networkLength), networkPrefix);
+  return new SparseModelFile(prefix, prefix.length + paddingBytes);
+}
+
 const bytesOk = fixture();
 const analysis = await analyze(bytesOk);
 analysis.model_sha256 = createHash("sha256").update(bytesOk).digest("hex");
@@ -216,6 +256,13 @@ assert(JSON.stringify(analysis.ops.map((op) => op.output_shapes[0])) === JSON.st
 assert(analysis.weight_integrity?.status === "assessed" && analysis.weight_integrity.parameter_count === 4, "Core ML WeightParams coverage is incomplete");
 assert(analysis.weight_integrity.payload_bytes === 188 && analysis.weight_integrity.assessed_payload_bytes === 188, "Core ML WeightParams byte conservation failed");
 assert(analysis.weight_integrity.nonfinite_value_count === 0, "Finite Core ML fixture produced a non-finite finding");
+const largeRangeFile = largeRangeStreamedFixture();
+const largeRangeAnalysis = (await readCoreMlModelFile(largeRangeFile)).analysis;
+assert(largeRangeAnalysis.operator_count === 1 && largeRangeAnalysis.ops[0]?.name === "COPY",
+  "Core ML range parser did not decode the graph beyond the former 64 MiB payload limit");
+assert(largeRangeAnalysis.coreml?.payload_read_strategy === "range_streamed_top_level_records"
+  && largeRangeFile.maximum_read_bytes <= 2 * 1024 * 1024,
+"Core ML large-payload analysis did not preserve bounded range reads");
 const rangedInterface = await analyze(rangedInterfaceFixture());
 assert(rangedInterface.inputs[0].constraints?.flexibility?.dimensions?.[0]?.lower_bound === 0
   && rangedInterface.inputs[0].constraints.flexibility.dimensions[0].upper_bound === -1
@@ -231,6 +278,29 @@ assert(flexibleScenarios?.status === "assessed_all_serialized_cases" && flexible
 assert(JSON.stringify(flexibleScenarios.scenarios.map((row) => [row.total_macs, row.input_logical_payload_bytes, row.output_logical_payload_bytes, row.peak_live_logical_payload_bytes]))
   === JSON.stringify([[72, 64, 32, 96], [648, 256, 288, 544]]),
 `Core ML flexible-shape scenario arithmetic is inconsistent: ${JSON.stringify(flexibleScenarios.scenarios)}`);
+const wideFlexible = await analyze(wideFlexibleImageFixture());
+const wideFlexibleBytes = wideFlexibleImageFixture();
+wideFlexible.model_sha256 = createHash("sha256").update(wideFlexibleBytes).digest("hex");
+const wideFlexibleScenarios = wideFlexible.coreml?.flexible_input_scenarios;
+assert(wideFlexibleScenarios?.status === "assessed_all_serialized_cases"
+  && wideFlexibleScenarios.scenario_count === 289
+  && wideFlexibleScenarios.evaluated_scenario_count === 289
+  && wideFlexibleScenarios.retained_scenario_count === 256
+  && wideFlexibleScenarios.scenario_rows_truncated === true
+  && wideFlexibleScenarios.assessed_scenario_count === 289,
+"Core ML finite shape products above the presentation limit were not exhaustively evaluated");
+assert(wideFlexibleScenarios.exact_envelope?.input_logical_payload_bytes_min === 8
+  && wideFlexibleScenarios.exact_envelope.input_logical_payload_bytes_max === 2312,
+`Core ML streamed flexible-shape envelope is inconsistent: ${JSON.stringify(wideFlexibleScenarios.exact_envelope)}`);
+const wideFlexibleReport = buildEngineeringReport(wideFlexible, { generatedAt: "2026-08-07T00:00:00.000Z" });
+assert(wideFlexibleReport.includes("289/289") && wideFlexibleReport.includes("256/289; complete aggregate retained below"),
+"Core ML streamed flexible-shape report does not disclose evaluated and retained denominators");
+const wideFlexibleEvidence = buildEngineeringEvidenceDocument(wideFlexible, {
+  reportContext: { generatedAt: "2026-08-07T00:00:00.000Z", identity: { filename: "wide-flexible.mlmodel", format: "coreml", sha256: wideFlexible.model_sha256 } },
+  rawEvidenceContext: { identity: { filename: "wide-flexible.mlmodel", format: "coreml", sha256: wideFlexible.model_sha256 } },
+  mlBomDocument: buildMlBomDocument(wideFlexible, { hash: wideFlexible.model_sha256 }),
+});
+assert(wideFlexibleEvidence.evidence?.conformance_report?.status === "pass", "Core ML streamed flexible-shape report/export conformance failed");
 const flexibleReport = buildEngineeringReport(flexibleImage, { generatedAt: "2026-08-07T00:00:00.000Z" });
 assert(flexibleReport.includes("Core ML Flexible Input Scenarios") && flexibleReport.includes("648 MACs")
   && flexibleReport.includes("not a proof that an interior point cannot have a larger cost or payload"),

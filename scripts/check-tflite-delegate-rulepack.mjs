@@ -6,6 +6,10 @@ import {
   applyProtectedTfliteDelegateCompatibilityEvidence,
   validateProtectedTfliteDelegateCompatibilityEvidence,
 } from "../web/lib/tflite-delegate-compatibility.js";
+import {
+  bindTfliteDelegateRequirement,
+  summarizeTfliteDelegateBuildBinding,
+} from "../web/lib/tflite-build-configuration-binding.js";
 
 const manifestPath = new URL("../reference/tflite-delegates/rule-manifest.json", import.meta.url);
 const manifestPresent = existsSync(manifestPath);
@@ -80,7 +84,53 @@ notApplicable.build_requirements = [];
 notApplicable.graph_op_count = 0;
 assert(validateProtectedTfliteDelegateCompatibilityEvidence(nonTflite, notApplicable), "Non-TFLite not-applicable envelope was rejected.");
 
-console.log(`TFLite delegate rulepack checks passed: 174 source registrations, ${manifestPresent ? "canonical manifest reproduction" : "public metadata identity"}, strict browser merge, fail-closed mutations, and ${protectedSourcesPresent ? "private generated-source parity" : "an explicit public-source boundary"}.`);
+const selectedBuild = {
+  tflite_delegate_build_inventory: {
+    evidence_class: "DECLARED_BUILD_AND_RUNTIME_OPTION_INVENTORY",
+    gpu: {
+      compiled_status: "enabled_by_declared_cmake_option",
+      experimental_flags: 1,
+      quantized_model_flag_status: "enabled_by_declared_runtime_option",
+    },
+    nnapi: {
+      compiled_status: "enabled_by_declared_cmake_option_and_android_gate",
+      runtime_feature_level: 31,
+      accelerator_identity: "android-nnapi-default-device",
+      capability_source: "android_nnapi_runtime_query",
+    },
+  },
+};
+const selectedSummary = summarizeTfliteDelegateBuildBinding(selectedBuild, evidence.build_requirements);
+assert(selectedSummary.applicable_requirement_count === 4, "Selected-build summary lost an applicable delegate requirement.");
+assert(selectedSummary.satisfied_requirement_count === 3, "Selected-build summary must close only the quant option and two NNAPI requirements.");
+assert(selectedSummary.pending_or_partial_count === 1 && selectedSummary.contradiction_count === 0,
+  "GPU target-backend uncertainty must remain partial rather than support or contradiction.");
+assert(!selectedSummary.all_applicable_requirements_bound,
+  "TFLITE_ENABLE_GPU alone must not establish target-backend inclusion or runtime assignment.");
+assert(selectedSummary.rows.find((row) => row.id === "tflite_gpu_delegate_compiled")?.binding.status
+  === "partial_gpu_delegate_compiled_target_backend_unobserved", "GPU selected-build boundary was widened.");
+assert(selectedSummary.rows.find((row) => row.id === "tflite_nnapi_feature_level")?.binding.status
+  === "observed_runtime_capability_present", "Observed NNAPI capability query was not recognized.");
+
+const declaredNnapi = structuredClone(selectedBuild);
+declaredNnapi.tflite_delegate_build_inventory.nnapi.capability_source = "declared_capture_configuration";
+assert(bindTfliteDelegateRequirement(declaredNnapi, evidence.build_requirements[3]).status
+  === "partial_declared_runtime_capability_not_observed", "Declared NNAPI capability must not be promoted to an observation.");
+
+const disabledBuild = structuredClone(selectedBuild);
+disabledBuild.tflite_delegate_build_inventory.gpu.compiled_status = "disabled_by_declared_cmake_option";
+disabledBuild.tflite_delegate_build_inventory.gpu.experimental_flags = 0;
+disabledBuild.tflite_delegate_build_inventory.gpu.quantized_model_flag_status = "disabled_by_declared_runtime_option";
+disabledBuild.tflite_delegate_build_inventory.nnapi.compiled_status = "disabled_by_non_android_cmake_gate";
+const disabledSummary = summarizeTfliteDelegateBuildBinding(disabledBuild, evidence.build_requirements);
+assert(disabledSummary.contradiction_count === 3,
+  "Disabled GPU compile, GPU quant option, and NNAPI Android gate must remain three explicit contradictions.");
+
+const noAffected = { ...evidence.build_requirements[0], affected_source_candidate_op_count: 0 };
+assert(bindTfliteDelegateRequirement(selectedBuild, noAffected).status
+  === "not_applicable_no_affected_source_candidates", "Zero-affected requirements must remain not applicable.");
+
+console.log(`TFLite delegate rulepack checks passed: 174 source registrations, ${manifestPresent ? "canonical manifest reproduction" : "public metadata identity"}, strict browser merge, fail-closed mutations, selected-build requirement binding, and ${protectedSourcesPresent ? "private generated-source parity" : "an explicit public-source boundary"}.`);
 
 function profileRuleCount(profile) {
   return profile?.rules?.length ?? profile?.registeredOpCount ?? null;

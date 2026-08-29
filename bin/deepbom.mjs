@@ -8,6 +8,7 @@ import process from "node:process";
 import { detectModelFormat } from "../web/lib/model-file.js";
 import { analyzeOnnxModel } from "../web/onnx.js";
 import { analyzeExecuTorchModel } from "../web/executorch.js";
+import { EXECUTORCH_SELECTED_BUILD_INPUT_SCHEMA } from "../web/lib/executorch-build-binding.js";
 import { parseStrictJson, readMetadataModelFile } from "../web/lib/metadata-model-adapters.js";
 import { readCoreMlModelFile } from "../web/lib/coreml-metadata-adapter.js";
 import { validateCustomTargetSpec } from "../web/lib/custom-targets.js";
@@ -59,10 +60,22 @@ async function main(argv) {
     throw new Error(`${parsed.targetProfile ? "--target-profile" : "--target"} applies only to TFLite artifacts, received ${detectedFormat}.`);
   }
   if (parsed.externalDataRoot && input.kind !== "file") throw new Error("--external-data-dir applies only to an ONNX or ExecuTorch PTE file.");
+  if (parsed.executorchBuild && (input.kind !== "file" || detectedFormat !== "executorch")) {
+    throw new Error("--executorch-build applies only to an ExecuTorch PTE artifact.");
+  }
   if (input.kind === "file" && ["unsupported", "pytorch_pickle"].includes(detectedFormat)) {
     throw new Error(`Unsupported artifact format: ${detectedFormat}`);
   }
-  let analysis = await analyzeArtifact({ input, filename, format: detectedFormat, target: targetBinding.value, externalDataRoot: parsed.externalDataRoot });
+  const execuTorchBuild = parsed.executorchBuild
+    ? await readJsonSidecar(parsed.executorchBuild, "executorch_selected_build_attestation") : null;
+  let analysis = await analyzeArtifact({
+    input,
+    filename,
+    format: detectedFormat,
+    target: targetBinding.value,
+    externalDataRoot: parsed.externalDataRoot,
+    execuTorchBuild,
+  });
   const format = String(analysis.format || detectedFormat).toLowerCase();
   if (["unsupported", "pytorch_pickle"].includes(format)) {
     throw new Error(`Unsupported artifact format: ${format}`);
@@ -77,6 +90,9 @@ async function main(argv) {
   if (parsed.request && parsed.command !== "explore") throw new Error("--request is valid only with the explore command.");
   if (parsed.externalDataRoot && !["onnx", "executorch"].includes(format)) {
     throw new Error("--external-data-dir applies only to an ONNX or ExecuTorch PTE file.");
+  }
+  if (parsed.executorchBuild && (format !== "executorch" || analysis.executorch_container !== "pte")) {
+    throw new Error("--executorch-build applies only to an ExecuTorch PTE artifact.");
   }
   if (parsed.command === "gguf" && format !== "gguf") {
     throw new Error(`The gguf command requires a GGUF artifact, received ${format}.`);
@@ -124,15 +140,16 @@ async function main(argv) {
     const sidecar = await readJsonSidecar(parsed.llmMemoryProfile, "llm_static_memory_profile");
     analysis.on_device_llm.static_memory_placement = buildLlmStaticMemoryPlacement(analysis.on_device_llm, analysis, sidecar);
   }
-  if ((parsed.tensorrtProfile || parsed.tensorrtParserEvidence) && format !== "onnx") {
-    throw new Error("--tensorrt-profile and --tensorrt-parser-evidence apply only to ONNX artifacts.");
+  if ((parsed.tensorrtProfile || parsed.tensorrtParserEvidence || parsed.tensorrtEngineInspector) && format !== "onnx") {
+    throw new Error("--tensorrt-profile, --tensorrt-parser-evidence, and --tensorrt-engine-inspector apply only to ONNX artifacts.");
   }
   if (format === "onnx") {
     const parserEvidence = parsed.tensorrtParserEvidence ? await readJsonDocument(parsed.tensorrtParserEvidence) : null;
+    const engineInspectorEvidence = parsed.tensorrtEngineInspector ? await readJsonDocument(parsed.tensorrtEngineInspector) : null;
     const buildProfile = parsed.tensorrtProfile
       ? await readJsonDocument(parsed.tensorrtProfile)
       : parserEvidence?.build_profile || null;
-    analysis.tensorrt_static_preflight = buildTensorRtStaticPreflight(analysis, buildProfile, parserEvidence);
+    analysis.tensorrt_static_preflight = buildTensorRtStaticPreflight(analysis, buildProfile, parserEvidence, engineInspectorEvidence);
   }
 
   if (parsed.command === "verify") return runVerifyCommand(parsed, analysis, artifact);
@@ -177,14 +194,15 @@ function validateInvocation(parsed) {
   if (parsed.request && parsed.command !== "explore") throw new Error("--request is valid only with the explore command.");
   if (parsed.command === "verify" && !parsed.contract) throw new Error("The verify command requires --contract <json>.");
   if (parsed.command === "diff" && !parsed.candidate) throw new Error("The diff command requires baseline and candidate TFLite artifacts.");
+  if (parsed.executorchBuild && parsed.command !== "audit") throw new Error("--executorch-build is valid only with the audit command.");
   if (["verify", "diff", "explore"].includes(parsed.command)) assertCommandOutputFormat(parsed, parsed.command);
 }
 
 async function runDiffCommand(parsed, targetBinding) {
   assertCommandOutputFormat(parsed, "diff");
   assertNoOptions(parsed, [
-    "contract", "request", "context", "batch", "stateBits", "memoryMib", "tensorrtProfile", "tensorrtParserEvidence",
-    "tensorrtLlmConfig", "tensorrtLlmBinding", "llmMemoryProfile", "externalDataRoot",
+    "contract", "request", "context", "batch", "stateBits", "memoryMib", "tensorrtProfile", "tensorrtParserEvidence", "tensorrtEngineInspector",
+    "tensorrtLlmConfig", "tensorrtLlmBinding", "llmMemoryProfile", "externalDataRoot", "executorchBuild",
   ], "diff");
   const baselineInput = await loadCliInput(path.resolve(parsed.input));
   const candidateInput = await loadCliInput(path.resolve(parsed.candidate));
@@ -315,7 +333,7 @@ function optionName(name) {
   return `--${name.replace(/[A-Z]/g, (character) => `-${character.toLowerCase()}`)}`;
 }
 
-async function analyzeArtifact({ input, filename, format, target, externalDataRoot }) {
+async function analyzeArtifact({ input, filename, format, target, externalDataRoot, execuTorchBuild }) {
   if (input.kind === "bundle") {
     const parsed = await readArtifactBundle(input.files);
     await verifyBundleSnapshot(input.files, parsed.analysis.artifact_bundle?.files);
@@ -335,14 +353,25 @@ async function analyzeArtifact({ input, filename, format, target, externalDataRo
 
   if (format === "executorch") {
     const bytes = await readCliFileBytes(input);
-    const structural = analyzeExecuTorchModel(bytes, filename);
+    const buildOptions = execuTorchBuild ? {
+      selectedBuildAttestation: execuTorchBuild.document,
+      selectedBuildInput: {
+        schema: EXECUTORCH_SELECTED_BUILD_INPUT_SCHEMA,
+        path: execuTorchBuild.path,
+        byte_length: execuTorchBuild.byte_length,
+        file_sha256: execuTorchBuild.sha256,
+        attestation_sha256: execuTorchBuild.document?.attestation_sha256,
+        duplicate_key_validation: "complete",
+      },
+    } : {};
+    const structural = analyzeExecuTorchModel(bytes, filename, buildOptions);
     if (structural.executorch_container !== "pte") {
-      if (externalDataRoot) throw new Error("--external-data-dir is not applicable to a standalone ExecuTorch PTD file.");
+      if (externalDataRoot || execuTorchBuild) throw new Error("ExecuTorch PTD files do not accept external-data or selected-build sidecars.");
       return structural;
     }
     if (!structural.executorch_program?.external_tensor_data?.required_name_count) return structural;
     const externalDataFiles = await loadExecuTorchExternalData(input.path, externalDataRoot);
-    return externalDataFiles.length ? analyzeExecuTorchModel(bytes, filename, { externalDataFiles }) : structural;
+    return externalDataFiles.length ? analyzeExecuTorchModel(bytes, filename, { ...buildOptions, externalDataFiles }) : structural;
   }
 
   if (format === "gguf" || format === "safetensors") {
@@ -705,10 +734,12 @@ function parseArguments(argv) {
     memoryMib: null,
     tensorrtProfile: "",
     tensorrtParserEvidence: "",
+    tensorrtEngineInspector: "",
     tensorrtLlmConfig: "",
     tensorrtLlmBinding: "",
     llmMemoryProfile: "",
     externalDataRoot: "",
+    executorchBuild: "",
     json: false,
     compact: false,
   };
@@ -727,10 +758,12 @@ function parseArguments(argv) {
     else if (token === "--memory-mib") parsed.memoryMib = positiveInteger(requiredValue(values, token), token);
     else if (token === "--tensorrt-profile") parsed.tensorrtProfile = requiredValue(values, token);
     else if (token === "--tensorrt-parser-evidence") parsed.tensorrtParserEvidence = requiredValue(values, token);
+    else if (token === "--tensorrt-engine-inspector") parsed.tensorrtEngineInspector = requiredValue(values, token);
     else if (token === "--tensorrt-llm-config") parsed.tensorrtLlmConfig = requiredValue(values, token);
     else if (token === "--tensorrt-llm-binding") parsed.tensorrtLlmBinding = requiredValue(values, token);
     else if (token === "--llm-memory-profile") parsed.llmMemoryProfile = requiredValue(values, token);
     else if (token === "--external-data-dir") parsed.externalDataRoot = requiredValue(values, token);
+    else if (token === "--executorch-build") parsed.executorchBuild = requiredValue(values, token);
     else if (token === "--format") parsed.outputFormat = requiredValue(values, token).toLowerCase();
     else if (token === "--output" || token === "-o") parsed.output = requiredValue(values, token);
     else if (token === "--timestamp") parsed.timestamp = normalizeTimestamp(requiredValue(values, token));
@@ -801,6 +834,8 @@ async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_B
 
 function printHelp() {
   process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     GGUF context-length scenario\n  --batch <count>        GGUF scenario batch size (default: 1)\n  --state-bits <bits>    GGUF KV-state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the static lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis or cyclonedx (default: analysis; audit/gguf only)\n  --timestamp <iso>      Fixed CycloneDX generation timestamp\n  --output, -o <path>    Write the complete JSON document to a file\n  --json                 Emit the complete formatted evidence JSON\n  --compact              Emit the complete compact evidence JSON\n  --version              Print version\n  --help                 Show this help\n\nverify exit codes:\n  0 exact pass; 2 contradiction or invalid declaration; 3 incomplete release binding\n`);
+  process.stdout.write("\nTensorRT optimized-engine option:\n  --tensorrt-engine-inspector <json>\n                          Import identity-bound TensorRT optimized-engine inspector evidence\n");
+  process.stdout.write("\nExecuTorch selected-build option:\n  --executorch-build <json>\n                          Bind backend/operator inventories and runtime binary digests to a PTE audit\n");
 }
 
 main(process.argv.slice(2)).catch((error) => {

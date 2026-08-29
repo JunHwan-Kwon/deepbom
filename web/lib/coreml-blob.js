@@ -83,16 +83,20 @@ function float8ToNumber(code, exponentBits, mantissaBits, bias, finiteOnly) {
   return sign * (1 + mantissa / 2 ** mantissaBits) * 2 ** (exponent - bias);
 }
 
-function statsState(type) {
+function statsState(type, retainValues = false) {
   return {
     type, decoded_value_count: 0, finite_count: 0, zero_count: 0, negative_zero_count: 0,
     nan_count: 0, positive_infinity_count: 0, negative_infinity_count: 0,
     finite_min: null, finite_max: null, code_histogram: type.bits <= 8 && ["int", "uint"].includes(type.kind) ? new Array(2 ** type.bits).fill(0) : null,
+    retained_values: retainValues ? [] : null,
   };
 }
 
 function observe(state, value, rawCode = null) {
   state.decoded_value_count += 1;
+  if (state.retained_values) state.retained_values.push(Number.isNaN(value) ? "NaN"
+    : value === Number.POSITIVE_INFINITY ? "+Infinity"
+      : value === Number.NEGATIVE_INFINITY ? "-Infinity" : Object.is(value, -0) ? "-0" : value);
   if (rawCode != null && state.code_histogram) state.code_histogram[rawCode] += 1;
   if (Number.isNaN(value)) { state.nan_count += 1; return; }
   if (value === Number.POSITIVE_INFINITY) { state.positive_infinity_count += 1; return; }
@@ -123,8 +127,8 @@ function decodeByteAligned(state, bytes) {
 
 async function scanPayload(file, metadata, type, onProgress) {
   const digest = new Sha256Accumulator();
-  const state = statsState(type);
   const expectedCount = (metadata.size_in_bytes * 8 - (type.bits < 8 ? metadata.padding_bits : 0)) / type.bits;
+  const state = statsState(type, expectedCount <= 256);
   let processed = 0;
   if (type.bits >= 8) {
     const width = type.bits / 8;
@@ -169,15 +173,21 @@ async function scanPayload(file, metadata, type, onProgress) {
   }
   if (state.decoded_value_count !== expectedCount) throw new Error(`Core ML blob decoded ${state.decoded_value_count} values; expected ${expectedCount}`);
   const nonfinite = state.nan_count + state.positive_infinity_count + state.negative_infinity_count;
-  const levels = state.code_histogram?.filter((count) => count > 0).length ?? null;
+  const histogram = state.code_histogram;
+  const levels = histogram?.filter((count) => count > 0).length ?? null;
+  const retainedValues = state.retained_values;
   delete state.type;
   delete state.code_histogram;
+  delete state.retained_values;
   return {
     status: "assessed_full_payload", byte_length: metadata.size_in_bytes, payload_sha256: digest.digestHex(), ...state,
     nonfinite_count: nonfinite, all_zero: state.decoded_value_count > 0 && state.zero_count === state.decoded_value_count,
     constant_finite: state.decoded_value_count > 0 && nonfinite === 0 && state.finite_min === state.finite_max,
     quant_code_levels_used: levels, quant_code_level_capacity: levels == null ? null : 2 ** type.bits,
     quant_code_utilization_ratio: levels == null ? null : levels / 2 ** type.bits,
+    quant_code_histogram: histogram,
+    decoded_values_status: retainedValues ? "complete_bounded_payload" : "not_retained_above_256_values",
+    decoded_values: retainedValues || [],
   };
 }
 

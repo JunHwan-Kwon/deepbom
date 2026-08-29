@@ -2349,6 +2349,7 @@ export function registerOnnxConformance({
         && conditionInventory.source_rule_count === 938
         && conditionInventory.cpu_registration_variant_count === 611
         && conditionInventory.machine_condition_count === 540
+        && conditionInventory.versioned_scalar_schema_default_binding_count === 80
         && conditionInventory.unresolved_source_fragment_count === 432
         && conditionInventory.informational_source_note_count === 425
         && (conditionInventory.execution_providers || []).length === 8

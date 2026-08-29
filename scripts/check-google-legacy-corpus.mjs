@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { spawnSync } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
@@ -68,27 +67,13 @@ assert.deepEqual(
 );
 assert.match(measurementBaseline.analyzer.git_commit, /^[0-9a-f]{40}$/);
 assert.equal(measurementBaseline.analyzer.working_tree_dirty, false);
-const recordedAnalyzer = spawnSync(
-  "git",
-  ["show", `${measurementBaseline.analyzer.git_commit}:pkg/tflite_wasm_audit_bg.wasm`],
-  { encoding: null, maxBuffer: 8 * 1024 * 1024 },
-);
-assert.equal(
-  recordedAnalyzer.status,
-  0,
-  `Cannot read the analyzer WASM from recorded commit ${measurementBaseline.analyzer.git_commit}.`,
-);
-assert.equal(measurementBaseline.analyzer.wasm_size_bytes, recordedAnalyzer.stdout.byteLength);
+const archivedAnalyzerPath = `corpus/google_legacy/provenance/tflite_wasm_audit_bg.${measurementBaseline.analyzer.wasm_sha256}.wasm.gz`;
+const recordedAnalyzer = gunzipSync(await readFile(archivedAnalyzerPath));
+assert.equal(measurementBaseline.analyzer.wasm_size_bytes, recordedAnalyzer.byteLength);
 assert.equal(
   measurementBaseline.analyzer.wasm_sha256,
-  createHash("sha256").update(recordedAnalyzer.stdout).digest("hex"),
+  createHash("sha256").update(recordedAnalyzer).digest("hex"),
 );
-const baselineIsAncestor = spawnSync(
-  "git",
-  ["merge-base", "--is-ancestor", measurementBaseline.analyzer.git_commit, "HEAD"],
-  { encoding: "utf8" },
-);
-assert.equal(baselineIsAncestor.status, 0, "Measurement baseline analyzer must be an ancestor of HEAD.");
 
 for (const invalid of ["", "../model.tflite", "/model.tflite", "a\\model.tflite", "a/../model.tflite"]) {
   assert.throws(() => normalizeMemberPath(invalid), /Unsafe archive member path/);
@@ -100,6 +85,7 @@ const repositoryFiles = await listFiles("corpus/google_legacy");
 assert.equal(repositoryFiles.filter((filename) => /\.(?:tflite|tgz|zip)$/i.test(filename)).length, 0);
 for (const required of [
   "corpus/google_legacy/README.md",
+  archivedAnalyzerPath,
   GOOGLE_LEGACY_MANIFEST_PATH,
   GOOGLE_LEGACY_COHORTS_PATH,
   "scripts/download-google-legacy-corpus.mjs",

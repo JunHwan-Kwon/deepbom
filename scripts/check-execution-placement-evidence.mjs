@@ -33,7 +33,7 @@ const tflite = {
   delegation_repair: {
     runtime_build_risks: [{
       baseline_conditionally_delegatable_op_count: 4,
-      required_build_configuration: "XNNPACK enabled",
+      required_build_configuration: "--define tflite_with_xnnpack_qu8=true; selected build evidence required",
     }],
   },
   tflite_delegate_compatibility_evidence: {
@@ -52,7 +52,25 @@ assert.deepEqual(tfliteStatic.flow.segments.map((row) => row.item_count), [2, 1,
 assert.deepEqual(tfliteStatic.portfolios.map((row) => [row.id, row.candidate_count, row.total_count]), [
   ["xnnpack", 4, 5], ["gpu", 3, 5], ["nnapi", 2, 5],
 ]);
+assert(tfliteStatic.banner, "An unbound XNNPACK build requirement must remain visible.");
 conserves(tfliteStatic);
+
+const tfliteAlternateInventoryPresenceOnly = buildExecutionPlacementEvidence(tflite, {
+  tflite_delegate_build_inventory: { schema: "fixture-selected-build" },
+});
+assert(tfliteAlternateInventoryPresenceOnly.banner,
+  "A GPU/NNAPI selected-build inventory must not suppress an unrelated XNNPACK build warning.");
+assert.equal(tfliteAlternateInventoryPresenceOnly.levels[2].state, "UNBOUND",
+  "Inventory presence without requirement-level binding must remain configuration-unbound.");
+assert.match(tfliteAlternateInventoryPresenceOnly.levels[2].detail, /not embedded in TFLite/);
+
+const tfliteXnnpackBuildBound = buildExecutionPlacementEvidence(tflite, {
+  runtime: { build: "bazel build //tensorflow/lite:benchmark_model" },
+  selector_context: { build: { compile_definitions: [{ name: "tflite_with_xnnpack_qu8", value: "true" }] } },
+});
+assert.equal(tfliteXnnpackBuildBound.banner, null,
+  "The exact selected-build definition must close the corresponding XNNPACK warning.");
+assert.match(tfliteXnnpackBuildBound.levels[2].detail, /XNNPACK build requirements are bound/);
 
 const partialAssignments = {
   artifact_sha256: sha,

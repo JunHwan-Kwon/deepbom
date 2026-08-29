@@ -3,6 +3,16 @@ import { createHash } from "node:crypto";
 
 import { analyzeExecuTorchModel, assessExecuTorchPortableKernelMac, compareExecuTorchExternalTensorContract, deriveExecuTorchTensorShapeContract, EXECUTORCH_SCHEMA_SOURCE } from "../web/executorch.js";
 import { EXECUTORCH_OPERATOR_SIGNATURE_SOURCE, EXECUTORCH_PORTABLE_OPERATOR_SIGNATURES } from "../web/lib/executorch-operator-signatures.generated.js";
+import {
+  assessExecuTorchProcessedPayload,
+  EXECUTORCH_BACKEND_REGISTRY_SOURCE,
+  EXECUTORCH_SELECTED_BUILD_ATTESTATION_SCHEMA,
+  EXECUTORCH_SELECTED_BUILD_INPUT_SCHEMA,
+  resolveExecuTorchSelectedBuildAttestation,
+  validateExecuTorchSelectedBuildAttestation,
+} from "../web/lib/executorch-build-binding.js";
+import { canonicalJson } from "../web/lib/report-utils.js";
+import { sha256TextHex } from "../web/lib/sha256-sync.js";
 import { buildEngineeringReport } from "../web/lib/report-engineering.js";
 import {
   decodeFixtureBase64,
@@ -37,6 +47,11 @@ assert.equal(add.mac_assessment.source_bound_kernel_instruction_count, 1);
 assert.equal(add.mac_assessment.non_compute_instruction_count, 0);
 assert.equal(add.stages[0].mac_assessed_ops, 1);
 assert.equal(add.stages[0].mac_not_assessed_ops, 0);
+assert.equal(add.runtime_compat.min_runtime_version, null);
+assert.equal(add.runtime_compat.min_runtime_version_status, "NOT_DERIVABLE_SCHEMA_VERSION_NOT_RELEASE_MONOTONIC");
+assert.equal(add.runtime_compat.schema_version_status, "MATCHES_PINNED_EXPORTER_SCHEMA_VERSION");
+assert.equal(add.executorch_program.selected_build_binding.status, "SOURCE_ONLY_SELECTED_BUILD_UNBOUND");
+assert.equal(add.executorch_program.selected_build_binding.kernel_bindings[0].selected_build_status, "SELECTED_BUILD_NOT_BOUND");
 assert.equal(add.tensor_liveness.planned_non_const_memory_decimal, "48");
 assert.equal(add.tensor_liveness.peak_planned_live_allocation_decimal, "12");
 assert.equal(add.tensor_liveness.peak_planned_live_allocation_status, "derived_exact_aot_static_address_liveness");
@@ -48,6 +63,65 @@ assert(addReport.includes("1 kernel + 0 delegate + 0 move/control/free")
   && addReport.includes("0/0 exact name/dtype/shape/logical-byte/layout contracts")
   && addReport.includes("Matching portable KernelCall direction is source-bound")
   && addReport.includes("1/1 KernelCall signatures source-bound"));
+
+const selectedBuild = buildSelectedBuildAttestation({ portableOperatorNames: ["aten::add.out"] });
+assert.deepEqual(validateExecuTorchSelectedBuildAttestation(selectedBuild), selectedBuild);
+const selectedBuildBytes = new TextEncoder().encode(JSON.stringify(selectedBuild));
+const resolvedSelectedBuild = resolveExecuTorchSelectedBuildAttestation([{
+  path: "evidence/deepbom.executorch-build.json",
+  bytes: selectedBuildBytes,
+  sha256: sha256(selectedBuildBytes),
+}]);
+assert.equal(resolvedSelectedBuild.input.schema, EXECUTORCH_SELECTED_BUILD_INPUT_SCHEMA);
+assert.equal(resolvedSelectedBuild.input.duplicate_key_validation, "complete");
+assert.equal(resolvedSelectedBuild.input.file_sha256, sha256(selectedBuildBytes));
+const buildBoundAdd = analyzeExecuTorchModel(addBytes, "add.pte", {
+  selectedBuildAttestation: resolvedSelectedBuild.attestation,
+  selectedBuildInput: resolvedSelectedBuild.input,
+});
+assert.equal(buildBoundAdd.executorch_program.selected_build_binding.status, "SELECTED_BUILD_INVENTORY_SATISFIES_SERIALIZED_IDENTITIES");
+assert.equal(buildBoundAdd.executorch_program.selected_build_binding.kernel_bindings[0].selected_build_status, "ATTESTED_PORTABLE_OPERATOR_INCLUDED");
+assert.equal(buildBoundAdd.executorch_program.selected_build_binding.selected_build_input.file_sha256, sha256(selectedBuildBytes));
+assert.equal(buildBoundAdd.weight_integrity.status, "pass");
+const buildBoundReport = buildEngineeringReport(buildBoundAdd, { generatedAt: "2026-08-25T00:00:00.000Z" });
+assert(buildBoundReport.includes(selectedBuild.attestation_sha256)
+  && buildBoundReport.includes("SELECTED_BUILD_INVENTORY_SATISFIES_SERIALIZED_IDENTITIES")
+  && buildBoundReport.includes(sha256(selectedBuildBytes)));
+assert.throws(() => resolveExecuTorchSelectedBuildAttestation([
+  { path: "a/deepbom.executorch-build.json", bytes: selectedBuildBytes },
+  { path: "b/deepbom.executorch-build.json", bytes: selectedBuildBytes },
+]), /more than one/);
+const duplicateKeyBytes = new TextEncoder().encode('{"schema":"deepbom.executorch_selected_build_attestation.v1","schema":"duplicate"}');
+assert.throws(() => resolveExecuTorchSelectedBuildAttestation([{
+  path: "deepbom.executorch-build.json",
+  bytes: duplicateKeyBytes,
+}]), /duplicate JSON key schema/);
+
+const missingOperatorBuild = buildSelectedBuildAttestation({ portableOperatorNames: [], portableOpsEnabled: false });
+const contradictedAdd = analyzeExecuTorchModel(addBytes, "add.pte", { selectedBuildAttestation: missingOperatorBuild });
+assert.equal(contradictedAdd.executorch_program.selected_build_binding.status, "CONTRADICTION_SELECTED_BUILD_CANNOT_SATISFY_SERIALIZED_PROGRAM");
+assert.equal(contradictedAdd.executorch_program.selected_build_binding.kernel_contradiction_count, 1);
+assert(contradictedAdd.weight_integrity.issues.some((row) => row.code === "EXECUTORCH_SELECTED_BUILD_BINDING_CONTRADICTION"));
+assert.throws(() => validateExecuTorchSelectedBuildAttestation({ ...selectedBuild, attestation_sha256: "0".repeat(64) }), /does not reconstruct/);
+
+const bareFlatBuffer = Uint8Array.from([8, 0, 0, 0, 4, 0, 4, 0, 4, 0, 0, 0]);
+const xnnPayload = assessExecuTorchProcessedPayload("XnnpackBackend", bareFlatBuffer);
+assert.equal(xnnPayload.structural_status, "OBSERVED_BOUNDED_FLATBUFFER_ROOT_ENVELOPE");
+assert.equal(xnnPayload.root_type, "XNNGraph");
+assert.equal(xnnPayload.byte_length, bareFlatBuffer.length);
+assert.match(xnnPayload.sha256, /^[a-f0-9]{64}$/);
+const invalidXnnPayload = assessExecuTorchProcessedPayload("XnnpackBackend", Uint8Array.from([0, 1, 2]));
+assert.equal(invalidXnnPayload.structural_status, "CONTRADICTION_SOURCE_DECLARED_FLATBUFFER_ENVELOPE_INVALID");
+const opaqueCoreMlPayload = assessExecuTorchProcessedPayload("CoreMLBackend", Uint8Array.from([0, 1, 2]));
+assert.equal(opaqueCoreMlPayload.structural_status, "NOT_ASSESSED_SOURCE_BOUND_NON_FLATBUFFER_PAYLOAD");
+assert.equal(EXECUTORCH_BACKEND_REGISTRY_SOURCE.backend_count, 7);
+assert.equal(EXECUTORCH_BACKEND_REGISTRY_SOURCE.commit, "e4d02f41f7909e8ed5bf4a14ffc520d733453d9f");
+assert.equal(EXECUTORCH_BACKEND_REGISTRY_SOURCE.registry_sha256, "75538913e6cd07fa90450c82f7193688f84c78dd785224f7299949e6b0c20d43");
+assert.deepEqual(Object.fromEntries(Object.entries(EXECUTORCH_BACKEND_REGISTRY_SOURCE.files).map(([key, row]) => [key, row.sha256])), {
+  cmake_options: "d718e91fea803271f3febeb000bbbc1bba6c0305f4f6852db9bedf93a74c1c9b",
+  schema_version: "d1853272c0ed0cf026ecec49f2ad6932d924cbca7b03a46d2ed16e73227a2047",
+  runtime_loader: "d38be8eeec0fac0cea8f25d61820bc6f6d2bac4f07a89f3cb9ce175649260ca9",
+});
 
 const emptyPtd = analyzeExecuTorchModel(decodeFixtureBase64(EXECUTORCH_EMPTY_PTD_BASE64), "weights.ptd");
 assert.equal(emptyPtd.executorch_container, "ptd");
@@ -158,6 +232,41 @@ assert.deepEqual(
   ]),
   { macs: 42, decimal: "42", status: "assessed_source_bound_transposed_convolution_overlap" },
 );
+const convolutionBackwardValues = tensorValues(14);
+convolutionBackwardValues[3] = { kind: "IntList", values: [8], values_decimal: ["8"] };
+convolutionBackwardValues[4] = { kind: "IntList", values: [1, 1], values_decimal: ["1", "1"] };
+convolutionBackwardValues[5] = { kind: "IntList", values: [0, 0], values_decimal: ["0", "0"] };
+convolutionBackwardValues[6] = { kind: "IntList", values: [1, 1], values_decimal: ["1", "1"] };
+convolutionBackwardValues[7] = { kind: "Bool", value: false };
+convolutionBackwardValues[8] = { kind: "IntList", values: [0, 0], values_decimal: ["0", "0"] };
+convolutionBackwardValues[9] = { kind: "Int", value: 2, value_decimal: "2" };
+convolutionBackwardValues[10] = { kind: "BoolList", values: [true, true, true] };
+const convolutionBackwardTensors = Array.from({ length: 14 }, () => tensor([]));
+convolutionBackwardTensors[0] = tensor([1, 8, 14, 14]);
+convolutionBackwardTensors[1] = tensor([1, 4, 16, 16]);
+convolutionBackwardTensors[2] = tensor([8, 2, 3, 3]);
+convolutionBackwardTensors[11] = tensor([1, 4, 16, 16]);
+convolutionBackwardTensors[12] = tensor([8, 2, 3, 3]);
+convolutionBackwardTensors[13] = tensor([8]);
+assert.deepEqual(
+  assessExecuTorchPortableKernelMac("aten::convolution_backward.out", Array.from({ length: 14 }, (_, index) => index), convolutionBackwardValues, convolutionBackwardTensors),
+  { macs: 56448, decimal: "56448", status: "assessed_source_bound_convolution_backward" },
+  "ExecuTorch convolution_backward must independently count requested grad-input and grad-weight contractions.",
+);
+const biasOnlyValues = convolutionBackwardValues.map((value) => ({ ...value }));
+biasOnlyValues[10] = { kind: "BoolList", values: [false, false, true] };
+assert.deepEqual(
+  assessExecuTorchPortableKernelMac("aten::convolution_backward.out", Array.from({ length: 14 }, (_, index) => index), biasOnlyValues, convolutionBackwardTensors),
+  { macs: 0, decimal: "0", status: "assessed_source_bound_convolution_backward_bias_only" },
+  "ExecuTorch bias-only convolution backward must remain zero in the nominal tensor-contraction MAC metric.",
+);
+const invalidBackwardTensors = convolutionBackwardTensors.map((value) => ({ ...value, shape: [...value.shape] }));
+invalidBackwardTensors[11] = tensor([1, 4, 15, 16]);
+assert.match(
+  assessExecuTorchPortableKernelMac("aten::convolution_backward.out", Array.from({ length: 14 }, (_, index) => index), convolutionBackwardValues, invalidBackwardTensors).status,
+  /^not_assessed_shape_contract_conflict:grad_input_shape_mismatch$/,
+  "ExecuTorch convolution_backward output-shape contradiction must fail closed.",
+);
 const dynamicBoundTensors = [tensor([2, 3]), tensor([3, 4]), tensor([2, 4])];
 dynamicBoundTensors[0].shape_status = "assessed_upper_bound";
 assert.match(
@@ -181,3 +290,52 @@ assert.throws(() => analyzeExecuTorchModel(truncatedSegment, "truncated.ptd"), /
 console.log("ExecuTorch ET12/FT01 analysis checks passed.");
 
 function sha256(value) { return createHash("sha256").update(value).digest("hex"); }
+
+function buildSelectedBuildAttestation({ portableOperatorNames, portableOpsEnabled = true }) {
+  const hex = (character) => character.repeat(64);
+  const cmakeOptions = {
+    EXECUTORCH_BUILD_COREML: false,
+    EXECUTORCH_BUILD_CUDA: false,
+    EXECUTORCH_BUILD_METAL: false,
+    EXECUTORCH_BUILD_MPS: false,
+    EXECUTORCH_BUILD_PORTABLE_OPS: portableOpsEnabled,
+    EXECUTORCH_BUILD_QNN: false,
+    EXECUTORCH_BUILD_VULKAN: false,
+    EXECUTORCH_BUILD_XNNPACK: false,
+  };
+  const binaryInventory = [{ path: "bin/executorch_runner", byte_length: 4096, sha256: hex("a") }];
+  const normalized = {
+    schema: EXECUTORCH_SELECTED_BUILD_ATTESTATION_SCHEMA,
+    evidence_class: "REPRODUCIBLE_SELECTED_BUILD_ATTESTATION",
+    source: {
+      repository: "pytorch/executorch",
+      release: "v1.4.1",
+      commit: "e4d02f41f7909e8ed5bf4a14ffc520d733453d9f",
+      pristine_before_build: true,
+      submodule_status_sha256: hex("b"),
+      post_build_diff_sha256: hex("c"),
+      backend_registry_sha256: EXECUTORCH_BACKEND_REGISTRY_SOURCE.registry_sha256,
+    },
+    build: {
+      configuration: "test-release",
+      cmake_options: cmakeOptions,
+      linked_backend_ids: [],
+      custom_backend_sources: [],
+      portable_operator_names: [...portableOperatorNames].sort(),
+      custom_operator_names: [],
+      cmake_cache_sha256: hex("d"),
+      build_stdout_sha256: hex("e"),
+      build_stderr_sha256: hex("f"),
+    },
+    runtime: {
+      platform: "linux",
+      arch: "x86_64",
+      binary_inventory: binaryInventory,
+      binary_inventory_sha256: sha256TextHex(canonicalJson(binaryInventory)),
+      primary_binary_path: "bin/executorch_runner",
+      primary_binary_sha256: hex("a"),
+    },
+    boundary: null,
+  };
+  return { ...normalized, attestation_sha256: sha256TextHex(canonicalJson(normalized)) };
+}

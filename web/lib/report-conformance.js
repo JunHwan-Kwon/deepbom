@@ -27,6 +27,8 @@ import { verifyDynamicShapeCostEvidence } from "./dynamic-shape-cost-conformance
 import { registerExecutionPlacementConformance } from "./report-conformance-execution-placement.js";
 import { registerOnnxConformance } from "./report-conformance-onnx.js";
 import { validateOnDeviceLlmContract } from "./on-device-llm-contract.js";
+import { buildExecuTorchSelectedBuildBinding } from "./executorch-build-binding.js";
+import { canonicalJson } from "./report-utils.js";
 import {
   buildQuantResearchCoverage,
   QUANT_RESEARCH_COVERAGE_SCHEMA,
@@ -430,6 +432,37 @@ function registerExecuTorchSerializedConformance({ staticAnalysis, tensors, ops,
       && Number(staticAnalysis.mac_assessment?.source_bound_kernel_instruction_count || 0) <= kernelInstructions
       && delegateInstructions === Number(staticAnalysis.mac_assessment?.delegate_instruction_count || 0),
     "ExecuTorch KernelCall direction or nominal-MAC evidence is not bound to the pinned portable/PyTorch signature sources.", ["/evidence/static_analysis/executorch_program/operator_signature_registry", "/evidence/static_analysis/mac_assessment"]);
+    const buildBinding = contract.selected_build_binding || {};
+    let reconstructedBinding = null;
+    try {
+      reconstructedBinding = buildExecuTorchSelectedBuildBinding(
+        contract.delegates || [],
+        ops,
+        buildBinding.selected_build || null,
+        buildBinding.selected_build_input || null,
+      );
+    } catch { reconstructedBinding = null; }
+    check("CF-EXECUTORCH-BUILD-BINDING-001", reconstructedBinding != null
+      && canonicalJson(reconstructedBinding) === canonicalJson(buildBinding)
+      && buildBinding.source_registry?.commit === source.commit
+      && buildBinding.source_registry?.backend_count === 7
+      && /^[a-f0-9]{64}$/.test(String(buildBinding.source_registry?.registry_sha256 || ""))
+      && (!buildBinding.selected_build_input || (reportText.includes(String(buildBinding.selected_build_input.path))
+        && reportText.includes(String(buildBinding.selected_build_input.file_sha256))))
+      && buildBinding.status !== "CONTRADICTION_SELECTED_BUILD_CANNOT_SATISFY_SERIALIZED_PROGRAM",
+    "ExecuTorch backend source registry or selected-build attestation does not reconstruct, or the selected build contradicts the serialized program.", ["/evidence/static_analysis/executorch_program/selected_build_binding"]);
+    const processedPayloads = Array.isArray(contract.processed_backend_payloads) ? contract.processed_backend_payloads : [];
+    const delegates = Array.isArray(contract.delegates) ? contract.delegates : [];
+    check("CF-EXECUTORCH-PROCESSED-PAYLOAD-001", processedPayloads.length === delegates.length
+      && processedPayloads.every((payload) => {
+        const delegate = delegates.find((row) => row.plan_index === payload.plan_index && row.index === payload.delegate_index);
+        return delegate && delegate.backend_id === payload.backend_id
+          && delegate.processed_location === payload.processed_location && delegate.processed_index === payload.processed_index
+          && Number.isSafeInteger(payload.byte_length) && payload.byte_length >= 0
+          && /^[a-f0-9]{64}$/.test(String(payload.sha256 || ""))
+          && !String(payload.structural_status || "").startsWith("CONTRADICTION_");
+      }),
+    "ExecuTorch processed backend payload identities, ranges, hashes, or source-described FlatBuffer envelopes do not conserve.", ["/evidence/static_analysis/executorch_program/processed_backend_payloads"]);
     const macContractValid = unknownComputeInstructions > 0
       ? staticAnalysis.total_macs == null && staticAnalysis.mac_assessment?.complete === false
         && Number(staticAnalysis.mac_assessment?.unknown_compute_instruction_count) === unknownComputeInstructions

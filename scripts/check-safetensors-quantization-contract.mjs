@@ -12,7 +12,9 @@ import { assertCycloneDx17 } from "./cyclonedx-17-schema.mjs";
 const { done, expect, expectEqual } = createCheck("SafeTensors quantization contract check");
 
 const awqTensors = packedTensors("layer.proj", {
-  qweight: ["I32", [128, 2]], qzeros: ["I32", [1, 2]], scales: ["F16", [1, 16]],
+  qweight: ["I32", [128, 2], new Array(256).fill("0")],
+  qzeros: ["I32", [1, 2], ["0", "0"]],
+  scales: ["F16", [1, 16], new Array(16).fill(1)],
 });
 const awq = buildSafeTensorsQuantizationContract({
   quantization_config: { quant_method: "awq", bits: 4, group_size: 128, zero_point: true, version: "gemm" },
@@ -186,9 +188,57 @@ const bundleFiles = [
 ];
 const { analysis } = await readArtifactBundle(bundleFiles);
 expectEqual(analysis.safetensors.quantization_contract.status, "assessed", "Bundle analysis should expose the AWQ contract.");
+expectEqual(analysis.safetensors.quantization_contract.modules[0].quantization_payload_integrity.status, "assessed", "Bundle analysis should bind full-payload scale and packed-zero integrity without a second payload scan.");
 expectEqual(analysis.artifact_bundle.model_source_file_count, 3, "Quantization config must be bound into model-source identity.");
 expect(analysis.artifact_bundle.model_source_roles.includes("quantization_config"), "Model-source identity should name the quantization config role.");
 expect(analysis.artifact_bundle.files.some((row) => row.role === "quantization_config" && row.required), "Quantization config should be required and hash-bound.");
+
+const gptqPayloadTensors = packedTensors("layer.proj", {
+  qweight: ["I32", [32, 64], new Array(2048).fill("0")],
+  qzeros: ["I32", [2, 8], new Array(16).fill("0")],
+  scales: ["F16", [2, 64], new Array(128).fill(1)],
+  g_idx: ["I32", [256], [...new Array(128).fill("0"), ...new Array(128).fill("1")]],
+});
+const { analysis: gptqPayloadAnalysis } = await readArtifactBundle([
+  browserFile("gptq/model.safetensors", safeTensorBytes(gptqPayloadTensors)),
+  browserFile("gptq/config.json", JSON.stringify({ quantization_config: { quant_method: "gptq", bits: 4, group_size: 128, sym: true, desc_act: true } })),
+]);
+const gptqPayloadModule = gptqPayloadAnalysis.safetensors.quantization_contract.modules[0];
+const gptqGroupIndex = gptqPayloadModule.quantization_payload_integrity.tensors.g_idx;
+expectEqual(gptqPayloadAnalysis.safetensors.quantization_contract.status, "assessed", "A valid full GPTQ payload should remain assessed.");
+expectEqual(gptqGroupIndex.status, "assessed_full_payload", "GPTQ g_idx should be scanned across its complete payload.");
+expectEqual(gptqGroupIndex.semantic.role, "group_index", "GPTQ g_idx semantic ownership should be explicit.");
+expectEqual(gptqGroupIndex.semantic.integer_value_contract, true, "GPTQ g_idx full payload should retain its integer contract.");
+expectEqual(gptqPayloadModule.quantization_payload_integrity.tensors.scales.value_count, 128, "Scale validation must cover values beyond the retained-value preview limit.");
+expectEqual(gptqPayloadModule.quantization_payload_integrity.tensors.scales.semantic.nonpositive_scale_count, 0, "Every GPTQ scale should be finite and positive.");
+expectEqual(gptqGroupIndex.distinct_finite_values, 2, "GPTQ group-index cardinality should be exact over the full payload.");
+expectEqual(gptqPayloadModule.quantization_payload_integrity.tensors.qzeros.selected_packed_lane_profile.lane_count, 128, "Packed zero-point lane cardinality should conserve the declared group/output contract.");
+expectEqual(gptqPayloadAnalysis.tensors.find((tensor) => tensor.name.endsWith(".g_idx")).numerical_integrity.decoded_values_status,
+  "not_retained_above_small_tensor_limit", "Large g_idx validation must not depend on retaining a decoded preview.");
+
+const invalidGptqPayloadTensors = packedTensors("layer.proj", {
+  qweight: ["I32", [32, 64], new Array(2048).fill("0")],
+  qzeros: ["I32", [2, 8], new Array(16).fill("0")],
+  scales: ["F16", [2, 64], new Array(128).fill(1)],
+  g_idx: ["I32", [256], [...new Array(255).fill("0"), "2"]],
+});
+const { analysis: invalidGptqPayloadAnalysis } = await readArtifactBundle([
+  browserFile("gptq-invalid/model.safetensors", safeTensorBytes(invalidGptqPayloadTensors)),
+  browserFile("gptq-invalid/config.json", JSON.stringify({ quantization_config: { quant_method: "gptq", bits: 4, group_size: 128, sym: true, desc_act: true } })),
+]);
+expectEqual(invalidGptqPayloadAnalysis.safetensors.quantization_contract.status, "fail", "Out-of-domain g_idx in a payload larger than the preview limit must fail closed.");
+expect(invalidGptqPayloadAnalysis.safetensors.quantization_contract.modules[0].issues.includes("g_idx_payload_outside_group_domain"),
+  "Large g_idx domain failure should remain machine-readable.");
+
+const invalidScalePayloadTensors = structuredClone(gptqPayloadTensors);
+invalidScalePayloadTensors.find((tensor) => tensor.name.endsWith(".scales")).numerical_integrity.decoded_values[127] = "0";
+const { analysis: invalidScalePayloadAnalysis } = await readArtifactBundle([
+  browserFile("gptq-invalid-scale/model.safetensors", safeTensorBytes(invalidScalePayloadTensors)),
+  browserFile("gptq-invalid-scale/config.json", JSON.stringify({ quantization_config: { quant_method: "gptq", bits: 4, group_size: 128, sym: true, desc_act: true } })),
+]);
+expectEqual(invalidScalePayloadAnalysis.safetensors.quantization_contract.status, "fail", "A non-positive scale beyond the preview limit must fail closed.");
+expect(invalidScalePayloadAnalysis.safetensors.quantization_contract.modules[0].issues.includes("scales_payload_must_be_finite_and_positive"),
+  "Large scale-domain failure should remain machine-readable.");
 
 const { analysis: hqqBundleAnalysis } = await readArtifactBundle([
   browserFile("hqq/model.safetensors", safeTensorBytes(hqqTensors)),
@@ -262,14 +312,36 @@ function safeTensorBytes(tensors) {
   const payloadStart = 8 + encoded.length;
   for (const tensor of tensors) {
     const values = tensor.numerical_integrity?.decoded_values || [];
-    values.forEach((value, index) => {
+    const valueCount = tensor.shape.reduce((product, dimension) => product * dimension, 1);
+    for (let index = 0; index < valueCount; index += 1) {
+      const value = values[index] ?? (tensor.dtype === "F16" && /(?:^|[._])(?:scales?|k_scale|v_scale)$/.test(tensor.name) ? 1 : 0);
       const position = payloadStart + tensor.data_offset;
       if (tensor.dtype === "U8") view.setUint8(position + index, Number(value));
       else if (tensor.dtype === "I32") view.setInt32(position + index * 4, Number(value), true);
       else if (tensor.dtype === "I64") view.setBigInt64(position + index * 8, BigInt(value), true);
-    });
+      else if (tensor.dtype === "F16") view.setUint16(position + index * 2, float16Bits(Number(value)), true);
+    }
   }
   return output;
+}
+
+function float16Bits(value) {
+  const buffer = new ArrayBuffer(4);
+  const view = new DataView(buffer);
+  view.setFloat32(0, value, false);
+  const bits = view.getUint32(0, false);
+  const sign = bits >>> 16 & 0x8000;
+  let exponent = (bits >>> 23 & 0xff) - 127 + 15;
+  let mantissa = bits & 0x7fffff;
+  if (exponent <= 0) {
+    if (exponent < -10) return sign;
+    mantissa = (mantissa | 0x800000) >>> (1 - exponent);
+    return sign | (mantissa + 0x1000 >>> 13);
+  }
+  if (exponent >= 31) return sign | 0x7c00;
+  mantissa += 0x1000;
+  if (mantissa & 0x800000) { mantissa = 0; exponent += 1; }
+  return exponent >= 31 ? sign | 0x7c00 : sign | exponent << 10 | mantissa >>> 13;
 }
 
 function browserFile(path, value) {

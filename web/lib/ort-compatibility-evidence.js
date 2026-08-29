@@ -1,7 +1,7 @@
 import { effectiveOnnxOpsetMap } from "./onnx-opset-imports.js";
 
-export const ORT_COMPATIBILITY_EVIDENCE_SCHEMA = "deepbom.ort_source_compatibility.v1.14";
-export const ORT_COMPATIBILITY_METHOD_VERSION = "2026-08-12.1";
+export const ORT_COMPATIBILITY_EVIDENCE_SCHEMA = "deepbom.ort_source_compatibility.v1.15";
+export const ORT_COMPATIBILITY_METHOD_VERSION = "2026-08-29.1";
 export const ORT_EP_PORTABILITY_FRONTIER_SCHEMA = "deepbom.ort_ep_portability_frontier.v2";
 const ORT_ARTIFACT_CONTRACT_SCHEMA = "deepbom.ort_source_artifact_contract.v1";
 
@@ -117,6 +117,7 @@ function validateSourceConditionInventory(inventory) {
     || Number(inventory.cpu_registration_variant_with_signature_count) !== 611
     || Number(inventory.cpu_registration_variant_with_type_constraint_count) !== 611
     || Number(inventory.machine_condition_count) !== 540
+    || Number(inventory.versioned_scalar_schema_default_binding_count) !== 80
     || Number(inventory.unresolved_source_fragment_count) !== 432
     || Number(inventory.informational_source_note_count) !== 425
     || !Array.isArray(inventory.execution_providers) || inventory.execution_providers.length !== expected.size
@@ -292,8 +293,11 @@ function validateEpAssessment(analysis, ep) {
     if (!Array.isArray(artifactRows) || new Set(artifactRows.map((item) => item.condition_id)).size !== artifactRows.length
       || artifactRows.some((item) => !item?.condition_id || !item?.condition_kind
         || !["PASS", "DEFINITE_FAIL", "UNRESOLVED"].includes(item.status)
-        || item.evidence_class !== (item.status === "UNRESOLVED" ? "NOT_ASSESSABLE" : "DERIVED_FROM_ARTIFACT_AND_PINNED_SOURCE_CONDITION")
-        && item.evidence_class !== "SOURCE_DOCUMENTED_NOT_MACHINE_ASSESSED"
+        || !new Set([
+          item.status === "UNRESOLVED" ? "NOT_ASSESSABLE" : "DERIVED_FROM_ARTIFACT_AND_PINNED_SOURCE_CONDITION",
+          "SOURCE_DOCUMENTED_NOT_MACHINE_ASSESSED",
+          "SOURCE_PINNED_SCHEMA_DEFAULT_DERIVED",
+        ]).has(item.evidence_class)
         || !String(item.subject || "").trim() || !String(item.expected || "").trim() || !String(item.reason || "").trim()
         || (item.source_ref && (!validSourceRef(item.source_ref) || !SHA256.test(String(item.source_sha256 || ""))))
         || (!item.source_ref && item.source_sha256))) {

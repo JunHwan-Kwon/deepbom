@@ -445,6 +445,21 @@ function parseFunction(reader) {
   return result;
 }
 
+export function parseCoreMlMilFunctionEntry(reader) {
+  return parseMapEntry(reader, "MIL function map", parseFunction);
+}
+
+export function parseCoreMlMilAttributeEntry(reader) {
+  return parseMapEntry(reader, "MIL program attribute map", parseValue);
+}
+
+export function finalizeCoreMlMilProgram(result) {
+  if (result.version == null || !Object.keys(result.functions || {}).length) throw new Error("Core ML MIL Program is missing version or functions");
+  result.function_count = Object.keys(result.functions).length;
+  result.source_basis = COREML_MIL_SOURCE;
+  return result;
+}
+
 export function parseCoreMlMilProgram(reader) {
   const result = { version: null, functions: {}, attributes: {}, source_basis: COREML_MIL_SOURCE };
   const singular = new Set();
@@ -452,19 +467,17 @@ export function parseCoreMlMilProgram(reader) {
     const { field, wire } = reader.key();
     if (field === 1) result.version = reader.int64Field(wire, singular, 1, "version");
     else if (field === 2) {
-      const [name, value] = parseMapEntry(reader.message(wire, "MIL.Program.functions"), "MIL function map", parseFunction);
+      const [name, value] = parseCoreMlMilFunctionEntry(reader.message(wire, "MIL.Program.functions"));
       if (Object.hasOwn(result.functions, name)) throw new Error(`Core ML MIL program repeats function ${name}`);
       result.functions[name] = value;
     } else if (field === 3) reader.stringField(wire, singular, 3, "docString");
     else if (field === 4) {
-      const [name, value] = parseMapEntry(reader.message(wire, "MIL.Program.attributes"), "MIL program attribute map", parseValue);
+      const [name, value] = parseCoreMlMilAttributeEntry(reader.message(wire, "MIL.Program.attributes"));
       if (Object.hasOwn(result.attributes, name)) throw new Error(`Core ML MIL program repeats attribute ${name}`);
       result.attributes[name] = value;
     } else reader.skip(wire);
   }
-  if (result.version == null || !Object.keys(result.functions).length) throw new Error("Core ML MIL Program is missing version or functions");
-  result.function_count = Object.keys(result.functions).length;
-  return result;
+  return finalizeCoreMlMilProgram(result);
 }
 
 function safeProduct(shape) {
@@ -579,6 +592,8 @@ function exactLegacyLutContract(outputShapes, outputIds, inputBindings, tensors,
     logical_index_elements: outputElements, logical_output_elements: outputElements,
     serialized_index_bytes: packedIndexBytes, index_bits: indexBits, palette_count: paletteCount,
     vector_size: 1, vector_axis: null, index_shape: [...indices.shape], lut_shape: [...lut.shape], output_shape: outputShape,
+    indices_tensor_index: Number.isSafeInteger(indices.index) ? indices.index : null,
+    lut_tensor_index: Number.isSafeInteger(lut.index) ? lut.index : null,
     source_file: COREML_MIL_SOURCE.constexpr_ios16_definition,
     source_sha256: COREML_MIL_SOURCE.constexpr_ios16_definition_sha256,
     boundary: "Serialized iOS 16 packed-index palette cardinality and output type/shape contract only. LUT usage distribution, decompressed numerical quality, physical runtime storage, device placement, and timing are not inferred.",
@@ -624,6 +639,8 @@ function exactLegacySparseContract(outputShapes, outputIds, inputBindings, tenso
     representation: "packed_unstructured_sparse_bitmask", stored_nonzero_elements: data.shape[0],
     logical_output_elements: outputElements, serialized_mask_bytes: packedMaskBytes, mask_shape: [...mask.shape],
     output_shape: outputShape, mask_population: maskPopulation, padding_bits: paddingBits,
+    nonzero_data_tensor_index: Number.isSafeInteger(data.index) ? data.index : null,
+    mask_tensor_index: Number.isSafeInteger(mask.index) ? mask.index : null,
     mask_population_status: maskPopulation == null ? "not_decoded_at_mil_contract_layer" : "assessed_exact_immediate_payload",
     source_file: COREML_MIL_SOURCE.constexpr_ios16_definition,
     source_sha256: COREML_MIL_SOURCE.constexpr_ios16_definition_sha256,
@@ -638,6 +655,62 @@ function exactCompressionContract(type, outputShapes, outputIds, inputBindings, 
   const opsetGeneration = coreMlOpsetGeneration(opset);
   if (name.startsWith("constexpr_") && opsetGeneration == null) {
     throw new Error(`Core ML MIL ${name} has no recognized CoreML<N> opset binding`);
+  }
+  if (name === "constexpr_affine_dequantize") {
+    if (opsetGeneration < 6) {
+      throw new Error("Core ML MIL constexpr_affine_dequantize is unavailable before the pinned CoreML6 opset");
+    }
+    const data = exactBinding(inputBindings, tensors, "quantized_data");
+    const zeroPoint = exactBinding(inputBindings, tensors, "zero_point");
+    const scale = exactBinding(inputBindings, tensors, "scale");
+    const axisTensor = exactBinding(inputBindings, tensors, "axis");
+    const axisRaw = exactScalarBinding(inputBindings, tensors, "axis");
+    if (!data || !zeroPoint || !scale || !axisTensor || axisRaw == null) {
+      throw new Error("Core ML MIL constexpr_affine_dequantize is missing a serialized quantized_data, zero_point, scale, or scalar axis binding");
+    }
+    if (data.shape.length < 1 || !["INT8", "UINT8"].includes(data.dtype)
+      || !["INT8", "UINT8", "FLOAT32"].includes(zeroPoint.dtype)
+      || !["FLOAT16", "FLOAT32"].includes(scale.dtype)
+      || axisTensor.dtype !== "INT32" || axisTensor.shape.length !== 0
+      || !Number.isSafeInteger(axisRaw)) {
+      throw new Error("Core ML MIL constexpr_affine_dequantize violates the pinned rank or dtype domains");
+    }
+    if (![0, 1].includes(scale.shape.length) || ![0, 1].includes(zeroPoint.shape.length)) {
+      throw new Error("Core ML MIL constexpr_affine_dequantize scale and zero_point must each be a scalar or vector");
+    }
+    if (axisRaw < -data.shape.length || axisRaw >= data.shape.length) {
+      throw new Error("Core ML MIL constexpr_affine_dequantize axis is outside the pinned quantized_data rank range");
+    }
+    const normalizedAxis = axisRaw < 0 ? axisRaw + data.shape.length : axisRaw;
+    const axisExtent = data.shape[normalizedAxis];
+    if (!Number.isSafeInteger(axisExtent) || axisExtent <= 0
+      || scale.shape.length === 1 && scale.shape[0] !== axisExtent
+      || zeroPoint.shape.length === 1 && zeroPoint.shape[0] !== axisExtent) {
+      throw new Error("Core ML MIL constexpr_affine_dequantize vector cardinality contradicts the selected quantized_data axis");
+    }
+    if (!sameStaticShape(outputShapes[0], data.shape) || tensors[outputIds[0]]?.dtype !== scale.dtype) {
+      throw new Error("Core ML MIL constexpr_affine_dequantize output ValueType contradicts pinned type inference");
+    }
+    const scaleElements = scale.shape.length ? scale.shape[0] : 1;
+    const zeroPointElements = zeroPoint.shape.length ? zeroPoint.shape[0] : 1;
+    return {
+      schema: "deepbom.coreml.mil_compression_transform.v1", status: "assessed_exact_serialized_contract",
+      evidence_class: "OBSERVED/SOURCE_PINNED/DERIVED", transform: name,
+      representation: "affine_constant_dequantization",
+      granularity: scale.shape.length === 1 || zeroPoint.shape.length === 1 ? "per_axis" : "per_tensor",
+      logical_output_elements: safeProduct(data.shape), quantized_data_elements: safeProduct(data.shape),
+      scale_elements: scaleElements, zero_point_elements: zeroPointElements,
+      serialized_axis: axisRaw, normalized_axis: normalizedAxis, axis_extent: axisExtent,
+      quantized_data_dtype: data.dtype, zero_point_dtype: zeroPoint.dtype,
+      scale_dtype: scale.dtype, output_dtype: scale.dtype, output_shape: [...data.shape],
+      quantized_data_tensor_index: Number.isSafeInteger(data.index) ? data.index : null,
+      zero_point_tensor_index: Number.isSafeInteger(zeroPoint.index) ? zeroPoint.index : null,
+      scale_tensor_index: Number.isSafeInteger(scale.index) ? scale.index : null,
+      axis_tensor_index: Number.isSafeInteger(axisTensor.index) ? axisTensor.index : null,
+      source_file: COREML_MIL_SOURCE.constexpr_ios16_definition,
+      source_sha256: COREML_MIL_SOURCE.constexpr_ios16_definition_sha256,
+      boundary: "The serialized affine mapping, scalar/per-axis cardinality, normalized axis, and output type/shape are exact. Decompressed values, runtime materialization, device placement, timing, and task accuracy are not inferred.",
+    };
   }
   if (name === "constexpr_blockwise_shift_scale") {
     if (opsetGeneration < 8) {
@@ -666,6 +739,9 @@ function exactCompressionContract(type, outputShapes, outputIds, inputBindings, 
       logical_output_elements: safeProduct(data.shape), scale_elements: safeProduct(scale.shape),
       offset_present: Boolean(offset), block_shape: data.shape.map((value, index) => value / scale.shape[index]),
       data_dtype: data.dtype, scale_dtype: scale.dtype, output_dtype: scale.dtype, output_shape: [...data.shape],
+      data_tensor_index: Number.isSafeInteger(data.index) ? data.index : null,
+      scale_tensor_index: Number.isSafeInteger(scale.index) ? scale.index : null,
+      offset_tensor_index: Number.isSafeInteger(offset?.index) ? offset.index : null,
       source_file: COREML_MIL_SOURCE.compression_ios18_definition,
       source_sha256: COREML_MIL_SOURCE.compression_ios18_definition_sha256,
       boundary: "Serialized block cardinality and type/shape contract only. Decompressed values, physical runtime storage, device placement, and decompression timing are not inferred.",
@@ -719,6 +795,8 @@ function exactCompressionContract(type, outputShapes, outputIds, inputBindings, 
       logical_index_elements: safeProduct(indices.shape), logical_output_elements: safeProduct(expected),
       index_bits: indexBits, palette_count: paletteCount, vector_size: vectorSize, vector_axis: vectorAxis,
       group_grid_shape: lut.shape.slice(0, -2), index_shape: [...indices.shape], lut_shape: [...lut.shape], output_shape: expected,
+      indices_tensor_index: Number.isSafeInteger(indices.index) ? indices.index : null,
+      lut_tensor_index: Number.isSafeInteger(lut.index) ? lut.index : null,
       source_file: COREML_MIL_SOURCE.compression_ios18_definition,
       source_sha256: COREML_MIL_SOURCE.compression_ios18_definition_sha256,
       boundary: "Serialized palette/index cardinality and type/shape contract only. LUT usage distribution, decompressed numerical quality, physical runtime storage, device placement, and timing are not inferred.",
@@ -777,10 +855,279 @@ function sparseMaskPopulation(tensor) {
   return null;
 }
 
+function halfToNumber(bits) {
+  const sign = bits & 0x8000 ? -1 : 1;
+  const exponent = bits >>> 10 & 31;
+  const fraction = bits & 1023;
+  if (!exponent) return fraction ? sign * fraction * 2 ** -24 : sign < 0 ? -0 : 0;
+  if (exponent === 31) return fraction ? Number.NaN : sign * Number.POSITIVE_INFINITY;
+  return sign * (1 + fraction / 1024) * 2 ** (exponent - 15);
+}
+
+function decodeMilImmediateBytes(tensor) {
+  const immediate = tensor?.immediate_value;
+  if (immediate?.kind !== "bytes" || immediate.values.length !== immediate.byte_length) return null;
+  const bytes = Uint8Array.from(immediate.values);
+  const count = tensor.shape?.length === 0 ? 1 : safeProduct(tensor.shape);
+  if (!Number.isSafeInteger(count)) return null;
+  const bits = DTYPE_BITS[tensor.dtype];
+  if (Number.isSafeInteger(bits) && bits < 8) {
+    const mask = 2 ** bits - 1;
+    const values = [];
+    for (const byte of bytes) for (let shift = 0; shift < 8 && values.length < count; shift += bits) {
+      const code = byte >>> shift & mask;
+      values.push(tensor.dtype.startsWith("INT") && code & 1 << (bits - 1) ? code - 2 ** bits : code);
+    }
+    return values.length === count ? values : null;
+  }
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const widths = { INT8: 1, UINT8: 1, INT16: 2, UINT16: 2, INT32: 4, UINT32: 4, FLOAT16: 2, BFLOAT16: 2, FLOAT32: 4, FLOAT64: 8 };
+  const width = widths[tensor.dtype];
+  if (!width || bytes.length !== count * width) return null;
+  const values = [];
+  for (let offset = 0; offset < bytes.length; offset += width) {
+    if (tensor.dtype === "INT8") values.push(view.getInt8(offset));
+    else if (tensor.dtype === "UINT8") values.push(view.getUint8(offset));
+    else if (tensor.dtype === "INT16") values.push(view.getInt16(offset, true));
+    else if (tensor.dtype === "UINT16") values.push(view.getUint16(offset, true));
+    else if (tensor.dtype === "INT32") values.push(view.getInt32(offset, true));
+    else if (tensor.dtype === "UINT32") values.push(view.getUint32(offset, true));
+    else if (tensor.dtype === "FLOAT16") values.push(halfToNumber(view.getUint16(offset, true)));
+    else if (tensor.dtype === "BFLOAT16") {
+      const buffer = new ArrayBuffer(4);
+      new DataView(buffer).setUint32(0, view.getUint16(offset, true) << 16, true);
+      values.push(new DataView(buffer).getFloat32(0, true));
+    } else if (tensor.dtype === "FLOAT32") values.push(view.getFloat32(offset, true));
+    else values.push(view.getFloat64(offset, true));
+  }
+  return values;
+}
+
+function retainedTensorValues(tensor) {
+  const numerical = tensor?.numerical_integrity;
+  if (Array.isArray(numerical?.decoded_values) && numerical.decoded_values.length
+    && String(numerical.decoded_values_status || "").startsWith("complete")) {
+    const values = numerical.decoded_values.map(Number);
+    return values.every(Number.isFinite) ? values : null;
+  }
+  const immediate = tensor?.immediate_value;
+  if (immediate && !immediate.truncated && Array.isArray(immediate.values)
+    && immediate.kind !== "bytes" && immediate.values.length === immediate.count) {
+    const values = immediate.values.map(Number);
+    return values.every(Number.isFinite) ? values : null;
+  }
+  const decoded = decodeMilImmediateBytes(tensor);
+  return decoded?.every(Number.isFinite) ? decoded : null;
+}
+
+function tensorCodeHistogram(tensor, contract) {
+  const numerical = tensor?.numerical_integrity;
+  if (Array.isArray(numerical?.quant_code_histogram)) return [...numerical.quant_code_histogram];
+  const immediate = tensor?.immediate_value;
+  if (immediate?.kind !== "bytes" || immediate.values.length !== immediate.byte_length) return null;
+  const bytes = immediate.values;
+  const tensorBits = DTYPE_BITS[tensor?.dtype];
+  const packedLogicalCount = Number.isSafeInteger(tensorBits) && tensorBits < 8 ? safeProduct(tensor.shape) : null;
+  if ((packedLogicalCount != null || (contract.index_shape?.length === 1 && contract.serialized_index_bytes === bytes.length))
+    && contract.index_bits < 8) {
+    const histogram = new Array(contract.palette_count).fill(0);
+    let remaining = packedLogicalCount ?? contract.logical_index_elements;
+    const mask = 2 ** contract.index_bits - 1;
+    for (const byte of bytes) for (let shift = 0; shift < 8 && remaining > 0; shift += contract.index_bits) {
+      histogram[byte >>> shift & mask] += 1;
+      remaining -= 1;
+    }
+    return remaining === 0 ? histogram : null;
+  }
+  const capacity = contract.palette_count || 2 ** (DTYPE_BITS[tensor.dtype] || 8);
+  const histogram = new Array(capacity).fill(0);
+  for (const value of bytes) {
+    if (value >= histogram.length) return null;
+    histogram[value] += 1;
+  }
+  return histogram;
+}
+
+function numericalDigest(tensor) {
+  const row = tensor?.numerical_integrity;
+  const retained = retainedTensorValues(tensor);
+  if ((!row || String(row.status || "").startsWith("not_assessed")) && retained) {
+    const stats = reconstructedStats(retained);
+    return {
+      status: "assessed_exact_retained_serialized_payload",
+      decoded_value_count: stats.value_count,
+      nonfinite_count: 0,
+      zero_count: stats.zero_count,
+      negative_count: retained.filter((value) => value < 0).length,
+      finite_min: stats.finite_min,
+      finite_max: stats.finite_max,
+      payload_sha256: row?.payload_sha256 || null,
+    };
+  }
+  if (!row) return { status: "not_assessed_payload_not_bound" };
+  return {
+    status: row.status,
+    decoded_value_count: row.decoded_value_count ?? row.value_count ?? null,
+    nonfinite_count: row.nonfinite_count ?? ((row.nan_value_count || 0) + (row.positive_infinity_value_count || 0) + (row.negative_infinity_value_count || 0)),
+    zero_count: row.zero_count ?? row.zero_value_count ?? null,
+    negative_count: row.negative_count ?? row.negative_value_count ?? null,
+    finite_min: row.finite_min ?? row.minimum_finite ?? null,
+    finite_max: row.finite_max ?? row.maximum_finite ?? null,
+    payload_sha256: row.payload_sha256 || null,
+  };
+}
+
+function reconstructedStats(values) {
+  if (!values?.length || values.some((value) => !Number.isFinite(value))) return null;
+  let minimum = values[0];
+  let maximum = values[0];
+  let zeroCount = 0;
+  for (const value of values) {
+    minimum = Math.min(minimum, value);
+    maximum = Math.max(maximum, value);
+    if (value === 0) zeroCount += 1;
+  }
+  return { value_count: values.length, finite_min: minimum, finite_max: maximum, zero_count: zeroCount };
+}
+
+function lutReconstructedStats(histogram, values) {
+  let valueCount = 0;
+  let zeroCount = 0;
+  let minimum = null;
+  let maximum = null;
+  for (let index = 0; index < histogram.length; index += 1) {
+    const count = histogram[index];
+    if (!count) continue;
+    const value = values[index];
+    if (!Number.isFinite(value)) return null;
+    valueCount += count;
+    if (value === 0) zeroCount += count;
+    minimum = minimum == null ? value : Math.min(minimum, value);
+    maximum = maximum == null ? value : Math.max(maximum, value);
+  }
+  return valueCount ? { value_count: valueCount, finite_min: minimum, finite_max: maximum, zero_count: zeroCount } : null;
+}
+
+function sparseReconstructedStats(values, logicalCount) {
+  if (!values || !Number.isSafeInteger(logicalCount) || logicalCount < values.length || values.some((value) => !Number.isFinite(value))) return null;
+  let minimum = 0;
+  let maximum = 0;
+  let zeroCount = logicalCount - values.length;
+  for (const value of values) {
+    minimum = Math.min(minimum, value);
+    maximum = Math.max(maximum, value);
+    if (value === 0) zeroCount += 1;
+  }
+  return { value_count: logicalCount, finite_min: minimum, finite_max: maximum, zero_count: zeroCount };
+}
+
+function blockwiseReconstruction(contract, tensors) {
+  const data = tensors?.[contract.data_tensor_index];
+  const scale = tensors?.[contract.scale_tensor_index];
+  const offset = Number.isSafeInteger(contract.offset_tensor_index) ? tensors?.[contract.offset_tensor_index] : null;
+  const dataValues = retainedTensorValues(data);
+  const scaleValues = retainedTensorValues(scale);
+  const offsetValues = offset ? retainedTensorValues(offset) : null;
+  if (!dataValues || !scaleValues || (offset && !offsetValues)) return null;
+  const dataShape = data.shape;
+  const scaleShape = scale.shape;
+  if (dataValues.length !== safeProduct(dataShape) || scaleValues.length !== safeProduct(scaleShape)
+    || (offsetValues && offsetValues.length !== scaleValues.length)) return null;
+  const scaleStrides = scaleShape.map((_, index) => safeProduct(scaleShape.slice(index + 1)) || 1);
+  const dataStrides = dataShape.map((_, index) => safeProduct(dataShape.slice(index + 1)) || 1);
+  const output = new Array(dataValues.length);
+  for (let linear = 0; linear < dataValues.length; linear += 1) {
+    let scaleLinear = 0;
+    for (let axis = 0; axis < dataShape.length; axis += 1) {
+      const coordinate = Math.floor(linear / dataStrides[axis]) % dataShape[axis];
+      scaleLinear += Math.floor(coordinate / contract.block_shape[axis]) * scaleStrides[axis];
+    }
+    output[linear] = dataValues[linear] * scaleValues[scaleLinear] + (offsetValues?.[scaleLinear] || 0);
+  }
+  return reconstructedStats(output);
+}
+
+function affineReconstruction(contract, tensors) {
+  const dataValues = retainedTensorValues(tensors?.[contract.quantized_data_tensor_index]);
+  const zeroPointValues = retainedTensorValues(tensors?.[contract.zero_point_tensor_index]);
+  const scaleValues = retainedTensorValues(tensors?.[contract.scale_tensor_index]);
+  if (!dataValues || !zeroPointValues || !scaleValues
+    || dataValues.length !== contract.quantized_data_elements
+    || ![1, contract.axis_extent].includes(zeroPointValues.length)
+    || ![1, contract.axis_extent].includes(scaleValues.length)) return null;
+  const trailing = safeProduct(contract.output_shape.slice(contract.normalized_axis + 1)) || 1;
+  const output = dataValues.map((value, index) => {
+    const coordinate = Math.floor(index / trailing) % contract.axis_extent;
+    const scale = scaleValues.length === 1 ? scaleValues[0] : scaleValues[coordinate];
+    const zeroPoint = zeroPointValues.length === 1 ? zeroPointValues[0] : zeroPointValues[coordinate];
+    return scale * (value - zeroPoint);
+  });
+  return reconstructedStats(output);
+}
+
+function annotateCompressionPayloadEvidence(contract, tensors) {
+  if (contract.transform === "constexpr_affine_dequantize") {
+    contract.payload_integrity = {
+      quantized_data: numericalDigest(tensors?.[contract.quantized_data_tensor_index]),
+      zero_point: numericalDigest(tensors?.[contract.zero_point_tensor_index]),
+      scale: numericalDigest(tensors?.[contract.scale_tensor_index]),
+      axis: numericalDigest(tensors?.[contract.axis_tensor_index]),
+    };
+    const reconstruction = affineReconstruction(contract, tensors);
+    contract.reconstruction = reconstruction
+      ? { status: "assessed_exact_retained_payload", evidence_class: "OBSERVED/SOURCE_PINNED/DERIVED", ...reconstruction }
+      : { status: "not_materialized_large_payload", evidence_class: "NOT_ASSESSED", reason: "The affine contract is exact, but dense value extrema require retained quantized data, scale, and zero-point values." };
+  } else if (contract.transform === "constexpr_blockwise_shift_scale") {
+    contract.payload_integrity = {
+      data: numericalDigest(tensors?.[contract.data_tensor_index]),
+      scale: numericalDigest(tensors?.[contract.scale_tensor_index]),
+      offset: Number.isSafeInteger(contract.offset_tensor_index) ? numericalDigest(tensors?.[contract.offset_tensor_index]) : { status: "not_applicable_absent" },
+    };
+    const reconstruction = blockwiseReconstruction(contract, tensors);
+    contract.reconstruction = reconstruction
+      ? { status: "assessed_exact_retained_payload", evidence_class: "OBSERVED/SOURCE_PINNED/DERIVED", ...reconstruction }
+      : { status: "not_materialized_large_payload", evidence_class: "NOT_ASSESSED", reason: "All source tensors are fully scanned, but element-correlated dense reconstruction is retained only when every operand has at most 256 decoded values." };
+    contract.boundary = "Block cardinality, operand payload integrity, and source-defined affine mapping are assessed. Exact reconstructed extrema are emitted only for bounded retained operands; runtime buffer residency, placement, and timing are not inferred.";
+  } else if (contract.transform === "constexpr_lut_to_dense") {
+    const indices = tensors?.[contract.indices_tensor_index];
+    const lut = tensors?.[contract.lut_tensor_index];
+    const histogram = tensorCodeHistogram(indices, contract);
+    const used = histogram?.filter((count) => count > 0).length ?? null;
+    contract.payload_integrity = { indices: numericalDigest(indices), lut: numericalDigest(lut) };
+    contract.lut_usage = histogram ? {
+      status: "assessed_exact_full_index_payload", palette_entries_used: used,
+      palette_entries_total: contract.palette_count, utilization_ratio: used / contract.palette_count,
+      index_count: histogram.reduce((sum, count) => sum + count, 0), code_histogram: histogram,
+    } : { status: "not_assessed_index_payload_not_bound_or_not_decoded" };
+    const lutValues = retainedTensorValues(lut);
+    const singleGrid = Array.isArray(contract.group_grid_shape) ? contract.group_grid_shape.every((value) => value === 1) : true;
+    const reconstruction = histogram && lutValues && singleGrid && contract.vector_size === 1 && lutValues.length === contract.palette_count
+      ? lutReconstructedStats(histogram, lutValues) : null;
+    if (reconstruction) {
+      contract.reconstruction = { status: "assessed_exact_retained_payload", evidence_class: "OBSERVED/SOURCE_PINNED/DERIVED", ...reconstruction };
+    } else contract.reconstruction = {
+      status: "not_materialized_grouped_or_large_payload", evidence_class: "NOT_ASSESSED",
+      reason: "Exact LUT usage is retained when index codes are decoded; dense value extrema additionally require one retained scalar palette shared by all groups.",
+    };
+    contract.boundary = "Palette/index cardinality and full-payload code utilization are assessed when index payloads are bound. Exact reconstructed extrema require a bounded retained scalar palette; runtime storage, placement, and timing are not inferred.";
+  } else if (contract.transform === "constexpr_sparse_to_dense") {
+    const data = tensors?.[contract.nonzero_data_tensor_index];
+    const mask = tensors?.[contract.mask_tensor_index];
+    contract.payload_integrity = { nonzero_data: numericalDigest(data), mask: numericalDigest(mask) };
+    const values = retainedTensorValues(data);
+    const reconstructed = sparseReconstructedStats(values, contract.logical_output_elements);
+    contract.reconstruction = reconstructed
+      ? { status: "assessed_exact_retained_payload", evidence_class: "OBSERVED/SOURCE_PINNED/DERIVED", ...reconstructed }
+      : { status: "not_materialized_large_payload", evidence_class: "NOT_ASSESSED", reason: "Mask population is exact, but dense numerical extrema require retained nonzero values." };
+    contract.boundary = "Sparse mask population, nonzero cardinality, padding, and payload integrity are assessed. Exact reconstructed extrema are emitted only for bounded retained nonzero values; runtime storage, placement, and timing are not inferred.";
+  }
+}
+
 export function refreshCoreMlMilCompressionEvidence(analysis) {
   const ops = analysis?.ops || [];
   for (const op of ops) {
     const contract = op?.compression_contract;
+    if (contract) annotateCompressionPayloadEvidence(contract, analysis.tensors || []);
     if (contract?.transform !== "constexpr_sparse_to_dense" || !Number.isSafeInteger(contract.mask_tensor_index)) continue;
     const population = sparseMaskPopulation(analysis.tensors?.[contract.mask_tensor_index]);
     if (!population) continue;

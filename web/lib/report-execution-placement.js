@@ -97,6 +97,18 @@ export function executionPlacementMarkdown(evidence) {
       scenario.peak_live_payload_bytes == null ? scenario.peak_live_payload_bytes_decimal ?? "not assessed" : formatBytes(scenario.peak_live_payload_bytes),
       scenario.residual_symbol_ids.join(", ") || "none",
     ]))}\n\n> ${preflight.optimization_profile_cost.interpretation_boundary}` : "No optimization-profile cost scenario is emitted.",
+    preflight.engine_inspector ? `#### Optimized Engine Inspector Evidence\n\n${markdownTable(["Field", "Value"], [
+      ["Status / class", `${preflight.engine_inspector.status} / ${preflight.engine_inspector.evidence_class}`],
+      ["Engine identity", `${preflight.engine_inspector.engine_sha256}; ${formatBytes(preflight.engine_inspector.engine_byte_length)}`],
+      ["Inspector contract", `${preflight.engine_inspector.schema_generation}; ${preflight.engine_inspector.profiling_verbosity}; execution context ${preflight.engine_inspector.execution_context_bound ? "bound" : "not bound"}`],
+      ["Optimized layers / I/O tensors", `${formatNumber(preflight.engine_inspector.engine_layer_count)} / ${formatNumber(preflight.engine_inspector.io_tensor_count)}`],
+      ["Tactic-annotated / multi-source metadata layers", `${formatNumber(preflight.engine_inspector.tactic_annotated_layer_count)} / ${formatNumber(preflight.engine_inspector.multi_source_metadata_layer_count)}`],
+      ["Dynamic-dimension tensor rows", formatNumber(preflight.engine_inspector.dynamic_dimension_tensor_count)],
+      ["Layer types", preflight.engine_inspector.layer_type_inventory.map((row) => `${row.name}:${row.count}`).join(" / ") || "not exposed"],
+      ["Separate data types", preflight.engine_inspector.data_type_inventory.map((row) => `${row.name}:${row.count}`).join(" / ") || "not exposed"],
+      ["Original-op mapping", preflight.engine_inspector.source_mapping_status],
+      ["Artifact-engine relation", preflight.engine_inspector.artifact_engine_relation],
+    ])}\n\n> ${preflight.engine_inspector.interpretation_boundary}` : "No optimized-engine inspector evidence is imported.",
     `> Trust boundary: browser engine deserialization ${code(preflight.trust_boundary.browser_engine_deserialization)}; browser plan execution ${code(preflight.trust_boundary.browser_plan_execution)}. ${preflight.interpretation_boundary}`,
   ].join("\n\n"));
   return [

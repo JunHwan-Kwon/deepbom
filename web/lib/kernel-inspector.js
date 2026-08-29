@@ -2362,7 +2362,7 @@ function renderOrtSourceLedger(container, context, analysis, onSelect, onLoadSou
   const inventoryLine = document.createElement("p");
   inventoryLine.className = "kernel-selector-ledger-context";
   inventoryLine.textContent = inventory
-    ? `${inventory.source_rule_count} pinned source rules / ${inventory.cpu_registration_variant_count} CPU type registration variants / ${inventory.machine_condition_count} machine-evaluated artifact conditions / ${inventory.unresolved_source_fragment_count} source fragments unresolved. Remaining candidates are not support or assignment.`
+    ? `${inventory.source_rule_count} pinned source rules / ${inventory.cpu_registration_variant_count} CPU type registration variants / ${inventory.machine_condition_count} machine-evaluated artifact conditions / ${inventory.versioned_scalar_schema_default_binding_count || 0} versioned scalar schema-default bindings / ${inventory.unresolved_source_fragment_count} source fragments unresolved. Remaining candidates are not support or assignment.`
     : "Source-condition extractor inventory is unavailable.";
   const metrics = document.createElement("div");
   metrics.className = "kernel-selector-ledger-metrics";

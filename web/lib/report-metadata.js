@@ -178,7 +178,7 @@ export const ANALYZER_METADATA = Object.freeze({
     conformanceReport: "deepbom.conformance_report.v1.77",
     xnnpackSelectorEvidence: "deepbom.xnnpack_selector_evidence.v2",
     tfliteDelegateSourceRulepack: "deepbom.tflite_delegate_source_rulepack.v1",
-    ortSourceCompatibility: "deepbom.ort_source_compatibility.v1.14",
+    ortSourceCompatibility: "deepbom.ort_source_compatibility.v1.15",
     ortEpPortabilityFrontier: "deepbom.ort_ep_portability_frontier.v2",
     analyzerBuildContentManifest: "deepbom.analyzer_build_content_manifest.v1",
     packageDigestSet: "deepbom.package_member_digest_set.v1",

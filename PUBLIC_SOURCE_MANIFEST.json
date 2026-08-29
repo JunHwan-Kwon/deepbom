@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "eecf0a0c201ad43cf98f0b399c78aa83a1b1e136",
+  "source_commit": "ba313e5b9b45cb240c520646d82dbbe41ef33381",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 851,
+  "file_count": 861,
   "files": [
     {
       "path": ".gitattributes",
@@ -37,8 +37,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 5341,
-      "sha256": "f6e2fce6b4e42a86c8f2f13aa8eb26c5b51b265845f9ea5bea930573c749827d"
+      "byte_length": 6791,
+      "sha256": "100e01f8567f02c19b65824db6794a73a5dcbcaae93aad16a6160055f206edc6"
     },
     {
       "path": "CITATION.cff",
@@ -62,8 +62,8 @@
     },
     {
       "path": "README.md",
-      "byte_length": 4255,
-      "sha256": "c1e387c9e5f0f59a6045b2461757663ec9b40ba55b8171780d52d315e75914b2"
+      "byte_length": 4349,
+      "sha256": "d660b966cbea1ee76d7c3f7e3f114022fb58901f133f5b0325cc5027b67af148"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -77,8 +77,8 @@
     },
     {
       "path": "bin/deepbom.mjs",
-      "byte_length": 43616,
-      "sha256": "bb13b4f6a0789ac7c1be3627f5eb03e0054c1e740a51c5909ee62f68003c5875"
+      "byte_length": 45888,
+      "sha256": "aad9b8962856740f295ea9d9b433eba01a7cb8ea0e5da797fa4d43160fb16480"
     },
     {
       "path": "build.rs",
@@ -132,13 +132,13 @@
     },
     {
       "path": "channels/npm/README.md",
-      "byte_length": 1741,
-      "sha256": "2126dc5267e59d4024de9a21a15e66e581ccab608c4bce9dc7c4ee9d801af6a3"
+      "byte_length": 2027,
+      "sha256": "82f488d196d327e71af1690a8d7f85b19f5ed20f2c277fad7126a2ce08231b03"
     },
     {
       "path": "channels/python/README.md",
-      "byte_length": 1026,
-      "sha256": "85d56911605f78cf549ce2ff1af9e3505bb638bcbe46b5330681164b486981a0"
+      "byte_length": 1263,
+      "sha256": "f3d508bcde0b21b486d3ef4fed0c82589a51db8564db64ffce3c00096262915b"
     },
     {
       "path": "channels/python/pyproject.toml",
@@ -172,8 +172,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 31429,
-      "sha256": "7eb13ed7403474cd06aaf5cae1bcb23195314988739abb0040efc08024d00019"
+      "byte_length": 31924,
+      "sha256": "7bd0f91964a233e2898eaadc9879d6cc2c7a9b42c36bd636fd4c4c5d5e0cc072"
     },
     {
       "path": "corpus/README.md",
@@ -257,8 +257,8 @@
     },
     {
       "path": "corpus/google_legacy/README.md",
-      "byte_length": 4120,
-      "sha256": "c2019c416e5e69a11193808d585f79cc5ba8426188f930708d79b6298cf22837"
+      "byte_length": 4358,
+      "sha256": "f0666b29d3399abf86dbe8ac219ca860e7aebc087a7909f9cd73488bc398a0cb"
     },
     {
       "path": "corpus/google_legacy/conversion/README.md",
@@ -304,6 +304,11 @@
       "path": "corpus/google_legacy/paired-modern.v1.json",
       "byte_length": 10510,
       "sha256": "5ca007567a506355151be490a085446275306452f37006f478235f636bdddd05"
+    },
+    {
+      "path": "corpus/google_legacy/provenance/tflite_wasm_audit_bg.5cb18b1375a8890d14af25f0abb1a13ebd2991de73c3c5c9431248261315884a.wasm.gz",
+      "byte_length": 636820,
+      "sha256": "28cefce9648fcf7588393a5a7c654304afad22ac33f9205e9766c186e5ab85ed"
     },
     {
       "path": "corpus/huggingface-community-corpus.v1.json.gz",
@@ -433,7 +438,7 @@
     {
       "path": "corpus/standardization-evidence.v1.json",
       "byte_length": 58642,
-      "sha256": "a614f72e5c59b43ed42bb60d3393aecc35b8db7b5eea677509ef11827d740e0d"
+      "sha256": "1455cc8019cb5f7e3c137cf6fe77873cd1f8ba8d9f149f607a5400db6fe750e6"
     },
     {
       "path": "docs/CYCLONEDX_20_QUANTIZATION_CONTRIBUTION.md",
@@ -447,8 +452,8 @@
     },
     {
       "path": "docs/PROJECT_STATUS.md",
-      "byte_length": 112023,
-      "sha256": "f81e251abaae53589165cbbd9a0a961db3cb7b41ebe40b739195d36464bb5b2d"
+      "byte_length": 112874,
+      "sha256": "db808cecaa4dafb1bc1f4af5cd49c97b51baaa587a8f938d0ffc6c8d6f2effdc"
     },
     {
       "path": "docs/PUBLIC_MULTIFORMAT_CORPUS.md",
@@ -462,8 +467,8 @@
     },
     {
       "path": "docs/PUBLIC_README.md",
-      "byte_length": 4255,
-      "sha256": "c1e387c9e5f0f59a6045b2461757663ec9b40ba55b8171780d52d315e75914b2"
+      "byte_length": 4349,
+      "sha256": "d660b966cbea1ee76d7c3f7e3f114022fb58901f133f5b0325cc5027b67af148"
     },
     {
       "path": "docs/REPRESENTATIVE_DATASET_CAPTURE.md",
@@ -592,8 +597,8 @@
     },
     {
       "path": "package.json",
-      "byte_length": 19803,
-      "sha256": "d69e08dcb4aebf005cf728ac94c35c32f8d59c78fa7e1ac298554ddeb0792165"
+      "byte_length": 19891,
+      "sha256": "f9c02935b4b1c437e1ef36daa9be1c6d96706535bb9b5f5c399d4017e2d4d833"
     },
     {
       "path": "pkg/LICENSE",
@@ -622,8 +627,8 @@
     },
     {
       "path": "pkg/tflite_wasm_audit_bg.wasm",
-      "byte_length": 1996504,
-      "sha256": "502b847240063853bc473daa36b0d8c15ac3a4071c7ee0d64f2d743342a15bb8"
+      "byte_length": 1997099,
+      "sha256": "145fabc36427c1d52efddd5a046e799cdf660ee1960f7642955fc4dbb6d19c09"
     },
     {
       "path": "pkg/tflite_wasm_audit_bg.wasm.d.ts",
@@ -891,6 +896,11 @@
       "sha256": "78ba96087400b1fbbf43bd704d8dd4820039c874788045b7bcf60227c8c223bd"
     },
     {
+      "path": "scripts/capture-tensorrt-engine-inspector.mjs",
+      "byte_length": 3383,
+      "sha256": "d89cea61b3e8af4c776fa5652ec4217864a6729eeb31913b2ce0f223a3724120"
+    },
+    {
       "path": "scripts/capture-tensorrt-parser.mjs",
       "byte_length": 2753,
       "sha256": "8cc6a9f452369fd74d43765324026c11eff6f2efeff80fb10f0c190c75e1d32a"
@@ -932,8 +942,8 @@
     },
     {
       "path": "scripts/check-all.mjs",
-      "byte_length": 9473,
-      "sha256": "47b022603bbf12f8202aea7484f19dc75e729986edd94a50270993115dd626e7"
+      "byte_length": 9573,
+      "sha256": "b79cbfa3a34f1f1671655b61569ef2701a4702cc83c2888875289b22d76e19d5"
     },
     {
       "path": "scripts/check-analysis-invariants.mjs",
@@ -1002,8 +1012,8 @@
     },
     {
       "path": "scripts/check-cli.mjs",
-      "byte_length": 20879,
-      "sha256": "f2f504a594ee45bcd4a9e87a0211fa5ddb5a353efbf7a5031e76edb8098dadb2"
+      "byte_length": 26897,
+      "sha256": "a23dfbe5054988d94cc03e0a7047a8bb2c076da91f5096e72ca3c143120e882d"
     },
     {
       "path": "scripts/check-contract-migration-viewer.mjs",
@@ -1042,8 +1052,8 @@
     },
     {
       "path": "scripts/check-coreml-legacy-analysis.mjs",
-      "byte_length": 35822,
-      "sha256": "4d2e3f3911b24fb40fd3593ec52cb9d80ae3d53f01d114d7501bda4f0285c18d"
+      "byte_length": 40299,
+      "sha256": "9affa0a01f848cb3604a8f2f39e0915fdef9dcd034fb351b75446babccf86684"
     },
     {
       "path": "scripts/check-coreml-legacy-quantization-corpus.mjs",
@@ -1052,13 +1062,18 @@
     },
     {
       "path": "scripts/check-coreml-mlprogram-analysis.mjs",
-      "byte_length": 37327,
-      "sha256": "6327b9408061fc8dd922c4f789316c1ec8c3027923b6736992ab862f07a0005d"
+      "byte_length": 41645,
+      "sha256": "43e2bb9814e0952e5646715632258b05b15f716c99c7819c77bbbf37bb5aaac6"
     },
     {
       "path": "scripts/check-coreml-mlprogram-corpus.mjs",
       "byte_length": 2578,
       "sha256": "47b07750c6bdf782744d957304aeb45b6407180a44bd910d3c493f88180b6c01"
+    },
+    {
+      "path": "scripts/check-coreml-range-reader.mjs",
+      "byte_length": 3314,
+      "sha256": "84f3a76e97fabdbda9b8c4b35bd6daa562c7ab184aa394f59e6ffa3a55df72bd"
     },
     {
       "path": "scripts/check-corpus-validation-provenance.mjs",
@@ -1097,8 +1112,8 @@
     },
     {
       "path": "scripts/check-deploy.mjs",
-      "byte_length": 2839,
-      "sha256": "c502a9c0684b707efcf1b8133425e1a20a4fcb710cdc0699a80d651a4f20da2a"
+      "byte_length": 3373,
+      "sha256": "7299732cb0038851cfa75f8b945f865562e0d794a99dbeb44bfff82c13989a8e"
     },
     {
       "path": "scripts/check-deployment-delta-viewer.mjs",
@@ -1128,7 +1143,7 @@
     {
       "path": "scripts/check-dist-assets.mjs",
       "byte_length": 12701,
-      "sha256": "9e3d3a56d1fd9f3cfdeb7aee2ed5bad61d1d4c5ce1e0f08405c508a14f45853e"
+      "sha256": "d72b86f32f1d5024771eb0c24b79f191fae9871714b3fc97bc997c5abfe54841"
     },
     {
       "path": "scripts/check-dist-budget.mjs",
@@ -1167,8 +1182,8 @@
     },
     {
       "path": "scripts/check-execution-placement-evidence.mjs",
-      "byte_length": 9285,
-      "sha256": "9671bc1c1a5b7edf48137e41aed02c789674e3634b3a5dc040b500db47b92d82"
+      "byte_length": 10507,
+      "sha256": "e2b312ee05a2f515902659df697933a0b2b802abaad6b120006aca187938c615"
     },
     {
       "path": "scripts/check-execution-placement-viewer.mjs",
@@ -1177,8 +1192,8 @@
     },
     {
       "path": "scripts/check-executorch-analysis.mjs",
-      "byte_length": 10424,
-      "sha256": "11bf3301842c17f7fe1cb5dc5f776a334e9d6e2156da61b3a898cd2bd5172289"
+      "byte_length": 20368,
+      "sha256": "ee94fee6d5398697dafc44f12912caa4371664b96a429e50ed52d09e1f212367"
     },
     {
       "path": "scripts/check-explorer-question-view.mjs",
@@ -1207,8 +1222,8 @@
     },
     {
       "path": "scripts/check-export-contract-documents.mjs",
-      "byte_length": 50728,
-      "sha256": "11ed079f63140f891eeefe360ff852b4a13b2c5ea33451e423fc82eadd64f37b"
+      "byte_length": 50801,
+      "sha256": "7afb369a0fbac89d83ee379c8be2e988e059c04cee23004b4e9a7afd612e5c6c"
     },
     {
       "path": "scripts/check-export-contract-viewer.mjs",
@@ -1263,12 +1278,12 @@
     {
       "path": "scripts/check-git-privacy.mjs",
       "byte_length": 10613,
-      "sha256": "c1188b79fc3214edd394d508dcfcd73f2d17b25adc0f6ade53e3d08fd54af1a8"
+      "sha256": "24b76947f65a7367ed0240bc7f7184db84c72eda4493ef814089c7764999160f"
     },
     {
       "path": "scripts/check-google-legacy-corpus.mjs",
-      "byte_length": 6615,
-      "sha256": "40c4ffddb13e38ba4ce4f9c4611398e632ad2740110f5d1f1ffa54e2c26d4abe"
+      "byte_length": 6190,
+      "sha256": "b475c68b1ca92f9ceece5c3473824162dc7b6ae9de88dab1c09a3ac9c61b999b"
     },
     {
       "path": "scripts/check-graph-topology.mjs",
@@ -1552,8 +1567,8 @@
     },
     {
       "path": "scripts/check-product-guidance-contracts.mjs",
-      "byte_length": 10330,
-      "sha256": "69611fce82fac032ae65b1c65ae5207896c8cf06be55571c2388db1021751785"
+      "byte_length": 10386,
+      "sha256": "242ac20efeb8d236040acb640ec422b83b07a9f2dbf0c5a058a3fff62aa45e49"
     },
     {
       "path": "scripts/check-protected-selector-viewer.mjs",
@@ -1727,8 +1742,8 @@
     },
     {
       "path": "scripts/check-safetensors-quantization-contract.mjs",
-      "byte_length": 20423,
-      "sha256": "e7171444980caaa9095504e27b5a19cc23a570173a577567ade24599a92091d0"
+      "byte_length": 25884,
+      "sha256": "77a384cf24783d6d43bb890c09a533c134ae9d509eb39b80956a1169ffebc85a"
     },
     {
       "path": "scripts/check-safetensors-quantization-corpus.mjs",
@@ -1753,7 +1768,7 @@
     {
       "path": "scripts/check-source-budget.mjs",
       "byte_length": 10690,
-      "sha256": "5e04eaeaf3eb4fcba72ffa20e5b88aed3ad22528af69694cb6061bae87c981fd"
+      "sha256": "585761cf2e1811c2f6da31e999b76197a3fbbbac0cbdfe0c4bc989b82e379893"
     },
     {
       "path": "scripts/check-standardization-evidence.mjs",
@@ -1781,6 +1796,11 @@
       "sha256": "466d5ca7d4bd86936393703bca783c8d6b487c927ebcf60288e008c5b7b30810"
     },
     {
+      "path": "scripts/check-tensorrt-engine-inspector-capture.mjs",
+      "byte_length": 4177,
+      "sha256": "708bb1722aeae86fa8f45ae1e902132c926fe993e49612f72280719153fcf832"
+    },
+    {
       "path": "scripts/check-tensorrt-llm-contract.mjs",
       "byte_length": 4691,
       "sha256": "bb3db435574b71accd49c3837c78451d5ce1060bf87c5536b6ece819ba1243e5"
@@ -1792,13 +1812,13 @@
     },
     {
       "path": "scripts/check-tensorrt-static-preflight.mjs",
-      "byte_length": 11060,
-      "sha256": "c9a6993845938c5d628861162e1c7524e4a6fffaa7b081e45c88666a5594d56e"
+      "byte_length": 18936,
+      "sha256": "24639fde7adcde352937793ae8c0df9f262374433c5d73a28c61ef969ff242f0"
     },
     {
       "path": "scripts/check-tflite-delegate-rulepack.mjs",
-      "byte_length": 9220,
-      "sha256": "20709ac815bd795b93cc8ef460246dba355155c11f3487df2a877ea1f945b5f9"
+      "byte_length": 12487,
+      "sha256": "d18e2ca47d01ce1f819f532bc244315da29eabbaca419dcad5ce7df85da5f99c"
     },
     {
       "path": "scripts/check-tflite-profile-info-adapter.mjs",
@@ -1862,8 +1882,8 @@
     },
     {
       "path": "scripts/check-zenodo-release.mjs",
-      "byte_length": 5001,
-      "sha256": "5e9989710d79d2be11b81ca8068d2f7e60035688025e508e63a94ef3ce1e44f3"
+      "byte_length": 5169,
+      "sha256": "8d2818a76c31404955e0b866de1bc6f90a01e14471f18b7d74684e944d1b7ede"
     },
     {
       "path": "scripts/compact-mlbom-assert.mjs",
@@ -1972,8 +1992,8 @@
     },
     {
       "path": "scripts/generate-executorch-operator-signatures.mjs",
-      "byte_length": 10059,
-      "sha256": "8ff49443b435ec35b2e3c7d719bf175c3bde6bfae456a768708b153df0822491"
+      "byte_length": 10048,
+      "sha256": "7759fab2ddffcd0a341cd7102fc3b96cc5add548ee02826e70ee5655bbf9a1dc"
     },
     {
       "path": "scripts/generate-gguf-backend-contract.mjs",
@@ -2256,6 +2276,11 @@
       "sha256": "607a92429a12abcd1b7a7117ea61c518501c90e5f2b70845d30915e982801891"
     },
     {
+      "path": "scripts/tensorrt-engine-inspector-capture-lib.mjs",
+      "byte_length": 5400,
+      "sha256": "acc9f40a6206dd92014915e9f133a79a2ce86f9621ca24c473509a89836921b2"
+    },
+    {
       "path": "scripts/test-live-permissions.mjs",
       "byte_length": 26553,
       "sha256": "8030d5b0992760ca3feee0d4d81efee777165fa2433ed02791d2a6fd751bb001"
@@ -2392,8 +2417,8 @@
     },
     {
       "path": "scripts/zenodo-release-lib.mjs",
-      "byte_length": 16953,
-      "sha256": "e4faa35e92a24a6155d7b0a97b34064641f62b088121f77a659c8f90f0e116b5"
+      "byte_length": 17486,
+      "sha256": "9800b6f6a64b2e2f3c38975baad3b0397e1af2cb345db08ecd1c2578b0b2a941"
     },
     {
       "path": "src/accumulator_atlas.rs",
@@ -2622,8 +2647,8 @@
     },
     {
       "path": "web/app.js",
-      "byte_length": 287189,
-      "sha256": "7e6f91fad936e56d1d6f0fde70f7d16379e6a8d169d5699609c74d063bdbe7a2"
+      "byte_length": 287270,
+      "sha256": "789a58fd752e3ea173dfa3e92477114e04ceaf122fc5fa78098cd6ce3d5f04d0"
     },
     {
       "path": "web/auth-complete.html",
@@ -2652,8 +2677,8 @@
     },
     {
       "path": "web/executorch.js",
-      "byte_length": 75855,
-      "sha256": "4837f3d40b48443a5bdd07fd3e8c5a644c1a379121047bf024b271060ab7924d"
+      "byte_length": 82444,
+      "sha256": "64e7fdf662c78abb3ec2a3b6838e8fe45c377de911ffe027f6ba1377d74552c6"
     },
     {
       "path": "web/explorer-evidence.css",
@@ -2672,8 +2697,8 @@
     },
     {
       "path": "web/index.html",
-      "byte_length": 135303,
-      "sha256": "5f9473c3816459500f15b4772301a95394b7ddc4059ccea76c49c9f1018f84f1"
+      "byte_length": 135398,
+      "sha256": "1efbfbead4d1623306f2183b001a4d5735aa3eec658ea1844cf8038d6d46c810"
     },
     {
       "path": "web/lib/access-policy.js",
@@ -2757,8 +2782,8 @@
     },
     {
       "path": "web/lib/artifact-overview.js",
-      "byte_length": 35448,
-      "sha256": "e734d56388e9facf20bcf6d4ba7af8623e5cf62cf7836b7fd9da13d24fe412d4"
+      "byte_length": 35862,
+      "sha256": "6a59ce58a49db687fafc56439b536690998948ddb413d1ad8b21b58d1e9244dd"
     },
     {
       "path": "web/lib/audit-progress.js",
@@ -2767,8 +2792,8 @@
     },
     {
       "path": "web/lib/audit-ui.js",
-      "byte_length": 54062,
-      "sha256": "6d719b1303c3f2f664b4c311434b574faca65035a6ebc228bf9aa3160cf211b4"
+      "byte_length": 54320,
+      "sha256": "5f158926870c97ce74cf793a3dd066dc1a26dcd2e2382a16827e763b5b08ad99"
     },
     {
       "path": "web/lib/auth-labels.js",
@@ -2837,8 +2862,8 @@
     },
     {
       "path": "web/lib/coreml-blob.js",
-      "byte_length": 15314,
-      "sha256": "a5b22efd8acc8001498eb12a3b8c30133f7f53891817aba5267812cdb0d75203"
+      "byte_length": 15937,
+      "sha256": "99f9bb5ec6ef5385a2c270dbd5d3810ee3afedac2addee4113bddd9abf1ca981"
     },
     {
       "path": "web/lib/coreml-classical-model.js",
@@ -2862,18 +2887,18 @@
     },
     {
       "path": "web/lib/coreml-metadata-adapter.js",
-      "byte_length": 153383,
-      "sha256": "5df2828a5781932e69701ebb16144ba977b4f175b34b7faf3f0d5109d19c2f5e"
+      "byte_length": 161838,
+      "sha256": "9a33bbead15e1a942275913c375d602a6849e590b525bbd423d4c48539660fe6"
     },
     {
       "path": "web/lib/coreml-mil-program.js",
-      "byte_length": 81652,
-      "sha256": "80e01900746955aa1ce81889cc403fe4a57e10dec03880d3f0a297308c4a4c33"
+      "byte_length": 102185,
+      "sha256": "4a6ae1b3e509a0ef7383f1c4f174bda32ad8949fe48865481e29be06e102bcb9"
     },
     {
       "path": "web/lib/coreml-neural-network.js",
-      "byte_length": 74549,
-      "sha256": "3205dd7151d485129522c5949727958198523a56bf4a02f0eceb1080d083c07f"
+      "byte_length": 74859,
+      "sha256": "26c517209810a633ec4b8085a9f8a54b1ae459cd2f4ce43daeb99ce6df37945d"
     },
     {
       "path": "web/lib/corpus-validation-provenance.js",
@@ -2982,8 +3007,8 @@
     },
     {
       "path": "web/lib/execution-placement-evidence.js",
-      "byte_length": 37233,
-      "sha256": "3adb06339e92d42c2c524f9548ac7512be1a89ca0077084bd48075cd01599d06"
+      "byte_length": 40917,
+      "sha256": "9d88b1396ae0fe9446176e0476f1858a321e158630166925d2724c3b33ca8dce"
     },
     {
       "path": "web/lib/execution-placement-view.js",
@@ -2991,9 +3016,14 @@
       "sha256": "c459073a688edcbddf32fc1fb5b2f3cbac6a75dbfc42539dd3fa3197ce422773"
     },
     {
+      "path": "web/lib/executorch-build-binding.js",
+      "byte_length": 25168,
+      "sha256": "62acce0b6da002a4b4dacac6e413890536e3ca863fc29c6149cd8576a60a3c31"
+    },
+    {
       "path": "web/lib/executorch-operator-signatures.generated.js",
-      "byte_length": 114124,
-      "sha256": "514d6df0bf1a9c8d888732c7ddcfac902e8fc1fb9f8d0576083e2ec6de064094"
+      "byte_length": 114113,
+      "sha256": "8c494c1136ba7580bc871c33250666299f18fec72ccc65b539e510f8cee125ac"
     },
     {
       "path": "web/lib/explorer-decision-view.js",
@@ -3042,13 +3072,13 @@
     },
     {
       "path": "web/lib/format-capability-view.js",
-      "byte_length": 38777,
-      "sha256": "76f7a8f23b2896c90d38be18300ee9c367e1e759040aaadcc865701bf3b6eaa4"
+      "byte_length": 40628,
+      "sha256": "1dc8179e21419c26ad28e8a8d7286d0f3973f21cfedc59abeeecd16d38427ab8"
     },
     {
       "path": "web/lib/format-evidence-scope.js",
-      "byte_length": 11477,
-      "sha256": "60f9ae84947bca337d6bfeb21fb1239aa8ef3f207901d70ae7ad778c740f51a9"
+      "byte_length": 11778,
+      "sha256": "f725452f585da444025dca1469d8f79541b0b7aa18fcff9800db0cf42d35739a"
     },
     {
       "path": "web/lib/format-workflow-ui.js",
@@ -3137,8 +3167,8 @@
     },
     {
       "path": "web/lib/kernel-inspector.js",
-      "byte_length": 191512,
-      "sha256": "f796e78d5ccde10f25e20a8c9984873c6c9c1d24da5088a501c22f991e00cba0"
+      "byte_length": 191619,
+      "sha256": "e2de05680bc26c3dae6fc9205f1ea979842294622434c847b6f62a3f5cd8dacf"
     },
     {
       "path": "web/lib/kernel-witness-worker.js",
@@ -3182,13 +3212,13 @@
     },
     {
       "path": "web/lib/metadata-model-adapters.js",
-      "byte_length": 44216,
-      "sha256": "490f292cfc37ac3b15606200c4fce3eb215ad7d1acba587b5cd99e95c8c2d536"
+      "byte_length": 41882,
+      "sha256": "06436829cdaba3649d4e9b75ab2cb44f8409209ddd9843d5c09fe0f0d6d2d4d9"
     },
     {
       "path": "web/lib/metric-coverage.js",
-      "byte_length": 202388,
-      "sha256": "91ba4f21aca9132a06654e351d470cde105890a8a7d487d4665b623a7d6e705c"
+      "byte_length": 202861,
+      "sha256": "a43112d921918944048e0945efccb6f713cc32ab7668247df6563b89a9506c5e"
     },
     {
       "path": "web/lib/modal-accessibility.js",
@@ -3277,8 +3307,8 @@
     },
     {
       "path": "web/lib/onnx-external-data-status.js",
-      "byte_length": 1527,
-      "sha256": "714f31bcfbaf572086b65b2f18ffe04256f1becb63f148fea1732e37d66ba991"
+      "byte_length": 2356,
+      "sha256": "eb9ad04924317738dac2eac3aebf6ce8c4fd1908a5c643cd418024f306134e28"
     },
     {
       "path": "web/lib/onnx-external-data.js",
@@ -3457,8 +3487,8 @@
     },
     {
       "path": "web/lib/ort-compatibility-evidence.js",
-      "byte_length": 35731,
-      "sha256": "3a7eecc97da1937f1ff510a6459d4952b5a6e41e91c2f14f15b69114020b81e0"
+      "byte_length": 35867,
+      "sha256": "81396b6e13074521412dec207dc56346fae97f704ca5b1158bb42bedfeffeeeb"
     },
     {
       "path": "web/lib/ort-reduced-operator-config.js",
@@ -3468,7 +3498,7 @@
     {
       "path": "web/lib/ort-selected-build-binding.js",
       "byte_length": 5544,
-      "sha256": "3d984a5ad3f26d3f0222f2c04df93c2121ed3f7e140ac4d0228411b41781a381"
+      "sha256": "22cfdc2d99dc8de5791a152b8dcc55c892c4120a5468ba96a95f9c971210da0a"
     },
     {
       "path": "web/lib/performance-visuals.js",
@@ -3527,8 +3557,8 @@
     },
     {
       "path": "web/lib/public-cyclonedx-export.js",
-      "byte_length": 23567,
-      "sha256": "f2286bce4738def9187148889c19f0b804a35d6aa81763f26f967de0dac82d2f"
+      "byte_length": 21614,
+      "sha256": "b78cdfcca56f392d9cc3578f98b48a4c422850015b9a6d74a90f13ad68b3a0fe"
     },
     {
       "path": "web/lib/public-evidence-package.js",
@@ -3617,8 +3647,8 @@
     },
     {
       "path": "web/lib/report-conformance-coreml.js",
-      "byte_length": 17141,
-      "sha256": "87f4639ea3bcdc7c71e677f71b5ac0da98920ed9672046e5759e4705c11b7d2f"
+      "byte_length": 20343,
+      "sha256": "b50354fe658de662f14c5b2a2078154674933357de83377ff7d0c583661aa64b"
     },
     {
       "path": "web/lib/report-conformance-execution-placement.js",
@@ -3637,8 +3667,8 @@
     },
     {
       "path": "web/lib/report-conformance-onnx.js",
-      "byte_length": 272725,
-      "sha256": "47c2f868b933a00e6bbe99010de15f2a69498c53bd7c08133ea7f8f7845fed62"
+      "byte_length": 272808,
+      "sha256": "55c0624a19430424687ce4658fff2ea6f195d6b14788b1add6928f06e3ad3213"
     },
     {
       "path": "web/lib/report-conformance-ort-runtime.js",
@@ -3652,8 +3682,8 @@
     },
     {
       "path": "web/lib/report-conformance-serialized-containers.js",
-      "byte_length": 35045,
-      "sha256": "639a6b03bb4b7a9a710d024d4bdcdcd392fab59c15fc3f71d324c26fba72dd06"
+      "byte_length": 36966,
+      "sha256": "e33e78f251b3c5b6fe011682c1b38689f955fe4436f99954867bcf9e54e52d4c"
     },
     {
       "path": "web/lib/report-conformance-tflite-storage.js",
@@ -3662,8 +3692,8 @@
     },
     {
       "path": "web/lib/report-conformance.js",
-      "byte_length": 219021,
-      "sha256": "b1136a93030c2c168b63d6615a17ddc35f271185540963b022fd14d73bf6e962"
+      "byte_length": 221555,
+      "sha256": "32cca8a91961f56db9134eefa0cf4d48212a383189240d7cd5cd86accbbd51cd"
     },
     {
       "path": "web/lib/report-context.js",
@@ -3712,13 +3742,13 @@
     },
     {
       "path": "web/lib/report-engineering-safetensors-quantization.js",
-      "byte_length": 6394,
-      "sha256": "a903e4076d618b06f6dc77d93d57bbb01d04bfbe7025842ec4f8bc4a42156a61"
+      "byte_length": 6885,
+      "sha256": "1e983005c8f914b4040b2f7a186499dad391bff325aed513c708b33f4d6e39ba"
     },
     {
       "path": "web/lib/report-engineering-serialized.js",
-      "byte_length": 58529,
-      "sha256": "70141d3f34b415ab05a7dbd3447beee036b0b076a42f693cb6b8fdfe523dc9c6"
+      "byte_length": 63405,
+      "sha256": "4a184a72aeac989e43c6799bc8714e330781ec87aaa8a54f70a6f1ee2e2de947"
     },
     {
       "path": "web/lib/report-engineering-tflite-delegates.js",
@@ -3732,8 +3762,8 @@
     },
     {
       "path": "web/lib/report-engineering.js",
-      "byte_length": 258975,
-      "sha256": "867cadf0943b78ee4ac19e37698b1cc1277964b0604aa8a954d1e4c23a900e87"
+      "byte_length": 259085,
+      "sha256": "1a85d692fe033d51ac4407a2b6301f8945c24f26d4d0b1dfd39f4aa27d29b177"
     },
     {
       "path": "web/lib/report-evidence.js",
@@ -3742,13 +3772,13 @@
     },
     {
       "path": "web/lib/report-execution-placement.js",
-      "byte_length": 8314,
-      "sha256": "c89dda2073cf06bb621f5c06df584798fdee8d1cff34abda03a313cad88e620d"
+      "byte_length": 9994,
+      "sha256": "34809a292617b088ce91bf806bf8d0825cc576c125b0c4b6a3b0daf143378685"
     },
     {
       "path": "web/lib/report-export-contracts.js",
-      "byte_length": 123908,
-      "sha256": "a2ed68ff8b56060069c0b487a7dcc2a5f811e91691e99d2576012a7b7fac5a1d"
+      "byte_length": 118397,
+      "sha256": "5369d4d30152c91be44d4d47add3969492b8750c2f5e36ef11296a237efce920"
     },
     {
       "path": "web/lib/report-findings.js",
@@ -3763,7 +3793,7 @@
     {
       "path": "web/lib/report-metadata.js",
       "byte_length": 23162,
-      "sha256": "e11dc4fb30a4cc1cecbeccc24748504c1e111f0cf1cd3d4e8d4baa87f93dafcc"
+      "sha256": "8bb001b31a79e377f268dc2584d259d90680cb2a698d179404ba2e3189c94b3d"
     },
     {
       "path": "web/lib/report-mlbom-compat.js",
@@ -3887,8 +3917,8 @@
     },
     {
       "path": "web/lib/runtime-evidence-controller.js",
-      "byte_length": 8777,
-      "sha256": "06757ebbfeedeba7a7a9ce12cddd0d644bccea5ed19542c666a0075c51873e5c"
+      "byte_length": 9539,
+      "sha256": "fd43c1b1acb19b1dfe7b497195b67b94bf4213414956abd61b3454421b48d2d0"
     },
     {
       "path": "web/lib/runtime-evidence-sidecar.js",
@@ -3922,8 +3952,8 @@
     },
     {
       "path": "web/lib/safetensors-quantization-contract.js",
-      "byte_length": 54285,
-      "sha256": "606dd27a53324f0f694aeddeaa9c0deb669bff343363dfcfdeac141b1d60df08"
+      "byte_length": 58754,
+      "sha256": "73c6e1943699dd6d22413a06f491a0bc23df8454323c901cd4be654110dc5c84"
     },
     {
       "path": "web/lib/safetensors-quantization-export.js",
@@ -3991,6 +4021,11 @@
       "sha256": "974760ad15b82f7a9155b790af54db1db7333f86af4180d5bc3cfd6d95803b10"
     },
     {
+      "path": "web/lib/strict-json.js",
+      "byte_length": 2663,
+      "sha256": "d2a99f28bba82126fe54430aadef919610e702b80cba7b5ce0308f870fec3462"
+    },
+    {
       "path": "web/lib/telemetry.js",
       "byte_length": 5791,
       "sha256": "d199a842c5b00d106c2d69bb55a4ed99c94925de6f04f933b2b4dde156f72e45"
@@ -4002,8 +4037,18 @@
     },
     {
       "path": "web/lib/tensor-numerical-integrity.js",
-      "byte_length": 54821,
-      "sha256": "43fce3e8e7ba8e073adfc8319279277d70ec79687a9e874fb139a6dc897d0bc3"
+      "byte_length": 57676,
+      "sha256": "47044e4fd73c6f1f9d9f40a9b7a79fa02ad88c911ecc411de62bd0da8dbaf93e"
+    },
+    {
+      "path": "web/lib/tensorrt-cyclonedx-properties.js",
+      "byte_length": 3766,
+      "sha256": "9ea1390d0833708d85326bc2cac443e629a7bbb82f2bf0986ba3ca4e1207de9c"
+    },
+    {
+      "path": "web/lib/tensorrt-engine-inspector.js",
+      "byte_length": 16986,
+      "sha256": "6f772f7c8280c53affbdacb7ef685c4ff9571833ab8c37a69c6aa198069fb455"
     },
     {
       "path": "web/lib/tensorrt-llm-contract.js",
@@ -4027,13 +4072,18 @@
     },
     {
       "path": "web/lib/tensorrt-static-preflight.js",
-      "byte_length": 25342,
-      "sha256": "5b2a497f8d1ae68a5ae0d79a360000f074df6bef992a117aa9ab326783c23dce"
+      "byte_length": 26703,
+      "sha256": "2684637b2c077d597b5759ff9c4345eb656e7e1e7bd4b3e0c3aeb3fe6892993f"
     },
     {
       "path": "web/lib/tflite-benchmark.js",
       "byte_length": 4653,
       "sha256": "0b450c19dda30f7cb97a9dd573df39386a6c9a6e7eb80b82dea2d9c253bfe1bf"
+    },
+    {
+      "path": "web/lib/tflite-build-configuration-binding.js",
+      "byte_length": 7763,
+      "sha256": "18cf9b94e6008df0231e6e265c8e413f0a2dddf0d2cd643a3378f6eb4303dcd1"
     },
     {
       "path": "web/lib/tflite-delegate-compatibility.js",
@@ -4232,8 +4282,8 @@
     },
     {
       "path": "web/sw.js",
-      "byte_length": 14225,
-      "sha256": "8e45cdc76850f4079b86f32877b4e20c763bcacb43de3f883798f2274885485f"
+      "byte_length": 14423,
+      "sha256": "98c348d2308359e6feba88b2b4caaff31e4ab2e5b00d972867309b1fa4a0f31e"
     },
     {
       "path": "web/test.html",
@@ -4257,8 +4307,8 @@
     },
     {
       "path": "web/workers/static-audit-worker.js",
-      "byte_length": 2751,
-      "sha256": "a1be585bef8a636825658f9fc6c9f8a2b747f033f12f58939723049ae878676f"
+      "byte_length": 3106,
+      "sha256": "8c9b83070636474e9794ae82febc9fc32a81785b5f8d8cd9950cf6e8a94ba9db"
     }
   ],
   "excluded_classes": [

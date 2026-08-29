@@ -9,6 +9,13 @@ import { sha256TextHex } from "../web/lib/sha256-sync.js";
 import { buildExecutionPlacementEvidence } from "../web/lib/execution-placement-evidence.js";
 import { buildPublicShareAnalysis } from "../web/lib/public-export.js";
 import { buildOnnxDynamicShapeCostContract } from "../web/lib/dynamic-shape-cost.js";
+import {
+  TENSORRT_ENGINE_INSPECTOR_EVIDENCE_SCHEMA,
+  tensorRtParserObservationIdentity,
+} from "../web/lib/tensorrt-engine-inspector.js";
+import { tensorRtCycloneDxPropertyEntries } from "../web/lib/tensorrt-cyclonedx-properties.js";
+import { executionPlacementMarkdown } from "../web/lib/report-execution-placement.js";
+import { buildArtifactEvidenceEnvelope, validateArtifactEvidenceEnvelope } from "../web/lib/artifact-evidence-envelope.js";
 
 const sha = "a".repeat(64);
 const analysis = {
@@ -140,6 +147,128 @@ assert.deepEqual(observed.projection.state_counts, {
 assert.equal(observed.projection.boundary_edge_count, 2);
 assert.equal(observed.projection.boundary_payload.summed_edge_payload_bytes, 64);
 assert.equal(observed.projection.evidence_class, "PARSER_OBSERVED_CONFIGURATION_BOUND");
+
+const engineInformation10 = {
+  Layers: [
+    {
+      Name: "fused_gemm_relu",
+      LayerType: "CaskConvolution",
+      Inputs: [{ Name: "tokens", Dimensions: [-1, 16], "Format/Datatype": "Row major linear FP16" }],
+      Outputs: [{ Name: "b", Dimensions: [-1, 16], "Format/Datatype": "Row major linear FP16" }],
+      TacticName: "sm87_fixture_tactic",
+      TacticValue: "0x1234",
+      StreamId: 0,
+      Metadata: "[ONNX Layer: MatMul][ONNX Layer: Relu]",
+    },
+    {
+      Name: "output_add [ONNX Layer: Add]",
+      LayerType: "ElementWise",
+      Inputs: [{ Name: "c", Dimensions: [1, 16], "Format/Datatype": "Row major linear FP16" }],
+      Outputs: [{ Name: "out", Dimensions: [1, 16], "Format/Datatype": "Row major linear FP16" }],
+    },
+  ],
+  Bindings: ["tokens", "out"],
+};
+const engineEvidence10 = {
+  schema: TENSORRT_ENGINE_INSPECTOR_EVIDENCE_SCHEMA,
+  artifact_sha256: sha,
+  build_profile_sha256: profile.profile_sha256,
+  parser_observation_sha256: tensorRtParserObservationIdentity(observation),
+  engine: { sha256: "d".repeat(64), byte_length: 4096 },
+  runtime: {
+    tensorrt_version: "10.14.1", cuda_version: "13.0", device_id: 0,
+    device_compute_capability: "8.7", device_identity: "Jetson test fixture / CC 8.7",
+  },
+  build_capture: {
+    evidence_class: "DECLARED_BUILD_CAPTURE",
+    binding_method: "fixture_files_with_independent_sha256",
+    tool_name: "trtexec",
+    tool_binary_sha256: "e".repeat(64),
+    invocation_sha256: "f".repeat(64),
+    collector_source_set_sha256: null,
+    model_input_sha256: sha,
+    serialized_engine_sha256: "d".repeat(64),
+  },
+  inspector: {
+    source: "trtexec_exportLayerInfo",
+    profiling_verbosity: "detailed",
+    schema_generation: "tensorrt_10x",
+    execution_context_bound: false,
+    source_file_sha256: "1".repeat(64),
+    source_file_byte_length: 2048,
+    canonical_json_sha256: sha256TextHex(canonicalJson(engineInformation10)),
+    engine_information: engineInformation10,
+  },
+};
+const engineObserved = buildTensorRtStaticPreflight(analysis, config, observation, engineEvidence10);
+assert.equal(engineObserved.status, "engine_inspected_parser_observed_partial");
+assert.equal(engineObserved.engine_inspector_evidence.engine_layer_count, 2);
+assert.equal(engineObserved.engine_inspector_evidence.io_tensor_count, 2);
+assert.equal(engineObserved.engine_inspector_evidence.tactic_annotated_layer_count, 1);
+assert.equal(engineObserved.engine_inspector_evidence.multi_source_metadata_layer_count, 1);
+assert.equal(engineObserved.engine_inspector_evidence.dynamic_dimension_tensor_count, 2);
+assert.equal(engineObserved.engine_inspector_evidence.data_type_inventory.length, 0,
+  "TensorRT 10.x combined Format/Datatype text must not be misreported as a separately exposed dtype.");
+assert.equal(engineObserved.engine_inspector_evidence.source_mapping_status,
+  "source_name_tokens_observed_original_op_identity_not_established");
+assert.equal(engineObserved.engine_inspector_evidence.artifact_engine_relation, "declared_build_capture_binding");
+const integratedAnalysis = { ...analysis, filename: "fixture.onnx", file_size_bytes: 1024, tensorrt_static_preflight: engineObserved };
+const integratedPlacement = buildExecutionPlacementEvidence(integratedAnalysis);
+assert.equal(integratedPlacement.configuration_preflights[0].engine_inspector.engine_sha256, "d".repeat(64));
+assert.match(executionPlacementMarkdown(integratedPlacement), /Optimized Engine Inspector Evidence/);
+assert.match(executionPlacementMarkdown(integratedPlacement), /selected engine metadata, not tactic timings/i);
+const propertyMap = new Map(tensorRtCycloneDxPropertyEntries(integratedAnalysis));
+assert.equal(propertyMap.get("deepbom:model:tensorRtEngineSha256"), "d".repeat(64));
+assert.equal(propertyMap.get("deepbom:model:tensorRtTacticAnnotatedLayerCount"), 1);
+assert.equal(propertyMap.get("deepbom:model:tensorRtInspectorProfilingVerbosity"), "detailed");
+assert.equal(propertyMap.get("deepbom:model:tensorRtEngineBuildCaptureClass"), "DECLARED_BUILD_CAPTURE");
+const envelope = buildArtifactEvidenceEnvelope(integratedAnalysis, { generatedAt: "2026-08-29T00:00:00.000Z" });
+assert.equal(validateArtifactEvidenceEnvelope(envelope).valid, true);
+assert.equal(envelope.format_extensions.onnx.tensorrt_static_preflight.engine_inspector_evidence.engine.sha256, "d".repeat(64));
+
+const config11 = { ...structuredClone(config), expected_tensorrt_version: "11.0.0" };
+const profile11 = createTensorRtBuildProfile(config11);
+const engineInformation11 = {
+  Layers: [{
+    Name: "gemm_0", LayerType: "MatrixMultiply",
+    Inputs: [{ Name: "tokens", Dimensions: [-1, 16], Format: "LINEAR", DataType: "FP16" }],
+    Outputs: [{ Name: "out", Dimensions: [-1, 16], Format: "LINEAR", Datatype: "FP16" }],
+    TacticName: "sm87_fixture_tactic_11",
+  }],
+  "I/O Tensors": [
+    { Name: "tokens", IOMode: "INPUT", DataType: "FP16", Dimensions: [-1, 16], Location: "DEVICE", IsShapeInferenceIO: false, ProfileInfo: [{ MinShape: [1, 16], OptShape: [2, 16], MaxShape: [8, 16], Format: "LINEAR" }] },
+    { Name: "out", IOMode: "OUTPUT", Datatype: "FP16", Dimensions: [-1, 16], Location: "DEVICE", IsShapeInferenceIO: false, ProfileInfo: [] },
+  ],
+};
+const engineEvidence11 = structuredClone(engineEvidence10);
+engineEvidence11.build_profile_sha256 = profile11.profile_sha256;
+engineEvidence11.parser_observation_sha256 = null;
+engineEvidence11.runtime.tensorrt_version = "11.0.0";
+engineEvidence11.inspector.schema_generation = "tensorrt_11x";
+engineEvidence11.inspector.canonical_json_sha256 = sha256TextHex(canonicalJson(engineInformation11));
+engineEvidence11.inspector.engine_information = engineInformation11;
+const engineOnly = buildTensorRtStaticPreflight(analysis, config11, null, engineEvidence11);
+assert.equal(engineOnly.status, "engine_inspected_parser_observation_unbound");
+assert.equal(engineOnly.engine_inspector_evidence.engine_layer_count, 1);
+assert.equal(engineOnly.engine_inspector_evidence.io_tensor_count, 2);
+assert.deepEqual(engineOnly.engine_inspector_evidence.data_type_inventory, [{ name: "FP16", count: 2 }]);
+assert.equal(engineOnly.engine_inspector_evidence.io_tensors[0].profile_info[0].max_shape[0], 8);
+
+const badGeneration = structuredClone(engineEvidence10);
+badGeneration.inspector.engine_information["I/O Tensors"] = [];
+badGeneration.inspector.canonical_json_sha256 = sha256TextHex(canonicalJson(badGeneration.inspector.engine_information));
+assert.throws(() => buildTensorRtStaticPreflight(analysis, config, observation, badGeneration), /schema generation/);
+const badDigest = structuredClone(engineEvidence10);
+badDigest.inspector.canonical_json_sha256 = "2".repeat(64);
+assert.throws(() => buildTensorRtStaticPreflight(analysis, config, observation, badDigest), /digest/);
+const badParserBinding = structuredClone(engineEvidence10);
+badParserBinding.parser_observation_sha256 = null;
+assert.throws(() => buildTensorRtStaticPreflight(analysis, config, observation, badParserBinding), /parser-observation binding/);
+const falseObservedBuild = structuredClone(engineEvidence10);
+falseObservedBuild.build_capture.evidence_class = "COLLECTOR_OBSERVED_BUILD_CAPTURE";
+falseObservedBuild.build_capture.collector_source_set_sha256 = "3".repeat(64);
+falseObservedBuild.build_capture.serialized_engine_sha256 = "4".repeat(64);
+assert.throws(() => buildTensorRtStaticPreflight(analysis, config, observation, falseObservedBuild), /does not bind/);
 
 const missingProfile = structuredClone(config);
 missingProfile.optimization_profiles = [];

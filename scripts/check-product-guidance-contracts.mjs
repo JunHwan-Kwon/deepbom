@@ -99,9 +99,10 @@ function checkCapabilityMatrix() {
     executorch_program: { delegate_instruction_count: 1, delegates: [{ backend_id: "XnnpackBackend" }] },
     weight_integrity: { assessed_tensors: 2 },
   });
-  assert.deepEqual(executorch.cells.map((entry) => entry.id), ["assessed", "decoded", "partial", "serialized", "external"]);
+  assert.deepEqual(executorch.cells.map((entry) => entry.id), ["assessed", "decoded", "partial", "serialized", "import_ready"]);
   assert.match(executorch.cells[3].title, /1 delegate call/);
-  assert.match(executorch.cells[4].title, /actual allocation, kernels, physical transfers, and latency are not imported/);
+  assert.match(executorch.cells[4].title, /deepbom\.executorch-build\.json/);
+  assert.match(executorch.cells[4].title, /Execution remains a separate native evidence layer/);
 }
 
 function checkRuntimeCapturePlans() {

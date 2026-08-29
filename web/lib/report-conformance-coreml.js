@@ -62,8 +62,16 @@ export function registerCoreMlSerializedConformance({ staticAnalysis, ops, repor
   const flexibleScenarios = staticAnalysis.flexible_input_scenarios || coreml.flexible_input_scenarios;
   if (flexibleScenarios?.scenario_count) {
     const rows = flexibleScenarios.scenarios || [];
-    const validRows = rows.length === Number(flexibleScenarios.scenario_count)
-      && Number(flexibleScenarios.assessed_scenario_count || 0) === rows.filter((row) => row.status === "assessed").length
+    const scenarioCount = Number(flexibleScenarios.scenario_count);
+    const retainedCount = Number(flexibleScenarios.retained_scenario_count ?? rows.length);
+    const evaluatedCount = Number(flexibleScenarios.evaluated_scenario_count ?? scenarioCount);
+    const statusCounts = Array.isArray(flexibleScenarios.scenario_status_counts) ? flexibleScenarios.scenario_status_counts : [];
+    const countedStatuses = statusCounts.reduce((sum, row) => sum + Number(row.count || 0), 0);
+    const assessedStatuses = statusCounts.find((row) => row.status === "assessed")?.count;
+    const validRows = rows.length === retainedCount && retainedCount <= scenarioCount && evaluatedCount === scenarioCount
+      && (!statusCounts.length
+        ? Number(flexibleScenarios.assessed_scenario_count || 0) === rows.filter((row) => row.status === "assessed").length
+        : countedStatuses === scenarioCount && Number(flexibleScenarios.assessed_scenario_count || 0) === Number(assessedStatuses || 0))
       && rows.every((row, index) => row.scenario_index === index && Array.isArray(row.input_shapes)
         && row.input_shapes.every((item) => inputNames.has(item.name) && Array.isArray(item.shape)
           && item.shape.every((value) => Number.isSafeInteger(value) && value > 0))
@@ -72,6 +80,7 @@ export function registerCoreMlSerializedConformance({ staticAnalysis, ops, repor
             .every((value) => Number.isSafeInteger(value) && value >= 0)));
     check("CF-COREML-FLEX-SCENARIO-001", flexibleScenarios.schema === "deepbom.coreml.flexible_input_scenarios.v1"
       && validRows && reportText.includes("Core ML Flexible Input Scenarios")
+      && reportText.includes(`${evaluatedCount.toLocaleString("en-US")}/${scenarioCount.toLocaleString("en-US")}`)
       && reportText.includes("not a proof that an interior point cannot have a larger cost or payload"),
     "Core ML flexible-input scenario count, exact arithmetic, endpoint boundary, or report projection is inconsistent.", ["/evidence/static_analysis/flexible_input_scenarios", "/engineering_report.md"]);
   }
@@ -130,6 +139,20 @@ export function registerCoreMlSerializedConformance({ staticAnalysis, ops, repor
         const op = ops[row.op_index];
         if (!op || op.mil_operation_type !== row.op_type || op.compression_contract?.transform !== row.transform
           || !/^[0-9a-f]{64}$/i.test(String(row.source_sha256 || ""))) return false;
+        if (["affine_constant_dequantization", "blockwise_affine", "blockwise_lut_palettization", "packed_index_lut_palettization", "unstructured_sparse_bitmask", "packed_unstructured_sparse_bitmask"].includes(row.representation)
+          && (!row.payload_integrity || !row.reconstruction?.status)) return false;
+        if (row.representation === "affine_constant_dequantization") {
+          const outputElements = product(row.output_shape);
+          return outputElements === row.logical_output_elements && outputElements === row.quantized_data_elements
+            && ["per_tensor", "per_axis"].includes(row.granularity)
+            && Number.isSafeInteger(row.normalized_axis) && row.normalized_axis >= 0
+            && row.normalized_axis < row.output_shape.length && row.axis_extent === row.output_shape[row.normalized_axis]
+            && Number.isSafeInteger(row.serialized_axis)
+            && row.normalized_axis === (row.serialized_axis < 0 ? row.serialized_axis + row.output_shape.length : row.serialized_axis)
+            && Number.isSafeInteger(row.scale_elements) && Number.isSafeInteger(row.zero_point_elements)
+            && [1, row.axis_extent].includes(row.scale_elements) && [1, row.axis_extent].includes(row.zero_point_elements)
+            && row.granularity === (row.scale_elements > 1 || row.zero_point_elements > 1 ? "per_axis" : "per_tensor");
+        }
         if (row.representation === "blockwise_affine") {
           const outputElements = product(row.output_shape);
           const blockElements = product(row.block_shape);
@@ -145,13 +168,24 @@ export function registerCoreMlSerializedConformance({ staticAnalysis, ops, repor
             && Number.isSafeInteger(row.vector_size) && row.vector_size > 0
             && outputElements === indexElements * row.vector_size
             && positiveShape(row.group_grid_shape) && row.group_grid_shape.length === row.index_shape.length
-            && row.index_shape.every((value, index) => value % row.group_grid_shape[index] === 0);
+            && row.index_shape.every((value, index) => value % row.group_grid_shape[index] === 0)
+            && (!row.lut_usage?.status?.startsWith("assessed")
+              || row.lut_usage.index_count === row.logical_index_elements
+                && row.lut_usage.palette_entries_total === row.palette_count
+                && row.lut_usage.palette_entries_used <= row.palette_count);
         }
-        if (row.representation === "unstructured_sparse_bitmask") {
+        if (row.representation === "packed_index_lut_palettization") {
+          const outputElements = product(row.output_shape);
+          return outputElements === row.logical_output_elements
+            && Number.isSafeInteger(row.serialized_index_bytes) && row.serialized_index_bytes > 0
+            && Number.isSafeInteger(row.index_bits) && row.palette_count === 2 ** row.index_bits;
+        }
+        if (["unstructured_sparse_bitmask", "packed_unstructured_sparse_bitmask"].includes(row.representation)) {
           const outputElements = product(row.output_shape);
           return outputElements === row.logical_output_elements && Number.isSafeInteger(row.stored_nonzero_elements)
             && row.stored_nonzero_elements >= 0 && row.stored_nonzero_elements <= outputElements
-            && row.mask_population_status === "not_decoded_at_mil_contract_layer";
+            && ["not_decoded_at_mil_contract_layer", "assessed_exact_immediate_payload", "assessed_exact_bound_blob_payload"].includes(row.mask_population_status)
+            && (row.mask_population == null || row.mask_population === row.stored_nonzero_elements);
         }
         return row.status === "not_assessed_source_semantics_not_implemented";
       });

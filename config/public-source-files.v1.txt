@@ -57,6 +57,7 @@ corpus/google_legacy/converter-cohorts.v1.json
 corpus/google_legacy/manifest.v1.json
 corpus/google_legacy/measurement-baseline.v1.json.gz
 corpus/google_legacy/paired-modern.v1.json
+corpus/google_legacy/provenance/tflite_wasm_audit_bg.5cb18b1375a8890d14af25f0abb1a13ebd2991de73c3c5c9431248261315884a.wasm.gz
 corpus/huggingface-community-corpus.v1.json.gz
 corpus/huggingface-community-corpus.v1.summary.json
 corpus/measurements/README.md
@@ -174,6 +175,7 @@ scripts/capture-coreml-compute-plan.py
 scripts/capture-gguf-runtime.mjs
 scripts/capture-pinned-ort-profile.mjs
 scripts/capture-pinned-runtime.mjs
+scripts/capture-tensorrt-engine-inspector.mjs
 scripts/capture-tensorrt-parser.mjs
 scripts/check-access-hierarchy.mjs
 scripts/check-accumulator-atlas-viewer.mjs
@@ -208,6 +210,7 @@ scripts/check-coreml-legacy-analysis.mjs
 scripts/check-coreml-legacy-quantization-corpus.mjs
 scripts/check-coreml-mlprogram-analysis.mjs
 scripts/check-coreml-mlprogram-corpus.mjs
+scripts/check-coreml-range-reader.mjs
 scripts/check-corpus-validation-provenance.mjs
 scripts/check-curated-micro-corpus.mjs
 scripts/check-custom-targets.mjs
@@ -352,6 +355,7 @@ scripts/check-sw-assets.mjs
 scripts/check-sw-version.mjs
 scripts/check-tensor-inventory.mjs
 scripts/check-tensor-numerical-integrity.mjs
+scripts/check-tensorrt-engine-inspector-capture.mjs
 scripts/check-tensorrt-llm-contract.mjs
 scripts/check-tensorrt-native-collector.mjs
 scripts/check-tensorrt-static-preflight.mjs
@@ -447,6 +451,7 @@ scripts/sweep-public-multiformat-corpus.mjs
 scripts/sweep-safetensors-architecture-corpus.mjs
 scripts/sync-huggingface-community-corpus.mjs
 scripts/tensorrt-capture-lib.mjs
+scripts/tensorrt-engine-inspector-capture-lib.mjs
 scripts/test-live-permissions.mjs
 scripts/validate-cyclonedx-17.mjs
 scripts/validate-supported-formats.mjs
@@ -594,6 +599,7 @@ web/lib/evidence-treemap.js
 web/lib/exact-rational.js
 web/lib/execution-placement-evidence.js
 web/lib/execution-placement-view.js
+web/lib/executorch-build-binding.js
 web/lib/executorch-operator-signatures.generated.js
 web/lib/explorer-decision-view.js
 web/lib/explorer-question-view.js
@@ -794,15 +800,19 @@ web/lib/signing-key-trust.js
 web/lib/static-audit-worker-client.js
 web/lib/status.js
 web/lib/storage.js
+web/lib/strict-json.js
 web/lib/telemetry.js
 web/lib/tensor-inventory.js
 web/lib/tensor-numerical-integrity.js
+web/lib/tensorrt-cyclonedx-properties.js
+web/lib/tensorrt-engine-inspector.js
 web/lib/tensorrt-llm-contract.js
 web/lib/tensorrt-llm-source-metadata.js
 web/lib/tensorrt-profile-cost.js
 web/lib/tensorrt-source-metadata.js
 web/lib/tensorrt-static-preflight.js
 web/lib/tflite-benchmark.js
+web/lib/tflite-build-configuration-binding.js
 web/lib/tflite-delegate-compatibility.js
 web/lib/tflite-delegate-rulepack-metadata.js
 web/lib/tflite-profile-info-adapter.js

@@ -5,6 +5,10 @@ import {
   tfliteXnnpackProjectionRows,
   validateBackendPlacementProjection,
 } from "./backend-placement-projection.js";
+import {
+  summarizeTfliteDelegateBuildBinding,
+  tfliteBuildRequirementsBound,
+} from "./tflite-build-configuration-binding.js";
 
 export const EXECUTION_PLACEMENT_EVIDENCE_SCHEMA = "deepbom.execution_placement_evidence.v1";
 
@@ -119,8 +123,12 @@ function tfliteEvidence(analysis, runtime) {
     && finiteInteger(risk.baseline_conditionally_delegatable_op_count) !== candidateCount);
   if (mismatchedBaseline) throw new Error("TFLite runtime-build risk baseline differs from the canonical XNNPACK candidate count.");
   const alternate = analysis.tflite_delegate_compatibility_evidence;
-  const buildBound = observed || Boolean(runtime?.tflite_delegate_build_inventory
-    || runtime?.runtime_identity || runtime?.runtime_identity_status === "bound");
+  const xnnpackBuildBound = observed || tfliteBuildRequirementsBound(runtime, buildRisks);
+  const alternateBuildBinding = summarizeTfliteDelegateBuildBinding(runtime, alternate?.build_requirements);
+  const alternateBuildBound = alternateBuildBinding.all_applicable_requirements_bound;
+  const buildBound = observed || xnnpackBuildBound || alternateBuildBound || Boolean(
+    runtime?.runtime_identity || runtime?.runtime_identity_status === "bound",
+  );
   const alternateProfiles = rows(alternate?.profiles)
     .filter((profile) => !/xnnpack/i.test(`${profile.id || ""} ${profile.label || ""}`))
     .map((profile) => portfolio(profile.id || profile.label, profile.label || profile.id,
@@ -172,11 +180,21 @@ function tfliteEvidence(analysis, runtime) {
     subtitle: observed ? "Observed delegate assignment" : "XNNPACK predicted partition + alternate delegate eligibility",
     state: observed ? fullObservation ? "RUNTIME OBSERVED" : "PARTIAL RUNTIME OBSERVATION" : "SOURCE-PINNED PREDICTION",
     tone: observed ? fullObservation ? "complete" : "partial" : "partial",
-    banner: !buildBound && buildRisks.length ? buildRiskBanner(buildRisks, candidateCount, ops.length) : null,
+    banner: !xnnpackBuildBound && buildRisks.length ? buildRiskBanner(buildRisks, candidateCount, ops.length) : null,
     levels: [
       level("artifact_observed", "Artifact observed", "OBSERVED", "complete", "ARTIFACT_OBSERVED", `${ops.length} serialized operators and their tensor contracts; the artifact does not select a delegate or runtime build.`),
       level("source_pinned_eligibility", "Source-pinned eligibility", "ASSESSED", "partial", "SOURCE_PINNED_PREDICTED", sourceDetail),
-      level("configuration_bound", "Configuration-bound", buildBound ? "BOUND" : "UNBOUND", buildBound ? "partial" : "missing", buildBound ? "CONFIGURATION_BOUND" : "NOT_OBSERVED", buildBound ? "Imported runtime/build identity is bound; device acceptance remains separate." : "Selected delegate build flags and device capability are not embedded in TFLite."),
+      level("configuration_bound", "Configuration-bound", buildBound ? "BOUND" : "UNBOUND", buildBound ? "partial" : "missing", buildBound ? "CONFIGURATION_BOUND" : "NOT_OBSERVED", observed
+        ? "The imported runtime assignment binds the executed configuration."
+        : xnnpackBuildBound && alternateBuildBound
+          ? "XNNPACK requirements and the TFLite GPU/NNAPI selected-build inventory are bound; device acceptance remains separate."
+          : xnnpackBuildBound
+            ? "XNNPACK build requirements are bound; TFLite GPU/NNAPI selected-build availability remains separate."
+            : alternateBuildBound
+              ? "TFLite GPU/NNAPI selected-build inventory is bound; XNNPACK build requirements and device acceptance remain separate."
+              : buildBound
+                ? "A runtime identity is bound, but backend-specific build requirements remain separately assessed."
+                : "Selected delegate build flags and device capability are not embedded in TFLite."),
       level("runtime_evidence", "Runtime evidence", observed ? fullObservation ? "OBSERVED" : "PARTIAL OBSERVED" : "NOT OBSERVED", observed ? fullObservation ? "complete" : "partial" : "missing", observed ? "OBSERVED_RUNTIME" : "NOT_OBSERVED", observed ? `${assignments.rows.length}/${ops.length} original-op assignments are identity-bound.` : "Executed delegate partitions, lowering, copies, and kernels require an imported target trace."),
     ],
     flow: flow(observed ? "Observed assignment flow" : "Conditional XNNPACK partition flow",
@@ -343,6 +361,9 @@ function safeTensorsEvidence(analysis) {
 function execuTorchEvidence(analysis) {
   const ops = rows(analysis.ops);
   const pte = analysis.executorch_container === "pte";
+  const binding = analysis.executorch_program?.selected_build_binding || null;
+  const selectedBuild = binding?.selected_build || null;
+  const buildConflict = binding?.status === "CONTRADICTION_SELECTED_BUILD_CANNOT_SATISFY_SERIALIZED_PROGRAM";
   const segments = pte && ops.length ? contiguous(ops, (op) => {
     const delegated = op.instruction_kind === "DelegateCall";
     const label = delegated ? String(op.name || "serialized delegate") : "portable instruction";
@@ -354,11 +375,11 @@ function execuTorchEvidence(analysis) {
     title: "ExecuTorch Execution Placement", subtitle: pte ? "Serialized AOT instruction and delegate flow" : "FT01 data-container boundary",
     state: pte ? delegateCount ? "SERIALIZED DELEGATE CALLS" : "PORTABLE INSTRUCTIONS SERIALIZED" : "NOT APPLICABLE TO PTD",
     tone: pte ? "partial" : "na",
-    banner: pte ? "ET12 delegate calls and backend IDs are artifact-observed AOT lowering evidence. They do not prove that the selected runtime build can load or execute the backend." : "FT01 stores named tensor/blob segments and no execution plan.",
+    banner: pte ? `ET12 delegate calls and backend IDs are artifact-observed AOT lowering evidence. ${selectedBuild ? buildConflict ? "The imported selected-build attestation contradicts the serialized program inventory." : "The imported selected-build attestation covers the serialized backend and operator identities, but does not prove loading or execution." : "No selected runtime build or binary inventory is bound."}` : "FT01 stores named tensor/blob segments and no execution plan.",
     levels: [
       level("artifact_observed", "Artifact observed", "OBSERVED", "complete", "ARTIFACT_OBSERVED", pte ? `${ops.length} ordered ET12 instruction(s), including ${delegateCount} serialized delegate call(s), are decoded.` : `${analysis.tensor_count || 0} FT01 named tensor/blob descriptor(s) are decoded.`),
-      level("source_pinned_eligibility", "Source-pinned eligibility", "SCHEMA PINNED", "complete", "SOURCE_PINNED_SCHEMA", "The ET12/FT01 wire contract is pinned to the declared ExecuTorch source release; backend implementation eligibility is not inferred from the backend ID alone."),
-      level("configuration_bound", "Configuration-bound", "UNBOUND", "missing", "NOT_OBSERVED", pte ? "The serialized compile specs are observed, but the matching runtime binary, registered backend implementation, device, and allocator configuration are not bound." : "FT01 does not select a consuming PTE or runtime configuration."),
+      level("source_pinned_eligibility", "Source-pinned eligibility", binding ? "BACKEND REGISTRY PINNED" : "SCHEMA PINNED", "complete", binding ? "SOURCE_PINNED_BACKEND_REGISTRY" : "SOURCE_PINNED_SCHEMA", binding ? `${binding.source_registry?.backend_count || 0} standard backend IDs are bound to the pinned ExecuTorch source registry; serialized identity still does not establish selected-build linkage.` : "The ET12/FT01 wire contract is pinned to the declared ExecuTorch source release; backend implementation eligibility is not inferred from the backend ID alone."),
+      level("configuration_bound", "Configuration-bound", !pte ? "NOT APPLICABLE" : !selectedBuild ? "UNBOUND" : buildConflict ? "CONTRADICTION" : "ATTESTED", !pte ? "na" : !selectedBuild ? "missing" : buildConflict ? "conflict" : "complete", !pte ? "NOT_APPLICABLE" : !selectedBuild ? "NOT_OBSERVED" : buildConflict ? "ATTESTED_BUILD_CONTRADICTION" : "ATTESTED_SELECTED_BUILD", !pte ? "FT01 does not select a consuming PTE or runtime configuration." : !selectedBuild ? "The serialized compile specs are observed, but the matching runtime binary, registered backend implementation, device, and allocator configuration are not bound." : `${binding.delegate_bindings?.length || 0} delegate and ${binding.kernel_bindings?.length || 0} kernel identity binding(s) were compared with attested build inventories; device capability and initialization remain unobserved.`),
       level("runtime_evidence", "Runtime evidence", "NOT OBSERVED", "missing", "NOT_OBSERVED", "Delegate loading, executed instruction placement, runtime allocation, kernels, physical transfers, and latency require native ExecuTorch evidence."),
     ],
     flow: flow(pte ? "Serialized instruction placement flow" : "Placement unavailable by format semantics", pte ? "ARTIFACT_SERIALIZED_AOT_FLOW" : "NOT_APPLICABLE", pte ? ops.length : 0, pte ? ops.length : 0, segments),
@@ -460,6 +481,7 @@ function level(id, label, state, tone, evidenceClass, detail) {
 }
 
 function tensorRtPreflightSummary(value) {
+  const engine = value.engine_inspector_evidence || null;
   return {
     schema: value.schema,
     label: "TensorRT Preflight",
@@ -472,6 +494,26 @@ function tensorRtPreflightSummary(value) {
     profile_cost_status: value.optimization_profile_cost?.status || "not emitted",
     profile_cost_scenario_count: finiteInteger(value.optimization_profile_cost?.scenario_count),
     optimization_profile_cost: value.optimization_profile_cost || null,
+    engine_inspector: engine ? {
+      schema: engine.schema,
+      status: engine.status,
+      evidence_class: engine.evidence_class,
+      engine_sha256: engine.engine?.sha256 || null,
+      engine_byte_length: finiteInteger(engine.engine?.byte_length),
+      profiling_verbosity: engine.inspector?.profiling_verbosity || null,
+      schema_generation: engine.inspector?.schema_generation || null,
+      execution_context_bound: engine.inspector?.execution_context_bound === true,
+      engine_layer_count: finiteInteger(engine.engine_layer_count),
+      io_tensor_count: finiteInteger(engine.io_tensor_count),
+      tactic_annotated_layer_count: finiteInteger(engine.tactic_annotated_layer_count),
+      multi_source_metadata_layer_count: finiteInteger(engine.multi_source_metadata_layer_count),
+      dynamic_dimension_tensor_count: finiteInteger(engine.dynamic_dimension_tensor_count),
+      layer_type_inventory: rows(engine.layer_type_inventory),
+      data_type_inventory: rows(engine.data_type_inventory),
+      source_mapping_status: engine.source_mapping_status || null,
+      artifact_engine_relation: engine.artifact_engine_relation || null,
+      interpretation_boundary: engine.interpretation_boundary || null,
+    } : null,
     issues: rows(value.issues),
     trust_boundary: value.trust_boundary,
     interpretation_boundary: value.interpretation_boundary,

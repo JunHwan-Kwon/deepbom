@@ -9,7 +9,7 @@ import { buildMlBomDocument } from "../web/lib/report-mlbom.js";
 import { buildEngineeringEvidenceDocument } from "../web/lib/report-evidence.js";
 
 function assert(value, message) { if (!value) throw new Error(message); }
-function varint(value) { let x = BigInt(value); const out = []; while (x > 127n) { out.push(Number(x & 127n) | 128); x >>= 7n; } out.push(Number(x)); return Buffer.from(out); }
+function varint(value) { let x = BigInt(value); if (x < 0n) x = BigInt.asUintN(64, x); const out = []; while (x > 127n) { out.push(Number(x & 127n) | 128); x >>= 7n; } out.push(Number(x)); return Buffer.from(out); }
 function concat(...rows) { return Buffer.concat(rows.flat().filter(Boolean)); }
 function key(field, wire) { return varint(field * 8 + wire); }
 function uint(field, value) { return concat(key(field, 0), varint(value)); }
@@ -163,11 +163,22 @@ function immediateBytesProgramModel() {
   return concat(uint(1, 8), message(2, description), message(502, program));
 }
 
-function compressionProgramModel(kind, { invalidBlock = false, invalidPalette = false, vector = false, invalidSparse = false, invalidPadding = false, opset = "CoreML8" } = {}) {
+function compressionProgramModel(kind, { invalidBlock = false, invalidPalette = false, vector = false, invalidSparse = false, invalidPadding = false, invalidAffineVector = false, invalidAffineAxis = false, opset = "CoreML8" } = {}) {
   let op;
   let outputShape;
   let outputDtype;
-  if (kind === "blockwise") {
+  if (kind === "affine") {
+    const dataShape = [2, 3];
+    const scaleShape = [invalidAffineVector ? 2 : 3];
+    op = operation("constexpr_affine_dequantize", [
+      ["quantized_data", valueBinding(immediateBytesValue(21, dataShape, Buffer.from([1, 2, 3, 4, 5, 6])))],
+      ["zero_point", valueBinding(immediateBytesValue(11, [], floatPayload([1])))],
+      ["scale", valueBinding(immediateBytesValue(11, scaleShape, floatPayload(Array.from({ length: scaleShape[0] }, (_, index) => (index + 1) / 4))))],
+      ["axis", valueBinding(int32Value(invalidAffineAxis ? -3 : -1))],
+    ], [["output", 11, dataShape]]);
+    outputShape = dataShape;
+    outputDtype = 11;
+  } else if (kind === "blockwise") {
     const scaleShape = invalidBlock ? [3, 1] : [2, 1];
     op = operation("constexpr_blockwise_shift_scale", [
       ["data", valueBinding(immediateBytesValue(35, [4, 4], Buffer.alloc(8, 0x21)))],
@@ -321,23 +332,53 @@ const blockwiseLedger = blockwiseCompression.coreml?.mil_compression_contract;
 const blockwiseRow = blockwiseLedger?.transforms?.[0];
 assert(blockwiseLedger?.status === "assessed_exact_serialized_contracts" && blockwiseLedger.exact_contract_count === 1
   && blockwiseRow?.representation === "blockwise_affine" && blockwiseRow.logical_output_elements === 16
-  && blockwiseRow.scale_elements === 2 && JSON.stringify(blockwiseRow.block_shape) === "[2,4]",
+  && blockwiseRow.scale_elements === 2 && JSON.stringify(blockwiseRow.block_shape) === "[2,4]"
+  && blockwiseRow.reconstruction?.status === "assessed_exact_retained_payload"
+  && blockwiseRow.reconstruction.value_count === 16 && blockwiseRow.reconstruction.zero_count === 16,
 "Core ML iOS 18 blockwise affine shape/cardinality contract is incorrect");
+
+const affineCompressionModel = compressionProgramModel("affine", { opset: "CoreML6" });
+const affineCompression = (await readCoreMlModelFile(new File([affineCompressionModel], "affine.mlmodel"))).analysis;
+const affineRow = affineCompression.coreml?.mil_compression_contract?.transforms?.[0];
+assert(affineRow?.status === "assessed_exact_serialized_contract"
+  && affineRow.representation === "affine_constant_dequantization"
+  && affineRow.granularity === "per_axis" && affineRow.serialized_axis === -1
+  && affineRow.normalized_axis === 1 && affineRow.axis_extent === 3
+  && affineRow.scale_elements === 3 && affineRow.zero_point_elements === 1
+  && affineRow.reconstruction?.status === "assessed_exact_retained_payload"
+  && affineRow.reconstruction.value_count === 6 && affineRow.reconstruction.finite_min === 0,
+`Core ML iOS 16 affine dequantization axis, cardinality, or exact retained-payload reconstruction is incorrect: ${JSON.stringify({ row: affineRow, tensors: affineCompression.tensors?.slice(0, 4) })}`);
+affineCompression.model_sha256 = createHash("sha256").update(affineCompressionModel).digest("hex");
+const affineReport = buildEngineeringReport(affineCompression, { generatedAt: "2026-08-07T00:00:00.000Z" });
+assert(affineReport.includes("affine_constant_dequantization")
+  && affineReport.includes("per_axis; 3 scale / 1 zero-point value(s); axis -1 -> 1"),
+"Core ML affine contract or normalized axis is missing from the engineering report");
+const affineEvidence = buildEngineeringEvidenceDocument(affineCompression, {
+  reportContext: { generatedAt: "2026-08-07T00:00:00.000Z", identity: { filename: "affine.mlmodel", format: "coreml", sha256: affineCompression.model_sha256 } },
+  rawEvidenceContext: { identity: { filename: "affine.mlmodel", format: "coreml", sha256: affineCompression.model_sha256 } },
+  mlBomDocument: buildMlBomDocument(affineCompression, { hash: affineCompression.model_sha256 }),
+});
+assert(affineEvidence.evidence?.conformance_report?.status === "pass", "Core ML affine compression evidence failed report/export conformance");
 
 const lutCompressionModel = compressionProgramModel("lut", { vector: true });
 const lutCompression = (await readCoreMlModelFile(new File([lutCompressionModel], "lut.mlmodel"))).analysis;
 const lutRow = lutCompression.coreml?.mil_compression_contract?.transforms?.[0];
 assert(lutRow?.representation === "blockwise_lut_palettization" && lutRow.index_bits === 2
   && lutRow.palette_count === 4 && lutRow.vector_size === 2 && lutRow.vector_axis === 1
-  && lutRow.logical_index_elements === 4 && lutRow.logical_output_elements === 8,
-"Core ML iOS 18 LUT palette/vector cardinality contract is incorrect");
+  && lutRow.logical_index_elements === 4 && lutRow.logical_output_elements === 8
+  && lutRow.lut_usage?.status === "assessed_exact_full_index_payload"
+  && lutRow.lut_usage.palette_entries_used === 4 && lutRow.lut_usage.index_count === 4,
+`Core ML iOS 18 LUT palette/vector cardinality contract is incorrect: ${JSON.stringify(lutRow)}`);
 
 const sparseCompressionModel = compressionProgramModel("sparse");
 const sparseCompression = (await readCoreMlModelFile(new File([sparseCompressionModel], "sparse.mlmodel"))).analysis;
 const sparseRow = sparseCompression.coreml?.mil_compression_contract?.transforms?.[0];
 assert(sparseRow?.status === "assessed_exact_serialized_contract"
   && sparseRow.mask_population === 3 && sparseRow.stored_nonzero_elements === 3
-  && sparseRow.logical_output_elements === 6 && sparseRow.mask_population_status === "assessed_exact_immediate_payload",
+  && sparseRow.logical_output_elements === 6 && sparseRow.mask_population_status === "assessed_exact_immediate_payload"
+  && sparseRow.reconstruction?.status === "assessed_exact_retained_payload"
+  && sparseRow.reconstruction.value_count === 6 && sparseRow.reconstruction.zero_count === 3
+  && sparseRow.reconstruction.finite_min === 0 && sparseRow.reconstruction.finite_max === 3,
 "Core ML iOS 18 sparse mask population and nonzero-data cardinality contract is incorrect");
 
 const legacyLutModel = legacyCompressionProgramModel("lut");
@@ -376,6 +417,14 @@ let invalidBlockRejected = false;
 try { await readCoreMlModelFile(new File([compressionProgramModel("blockwise", { invalidBlock: true })], "invalid-blockwise.mlmodel")); }
 catch (error) { invalidBlockRejected = /block divisibility constraints/.test(String(error?.message)); }
 assert(invalidBlockRejected, "Core ML non-divisible blockwise scale shape did not fail closed");
+let invalidAffineVectorRejected = false;
+try { await readCoreMlModelFile(new File([compressionProgramModel("affine", { opset: "CoreML6", invalidAffineVector: true })], "invalid-affine-vector.mlmodel")); }
+catch (error) { invalidAffineVectorRejected = /vector cardinality contradicts/.test(String(error?.message)); }
+assert(invalidAffineVectorRejected, "Core ML affine scale-vector cardinality contradiction did not fail closed");
+let invalidAffineAxisRejected = false;
+try { await readCoreMlModelFile(new File([compressionProgramModel("affine", { opset: "CoreML6", invalidAffineAxis: true })], "invalid-affine-axis.mlmodel")); }
+catch (error) { invalidAffineAxisRejected = /axis is outside/.test(String(error?.message)); }
+assert(invalidAffineAxisRejected, "Core ML affine negative axis outside the source-defined rank range did not fail closed");
 let invalidBlockOpsetRejected = false;
 try { await readCoreMlModelFile(new File([compressionProgramModel("blockwise", { opset: "CoreML7" })], "invalid-blockwise-opset.mlmodel")); }
 catch (error) { invalidBlockOpsetRejected = /unavailable before the pinned CoreML8 opset/.test(String(error?.message)); }
