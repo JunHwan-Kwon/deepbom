@@ -469,8 +469,11 @@ function registerExecuTorchSerializedConformance({ staticAnalysis, tensors, ops,
       : /^(?:0|[1-9]\d*)$/.test(String(staticAnalysis.total_macs_decimal || ""))
         && staticAnalysis.mac_assessment?.complete === true
         && Number(staticAnalysis.mac_assessment?.unknown_compute_instruction_count) === 0;
+    const graphBoundary = String(contract.graph_boundary || "");
+    const selectedBuildBoundary = String(buildBinding.interpretation_boundary || "");
     check("CF-EXECUTORCH-BOUNDARY-001", macContractValid
-      && reportText.includes("Serialized DelegateCall rows are AOT artifact evidence")
+      && graphBoundary.length > 0 && reportText.includes(graphBoundary)
+      && selectedBuildBoundary.length > 0 && reportText.includes(selectedBuildBoundary)
       && reportText.includes("Matching portable KernelCall direction is source-bound"),
     "ExecuTorch report promoted unbound operator semantics or serialized delegate calls beyond their evidence boundary.", ["/evidence/static_analysis/mac_assessment", "/engineering_report.md"]);
     const external = contract.external_tensor_data || {};

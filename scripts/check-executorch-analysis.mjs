@@ -63,6 +63,9 @@ assert(addReport.includes("1 kernel + 0 delegate + 0 move/control/free")
   && addReport.includes("0/0 exact name/dtype/shape/logical-byte/layout contracts")
   && addReport.includes("Matching portable KernelCall direction is source-bound")
   && addReport.includes("1/1 KernelCall signatures source-bound"));
+assert(addReport.includes(add.executorch_program.graph_boundary)
+  && addReport.includes(add.executorch_program.selected_build_binding.interpretation_boundary),
+"ExecuTorch reports must preserve the artifact graph and selected-build interpretation boundaries verbatim.");
 
 const selectedBuild = buildSelectedBuildAttestation({ portableOperatorNames: ["aten::add.out"] });
 assert.deepEqual(validateExecuTorchSelectedBuildAttestation(selectedBuild), selectedBuild);
@@ -84,6 +87,9 @@ assert.equal(buildBoundAdd.executorch_program.selected_build_binding.kernel_bind
 assert.equal(buildBoundAdd.executorch_program.selected_build_binding.selected_build_input.file_sha256, sha256(selectedBuildBytes));
 assert.equal(buildBoundAdd.weight_integrity.status, "pass");
 const buildBoundReport = buildEngineeringReport(buildBoundAdd, { generatedAt: "2026-08-25T00:00:00.000Z" });
+assert(buildBoundReport.includes(buildBoundAdd.executorch_program.graph_boundary)
+  && buildBoundReport.includes(buildBoundAdd.executorch_program.selected_build_binding.interpretation_boundary),
+"Build-bound ExecuTorch reports must preserve both reconstructed interpretation boundaries verbatim.");
 assert(buildBoundReport.includes(selectedBuild.attestation_sha256)
   && buildBoundReport.includes("SELECTED_BUILD_INVENTORY_SATISFIES_SERIALIZED_IDENTITIES")
   && buildBoundReport.includes(sha256(selectedBuildBytes)));
