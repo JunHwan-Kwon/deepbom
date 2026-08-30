@@ -1,4 +1,4 @@
-import { estimateOnnxMacs, summarizeOnnxAssessedMacs } from "../web/onnx.js";
+import { estimateOnnxMacs, projectOnnxCompleteMacTotals, summarizeOnnxAssessedMacs } from "../web/onnx.js";
 import { createCheck } from "./check-assert.mjs";
 
 const { done, expect, expectEqual } = createCheck("ONNX operation cost check");
@@ -187,5 +187,14 @@ expectEqual(unsafeAggregate.total_assessed_macs, null, "An unsafe aggregate MAC 
 expectEqual(unsafeAggregate.total_assessed_ops_decimal, "18014398509481984", "Aggregate arithmetic operations should derive exactly from the BigInt MAC total.");
 expectEqual(unsafeAggregate.total_assessed_ops, null, "An unsafe aggregate operation Number mirror must be withheld.");
 expectEqual(unsafeAggregate.safe_number_mirror_status, "exact_decimal_only", "Unsafe aggregate status should disclose decimal-only representation.");
+
+const completeAggregate = projectOnnxCompleteMacTotals(summarizeOnnxAssessedMacs([12, 8]), 0);
+expectEqual(completeAggregate.total_macs, 20, "A complete ONNX compute ledger should publish its exact top-level MAC total.");
+expectEqual(completeAggregate.total_ops, 40, "A complete ONNX compute ledger should publish its exact top-level operation total.");
+const incompleteAggregate = projectOnnxCompleteMacTotals(summarizeOnnxAssessedMacs([12, 8]), 1);
+expectEqual(incompleteAggregate.total_macs, null, "An incomplete ONNX compute ledger must not publish its assessed subtotal as a complete MAC total.");
+expectEqual(incompleteAggregate.total_macs_decimal, null, "An incomplete ONNX compute ledger must withhold the top-level decimal MAC total.");
+expectEqual(incompleteAggregate.total_ops, null, "An incomplete ONNX compute ledger must not publish its assessed subtotal as a complete operation total.");
+expectEqual(incompleteAggregate.total_ops_decimal, null, "An incomplete ONNX compute ledger must withhold the top-level decimal operation total.");
 
 done("source-classified MAC coverage, exact rank-N ConvTranspose, rank-1 MatMul promotion, zero-cardinality tensors, and exact aggregate ledgers");

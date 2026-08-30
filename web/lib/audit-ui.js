@@ -245,9 +245,10 @@ export function summaryMetricCards(analysis) {
   const batchProjection = deriveTfliteBatchOneProjection(analysis);
   const batchOne = batchProjection.status === "assumption_bound_batch_one"
     && Number.isFinite(Number(batchProjection.projected_total_macs));
-  const macs = batchOne ? Number(batchProjection.projected_total_macs) : +analysis.total_macs;
-  const ops = +analysis.total_ops;
-  const nonMacOps = Math.max(0, ops - 2 * macs);
+  const completeMacTotal = batchOne || analysis.total_macs != null;
+  const macs = batchOne ? Number(batchProjection.projected_total_macs) : completeMacTotal ? Number(analysis.total_macs) : null;
+  const ops = batchOne ? Number(analysis.total_ops) : analysis.total_ops == null ? null : Number(analysis.total_ops);
+  const nonMacOps = macs == null || ops == null ? null : Math.max(0, ops - 2 * macs);
   const dynamic = analysis?.dynamic_shape_cost_contract;
   const shapeDependent = dynamic
     && dynamic.status !== "not_applicable_static_shapes"
@@ -260,6 +261,9 @@ export function summaryMetricCards(analysis) {
     : batchOne
       ? `ASSUMPTION_BOUND: exact polynomial projection at serialized batch N=1; 0 non-batch dynamic input axes; ${formatNumber(batchProjection.internal_symbol_count)} propagated internal batch symbol(s)`
       : "";
+  const incompleteMacDetail = !completeMacTotal && !shapeDependent
+    ? `${formatNumber(analysis.mac_assessment?.assessed_compute_ops || 0)}/${formatNumber(analysis.mac_assessment?.compute_ops || 0)} compute operators assessed; assessed subtotal ${formatNumber(analysis.mac_assessment?.total_assessed_macs_decimal || 0)} MACs; unresolved rows are excluded and no complete total is claimed`
+    : "";
   const identityDetail = [
     formatBytes(analysis.file_size ?? analysis.file_size_bytes ?? 0),
     analysis.model_sha256 ? `SHA-256 ${analysis.model_sha256}` : "SHA-256 not bound",
@@ -349,16 +353,22 @@ export function summaryMetricCards(analysis) {
     ...(!graphFormat ? [] : [[
       shapeDependent
         ? "MACs / Ops ratio"
-        : `${analysis.mac_assessment ? "Assessed " : ""}MACs / Ops ratio 1:${macs ? (ops / macs).toFixed(2) : "N/A"}`,
-      shapeDependent ? "Shape-dependent" : formatNumber(macs),
-      shapeDependent || batchOne ? dynamicDetail : "",
+        : !completeMacTotal
+          ? "MACs / Ops ratio"
+          : `${analysis.mac_assessment ? "Assessed " : ""}MACs / Ops ratio 1:${macs ? (ops / macs).toFixed(2) : "N/A"}`,
+      shapeDependent ? "Shape-dependent" : !completeMacTotal ? "Not fully assessed" : formatNumber(macs),
+      shapeDependent || batchOne ? dynamicDetail : incompleteMacDetail,
     ], [
       shapeDependent
         ? "Ops / Non-MAC"
-        : `Ops / Non-MAC ${formatNumber(nonMacOps)} (${ops ? (100 * nonMacOps / ops).toFixed(2) : "N/A"}%)`,
-      shapeDependent ? "Shape-dependent" : formatNumber(ops),
+        : !completeMacTotal
+          ? "Ops / Non-MAC"
+          : `Ops / Non-MAC ${formatNumber(nonMacOps)} (${ops ? (100 * nonMacOps / ops).toFixed(2) : "N/A"}%)`,
+      shapeDependent ? "Shape-dependent" : !completeMacTotal ? "Not fully assessed" : formatNumber(ops),
       shapeDependent
         ? dynamicDetail
+        : !completeMacTotal
+          ? incompleteMacDetail
         : batchOne
           ? `${dynamicDetail}; Ops and non-MAC counts use the same serialized N=1 graph projection`
         : analysis.mac_assessment

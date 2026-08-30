@@ -168,7 +168,7 @@ function modelAtGlanceMarkdown(analysis) {
     ? ` ${glance.delegation.motifAttribution.summary}`
     : "";
   const artifactShape = glance.artifact.totalMacs == null
-    ? `MAC shape-dependent; ${formatNumber(glance.artifact.opCount)} ops / ${formatBytes(glance.artifact.fileSizeBytes)}`
+    ? `${glance.artifact.totalMacsEvidenceClass === "NOT_ASSESSED_DYNAMIC_SHAPE" ? "MAC shape-dependent" : "Complete MAC total not assessed"}; ${formatNumber(glance.artifact.opCount)} ops / ${formatBytes(glance.artifact.fileSizeBytes)}`
     : `${formatNumber(glance.artifact.totalMacs)} MAC / ${formatNumber(glance.artifact.opCount)} ops / ${formatBytes(glance.artifact.fileSizeBytes)}`;
   const delegatedMacText = glance.delegation.delegatedMacRatio == null
     ? "MAC share not assessed until shape binding"
@@ -180,7 +180,7 @@ function modelAtGlanceMarkdown(analysis) {
   return [
     "## Model At A Glance",
     markdownTable(["Question", "Answer", "Evidence"], [
-      ["Artifact shape", artifactShape, onnx ? `DERIVED; MAC coverage ${glance.artifact.macAssessedComputeOps}/${glance.artifact.macComputeOps} compute ops` : glance.artifact.totalMacsEvidenceClass === "NOT_ASSESSED_DYNAMIC_SHAPE" ? "NOT_ASSESSED; bind non-batch dynamic axes" : glance.artifact.totalMacsEvidenceClass === "ASSUMPTION_BOUND_N_EQ_1" ? "ASSUMPTION_BOUND; exact emitted polynomial evaluation at serialized N=1" : "OBSERVED + DERIVED"],
+      ["Artifact shape", artifactShape, onnx ? `${glance.artifact.totalMacsEvidenceClass === "NOT_ASSESSED_INCOMPLETE_MAC_LEDGER" ? "NOT_ASSESSED" : "DERIVED"}; MAC coverage ${glance.artifact.macAssessedComputeOps}/${glance.artifact.macComputeOps} compute ops` : glance.artifact.totalMacsEvidenceClass === "NOT_ASSESSED_DYNAMIC_SHAPE" ? "NOT_ASSESSED; bind non-batch dynamic axes" : glance.artifact.totalMacsEvidenceClass === "ASSUMPTION_BOUND_N_EQ_1" ? "ASSUMPTION_BOUND; exact emitted polynomial evaluation at serialized N=1" : "OBSERVED + DERIVED"],
       ...(!quantResearch ? [] : [[
         "Quant research artifact class",
         `${quantResearch.artifact_class_label}; class-supported ${formatNumber(quantResearch.class_supported_lab_count)}/${formatNumber(quantResearch.lab_count)}, artifact-applicable ${formatNumber(quantResearch.artifact_applicable_lab_count)}, assessed ${formatNumber(quantResearch.assessed_lab_count)}, partial ${formatNumber(quantResearch.partial_lab_count)}, not assessed ${formatNumber(quantResearch.not_assessed_lab_count)}`,

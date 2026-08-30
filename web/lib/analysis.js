@@ -200,7 +200,21 @@ export function bottleneckComponentTotals(estimates) {
 
 export function macDistributionData(analysis, { limit = 12 } = {}) {
   const ops = Array.isArray(analysis?.ops) ? analysis.ops : [];
-  const totalMacs = Math.max(0, Number(analysis?.total_macs || sumNumbers(ops.map((op) => op.macs))));
+  const hasMacAssessment = analysis?.mac_assessment && typeof analysis.mac_assessment === "object";
+  const computeOps = Number(analysis?.mac_assessment?.compute_ops);
+  const assessedComputeOps = Number(analysis?.mac_assessment?.assessed_compute_ops);
+  const coverageComplete = hasMacAssessment
+    ? Number.isSafeInteger(computeOps)
+      && Number.isSafeInteger(assessedComputeOps)
+      && assessedComputeOps === computeOps
+      && analysis?.total_macs != null
+    : analysis?.total_macs != null;
+  const assessedSubtotal = hasMacAssessment
+    ? analysis.mac_assessment.total_assessed_macs == null
+      ? sumNumbers(ops.filter((op) => op.macs_status === "assessed").map((op) => op.macs))
+      : Number(analysis.mac_assessment.total_assessed_macs)
+    : Number(analysis?.total_macs ?? 0);
+  const totalMacs = Math.max(0, Number(coverageComplete ? analysis.total_macs : assessedSubtotal));
   const top = [...ops]
     .filter((op) => Number(op.macs || 0) > 0)
     .sort((a, b) => Number(b.macs || 0) - Number(a.macs || 0))
@@ -212,6 +226,9 @@ export function macDistributionData(analysis, { limit = 12 } = {}) {
     top,
     topMacs,
     otherMacs: Math.max(0, totalMacs - topMacs),
+    coverageComplete,
+    assessedComputeOps: Number.isSafeInteger(assessedComputeOps) ? assessedComputeOps : null,
+    computeOps: Number.isSafeInteger(computeOps) ? computeOps : null,
   };
 }
 

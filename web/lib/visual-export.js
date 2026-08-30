@@ -1223,12 +1223,16 @@ function renderEvidenceTreemapCanvas(analysis, filename, kind) {
 }
 
 function renderMacDistributionCanvas(analysis, filename) {
+  const distribution = macDistributionData(analysis);
+  const coverage = distribution.coverageComplete
+    ? "Complete deterministic MAC ledger."
+    : `${distribution.assessedComputeOps ?? 0}/${distribution.computeOps ?? "?"} compute ops assessed; unresolved rows are excluded from this subtotal.`;
   const { canvas, ctx, width, y } = createExportCanvas(
     filename,
-    "MAC Distribution",
-    "Top operators by MAC share; color follows static roofline posture.",
+    distribution.coverageComplete ? "MAC Distribution" : "Assessed MAC Distribution",
+    `Top operators by ${distribution.coverageComplete ? "complete MAC share" : "assessed MAC subtotal"}; color follows static roofline posture. ${coverage}`,
   );
-  const { top, totalMacs, otherMacs } = macDistributionData(analysis);
+  const { top, totalMacs, otherMacs } = distribution;
   const total = Math.max(1, totalMacs);
   const segments = top.map((op) => ({ label: `#${padOp(op.index)}`, value: Number(op.macs || 0), tone: boundTone(op.static_bound_guess), detail: op.name }));
   if (otherMacs > 0) segments.push({ label: "Other", value: otherMacs, tone: "neutral", detail: "Remaining ops" });

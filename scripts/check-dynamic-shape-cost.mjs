@@ -14,7 +14,7 @@ import { buildFindingsRegister } from "../web/lib/report-findings.js";
 import { buildMlBomDocument } from "../web/lib/report-mlbom.js";
 import { buildEngineeringEvidenceDocument } from "../web/lib/report-evidence.js";
 import { buildModelAtGlance } from "../web/lib/model-glance.js";
-import { estimateOpBottleneck, normalizeUnassessedCostValues } from "../web/lib/analysis.js";
+import { estimateOpBottleneck, macDistributionData, normalizeUnassessedCostValues } from "../web/lib/analysis.js";
 import { formatUs } from "../web/lib/format.js";
 import { buildAuditSnapshot } from "../web/lib/report-store.js";
 import { evaluateOnnxDimensionExpression, parseOnnxDimensionExpression } from "../web/lib/onnx-dimension-expression.js";
@@ -102,8 +102,8 @@ function dynamicConvAnalysis() {
     tensor_types: [{ name: "FLOAT32", count: 3 }],
     quantized_tensors: 0,
     per_channel_tensors: 0,
-    total_macs: 0,
-    total_ops: 0,
+    total_macs: null,
+    total_ops: null,
     mac_assessment: {
       status: "not_assessed",
       total_assessed_macs: 0,
@@ -128,6 +128,17 @@ function dynamicConvAnalysis() {
 
 const analysis = dynamicConvAnalysis();
 const contract = analysis.dynamic_shape_cost_contract;
+const onnxGlance = buildModelAtGlance(analysis);
+expect(onnxGlance.artifact.totalMacs === null, "an incomplete ONNX MAC ledger must remain null in the model-at-a-glance projection");
+expect(onnxGlance.artifact.totalMacsEvidenceClass === "NOT_ASSESSED_INCOMPLETE_MAC_LEDGER", "an incomplete ONNX MAC ledger must carry an explicit evidence class");
+const onnxMacDistribution = macDistributionData(analysis);
+expect(onnxMacDistribution.coverageComplete === false && onnxMacDistribution.totalMacs === 0, "an unassessed ONNX MAC distribution must expose zero assessed subtotal without claiming complete coverage");
+const tfliteMacDistribution = macDistributionData({
+  format: "tflite",
+  total_macs: 30,
+  ops: [{ index: 0, name: "CONV_2D", macs: 30 }],
+});
+expect(tfliteMacDistribution.coverageComplete === true && tfliteMacDistribution.totalMacs === 30, "a TFLite complete total must remain complete without an ONNX MAC-assessment ledger");
 expect(contract.status === "assessed", `dynamic Conv contract should be assessed, got ${contract.status}`);
 expect(contract.symbol_count === 1, "repeated ONNX dim_param should bind one symbol");
 expect(contract.symbols[0].occurrences.length === 2, "batch symbol should retain both tensor-axis occurrences");

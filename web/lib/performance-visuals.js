@@ -433,15 +433,17 @@ export function createPerformanceVisualController({
   }
 
   function renderMacDistribution(analysis) {
-    const { ops, totalMacs, top, otherMacs } = macDistributionData(analysis);
+    const { ops, totalMacs, top, otherMacs, coverageComplete, assessedComputeOps, computeOps } = macDistributionData(analysis);
     if (!ops.length || !totalMacs) {
-      renderVisualEmpty(elements.macFlame, "No MAC-heavy operators were detected for this model.");
-      elements.macTopList.replaceChildren(visualListItem("MAC distribution", "N/A", "neutral"));
+      renderVisualEmpty(elements.macFlame, coverageComplete
+        ? "No MAC-heavy operators were detected for this model."
+        : "No assessed MAC-bearing operators are available; unresolved rows are not treated as zero.");
+      elements.macTopList.replaceChildren(visualListItem("MAC coverage", coverageComplete ? "Complete" : `${assessedComputeOps ?? 0}/${computeOps ?? "?"} assessed`, coverageComplete ? "good" : "warn"));
       return;
     }
     const segments = top.map((op) => ({
       label: `#${padOp(op.index)}`,
-      detail: `${op.name} / ${formatPercent(Number(op.macs || 0) / totalMacs)} MACs`,
+      detail: `${op.name} / ${formatPercent(Number(op.macs || 0) / totalMacs)} ${coverageComplete ? "MACs" : "of assessed MAC subtotal"}`,
       value: Number(op.macs || 0),
       tone: boundTone(op.static_bound_guess),
       opIndex: op.index,
@@ -456,6 +458,7 @@ export function createPerformanceVisualController({
     }
     renderFlameStrip(elements.macFlame, segments, totalMacs);
     elements.macTopList.replaceChildren(
+      ...(!coverageComplete ? [visualListItem("MAC coverage", `${assessedComputeOps ?? 0}/${computeOps ?? "?"} compute ops`, "warn")] : []),
       ...top.slice(0, 5).map((op) =>
         visualListItem(
           `#${padOp(op.index)} ${op.name}`,

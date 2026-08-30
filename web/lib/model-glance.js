@@ -14,6 +14,12 @@ function finiteNonNegative(value) {
   return Number.isFinite(number) && number > 0 ? number : 0;
 }
 
+function nullableFiniteNonNegative(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
+}
+
 function ratio(numerator, denominator) {
   return denominator > 0 ? numerator / denominator : 0;
 }
@@ -239,6 +245,7 @@ export function buildModelAtGlance(analysis, cacheOptions = {}) {
   const batchOneBound = batchOneProjection?.status === "assumption_bound_batch_one";
   const shapeBindingRequired = batchOneProjection?.status === "requires_explicit_shape_binding"
     || batchOneProjection?.status === "batch_one_projection_formula_incomplete";
+  const incompleteOnnxMacLedger = onnx && analysis?.total_macs == null;
   const quantization = modelQuantizationStatus(analysis);
   const quantResearchCoverage = onnx
     ? null
@@ -378,12 +385,14 @@ export function buildModelAtGlance(analysis, cacheOptions = {}) {
         ? null
         : batchOneBound
         ? finiteNonNegative(batchOneProjection.projected_total_macs)
-        : finiteNonNegative(analysis?.total_macs),
+        : nullableFiniteNonNegative(analysis?.total_macs),
       totalMacsEvidenceClass: shapeBindingRequired
         ? "NOT_ASSESSED_DYNAMIC_SHAPE"
         : batchOneBound
           ? "ASSUMPTION_BOUND_N_EQ_1"
-          : "OBSERVED_OR_DERIVED",
+          : incompleteOnnxMacLedger
+            ? "NOT_ASSESSED_INCOMPLETE_MAC_LEDGER"
+            : "OBSERVED_OR_DERIVED",
       dynamicShapeProjection: batchOneProjection,
       macAssessedComputeOps: Number(analysis?.mac_assessment?.assessed_compute_ops || 0),
       macComputeOps: Number(analysis?.mac_assessment?.compute_ops || 0),

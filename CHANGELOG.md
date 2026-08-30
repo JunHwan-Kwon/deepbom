@@ -4,6 +4,10 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Preserved incomplete ONNX MAC ledgers as not assessed instead of exposing
+  their assessed subtotal as a complete zero-valued model total; UI, graph
+  exports, engineering/regulatory reports, conformance checks, and CLI output
+  now share the same nullable-total contract and explicit coverage denominator.
 - Added immutable Hugging Face, GCS-generation, and SHA-256-pinned HTTPS
   acquisition receipts with a content-addressed cache and no remote code or
   pickle execution.

@@ -36,12 +36,12 @@ function referenceRulepackHashBasis() {
 export const REFERENCE_CONTRACT_ANALYZER_METADATA = Object.freeze({
   ...ANALYZER_METADATA,
   version: "2026-08-03",
-  semanticVersion: "1.94.0",
-  buildCommit: "684260dddf632240c31bee646581d9c4ae32623a",
+  semanticVersion: "1.95.0",
+  buildCommit: "077ceb7533cdaafe9389634f3c7d36ede346b2dd",
   buildSourceState: "clean",
-  buildContentSha256: "5c03ec024b99e9a73ac3b3f098cebdd8dc18ae5ec67d740de97dd21df4e5b34d",
-  buildContentManifestSha256: "d8c13a2a8b44844a88d90bd651f48ae97ab7e5bdcc6109746afd803116dd6ac6",
+  buildContentSha256: "7fba3e04cd19fe4a5eab2c8bb4d639fd1b9e72e39d89bff6f4fe3b07b96299cc",
+  buildContentManifestSha256: "3c5f08161b2271e2f3818dbe0d693fa4bc2e58917a39cb6432c7a01d8e110c28",
   rulepackVersion: "deepbom.rulepack.2026-07-24.63",
-  rulepackSha256: "a1e0dc58a9dc742b4532448190410d89e04d56ab134a16a72cda6cae8b6a6d9f",
+  rulepackSha256: "0b74cf5f8157f2aa14c0b26098ff36427c043bc7fc14f517aac9115ac52ae46a",
   rulepackHashBasis: referenceRulepackHashBasis(),
 });

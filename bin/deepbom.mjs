@@ -1121,6 +1121,7 @@ function evidenceBoundary(format) {
 }
 
 function nonNegativeInteger(value) {
+  if (value === null || value === undefined || value === "") return null;
   const number = Number(value);
   return Number.isSafeInteger(number) && number >= 0 ? number : null;
 }

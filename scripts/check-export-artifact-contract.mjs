@@ -653,6 +653,11 @@ const explicitLineageChange = buildChangeAnalysis({ ...reportBoundaryAnalysis, m
 });
 expectEqual(explicitLineageChange.status, "assessed", "Matching model lineage IDs should allow deterministic comparison.");
 expectEqual(explicitLineageChange.comparison_basis, "matching_model_lineage_id", "Change analysis should record its lineage basis.");
+const incompleteMacChange = buildChangeAnalysis({ ...reportBoundaryAnalysis, model_sha256: "new", model_lineage_id: "lineage-1", total_macs: null }, {
+  priorSnapshot: { sha256: "old", format: "tflite", target: reportBoundaryAnalysis.target_profile.id, modelLineageId: "lineage-1", totalMacs: reportBoundaryAnalysis.total_macs },
+  identity: reportBoundaryIdentity,
+});
+expectEqual(incompleteMacChange.deltas.total_macs, null, "Change analysis must not coerce an unassessed MAC total to zero.");
 const engineeringBundleSummary = buildEngineeringBundleSummary({ analysis: reportBoundaryAnalysis, identity: reportBoundaryIdentity });
 const regulatoryBundleSummary = buildEvidenceBundleSummary({ analysis: reportBoundaryAnalysis, identity: reportBoundaryIdentity });
 

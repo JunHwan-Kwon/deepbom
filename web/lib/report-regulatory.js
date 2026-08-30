@@ -72,7 +72,7 @@ export function buildRegulatoryReport(analysis, {
       : "ONNX Runtime execution-provider assignment was not modeled; no fallback or partition count is asserted."]
     : ["Delegate partitions", "PREDICTED", `${formatNumber(analysis.xnnpack_chains?.length || 0)} predicted delegate segment(s), ${formatNumber(analysis.xnnpack_effective_chain_breaks || 0)} non-structural predicted partition break(s)`];
   const suitabilityRows = onnx ? [
-    ["Assessed MAC subtotal", Number(analysis.mac_assessment?.not_assessed_compute_ops || 0) ? "DERIVED/PARTIAL" : "DERIVED", `${formatNumber(analysis.total_macs)} across ${formatNumber(analysis.mac_assessment?.assessed_compute_ops || 0)}/${formatNumber(analysis.mac_assessment?.compute_ops || 0)} compute op(s); ${formatNumber(analysis.mac_assessment?.not_assessed_compute_ops || 0)} unassessed`],
+    ["Assessed MAC subtotal", Number(analysis.mac_assessment?.not_assessed_compute_ops || 0) ? "DERIVED/PARTIAL" : "DERIVED", `${formatNumber(analysis.mac_assessment?.total_assessed_macs_decimal || 0)} across ${formatNumber(analysis.mac_assessment?.assessed_compute_ops || 0)}/${formatNumber(analysis.mac_assessment?.compute_ops || 0)} compute op(s); ${formatNumber(analysis.mac_assessment?.not_assessed_compute_ops || 0)} unassessed; complete top-level total ${analysis.total_macs == null ? "withheld" : formatNumber(analysis.total_macs)}`],
     ["Target ridge", "NOT_APPLICABLE", "Suppressed; the selected TFLite planning profile is used only as an L1 working-set reference for ONNX."],
     ["Static intensity posture", "HEURISTIC", rooflineMixSummary(analysis)],
     ["L1 row pressure", "ESTIMATED", l1PressureSummary(analysis)],

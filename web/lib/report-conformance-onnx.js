@@ -2259,15 +2259,22 @@ export function registerOnnxConformance({
     const safeMacMirror = assessedMacTotal <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(assessedMacTotal) : null;
     const assessedOpsTotal = assessedMacTotal * 2n;
     const safeOpsMirror = assessedOpsTotal <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(assessedOpsTotal) : null;
+    const completeMacLedger = Number(staticAnalysis?.mac_assessment?.not_assessed_compute_ops || 0) === 0;
+    const topLevelMacTotalsValid = completeMacLedger
+      ? staticAnalysis?.total_macs === safeMacMirror
+        && String(staticAnalysis?.total_macs_decimal || "") === assessedMacTotal.toString()
+        && staticAnalysis?.total_ops === safeOpsMirror
+        && String(staticAnalysis?.total_ops_decimal || "") === assessedOpsTotal.toString()
+      : staticAnalysis?.total_macs === null
+        && staticAnalysis?.total_macs_decimal === null
+        && staticAnalysis?.total_ops === null
+        && staticAnalysis?.total_ops_decimal === null;
     check("CF-FORMAT-007", assessedMacDecimal === assessedMacTotal.toString()
       && assessedOpsDecimal === assessedOpsTotal.toString()
       && staticAnalysis?.mac_assessment?.total_assessed_macs === safeMacMirror
       && staticAnalysis?.mac_assessment?.total_assessed_ops === safeOpsMirror
-      && staticAnalysis?.total_macs === safeMacMirror
-      && String(staticAnalysis?.total_macs_decimal || "") === assessedMacTotal.toString()
-      && staticAnalysis?.total_ops === safeOpsMirror
-      && String(staticAnalysis?.total_ops_decimal || "") === assessedOpsTotal.toString()
-      && staticAnalysis?.mac_assessment?.safe_number_mirror_status === (safeMacMirror == null || safeOpsMirror == null ? "exact_decimal_only" : "safe_integer_mirrors_available"), "ONNX assessed MAC/op totals must equal the exact BigInt per-op sum while unsafe Number mirrors remain null.", ["/evidence/static_analysis/total_macs", "/evidence/static_analysis/mac_assessment"]);
+      && topLevelMacTotalsValid
+      && staticAnalysis?.mac_assessment?.safe_number_mirror_status === (safeMacMirror == null || safeOpsMirror == null ? "exact_decimal_only" : "safe_integer_mirrors_available"), "ONNX assessed MAC/op subtotals must equal the exact BigInt per-op sum, while incomplete top-level totals and unsafe Number mirrors remain null.", ["/evidence/static_analysis/total_macs", "/evidence/static_analysis/mac_assessment"]);
     check("CF-FORMAT-008", Boolean(staticAnalysis?.mac_assessment) && String(engineeringReport || "").includes("Assessed MAC total"), "ONNX MAC assessment coverage must be present in structured evidence and the engineering report.", ["/evidence/static_analysis/mac_assessment", "/engineering_report.md"]);
     check("CF-FORMAT-009", compactMlBomEvidence || properties.some((item) => item.name === "mlbom:model:macAssessmentStatus"), "ONNX ML-BOM must expose MAC assessment coverage semantics.", ["/evidence/mlbom_cyclonedx"]);
     const quantMacRatio = staticAnalysis?.quantization_status?.quantized_compute_mac_percent;

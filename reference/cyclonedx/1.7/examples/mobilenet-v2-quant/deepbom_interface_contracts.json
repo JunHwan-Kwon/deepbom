@@ -440,14 +440,14 @@
   },
   "provenance": {
     "analyzer": "deepbom",
-    "analyzer_semantic_version": "1.94.0",
+    "analyzer_semantic_version": "1.95.0",
     "analyzer_build_version": "2026-08-03",
-    "analyzer_build_commit": "684260dddf632240c31bee646581d9c4ae32623a",
+    "analyzer_build_commit": "077ceb7533cdaafe9389634f3c7d36ede346b2dd",
     "analyzer_build_source_state": "clean",
-    "analyzer_bundle_content_sha256": "5c03ec024b99e9a73ac3b3f098cebdd8dc18ae5ec67d740de97dd21df4e5b34d",
+    "analyzer_bundle_content_sha256": "7fba3e04cd19fe4a5eab2c8bb4d639fd1b9e72e39d89bff6f4fe3b07b96299cc",
     "analyzer_bundle_content_hash_method": "SHA-256 over RFC8785-JCS canonical deepbom.analyzer_build_file_digest_set.v1",
     "rulepack_version": "deepbom.rulepack.2026-07-24.63",
-    "rulepack_sha256": "a1e0dc58a9dc742b4532448190410d89e04d56ab134a16a72cda6cae8b6a6d9f",
+    "rulepack_sha256": "0b74cf5f8157f2aa14c0b26098ff36427c043bc7fc14f517aac9115ac52ae46a",
     "rulepack_hash_basis": [
       "web/lib/report-metadata.js (report metadata/provenance)",
       "web/lib/reason-codes.js (reason-code labels)",

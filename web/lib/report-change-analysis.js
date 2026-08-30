@@ -19,6 +19,8 @@ export function buildChangeAnalysis(analysis, { priorSnapshot = null, identity =
   else if (priorSnapshot.derivationManifestId && analysis?.derivation_manifest_id && priorSnapshot.derivationManifestId === analysis.derivation_manifest_id) basis = "matching_derivation_manifest_id";
   else if (priorSnapshot.explicitlySelectedForComparison === true) basis = "explicit_user_selection";
   if (!basis) return notPerformed("LINEAGE_NOT_ESTABLISHED", "Filename similarity is not lineage evidence. Supply a model lineage ID, previous artifact SHA-256, derivation manifest ID, or explicit user selection.");
+  const currentTotalMacs = analysis?.total_macs == null ? null : Number(analysis.total_macs);
+  const priorTotalMacs = priorSnapshot.totalMacs == null ? null : Number(priorSnapshot.totalMacs);
   return {
     schema: "deepbom.change_analysis.v1",
     status: "assessed",
@@ -34,7 +36,7 @@ export function buildChangeAnalysis(analysis, { priorSnapshot = null, identity =
     },
     deltas: {
       operator_count: Number(analysis?.operator_count || 0) - Number(priorSnapshot.operatorCount || 0),
-      total_macs: Number(analysis?.total_macs || 0) - Number(priorSnapshot.totalMacs || 0),
+      total_macs: currentTotalMacs == null || priorTotalMacs == null ? null : currentTotalMacs - priorTotalMacs,
       predicted_chain_breaks: Number(analysis?.xnnpack_effective_chain_breaks || 0) - Number(priorSnapshot.delegation?.effectiveChainBreaks || 0),
       quantized_compute_mac_ratio: analysis?.quantization_status?.quantized_compute_mac_percent == null || priorSnapshot.quant?.quantComputeMacPercent == null
         ? null

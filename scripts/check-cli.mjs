@@ -36,6 +36,9 @@ assert.match(humanSummary, /^DEEPBOM \S+ deployment-artifact audit/m, "default C
 assert.match(humanSummary, /Graph: 9 operators \| 16 tensors \| 6,488,384 MACs/, "human summary projects exact graph totals");
 assert.match(humanSummary, /Evidence boundary:/, "human summary states its evidence boundary");
 assert.equal(Buffer.byteLength(humanSummary, "utf8") < 8192, true, "human summary remains terminal-sized");
+const incompleteMacSummary = run(["audit", "scripts/fixtures/onnx_dynamic_conv.onnx"]).stdout;
+assert.match(incompleteMacSummary, /Graph: 1 operators \| 3 tensors \| MACs not assessable/, "human summary preserves an incomplete ONNX MAC total as not assessable");
+assert.doesNotMatch(incompleteMacSummary, /\| 0 MACs/, "human summary must not coerce an unassessed ONNX MAC total to zero");
 assert.equal(JSON.parse(run(["audit", cases[1][0], "--json"]).stdout).format, "onnx", "--json retains complete formatted machine output");
 assert.match(run(["--help"]).stdout, /--json\s+Emit the complete formatted (?:analysis|evidence) JSON/, "JSON mode is discoverable");
 assert.match(run(["--help"]).stdout, /deepbom verify <artifact> --contract <json>/, "verify command is discoverable");

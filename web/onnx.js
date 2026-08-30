@@ -359,11 +359,12 @@ export function analyzeOnnxModel(bytes, filename, targetProfile = null, options 
       };
     });
   const exactMacTotals = summarizeOnnxAssessedMacs(ops.filter((op) => op.macs_status === "assessed").map((op) => op.macs_decimal ?? op.macs));
-  const totalMacs = exactMacTotals.total_assessed_macs;
-  const totalOps = exactMacTotals.total_assessed_ops;
   const computeOps = ops.filter((op) => isOnnxMacBearingOperation(op.name, op.standard_domain));
   const assessedComputeOps = computeOps.filter((op) => op.macs_status === "assessed");
   const unassessedComputeOps = computeOps.filter((op) => op.macs_status === "not_assessed");
+  const completeMacTotals = projectOnnxCompleteMacTotals(exactMacTotals, unassessedComputeOps.length);
+  const totalMacs = completeMacTotals.total_macs;
+  const totalOps = completeMacTotals.total_ops;
   const algorithmDependentArithmeticOps = ops.filter((op) => isOnnxAlgorithmDependentArithmetic(op.name, op.standard_domain));
   const macAssessment = {
     status: unassessedComputeOps.length === 0 ? "assessed" : assessedComputeOps.length > 0 ? "partially_assessed" : "not_assessed",
@@ -443,9 +444,9 @@ export function analyzeOnnxModel(bytes, filename, targetProfile = null, options 
     quantization_status: quantizationStatus,
     onnx_quantization_binding: onnxQuantizationBinding,
     total_macs: totalMacs,
-    total_macs_decimal: exactMacTotals.total_assessed_macs_decimal,
+    total_macs_decimal: completeMacTotals.total_macs_decimal,
     total_ops: totalOps,
-    total_ops_decimal: exactMacTotals.total_assessed_ops_decimal,
+    total_ops_decimal: completeMacTotals.total_ops_decimal,
     mac_assessment: macAssessment,
     inputs,
     outputs,
@@ -1512,6 +1513,20 @@ export function summarizeOnnxAssessedMacs(values) {
     total_assessed_ops: operationMirror,
     total_assessed_ops_decimal: operations.toString(),
     safe_number_mirror_status: macMirror == null || operationMirror == null ? "exact_decimal_only" : "safe_integer_mirrors_available",
+  };
+}
+
+export function projectOnnxCompleteMacTotals(assessedTotals, unassessedComputeOpCount) {
+  const unresolved = Number(unassessedComputeOpCount);
+  if (!Number.isSafeInteger(unresolved) || unresolved < 0) {
+    throw new Error("ONNX unassessed compute-op count must be a nonnegative safe integer.");
+  }
+  const complete = unresolved === 0;
+  return {
+    total_macs: complete ? assessedTotals?.total_assessed_macs ?? null : null,
+    total_macs_decimal: complete ? assessedTotals?.total_assessed_macs_decimal ?? null : null,
+    total_ops: complete ? assessedTotals?.total_assessed_ops ?? null : null,
+    total_ops_decimal: complete ? assessedTotals?.total_assessed_ops_decimal ?? null : null,
   };
 }
 
