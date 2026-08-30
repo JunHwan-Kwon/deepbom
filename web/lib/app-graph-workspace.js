@@ -1649,7 +1649,7 @@ async function downloadCurrentGraphSvg() {
   if (!workspace.current || !graphMapSvg.children.length) return;
   await downloadTextArtifact({
     artifact: TEXT_EXPORT_ARTIFACTS.graphSvg,
-    buildText: () => graphSvgText(graphMapSvg),
+    buildText: () => workspace.canonicalGraphSvgText(),
     ...textExportOptions,
   });
 }

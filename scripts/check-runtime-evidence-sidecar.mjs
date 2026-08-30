@@ -20,7 +20,7 @@ const analysis = {
   target_profile: { id: "android_mid_a55", profile_sha256: targetSha256 },
 };
 const assignment = {
-  schema: "deepbom.runtime_assignment.v1.9",
+  schema: "deepbom.runtime_assignment.v1.10",
   artifact_sha256: artifactSha256,
   target_profile_id: "android_mid_a55",
   target_profile_sha256: targetSha256,

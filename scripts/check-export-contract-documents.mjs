@@ -468,7 +468,7 @@ expectEqual(runtime.target_independent_requirements.backend_build_requirements.l
 expectEqual(runtime.target_specific_impact.backend_build_requirement_impacts.length, 1, "target-specific impact projection");
 
 const boundRuntimeEvidence = {
-  schema: "deepbom.runtime_assignment.v1.9",
+  schema: "deepbom.runtime_assignment.v1.10",
   evidence_class: "OBSERVED_RUNTIME",
   artifact_sha256: SHA,
   target_profile_sha256: PROFILE_SHA,

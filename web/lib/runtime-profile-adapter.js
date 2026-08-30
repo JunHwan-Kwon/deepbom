@@ -389,13 +389,19 @@ export function previewOrtProfileMapping(profile, analysis, metadata = {}) {
 
 export function buildOrtRuntimeAssignmentDocument(profile, analysis, metadata) {
   const preview = previewOrtProfileMapping(profile, analysis, metadata);
-  if (!preview.assignment_count) throw new Error("No ONNX Runtime profile node can be bound deterministically to the active graph.");
+  const nativeRuntimeGraphOnly = !preview.assignment_count
+    && metadata?.nativeCaptureEvidence
+    && preview.kernel_event_count > 0
+    && preview.unresolved_runtime_node_count > 0;
+  if (!preview.assignment_count && !nativeRuntimeGraphOnly) {
+    throw new Error("No ONNX Runtime profile node can be bound deterministically to the active graph.");
+  }
   const profileSha = String(metadata?.profileSha256 || "").toLowerCase();
   if (!SHA256_PATTERN.test(profileSha)) throw new Error("ONNX Runtime profile SHA-256 is required.");
   const collectedAt = String(metadata?.collectedAt || "").trim();
   if (!collectedAt) throw new Error("ONNX Runtime profile collection time is required.");
   return {
-    schema: "deepbom.runtime_assignment.v1.9",
+    schema: "deepbom.runtime_assignment.v1.10",
     artifact_sha256: analysis?.model_sha256 || "",
     target_profile_id: analysis?.target_profile?.id || "",
     target_profile_sha256: analysis?.target_profile?.profile_sha256 || "",
@@ -415,7 +421,9 @@ export function buildOrtRuntimeAssignmentDocument(profile, analysis, metadata) {
       capture_binding_semantics: metadata?.nativeCaptureEvidence
         ? "BROWSER_VERIFIED_NATIVE_CAPTURE_ENVELOPE_ARTIFACT_CONTENT_SET_AND_PROFILE_SHA256"
         : null,
-      assignment_semantics: "original_graph_op_assignment",
+      assignment_semantics: nativeRuntimeGraphOnly
+        ? "runtime_graph_observed_original_graph_mapping_unresolved"
+        : "original_graph_op_assignment",
       partition_semantics: "partition_id_identifies_runtime_partition_when_present",
       duration_semantics: preview.duration_semantics,
       duration_statistic: preview.duration_statistic,

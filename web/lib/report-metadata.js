@@ -151,7 +151,7 @@ export const ANALYZER_METADATA = Object.freeze({
     quantizationContractChecks: "deepbom.quantization_contract_checks.v1.18",
     runtimeEvidence: "deepbom.runtime_evidence.v1.16",
     runtimeEvidenceSidecar: "deepbom.runtime_evidence_sidecar.v1",
-    runtimeAssignment: "deepbom.runtime_assignment.v1.9",
+    runtimeAssignment: "deepbom.runtime_assignment.v1.10",
     runtimeSelectorContext: "deepbom.runtime_selector_context.v1.1",
     tfliteDelegateBuildInventory: "deepbom.tflite_delegate_build_inventory.v1",
     runtimeSelectorObservation: "deepbom.runtime_selector_observation.v1",

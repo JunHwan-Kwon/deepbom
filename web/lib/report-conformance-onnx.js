@@ -2290,7 +2290,7 @@ export function registerOnnxConformance({
           && staticAnalysis.runtime_compat?.effective_min_runtime_version === (completeOrtFloor ? floor.minimum_ort_version : "")
         : !staticAnalysis.runtime_compat?.derived_min_runtime_version, "ONNX runtime compatibility fields do not preserve the necessary-floor versus complete-floor distinction.", ["/evidence/static_analysis/runtime_compat", "/evidence/static_analysis/ort_compatibility_evidence/runtime_floor"]);
       const nativeRegistrationEps = new Set(["qnn", "directml", "coreml", "nnapi", "xnnpack"]);
-      check("CF-ORT-003", eps.length === 8 && eps.every((ep) => ep.assignment_evidence_class === "NOT_OBSERVED"
+      check("CF-ORT-003", eps.length === 9 && eps.every((ep) => ep.assignment_evidence_class === "NOT_OBSERVED"
         && ep.support_evidence_class === (nativeRegistrationEps.has(ep.execution_provider)
           ? "SOURCE_REGISTRATION_CANDIDATE_WITH_UNRESOLVED_GET_CAPABILITY_PREDICATES"
           : "SOURCE_SCHEMA_KERNEL_VERSION_WITH_DEFINITE_ARTIFACT_EXCLUSIONS_ONLY")
@@ -2346,15 +2346,15 @@ export function registerOnnxConformance({
         && String(mlBomProperty("deepbom:model:ortEpArtifactPrecheckBoundary") || "").includes("not support")), "ONNX ML-BOM must preserve the source-only and artifact-precheck candidate distinction and its non-assignment boundary.", ["/evidence/static_analysis/ort_ep_portability_frontier", "/evidence/mlbom_cyclonedx"]);
       const conditionInventory = ortCompatibility.source_condition_inventory || {};
       check("CF-ORT-009", conditionInventory.schema === "deepbom.ort_source_artifact_contract.v1"
-        && conditionInventory.source_rule_count === 938
+        && conditionInventory.source_rule_count === 1167
         && conditionInventory.cpu_registration_variant_count === 611
         && conditionInventory.machine_condition_count === 540
         && conditionInventory.versioned_scalar_schema_default_binding_count === 80
         && conditionInventory.unresolved_source_fragment_count === 432
         && conditionInventory.informational_source_note_count === 425
-        && (conditionInventory.execution_providers || []).length === 8
+        && (conditionInventory.execution_providers || []).length === 9
         && String(engineeringReport || "").includes("Source-condition extractor")
-        && String(engineeringReport || "").includes("938 / 611")
+        && String(engineeringReport || "").includes("1,167 / 611")
         && String(engineeringReport || "").includes(conditionInventory.evidence_boundary), "Engineering Report must disclose the complete pinned source-condition extractor inventory and unresolved-fragment boundary.", ["/evidence/static_analysis/ort_compatibility_evidence/source_condition_inventory", "/engineering_report.md"]);
     }
 

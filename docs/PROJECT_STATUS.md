@@ -255,9 +255,9 @@ separately, leaves runtime partition count unassessed without explicit IDs, and
 never emits ONNX placement or boundary mismatches against the TFLite XNNPACK
 rulepack. The protected ORT rulepack now resolves standard, ONNX-ML, and 113
 `com.microsoft` schema identities before comparing source-documented EP kernel
-version ranges. Its pinned extractors preserve 938 EP/operator rows across CPU,
-WebGPU, WebNN, DirectML, QNN, CoreML, NNAPI, and XNNPACK; all 611 CPU
-registration signatures and type constraints; 540 machine-evaluated artifact
+version ranges. Its pinned extractors preserve 1,167 EP/operator rows across
+CPU, CUDA, WebGPU, WebNN, DirectML, QNN, CoreML, NNAPI, and XNNPACK; all 611
+CPU and 482 CUDA registration signatures and type constraints; 540 machine-evaluated artifact
 conditions; 432 explicit unresolved source fragments; and 425 informational
 source notes. Definite dtype, rank, static-shape, constant-input/value,
 output-count, or explicit-attribute failures remove only the affected source

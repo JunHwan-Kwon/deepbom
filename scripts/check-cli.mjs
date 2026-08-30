@@ -43,6 +43,13 @@ assert.match(run(["--help"]).stdout, /deepbom diff <baseline\.tflite> <candidate
 assert.match(run(["--help"]).stdout, /deepbom explore <artifact\.tflite>/, "explore command is discoverable");
 assert.match(run(["--help"]).stdout, /--executorch-build <json>/, "ExecuTorch selected-build binding is discoverable");
 assert.match(run(["--help"]).stdout, /--tensorrt-engine-inspector <json>/, "TensorRT optimized-engine evidence import is discoverable");
+assert.match(run(["--help"]).stdout, /deepbom accelerator collect nvidia/, "NVIDIA accelerator observation is discoverable");
+assert.match(run(["--help"]).stdout, /--include-device-identifiers/, "NVIDIA identifier privacy option is discoverable");
+assert.match(run(["--help"]).stdout, /hf:\/\/owner\/repo@<40-hex-commit>\/path/, "immutable Hugging Face input is discoverable");
+assert.match(run(["--help"]).stdout, /--offline\s+Refuse network access/, "offline cache behavior is discoverable");
+assert.match(run(["--help"]).stdout, /deepbom graph <artifact>/, "deterministic graph export is discoverable");
+assert.match(run(["--help"]).stdout, /--scan <mode>\s+auto, structure, integrity, or full/, "bounded scan modes are discoverable");
+assert.match(run(["--help"]).stdout, /--accelerator-profile <json>/, "NVIDIA profile binding is discoverable");
 
 for (const [artifact, expectedFormat] of cases) {
   const result = run(["audit", artifact, "--compact"]);
@@ -51,10 +58,20 @@ for (const [artifact, expectedFormat] of cases) {
   assert.equal(document.filename, path.basename(artifact), `${artifact} filename`);
   assert.match(document.model_sha256, /^[a-f0-9]{64}$/, `${artifact} SHA-256`);
   assert.equal(document.file_size_bytes > 0, true, `${artifact} byte size`);
+  assert.equal(document.artifact_set?.schema, "deepbom.artifact_set.v1", `${artifact} artifact-set schema`);
+  assert.equal(document.artifact_set?.files?.[0]?.sha256, document.model_sha256, `${artifact} artifact-set primary identity`);
 }
 
 const gguf = JSON.parse(run(["gguf", cases[2][0], "--compact"]).stdout);
 assert.equal(gguf.gguf?.tensor_count > 0, true, "GGUF command tensor inventory");
+const ggufStructure = JSON.parse(run(["gguf", cases[2][0], "--scan", "structure", "--compact"]).stdout);
+assert.equal(ggufStructure.cli_scan_policy?.effective_mode, "structure", "GGUF structure scan policy");
+assert.equal(ggufStructure.tensor_numerical_integrity?.status, "not_assessed_scan_policy_structure", "structure mode must not imply payload integrity");
+assert.equal(ggufStructure.tensor_numerical_integrity?.assessed_tensor_count, 0, "structure mode decoded payload count");
+assert.equal(ggufStructure.tensor_numerical_integrity?.unassessed_tensor_count, ggufStructure.tensor_count, "structure-mode unassessed tensor conservation");
+const invalidOnnxScan = run(["audit", cases[1][0], "--scan", "structure"], false);
+assert.notEqual(invalidOnnxScan.status, 0);
+assert.match(invalidOnnxScan.stderr, /does not provide a truthful structure scan path/);
 const ggufScenario = JSON.parse(run(["gguf", cases[2][0], "--context", "8192", "--batch", "2", "--state-bits", "8", "--memory-mib", "1", "--compact"]).stdout);
 assert.equal(ggufScenario.cli_context_scenario?.context_length, 8192, "GGUF context scenario binding");
 assert.equal(ggufScenario.cli_context_scenario?.batch_size, 2, "GGUF batch scenario binding");

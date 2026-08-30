@@ -218,6 +218,8 @@ import {
   renderGraphMapContent,
   renderOpDetailPanel,
 } from "./lib/graph-ui.js";
+import { buildCanonicalGraphIr } from "./lib/graph-ir.js";
+import { exportGraphVisualization } from "./lib/graph-export.js";
 import {
   buildModelIdentity,
   detectModelFormat,
@@ -1564,6 +1566,7 @@ graphWorkspace = createGraphWorkspace({
   graphSearch,
   graphStats,
   graphSvgText,
+  canonicalGraphSvgText,
   histogramBody,
   histogramRow,
   kernelBoundaryInventory,
@@ -4189,13 +4192,28 @@ function currentArtifactFilename(suffix) {
   return artifactFilename(current?.filename || currentFilename || "model", suffix);
 }
 
+function canonicalGraphSvgText() {
+  if (!current?.model_sha256) return graphSvgText(graphMapSvg);
+  const size = Number(current.file_size_bytes ?? current.file_size ?? currentModelBytes?.length ?? 0);
+  if (!Number.isSafeInteger(size) || size < 0) return graphSvgText(graphMapSvg);
+  const graph = buildCanonicalGraphIr(current, {
+    filename: current.filename || currentFilename || "model",
+    format: current.format,
+    sha256: current.model_sha256,
+    size,
+    artifact_set_sha256: current.artifact_set?.artifact_set_sha256 || null,
+  });
+  const view = currentGraphMode === "deploy" ? "placement" : "structure";
+  return exportGraphVisualization(graph, { view, format: "svg" }).text;
+}
+
 async function buildEngineeringBundleFiles() {
   const formatter = await loadRawExportFormatter();
   return formatter.buildEngineeringBundleArtifactFiles(current, {
     reportContext: currentReportContext(),
     rawEvidenceContext: currentRawEvidenceContext(),
     mlBomDocument: await buildMlBom(current, currentModelBytes),
-    graphSvgText: graphSvgText(graphMapSvg),
+    graphSvgText: canonicalGraphSvgText(),
   });
 }
 
@@ -4204,7 +4222,7 @@ async function buildRawDataFiles() {
   return formatter.buildRawDataArtifactFiles(current, {
     rawEvidenceContext: currentRawEvidenceContext(),
     mlBomDocument: await buildMlBom(current, currentModelBytes),
-    graphSvgText: graphSvgText(graphMapSvg),
+    graphSvgText: canonicalGraphSvgText(),
     visualPngFiles: await buildVisualPngFiles(),
   });
 }

@@ -54,7 +54,7 @@ const combinedDocument = buildTfliteProfiledAssignmentDocument(completeProfile, 
   collectedAt: "2026-07-16T01:00:02.000Z",
 });
 const combined = parseRuntimeAssignmentDocument(JSON.stringify(combinedDocument), analysis);
-expectEqual(combined.schema, "deepbom.runtime_assignment.v1.9", "Combined evidence should use runtime-assignment v1.9.");
+expectEqual(combined.schema, "deepbom.runtime_assignment.v1.10", "Combined evidence should use runtime-assignment v1.10.");
 expectEqual(combined.source.adapter.schema, "deepbom.tflite_runtime_info_adapter.v2", "Combined evidence should use the timing-capable adapter schema.");
 expectEqual(combined.assignments[0].duration_us, null, "A partition total must not be copied to delegated original op #0.");
 expectEqual(combined.assignments[1].duration_us, null, "A partition total must not be copied to delegated original op #1.");

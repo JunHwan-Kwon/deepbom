@@ -4,6 +4,7 @@ export const ORT_SELECTED_BUILD_BINDING_SCHEMA = "deepbom.ort_selected_build_pro
 
 const BACKEND_TO_SOURCE_PROFILE = Object.freeze({
   cpu: "wasm_cpu",
+  cuda: "cuda",
   dml: "directml",
   webgpu: "webgpu",
   webnn: "webnn",

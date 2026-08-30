@@ -60,10 +60,10 @@ try {
   await page.getByRole("button", { name: "Load source-backed EP analysis" }).click();
   await page.waitForFunction(() => {
     const text = document.querySelector("#kernelInspectorSummary")?.textContent || "";
-    return text.includes("8 pinned source EP profile(s)") && text.includes("ORT source compatibility ledger");
+    return text.includes("9 pinned source EP profile(s)") && text.includes("ORT source compatibility ledger");
   }, null, { timeout: 30_000 });
   const sourcePlacement = await page.locator("#executionPlacementPanel").textContent();
-  if (!sourcePlacement?.includes("8 EP PROFILES") || !sourcePlacement.includes("Per-EP source eligibility portfolios")
+  if (!sourcePlacement?.includes("9 EP PROFILES") || !sourcePlacement.includes("Per-EP source eligibility portfolios")
     || !sourcePlacement.includes("provider-priority partition is intentionally not inferred")) {
     throw new Error(`ONNX source eligibility was not separated from joint provider placement: ${sourcePlacement}`);
   }
@@ -141,9 +141,9 @@ try {
   if (!comparison?.includes("Provider coverage") || !comparison.includes("Observed relation edges") || comparison.includes("Placement match") || comparison.includes("Predicted")) {
     throw new Error("ORT profile import did not render provider-only evidence metrics.");
   }
-  if (!comparison.includes("Selected runtime backend evidence") || !["QNN", "NNAPI", "Core ML", "WebGPU", "WebNN"].every((label) => comparison.includes(label))
-    || !comparison.includes("Build") || !comparison.includes("Capability") || !comparison.includes("Assignment") || !comparison.includes("Execution")) {
-    throw new Error("ORT runtime backend ledger did not render all five providers and four independent evidence layers.");
+  if (!comparison.includes("Selected runtime backend evidence") || !["CUDA", "TensorRT", "DirectML", "QNN", "NNAPI", "Core ML", "WebGPU", "WebNN"].every((label) => comparison.includes(label))
+    || !comparison.includes("Source") || !comparison.includes("Build") || !comparison.includes("Capability") || !comparison.includes("Assignment") || !comparison.includes("Execution")) {
+    throw new Error("ORT runtime backend ledger did not render all eight accelerator providers and five independent evidence layers.");
   }
   const trackCells = await page.locator("#runtimeAssignmentComparison .runtime-assignment-cell").count();
   if (trackCells !== 9) throw new Error(`ORT provider view rendered ${trackCells} track cells instead of one observed track with 9 cells.`);

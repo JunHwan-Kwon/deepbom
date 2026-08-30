@@ -178,7 +178,7 @@ applyProtectedOrtCompatibilityEvidence(onnx, ortEvidence);
 const ortFrontier = onnx.ort_ep_portability_frontier;
 expect(validateOrtEpPortabilityFrontier(ortFrontier, onnx), "ONNX EP portability frontier should satisfy browser invariants.");
 expectEqual(ortFrontier.schema, "deepbom.ort_ep_portability_frontier.v2", "ONNX frontier schema should be stable.");
-expectEqual(ortFrontier.execution_provider_count, 8, "ONNX frontier should cover CPU, WebGPU, WebNN, QNN, DirectML, CoreML, NNAPI, and XNNPACK source profiles.");
+expectEqual(ortFrontier.execution_provider_count, 9, "ONNX frontier should cover CPU, CUDA, WebGPU, WebNN, QNN, DirectML, CoreML, NNAPI, and XNNPACK source profiles.");
 expectEqual(ortFrontier.ops.length, onnx.ops.length, "ONNX portability frontier should cover every graph op.");
 expect(ortFrontier.providers.every((provider) => provider.source_match_op_count + provider.top_gap_ops.length >= provider.source_match_op_count), "ONNX provider summaries should retain source gaps without support claims.");
 expect(ortFrontier.providers.every((provider) => provider.artifact_precheck_candidate_op_count <= provider.source_match_op_count), "Artifact-precheck candidates must remain a subset of source-version matches.");

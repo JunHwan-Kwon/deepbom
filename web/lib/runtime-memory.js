@@ -123,7 +123,9 @@ function validateSnapshot(source, expectedId, artifactTensorCount) {
 
 export function validateRuntimeMemoryEvidence(source, analysis, { sourceSchema, collector } = {}) {
   if (source == null) return null;
-  if (sourceSchema !== "deepbom.runtime_assignment.v1.9") throw new Error("Runtime memory evidence requires runtime assignment schema v1.9.");
+  if (!["deepbom.runtime_assignment.v1.9", "deepbom.runtime_assignment.v1.10"].includes(sourceSchema)) {
+    throw new Error("Runtime memory evidence requires runtime assignment schema v1.9 or v1.10.");
+  }
   if (collector?.schema !== "deepbom.native_runtime_collector.v1.1" || collector?.instrumentation?.arena_allocations !== true) {
     throw new Error("Runtime memory evidence requires declared native arena allocation instrumentation.");
   }

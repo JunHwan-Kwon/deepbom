@@ -363,7 +363,7 @@ async function analyzeCoreMlPackage(plan, onProgress) {
   return { analysis, retainedBytes: parsed.retainedBytes, payloadLoaded: false, rootFile: plan.rootFile };
 }
 
-async function analyzeSafeTensorsShards(plan, onProgress) {
+async function analyzeSafeTensorsShards(plan, onProgress, scanMode = "full") {
   const sidecarRows = Object.values(plan.llmSidecars || {}).filter((row) => row.role !== "architecture_config").map((row) => ({
     path: row.path, file: row.file, role: row.role, required: true,
   }));
@@ -384,6 +384,7 @@ async function analyzeSafeTensorsShards(plan, onProgress) {
     onProgress?.({ index, count: plan.shards.length, phase: "parsing", path: shard.path });
     const parsed = await readMetadataModelFile(shard.file, "safetensors", {
       onProgress: (progress) => onProgress?.({ ...progress, phase: "tensor_payload", shard_index: index, shard_count: plan.shards.length, path: shard.path }),
+      scanMode,
     });
     shardAnalyses.push(parsed.analysis);
     for (const tensor of parsed.analysis.tensors) {
@@ -507,7 +508,8 @@ async function analyzeSafeTensorsShards(plan, onProgress) {
   return { analysis, retainedBytes: new Uint8Array(), payloadLoaded: false, rootFile: plan.rootFile };
 }
 
-export async function readArtifactBundle(files, { onProgress } = {}) {
+export async function readArtifactBundle(files, { onProgress, scanMode = "full" } = {}) {
+  if (!["structure", "integrity", "full"].includes(scanMode)) throw new Error(`Unsupported artifact bundle scan mode ${scanMode}.`);
   const plan = await inspectArtifactBundle(files);
-  return plan.kind === "coreml_package" ? analyzeCoreMlPackage(plan, onProgress) : analyzeSafeTensorsShards(plan, onProgress);
+  return plan.kind === "coreml_package" ? analyzeCoreMlPackage(plan, onProgress) : analyzeSafeTensorsShards(plan, onProgress, scanMode);
 }

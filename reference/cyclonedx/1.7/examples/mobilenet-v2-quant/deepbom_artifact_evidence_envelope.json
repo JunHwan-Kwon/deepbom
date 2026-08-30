@@ -9,6 +9,8 @@
     "byte_length": 3577760,
     "schema_or_opset": null
   },
+  "artifact_set": null,
+  "accelerator_profile_binding": null,
   "capabilities": {
     "schema": "deepbom.artifact_capability_manifest.v1",
     "format": "tflite",
@@ -2522,5 +2524,5 @@
     ]
   },
   "evidence_boundary": "Serialized artifact facts and deterministic static derivations. Declarations and runtime measurements are accepted only through separately identified inputs.",
-  "envelope_sha256": "6bda36aacf2dd67461db6ccd138d947613cd6b81278e71235cb0fa6c00642484"
+  "envelope_sha256": "82eb9d36ed54c575e625214809539536079a14d35cacf5f849738bf9a52f453f"
 }

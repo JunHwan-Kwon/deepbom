@@ -59,7 +59,7 @@ const document = buildTfliteRuntimeAssignmentDocument(profile, analysis, {
   captureId: "fixture-capture-001",
 });
 const parsed = parseRuntimeAssignmentDocument(JSON.stringify(document), analysis);
-expectEqual(parsed.schema, "deepbom.runtime_assignment.v1.9", "TFLite runtime plan should normalize to runtime-assignment v1.9.");
+expectEqual(parsed.schema, "deepbom.runtime_assignment.v1.10", "TFLite runtime plan should normalize to runtime-assignment v1.10.");
 expectEqual(parsed.evidence_class, "OBSERVED_RUNTIME", "Imported execution-plan placement should be runtime-observed evidence.");
 expectEqual(parsed.source.duration_semantics, "not_collected", "ModelRuntimeDetails must not imply timing evidence.");
 expectEqual(parsed.source.adapter.artifact_binding, "active_artifact_exact_original_op_topology", "Artifact binding method should remain explicit.");

@@ -146,6 +146,14 @@ const shardDocuments = buildDeploymentContractDocuments(shardBundle.analysis, { 
 assertCycloneDx17(shardDocuments.documents.cyclonedx_evidence, "SafeTensors shard evidence BOM");
 expect(shardBundle.analysis.artifact_bundle.files.some((item) => item.role === "architecture_config" && item.required === true), "SafeTensors config used by analysis is a required hash-bound evidence file");
 expect(shardDocuments.documents.cyclonedx_evidence.dependencies[0].dependsOn.length === 4, "SafeTensors shard dependencies");
+const shardStructure = await readArtifactBundle(shardFiles, { scanMode: "structure" });
+expect(shardStructure.analysis.tensor_count === shardBundle.analysis.tensor_count, "SafeTensors structure scan preserves tensor count");
+expect(shardStructure.analysis.safetensors.payload_byte_length === shardBundle.analysis.safetensors.payload_byte_length,
+  "SafeTensors structure scan preserves serialized payload cardinality");
+expect(shardStructure.analysis.tensor_numerical_integrity.status === "not_assessed",
+  "SafeTensors structure scan must not claim payload numerical integrity");
+expect(shardStructure.analysis.tensor_numerical_integrity.unassessed_tensor_count === 2,
+  "SafeTensors structure scan preserves the unassessed tensor denominator");
 
 const tinyLlamaConfig = {
   model_type: "llama",

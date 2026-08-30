@@ -12,7 +12,7 @@
     "run_schema": "deepbom.native_capture_run.v1.2",
     "manifest_schema": "deepbom.native_capture_manifest.v4",
     "package_schema": "deepbom.native_capture_package.v1.1",
-    "assignment_schema": "deepbom.runtime_assignment.v1.9",
+    "assignment_schema": "deepbom.runtime_assignment.v1.10",
     "collector_schema": "deepbom.native_runtime_collector.v1.1",
     "runtime_memory_schema": "deepbom.runtime_memory.v1"
   }

@@ -7,7 +7,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 const MANIFEST_SCHEMA: &str = "deepbom.native_capture_manifest.v4";
-const OUTPUT_SCHEMA: &str = "deepbom.runtime_assignment.v1.9";
+const OUTPUT_SCHEMA: &str = "deepbom.runtime_assignment.v1.10";
 const COLLECTOR_SCHEMA: &str = "deepbom.native_runtime_collector.v1.1";
 const SELECTOR_SCHEMA: &str = "deepbom.runtime_selector_context.v1.1";
 const RUNTIME_MEMORY_SCHEMA: &str = "deepbom.runtime_memory.v1";

@@ -877,7 +877,7 @@ export function reconstructRuntimeArenaEvidence(staticAnalysis, runtimeAssignmen
     return valid ? value : 0;
   };
   const commit = "87bbf65b8d23d3f06912b1b2183587e1884bc45c";
-  requireCondition(runtimeAssignment?.schema === "deepbom.runtime_assignment.v1.9", "runtime assignment schema does not carry the arena contract");
+  requireCondition(runtimeAssignment?.schema === "deepbom.runtime_assignment.v1.10", "runtime assignment schema does not carry the arena contract");
   requireCondition(collector?.schema === "deepbom.native_runtime_collector.v1.1" && instrumentationDeclared, "collector did not declare v1.1 arena instrumentation");
   requireCondition(memory.schema === "deepbom.runtime_memory.v1" && memory.status === "assessed" && memory.evidence_class === "OBSERVED_RUNTIME", "runtime memory schema/status/evidence class is invalid");
   requireCondition(memory.tensorflow_source_commit === commit, "runtime memory TensorFlow commit is not pinned");

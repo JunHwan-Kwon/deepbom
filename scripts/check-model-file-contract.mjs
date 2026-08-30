@@ -204,7 +204,7 @@ applyProtectedOrtCompatibilityEvidence(sampleOnnx, protectedOrtCompatibility);
 expectEqual(sampleOnnx.ort_compatibility_assessment_status, "complete", "Protected ORT source compatibility assessment should be complete.");
 expectEqual(sampleOnnx.runtime_compat.derived_min_runtime_version, "1.9", "IR 8 / ai.onnx opset 13 should derive ORT 1.9 as the necessary parser floor.");
 expectEqual(sampleOnnx.runtime_compat.effective_min_runtime_version, "1.9", "A standard-domain-only model should retain the derived necessary floor as its complete artifact-side parser floor.");
-expectEqual(protectedOrtCompatibility.execution_providers.length, 8, "Protected ORT rulepack should assess WASM CPU, WebGPU, WebNN, DirectML, QNN, CoreML, NNAPI, and XNNPACK source profiles.");
+expectEqual(protectedOrtCompatibility.execution_providers.length, 9, "Protected ORT rulepack should assess WASM CPU, CUDA, WebGPU, WebNN, DirectML, QNN, CoreML, NNAPI, and XNNPACK source profiles.");
 expect(protectedOrtCompatibility.execution_providers.every((ep) => ep.assignment_evidence_class === "NOT_OBSERVED"), "Source EP version matches must not claim actual runtime assignment.");
 expect(protectedOrtCompatibility.execution_providers.every((ep) => ep.ops[0].imported_opset === 13 && ep.ops[0].resolved_schema_version === 11), "Conv must resolve imported opset 13 to pinned ONNX schema since_version 11 before ORT kernel-range comparison.");
 expect(protectedOrtCompatibility.execution_providers.every((ep) => ep.ops[0].schema_source_sha256 === "d1c94c1b4b890350a5ff8cc8bf24bd062b09b7a0689293afb1fdc1f7e987b479"), "Resolved standard-domain schema rows must bind the pinned ONNX schema source hash.");

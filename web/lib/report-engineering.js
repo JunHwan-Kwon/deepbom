@@ -240,6 +240,7 @@ function artifactSizeBreakdownMarkdown(analysis) {
   const size = analysis?.size_breakdown || {};
   if (isOnnxAnalysis(analysis)) {
     const external = analysis?.onnx_external_data || {};
+    const structureBinding = analysis?.onnx_external_data_structure_binding || null;
     const externalRows = (external.tensors || []).slice(0, 24).map((tensor) => [
       code(tensor.scope || "unknown_scope"),
       tensor.tensor_role || "TensorProto",
@@ -272,6 +273,9 @@ function artifactSizeBreakdownMarkdown(analysis) {
         ["External payload coverage", `${formatNumber(external.supplied_payload_count || 0)} supplied / ${formatNumber(external.verified_payload_count || 0)} verified / ${formatNumber(external.payload_verification_failed_count || 0)} failed; verified ${formatBytes(external.verified_payload_bytes || 0)}; declared ${external.declared_payload_bytes == null ? "not fully declared" : `${formatBytes(external.declared_payload_bytes)} (${formatNumber(external.declared_payload_bytes)} B)`}`],
         ["External payload failures", `${formatNumber(external.range_out_of_bounds_count || 0)} out-of-bounds / ${formatNumber(external.payload_size_mismatch_count || 0)} dtype-shape byte mismatch / ${formatNumber(external.checksum_mismatch_count || 0)} SHA-1 mismatch`],
         ["External sidecar files", `${formatNumber(external.supplied_file_count || 0)} supplied (${formatBytes(external.supplied_file_bytes || 0)}) / ${formatNumber(external.used_file_count || 0)} used / ${formatNumber(external.unused_file_count || 0)} unused`],
+        ["Structure-mode sidecar binding", structureBinding
+          ? `${structureBinding.status}; ${formatNumber(structureBinding.file_count)} content-hashed file(s), ${formatNumber(structureBinding.tensor_count)} serialized range(s), ${formatBytes(Number(structureBinding.declared_payload_bytes?.number || 0))} declared; numerical payload decode ${structureBinding.numerical_payload_decode}`
+          : "not emitted"],
         ["External-data detail", external.detail || "not emitted"],
         ["Separately attributable metadata bytes", size.metadata_bytes == null ? "NOT_ASSESSABLE; protobuf structure and metadata are not separated" : `${formatBytes(size.metadata_bytes)} (${formatNumber(size.metadata_bytes)} B)`],
         ["Graph protobuf / metadata overhead", `${formatBytes(size.structure_overhead_bytes || 0)} (${formatNumber(size.structure_overhead_bytes || 0)} B)`],
@@ -2502,6 +2506,7 @@ export function buildEngineeringReportArtifacts(analysis, {
       const full = customCount === 0 && allSubgraphsParsed;
       if (onnx) {
         const external = analysis.onnx_external_data || {};
+        const structureBinding = analysis.onnx_external_data_structure_binding || null;
         const runtimeAssignment = runtimeEvidence?.runtimeAssignmentEvidence || runtimeEvidence?.runtime_assignment || null;
         const ortCompatibility = analysis.ort_compatibility_evidence || null;
         return markdownTable(["Analysis area", "Status"], [
@@ -2513,7 +2518,9 @@ export function buildEngineeringReportArtifacts(analysis, {
           ["Dynamic shape cost", analysis.dynamic_shape_cost_contract?.status === "not_applicable_static_shapes"
             ? "not applicable; all assessed tensor shapes are static"
             : `${analysis.dynamic_shape_cost_contract?.status || "not assessed"}; ${analysis.dynamic_shape_cost_contract?.total_macs_formula_status || "total MAC formula not emitted"}; ${analysis.dynamic_shape_cost_contract?.arena_projection_status || "arena status not emitted"}`],
-          ["Initializer inventory", `${formatNumber(analysis.size_breakdown?.constant_tensor_count || 0)} declaration(s); ${formatNumber(analysis.size_breakdown?.embedded_constant_tensor_count || 0)} embedded, ${formatNumber(external.verified_payload_count || 0)}/${formatNumber(external.tensor_count || 0)} external payload range(s) path/range/cardinality/hash verified; ${external.status || "external-data status not emitted"}`],
+          ["Initializer inventory", structureBinding
+            ? `${formatNumber(analysis.size_breakdown?.constant_tensor_count || 0)} declaration(s); ${formatNumber(structureBinding.tensor_count)} external range(s) location/offset/length/file-SHA bound; numerical payload decode not assessed by structure policy`
+            : `${formatNumber(analysis.size_breakdown?.constant_tensor_count || 0)} declaration(s); ${formatNumber(analysis.size_breakdown?.embedded_constant_tensor_count || 0)} embedded, ${formatNumber(external.verified_payload_count || 0)}/${formatNumber(external.tensor_count || 0)} external payload range(s) path/range/cardinality/hash verified; ${external.status || "external-data status not emitted"}`],
           ...onnxWeightIntegrityCompletenessRows(analysis.weight_integrity),
           ["Execution-provider assignment", runtimeAssignment
             ? `${runtimeAssignment.assignment_evidence_class || "OBSERVED_RUNTIME"}; ${formatNumber(runtimeAssignment.mapped_op_count || 0)}/${formatNumber((analysis.ops || []).length)} original op(s) mapped; ${formatNumber(runtimeAssignment.unresolved_op_count || 0)} unresolved`

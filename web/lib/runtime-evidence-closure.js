@@ -82,7 +82,7 @@ export function buildRuntimeCapturePlan(analysis) {
           : ["compiled_model_identity", "compute_unit_configuration", "operation_identity", "preferred_compute_device", "supported_compute_devices", "estimated_cost_weight"],
     import_contract: {
       accepted_by: analysis.format === "gguf" ? "Evidence capability > Import runtime evidence" : "Graph > Kernel & Runtime > Import runtime evidence",
-      schema: analysis.format === "gguf" ? GGUF_RUNTIME_ENVIRONMENT_SCHEMA : analysis.format === "coreml" ? COREML_COMPUTE_PLAN_SCHEMA : "deepbom.runtime_assignment.v1.9",
+      schema: analysis.format === "gguf" ? GGUF_RUNTIME_ENVIRONMENT_SCHEMA : analysis.format === "coreml" ? COREML_COMPUTE_PLAN_SCHEMA : "deepbom.runtime_assignment.v1.10",
       fail_closed_on: analysis.format === "gguf"
         ? ["artifact_hash_mismatch", "source_or_patch_hash_mismatch", "build_attestation_mismatch", "runtime_binary_hash_mismatch", "cmake_cache_hash_mismatch", "build_option_inventory_incomplete", "requested_backend_not_compiled", "scheduler_trace_missing", "scheduler_graph_conservation_failure"]
         : analysis.format === "coreml"

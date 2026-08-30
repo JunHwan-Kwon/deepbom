@@ -97,7 +97,7 @@ const runtimeMemory = {
 const xnnpackCommit = "23a67314f7afdbb76191589ae090d82bf55afbfa";
 const buildIdentifierSha = "b".repeat(64);
 const capture = {
-  schema: "deepbom.runtime_assignment.v1.9",
+  schema: "deepbom.runtime_assignment.v1.10",
   artifact_sha256: analysis.model_sha256,
   target_profile_id: analysis.target_profile.id,
   target_profile_sha256: analysis.target_profile.profile_sha256,

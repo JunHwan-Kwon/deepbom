@@ -6,7 +6,7 @@ import path from "node:path";
 import process from "node:process";
 
 import { detectModelFormat } from "../web/lib/model-file.js";
-import { analyzeOnnxModel } from "../web/onnx.js";
+import { analyzeOnnxModel, MAX_ONNX_DECODED_ELEMENTS } from "../web/onnx.js";
 import { analyzeExecuTorchModel } from "../web/executorch.js";
 import { EXECUTORCH_SELECTED_BUILD_INPUT_SCHEMA } from "../web/lib/executorch-build-binding.js";
 import { parseStrictJson, readMetadataModelFile } from "../web/lib/metadata-model-adapters.js";
@@ -21,7 +21,16 @@ import { buildTensorRtStaticPreflight } from "../web/lib/tensorrt-static-preflig
 import { buildOnDeviceLlmContract } from "../web/lib/on-device-llm-contract.js";
 import { buildLlmStaticMemoryPlacement } from "../web/lib/llm-static-memory-placement.js";
 import { readArtifactBundle } from "../web/lib/artifact-bundle.js";
-import { identifyCliFile, loadCliInput, loadExecuTorchExternalData, loadOnnxExternalData, readCliFileBytes, verifyBundleSnapshot } from "./deepbom-input.mjs";
+import { identifyCliFile, loadCliBundleMembers, loadCliInput, loadExecuTorchExternalData, loadOnnxExternalData, loadOnnxExternalDataMembers, readCliFileBytes, verifyBundleSnapshot } from "./deepbom-input.mjs";
+import { collectNvidiaAcceleratorProfile } from "./nvidia-accelerator-collector.mjs";
+import { resolveArtifactSource } from "./remote-artifact-resolver.mjs";
+import { resolveHuggingFaceOnnxExternalDataClosure, resolveHuggingFaceSafeTensorsClosure } from "./remote-artifact-closure.mjs";
+import { finalizeArtifactSet } from "../web/lib/artifact-set.js";
+import { buildCanonicalGraphIr } from "../web/lib/graph-ir.js";
+import { exportGraphVisualization } from "../web/lib/graph-export.js";
+import { exportGraphPng } from "./graph-png-export.mjs";
+import { buildNvidiaAcceleratorProfileBinding } from "../web/lib/accelerator-profile-binding.js";
+import { buildOnnxExternalDataStructureBinding, onnxExternalInitializerElementCount } from "../web/lib/onnx-external-data-structure-binding.js";
 import {
   buildCanonicalGatedDecoderProjection,
   buildKvStateProjection,
@@ -51,6 +60,9 @@ const DEFAULT_TARGET = "android_mid_a55";
 const DEFAULT_DELTA_TARGETS = Object.freeze([DEFAULT_TARGET, "rpi4_a72", "x86_avx2", "wasm_simd"]);
 const MAX_TARGET_PROFILE_BYTES = 16_384;
 const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
+const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
+const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
+const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
 const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.95.0";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 
@@ -64,16 +76,31 @@ async function main(argv) {
     const capabilities = buildCliCapabilities(VERSION, { defaultTarget: DEFAULT_TARGET, deltaTargets: DEFAULT_DELTA_TARGETS });
     return emitDocument(parsed, capabilities, () => buildCapabilitiesSummary(capabilities));
   }
+  if (parsed.command === "accelerator") {
+    validateAcceleratorInvocation(parsed);
+    await preflightOutputDestinations(parsed);
+    const profile = await collectNvidiaAcceleratorProfile({
+      collectorVersion: VERSION,
+      deviceIndex: parsed.deviceIndex,
+      includeDeviceIdentifiers: parsed.includeDeviceIdentifiers,
+    });
+    return emitDocument(parsed, profile, () => buildAcceleratorSummary(profile));
+  }
   if (!parsed.input) throw new Error("An artifact path is required.");
   validateInvocation(parsed);
   await preflightOutputDestinations(parsed);
   const targetBinding = await resolveTargetBinding(parsed);
   if (parsed.command === "diff") return runDiffCommand(parsed, targetBinding);
 
-  const inputPath = path.resolve(parsed.input);
-  const input = await loadCliInput(inputPath);
+  let resolvedSource = await resolveCliArtifactSource(parsed.input, parsed);
+  resolvedSource = await resolveHuggingFaceSafeTensorsClosure(parsed.input, resolvedSource, remoteResolveOptions(parsed));
+  const inputPath = resolvedSource.path;
+  const input = resolvedSource.virtual_bundle_members
+    ? await loadCliBundleMembers(resolvedSource.virtual_bundle_members, "remote-model")
+    : await loadCliInput(inputPath);
   const filename = input.filename;
   const detectedFormat = input.kind === "file" ? detectModelFormat(filename, input.prefix) : "package";
+  let scanPolicy = resolveScanPolicy(parsed.scan, detectedFormat, input);
   if ((parsed.targetProfile || parsed.targetExplicit) && input.kind === "file" && detectedFormat !== "tflite") {
     throw new Error(`${parsed.targetProfile ? "--target-profile" : "--target"} applies only to TFLite artifacts, received ${detectedFormat}.`);
   }
@@ -86,13 +113,31 @@ async function main(argv) {
   }
   const execuTorchBuild = parsed.executorchBuild
     ? await readJsonSidecar(parsed.executorchBuild, "executorch_selected_build_attestation") : null;
+  const acceleratorProfile = parsed.acceleratorProfile
+    ? await readJsonSidecar(parsed.acceleratorProfile, "nvidia_accelerator_profile") : null;
+  let preanalyzedOnnx = null;
+  if (input.kind === "file" && detectedFormat === "onnx" && resolvedSource.acquisition?.source?.kind === "huggingface" && !parsed.externalDataRoot) {
+    const bytes = await readCliFileBytes(input);
+    preanalyzedOnnx = analyzeOnnxModel(bytes, filename);
+    const locations = [...new Set((preanalyzedOnnx?.onnx_external_data?.tensors || [])
+      .map((row) => String(row.normalized_location || "")).filter(Boolean))].sort();
+    if (locations.length) resolvedSource = await resolveHuggingFaceOnnxExternalDataClosure(
+      parsed.input, resolvedSource, locations, remoteResolveOptions(parsed),
+    );
+    if (resolvedSource.external_data_members) {
+      scanPolicy = resolveOnnxExternalAutoScanPolicy(scanPolicy, parsed.scan, preanalyzedOnnx, resolvedSource.closure);
+    }
+  }
   let analysis = await analyzeArtifact({
     input,
     filename,
     format: detectedFormat,
     target: targetBinding.value,
-    externalDataRoot: parsed.externalDataRoot,
+    externalDataRoot: parsed.externalDataRoot || resolvedSource.closure?.model_root || "",
     execuTorchBuild,
+    scanPolicy,
+    preanalyzedOnnx,
+    externalDataMembers: resolvedSource.external_data_members,
   });
   const format = String(analysis.format || detectedFormat).toLowerCase();
   if (["unsupported", "pytorch_pickle"].includes(format)) {
@@ -130,7 +175,16 @@ async function main(argv) {
   const artifact = input.kind === "file"
     ? { ...(await identifyCliFile(input)), format }
     : packageIdentity(analysis, format, filename);
+  if (parsed.expectedSha256 && artifact.sha256 !== parsed.expectedSha256) {
+    throw new Error(`Artifact SHA-256 mismatch: expected ${parsed.expectedSha256}, observed ${artifact.sha256}.`);
+  }
+  if (resolvedSource.acquisition && resolvedSource.closure?.kind !== "huggingface_safetensors_shards"
+      && artifact.sha256 !== resolvedSource.acquisition.file.sha256) {
+    throw new Error("Analyzed artifact SHA-256 differs from the remote acquisition receipt.");
+  }
   enforceArtifactIdentity(analysis, artifact);
+  analysis.cli_scan_policy = scanPolicy;
+  analysis.artifact_set = buildCliArtifactSet(artifact, resolvedSource.acquisition, analysis, resolvedSource.closure);
   if (targetBinding.evidence) {
     analysis.cli_target_profile_input = {
       ...targetBinding.evidence,
@@ -169,6 +223,15 @@ async function main(argv) {
       : parserEvidence?.build_profile || null;
     analysis.tensorrt_static_preflight = buildTensorRtStaticPreflight(analysis, buildProfile, parserEvidence, engineInspectorEvidence);
   }
+  if (acceleratorProfile) {
+    analysis.accelerator_profile_binding = buildNvidiaAcceleratorProfileBinding(analysis, acceleratorProfile, {
+      deviceIndex: parsed.acceleratorDeviceIndex,
+    });
+  } else if (parsed.acceleratorDeviceIndex != null) {
+    throw new Error("--accelerator-device requires --accelerator-profile.");
+  }
+
+  if (parsed.command === "graph") return runGraphCommand(parsed, analysis, artifact);
 
   if (parsed.command === "verify") return runVerifyCommand(parsed, analysis, artifact);
   if (parsed.command === "explore") return runExploreCommand(parsed, analysis, artifact, input, targetBinding.value);
@@ -237,13 +300,44 @@ async function resolveTargetBinding(parsed) {
   };
 }
 
+function resolveCliArtifactSource(spec, parsed) {
+  return resolveArtifactSource(spec, {
+    cacheDir: parsed.cacheDir || undefined,
+    expectedSha256: parsed.expectedSha256,
+    offline: parsed.offline,
+    maximumBytes: BigInt(parsed.maxDownloadGib) * 1024n * 1024n * 1024n,
+  });
+}
+
+function remoteResolveOptions(parsed) {
+  return {
+    cacheDir: parsed.cacheDir || undefined,
+    expectedSha256: parsed.expectedSha256,
+    offline: parsed.offline,
+    maximumBytes: BigInt(parsed.maxDownloadGib) * 1024n * 1024n * 1024n,
+  };
+}
+
 function validateInvocation(parsed) {
+  if (parsed.deviceIndex != null || parsed.includeDeviceIdentifiers) {
+    throw new Error("--device and --include-device-identifiers apply only to accelerator collect nvidia.");
+  }
   if (parsed.targetProfile && parsed.targetExplicit) throw new Error("--target and --target-profile are mutually exclusive.");
   if (parsed.contract && parsed.command !== "verify") throw new Error("--contract is valid only with the verify command.");
   if (parsed.request && parsed.command !== "explore") throw new Error("--request is valid only with the explore command.");
+  if (parsed.view && parsed.command !== "graph") throw new Error("--view is valid only with the graph command.");
   if (parsed.command === "verify" && !parsed.contract) throw new Error("The verify command requires --contract <json>.");
   if (parsed.command === "diff" && !parsed.candidate) throw new Error("The diff command requires baseline and candidate TFLite artifacts.");
   if (parsed.executorchBuild && parsed.command !== "audit") throw new Error("--executorch-build is valid only with the audit command.");
+  if (parsed.scanExplicit && ["verify", "diff", "explore"].includes(parsed.command)) {
+    throw new Error(`--scan is not accepted by the ${parsed.command} command.`);
+  }
+  if (parsed.acceleratorProfile && !["audit", "gguf", "graph"].includes(parsed.command)) {
+    throw new Error("--accelerator-profile is valid only with audit, gguf, or graph.");
+  }
+  if (parsed.acceleratorDeviceIndex != null && !parsed.acceleratorProfile) {
+    throw new Error("--accelerator-device requires --accelerator-profile.");
+  }
   if (parsed.policyOutput && parsed.failOn === "none") throw new Error("--policy-output requires --fail-on.");
   if (parsed.noClobber && !parsed.output && !parsed.policyOutput) throw new Error("--no-clobber requires --output or --policy-output.");
   if (parsed.noClobber && parsed.output === "-" && !parsed.policyOutput) {
@@ -264,6 +358,11 @@ function validateInvocation(parsed) {
     throw new Error("--output and --policy-output must identify different files.");
   }
   if (["verify", "diff", "explore"].includes(parsed.command)) assertCommandOutputFormat(parsed, parsed.command);
+  if (parsed.command === "graph") {
+    if (parsed.failOn !== "none" || parsed.policyOutput) throw new Error("The graph command does not accept finding-policy options.");
+    if (parsed.timestamp) throw new Error("The graph command is deterministic and does not accept --timestamp.");
+    if (parsed.contract || parsed.request) throw new Error("The graph command does not accept verify or redesign sidecars.");
+  }
 }
 
 async function preflightOutputDestinations(parsed) {
@@ -279,12 +378,37 @@ function validateCapabilitiesInvocation(parsed) {
   assertNoOptions(parsed, [
     "targetProfile", "contract", "request", "context", "batch", "stateBits", "memoryMib", "tensorrtProfile",
     "tensorrtParserEvidence", "tensorrtEngineInspector", "tensorrtLlmConfig", "tensorrtLlmBinding",
-    "llmMemoryProfile", "externalDataRoot", "executorchBuild", "policyOutput",
+    "llmMemoryProfile", "acceleratorProfile", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
   ], "capabilities");
   if (parsed.targetExplicit || parsed.failOn !== "none") throw new Error("The capabilities command does not accept target or finding-policy options.");
+  if (parsed.deviceIndex != null || parsed.includeDeviceIdentifiers) throw new Error("The capabilities command does not accept NVIDIA collector options.");
+  if (parsed.acceleratorDeviceIndex != null) throw new Error("The capabilities command does not accept --accelerator-device.");
+  if (parsed.scanExplicit) throw new Error("The capabilities command does not accept --scan.");
+  if (parsed.maxDownloadExplicit) throw new Error("The capabilities command does not accept --max-download-gib.");
   if (parsed.timestamp) throw new Error("The capabilities command does not accept --timestamp.");
+  if (parsed.noClobber && !parsed.output) throw new Error("--no-clobber requires --output.");
   if (parsed.noClobber && parsed.output === "-") throw new Error("--no-clobber cannot protect stdout; provide a file path with --output.");
-  if (parsed.outputFormat !== "analysis") throw new Error("The capabilities command emits deepbom.cli_capabilities.v1; --format is not supported.");
+  if (parsed.formatExplicit) throw new Error("The capabilities command emits deepbom.cli_capabilities.v1; --format is not supported.");
+}
+
+function validateAcceleratorInvocation(parsed) {
+  if (parsed.input || parsed.candidate) throw new Error("The accelerator collect nvidia command does not accept an artifact path.");
+  if (parsed.acceleratorAction !== "collect" || parsed.acceleratorProvider !== "nvidia") {
+    throw new Error("The accelerator command requires: deepbom accelerator collect nvidia.");
+  }
+  assertNoOptions(parsed, [
+    "targetProfile", "contract", "request", "context", "batch", "stateBits", "memoryMib", "tensorrtProfile",
+    "tensorrtParserEvidence", "tensorrtEngineInspector", "tensorrtLlmConfig", "tensorrtLlmBinding",
+    "llmMemoryProfile", "acceleratorProfile", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
+  ], "accelerator collect nvidia");
+  if (parsed.acceleratorDeviceIndex != null) throw new Error("The collector uses --device, not --accelerator-device.");
+  if (parsed.scanExplicit) throw new Error("The accelerator collect nvidia command does not accept --scan.");
+  if (parsed.targetExplicit || parsed.failOn !== "none") throw new Error("The accelerator collect nvidia command does not accept target or finding-policy options.");
+  if (parsed.maxDownloadExplicit) throw new Error("The accelerator collect nvidia command does not accept --max-download-gib.");
+  if (parsed.timestamp) throw new Error("The accelerator collect nvidia command records its observation time and does not accept --timestamp.");
+  if (parsed.noClobber && !parsed.output) throw new Error("--no-clobber requires --output.");
+  if (parsed.noClobber && parsed.output === "-") throw new Error("--no-clobber cannot protect stdout; provide a file path with --output.");
+  if (parsed.formatExplicit) throw new Error("The accelerator command emits deepbom.accelerator_profile.v1; --format is not supported.");
 }
 
 async function runDiffCommand(parsed, targetBinding) {
@@ -293,8 +417,14 @@ async function runDiffCommand(parsed, targetBinding) {
     "contract", "request", "context", "batch", "stateBits", "memoryMib", "tensorrtProfile", "tensorrtParserEvidence", "tensorrtEngineInspector",
     "tensorrtLlmConfig", "tensorrtLlmBinding", "llmMemoryProfile", "externalDataRoot", "executorchBuild",
   ], "diff");
-  const baselineInput = await loadCliInput(path.resolve(parsed.input));
-  const candidateInput = await loadCliInput(path.resolve(parsed.candidate));
+  const baselineSource = await resolveCliArtifactSource(parsed.input, parsed);
+  const candidateSource = await resolveArtifactSource(parsed.candidate, {
+    cacheDir: parsed.cacheDir || undefined,
+    offline: parsed.offline,
+    maximumBytes: BigInt(parsed.maxDownloadGib) * 1024n * 1024n * 1024n,
+  });
+  const baselineInput = await loadCliInput(baselineSource.path);
+  const candidateInput = await loadCliInput(candidateSource.path);
   if (baselineInput.kind !== "file" || candidateInput.kind !== "file") {
     throw new Error("The diff command requires two standalone TFLite files.");
   }
@@ -318,6 +448,12 @@ async function runDiffCommand(parsed, targetBinding) {
     candidateInput.filename,
     JSON.stringify(targetIds),
   );
+  if (baselineSource.acquisition || candidateSource.acquisition) {
+    delta.cli_artifact_sources = {
+      baseline: baselineSource.acquisition,
+      candidate: candidateSource.acquisition,
+    };
+  }
   if (targetBinding.evidence) delta.cli_target_profile_input = targetBinding.evidence;
   return emitDocument(parsed, delta, () => buildDiffSummary(delta));
 }
@@ -386,6 +522,19 @@ async function runExploreCommand(parsed, analysis, artifact, input, target) {
   return emitDocument(parsed, pareto, () => buildExploreSummary(pareto));
 }
 
+async function runGraphCommand(parsed, analysis, artifact) {
+  const graph = buildCanonicalGraphIr(analysis, { ...artifact, artifact_set_sha256: analysis.artifact_set?.artifact_set_sha256 || null });
+  if (parsed.outputFormat === "png") {
+    const exported = exportGraphPng(graph, { view: parsed.view });
+    if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, exported.bytes, { noClobber: parsed.noClobber });
+    else process.stdout.write(exported.bytes);
+    return;
+  }
+  const exported = exportGraphVisualization(graph, { view: parsed.view, format: parsed.outputFormat, compact: parsed.compact });
+  if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, exported.text, { noClobber: parsed.noClobber });
+  else process.stdout.write(exported.text);
+}
+
 async function initializeTfliteWasm() {
   const wasm = await readFile(await resolveRuntimeAsset("tflite_wasm_audit_bg.wasm"));
   if (EXPECTED_TFLITE_WASM_SHA256 && createHash("sha256").update(wasm).digest("hex") !== EXPECTED_TFLITE_WASM_SHA256) {
@@ -422,9 +571,12 @@ function optionName(name) {
   return `--${name.replace(/[A-Z]/g, (character) => `-${character.toLowerCase()}`)}`;
 }
 
-async function analyzeArtifact({ input, filename, format, target, externalDataRoot, execuTorchBuild }) {
+async function analyzeArtifact({ input, filename, format, target, externalDataRoot, execuTorchBuild, scanPolicy, preanalyzedOnnx = null, externalDataMembers = null }) {
   if (input.kind === "bundle") {
-    const parsed = await readArtifactBundle(input.files);
+    const parsed = await readArtifactBundle(input.files, {
+      scanMode: scanPolicy.effective_mode,
+      onProgress: buildBundleScanProgressReporter(input.files),
+    });
     await verifyBundleSnapshot(input.files, parsed.analysis.artifact_bundle?.files);
     return parsed.analysis;
   }
@@ -435,8 +587,14 @@ async function analyzeArtifact({ input, filename, format, target, externalDataRo
   }
   if (format === "onnx") {
     const bytes = await readCliFileBytes(input);
-    const structural = analyzeOnnxModel(bytes, filename);
-    const externalDataFiles = await loadOnnxExternalData(input.path, structural, externalDataRoot);
+    const structural = preanalyzedOnnx || analyzeOnnxModel(bytes, filename);
+    if (externalDataMembers && scanPolicy.effective_mode === "structure") {
+      structural.onnx_external_data_structure_binding = buildOnnxExternalDataStructureBinding(structural, externalDataMembers);
+      return structural;
+    }
+    const externalDataFiles = externalDataMembers
+      ? await loadOnnxExternalDataMembers(structural, externalDataMembers)
+      : await loadOnnxExternalData(input.path, structural, externalDataRoot);
     return externalDataFiles.length ? analyzeOnnxModel(bytes, filename, null, { externalDataFiles }) : structural;
   }
 
@@ -464,10 +622,118 @@ async function analyzeArtifact({ input, filename, format, target, externalDataRo
   }
 
   if (format === "gguf" || format === "safetensors") {
-    return (await readMetadataModelFile(input.file, format)).analysis;
+    return (await readMetadataModelFile(input.file, format, {
+      scanMode: scanPolicy.effective_mode,
+      onProgress: buildTensorScanProgressReporter(input.file.size),
+    })).analysis;
   }
   if (format === "coreml") return (await readCoreMlModelFile(input.file)).analysis;
   throw new Error(`No analyzer is registered for ${format}.`);
+}
+
+function resolveScanPolicy(requested, format, input) {
+  const mode = String(requested || "auto").toLowerCase();
+  if (!["auto", "structure", "integrity", "full"].includes(mode)) {
+    throw new Error("--scan must be auto, structure, integrity, or full.");
+  }
+  if (input.kind === "bundle") {
+    const size = input.files.reduce((sum, file) => sum + file.size, 0);
+    const safeTensors = input.files.some((file) => /\.safetensors(?:\.index\.json)?$/i.test(file.name));
+    if (safeTensors) {
+      const effective = mode === "auto"
+        ? size > METADATA_STRUCTURE_DEFAULT_BYTES ? "structure" : size > METADATA_INTEGRITY_DEFAULT_BYTES ? "integrity" : "full"
+        : mode;
+      return createScanPolicy(mode, effective, effective === "structure"
+        ? "manifest_bound_shard_headers_and_tensor_directories_payload_numerical_scan_skipped"
+        : "manifest_bound_shards_streamed_with_payload_integrity", size);
+    }
+    if (!new Set(["auto", "full"]).has(mode)) throw new Error("Core ML package inputs currently support --scan full only.");
+    return createScanPolicy(mode, "full", "coreml_package_analyzer_requires_complete_manifest_selected_file_set", size);
+  }
+  const size = input.file.size;
+  if (["gguf", "safetensors"].includes(format)) {
+    const effective = mode === "auto"
+      ? size > METADATA_STRUCTURE_DEFAULT_BYTES ? "structure" : size > METADATA_INTEGRITY_DEFAULT_BYTES ? "integrity" : "full"
+      : mode;
+    return createScanPolicy(mode, effective, effective === "structure"
+      ? "range_parsed_header_and_tensor_directory_payload_numerical_scan_skipped"
+      : "range_parsed_header_and_streamed_full_declared_tensor_payloads", size);
+  }
+  if (mode !== "auto" && mode !== "full") {
+    throw new Error(`${format} does not provide a truthful ${mode} scan path; use --scan full.`);
+  }
+  if (["tflite", "onnx", "executorch"].includes(format) && size > MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES) {
+    throw new Error(`${format} artifact is ${size} bytes and exceeds the ${MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES}-byte fail-closed monolithic parser limit. Use an external-data or sharded representation where the format supports it; this CLI will not risk an unbounded full-file allocation.`);
+  }
+  return createScanPolicy(mode, "full", format === "coreml"
+    ? "range_parsed_coreml_protobuf_and_payload_contract"
+    : "complete_serialized_executable_artifact_parse", size);
+}
+
+function resolveOnnxExternalAutoScanPolicy(current, requested, analysis, closure) {
+  if (String(requested || "auto").toLowerCase() !== "auto") return current;
+  const elements = onnxExternalInitializerElementCount(analysis);
+  if (elements == null || elements <= BigInt(MAX_ONNX_DECODED_ELEMENTS)) return current;
+  const totalBytes = (closure?.members || []).reduce((sum, member) => {
+    const value = member?.byte_length?.number ?? Number(member?.byte_length?.decimal);
+    return Number.isSafeInteger(value) && value >= 0 ? sum + value : sum;
+  }, 0);
+  return createScanPolicy(
+    "auto",
+    "structure",
+    `onnx_external_initializer_elements_${elements}_exceed_decoder_safety_limit_${MAX_ONNX_DECODED_ELEMENTS}`,
+    totalBytes,
+  );
+}
+
+function createScanPolicy(requested, effective, reason, byteLength) {
+  return {
+    schema: "deepbom.cli_scan_policy.v1",
+    requested_mode: requested,
+    effective_mode: effective,
+    artifact_byte_length: { decimal: String(byteLength), number: Number.isSafeInteger(byteLength) ? byteLength : null },
+    reason,
+    boundary: effective === "structure"
+      ? "Header, metadata, tensor descriptors, serialized ranges, and storage cardinality are assessed. Tensor payload numerical integrity is explicitly not assessed."
+      : "Full declared tensor payload ranges are streamed for container integrity where supported. Executable graph formats use their complete parser contract; runtime execution remains outside scope.",
+  };
+}
+
+function buildTensorScanProgressReporter(totalBytes) {
+  if (!process.stderr.isTTY && process.env.DEEPBOM_PROGRESS !== "1") return undefined;
+  let last = 0;
+  return (event) => {
+    const now = Date.now();
+    if (now - last < 1000 && event.index + 1 < event.count) return;
+    last = now;
+    process.stderr.write(`deepbom: PAYLOAD ${event.index + 1}/${event.count} ${event.tensor} ${event.bytes_read}/${event.tensor_bytes} bytes (artifact ${totalBytes} bytes)\n`);
+  };
+}
+
+function buildBundleScanProgressReporter(files) {
+  if (!process.stderr.isTTY && process.env.DEEPBOM_PROGRESS !== "1") return undefined;
+  const totalBytes = files.reduce((sum, file) => sum + Number(file.size || 0), 0);
+  let last = 0;
+  return (event = {}) => {
+    const now = Date.now();
+    if (now - last < 1000 && event.phase !== "complete") return;
+    last = now;
+    const index = Number.isSafeInteger(event.index) ? event.index + 1 : null;
+    const count = Number.isSafeInteger(event.count) ? event.count : null;
+    const item = index != null && count != null ? ` ${index}/${count}` : "";
+    const pathLabel = event.path ? ` ${String(event.path).slice(0, 120)}` : "";
+    process.stderr.write(`[${String(event.phase || "ANALYZE").toUpperCase()}]${item}${pathLabel} · package ${formatProgressBytes(totalBytes)}\n`);
+  };
+}
+
+function formatProgressBytes(value) {
+  const bytes = Number(value || 0);
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ["KiB", "MiB", "GiB", "TiB"];
+  let amount = bytes / 1024;
+  let index = 0;
+  while (amount >= 1024 && index < units.length - 1) { amount /= 1024; index += 1; }
+  return `${amount.toFixed(amount >= 100 ? 0 : amount >= 10 ? 1 : 2)} ${units[index]}`;
 }
 
 function packageIdentity(analysis, format, filename) {
@@ -476,6 +742,68 @@ function packageIdentity(analysis, format, filename) {
   if (!/^[a-f0-9]{64}$/.test(sha256)) throw new Error("Package analyzer did not emit a canonical SHA-256 identity.");
   if (!Number.isSafeInteger(size) || size <= 0) throw new Error("Package analyzer did not emit a valid aggregate byte size.");
   return { filename, format, size, sha256 };
+}
+
+function buildCliArtifactSet(artifact, acquisition, analysis, closure) {
+  const bundleFiles = Array.isArray(analysis?.artifact_bundle?.files) ? analysis.artifact_bundle.files : [];
+  const closureFiles = Array.isArray(closure?.members) ? closure.members : [];
+  const sourceFiles = closureFiles.length ? closureFiles : bundleFiles;
+  const primaryIndex = sourceFiles.length ? selectArtifactSetPrimary(sourceFiles) : 0;
+  const files = sourceFiles.length ? sourceFiles.map((row, index) => ({
+    role: index === primaryIndex ? "primary" : artifactSetRole(row.role),
+    path: String(row.path),
+    sha256: String(row.sha256),
+    byte_length: normalizeExactBytes(row.byte_length),
+  })) : [{
+    role: "primary",
+    path: artifact.filename,
+    sha256: artifact.sha256,
+    byte_length: { decimal: String(artifact.size), number: artifact.size },
+  }];
+  return finalizeArtifactSet({
+    schema: "deepbom.artifact_set.v1",
+    evidence_class: "OBSERVED_ACQUISITION",
+    source: acquisition?.source || {
+      kind: "local",
+      canonical_locator: `local:${artifact.filename}`,
+      immutability: { kind: "sha256", value: artifact.sha256 },
+    },
+    subject: {
+      filename: artifact.filename,
+      format: artifact.format,
+      sha256: artifact.sha256,
+      byte_length: { decimal: String(artifact.size), number: artifact.size },
+      identity_basis: sourceFiles.length ? "canonical_manifest_bound_file_set" : "artifact_file_bytes",
+    },
+    files,
+    trust: {
+      remote_code_execution: "forbidden",
+      pickle_execution: "forbidden",
+      model_code_execution: "forbidden",
+    },
+  });
+}
+
+function selectArtifactSetPrimary(files) {
+  const preferred = ["shard_index", "package_manifest", "root_model"];
+  for (const role of preferred) {
+    const index = files.findIndex((row) => row.role === role);
+    if (index >= 0) return index;
+  }
+  return 0;
+}
+
+function artifactSetRole(role) {
+  if (["tensor_shard", "weights"].includes(role)) return "shard";
+  if (["architecture_config", "quantization_config", "configuration"].includes(role)) return "configuration";
+  if (["shard_index", "package_manifest"].includes(role)) return "manifest";
+  return "sidecar";
+}
+
+function normalizeExactBytes(value) {
+  const decimal = String(value?.decimal ?? value);
+  const exact = BigInt(decimal);
+  return { decimal, number: exact <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(exact) : null };
 }
 
 async function resolveRuntimeAsset(filename) {
@@ -732,6 +1060,23 @@ function buildCapabilitiesSummary(capabilities) {
   ].join("\n");
 }
 
+function buildAcceleratorSummary(profile) {
+  const lines = [
+    `DEEPBOM ${VERSION} NVIDIA accelerator observation`,
+    `Profile: sha256:${profile.profile_sha256}`,
+    `Devices: ${profile.devices.length}`,
+  ];
+  for (const device of profile.devices) {
+    lines.push(`  - GPU ${device.index}: ${device.name} | CC ${device.compute_capability} | ${formatBytes(device.memory_total_bytes.decimal)}`);
+  }
+  lines.push(`Driver: ${profile.software.nvidia_driver.version}`);
+  lines.push(`CUDA toolkit: ${profile.software.cuda_toolkit.version || profile.software.cuda_toolkit.status}`);
+  lines.push(`TensorRT: ${profile.software.tensorrt.version || profile.software.tensorrt.status}`);
+  lines.push("GPU roofline: not assessable without exact SM and memory-interface contracts.");
+  lines.push(`Evidence boundary: ${profile.interpretation_boundary}`);
+  return `${lines.join("\n")}\n`;
+}
+
 function displayValue(value) {
   if (typeof value === "string") return value;
   return JSON.stringify(value, bigintReplacer);
@@ -818,9 +1163,13 @@ function parseArguments(argv) {
   const first = values[0] || "";
   if (["-h", "--help", "help"].includes(first)) return { help: true };
   if (["-v", "--version", "version"].includes(first)) return { version: true };
-  const command = ["audit", "gguf", "verify", "diff", "explore", "capabilities"].includes(first) ? values.shift() : "audit";
+  const command = ["audit", "gguf", "verify", "diff", "explore", "graph", "capabilities", "accelerator"].includes(first) ? values.shift() : "audit";
+  const acceleratorAction = command === "accelerator" ? values.shift() || "" : "";
+  const acceleratorProvider = command === "accelerator" ? values.shift() || "" : "";
   const parsed = {
     command,
+    acceleratorAction,
+    acceleratorProvider,
     input: "",
     candidate: "",
     target: DEFAULT_TARGET,
@@ -828,7 +1177,8 @@ function parseArguments(argv) {
     targetProfile: "",
     contract: "",
     request: "",
-    outputFormat: "analysis",
+    view: command === "graph" ? "structure" : "",
+    outputFormat: command === "graph" ? "svg" : "analysis",
     output: "",
     policyOutput: "",
     failOn: "none",
@@ -845,10 +1195,22 @@ function parseArguments(argv) {
     tensorrtLlmConfig: "",
     tensorrtLlmBinding: "",
     llmMemoryProfile: "",
+    scan: "auto",
+    scanExplicit: false,
+    acceleratorProfile: "",
+    acceleratorDeviceIndex: null,
     externalDataRoot: "",
     executorchBuild: "",
+    cacheDir: "",
+    expectedSha256: "",
+    offline: false,
+    maxDownloadGib: 50,
+    maxDownloadExplicit: false,
+    deviceIndex: null,
+    includeDeviceIdentifiers: false,
     json: false,
     compact: false,
+    formatExplicit: false,
   };
   while (values.length) {
     const token = values.shift();
@@ -859,6 +1221,7 @@ function parseArguments(argv) {
     else if (token === "--target-profile") parsed.targetProfile = requiredValue(values, token);
     else if (token === "--contract") parsed.contract = requiredValue(values, token);
     else if (token === "--request") parsed.request = requiredValue(values, token);
+    else if (token === "--view") parsed.view = requiredValue(values, token).toLowerCase();
     else if (token === "--context") parsed.context = positiveInteger(requiredValue(values, token), token);
     else if (token === "--batch") parsed.batch = positiveInteger(requiredValue(values, token), token);
     else if (token === "--state-bits") parsed.stateBits = stateBits(requiredValue(values, token));
@@ -869,9 +1232,27 @@ function parseArguments(argv) {
     else if (token === "--tensorrt-llm-config") parsed.tensorrtLlmConfig = requiredValue(values, token);
     else if (token === "--tensorrt-llm-binding") parsed.tensorrtLlmBinding = requiredValue(values, token);
     else if (token === "--llm-memory-profile") parsed.llmMemoryProfile = requiredValue(values, token);
+    else if (token === "--scan") {
+      parsed.scan = requiredValue(values, token).toLowerCase();
+      parsed.scanExplicit = true;
+    }
+    else if (token === "--accelerator-profile") parsed.acceleratorProfile = requiredValue(values, token);
+    else if (token === "--accelerator-device") parsed.acceleratorDeviceIndex = parseNonNegativeInteger(requiredValue(values, token), token);
     else if (token === "--external-data-dir") parsed.externalDataRoot = requiredValue(values, token);
     else if (token === "--executorch-build") parsed.executorchBuild = requiredValue(values, token);
-    else if (token === "--format") parsed.outputFormat = requiredValue(values, token).toLowerCase();
+    else if (token === "--cache-dir") parsed.cacheDir = requiredValue(values, token);
+    else if (token === "--expected-sha256") parsed.expectedSha256 = requiredValue(values, token).toLowerCase();
+    else if (token === "--offline") parsed.offline = true;
+    else if (token === "--max-download-gib") {
+      parsed.maxDownloadGib = boundedPositiveInteger(requiredValue(values, token), token, 1024);
+      parsed.maxDownloadExplicit = true;
+    }
+    else if (token === "--device") parsed.deviceIndex = parseNonNegativeInteger(requiredValue(values, token), token);
+    else if (token === "--include-device-identifiers") parsed.includeDeviceIdentifiers = true;
+    else if (token === "--format") {
+      parsed.outputFormat = requiredValue(values, token).toLowerCase();
+      parsed.formatExplicit = true;
+    }
     else if (token === "--output" || token === "-o") parsed.output = requiredValue(values, token);
     else if (token === "--policy-output") parsed.policyOutput = requiredValue(values, token);
     else if (token === "--fail-on") parsed.failOn = normalizeFailOn(requiredValue(values, token));
@@ -887,8 +1268,18 @@ function parseArguments(argv) {
     else if (parsed.command === "diff" && !parsed.candidate) parsed.candidate = token;
     else throw new Error(`Unexpected positional argument: ${token}`);
   }
-  if (!new Set(["analysis", "envelope", "cyclonedx", "sarif"]).has(parsed.outputFormat)) {
-    throw new Error("--format must be analysis, envelope, cyclonedx, or sarif.");
+  if (parsed.command === "graph" && (parsed.json || parsed.compact)) {
+    if (parsed.formatExplicit && parsed.outputFormat !== "json") throw new Error("--json or --compact conflicts with an explicit non-JSON graph --format.");
+    parsed.outputFormat = "json";
+  }
+  const outputFormats = parsed.command === "graph"
+    ? new Set(["svg", "png", "html", "mermaid", "dot", "json"])
+    : new Set(["analysis", "envelope", "cyclonedx", "sarif"]);
+  if (!outputFormats.has(parsed.outputFormat)) {
+    throw new Error(parsed.command === "graph" ? "--format must be svg, png, html, mermaid, dot, or json for graph." : "--format must be analysis, envelope, cyclonedx, or sarif.");
+  }
+  if (parsed.command === "graph" && !new Set(["structure", "placement", "quantization", "architecture"]).has(parsed.view)) {
+    throw new Error("--view must be structure, placement, quantization, or architecture.");
   }
   if (!new Set(["text", "json"]).has(parsed.errorFormat)) throw new Error("--error-format must be text or json.");
   if (parsed.json && parsed.compact) throw new Error("--json and --compact are mutually exclusive.");
@@ -910,6 +1301,18 @@ function normalizeTimestamp(value) {
 function positiveInteger(value, option) {
   const parsed = Number(value);
   if (!Number.isSafeInteger(parsed) || parsed <= 0) throw new Error(`${option} must be a positive safe integer.`);
+  return parsed;
+}
+
+function boundedPositiveInteger(value, option, maximum) {
+  const parsed = positiveInteger(value, option);
+  if (parsed > maximum) throw new Error(`${option} must not exceed ${maximum}.`);
+  return parsed;
+}
+
+function parseNonNegativeInteger(value, option) {
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 0) throw new Error(`${option} must be a non-negative safe integer.`);
   return parsed;
 }
 
@@ -947,6 +1350,11 @@ async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_B
 
 function printHelp() {
   process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     GGUF context-length scenario\n  --batch <count>        GGUF scenario batch size (default: 1)\n  --state-bits <bits>    GGUF KV-state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the static lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis, envelope, cyclonedx, or sarif (audit/gguf only)\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Exit 2 for findings at/above informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Emit the complete formatted evidence JSON\n  --compact              Emit the complete compact evidence JSON\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
+  process.stdout.write("\nNVIDIA accelerator binding:\n  --accelerator-profile <json>\n                          Bind an observed NVIDIA host profile without inferring selected-build or runtime assignment\n  --accelerator-device <index>\n                          Select one device when the bound profile contains multiple NVIDIA devices\n");
+  process.stdout.write("\nNVIDIA accelerator observation:\n  deepbom accelerator collect nvidia [--device <index>] [--json|--compact]\n  --device <index>        Collect one NVIDIA device index (default: all devices)\n  --include-device-identifiers\n                          Include raw GPU UUID and PCI bus ID; hashes are always emitted\n");
+  process.stdout.write("\nRemote immutable artifact input:\n  hf://owner/repo@<40-hex-commit>/path\n  gs://bucket/object#generation=<generation>\n  https://host/path#sha256=<64-hex>\n  --expected-sha256 <hex> Add an independent content digest requirement\n  --cache-dir <directory> Use a content-addressed cache directory\n  --offline               Refuse network access and require a verified cache receipt\n  --max-download-gib <n>  Bound one remote download (default: 50, maximum: 1024)\n");
+  process.stdout.write("\nBounded scan policy:\n  --scan <mode>           auto, structure, integrity, or full\n  GGUF/SafeTensors use range reads; auto selects structure above 10 GiB and streamed integrity above 2 GiB.\n  Monolithic TFLite/ONNX/ExecuTorch files above 1 GiB fail before full-file allocation.\n");
+  process.stdout.write("\nDeterministic graph export:\n  deepbom graph <artifact> --view structure --format svg -o graph.svg\n  --view <kind>           structure, placement, quantization, or architecture\n  --format <kind>         svg, png, html, mermaid, dot, or json for graph\n");
   process.stdout.write("\nTensorRT optimized-engine option:\n  --tensorrt-engine-inspector <json>\n                          Import identity-bound TensorRT optimized-engine inspector evidence\n");
   process.stdout.write("\nExecuTorch selected-build option:\n  --executorch-build <json>\n                          Bind backend/operator inventories and runtime binary digests to a PTE audit\n");
 }

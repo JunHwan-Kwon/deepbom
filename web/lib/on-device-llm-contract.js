@@ -292,6 +292,37 @@ function exactLogicalTensorBytes(tensor) {
 
 function graphTensorStorage(analysis) {
   const format = String(analysis?.format || "").toLowerCase();
+  const structureBinding = format === "onnx" ? analysis?.onnx_external_data_structure_binding : null;
+  if (structureBinding?.range_conservation_status === "complete") {
+    const elementCount = exactFrom(structureBinding.declared_element_count);
+    const byteLength = exactFrom(structureBinding.declared_payload_bytes);
+    const encodings = (structureBinding.encoding_inventory || []).map((row) => {
+      const rowElements = exactFrom(row.element_count);
+      const rowBytes = exactFrom(row.declared_payload_bytes);
+      return {
+        dtype: String(row.dtype || "UNKNOWN"),
+        tensor_count: Number(row.tensor_count || 0),
+        element_count: rowElements != null && rowElements <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(rowElements) : null,
+        element_count_decimal: rowElements == null ? null : String(rowElements),
+        byte_length: rowBytes != null && rowBytes <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(rowBytes) : null,
+        byte_length_decimal: rowBytes == null ? null : String(rowBytes),
+        effective_bits_per_element: row.effective_bits_per_element ?? null,
+      };
+    });
+    return {
+      status: "assessed_serialized_constant_structure_payload_values_not_assessed",
+      element_count: elementCount <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(elementCount) : null,
+      element_count_decimal: String(elementCount),
+      byte_length: byteLength <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(byteLength) : null,
+      byte_length_decimal: String(byteLength),
+      unique_byte_length: structureBinding.unique_payload_bytes?.number ?? null,
+      unique_byte_length_decimal: structureBinding.unique_payload_bytes?.decimal ?? null,
+      effective_bits_per_element: elementCount > 0n ? Number(byteLength * 8_000_000n / elementCount) / 1_000_000 : null,
+      numerical_payload_decode: structureBinding.numerical_payload_decode,
+      encodings,
+      format,
+    };
+  }
   const tensors = Array.isArray(analysis?.tensors) ? analysis.tensors : [];
   const constants = tensors.filter((tensor) => tensor?.constant_buffer === true
     || Number(tensor?.initializer_available_bytes || tensor?.initializer_bytes || tensor?.buffer_data_length || 0) > 0);

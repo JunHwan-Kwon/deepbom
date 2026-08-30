@@ -6,7 +6,7 @@ import process from "node:process";
 
 export const CAPTURE_RUN_SCHEMA = "deepbom.native_capture_run.v1.2";
 export const CAPTURE_MANIFEST_SCHEMA = "deepbom.native_capture_manifest.v4";
-export const RUNTIME_ASSIGNMENT_SCHEMA = "deepbom.runtime_assignment.v1.9";
+export const RUNTIME_ASSIGNMENT_SCHEMA = "deepbom.runtime_assignment.v1.10";
 export const CAPTURE_PACKAGE_SCHEMA = "deepbom.native_capture_package.v1.1";
 export const TENSORFLOW_SOURCE_COMMIT = "87bbf65b8d23d3f06912b1b2183587e1884bc45c";
 export const XNNPACK_SOURCE_COMMIT = "23a67314f7afdbb76191589ae090d82bf55afbfa";

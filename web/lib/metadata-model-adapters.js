@@ -1,4 +1,4 @@
-import { SAFETENSORS_NUMERICAL_SOURCE, safeTensorsNumericalSourceEvidence, scanSerializedTensorPayloads } from "./tensor-numerical-integrity.js";
+import { GGUF_DEQUANTIZATION_SOURCE, SAFETENSORS_NUMERICAL_SOURCE, safeTensorsNumericalSourceEvidence, scanSerializedTensorPayloads } from "./tensor-numerical-integrity.js";
 import { buildGgufBackendCompatibility } from "./gguf-backend-contract.js";
 import { buildOnDeviceLlmContract } from "./on-device-llm-contract.js";
 import { buildSafeTensorsQuantizationContract } from "./safetensors-quantization-contract.js";
@@ -729,8 +729,9 @@ function attachNumericalIntegrity(analysis, numericalIntegrity) {
   return analysis;
 }
 
-export async function readMetadataModelFile(file, format, { onProgress } = {}) {
+export async function readMetadataModelFile(file, format, { onProgress, scanMode = "full" } = {}) {
   const normalized = String(format || "").toLowerCase();
+  if (!["structure", "integrity", "full"].includes(scanMode)) throw new Error(`unsupported metadata scan mode ${scanMode}`);
   if (normalized === "safetensors") {
     const prefix = new Uint8Array(await file.slice(0, 8).arrayBuffer());
     if (prefix.length < 8) throw new Error("truncated SafeTensors length prefix");
@@ -738,8 +739,9 @@ export async function readMetadataModelFile(file, format, { onProgress } = {}) {
     if (headerLength > MAX_SAFE_TENSORS_HEADER) throw new Error(`SafeTensors header exceeds ${MAX_SAFE_TENSORS_HEADER} bytes`);
     const bytes = new Uint8Array(await file.slice(0, 8 + headerLength).arrayBuffer());
     const analysis = safeTensorsAnalysis(bytes, file.name, file.size);
-    attachNumericalIntegrity(analysis, await scanSerializedTensorPayloads(file, analysis, { onProgress }));
-    return { analysis, retainedBytes: bytes, payloadLoaded: false, payloadScanned: true };
+    if (scanMode === "structure") attachNumericalIntegrity(analysis, skippedNumericalIntegrity(analysis, file.size));
+    else attachNumericalIntegrity(analysis, await scanSerializedTensorPayloads(file, analysis, { onProgress }));
+    return { analysis, retainedBytes: bytes, payloadLoaded: false, payloadScanned: scanMode !== "structure" };
   }
   if (normalized === "gguf") {
     let length = Math.min(file.size, 64 * 1024);
@@ -747,8 +749,9 @@ export async function readMetadataModelFile(file, format, { onProgress } = {}) {
       const bytes = new Uint8Array(await file.slice(0, length).arrayBuffer());
       try {
         const analysis = ggufAnalysis(bytes, file.name, file.size);
-        attachNumericalIntegrity(analysis, await scanSerializedTensorPayloads(file, analysis, { onProgress }));
-        return { analysis, retainedBytes: bytes, payloadLoaded: false, payloadScanned: true };
+        if (scanMode === "structure") attachNumericalIntegrity(analysis, skippedNumericalIntegrity(analysis, file.size));
+        else attachNumericalIntegrity(analysis, await scanSerializedTensorPayloads(file, analysis, { onProgress }));
+        return { analysis, retainedBytes: bytes, payloadLoaded: false, payloadScanned: scanMode !== "structure" };
       } catch (error) {
         if (!(error instanceof NeedMoreData)) throw error;
         const next = Math.max(length * 2, error.requiredBytes);
@@ -758,4 +761,43 @@ export async function readMetadataModelFile(file, format, { onProgress } = {}) {
     }
   }
   throw new Error(`metadata adapter is not implemented for ${normalized || "unknown"}`);
+}
+
+function skippedNumericalIntegrity(analysis, sourceBytes) {
+  const records = analysis.tensors.map((tensor) => ({
+    schema: "deepbom.tensor_numerical_integrity.tensor.v1",
+    status: "not_assessed_scan_policy_structure",
+    evidence_class: "NOT_ASSESSABLE",
+    tensor_index: tensor.index,
+    tensor_name: tensor.name,
+    dtype: tensor.dtype,
+    shape: tensor.shape,
+    byte_length: Number.isSafeInteger(tensor.byte_length) ? tensor.byte_length : null,
+    reason: "Payload numerical decoding was intentionally skipped by the structure scan policy.",
+  }));
+  const declaredBytes = analysis.tensors.reduce((sum, tensor) => sum + Number(tensor.byte_length || 0), 0);
+  return {
+    schema: "deepbom.tensor_numerical_integrity.v1",
+    status: "not_assessed_scan_policy_structure",
+    evidence_class: "NOT_ASSESSABLE",
+    scan_scope: "metadata_and_tensor_directory_only",
+    tensor_count: records.length,
+    assessed_tensor_count: 0,
+    unassessed_tensor_count: records.length,
+    declared_tensor_bytes: declaredBytes,
+    assessed_tensor_bytes: 0,
+    unassessed_tensor_bytes: declaredBytes,
+    byte_conservation_status: "complete_descriptor_cardinality_payload_not_scanned",
+    source_file_bytes: sourceBytes,
+    decoded_value_count: 0,
+    nonfinite_value_count: null,
+    exact_zero_value_count: null,
+    all_zero_tensor_count: null,
+    constant_tensor_count: null,
+    invalid_encoding_value_count: null,
+    nonfinite_scale_block_count: null,
+    tensor_records: records,
+    decoder_source: analysis.format === "gguf" ? GGUF_DEQUANTIZATION_SOURCE : safeTensorsNumericalSourceEvidence(),
+    limitations: [{ reason: "Payload numerical integrity requires --scan integrity or --scan full." }],
+  };
 }

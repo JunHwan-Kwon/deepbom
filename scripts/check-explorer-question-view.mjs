@@ -41,7 +41,7 @@ const onnx = {
   format: "onnx",
   operator_count: 5,
   ops: Array.from({ length: 5 }, (_, index) => ({ index, name: "Add" })),
-  ort_ep_portability_frontier: { execution_provider_count: 8 },
+  ort_ep_portability_frontier: { execution_provider_count: 9 },
 };
 const onnxGlance = {
   ...baseGlance,
@@ -52,7 +52,7 @@ const onnxGlance = {
 const onnxSummary = buildExplorerQuestionSummary(onnx, onnxGlance, {
   runtimeAssignmentEvidence: { evidence_class: "OBSERVED_RUNTIME", mapped_op_count: 3 },
 });
-expect(item(onnxSummary, "fallback").answer.includes("8 source-backed EP profiles"), "ONNX fallback entry must distinguish source profiles from assignment.");
+expect(item(onnxSummary, "fallback").answer.includes("9 source-backed EP profiles"), "ONNX fallback entry must distinguish source profiles from assignment.");
 expect(item(onnxSummary, "runtime").state === "issue"
   && item(onnxSummary, "runtime").answer.includes("3/5"), "Partial runtime assignment coverage must retain its exact denominator.");
 

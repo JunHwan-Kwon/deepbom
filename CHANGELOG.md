@@ -4,6 +4,23 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Added immutable Hugging Face, GCS-generation, and SHA-256-pinned HTTPS
+  acquisition receipts with a content-addressed cache and no remote code or
+  pickle execution.
+- Added source-backed ORT CUDA eligibility data, an observed NVIDIA host
+  profile collector, conservative LLM VRAM lower-bound binding, and explicit
+  separation of host capability, selected build, assignment, and execution.
+- Added canonical graph IR plus deterministic SVG, PNG, self-contained HTML,
+  Mermaid, DOT, and JSON exports. GGUF and SafeTensors remain architecture or
+  storage projections rather than invented executable DAGs.
+- Added bounded `auto`, `structure`, `integrity`, and `full` scan policies for
+  streamed GGUF/SafeTensors analysis and a fail-closed 1 GiB limit before
+  monolithic ONNX, TFLite, or ExecuTorch full-file allocation.
+- Raised the handwritten runtime ceiling from 11,000 KiB to 11,048 KiB for the
+  separately modularized acquisition, accelerator binding, graph IR,
+  deterministic PNG, and ONNX external-data range-ledger surfaces; per-file
+  and private-source ceilings remain unchanged.
+
 ## 1.95.0 - 2026-08-30
 
 - Added machine-readable `capabilities` discovery and a canonical cross-format

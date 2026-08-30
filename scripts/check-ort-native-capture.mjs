@@ -107,10 +107,16 @@ try {
   const productionPreview = previewOrtProfileMapping(productionProfile, analysis, verifiedProduction.metadata);
   assert.equal(productionPreview.assignment_count, 0, "optimized unnamed runtime nodes must not be assigned to original ops");
   assert.equal(productionPreview.unresolved_runtime_node_count, 8);
-  assert.throws(
-    () => buildOrtRuntimeAssignmentDocument(productionProfile, analysis, { ...verifiedProduction.metadata, profileSha256: verifiedProduction.profileSha256, nativeCaptureEvidence: verifiedProduction.evidence }),
-    /No ONNX Runtime profile node can be bound deterministically/,
-  );
+  const productionDocument = buildOrtRuntimeAssignmentDocument(productionProfile, analysis, {
+    ...verifiedProduction.metadata,
+    profileSha256: verifiedProduction.profileSha256,
+    nativeCaptureEvidence: verifiedProduction.evidence,
+  });
+  const normalizedProduction = parseRuntimeAssignmentDocument(JSON.stringify(productionDocument), analysis, { fileSha256: sha256(await readFile(productionPath)) });
+  assert.equal(normalizedProduction.evidence_class, "OBSERVED_RUNTIME_GRAPH_MAPPING_UNRESOLVED");
+  assert.equal(normalizedProduction.assignment_count, 0);
+  assert.equal(normalizedProduction.source.assignment_semantics, "runtime_graph_observed_original_graph_mapping_unresolved");
+  assert.equal(normalizedProduction.source.adapter.unresolved_runtime_node_count, 8);
 
   const tamperedEnvelope = JSON.parse(identityBytes.toString("utf8"));
   tamperedEnvelope.profile.json += " ";

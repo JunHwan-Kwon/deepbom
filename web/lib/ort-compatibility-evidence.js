@@ -102,6 +102,7 @@ export function validateProtectedOrtCompatibilityEvidence(analysis, evidence) {
 function validateSourceConditionInventory(inventory) {
   const expected = new Map([
     ["wasm_cpu", [292, 611, 0, 0, 0]],
+    ["cuda", [229, 482, 0, 0, 0]],
     ["webgpu", [118, 0, 10, 12, 9]],
     ["webnn", [112, 0, 69, 4, 0]],
     ["qnn", [102, 0, 108, 102, 102]],
@@ -112,7 +113,7 @@ function validateSourceConditionInventory(inventory) {
   ]);
   if (!inventory || inventory.schema !== ORT_ARTIFACT_CONTRACT_SCHEMA
     || inventory.status !== "complete_for_pinned_source_extractors"
-    || Number(inventory.source_rule_count) !== 938
+    || Number(inventory.source_rule_count) !== 1167
     || Number(inventory.cpu_registration_variant_count) !== 611
     || Number(inventory.cpu_registration_variant_with_signature_count) !== 611
     || Number(inventory.cpu_registration_variant_with_type_constraint_count) !== 611

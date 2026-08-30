@@ -13,6 +13,10 @@ THIRD_PARTY_NOTICES.md
 bin/deepbom-automation.mjs
 bin/deepbom-input.mjs
 bin/deepbom.mjs
+bin/graph-png-export.mjs
+bin/nvidia-accelerator-collector.mjs
+bin/remote-artifact-closure.mjs
+bin/remote-artifact-resolver.mjs
 build.rs
 channels/LICENSE
 channels/README.md
@@ -203,6 +207,7 @@ scripts/check-channel-vitality-viewer.mjs
 scripts/check-channel-vitality.mjs
 scripts/check-ci-deploy-contract.mjs
 scripts/check-cli-automation.mjs
+scripts/check-cli-graph-export.mjs
 scripts/check-cli.mjs
 scripts/check-contract-migration-viewer.mjs
 scripts/check-contract-migration.mjs
@@ -279,6 +284,7 @@ scripts/check-model-file-contract.mjs
 scripts/check-native-capture-pipeline.mjs
 scripts/check-numerical-abi-propagation-viewer.mjs
 scripts/check-numerical-abi-propagation.mjs
+scripts/check-nvidia-accelerator-profile.mjs
 scripts/check-offline-device-controller.mjs
 scripts/check-on-device-llm-v2.mjs
 scripts/check-on-device-llm-viewer.mjs
@@ -329,6 +335,7 @@ scripts/check-quant-research-applicability.mjs
 scripts/check-quantization-lattice-viewer.mjs
 scripts/check-quantization-lattice.mjs
 scripts/check-regulatory-bundle-contract.mjs
+scripts/check-remote-artifact-resolver.mjs
 scripts/check-requantization-fidelity-viewer.mjs
 scripts/check-requantization-fidelity.mjs
 scripts/check-research-visuals.mjs
@@ -541,6 +548,7 @@ web/explorer-evidence.css
 web/explorer-question.css
 web/explorer-redesign.css
 web/index.html
+web/lib/accelerator-profile-binding.js
 web/lib/access-policy.js
 web/lib/account-ui.js
 web/lib/accumulator-atlas.js
@@ -558,6 +566,7 @@ web/lib/arena-viewer.js
 web/lib/artifact-bundle.js
 web/lib/artifact-evidence-envelope.js
 web/lib/artifact-overview.js
+web/lib/artifact-set.js
 web/lib/audit-progress.js
 web/lib/audit-ui.js
 web/lib/auth-labels.js
@@ -623,6 +632,8 @@ web/lib/gguf-backend-contract.generated.js
 web/lib/gguf-backend-contract.js
 web/lib/gguf-codebooks.generated.js
 web/lib/gguf-runtime-environment.js
+web/lib/graph-export.js
+web/lib/graph-ir.js
 web/lib/graph-layout.js
 web/lib/graph-topology.js
 web/lib/graph-ui.js
@@ -651,6 +662,7 @@ web/lib/model-glance.js
 web/lib/node-view.js
 web/lib/numerical-abi-propagation-viewer.js
 web/lib/numerical-abi-propagation.js
+web/lib/nvidia-accelerator-profile.js
 web/lib/offline-device-controller.js
 web/lib/on-device-llm-contract.js
 web/lib/on-device-llm-runtime-manifest.js
@@ -663,6 +675,7 @@ web/lib/onnx-domain-viewer.js
 web/lib/onnx-einsum-contract.js
 web/lib/onnx-extended-shape-inference.js
 web/lib/onnx-external-data-status.js
+web/lib/onnx-external-data-structure-binding.js
 web/lib/onnx-external-data.js
 web/lib/onnx-ml-imputer-conformance.js
 web/lib/onnx-ml-imputer.js

@@ -4,6 +4,14 @@ import { sha256TextHex } from "./sha256-sync.js";
 export const RUNTIME_BACKEND_EVIDENCE_LEDGER_SCHEMA = "deepbom.runtime_backend_evidence_ledger.v1";
 
 const PROVIDERS = Object.freeze([
+  Object.freeze({ id: "cuda", label: "CUDA", source_profile: "cuda" }),
+  Object.freeze({
+    id: "tensorrt",
+    label: "TensorRT",
+    source_profile: null,
+    separate_static_contract: "deepbom.tensorrt_static_preflight.v1",
+  }),
+  Object.freeze({ id: "directml", label: "DirectML", source_profile: "directml" }),
   Object.freeze({ id: "qnn", label: "QNN", source_profile: "qnn" }),
   Object.freeze({ id: "nnapi", label: "NNAPI", source_profile: "nnapi" }),
   Object.freeze({ id: "coreml", label: "Core ML", source_profile: "coreml" }),
@@ -20,7 +28,10 @@ export function buildRuntimeBackendEvidenceLedger(runtimeEvidence) {
   const selected = capture?.selected_build_provider_binding || null;
   const inventoryComplete = selected?.provider_inventory_status === "OBSERVED_FROM_ORT_LIST_SUPPORTED_BACKENDS";
   const assignments = Array.isArray(runtimeEvidence.assignments) ? runtimeEvidence.assignments : [];
-  const rows = PROVIDERS.map((provider) => buildProviderRow(provider, selected, inventoryComplete, assignments));
+  const runtimeGraphProfile = (capture?.paired_profile_runtime_graph?.profiles || [])
+    .find((profile) => profile.role === capture?.profile_role) || null;
+  const runtimeNodes = Array.isArray(runtimeGraphProfile?.nodes) ? runtimeGraphProfile.nodes : [];
+  const rows = PROVIDERS.map((provider) => buildProviderRow(provider, selected, inventoryComplete, assignments, runtimeNodes));
   const body = {
     schema: RUNTIME_BACKEND_EVIDENCE_LEDGER_SCHEMA,
     evidence_class: "NORMALIZED_FROM_SEPARATE_SOURCE_BUILD_CAPABILITY_ASSIGNMENT_EXECUTION_LEDGERS",
@@ -30,9 +41,9 @@ export function buildRuntimeBackendEvidenceLedger(runtimeEvidence) {
     selected_build_inventory_status: selected?.provider_inventory_status || "not_observed",
     provider_count: rows.length,
     configured_inclusion_assessed_count: rows.filter((row) => row.configured_inclusion.status !== "not_assessed").length,
-    capability_acceptance_observed_count: rows.filter((row) => row.capability_acceptance.status === "accepted_by_observed_assignment").length,
+    capability_acceptance_observed_count: rows.filter((row) => row.capability_acceptance.status.startsWith("accepted_by_observed_")).length,
     assigned_provider_count: rows.filter((row) => row.assignment.assigned_original_op_count > 0).length,
-    executed_provider_count: rows.filter((row) => row.execution.executed_original_op_count > 0).length,
+    executed_provider_count: rows.filter((row) => row.execution.status === "observed_profile_events").length,
     providers: rows,
     interpretation_boundary: "Configured inclusion is read only from the selected runtime's complete backend inventory. Source eligibility, GetCapability acceptance, original-op assignment, and execution are separate layers. A missing assignment is never converted into rejection, and an observed assignment is not a microkernel or correctness claim.",
   };
@@ -45,22 +56,29 @@ export function validateRuntimeBackendEvidenceLedger(value, runtimeEvidence) {
   return true;
 }
 
-function buildProviderRow(provider, selected, inventoryComplete, assignments) {
+function buildProviderRow(provider, selected, inventoryComplete, assignments, runtimeNodes) {
   const binding = (selected?.bindings || []).find((row) => row.source_profile === provider.source_profile || normalizeProvider(row.backend_name) === provider.id) || null;
   const sourceListed = Boolean(binding?.source_profile)
     || (selected?.source_profiles_not_listed_by_selected_build || []).includes(provider.source_profile);
   const providerAssignments = assignments.filter((row) => normalizeProvider(row.provider) === provider.id);
-  const executed = providerAssignments.filter((row) => Number.isSafeInteger(Number(row.sample_count)) && Number(row.sample_count) > 0
+  const providerRuntimeNodes = runtimeNodes.filter((row) => normalizeProvider(row.provider) === provider.id);
+  const executionRows = providerRuntimeNodes.length ? providerRuntimeNodes : providerAssignments;
+  const executed = executionRows.filter((row) => Number.isSafeInteger(Number(row.sample_count)) && Number(row.sample_count) > 0
     && Number.isFinite(Number(row.duration_sum_us ?? row.duration_us)));
   const sampleCount = executed.reduce((sum, row) => sum + Number(row.sample_count || 0), 0);
   const duration = executed.reduce((sum, row) => sum + Number(row.duration_sum_us ?? row.duration_us ?? 0), 0);
+  const separateStaticContract = provider.separate_static_contract || null;
   return Object.freeze({
     provider_id: provider.id,
     label: provider.label,
     source_eligibility: {
-      status: sourceListed ? "source_profile_present" : selected ? "source_profile_not_loaded" : "not_assessed",
-      evidence_class: sourceListed ? "SOURCE_PINNED" : "NOT_ASSESSED",
+      status: sourceListed ? "source_profile_present"
+        : separateStaticContract ? "separate_static_preflight_required"
+          : selected ? "source_profile_not_loaded" : "not_assessed",
+      evidence_class: sourceListed ? "SOURCE_PINNED"
+        : separateStaticContract ? "NOT_ASSESSED_IN_ORT_SOURCE_RULEPACK" : "NOT_ASSESSED",
       source_profile: sourceListed ? provider.source_profile : null,
+      separate_static_contract: separateStaticContract,
     },
     configured_inclusion: {
       status: !selected || !inventoryComplete ? "not_assessed" : binding
@@ -72,9 +90,12 @@ function buildProviderRow(provider, selected, inventoryComplete, assignments) {
       binding_status: binding?.binding_status || null,
     },
     capability_acceptance: {
-      status: providerAssignments.length ? "accepted_by_observed_assignment" : "not_assessed",
-      evidence_class: providerAssignments.length ? "DERIVED_FROM_OBSERVED_RUNTIME_ASSIGNMENT" : "NOT_ASSESSED",
+      status: providerAssignments.length ? "accepted_by_observed_assignment"
+        : providerRuntimeNodes.length ? "accepted_by_observed_runtime_graph" : "not_assessed",
+      evidence_class: providerAssignments.length ? "DERIVED_FROM_OBSERVED_RUNTIME_ASSIGNMENT"
+        : providerRuntimeNodes.length ? "DERIVED_FROM_OBSERVED_RUNTIME_GRAPH_MAPPING_UNRESOLVED" : "NOT_ASSESSED",
       accepted_original_op_count: providerAssignments.length,
+      accepted_runtime_node_count: providerRuntimeNodes.length,
       rejection_not_inferred: true,
     },
     assignment: {
@@ -86,7 +107,8 @@ function buildProviderRow(provider, selected, inventoryComplete, assignments) {
     execution: {
       status: executed.length ? "observed_profile_events" : "not_observed",
       evidence_class: executed.length ? "OBSERVED_RUNTIME" : "NOT_OBSERVED",
-      executed_original_op_count: executed.length,
+      executed_original_op_count: providerAssignments.length,
+      executed_runtime_node_count: providerRuntimeNodes.length,
       event_sample_count: sampleCount,
       duration_sum_us: executed.length ? duration : null,
       correctness_status: "not_assessed",
@@ -97,6 +119,9 @@ function buildProviderRow(provider, selected, inventoryComplete, assignments) {
 function normalizeProvider(value) {
   const text = String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   if (text.includes("qnn")) return "qnn";
+  if (text.includes("tensorrt")) return "tensorrt";
+  if (text.includes("cuda")) return "cuda";
+  if (text.includes("directml") || text.startsWith("dml")) return "directml";
   if (text.includes("nnapi")) return "nnapi";
   if (text.includes("coreml")) return "coreml";
   if (text.includes("webgpu")) return "webgpu";

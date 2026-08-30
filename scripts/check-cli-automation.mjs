@@ -35,6 +35,11 @@ assert.deepEqual(capabilities.commands.find((row) => row.name === "audit").outpu
 assert.equal(capabilities.inputs.symbolic_stdin, false);
 assert.equal(capabilities.automation.atomic_file_output, true);
 assert.equal(capabilities.exit_codes[2].includes("policy"), true);
+assert.deepEqual(capabilities.commands.find((row) => row.name === "accelerator collect nvidia").outputs,
+  ["deepbom.accelerator_profile.v1"]);
+assert.equal(capabilities.inputs.remote_sources.huggingface, "full_commit_required");
+assert.equal(capabilities.inputs.remote_sources.remote_code_execution, false);
+assert.equal(capabilities.commands.find((row) => row.name === "graph").outputs.includes("deepbom.graph_ir.v1"), true);
 
 const syntheticEnvelope = {
   schema: "deepbom.artifact_evidence_envelope.v1",

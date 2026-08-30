@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.standardization_evidence.v1",
-  "snapshot_id": "standardization-ff90fd416d331ba7",
+  "snapshot_id": "standardization-568d44b030aa84ae",
   "hash_contract": {
     "algorithm": "SHA-256",
     "canonicalization": "RFC8785-JCS",
@@ -951,8 +951,8 @@
       "commit": "8c546c37b43caaca1fa25db430dab94b901cf277",
       "runtime_version": "1.26.0",
       "generated_inventory": {
-        "provider_source_count": 8,
-        "provider_rule_count": 938,
+        "provider_source_count": 9,
+        "provider_rule_count": 1167,
         "runtime_release_count": 32,
         "contrib_release_count": 29,
         "schema_history_count": 332
@@ -1295,8 +1295,8 @@
     {
       "id": "runtimeSidecarCheck",
       "path": "scripts/check-runtime-evidence-sidecar.mjs",
-      "sha256": "9cceb52089742626cb57fff5c36dc8ae3ea55c9000565a74df3eaf592cbb1eaf",
-      "byte_length": 6269
+      "sha256": "6ff6418a87bb5228bfe9b97bd1f9a036fcee0800ff0b528976c69f029c82c2a4",
+      "byte_length": 6270
     },
     {
       "id": "cyclonedxQuantization",
@@ -1307,9 +1307,9 @@
     {
       "id": "ortRulepack",
       "path": "protected/deepbom_wasm/src/ort_rulepack_generated.rs",
-      "sha256": "5c6437c7630dd3b775e108d44c0881ed473c8a173c30037ee6b6f91593dffc51",
-      "byte_length": 1164077
+      "sha256": "73dce48f12a3adb1cf7ecf39e6766623be2e508f1c5e7d57acaa0c550e817f46",
+      "byte_length": 1306401
     }
   ],
-  "ledger_sha256": "f8974157baca9f2537e5075efc8513988bdd86532fa537860a785e674dac708c"
+  "ledger_sha256": "1a2123a940ab5501f25204831b9fef7499dd2e538d4b750c124de127b5331448"
 }

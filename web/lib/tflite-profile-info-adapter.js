@@ -2,7 +2,7 @@ import { ProtoReader, toProtoBytes } from "./tflite-runtime-info-adapter.js";
 
 const PROFILE_ADAPTER_SCHEMA = "deepbom.tflite_benchmark_profile_adapter.v1";
 const COMBINED_ADAPTER_SCHEMA = "deepbom.tflite_runtime_info_adapter.v2";
-const RUNTIME_ASSIGNMENT_SCHEMA = "deepbom.runtime_assignment.v1.9";
+const RUNTIME_ASSIGNMENT_SCHEMA = "deepbom.runtime_assignment.v1.10";
 const MAX_PROTO_BYTES = 32 * 1024 * 1024;
 const MAX_ROWS = 1_000_000;
 

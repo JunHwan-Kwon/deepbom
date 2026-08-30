@@ -8,7 +8,8 @@ import { validateOrtSelectedBuildProviderBinding } from "./ort-selected-build-bi
 import { validateOrtBuildAttestation } from "./ort-build-attestation.js";
 import { buildRuntimeBackendEvidenceLedger } from "./runtime-backend-evidence-ledger.js";
 
-const RUNTIME_ASSIGNMENT_SCHEMA = "deepbom.runtime_assignment.v1.9";
+const RUNTIME_ASSIGNMENT_SCHEMA = "deepbom.runtime_assignment.v1.10";
+const V19_RUNTIME_ASSIGNMENT_SCHEMA = "deepbom.runtime_assignment.v1.9";
 const V18_RUNTIME_ASSIGNMENT_SCHEMA = "deepbom.runtime_assignment.v1.8";
 const PREVIOUS_RUNTIME_ASSIGNMENT_SCHEMA = "deepbom.runtime_assignment.v1.7";
 const PREVIOUS_SELECTOR_RUNTIME_ASSIGNMENT_SCHEMA = "deepbom.runtime_assignment.v1.6";
@@ -45,7 +46,7 @@ export function parseRuntimeAssignmentDocument(text, analysis, { fileSha256 = nu
   } catch {
     throw new Error("Runtime assignment file is not valid JSON.");
   }
-  if (![RUNTIME_ASSIGNMENT_SCHEMA, V18_RUNTIME_ASSIGNMENT_SCHEMA, PREVIOUS_RUNTIME_ASSIGNMENT_SCHEMA, PREVIOUS_SELECTOR_RUNTIME_ASSIGNMENT_SCHEMA, OLDER_RUNTIME_ASSIGNMENT_SCHEMA, EARLIER_RUNTIME_ASSIGNMENT_SCHEMA, OLD_RUNTIME_ASSIGNMENT_SCHEMA, ANCIENT_RUNTIME_ASSIGNMENT_SCHEMA, HISTORIC_RUNTIME_ASSIGNMENT_SCHEMA, LEGACY_RUNTIME_ASSIGNMENT_SCHEMA].includes(source?.schema)) {
+  if (![RUNTIME_ASSIGNMENT_SCHEMA, V19_RUNTIME_ASSIGNMENT_SCHEMA, V18_RUNTIME_ASSIGNMENT_SCHEMA, PREVIOUS_RUNTIME_ASSIGNMENT_SCHEMA, PREVIOUS_SELECTOR_RUNTIME_ASSIGNMENT_SCHEMA, OLDER_RUNTIME_ASSIGNMENT_SCHEMA, EARLIER_RUNTIME_ASSIGNMENT_SCHEMA, OLD_RUNTIME_ASSIGNMENT_SCHEMA, ANCIENT_RUNTIME_ASSIGNMENT_SCHEMA, HISTORIC_RUNTIME_ASSIGNMENT_SCHEMA, LEGACY_RUNTIME_ASSIGNMENT_SCHEMA].includes(source?.schema)) {
     throw new Error(`Runtime assignment schema must be ${RUNTIME_ASSIGNMENT_SCHEMA}; prior v1.x schemas remain accepted.`);
   }
   const artifactSha = String(source.artifact_sha256 || "").toLowerCase();
@@ -62,8 +63,16 @@ export function parseRuntimeAssignmentDocument(text, analysis, { fileSha256 = nu
   if (!SHA256_PATTERN.test(expectedTargetProfileSha) || targetProfileSha !== expectedTargetProfileSha) {
     throw new Error("Runtime assignment target_profile_sha256 does not match the active target profile.");
   }
-  if (!Array.isArray(source.assignments) || !source.assignments.length) {
-    throw new Error("Runtime assignment JSON must contain a non-empty assignments array.");
+  if (!Array.isArray(source.assignments)) throw new Error("Runtime assignment JSON must contain an assignments array.");
+  const nativeRuntimeGraphOnly = source.schema === RUNTIME_ASSIGNMENT_SCHEMA
+    && source.source?.kind === "onnxruntime_profile_json_adapter"
+    && source.source?.assignment_semantics === "runtime_graph_observed_original_graph_mapping_unresolved"
+    && source.source?.adapter?.native_capture != null
+    && Number(source.source?.adapter?.kernel_event_count) > 0
+    && Number(source.source?.adapter?.mapped_kernel_event_count) === 0
+    && Number(source.source?.adapter?.unresolved_runtime_node_count) > 0;
+  if (!source.assignments.length && !nativeRuntimeGraphOnly) {
+    throw new Error("Runtime assignment JSON must contain assignments, unless a verified native ORT runtime graph explicitly leaves original-graph mapping unresolved.");
   }
   if (source.assignments.length > 100000) throw new Error("Runtime assignment contains too many rows.");
   const opByIndex = new Map((analysis?.ops || []).map((op) => [op.index, op]));
@@ -135,7 +144,7 @@ export function parseRuntimeAssignmentDocument(text, analysis, { fileSha256 = nu
   const normalized = {
     schema: RUNTIME_ASSIGNMENT_SCHEMA,
     source_schema: source.schema,
-    evidence_class: "OBSERVED_RUNTIME",
+    evidence_class: nativeRuntimeGraphOnly ? "OBSERVED_RUNTIME_GRAPH_MAPPING_UNRESOLVED" : "OBSERVED_RUNTIME",
     artifact_sha256: artifactSha,
     target_profile_id: targetId,
     target_profile_sha256: targetProfileSha,
@@ -155,7 +164,11 @@ export function parseRuntimeAssignmentDocument(text, analysis, { fileSha256 = nu
       capture_binding_semantics: optionalText(source.source?.capture_binding_semantics, "source.capture_binding_semantics", 120),
       assignment_semantics: source.schema === LEGACY_RUNTIME_ASSIGNMENT_SCHEMA
         ? "original_graph_op_assignment"
-        : requiredExactText(source.source?.assignment_semantics, "source.assignment_semantics", "original_graph_op_assignment"),
+        : requiredExactText(
+          source.source?.assignment_semantics,
+          "source.assignment_semantics",
+          nativeRuntimeGraphOnly ? "runtime_graph_observed_original_graph_mapping_unresolved" : "original_graph_op_assignment",
+        ),
       partition_semantics: source.schema === LEGACY_RUNTIME_ASSIGNMENT_SCHEMA
         ? "partition_id_identifies_runtime_partition_when_present"
         : requiredExactText(source.source?.partition_semantics, "source.partition_semantics", "partition_id_identifies_runtime_partition_when_present"),
@@ -175,7 +188,9 @@ export function parseRuntimeAssignmentDocument(text, analysis, { fileSha256 = nu
     graph_op_count: (analysis?.ops || []).length,
     coverage_ratio: assignments.length / Math.max(1, (analysis?.ops || []).length),
     assignments,
-    interpretation_boundary: `Observed provider/kernel assignment for the artifact SHA-256, target-profile SHA-256, and declared runtime export; dispatch samples use ${dispatchSampleSemantics}. Logical boundary payload does not establish tensor-copy materialization. Duration totals require semantics and coverage checks appropriate to original-op or execution-plan-node evidence.`,
+    interpretation_boundary: nativeRuntimeGraphOnly
+      ? "Observed native runtime-graph execution is bound to the artifact and selected runtime binary, but fused or renamed runtime nodes are not assigned to original graph ops. Provider-level runtime-node evidence does not establish original-op placement, microkernel identity, or physical transfer bytes."
+      : `Observed provider/kernel assignment for the artifact SHA-256, target-profile SHA-256, and declared runtime export; dispatch samples use ${dispatchSampleSemantics}. Logical boundary payload does not establish tensor-copy materialization. Duration totals require semantics and coverage checks appropriate to original-op or execution-plan-node evidence.`,
   };
   normalized.source.adapter = validateRuntimeAdapter(source.source?.adapter, normalized, analysis);
   normalized.source.collector = validateNativeCollector(source.source?.collector, normalized.source.kind);
@@ -687,8 +702,8 @@ function canonicalUniqueStrings(values, field, maxItems, maxLength) {
 
 function validateResourcePartition(value, sourceSchema, threadCount) {
   if (value == null) return null;
-  if (sourceSchema !== RUNTIME_ASSIGNMENT_SCHEMA) {
-    throw new Error("Resource-partition evidence requires deepbom.runtime_assignment.v1.9.");
+  if (![RUNTIME_ASSIGNMENT_SCHEMA, V19_RUNTIME_ASSIGNMENT_SCHEMA].includes(sourceSchema)) {
+    throw new Error("Resource-partition evidence requires deepbom.runtime_assignment.v1.9 or v1.10.");
   }
   if (value.schema !== "deepbom.resource_partition_observation.v1"
     || value.evidence_class !== "OBSERVED_OS_RESOURCE_PARTITION") {
@@ -2498,7 +2513,7 @@ function runtimeBackendEvidenceSection(ledger) {
   const heading = document.createElement("h3");
   heading.textContent = "Selected runtime backend evidence";
   const note = document.createElement("p");
-  note.textContent = "Build inclusion, capability acceptance, original-op assignment, and execution are independent. Empty later stages are not treated as rejection.";
+  note.textContent = "Source eligibility, selected-build inclusion, capability acceptance, original-op assignment, and execution are independent. Fused runtime-node execution is retained without inventing original-op placement; empty later stages are not treated as rejection.";
   const grid = document.createElement("div");
   grid.className = "runtime-backend-ledger-grid";
   for (const row of ledger.providers) {
@@ -2507,16 +2522,24 @@ function runtimeBackendEvidenceSection(ledger) {
     const title = document.createElement("strong");
     title.textContent = row.label;
     item.append(title,
+      backendStage("Source", row.source_eligibility.status, row.source_eligibility.evidence_class),
       backendStage("Build", row.configured_inclusion.status, row.configured_inclusion.evidence_class),
-      backendStage("Capability", row.capability_acceptance.status, row.capability_acceptance.evidence_class),
+      backendStage("Capability", backendCountLabel(row.capability_acceptance.status, row.capability_acceptance.accepted_original_op_count, row.capability_acceptance.accepted_runtime_node_count), row.capability_acceptance.evidence_class),
       backendStage("Assignment", `${row.assignment.status}${row.assignment.assigned_original_op_count ? ` (${row.assignment.assigned_original_op_count})` : ""}`, row.assignment.evidence_class),
-      backendStage("Execution", `${row.execution.status}${row.execution.executed_original_op_count ? ` (${row.execution.executed_original_op_count})` : ""}`, row.execution.evidence_class));
+      backendStage("Execution", backendCountLabel(row.execution.status, row.execution.executed_original_op_count, row.execution.executed_runtime_node_count), row.execution.evidence_class));
     grid.append(item);
   }
   const digest = document.createElement("small");
   digest.textContent = `Ledger SHA-256 ${ledger.ledger_sha256}`;
   section.append(heading, note, grid, digest);
   return section;
+}
+
+function backendCountLabel(status, originalOpCount, runtimeNodeCount) {
+  const counts = [];
+  if (Number(originalOpCount) > 0) counts.push(`${originalOpCount} original op${Number(originalOpCount) === 1 ? "" : "s"}`);
+  if (Number(runtimeNodeCount) > 0) counts.push(`${runtimeNodeCount} runtime node${Number(runtimeNodeCount) === 1 ? "" : "s"}`);
+  return `${status}${counts.length ? ` (${counts.join(" / ")})` : ""}`;
 }
 
 function backendStage(label, status, evidenceClass) {

@@ -147,7 +147,7 @@ const runtimeMemory = {
 };
 const nativeSource = {
   ...source,
-  schema: "deepbom.runtime_assignment.v1.9",
+  schema: "deepbom.runtime_assignment.v1.10",
   runtime: { ...source.runtime, build: "instrumented release", binary_sha256: "b".repeat(64) },
   source: {
     ...source.source,
@@ -416,7 +416,7 @@ const legacy = parseRuntimeAssignmentDocument(JSON.stringify({
   schema: "deepbom.runtime_assignment.v1",
   source: { kind: "legacy_interpreter_plan_export", collected_at: null },
 }), analysis);
-expectEqual(legacy.schema, "deepbom.runtime_assignment.v1.9", "Legacy runtime evidence should normalize to the current in-memory schema.");
+expectEqual(legacy.schema, "deepbom.runtime_assignment.v1.10", "Legacy runtime evidence should normalize to the current in-memory schema.");
 expectEqual(legacy.source_schema, "deepbom.runtime_assignment.v1", "Normalized runtime evidence should retain its original schema identity.");
 expectEqual(legacy.source.duration_semantics, "unspecified", "Legacy runtime evidence must not imply additive timing semantics.");
 expectEqual(legacy.comparison.duration_comparison.total_duration_us, null, "Legacy runtime durations must not be summed without explicit semantics.");
@@ -424,7 +424,7 @@ expectEqual(legacy.comparison.duration_comparison.total_duration_us, null, "Lega
 const template = buildRuntimeAssignmentTemplate(analysis);
 expectEqual(template.artifact_sha256, sha, "Runtime template should bind the active artifact.");
 expectEqual(template.target_profile_sha256, profileSha, "Runtime template should bind exact target-profile content.");
-expectEqual(template.schema, "deepbom.runtime_assignment.v1.9", "Runtime template should use the current schema with explicit timing and adapter semantics.");
+expectEqual(template.schema, "deepbom.runtime_assignment.v1.10", "Runtime template should use the current schema with explicit timing and adapter semantics.");
 expectEqual(template.source.duration_semantics, "not_collected", "Runtime template must not imply additive timing before measurements exist.");
 expectEqual(template.graph_ops.length, analysis.ops.length, "Runtime template should include a non-evidentiary op reference inventory.");
 expect(template.graph_ops.every((item) => item.reference_only === true && typeof item.predicted_delegated === "boolean"), "Runtime template op references must be explicitly non-evidentiary and expose the static placement prediction.");

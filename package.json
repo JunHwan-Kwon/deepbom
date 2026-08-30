@@ -12,7 +12,7 @@
   },
   "private": true,
   "bin": {
-    "deepbom": "./bin/deepbom.mjs"
+    "deepbom": "bin/deepbom.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -95,6 +95,9 @@
     "check": "node scripts/check-all.mjs",
     "check:cli": "node scripts/check-cli.mjs",
     "check:cli-automation": "node scripts/check-cli-automation.mjs",
+    "check:nvidia-accelerator": "node scripts/check-nvidia-accelerator-profile.mjs",
+    "check:remote-artifact-resolver": "node scripts/check-remote-artifact-resolver.mjs",
+    "check:cli-graph": "node scripts/check-cli-graph-export.mjs",
     "check:channels": "node scripts/check-channel-equivalence.mjs",
     "check:cargo-engine-release": "node scripts/check-cargo-engine-release.mjs",
     "check:public-package-boundary": "node scripts/check-public-package-boundary.mjs",
@@ -272,5 +275,8 @@
     "onnxruntime-node": {
       "adm-zip": "0.6.0"
     }
+  },
+  "directories": {
+    "doc": "docs"
   }
 }

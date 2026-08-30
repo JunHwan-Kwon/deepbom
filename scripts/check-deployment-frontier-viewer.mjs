@@ -782,7 +782,7 @@ try {
     throw new Error(`Saved target preference must persist without exposing target conditions before format resolution: ${JSON.stringify(restoredTarget)}`);
   }
   if (browserErrors.length) throw new Error(`Browser errors:\n${browserErrors.join("\n")}`);
-  console.log("Deployment Frontier viewer passed (canonical 4-target and selected 5-target TFLite frontiers; ONNX 8 EP source portfolios; desktop/mobile overflow 0).");
+  console.log("Deployment Frontier viewer passed (canonical 4-target and selected 5-target TFLite frontiers; ONNX 9 EP source portfolios; desktop/mobile overflow 0).");
   console.log(`desktop=${desktopPath}`);
   console.log(`artifact_overview_desktop=${artifactOverviewDesktopPath}`);
   console.log(`artifact_overview_mobile=${artifactOverviewMobilePath}`);

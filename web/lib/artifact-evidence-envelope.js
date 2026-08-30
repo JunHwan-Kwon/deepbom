@@ -2,6 +2,8 @@ import { buildFindingsRegister } from "./report-findings.js";
 import { buildInterfaceQuantizationContractLedger } from "./quantization-contract-summary.js";
 import { canonicalJson, normalizeJsonContractValue } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
+import { validateArtifactSet } from "./artifact-set.js";
+import { validateNvidiaAcceleratorProfileBinding } from "./accelerator-profile-binding.js";
 
 export const ARTIFACT_EVIDENCE_SCHEMA = "deepbom.artifact_evidence_envelope.v1";
 export const EVIDENCE_CLASSES = Object.freeze([
@@ -177,12 +179,24 @@ function capabilityManifest(analysis, format) {
   check("artifact_identity", analysis);
   check("graph", analysis?.ops && analysis?.tensors);
   check("interfaces", analysis?.inputs && analysis?.outputs);
-  check("tensor_payloads", analysis?.weight_integrity || analysis?.tensor_numerical_integrity || analysis?.tensors,
-    analysis?.tensor_numerical_integrity ? analysis.tensor_numerical_integrity.status === "assessed"
-      : format === "coreml" ? analysis?.weight_integrity?.status === "assessed" : true);
+  if (format === "onnx") {
+    const weights = analysis?.weight_integrity;
+    check("tensor_payloads", weights || analysis?.onnx_external_data_structure_binding,
+      weights?.status === "assessed" && weights?.coverage_status === "complete");
+  } else {
+    check("tensor_payloads", analysis?.weight_integrity || analysis?.tensor_numerical_integrity || analysis?.tensors,
+      analysis?.tensor_numerical_integrity ? analysis.tensor_numerical_integrity.status === "assessed"
+        : format === "coreml" ? analysis?.weight_integrity?.status === "assessed" : true);
+  }
   check("affine_quantization", analysis?.tensors);
   check("metadata", analysis?.metadata_presence);
-  check("external_data", analysis?.onnx_external_data, analysis?.onnx_external_data?.status !== "partial");
+  if (format === "onnx" && Number(analysis?.onnx_external_data?.tensor_count || 0) === 0) {
+    check("external_data", analysis?.onnx_external_data, true);
+  } else if (analysis?.onnx_external_data_structure_binding) {
+    check("external_data", analysis.onnx_external_data_structure_binding, false);
+  } else {
+    checkStatus("external_data", analysis?.onnx_external_data, analysis?.onnx_external_data?.status);
+  }
   check("associated_files", analysis?.metadata_presence, analysis?.metadata_presence?.associated_file_archive_status !== "partial");
   checkStatus("runtime_floor", analysis?.runtime_compat || analysis?.ort_compatibility_evidence,
     analysis?.runtime_compat?.status || analysis?.runtime_compat?.assessment_status || analysis?.ort_compatibility_evidence?.status);
@@ -298,6 +312,7 @@ function formatExtensionSummary(analysis, format) {
     domain_contract_schema: analysis?.onnx_domain_analysis?.schema || null,
     shape_contract_schema: analysis?.onnx_shape_inference?.schema || null,
     quantization_binding_schema: analysis?.onnx_quantization_binding?.schema || null,
+    external_data_structure_binding: analysis?.onnx_external_data_structure_binding || null,
     on_device_llm: analysis?.on_device_llm || null,
     tensorrt_static_preflight: analysis?.tensorrt_static_preflight || null,
   };
@@ -344,6 +359,8 @@ export function buildArtifactEvidenceEnvelope(analysis = {}, options = {}) {
     schema: ARTIFACT_EVIDENCE_SCHEMA,
     generated_at: text(options.generatedAt) || null,
     identity,
+    artifact_set: analysis?.artifact_set || null,
+    accelerator_profile_binding: analysis?.accelerator_profile_binding || null,
     capabilities: capabilityManifest(analysis, format),
     interfaces,
     graph: {
@@ -368,6 +385,14 @@ export function validateArtifactEvidenceEnvelope(envelope) {
   if (envelope?.schema !== ARTIFACT_EVIDENCE_SCHEMA) errors.push("schema_mismatch");
   if (!text(envelope?.identity?.format) || envelope.identity.format === "unknown") errors.push("format_unbound");
   if (envelope?.identity?.sha256 && !sha256(envelope.identity.sha256)) errors.push("invalid_artifact_sha256");
+  if (envelope?.artifact_set) {
+    try { validateArtifactSet(envelope.artifact_set); }
+    catch { errors.push("invalid_artifact_set"); }
+  }
+  if (envelope?.accelerator_profile_binding) {
+    try { validateNvidiaAcceleratorProfileBinding(envelope.accelerator_profile_binding); }
+    catch { errors.push("invalid_accelerator_profile_binding"); }
+  }
   if (!Array.isArray(envelope?.interfaces?.parameters)) errors.push("interface_ledger_missing");
   for (const file of envelope?.external_files || []) {
     if (!sha256(file.sha256)) errors.push(`invalid_external_file_sha256:${file.path}`);

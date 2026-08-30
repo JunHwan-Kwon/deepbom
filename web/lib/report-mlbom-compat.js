@@ -65,6 +65,8 @@ export function buildMlBomCompatibilityProjection(analysis, {
   const quantizedRatio = finite(quant.quantized_compute_mac_percent);
   const nonDelegated = predictedNonDelegatedOpCounts(analysis);
   const validSerialNumber = /^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(serialNumber);
+  const artifactSet = analysis?.artifact_set;
+  const accelerator = analysis?.accelerator_profile_binding;
 
   const componentProperties = compact([
     property("deepbom:compatibility:profile", "deepbom.compact_mlbom_compatibility.v2"),
@@ -96,6 +98,16 @@ export function buildMlBomCompatibilityProjection(analysis, {
     property("deepbom:model:predictedPartitionBoundaryEdges", boundary?.edge_count),
     property("deepbom:model:predictedPartitionBoundaryLogicalBytes", boundary?.summed_edge_payload_bytes),
     property("deepbom:model:runtimeAssignmentStatus", runtimeObserved ? "imported_observed_runtime_evidence" : "not_observed"),
+    property("deepbom:model:artifactSetSchema", artifactSet?.schema),
+    property("deepbom:model:artifactSetSha256", artifactSet?.artifact_set_sha256),
+    property("deepbom:model:artifactSourceKind", artifactSet?.source?.kind),
+    property("deepbom:model:artifactSourceImmutability", artifactSet?.source?.immutability?.kind),
+    property("deepbom:model:acceleratorProfileBindingSha256", accelerator?.binding_sha256),
+    property("deepbom:model:acceleratorProfileSha256", accelerator?.profile_sha256),
+    property("deepbom:model:acceleratorDeviceName", accelerator?.selected_device?.name),
+    property("deepbom:model:acceleratorComputeCapability", accelerator?.selected_device?.compute_capability),
+    property("deepbom:model:acceleratorPhysicalVramBytes", accelerator?.selected_device?.memory_total_bytes?.decimal),
+    property("deepbom:model:acceleratorSelectedBuildStatus", accelerator?.selected_build?.status),
   ]);
 
   const documentProperties = compact([
@@ -110,6 +122,7 @@ export function buildMlBomCompatibilityProjection(analysis, {
     property("ondevice:predictedNonDelegatedOps", nonDelegated == null ? null : JSON.stringify(nonDelegated)),
     property("ondevice:executionProviderAssignment", format === "onnx" ? "not_assessable_without_runtime_evidence" : null),
     property("ondevice:runtimeAssignmentEvidence", runtimeObserved ? "imported" : "not_observed"),
+    property("deepbom:artifact:sourceLocator", artifactSet?.source?.canonical_locator),
     property("ondevice:detailEvidencePointer", DETAIL_POINTER),
     property("ondevice:privacy:modelUpload", "false"),
     property("ondevice:privacy:reportUpload", "false"),

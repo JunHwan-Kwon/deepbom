@@ -71,7 +71,7 @@ const document = buildOrtRuntimeAssignmentDocument(parsedProfile, analysis, {
   profileSha256: "c".repeat(64),
 });
 const assignment = parseRuntimeAssignmentDocument(JSON.stringify(document), analysis);
-expectEqual(assignment.schema, "deepbom.runtime_assignment.v1.9", "Adapted evidence should normalize to runtime assignment schema v1.9.");
+expectEqual(assignment.schema, "deepbom.runtime_assignment.v1.10", "Adapted evidence should normalize to runtime assignment schema v1.10.");
 expectEqual(assignment.source.adapter.schema, "deepbom.ort_profile_adapter.v2.2", "Adapted evidence should preserve the internal type-shape adapter schema.");
 expectEqual(assignment.source.adapter.runtime_tensor_observation_count, 1, "Canonical parsing should retain validated ORT tensor observations.");
 expectEqual(assignment.source.adapter.runtime_tensor_observations[0].output_size_bytes, 16, "ORT output size should retain its exact safe-integer mirror.");

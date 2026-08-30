@@ -177,7 +177,9 @@ const manifest = {
   analysis_entrypoint: "bundled bin/deepbom.mjs",
   supported_formats: ["tflite", "onnx", "gguf", "safetensors", "coreml", "executorch"],
   supported_packages: ["onnx_external_data", "safetensors_sharded_repository", "coreml_mlpackage"],
-  accelerator_contracts: ["tensorrt_static_preflight", "tensorrt_parser_evidence", "tensorrt_llm_config_binding"],
+  accelerator_contracts: ["nvidia_accelerator_profile", "accelerator_profile_binding", "tensorrt_static_preflight", "tensorrt_parser_evidence", "tensorrt_llm_config_binding"],
+  acquisition_contracts: ["artifact_set", "remote_artifact_acquisition"],
+  visualization_contracts: ["graph_ir", "visualization_manifest", "svg", "png", "html", "mermaid", "dot"],
   build_runtime: { node: process.versions.node, platform: process.platform, arch: process.arch },
   channels: {
     npm: { status: "built", runtime: "node>=20", package: relative(output, path.join(output, "npm", `deepbom-${packageDocument.version}.tgz`)) },

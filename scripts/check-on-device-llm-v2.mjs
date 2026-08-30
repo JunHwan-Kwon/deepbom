@@ -375,6 +375,27 @@ assert.equal(onnxGraphAnalysis.on_device_llm.serialized_graph.external_state_can
 assert.equal(onnxGraphAnalysis.on_device_llm.state.kv_projection, null, "Graph motifs must not invent KV architecture dimensions.");
 assert.equal(onnxGraphAnalysis.on_device_llm.storage.serialized_tensor_bytes_decimal, "2048");
 assert.deepEqual(validateOnDeviceLlmContract(onnxGraphAnalysis), { valid: true, errors: [] });
+const onnxStructureOnly = structuredClone(onnxGraphAnalysis);
+onnxStructureOnly.size_breakdown = { available_initializer_bytes: 0, available_initializer_scalar_elements: 0 };
+onnxStructureOnly.onnx_external_data_structure_binding = {
+  range_conservation_status: "complete",
+  numerical_payload_decode: "not_assessed_scan_policy_structure",
+  declared_payload_bytes: { decimal: "2048", number: 2048 },
+  unique_payload_bytes: { decimal: "2048", number: 2048 },
+  declared_element_count: { decimal: "1024", number: 1024 },
+  encoding_inventory: [{
+    dtype: "FLOAT16", tensor_count: 1,
+    element_count: { decimal: "1024", number: 1024 },
+    declared_payload_bytes: { decimal: "2048", number: 2048 },
+    effective_bits_per_element: 16,
+  }],
+};
+onnxStructureOnly.on_device_llm = buildOnDeviceLlmContract(onnxStructureOnly);
+assert.equal(onnxStructureOnly.on_device_llm.storage.status, "assessed_serialized_constant_structure_payload_values_not_assessed");
+assert.equal(onnxStructureOnly.on_device_llm.storage.serialized_parameter_count_decimal, "1024");
+assert.equal(onnxStructureOnly.on_device_llm.storage.serialized_tensor_bytes_decimal, "2048");
+assert.equal(onnxStructureOnly.on_device_llm.storage.effective_bits_per_parameter, 16);
+assert.deepEqual(validateOnDeviceLlmContract(onnxStructureOnly), { valid: true, errors: [] });
 const onnxLlmReport = buildEngineeringReport(onnxGraphAnalysis, { generatedAt: "2026-08-19T00:00:00.000Z" });
 assert(onnxLlmReport.includes("## On-device LLM Evidence Contract")
   && onnxLlmReport.includes("### Serialized Transformer Graph Evidence")

@@ -22,6 +22,26 @@ export async function loadCliInput(inputPath) {
   };
 }
 
+export async function loadCliBundleMembers(members, rootName = "remote-artifact") {
+  if (!Array.isArray(members) || !members.length || members.length > MAX_BUNDLE_FILES) {
+    throw new Error("Remote artifact bundle member count is invalid.");
+  }
+  const safeRoot = safePathComponent(rootName, "remote artifact root");
+  const paths = new Set();
+  const files = [];
+  for (const member of members) {
+    const relative = safeRelativePath(member?.path, "remote artifact member");
+    if (paths.has(relative)) throw new Error(`Remote artifact bundle repeats ${relative}.`);
+    paths.add(relative);
+    const absolute = path.resolve(String(member?.resolved_path || ""));
+    const metadata = await statNoLinks(absolute, `remote artifact member ${relative}`);
+    if (!metadata.isFile()) throw new Error(`Remote artifact member ${relative} is not a regular file.`);
+    files.push(new DiskFile(absolute, `${safeRoot}/${relative}`, metadata));
+  }
+  files.sort((left, right) => left.webkitRelativePath.localeCompare(right.webkitRelativePath));
+  return { kind: "bundle", path: null, filename: safeRoot, files, virtual: true };
+}
+
 export async function readCliFileBytes(input) {
   if (input?.kind !== "file") throw new Error("A single-file CLI input is required.");
   if (input.bytes) return input.bytes;
@@ -60,6 +80,28 @@ export async function loadOnnxExternalData(modelPath, analysis, externalDataRoot
     }
     if (!metadata.isFile()) throw new Error(`ONNX external data ${location} is not a regular file.`);
     files.push(new DiskFile(candidate, `${selectedRoot}/${location}`, metadata));
+  }
+  return prepareOnnxExternalDataFiles(files);
+}
+
+export async function loadOnnxExternalDataMembers(analysis, members) {
+  const locations = [...new Set((analysis?.onnx_external_data?.tensors || [])
+    .map((row) => String(row.normalized_location || "")).filter(Boolean))].sort();
+  if (!locations.length) return [];
+  const byLocation = new Map();
+  for (const member of members || []) {
+    const location = safeRelativePath(member?.model_relative_path, "ONNX external_data member location");
+    if (byLocation.has(location)) throw new Error(`Remote ONNX closure repeats external_data location ${location}.`);
+    byLocation.set(location, member);
+  }
+  const files = [];
+  for (const location of locations) {
+    const member = byLocation.get(location);
+    if (!member) throw new Error(`Remote ONNX closure is missing external_data location ${location}.`);
+    const absolute = path.resolve(String(member.resolved_path || ""));
+    const metadata = await statNoLinks(absolute, `ONNX external data ${location}`);
+    if (!metadata.isFile()) throw new Error(`ONNX external data ${location} is not a regular file.`);
+    files.push(new DiskFile(absolute, `remote-onnx/${location}`, metadata));
   }
   return prepareOnnxExternalDataFiles(files);
 }
@@ -167,6 +209,23 @@ function resolveContainedPath(root, relative, label) {
   const prefix = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
   if (!candidate.startsWith(prefix)) throw new Error(`${label} escapes its declared root.`);
   return candidate;
+}
+
+function safeRelativePath(value, label) {
+  const normalized = String(value || "").replaceAll("\\", "/");
+  if (!normalized || normalized.length > 2048 || normalized.startsWith("/") || /^[A-Za-z]:/.test(normalized)
+    || normalized.split("/").some((part) => !part || part === "." || part === "..")) {
+    throw new Error(`${label} is not a safe relative path.`);
+  }
+  return normalized;
+}
+
+function safePathComponent(value, label) {
+  const normalized = String(value || "").trim();
+  if (!normalized || normalized.length > 255 || /[\\/:*?"<>|]/.test(normalized) || normalized === "." || normalized === "..") {
+    throw new Error(`${label} is invalid.`);
+  }
+  return normalized;
 }
 
 function boundedOffset(value, size) {

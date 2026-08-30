@@ -143,7 +143,7 @@ an exact pinned-catalog name. An unresolved pointer is never promoted to
 microkernel evidence.
 
 One TFLite op may lower to multiple XNN nodes, and one runtime operator may
-dispatch multiple compute invocations. Schema `deepbom.runtime_assignment.v1.9`
+dispatch multiple compute invocations. Schema `deepbom.runtime_assignment.v1.10`
 therefore preserves `lowerings[]` and `dispatches[]`; singular top-level
 lowering/kernel fields exist only for a one-row inventory.
 

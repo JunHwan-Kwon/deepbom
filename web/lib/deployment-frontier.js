@@ -156,7 +156,7 @@ export function createDeploymentFrontierController({
     summary.replaceChildren(
       summaryMetric("Narrowed common candidates", `${frontier.all_ep_artifact_precheck_candidate_op_count} / ${frontier.op_count}`, "after definite artifact exclusions"),
       summaryMetric("Narrowed assessed MACs", frontier.all_ep_artifact_precheck_candidate_mac_ratio == null ? "N/A" : formatPercent(frontier.all_ep_artifact_precheck_candidate_mac_ratio), "still not support or assignment"),
-      summaryMetric("EP portfolio", String(frontier.execution_provider_count), "CPU / WebGPU / WebNN"),
+      summaryMetric("EP portfolio", String(frontier.execution_provider_count), "Independent source-backed profiles"),
       summaryMetric("Runtime assignment", observed ? "Observed" : "Unobserved", observed ? runtimeEvidenceLabel(runtime) : "source rules only"),
     );
     if (activeView === "levers") body.replaceChildren(renderOnnxGaps(frontier));
