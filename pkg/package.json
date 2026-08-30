@@ -2,7 +2,7 @@
   "name": "tflite_wasm_audit",
   "type": "module",
   "description": "Browser-side TFLite and ONNX static audit WASM module.",
-  "version": "1.94.6",
+  "version": "1.95.0",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

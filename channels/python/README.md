@@ -8,6 +8,8 @@ installed manifest. No parser or numerical rule is reimplemented in Python.
 ```console
 deepbom audit model.tflite --compact
 deepbom audit model.onnx --format cyclonedx
+deepbom audit model.onnx --format sarif --output deepbom.sarif --fail-on high
+deepbom capabilities --compact
 deepbom audit Model.mlpackage --compact
 deepbom audit safetensors-repository/ --compact
 deepbom audit model.pte --executorch-build deepbom.executorch-build.json --compact

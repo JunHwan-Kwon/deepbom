@@ -35,6 +35,18 @@ const cases = platformSmoke ? fileCases.slice(0, 2) : [
   { path: fixtures.sharded, format: "safetensors", bundle: "safetensors_sharded_repository" },
 ];
 const canonicalByPath = new Map();
+const capabilityArgs = ["capabilities", "--compact"];
+const canonicalCapabilities = json(run(process.execPath, ["bin/deepbom.mjs", ...capabilityArgs]).stdout);
+if (npmCli) {
+  assert.deepEqual(json(run(process.execPath, [npmCli, ...capabilityArgs]).stdout), canonicalCapabilities,
+    "installed npm capability discovery diverged from canonical CLI");
+}
+if (platformSmoke || releaseContract) {
+  assert.deepEqual(json(run(engine, capabilityArgs).stdout), canonicalCapabilities,
+    "standalone engine capability discovery diverged from canonical CLI");
+  assert.deepEqual(json(run(python, ["-m", "deepbom", ...capabilityArgs]).stdout), canonicalCapabilities,
+    "installed Python capability discovery diverged from canonical CLI");
+}
 
 for (const [caseIndex, item] of cases.entries()) {
   const args = ["audit", item.path, "--compact"];
@@ -74,6 +86,18 @@ if (!platformSmoke) {
     const canonical = json(run(process.execPath, ["bin/deepbom.mjs", ...args]).stdout);
     assert.deepEqual(json(run(process.execPath, [npmCli, ...args]).stdout), canonical, `${label}: installed npm package diverged`);
   }
+  for (const outputFormat of ["envelope", "sarif"]) {
+    const args = ["audit", fileCases[1].path, "--format", outputFormat, "--compact"];
+    const canonical = json(run(process.execPath, ["bin/deepbom.mjs", ...args]).stdout);
+    assert.deepEqual(json(run(process.execPath, [npmCli, ...args]).stdout), canonical,
+      `${outputFormat}: installed npm automation output diverged`);
+  }
+  const policyArgs = ["audit", fileCases[1].path, "--fail-on", "high", "--compact"];
+  const canonicalPolicy = run(process.execPath, ["bin/deepbom.mjs", ...policyArgs], {}, false);
+  const npmPolicy = run(process.execPath, [npmCli, ...policyArgs], {}, false);
+  assert.equal(canonicalPolicy.status, 2, "canonical finding policy must block the fixture");
+  assert.equal(npmPolicy.status, canonicalPolicy.status, "installed npm finding-policy exit code diverged");
+  assert.deepEqual(json(npmPolicy.stdout), json(canonicalPolicy.stdout), "installed npm finding-policy evidence diverged");
 }
 
 if (platformSmoke) {
@@ -86,6 +110,12 @@ if (platformSmoke) {
       DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
     });
     assert.deepEqual(json(cargoResult.stdout), canonicalByPath.get(cases[1].path), "Cargo launcher diverged from canonical CLI");
+    const cargoCapabilities = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", ...capabilityArgs], {
+      DEEPBOM_ENGINE: engine,
+      DEEPBOM_ENGINE_SHA256: createHash("sha256").update(await readFile(engine)).digest("hex"),
+      DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
+    });
+    assert.deepEqual(json(cargoCapabilities.stdout), canonicalCapabilities, "Cargo capability discovery diverged");
     const unboundCargo = run(
       "cargo",
       ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"],
@@ -113,7 +143,7 @@ if (platformSmoke) {
   assert.equal(manifest.channels.cargo.status, "launcher_ready_for_immutable_engine_matrix");
   const cargoStatus = releaseContract ? "Cargo execution and unbound-engine rejection" : "Cargo execution reserved for --release-contract";
   const nativeStatus = releaseContract ? "standalone/Python TFLite and ONNX execution parity" : "native/Python execution reserved for platform release smoke";
-  console.log(`Channel equivalence passed (installed npm tarball across five formats and two package forms; ${nativeStatus}; verify/diff/explore npm parity; ${cargoStatus}; packaged-WASM tamper rejection).`);
+  console.log(`Channel equivalence passed (installed npm tarball across five formats and two package forms; ${nativeStatus}; capability/envelope/SARIF/policy and verify/diff/explore npm parity; ${cargoStatus}; packaged-WASM tamper rejection).`);
 }
 
 async function installNpmPackage(release) {

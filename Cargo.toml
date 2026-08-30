@@ -1,6 +1,6 @@
 [package]
 name = "tflite_wasm_audit"
-version = "1.94.6"
+version = "1.95.0"
 edition = "2021"
 description = "Browser-side TFLite and ONNX static audit WASM module."
 repository = "https://github.com/JunHwan-Kwon/deepbom"

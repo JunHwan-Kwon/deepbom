@@ -39,6 +39,7 @@ export const BUDGET_SOURCE_EXTENSIONS = new Set([
 ]);
 
 const RUNTIME_SOURCE_PREFIXES = [
+  "bin/",
   "web/",
   "worker/",
   "src/",

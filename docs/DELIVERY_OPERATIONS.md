@@ -24,6 +24,11 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 | Local Windows 1.94.6 release-contract equivalence | npm full-format and command parity, native/Python execution, Cargo binding, and npm/Python WASM tamper rejection | 446.3 s |
 | Local Windows 1.94.6 public-PR channel equivalence | npm full-format and command parity plus npm WASM tamper rejection; native/Python/Cargo execution reserved for release | 51.7 s |
 | Packaged public CLI corpus sweep | 113 hash-bound artifacts; bounded human and compact JSON output in fresh processes | 403.9 s |
+| CLI automation contract 1.95.0 | capability discovery, canonical envelope, pinned OASIS SARIF validation, finding policy, structured errors, reproducible timestamp, and atomic output | 4.3 s |
+| Private web 1.95.0 preflight | 69 bounded parser, export, cache, privacy, CLI identity, and deployment-contract checks; no browser or corpus matrix | 121.825 s |
+| Local Windows 1.95.0 channel build | npm, executable, Python wheel, and Cargo launcher with the automation module and no protected source | 150.626 s |
+| Local Windows 1.95.0 platform smoke | native executable and installed Python capability discovery plus TFLite/WASM and ONNX execution parity | 173.056 s |
+| Local Windows 1.95.0 release-contract equivalence | capability, envelope, SARIF, and policy parity plus all prior npm, native, Python, Cargo, format, and tamper contracts | 557.443 s |
 
 The 1.94.4 run is retained as timing and incident evidence. It is not a known-good
 quality baseline. A registry success is never treated as sufficient without a
@@ -55,14 +60,15 @@ build, dist, cache, and egg-info directories before packaging.
 | --- | --- | --- |
 | Web layout, copy, or browser orchestration | `npm run check:deploy`, `npm run build:release`, dist asset and budget checks | Manual private web deploy |
 | Parser or shared analysis calculation | `npm run check:cli`, `npm run check:formats`, affected exact check, then `npm run check:release` before publication | Public PR quality; private full quality when hosted UI is affected |
-| Public package adapter | package boundary, channel build, npm full-format/command equivalence | Public PR quality; `--release-contract` only in the manual channel release |
+| Public package adapter | source/privacy/CLI checks on pull requests; exact tarball boundary after the channel build | Public PR quality for source contracts; package boundary and `--release-contract` only in the manual channel release |
+| CLI automation output or exit contract | `npm run check:cli-automation`; add `npm run check:cli` when analysis routing changes | Public PR quality; full channel equivalence only before publication |
 | Private WASM or rulepack generator | private WASM/rulepack checks plus public boundary checks | Manual private full quality and web deploy |
 | Corpus manifest or aggregate evidence | corpus-specific deterministic verifier | Public PR quality only when public evidence changes |
 
 The web deployment gate is the bounded `scripts/check-deploy.mjs` set. The
 exhaustive release tier remains available as `npm run check:release`; it must not
 be wired back into every Cloudflare deployment. The measured preflight budget is
-240 seconds; the current successful baseline is 147.4 seconds.
+240 seconds; the current successful baseline is 121.825 seconds for 69 checks.
 
 ## Cross-platform release rule
 

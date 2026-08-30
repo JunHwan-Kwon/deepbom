@@ -10,6 +10,7 @@ Cargo.lock
 Cargo.toml
 README.md
 THIRD_PARTY_NOTICES.md
+bin/deepbom-automation.mjs
 bin/deepbom-input.mjs
 bin/deepbom.mjs
 build.rs
@@ -84,6 +85,7 @@ corpus/safetensors-quantization-contract-corpus/teeny-tiny-llama-460m-awq.quant_
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.config.json
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.quantize_config.json
 corpus/standardization-evidence.v1.json
+docs/CLI_AUTOMATION.md
 docs/CYCLONEDX_20_QUANTIZATION_CONTRIBUTION.md
 docs/DELIVERY_OPERATIONS.md
 docs/PROJECT_STATUS.md
@@ -137,6 +139,8 @@ reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_runtime_requirements
 reference/cyclonedx/1.7/jsf-0.82.schema.json
 reference/cyclonedx/1.7/schema-lock.json
 reference/cyclonedx/1.7/spdx.schema.json
+reference/sarif/2.1.0/SOURCE.md
+reference/sarif/2.1.0/sarif-schema-2.1.0.json
 reference/xnnpack-readme/INDEX.md
 reference/xnnpack-readme/README-v2.10.0.md
 reference/xnnpack-readme/README-v2.11.0.md
@@ -198,6 +202,7 @@ scripts/check-channel-equivalence.mjs
 scripts/check-channel-vitality-viewer.mjs
 scripts/check-channel-vitality.mjs
 scripts/check-ci-deploy-contract.mjs
+scripts/check-cli-automation.mjs
 scripts/check-cli.mjs
 scripts/check-contract-migration-viewer.mjs
 scripts/check-contract-migration.mjs

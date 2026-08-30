@@ -1,3 +1,3 @@
 """Thin Python launcher for the canonical DEEPBOM analysis engine."""
 
-__version__ = "1.94.6"
+__version__ = "1.95.0"

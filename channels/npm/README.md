@@ -5,6 +5,8 @@ and ExecuTorch.
 
 ```console
 npx deepbom audit model.onnx --format cyclonedx
+npx deepbom audit model.onnx --format sarif --output deepbom.sarif --fail-on high
+npx deepbom capabilities --compact
 npx deepbom gguf model.gguf --context 8192 --memory-mib 8192
 npx deepbom audit Model.mlpackage --compact
 npx deepbom audit safetensors-repository/ --compact
@@ -15,7 +17,10 @@ npx deepbom audit model.pte --executorch-build deepbom.executorch-build.json --c
 ```
 
 The default output is a bounded human-readable summary. Use `--json` or
-`--compact` for the complete analysis document.
+`--compact` for the complete analysis document, `--format envelope` for the
+canonical cross-format contract, `--format cyclonedx` for CycloneDX 1.7, or
+`--format sarif` for OASIS SARIF 2.1.0. `--policy-output` records a deterministic
+finding gate when `--fail-on` is selected.
 
 `verify` fails closed on interface contradictions, `diff` preserves the
 canonical multi-target TFLite delta ledger, and `explore` exposes deterministic

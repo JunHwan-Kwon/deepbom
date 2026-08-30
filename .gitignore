@@ -22,6 +22,8 @@ reference/*
 !reference/xnnpack-readme/**
 !reference/cyclonedx/
 !reference/cyclonedx/**
+!reference/sarif/
+!reference/sarif/**
 *.log
 *.tmp
 __pycache__/

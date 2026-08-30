@@ -18,6 +18,8 @@ const channelReleaseWorkflow = readFileSync(".github/workflows/release-channels.
 const cratesMaintenanceWorkflow = readFileSync(".github/workflows/crates-maintenance.yml", "utf8");
 const packageManifest = JSON.parse(readFileSync("package.json", "utf8"));
 const deliveryOperations = JSON.parse(readFileSync("config/delivery-operations.v1.json", "utf8"));
+const deployGateSource = readFileSync("scripts/check-deploy.mjs", "utf8");
+const deployGateCheckCount = [...deployGateSource.matchAll(/^\s+"scripts\/[^\"]+",?$/gm)].length;
 expectEqual(deliveryOperations.schema, "deepbom.delivery_operations.v1", "delivery operations schema");
 expect(deliveryOperations.observations?.some((row) => row.run_id === 33050003944 && row.attempt === 2 && row.elapsed_seconds === 21),
   "Delivery operations must retain the measured failed-job-only Cargo retry.");
@@ -27,8 +29,8 @@ expect(deliveryOperations.execution_policy?.cross_platform_equivalence?.includes
   "Delivery operations must preserve six-target platform execution.");
 const successfulWebPreflight = deliveryOperations.observations?.find((row) =>
   row.kind === "private_web_preflight" && row.version === packageManifest.version && row.conclusion === "success");
-expect(successfulWebPreflight?.check_count === 58,
-  "Delivery operations must retain the measured bounded web-preflight check count.");
+expect(deployGateCheckCount > 0 && successfulWebPreflight?.check_count === deployGateCheckCount,
+  "Delivery operations must bind the current bounded web-preflight check count.");
 expect(Number(successfulWebPreflight?.elapsed_seconds) > 0
   && Number(successfulWebPreflight.elapsed_seconds) <= Number(deliveryOperations.budgets?.private_web_preflight_seconds),
 "The measured private web preflight must remain inside its recorded wall-time budget.");
@@ -47,6 +49,13 @@ for (const kind of ["local_channel_build", "platform_channel_smoke"]) {
     row.kind === kind && row.version === packageManifest.version && row.conclusion === "success");
   expect(Boolean(currentObservation), `${kind} must include a successful observation for the current source version.`);
 }
+const currentReleaseContract = deliveryOperations.observations?.find((row) =>
+  row.kind === "release_contract_channel_equivalence"
+  && row.version === packageManifest.version
+  && row.conclusion === "success");
+expect(Number(currentReleaseContract?.elapsed_seconds) > 0
+  && Number(currentReleaseContract.elapsed_seconds) <= Number(deliveryOperations.budgets?.release_contract_channel_equivalence_seconds),
+"The current release-contract equivalence must remain inside its dedicated wall-time budget.");
 const privateWorkflowPaths = [
   ".github/workflows/pages.yml",
   ".github/workflows/quality.yml",
@@ -66,7 +75,6 @@ const workflow = readFileSync(".github/workflows/pages.yml", "utf8");
 const qualityWorkflow = readFileSync(".github/workflows/quality.yml", "utf8");
 const channelBuildSource = readFileSync("scripts/build-channel-artifacts.mjs", "utf8");
 const checkTierSource = readFileSync("scripts/check-tier.mjs", "utf8");
-const deployGateSource = readFileSync("scripts/check-deploy.mjs", "utf8");
 const releaseBuildSource = readFileSync("scripts/build-release.mjs", "utf8");
 const buildPagesSource = readFileSync("scripts/build-pages.mjs", "utf8");
 const buildMetadataSource = readFileSync("scripts/write-build-metadata.mjs", "utf8");
@@ -104,13 +112,13 @@ for (const snippet of [
   "npm run check:public-source",
   "npm run check:cli",
   "npm run check:formats:core",
-  "npm run check:public-package-boundary",
 ]) expect(publicQualityWorkflow.includes(snippet), `Public core quality should contain: ${snippet}`);
 for (const forbidden of [
   "actions/setup-python",
   "playwright install",
   "npm run build:channels",
   "npm run check:channels",
+  "npm run check:public-package-boundary",
   "npm run check:rust",
 ]) expect(!publicQualityWorkflow.includes(forbidden), `Public pull-request quality must defer expensive release/UI work: ${forbidden}`);
 expect(
@@ -405,7 +413,6 @@ function checkPublicDistributionCiContract() {
     "node scripts/check-ci-deploy-contract.mjs",
     "npm run check:cli",
     "npm run check:formats:core",
-    "npm run check:public-package-boundary",
   ]) {
     expect(publicQualityWorkflow.includes(snippet), `Public core quality should contain: ${snippet}`);
   }
@@ -414,6 +421,7 @@ function checkPublicDistributionCiContract() {
     "playwright install",
     "npm run build:channels",
     "npm run check:channels",
+    "npm run check:public-package-boundary",
     "npm run check:rust",
   ]) {
     expect(!publicQualityWorkflow.includes(forbidden), `Public pull-request quality must defer expensive release/UI work: ${forbidden}`);

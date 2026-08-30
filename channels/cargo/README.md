@@ -14,6 +14,8 @@ execution and work offline.
 cargo install deepbom
 deepbom audit model.tflite --compact
 deepbom audit model.onnx --format cyclonedx
+deepbom audit model.onnx --format sarif --output deepbom.sarif --fail-on high
+deepbom capabilities --compact
 deepbom engine verify
 ```
 

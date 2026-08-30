@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "aef8dfea41f688846aa935a3591c54b6ed23431f",
+  "source_commit": "c951df59c1bef8501b206db8f5650298f1055b01",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 861,
+  "file_count": 866,
   "files": [
     {
       "path": ".gitattributes",
@@ -17,8 +17,8 @@
     },
     {
       "path": ".github/workflows/public-quality.yml",
-      "byte_length": 1559,
-      "sha256": "9ac3a5608c4dc3813124ff3ffc56801315ce45df965b782e09555981362d4ec2"
+      "byte_length": 1459,
+      "sha256": "41613b63d1a8e5e17add60ae6fda68997378ea24f10f152c0c45456582e8bb6b"
     },
     {
       "path": ".github/workflows/release-channels.yml",
@@ -27,8 +27,8 @@
     },
     {
       "path": ".gitignore",
-      "byte_length": 1273,
-      "sha256": "410b40b2992b153cd79d5a51c3873ab660fdf449933d00a1b192983787db0944"
+      "byte_length": 1311,
+      "sha256": "1cf38a1cd48a6bea9cd77f1cb3174b7d43420cd5e2b5ab0c38039702760773b0"
     },
     {
       "path": ".zenodo.json",
@@ -37,8 +37,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 6791,
-      "sha256": "100e01f8567f02c19b65824db6794a73a5dcbcaae93aad16a6160055f206edc6"
+      "byte_length": 7810,
+      "sha256": "04a16b34e0412926cf86ab6eaed7fa6c2c8539be421122ca58d9128707558234"
     },
     {
       "path": "CITATION.cff",
@@ -48,12 +48,12 @@
     {
       "path": "Cargo.lock",
       "byte_length": 8652,
-      "sha256": "add6defaa2509efb15547602d275187ea7f21f7dfc07a99de1e6d4945142e499"
+      "sha256": "2604e74eaefb0c1c09a8b0e0883709b6e6299ce87c93c0bdf193388d1009ad3b"
     },
     {
       "path": "Cargo.toml",
       "byte_length": 983,
-      "sha256": "46e911fd7a88a446f1aa6823f44049b3a93ab205e89440d8e497fd627a922f71"
+      "sha256": "742d196902052708e6fc69f9c316ca8faf70ef19e7a743d65b7781bc45a12dc8"
     },
     {
       "path": "LICENSE",
@@ -62,13 +62,18 @@
     },
     {
       "path": "README.md",
-      "byte_length": 4349,
-      "sha256": "d660b966cbea1ee76d7c3f7e3f114022fb58901f133f5b0325cc5027b67af148"
+      "byte_length": 4718,
+      "sha256": "23178a076ada57a12f88a6f42e2d5f3e2665472b1b849d8e83ec4754686655a3"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
       "byte_length": 2640,
       "sha256": "17d105835874b549b3a0d7609e533c32dc2581575dbcfd86c05a1da72aced666"
+    },
+    {
+      "path": "bin/deepbom-automation.mjs",
+      "byte_length": 12567,
+      "sha256": "e5e833de2a12f393d8c6ff2aa2159c6d1d9a3a0ae600a99928e426c18f96fb83"
     },
     {
       "path": "bin/deepbom-input.mjs",
@@ -77,8 +82,8 @@
     },
     {
       "path": "bin/deepbom.mjs",
-      "byte_length": 45888,
-      "sha256": "aad9b8962856740f295ea9d9b433eba01a7cb8ea0e5da797fa4d43160fb16480"
+      "byte_length": 52643,
+      "sha256": "56c12c084fe810abcfaf223422f6f40f3a753f4c96879753ed9721a98cd4acca"
     },
     {
       "path": "build.rs",
@@ -98,17 +103,17 @@
     {
       "path": "channels/cargo/Cargo.lock",
       "byte_length": 12291,
-      "sha256": "0479c8125e68f3504977eeb2de9776b409741171b2423a092e568e7caac9eaf8"
+      "sha256": "857e6c61f1a0cf8c01daf06920ececd348716c9337df58e9bc193f41c391b980"
     },
     {
       "path": "channels/cargo/Cargo.toml",
       "byte_length": 751,
-      "sha256": "50e278fd50a23beca02e1653e4228084483c98d665da21b37fddc4242d6f1885"
+      "sha256": "9266fa614786088ad7cc6605518a6ccf338e4a11c79eab1d5cc6747e9ed4baaa"
     },
     {
       "path": "channels/cargo/README.md",
-      "byte_length": 1204,
-      "sha256": "0e1935694ae4f2d90778b0eedc9adfa218fe2e467a865e9210abf1c7ddbf7027"
+      "byte_length": 1313,
+      "sha256": "3bfbbf9602bebf1d2218d51672435d3239407c362c176c96b8dd1f567218a505"
     },
     {
       "path": "channels/cargo/src/main.rs",
@@ -132,18 +137,18 @@
     },
     {
       "path": "channels/npm/README.md",
-      "byte_length": 2027,
-      "sha256": "82f488d196d327e71af1690a8d7f85b19f5ed20f2c277fad7126a2ce08231b03"
+      "byte_length": 2373,
+      "sha256": "4ddbb764acd03410fe78bb3dbc9ef928da1ea9036632ce3177e0fa639245518b"
     },
     {
       "path": "channels/python/README.md",
-      "byte_length": 1263,
-      "sha256": "f3d508bcde0b21b486d3ef4fed0c82589a51db8564db64ffce3c00096262915b"
+      "byte_length": 1372,
+      "sha256": "8a878c1f0392cac7a91074f82bd67d79c735a9d2fe4db14c41bbf2786385ee3f"
     },
     {
       "path": "channels/python/pyproject.toml",
-      "byte_length": 865,
-      "sha256": "ca49962c3304643634de13f0a790607e1c542eeaf48786266ec0257ab72840a3"
+      "byte_length": 901,
+      "sha256": "9581ceb97b63683f778a881cd62994791ae0954722db9ff7c9858d99b50ef09f"
     },
     {
       "path": "channels/python/requirements-build.txt",
@@ -158,7 +163,7 @@
     {
       "path": "channels/python/src/deepbom/__init__.py",
       "byte_length": 94,
-      "sha256": "3bb07af99fc0f1f40a2976779eadec3c66358d1c0bf251e23ccc43290cebb24d"
+      "sha256": "a8ed99147e7939566e75fe93a6b76b7fd2861f6c64346fc3c797dc88feee3eed"
     },
     {
       "path": "channels/python/src/deepbom/__main__.py",
@@ -167,13 +172,13 @@
     },
     {
       "path": "config/delivery-operations.v1.json",
-      "byte_length": 9096,
-      "sha256": "632004ee7d1841cba4730d8b2254f62b4c910d830487b41a4149f985517674c0"
+      "byte_length": 11880,
+      "sha256": "5615349b87b1c544db5b01d13852e701bd9355a9063dbadd86fc7707721286d5"
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 31924,
-      "sha256": "7bd0f91964a233e2898eaadc9879d6cc2c7a9b42c36bd636fd4c4c5d5e0cc072"
+      "byte_length": 32085,
+      "sha256": "53790c138f4635cec2c760a524b1e5be27ebba35303dc34cd1573003c7892388"
     },
     {
       "path": "corpus/README.md",
@@ -441,14 +446,19 @@
       "sha256": "1455cc8019cb5f7e3c137cf6fe77873cd1f8ba8d9f149f607a5400db6fe750e6"
     },
     {
+      "path": "docs/CLI_AUTOMATION.md",
+      "byte_length": 4533,
+      "sha256": "39d04977edba7921ddadc60045ff9f0c40d78a6f2e52f6bad32f27ccd02dc4b2"
+    },
+    {
       "path": "docs/CYCLONEDX_20_QUANTIZATION_CONTRIBUTION.md",
       "byte_length": 2743,
       "sha256": "1ac81a15ff5ffd6a054e9e206edb8c31beefaa870fb7993cf8949d8d19222cd5"
     },
     {
       "path": "docs/DELIVERY_OPERATIONS.md",
-      "byte_length": 7007,
-      "sha256": "48a8a07b299beafb480399d49a227973656f5b4bdc41c8a61cea51d00ee87c1c"
+      "byte_length": 8145,
+      "sha256": "c44b1c9540509a2b049ef5736afc63e7b402d385a3de7685b1f3f68604654731"
     },
     {
       "path": "docs/PROJECT_STATUS.md",
@@ -467,8 +477,8 @@
     },
     {
       "path": "docs/PUBLIC_README.md",
-      "byte_length": 4349,
-      "sha256": "d660b966cbea1ee76d7c3f7e3f114022fb58901f133f5b0325cc5027b67af148"
+      "byte_length": 4718,
+      "sha256": "23178a076ada57a12f88a6f42e2d5f3e2665472b1b849d8e83ec4754686655a3"
     },
     {
       "path": "docs/REPRESENTATIVE_DATASET_CAPTURE.md",
@@ -592,13 +602,13 @@
     },
     {
       "path": "package-lock.json",
-      "byte_length": 39995,
-      "sha256": "a551d8c3ad8f5b2822e8610b170948dde10db207a44609e5389d93e3055e635a"
+      "byte_length": 40498,
+      "sha256": "738db5a248141318a366ff5d0a98137b7eb8a0b57773549c9a42ea16658ba734"
     },
     {
       "path": "package.json",
-      "byte_length": 19891,
-      "sha256": "f9c02935b4b1c437e1ef36daa9be1c6d96706535bb9b5f5c399d4017e2d4d833"
+      "byte_length": 19989,
+      "sha256": "b0debb6de5cd505433c8c60eaf5c3b7243e5da1e82e51ba68910ceb2dccf2187"
     },
     {
       "path": "pkg/LICENSE",
@@ -608,7 +618,7 @@
     {
       "path": "pkg/package.json",
       "byte_length": 496,
-      "sha256": "279b61f143cbe10031fb7ac5069fe4536a45b20589faed971ca83528f0ac32e3"
+      "sha256": "8b996057ae40b894a039daa4548ef99c433689dcdd4638709b34fd94bbb6e9e8"
     },
     {
       "path": "pkg/tflite_wasm_audit.d.ts",
@@ -706,6 +716,16 @@
       "sha256": "c87aa7bb5eb503d40b52ec6bf00de8045df15da7a13cea48d290cf6d36a8d2ea"
     },
     {
+      "path": "reference/sarif/2.1.0/SOURCE.md",
+      "byte_length": 604,
+      "sha256": "9db8dc97bf2b763b4ee0a3eb199ee7042439ad1dc09a8e8490329dd6a3f0163c"
+    },
+    {
+      "path": "reference/sarif/2.1.0/sarif-schema-2.1.0.json",
+      "byte_length": 112768,
+      "sha256": "c3b4bb2d6093897483348925aaa73af03b3e3f4bd4ca38cef26dcb4212a2682e"
+    },
+    {
       "path": "reference/xnnpack-readme/INDEX.md",
       "byte_length": 2372,
       "sha256": "30beebd8cefeadbb68f01d2b1b0b35187ce04cb99aef029a70d5d7a3a8734863"
@@ -797,8 +817,8 @@
     },
     {
       "path": "scripts/build-channel-artifacts.mjs",
-      "byte_length": 15738,
-      "sha256": "6fd4b49c4c60ec51ce9b738c58f01c4c41f51720ddb51ff4c7a4e898e711ceac"
+      "byte_length": 15824,
+      "sha256": "92ea865b0b4a9c2deaa7a25831d48b050ad262b7b14cb5da71de0ece4a4555d4"
     },
     {
       "path": "scripts/build-coreml-legacy-quantization-corpus.mjs",
@@ -942,8 +962,8 @@
     },
     {
       "path": "scripts/check-all.mjs",
-      "byte_length": 9573,
-      "sha256": "b79cbfa3a34f1f1671655b61569ef2701a4702cc83c2888875289b22d76e19d5"
+      "byte_length": 9611,
+      "sha256": "e1584bc99a111f6ac889b11b7895a4fe428f97c1a4a014dbba163a58f72a7b1a"
     },
     {
       "path": "scripts/check-analysis-invariants.mjs",
@@ -992,8 +1012,8 @@
     },
     {
       "path": "scripts/check-channel-equivalence.mjs",
-      "byte_length": 10586,
-      "sha256": "fb4285df512a279531d6088153f8e697ece33317cae3942c69a12f5a4eb84a20"
+      "byte_length": 12779,
+      "sha256": "e10f30c498a75b70777f70e29bb4d8debe0c66a24511ec6b7f27059612f300be"
     },
     {
       "path": "scripts/check-channel-vitality-viewer.mjs",
@@ -1007,8 +1027,13 @@
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
-      "byte_length": 31549,
-      "sha256": "4be5405c3c94ab8d0e42522d1743eb200689c66b89ffb5ff63141ba5b875b516"
+      "byte_length": 32195,
+      "sha256": "288f7be57b6c46d40a30eade926f6c592870cbddf0ad602db42ff9e1e2a44152"
+    },
+    {
+      "path": "scripts/check-cli-automation.mjs",
+      "byte_length": 8331,
+      "sha256": "55c0ba42b2a684b7effb61555d0b338026e7e78a8ead04229cc9d378bfeaaf09"
     },
     {
       "path": "scripts/check-cli.mjs",
@@ -1208,7 +1233,7 @@
     {
       "path": "scripts/check-explorer-redesign-viewer.mjs",
       "byte_length": 107760,
-      "sha256": "3378fce063963f795943e0bcab06bd976679711c99fdf327e9c68f378335f5f9"
+      "sha256": "251042bdb8a26e14dc60ec022de57ff8d57f998e5db994f867cfd9ca1d0e872a"
     },
     {
       "path": "scripts/check-explorer-redesign.mjs",
@@ -1768,7 +1793,7 @@
     {
       "path": "scripts/check-source-budget.mjs",
       "byte_length": 10690,
-      "sha256": "585761cf2e1811c2f6da31e999b76197a3fbbbac0cbdfe0c4bc989b82e379893"
+      "sha256": "af48e0c403d4e44657c7f5f67a379e315d88834efdd0fdef3a6d4f07d5cd8b73"
     },
     {
       "path": "scripts/check-standardization-evidence.mjs",
@@ -1847,8 +1872,8 @@
     },
     {
       "path": "scripts/check-tier.mjs",
-      "byte_length": 4448,
-      "sha256": "79f1184905e378cf0ea6e984a86c9fce1174418184f6f0ca62885c43ee36e811"
+      "byte_length": 4486,
+      "sha256": "1ee9dd0b6d659285bdf50a37e09757d0af1d14a84c34522fa558907a87d5960a"
     },
     {
       "path": "scripts/check-wasm-hardening.mjs",
@@ -2227,8 +2252,8 @@
     },
     {
       "path": "scripts/source-size-utils.mjs",
-      "byte_length": 7519,
-      "sha256": "ad8ffb48bf2bbdf1de9789654874de5be1eea347c25fc00bf483b147b1803fb9"
+      "byte_length": 7529,
+      "sha256": "b4a2539e59e62bc1b41aa12c11b41b1cefcc73ce7a90b2f1dc501d97cbb9db05"
     },
     {
       "path": "scripts/static-test-server.mjs",
@@ -2698,7 +2723,7 @@
     {
       "path": "web/index.html",
       "byte_length": 135398,
-      "sha256": "1efbfbead4d1623306f2183b001a4d5735aa3eec658ea1844cf8038d6d46c810"
+      "sha256": "50982d66102f40ea6ddf4e39ecbe536329bdf827ed5d465f87e8038b5fabde6e"
     },
     {
       "path": "web/lib/access-policy.js",
@@ -2748,7 +2773,7 @@
     {
       "path": "web/lib/app-config.js",
       "byte_length": 4671,
-      "sha256": "c89b8a84d1122301d88c7dc9de439975e981f23d8a90d66135a604f1eaf8d3b5"
+      "sha256": "6faa3343b49bb9f02e017dd41cadeb2e70ec7293be4571fd01c5e7a8ab3c86af"
     },
     {
       "path": "web/lib/app-deepbom-workspace.js",
@@ -4283,7 +4308,7 @@
     {
       "path": "web/sw.js",
       "byte_length": 14423,
-      "sha256": "98c348d2308359e6feba88b2b4caaff31e4ab2e5b00d972867309b1fa4a0f31e"
+      "sha256": "093ebbfe0e1bbb5a0068208fed3dc94bba73241c4b7b31f2faf625957b15feb0"
     },
     {
       "path": "web/test.html",

@@ -17,6 +17,7 @@ const CHECKS = [
   "scripts/check-advanced-copy-contract.mjs",
   "scripts/check-deepbom-analysis-contract.mjs",
   "scripts/check-cli.mjs",
+  "scripts/check-cli-automation.mjs",
   "scripts/check-regulatory-bundle-contract.mjs",
   "scripts/check-export-artifact-contract.mjs",
   "scripts/check-public-evidence-package.mjs",

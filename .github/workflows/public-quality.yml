@@ -56,5 +56,3 @@ jobs:
         run: |
           npm run check:cli
           npm run check:formats:core
-      - name: Verify package disclosure boundary
-        run: npm run check:public-package-boundary

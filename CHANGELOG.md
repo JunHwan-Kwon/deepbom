@@ -4,6 +4,24 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.95.0 - 2026-08-30
+
+- Added machine-readable `capabilities` discovery and a canonical cross-format
+  evidence-envelope output for stable automation across npm, Python, Cargo,
+  standalone, and repository CLI surfaces.
+- Added OASIS SARIF 2.1.0 Errata 01 projection validated offline against a
+  source-pinned schema, with artifact-bound finding fingerprints and no
+  invented source-code locations.
+- Added deterministic severity gates, structured JSON errors, stable exit
+  codes, `SOURCE_DATE_EPOCH`, atomic output, and explicit no-clobber behavior
+  for CI and regulated evidence pipelines.
+- Added installed-channel parity and regression coverage for capability,
+  envelope, SARIF, and policy contracts while retaining the public/private
+  package boundary and bounded release workflow.
+- Raised the documentation source ceiling from 288 KiB to 296 KiB to retain
+  the formal CLI automation and measured delivery-operation contracts without
+  relaxing runtime, verification, corpus, or native-tooling budgets.
+
 - Added identity-bound TensorRT 10.x/11.x optimized-engine inspector evidence,
   strict capture tooling, selected tactic-identifier inventory, and shared
   report/CycloneDX projection without deserializing plans in the browser.

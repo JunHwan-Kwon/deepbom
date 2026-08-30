@@ -23,6 +23,8 @@ Verified release channels expose the same analysis implementation:
 
 ```bash
 npx deepbom audit model.onnx --format cyclonedx
+npx deepbom audit model.onnx --format sarif --output deepbom.sarif --fail-on high
+deepbom capabilities --compact
 python -m pip install deepbom
 cargo install deepbom
 deepbom audit model.gguf --compact
@@ -31,8 +33,11 @@ deepbom diff baseline.tflite candidate.tflite
 deepbom explore model.tflite
 ```
 
-The default is a terminal-sized evidence summary. `--json`, `--compact`, and
-`--format cyclonedx` expose the complete machine-readable contracts.
+The default is a terminal-sized evidence summary. `--json` and `--compact`
+expose complete format evidence; `--format envelope` provides the canonical
+cross-format contract; CycloneDX 1.7 and OASIS SARIF 2.1.0 are standard
+projections. `--policy-output` records a hash-bound gate result when `--fail-on`
+is selected. See [`docs/CLI_AUTOMATION.md`](docs/CLI_AUTOMATION.md).
 
 `verify` compares the serialized external tensor ABI with a supplied,
 artifact-bound production declaration. `diff` uses the canonical deterministic
@@ -57,6 +62,7 @@ Run the public correctness gates:
 
 ```bash
 npm run check:cli
+npm run check:cli-automation
 npm run check:formats
 npm run check:rust
 ```

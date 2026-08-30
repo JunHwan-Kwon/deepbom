@@ -62,7 +62,7 @@ await writeFile(path.join(npmRoot, "package.json"), `${JSON.stringify({
   bugs: { url: "https://github.com/JunHwan-Kwon/deepbom/issues" },
   author: "Jun-Hwan Kwon",
   publishConfig: { access: "public" },
-  keywords: ["tflite", "onnx", "gguf", "safetensors", "coreml", "tensorrt", "quantization", "on-device", "ml-bom"],
+  keywords: ["tflite", "onnx", "gguf", "safetensors", "coreml", "executorch", "tensorrt", "quantization", "on-device", "ml-bom", "cyclonedx", "sarif"],
 }, null, 2)}\n`);
 await writeFile(path.join(npmRoot, "pkg", "release-manifest.json"), `${JSON.stringify({
   schema: "deepbom.npm_release.v1",
@@ -71,7 +71,7 @@ await writeFile(path.join(npmRoot, "pkg", "release-manifest.json"), `${JSON.stri
   runtime: { node: ">=20", tflite_wasm_sha256: wasmSha256 },
   license: { spdx: "Apache-2.0", file: "LICENSE" },
   public_bundle_input_count: Object.keys(npmBuildResult.metafile.inputs).length,
-  supported_inputs: ["tflite", "onnx", "onnx_external_data", "gguf", "safetensors", "safetensors_sharded_repository", "coreml_mlmodel", "coreml_mlpackage", "tensorrt_evidence", "tensorrt_llm_contract"],
+  supported_inputs: ["tflite", "onnx", "onnx_external_data", "gguf", "safetensors", "safetensors_sharded_repository", "coreml_mlmodel", "coreml_mlpackage", "executorch_pte", "executorch_ptd", "tensorrt_evidence", "tensorrt_llm_contract"],
 }, null, 2)}\n`);
 const npmPack = resolveNpmCommand(["pack", npmRoot, "--pack-destination", path.join(output, "npm")]);
 run(npmPack.command, npmPack.args);
@@ -175,7 +175,7 @@ const manifest = {
   source: { git_commit: gitCommit, git_state: gitState, tflite_wasm_source: relative(root, wasmSource) },
   license: { public_channels: "Apache-2.0", private_monorepo: "LicenseRef-DEEPBOM-Proprietary" },
   analysis_entrypoint: "bundled bin/deepbom.mjs",
-  supported_formats: ["tflite", "onnx", "gguf", "safetensors", "coreml"],
+  supported_formats: ["tflite", "onnx", "gguf", "safetensors", "coreml", "executorch"],
   supported_packages: ["onnx_external_data", "safetensors_sharded_repository", "coreml_mlpackage"],
   accelerator_contracts: ["tensorrt_static_preflight", "tensorrt_parser_evidence", "tensorrt_llm_config_binding"],
   build_runtime: { node: process.versions.node, platform: process.platform, arch: process.arch },

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { access, readFile, writeFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
@@ -16,6 +16,7 @@ import { buildInterfaceQuantizationContractLedger } from "../web/lib/quantizatio
 import { compareInterfaceContracts } from "../web/lib/interface-contract.js";
 import { canonicalJson } from "../web/lib/report-utils.js";
 import { buildMlBomDocument } from "../web/lib/report-mlbom.js";
+import { buildArtifactEvidenceEnvelope, validateArtifactEvidenceEnvelope } from "../web/lib/artifact-evidence-envelope.js";
 import { buildTensorRtStaticPreflight } from "../web/lib/tensorrt-static-preflight.js";
 import { buildOnDeviceLlmContract } from "../web/lib/on-device-llm-contract.js";
 import { buildLlmStaticMemoryPlacement } from "../web/lib/llm-static-memory-placement.js";
@@ -30,6 +31,16 @@ import {
   LLM_STATIC_RESIDENCY_ASSUMPTION,
 } from "../web/lib/llm-memory-feasibility.js";
 import {
+  buildCliCapabilities,
+  buildSarifDocument,
+  evaluateFindingPolicy,
+  normalizeFailOn,
+  outputExists,
+  renderCliError,
+  resolveGenerationTimestamp,
+  writeOutputAtomically,
+} from "./deepbom-automation.mjs";
+import {
   analyze_tflite_for_target,
   compute_deployment_delta,
   explore_tflite_redesign_pareto,
@@ -40,15 +51,22 @@ const DEFAULT_TARGET = "android_mid_a55";
 const DEFAULT_DELTA_TARGETS = Object.freeze([DEFAULT_TARGET, "rpi4_a72", "x86_avx2", "wasm_simd"]);
 const MAX_TARGET_PROFILE_BYTES = 16_384;
 const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.94.6";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.95.0";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 
 async function main(argv) {
   const parsed = parseArguments(argv);
   if (parsed.help) return printHelp();
   if (parsed.version) return process.stdout.write(`${VERSION}\n`);
+  if (parsed.command === "capabilities") {
+    validateCapabilitiesInvocation(parsed);
+    await preflightOutputDestinations(parsed);
+    const capabilities = buildCliCapabilities(VERSION, { defaultTarget: DEFAULT_TARGET, deltaTargets: DEFAULT_DELTA_TARGETS });
+    return emitDocument(parsed, capabilities, () => buildCapabilitiesSummary(capabilities));
+  }
   if (!parsed.input) throw new Error("An artifact path is required.");
   validateInvocation(parsed);
+  await preflightOutputDestinations(parsed);
   const targetBinding = await resolveTargetBinding(parsed);
   if (parsed.command === "diff") return runDiffCommand(parsed, targetBinding);
 
@@ -155,18 +173,49 @@ async function main(argv) {
   if (parsed.command === "verify") return runVerifyCommand(parsed, analysis, artifact);
   if (parsed.command === "explore") return runExploreCommand(parsed, analysis, artifact, input, targetBinding.value);
 
+  const generatedAt = resolveGenerationTimestamp(parsed.timestamp);
+  const envelope = parsed.outputFormat === "envelope" || parsed.outputFormat === "sarif" || parsed.failOn !== "none"
+    ? buildArtifactEvidenceEnvelope(analysis, {
+        hash: artifactSha256,
+        fileSizeBytes: artifact.size,
+        filename: artifact.filename,
+        generatedAt,
+        provenance: {
+          analyzer: "DEEPBOM",
+          version: VERSION,
+          command: parsed.command,
+          target_profile_id: analysis.target_profile?.id || null,
+        },
+      })
+    : null;
+  if (envelope) {
+    const validation = validateArtifactEvidenceEnvelope(envelope);
+    if (!validation.valid) throw new Error(`Canonical evidence envelope validation failed: ${validation.errors.join(", ")}`);
+  }
+  const policyResult = envelope ? evaluateFindingPolicy(envelope, parsed.failOn) : null;
   const document = parsed.outputFormat === "cyclonedx"
     ? buildMlBomDocument(analysis, {
         hash: artifactSha256,
         fileSizeBytes: artifact.size,
-        timestamp: parsed.timestamp || new Date().toISOString(),
+        timestamp: generatedAt || new Date().toISOString(),
         ...(analysis.target_profile ? {
           target: analysis.target_profile,
           targetId: analysis.target_profile.id,
         } : {}),
       })
-    : analysis;
-  return emitDocument(parsed, document, () => buildHumanSummary(analysis, artifact));
+    : parsed.outputFormat === "envelope"
+      ? envelope
+      : parsed.outputFormat === "sarif"
+        ? buildSarifDocument(envelope, { version: VERSION, policyResult })
+        : analysis;
+  await emitDocument(parsed, document, () => buildHumanSummary(analysis, artifact));
+  if (parsed.policyOutput) {
+    await writeOutputAtomically(parsed.policyOutput, `${JSON.stringify(policyResult, null, parsed.compact ? 0 : 2)}\n`, { noClobber: parsed.noClobber });
+  }
+  if (policyResult?.status === "block") {
+    process.stderr.write(`deepbom: finding policy blocked ${policyResult.blocking_finding_count} finding(s) at or above ${policyResult.fail_on}.\n`);
+    process.exitCode = 2;
+  }
 }
 
 async function resolveTargetBinding(parsed) {
@@ -195,7 +244,47 @@ function validateInvocation(parsed) {
   if (parsed.command === "verify" && !parsed.contract) throw new Error("The verify command requires --contract <json>.");
   if (parsed.command === "diff" && !parsed.candidate) throw new Error("The diff command requires baseline and candidate TFLite artifacts.");
   if (parsed.executorchBuild && parsed.command !== "audit") throw new Error("--executorch-build is valid only with the audit command.");
+  if (parsed.policyOutput && parsed.failOn === "none") throw new Error("--policy-output requires --fail-on.");
+  if (parsed.noClobber && !parsed.output && !parsed.policyOutput) throw new Error("--no-clobber requires --output or --policy-output.");
+  if (parsed.noClobber && parsed.output === "-" && !parsed.policyOutput) {
+    throw new Error("--no-clobber cannot protect stdout; provide a file path with --output.");
+  }
+  if (parsed.policyOutput === "-") throw new Error("--policy-output requires a file path; use --output - for the primary document.");
+  if (parsed.timestamp && parsed.outputFormat === "analysis" && parsed.failOn === "none") {
+    throw new Error("--timestamp applies only to envelope, CycloneDX, SARIF, or finding-policy evidence.");
+  }
+  if (["verify", "diff", "explore"].includes(parsed.command) && (parsed.failOn !== "none" || parsed.policyOutput)) {
+    throw new Error(`The ${parsed.command} command does not accept finding-policy options.`);
+  }
+  if (["verify", "diff", "explore"].includes(parsed.command) && parsed.timestamp) {
+    throw new Error(`The ${parsed.command} command does not accept --timestamp.`);
+  }
+  if (parsed.output && parsed.output !== "-" && parsed.policyOutput
+      && path.resolve(parsed.output) === path.resolve(parsed.policyOutput)) {
+    throw new Error("--output and --policy-output must identify different files.");
+  }
   if (["verify", "diff", "explore"].includes(parsed.command)) assertCommandOutputFormat(parsed, parsed.command);
+}
+
+async function preflightOutputDestinations(parsed) {
+  if (!parsed.noClobber) return;
+  const paths = [parsed.output === "-" ? "" : parsed.output, parsed.policyOutput].filter(Boolean);
+  for (const outputPath of paths) {
+    if (await outputExists(outputPath)) throw new Error(`Output already exists: ${path.resolve(outputPath)}`);
+  }
+}
+
+function validateCapabilitiesInvocation(parsed) {
+  if (parsed.input) throw new Error("The capabilities command does not accept an artifact path.");
+  assertNoOptions(parsed, [
+    "targetProfile", "contract", "request", "context", "batch", "stateBits", "memoryMib", "tensorrtProfile",
+    "tensorrtParserEvidence", "tensorrtEngineInspector", "tensorrtLlmConfig", "tensorrtLlmBinding",
+    "llmMemoryProfile", "externalDataRoot", "executorchBuild", "policyOutput",
+  ], "capabilities");
+  if (parsed.targetExplicit || parsed.failOn !== "none") throw new Error("The capabilities command does not accept target or finding-policy options.");
+  if (parsed.timestamp) throw new Error("The capabilities command does not accept --timestamp.");
+  if (parsed.noClobber && parsed.output === "-") throw new Error("--no-clobber cannot protect stdout; provide a file path with --output.");
+  if (parsed.outputFormat !== "analysis") throw new Error("The capabilities command emits deepbom.cli_capabilities.v1; --format is not supported.");
 }
 
 async function runDiffCommand(parsed, targetBinding) {
@@ -306,17 +395,17 @@ async function initializeTfliteWasm() {
 }
 
 async function emitDocument(parsed, document, humanBuilder) {
-  const machineReadable = parsed.json || parsed.compact || Boolean(parsed.output) || parsed.outputFormat === "cyclonedx";
+  const machineReadable = parsed.json || parsed.compact || Boolean(parsed.output) || parsed.outputFormat !== "analysis";
   const text = machineReadable
     ? `${JSON.stringify(document, bigintReplacer, parsed.compact ? 0 : 2)}\n`
     : humanBuilder();
-  if (parsed.output) await writeFile(path.resolve(parsed.output), text, "utf8");
+  if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, text, { noClobber: parsed.noClobber });
   else process.stdout.write(text);
 }
 
 function assertCommandOutputFormat(parsed, command) {
   if (parsed.outputFormat !== "analysis") {
-    throw new Error(`The ${command} command emits its own evidence schema; --format cyclonedx is not supported.`);
+    throw new Error(`The ${command} command emits its own evidence schema; --format ${parsed.outputFormat} is not supported.`);
   }
 }
 
@@ -629,6 +718,20 @@ function buildExploreSummary(pareto) {
   return `${lines.join("\n")}\n`;
 }
 
+function buildCapabilitiesSummary(capabilities) {
+  const commands = capabilities.commands.map((row) => row.name).join(", ");
+  const formats = capabilities.inputs.standalone_extensions.join(", ");
+  return [
+    `DEEPBOM ${capabilities.cli_version} CLI capabilities`,
+    `Commands: ${commands}`,
+    `Standalone inputs: ${formats}`,
+    "Machine discovery: rerun with --json or --compact.",
+    "Canonical automation outputs: envelope, CycloneDX 1.7, and SARIF 2.1.0.",
+    "Exit codes: 0 pass, 1 invocation/analysis failure, 2 policy or verification block, 3 incomplete verification binding.",
+    "",
+  ].join("\n");
+}
+
 function displayValue(value) {
   if (typeof value === "string") return value;
   return JSON.stringify(value, bigintReplacer);
@@ -715,7 +818,7 @@ function parseArguments(argv) {
   const first = values[0] || "";
   if (["-h", "--help", "help"].includes(first)) return { help: true };
   if (["-v", "--version", "version"].includes(first)) return { version: true };
-  const command = ["audit", "gguf", "verify", "diff", "explore"].includes(first) ? values.shift() : "audit";
+  const command = ["audit", "gguf", "verify", "diff", "explore", "capabilities"].includes(first) ? values.shift() : "audit";
   const parsed = {
     command,
     input: "",
@@ -727,6 +830,10 @@ function parseArguments(argv) {
     request: "",
     outputFormat: "analysis",
     output: "",
+    policyOutput: "",
+    failOn: "none",
+    noClobber: false,
+    errorFormat: "text",
     timestamp: "",
     context: null,
     batch: 1,
@@ -766,6 +873,10 @@ function parseArguments(argv) {
     else if (token === "--executorch-build") parsed.executorchBuild = requiredValue(values, token);
     else if (token === "--format") parsed.outputFormat = requiredValue(values, token).toLowerCase();
     else if (token === "--output" || token === "-o") parsed.output = requiredValue(values, token);
+    else if (token === "--policy-output") parsed.policyOutput = requiredValue(values, token);
+    else if (token === "--fail-on") parsed.failOn = normalizeFailOn(requiredValue(values, token));
+    else if (token === "--no-clobber") parsed.noClobber = true;
+    else if (token === "--error-format") parsed.errorFormat = requiredValue(values, token).toLowerCase();
     else if (token === "--timestamp") parsed.timestamp = normalizeTimestamp(requiredValue(values, token));
     else if (token === "--json") parsed.json = true;
     else if (token === "--compact") parsed.compact = true;
@@ -776,9 +887,11 @@ function parseArguments(argv) {
     else if (parsed.command === "diff" && !parsed.candidate) parsed.candidate = token;
     else throw new Error(`Unexpected positional argument: ${token}`);
   }
-  if (!new Set(["analysis", "cyclonedx"]).has(parsed.outputFormat)) {
-    throw new Error("--format must be analysis or cyclonedx.");
+  if (!new Set(["analysis", "envelope", "cyclonedx", "sarif"]).has(parsed.outputFormat)) {
+    throw new Error("--format must be analysis, envelope, cyclonedx, or sarif.");
   }
+  if (!new Set(["text", "json"]).has(parsed.errorFormat)) throw new Error("--error-format must be text or json.");
+  if (parsed.json && parsed.compact) throw new Error("--json and --compact are mutually exclusive.");
   return parsed;
 }
 
@@ -833,12 +946,12 @@ async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_B
 }
 
 function printHelp() {
-  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     GGUF context-length scenario\n  --batch <count>        GGUF scenario batch size (default: 1)\n  --state-bits <bits>    GGUF KV-state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the static lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis or cyclonedx (default: analysis; audit/gguf only)\n  --timestamp <iso>      Fixed CycloneDX generation timestamp\n  --output, -o <path>    Write the complete JSON document to a file\n  --json                 Emit the complete formatted evidence JSON\n  --compact              Emit the complete compact evidence JSON\n  --version              Print version\n  --help                 Show this help\n\nverify exit codes:\n  0 exact pass; 2 contradiction or invalid declaration; 3 incomplete release binding\n`);
+  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     GGUF context-length scenario\n  --batch <count>        GGUF scenario batch size (default: 1)\n  --state-bits <bits>    GGUF KV-state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the static lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis, envelope, cyclonedx, or sarif (audit/gguf only)\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Exit 2 for findings at/above informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Emit the complete formatted evidence JSON\n  --compact              Emit the complete compact evidence JSON\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
   process.stdout.write("\nTensorRT optimized-engine option:\n  --tensorrt-engine-inspector <json>\n                          Import identity-bound TensorRT optimized-engine inspector evidence\n");
   process.stdout.write("\nExecuTorch selected-build option:\n  --executorch-build <json>\n                          Bind backend/operator inventories and runtime binary digests to a PTE audit\n");
 }
 
 main(process.argv.slice(2)).catch((error) => {
-  process.stderr.write(`deepbom: ${error?.message || String(error)}\n`);
+  process.stderr.write(renderCliError(error));
   process.exitCode = 1;
 });
