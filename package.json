@@ -121,6 +121,7 @@
     "check:format-routing": "node scripts/check-format-routing.mjs",
     "check:format-quant-viewer": "node scripts/check-format-quant-viewer.mjs",
     "check:evidence-treemap": "node scripts/check-evidence-treemap.mjs",
+    "check:evidence-workbench": "node scripts/check-evidence-workbench.mjs",
     "check:format-capability-viewer": "node scripts/check-format-capability-viewer.mjs",
     "check:execution-placement": "node scripts/check-execution-placement-evidence.mjs && node scripts/check-execution-placement-viewer.mjs",
     "check:discovery-metadata": "node scripts/check-discovery-metadata.mjs",

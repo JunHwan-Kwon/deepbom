@@ -575,6 +575,30 @@
   vector-effect: non-scaling-stroke;
 }
 
+.nv-hierarchy-node rect {
+  fill: color-mix(in srgb, var(--surface-elevated) 86%, var(--accent) 14%);
+  stroke: color-mix(in srgb, var(--line-strong) 74%, var(--accent) 26%);
+}
+
+.nv-hierarchy-node.selected rect {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+
+.nv-node-external rect {
+  fill: color-mix(in srgb, var(--accent-cyan, #2b7f86) 18%, var(--surface-2, #f4f1ea));
+  stroke: var(--accent-cyan, #2b7f86);
+}
+
+.nv-edge-external {
+  stroke: var(--accent-cyan, #2b7f86);
+  stroke-width: 2.2;
+}
+
+.nv-hierarchy-edge {
+  stroke-width: 1.8;
+}
+
 .nv-edge-risk {
   stroke: #ef4444;
 }
@@ -894,6 +918,8 @@
   background: var(--panel);
 }
 
+.nv-detail-close { display: none; }
+
 .nv-detail-actions {
   flex-wrap: wrap;
   margin: 10px 0;
@@ -1086,8 +1112,34 @@
   }
 
   .nv-detail {
+    position: fixed;
+    inset-inline: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 1100;
     order: 0;
-    border-bottom: 1px solid var(--line);
+    max-height: min(58dvh, 620px);
+    overflow: auto;
+    border: 1px solid var(--line-strong, var(--line));
+    border-radius: 6px;
+    background: var(--surface, #fffdf8);
+    box-shadow: 0 -14px 42px rgb(18 24 20 / 24%);
+  }
+
+  .nv-shell.inspector-collapsed .nv-detail { display: none; }
+
+  .nv-detail-close {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: grid;
+    width: 32px;
+    height: 32px;
+    margin-inline-start: auto;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface, #fffdf8);
+    color: var(--ink);
   }
 
   .nv-viewport {

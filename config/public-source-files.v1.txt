@@ -243,6 +243,7 @@ scripts/check-dynamic-shape-cost.mjs
 scripts/check-evidence-package-profile-ui.mjs
 scripts/check-evidence-package-profiles.mjs
 scripts/check-evidence-treemap.mjs
+scripts/check-evidence-workbench.mjs
 scripts/check-execution-placement-evidence.mjs
 scripts/check-execution-placement-viewer.mjs
 scripts/check-executorch-analysis.mjs
@@ -551,6 +552,7 @@ web/explorer-question.css
 web/explorer-redesign.css
 web/index.html
 web/lib/accelerator-profile-binding.js
+web/lib/accelerator-profile-switcher.js
 web/lib/access-policy.js
 web/lib/account-ui.js
 web/lib/accumulator-atlas.js
@@ -566,6 +568,8 @@ web/lib/app-graph-workspace.js
 web/lib/app-surface.js
 web/lib/arena-viewer.js
 web/lib/artifact-bundle.js
+web/lib/artifact-diff-view.js
+web/lib/artifact-diff.js
 web/lib/artifact-evidence-envelope.js
 web/lib/artifact-overview.js
 web/lib/artifact-set.js
@@ -608,10 +612,12 @@ web/lib/download.js
 web/lib/dynamic-shape-cost-conformance.js
 web/lib/dynamic-shape-cost.js
 web/lib/elements.js
+web/lib/evidence-cursor.js
 web/lib/evidence-level-report.js
 web/lib/evidence-package-profiles.js
 web/lib/evidence-package-rights.js
 web/lib/evidence-treemap.js
+web/lib/evidence-why-drawer.js
 web/lib/exact-rational.js
 web/lib/execution-placement-evidence.js
 web/lib/execution-placement-view.js
@@ -635,6 +641,7 @@ web/lib/gguf-backend-contract.js
 web/lib/gguf-codebooks.generated.js
 web/lib/gguf-runtime-environment.js
 web/lib/graph-export.js
+web/lib/graph-hierarchy.js
 web/lib/graph-ir.js
 web/lib/graph-layout.js
 web/lib/graph-topology.js
@@ -661,6 +668,7 @@ web/lib/metric-coverage.js
 web/lib/modal-accessibility.js
 web/lib/model-file.js
 web/lib/model-glance.js
+web/lib/node-edge-evidence-overlay.js
 web/lib/node-view.js
 web/lib/numerical-abi-propagation-viewer.js
 web/lib/numerical-abi-propagation.js
@@ -793,6 +801,7 @@ web/lib/residual-contract-distortion-worker.js
 web/lib/residual-contract-distortion.js
 web/lib/residual-step-response-worker.js
 web/lib/residual-step-response.js
+web/lib/review-export.js
 web/lib/rgb-png.js
 web/lib/rounding-equivalence-worker.js
 web/lib/rounding-equivalence.js

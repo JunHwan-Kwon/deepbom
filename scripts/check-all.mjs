@@ -61,6 +61,7 @@ const CHECKS = [
   "scripts/check-coreml-compute-plan.mjs",
   "scripts/check-format-quant-viewer.mjs",
   "scripts/check-evidence-treemap.mjs",
+  "scripts/check-evidence-workbench.mjs",
   "scripts/check-format-capability-viewer.mjs",
   "scripts/check-backend-placement-projection.mjs",
   "scripts/check-tensorrt-static-preflight.mjs",

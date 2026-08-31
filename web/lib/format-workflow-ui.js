@@ -133,6 +133,7 @@ export function renderAuditClaimBoundaryView({
   format,
   analysis = null,
   runtimeEvidence = null,
+  placementOptions = {},
   elements = {},
   doc = globalThis.document,
 } = {}) {
@@ -153,7 +154,7 @@ export function renderAuditClaimBoundaryView({
   if (!boundary) return;
   if (!format) {
     boundary.hidden = true;
-    renderExecutionPlacementView(doc?.getElementById("executionPlacementPanel"), null, null, { doc });
+    renderExecutionPlacementView(doc?.getElementById("executionPlacementPanel"), null, null, { doc, ...placementOptions });
     return;
   }
   const scope = formatEvidenceScope(format, { analysis, runtimeEvidence });
@@ -168,7 +169,7 @@ export function renderAuditClaimBoundaryView({
     ? scope.releaseStatus
     : "Completion of the future static run will not establish task accuracy, runtime placement, or release readiness.";
   renderEvidenceSpine(boundary, scope, Boolean(analysis));
-  renderExecutionPlacementView(doc?.getElementById("executionPlacementPanel"), analysis, runtimeEvidence, { doc });
+  renderExecutionPlacementView(doc?.getElementById("executionPlacementPanel"), analysis, runtimeEvidence, { doc, ...placementOptions });
   if (reportScopeCopy) {
     reportScopeCopy.textContent = `Public summary: ${scope.assessed}. ${scope.runtimeBoundary}. The login-free Engineering Report adds the complete synthesized evidence ledger and action queue; reusable raw derivatives retain a separate access boundary.`;
   }

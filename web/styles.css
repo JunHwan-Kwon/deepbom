@@ -3419,6 +3419,16 @@
   filter: saturate(1.12) contrast(1.03);
 }
 
+.evidence-treemap-tile.compact-tile::after {
+  width: 5px;
+  height: 5px;
+  margin: auto;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .45;
+  content: "";
+}
+
 .evidence-treemap-tile strong,
 .evidence-treemap-tile span {
   display: block;
@@ -8175,6 +8185,204 @@ tr.clickable-row:hover {
 
 .target-pill.active .target-pill-ready.loaded {
   background: rgba(0, 0, 0, 0.6);
+}
+
+.accelerator-switcher-bar {
+  padding-top: 3px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 68%, transparent);
+}
+
+.accelerator-switcher-bar .target-pill {
+  border-radius: 4px;
+}
+
+.accelerator-switcher-bar .target-pill.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 13%, var(--surface));
+  color: var(--ink);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.accelerator-switcher-bar .accelerator-profile-pending:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 88%, var(--panel));
+  border-style: dashed;
+}
+
+.accelerator-switcher-bar .accelerator-profile-pending:disabled:hover {
+  border-color: var(--line);
+  background: color-mix(in srgb, var(--surface) 88%, var(--panel));
+}
+
+.accelerator-switcher-boundary {
+  flex: 1 1 100%;
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.finding-evidence-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 9px;
+}
+
+.finding-evidence-link {
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 10px;
+}
+
+.finding-evidence-remainder {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.tensor-row.selected td {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent) 46%, transparent), inset 0 -1px 0 color-mix(in srgb, var(--accent) 46%, transparent);
+}
+
+.artifact-diff-workspace {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.evidence-why-drawer {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 1200;
+  width: min(520px, 100vw);
+  overflow: auto;
+  padding: 22px;
+  color: var(--ink, #202622);
+  background: var(--surface, #f7f4ed);
+  border-inline-start: 1px solid var(--line, #cbc8bd);
+  box-shadow: -18px 0 48px rgb(20 25 22 / 18%);
+}
+
+.evidence-why-drawer[hidden] { display: none; }
+
+.evidence-why-drawer > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block-end: 16px;
+  border-block-end: 1px solid var(--line, #cbc8bd);
+}
+
+.evidence-why-drawer header span,
+.evidence-why-drawer header p,
+.evidence-why-body h3 { color: var(--muted, #657068); }
+.evidence-why-drawer h2 { margin: 3px 0; font-size: 1.24rem; }
+.evidence-why-drawer header p { margin: 0; }
+.evidence-why-actions { display: flex; gap: 6px; }
+.evidence-why-body { display: grid; gap: 0; }
+.evidence-why-body section { padding: 13px 0; border-block-end: 1px solid var(--line-soft, #dfdcd2); }
+.evidence-why-body h3 { margin: 0 0 4px; font-size: .72rem; text-transform: uppercase; }
+.evidence-why-body p, .evidence-why-body ul { margin: 0; line-height: 1.45; overflow-wrap: anywhere; }
+.evidence-why-body ul { padding-inline-start: 18px; }
+.evidence-why-trigger { min-width: 30px; padding-inline: 8px; }
+
+.placement-profile-metric-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.placement-profile-metric-label .evidence-why-trigger {
+  min-width: 0;
+  height: 24px;
+  padding: 0 5px;
+  font-size: 10px;
+}
+
+.runtime-source-unmapped { color: var(--muted); }
+.runtime-source-reconciliation summary { cursor: pointer; font-weight: 700; }
+
+.artifact-diff-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-block: 1px solid var(--line);
+}
+
+.artifact-diff-summary > div {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-right: 1px solid var(--line);
+}
+
+.artifact-diff-summary > div:last-child { border-right: 0; }
+.artifact-diff-summary span,
+.artifact-diff-node small,
+.artifact-diff-node em { color: var(--muted); font-size: 10px; }
+
+.artifact-diff-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.artifact-diff-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 420px;
+  border: 1px solid var(--line);
+}
+
+.artifact-diff-pane { min-width: 0; border-right: 1px solid var(--line); }
+.artifact-diff-pane:last-child { border-right: 0; }
+.artifact-diff-pane-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.artifact-diff-pane-head span { color: var(--muted); font-family: var(--mono); font-size: 10px; }
+.artifact-diff-list { max-height: 560px; overflow: auto; scrollbar-gutter: stable; }
+.artifact-diff-node {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 0.42fr) minmax(110px, 0.34fr);
+  width: 100%;
+  min-height: 54px;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 9px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+.artifact-diff-node:hover,
+.artifact-diff-node.selected { background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.artifact-diff-node.changed { box-shadow: inset 3px 0 0 var(--warn); }
+.artifact-diff-node.unmatched { box-shadow: inset 3px 0 0 var(--danger); }
+.artifact-diff-node-identity { display: grid; min-width: 0; gap: 2px; }
+.artifact-diff-node-identity strong,
+.artifact-diff-node-identity small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.artifact-diff-node-delta { font-size: 10px; overflow-wrap: anywhere; }
+.artifact-diff-node em { font-style: normal; overflow-wrap: anywhere; }
+
+@media (max-width: 720px) {
+  .artifact-diff-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .artifact-diff-split { grid-template-columns: 1fr; }
+  .artifact-diff-pane { border-right: 0; border-bottom: 1px solid var(--line); }
+  .artifact-diff-list { max-height: 360px; }
+  .artifact-diff-node { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ── Device registry ─────────────────────────────────────────────────────── */

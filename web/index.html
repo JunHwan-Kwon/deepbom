@@ -591,6 +591,7 @@
           </details>
           <section class="sample-verification" id="sampleVerificationPanel" aria-label="Verified example expected and observed evidence" hidden></section>
           <div class="target-switcher-bar" id="targetSwitcherBar" aria-label="TFLite CPU cost profiles" hidden></div>
+          <div class="target-switcher-bar accelerator-switcher-bar" id="acceleratorSwitcherBar" aria-label="Source-backed accelerator eligibility profiles" hidden></div>
         </section>
 
         <section class="model-plan" id="modelPlan">
@@ -1127,6 +1128,7 @@
                 </div>
                 <div class="export-buttons">
                   <button id="downloadMarkdown" type="button" disabled>Engineering Report HTML</button>
+                  <button id="downloadReviewHtml" class="secondary-action" type="button" disabled>Review HTML</button>
                   <button id="printPublicReport" class="secondary-action" type="button" disabled>Print Public Summary PDF</button>
                   <button id="downloadPublicVerificationManifest" class="secondary-action" type="button" disabled>Verification Manifest</button>
                   <button id="downloadRawData" type="button">Raw Evidence Package / Sign in</button>
@@ -1167,6 +1169,7 @@
                       <button id="closeComparison" class="secondary-action" type="button">Close</button>
                     </div>
                   </div>
+                  <div class="artifact-diff-workspace" id="comparisonVisual"></div>
                   <pre id="comparisonPre"></pre>
                 </div>
               </div>
@@ -1996,7 +1999,14 @@
               </label>
               <button id="downloadRuntimeAssignmentTemplate" class="secondary-action" type="button" title="Download a schema template bound to this model and target profile">Runtime template</button>
               <button id="clearRuntimeAssignment" class="secondary-action" type="button" hidden>Clear runtime</button>
+              <label class="secondary-action kernel-runtime-import" title="Import hash-bound node and edge metrics as JSON data. No plugin code is executed.">
+                Import evidence overlay
+                <input id="nodeEvidenceOverlayInput" type="file" accept="application/json,.json" hidden />
+              </label>
+              <button id="downloadNodeEvidenceOverlayTemplate" class="secondary-action" type="button" title="Download an artifact-bound node and edge evidence template">Overlay template</button>
+              <button id="clearNodeEvidenceOverlay" class="secondary-action" type="button" hidden>Clear overlay</button>
             </div>
+            <p class="kernel-runtime-status" id="nodeEvidenceOverlayStatus">No external node/edge evidence overlay imported.</p>
             <div class="kernel-inspector-summary" id="kernelInspectorSummary"></div>
             <div class="runtime-assignment-comparison" id="runtimeAssignmentComparison" hidden></div>
             <div class="kernel-boundary-inventory" id="kernelBoundaryInventory" hidden></div>
@@ -2093,6 +2103,21 @@
         </div>
       </section>
     </main>
+
+    <aside id="evidenceWhyDrawer" class="evidence-why-drawer" hidden aria-hidden="true" tabindex="-1" aria-labelledby="evidenceWhyTitle">
+      <header>
+        <div>
+          <span>Evidence ledger</span>
+          <h2 id="evidenceWhyTitle">Why this value?</h2>
+          <p id="evidenceWhySubtitle"></p>
+        </div>
+        <div class="evidence-why-actions">
+          <button id="copyEvidenceWhy" class="secondary-action" type="button">Copy JSON</button>
+          <button id="closeEvidenceWhy" class="icon-action" type="button" aria-label="Close evidence explanation" title="Close">&#215;</button>
+        </div>
+      </header>
+      <div id="evidenceWhyBody" class="evidence-why-body"></div>
+    </aside>
 
     <script type="module" src="./lib/citation-ui.js"></script>
     <script type="module" src="./bootstrap.js"></script>

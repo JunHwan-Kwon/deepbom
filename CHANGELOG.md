@@ -4,6 +4,42 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Separated CPU cost profiles from source-backed accelerator eligibility in the
+  audit controls. TFLite GPU and NNAPI remain visibly unavailable until their
+  pinned source ledgers are loaded; accelerator selection never changes the CPU
+  roofline or claims kernel selection, timing, or observed assignment.
+- Added a hash-bound Evidence Cursor, exact hierarchical graph contraction,
+  topology-and-tensor-contract artifact diff, strict external node/edge overlay
+  import, and explicit source-to-runtime graph reconciliation.
+- Added a uniform evidence explanation drawer and a CSP-restricted,
+  self-contained `review.html` export with normalized findings, static graph,
+  runtime reconciliation, and replayable review state but no model payload.
+- Added mobile bottom-sheet graph inspection and Resource Map evidence linking
+  while retaining keyboard navigation, light/dark contrast, exact conservation,
+  and desktop/mobile overflow checks. Internal `unnamed group` labels are
+  normalized only in the presentation layer without changing ledger identity.
+- Fixed the release-tier runner to pass script arguments separately from the
+  script path, so argument-bearing gates such as CLI documentation validation
+  execute instead of being interpreted as nonexistent filenames.
+- Made the JavaScript source gate public-boundary aware: `web` and `scripts`
+  remain mandatory, while private-only roots such as `worker` are checked when
+  present instead of making a clean public export fail before validation.
+- Made clean public source exports generate their own public-distribution build
+  metadata and record only roots that exist in that export, keeping runtime
+  imports, bundle hashes, and provenance complete without private-only paths.
+- Made web import smoke cover the protected WASM integration only when that
+  private artifact exists, while retaining mandatory imports for every public
+  web module, ONNX adapter, and TFLite WASM package.
+- Split the hosted-worker assertion from the public web workflow contract so a
+  clean public checkout validates all shipped UI, privacy, accessibility, and
+  export behavior without requiring the separately hosted backend source.
+- Scoped the hosted-worker configuration gate to private checkouts that contain
+  the worker; public smoke now runs its complete 15-check surface while private
+  smoke retains the additional worker deployment check.
+- Raised the handwritten runtime ceiling from 11,048 KiB to 11,184 KiB for the
+  separately modularized evidence cursor, hierarchy, diff, overlay, accelerator
+  switcher, explanation, and read-only review surfaces; per-file, generated,
+  private-source, and application-entry ceilings remain unchanged.
 - Preserved incomplete ONNX MAC ledgers as not assessed instead of exposing
   their assessed subtotal as a complete zero-valued model total; UI, graph
   exports, engineering/regulatory reports, conformance checks, and CLI output

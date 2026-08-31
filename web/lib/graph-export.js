@@ -1,5 +1,6 @@
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
+import { buildHierarchicalGraphProjection } from "./graph-hierarchy.js";
 
 export const VISUALIZATION_MANIFEST_SCHEMA = "deepbom.visualization_manifest.v1";
 const NODE_WIDTH = 248;
@@ -19,6 +20,7 @@ export function exportGraphVisualization(graph, { view = "structure", format = "
     rendered_node_count: projection.nodes.length,
     rendered_edge_count: projection.edges.length,
     level_of_detail: projection.level,
+    hierarchy_conservation: projection.hierarchy?.conservation || null,
     executable_dag_claim: graph.projection.executable_dag_claim,
     dimensions: { width: scene.width, height: scene.height },
     determinism: "canonical_graph_ir_stable_order_and_fixed_layout_v1",
@@ -42,20 +44,8 @@ export function buildGraphVisualizationScene(graph, view = "structure") {
 function project(graph, view) {
   if (!["structure", "placement", "quantization", "architecture"].includes(view)) throw new Error(`Unsupported graph view: ${view}.`);
   if (graph.nodes.length <= 2000) return { nodes: graph.nodes, edges: graph.edges.filter((edge) => edge.from && edge.to), level: "full_graph" };
-  const groups = new Map();
-  for (const node of graph.nodes) {
-    const key = node.stage || node.domain || node.label;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(node);
-  }
-  const nodes = [...groups].sort(([left], [right]) => left.localeCompare(right)).map(([label, members], index) => ({
-    id: `group:${index}`, index, kind: "collapsed_group", label, secondary_label: `${members.length} operators`, domain: "collapsed",
-    stage: label, topo_depth: index, output_shapes: [], macs: sumExact(members.map((node) => node.macs)),
-    estimated_bytes: sumExact(members.map((node) => node.estimated_bytes)),
-    quantization: { state: "mixed_or_grouped", risk: "inspect_group" }, placement: { status: "MIXED_OR_GROUPED", backend: null, evidence_class: "DERIVED_GROUPING" },
-  }));
-  const edges = nodes.slice(1).map((node, index) => ({ id: `group-edge:${index}`, from: nodes[index].id, to: node.id, tensor_name: "collapsed relationships", dtype: null, shape: [] }));
-  return { nodes, edges, level: "stage_collapse_over_2000_nodes" };
+  const hierarchy = buildHierarchicalGraphProjection(graph);
+  return { nodes: hierarchy.nodes, edges: hierarchy.edges, level: `${hierarchy.level}_exact_contraction`, hierarchy };
 }
 
 function layout(nodes, edges) {
@@ -138,7 +128,6 @@ function nodeTone(node, view) {
   return "neutral";
 }
 
-function sumExact(values) { return exact(values.reduce((sum, value) => sum + BigInt(value?.decimal || "0"), 0n)); }
 function exact(value) { return { decimal: value.toString(), number: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null }; }
 function clip(value, maximum) { const text = String(value || ""); return text.length <= maximum ? text : `${text.slice(0, maximum - 1)}…`; }
 function formatInteger(value) { return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }

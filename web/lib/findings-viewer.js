@@ -41,7 +41,7 @@ function appendEvidenceRow(table, source, text) {
   table.append(tr);
 }
 
-export function renderFindings(findingsBody, analysis) {
+export function renderFindings(findingsBody, analysis, { onSelectEvidence = null, onExplain = null } = {}) {
   if (!findingsBody) return;
 
   const findings = Array.isArray(analysis.findings) ? analysis.findings : [];
@@ -82,6 +82,10 @@ export function renderFindings(findingsBody, analysis) {
     title.className = "finding-title";
     title.textContent = f.title;
     hdr.append(sevBadge, catBadge, title);
+    hdr.addEventListener("click", () => onSelectEvidence?.({
+      finding_id: f.id,
+      report_anchor: `finding:${f.id}`,
+    }));
 
     // Evidence table
     const evTable = document.createElement("table");
@@ -106,6 +110,56 @@ export function renderFindings(findingsBody, analysis) {
       actionList.append(li);
     }
 
+    const references = findingReferences(f, analysis);
+    const evidenceActions = document.createElement("div");
+    evidenceActions.className = "finding-evidence-actions";
+    for (const opIndex of references.opIndices.slice(0, 4)) {
+      const inspect = document.createElement("button");
+      inspect.type = "button";
+      inspect.className = "secondary-action finding-evidence-link";
+      inspect.textContent = `Inspect op #${opIndex}`;
+      inspect.addEventListener("click", () => onSelectEvidence?.({
+        finding_id: f.id,
+        op_index: opIndex,
+        report_anchor: `finding:${f.id}`,
+      }));
+      evidenceActions.append(inspect);
+    }
+    for (const tensorIndex of references.tensorIndices.slice(0, 3)) {
+      const inspect = document.createElement("button");
+      inspect.type = "button";
+      inspect.className = "secondary-action finding-evidence-link";
+      inspect.textContent = `Inspect tensor T${tensorIndex}`;
+      inspect.addEventListener("click", () => onSelectEvidence?.({
+        finding_id: f.id,
+        tensor_index: tensorIndex,
+        report_anchor: `finding:${f.id}`,
+      }));
+      evidenceActions.append(inspect);
+    }
+    if (references.opIndices.length > 4 || references.tensorIndices.length > 3) {
+      const remainder = document.createElement("span");
+      remainder.className = "finding-evidence-remainder";
+      remainder.textContent = `+${Math.max(0, references.opIndices.length - 4) + Math.max(0, references.tensorIndices.length - 3)} linked items`;
+      evidenceActions.append(remainder);
+    }
+    if (typeof onExplain === "function") {
+      const why = document.createElement("button");
+      why.type = "button";
+      why.className = "secondary-action finding-evidence-link";
+      why.textContent = "Why?";
+      why.addEventListener("click", () => onExplain({
+        title: f.title,
+        value: `${f.severity} / ${f.category}`,
+        evidence_class: f.confidence || "NOT_ASSESSED",
+        method: "Finding assembled from the cited evidence rows and action policy.",
+        source_pointers: (f.evidence || []).map((row) => row.source).filter(Boolean),
+        limitations: f.impact || "No limitation statement was supplied.",
+        report_pointer: `findings[id=${f.id}]`,
+      }));
+      evidenceActions.append(why);
+    }
+
     // Footer: confidence level
     const footer = document.createElement("div");
     footer.className = "finding-footer";
@@ -119,7 +173,7 @@ export function renderFindings(findingsBody, analysis) {
 
     const content = document.createElement("div");
     content.className = "finding-card-content";
-    content.append(evTable, impactRow, actionList, footer);
+    content.append(evTable, impactRow, actionList, evidenceActions, footer);
     card.append(hdr, content);
     return card;
   });
@@ -146,6 +200,28 @@ export function renderFindings(findingsBody, analysis) {
   mobileActions.append(expandAll, collapseAll);
 
   findingsBody.replaceChildren(summary, mobileActions, ...cards);
+}
+
+export function findingReferences(finding, analysis) {
+  const validOps = new Set((analysis?.ops || []).map((op) => Number(op.index)));
+  const validTensors = new Set((analysis?.tensors || []).map((tensor) => Number(tensor?.index)).filter(Number.isSafeInteger));
+  const opIndices = new Set();
+  const tensorIndices = new Set();
+  const addIndex = (target, valid, value) => {
+    const index = Number(value);
+    if (Number.isSafeInteger(index) && index >= 0 && valid.has(index)) target.add(index);
+  };
+  addIndex(opIndices, validOps, finding?.op_index);
+  addIndex(tensorIndices, validTensors, finding?.tensor_index);
+  for (const value of finding?.op_indices || []) addIndex(opIndices, validOps, value);
+  for (const value of finding?.tensor_indices || []) addIndex(tensorIndices, validTensors, value);
+  const evidenceText = (finding?.evidence || []).map((row) => `${row?.source || ""} ${row?.text || ""}`).join("\n");
+  for (const match of evidenceText.matchAll(/(?:op(?:erator)?\s*)?#(\d+)/gi)) addIndex(opIndices, validOps, match[1]);
+  for (const match of evidenceText.matchAll(/\bT(\d+)\b/g)) addIndex(tensorIndices, validTensors, match[1]);
+  return {
+    opIndices: [...opIndices].sort((left, right) => left - right),
+    tensorIndices: [...tensorIndices].sort((left, right) => left - right),
+  };
 }
 
 export function renderFindingsCalibration(findingsBody, cal) {

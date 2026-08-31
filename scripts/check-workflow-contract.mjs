@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import {
   DEFAULT_REPORT_WORKSPACES,
   MODULE_WORKSPACES,
@@ -24,7 +24,9 @@ const performanceVisualSource = readFileSync("web/lib/performance-visuals.js", "
 const workspaceNavigationSource = readFileSync("web/lib/workspace-navigation.js", "utf8");
 const offlineDeviceSource = readFileSync("web/lib/offline-device-controller.js", "utf8");
 const adminSource = readFileSync("web/admin.js", "utf8");
-const workerSource = readFileSync("worker/index.js", "utf8");
+const hostedWorkerPath = "worker/index.js";
+const hasHostedWorker = existsSync(hostedWorkerPath);
+const workerSource = hasHostedWorker ? readFileSync(hostedWorkerPath, "utf8") : "";
 const webServiceWorkerSource = readFileSync("web/sw.js", "utf8");
 const syntheticModelSource = readFileSync("scripts/reconstruct_tflite.py", "utf8");
 const moduleWorkspaces = [...MODULE_WORKSPACES];
@@ -49,7 +51,7 @@ if (errors.length) {
 }
 
 console.log(
-  `Workflow contract passed (1 HTML shell, medical surface augmentation, ${WORKFLOW_ORDER.length} workflow steps, ${moduleWorkspaces.length} modules, ${regulatoryBundleIds.length} bundle modules).`,
+  `Workflow contract passed (1 HTML shell, medical surface augmentation, ${WORKFLOW_ORDER.length} workflow steps, ${moduleWorkspaces.length} modules, ${regulatoryBundleIds.length} bundle modules; hosted worker ${hasHostedWorker ? "included" : "omitted at the public boundary"}).`,
 );
 
 function checkDefaultPage() {
@@ -151,7 +153,7 @@ function checkPrivacyAndAccessibilityContract() {
     [html.includes("Why this matters for medical AI"), "medical-AI relevance must remain visible without changing the general product scope"],
     [html.includes("zero-weight, shape/op/dtype/quantization-equivalent synthetic reconstruction"), "offline device path must distinguish its synthetic reconstruction from the original artifact"],
     [appSource.includes('body: JSON.stringify({ fingerprint, target })') && offlineDeviceSource.includes("await queueTarget(fingerprint, target)"), "offline queue action must send only the structure fingerprint and selected target"],
-    [workerSource.includes("No model bytes or weights were uploaded"), "offline queue response must preserve its no-artifact-upload contract"],
+    ...(hasHostedWorker ? [[workerSource.includes("No model bytes or weights were uploaded"), "offline queue response must preserve its no-artifact-upload contract"]] : []),
     [syntheticModelSource.includes("Synthetic zero-weight reconstruction for benchmark_model"), "device benchmark builder must identify the generated artifact as a zero-weight reconstruction"],
     [appSource.includes("installWorkspaceNavigation") && workspaceNavigationSource.includes("installRovingTablist") && workspaceNavigationSource.includes('setAttribute("aria-selected"'), "workflow, audit, module, and explorer tabs need keyboard and ARIA state"],
     [styleSource.includes(".topbar > div:first-child,\n  .topbar-meta") && styleSource.includes("flex: 0 1 auto"), "mobile topbar must reset inherited desktop flex bases"],

@@ -9,6 +9,8 @@ import {
   layoutFullGraph,
 } from "./graph-layout.js";
 import { formatBytes, formatExactInteger, formatNumber, formatUs, padOp } from "./format.js";
+import { buildHierarchicalGraphProjection } from "./graph-hierarchy.js";
+import { indexNodeEdgeEvidenceOverlay } from "./node-edge-evidence-overlay.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const NODE_WIDTH = 216;
@@ -17,6 +19,8 @@ const INTERFACE_WIDTH = 194;
 const INTERFACE_HEIGHT = 42;
 const MIN_VIEW_WIDTH = 280;
 const MIN_VIEW_HEIGHT = 220;
+const HIERARCHY_LOD_THRESHOLD = 1200;
+const overlayIndexCache = new WeakMap();
 
 function element(tag, className = "", text = "") {
   const node = document.createElement(tag);
@@ -92,6 +96,11 @@ function tensorPortX(op, direction, tensorId, visibleIds = null) {
 }
 
 function nodeEvidenceLabel(analysis, op, overlay) {
+  if (overlay === "external") {
+    const row = externalOverlayIndex(analysis).nodes.get(Number(op.index));
+    if (!row) return "no imported metric";
+    return row.metrics.slice(0, 2).map(metricLabel).join(" / ");
+  }
   if (overlay === "delegation") return providerLabel(analysis, op);
   if (overlay === "quant") return quantLabel(op);
   if (overlay === "latency") {
@@ -102,6 +111,21 @@ function nodeEvidenceLabel(analysis, op, overlay) {
   }
   const dtype = dtypeSummary(analysis, op, "output");
   return `${dtype} / ${providerLabel(analysis, op)}`;
+}
+
+function externalOverlayIndex(analysis) {
+  const overlay = analysis?.external_node_edge_evidence_overlay;
+  if (!overlay) return { nodes: new Map(), edges: new Map() };
+  const cached = overlayIndexCache.get(overlay);
+  if (cached) return cached;
+  const indexed = indexNodeEdgeEvidenceOverlay(overlay);
+  overlayIndexCache.set(overlay, indexed);
+  return indexed;
+}
+
+function metricLabel(metric) {
+  const value = metric?.value == null ? "not reported" : String(metric.value);
+  return `${metric?.key || "metric"} ${value}${metric?.unit ? ` ${metric.unit}` : ""}`;
 }
 
 function clampViewBox(viewBox, layout) {
@@ -208,6 +232,9 @@ function nodeTone(analysis, op, overlay, projection, projectionIndex) {
     const maximum = Math.max(0, ...values);
     const ratio = maximum > 0 ? opSteadyStateUs(op) / maximum : 0;
     return ratio >= 0.5 ? "nv-node-risk" : ratio >= 0.2 ? "nv-node-warn" : "nv-node-cool";
+  }
+  if (overlay === "external") {
+    return externalOverlayIndex(analysis).nodes.has(Number(op.index)) ? "nv-node-external" : "nv-node-muted";
   }
   if (op.topo_role === "merge") return "nv-node-merge";
   if (Number(op.topo_fan_out_max || 0) > 1) return "nv-node-split";
@@ -420,6 +447,10 @@ function edgeTone(analysis, edge, overlay, projection, projectionIndex) {
     return "nv-edge";
   }
   const target = (analysis?.ops || []).find((op) => op.index === edge.to);
+  if (overlay === "external") {
+    const key = `${Number(edge.from)}:${Number(edge.to)}:${Number(edge.tensorId)}`;
+    return externalOverlayIndex(analysis).edges.has(key) ? "nv-edge-external" : "nv-edge";
+  }
   if (overlay === "delegation" && target?.xnnpack_chain_break) return "nv-edge-risk";
   if (overlay === "quant" && target?.quant_hole) return "nv-edge-risk";
   return "nv-edge";
@@ -576,7 +607,24 @@ function renderDetail(root, analysis, graph, selectedIndex, actions, projection,
     evidenceRows.append(row);
   }
   evidenceDetails.append(evidenceRows);
-  root.append(head, actionsRow, metrics, links, tensorDetails, evidenceDetails);
+  const imported = externalOverlayIndex(analysis).nodes.get(Number(op.index));
+  const importedDetails = imported ? document.createElement("details") : null;
+  if (importedDetails) {
+    importedDetails.className = "nv-evidence-ledger nv-external-evidence-ledger";
+    importedDetails.open = true;
+    importedDetails.append(element("summary", "", "Imported node evidence"));
+    const rows = element("dl", "nv-evidence-rows");
+    for (const metric of imported.metrics) {
+      const row = element("div");
+      row.append(
+        element("dt", "", metric.key),
+        element("dd", "", `${metricLabel(metric)} / ${metric.evidence_class}${metric.source_pointer ? ` / ${metric.source_pointer}` : ""}`),
+      );
+      rows.append(row);
+    }
+    importedDetails.append(rows);
+  }
+  root.append(head, actionsRow, metrics, links, tensorDetails, evidenceDetails, ...(importedDetails ? [importedDetails] : []));
 }
 
 function createMinimap(graph, layout, state, onNavigate) {
@@ -763,6 +811,7 @@ function renderSvg(root, analysis, graph, layout, state, actions) {
     const selected = edge.from === state.selectedOpIndex || edge.to === state.selectedOpIndex;
     const withinFocus = !state.focusedIndices
       || (state.focusedIndices.has(edge.from) && state.focusedIndices.has(edge.to));
+    if (graph.nodes.length > HIERARCHY_LOD_THRESHOLD && state.focusedIndices && !withinFocus) continue;
     const path = svgElement("path", {
       d: `M ${x1} ${y1} C ${x1} ${y1 + curve}, ${x2} ${y2 - curve}, ${x2} ${y2}`,
       class: `${edgeTone(analysis, edge, state.overlay, state.projection, state.projectionIndex)}${selected ? " selected" : ""}${withinFocus ? "" : " focus-hidden"}`,
@@ -808,6 +857,7 @@ function renderSvg(root, analysis, graph, layout, state, actions) {
     const searchMatch = !term || searchable.includes(term);
     const connected = selectedRelated.upstream.has(op.index) || selectedRelated.downstream.has(op.index);
     const withinFocus = !state.focusedIndices || state.focusedIndices.has(op.index);
+    if (graph.nodes.length > HIERARCHY_LOD_THRESHOLD && state.focusedIndices && !withinFocus) continue;
     const group = svgElement("g", {
       class: [
         "nv-node",
@@ -966,6 +1016,217 @@ function renderSvg(root, analysis, graph, layout, state, actions) {
   });
 }
 
+function buildNodeHierarchy(analysis, graph) {
+  const tensorByIndex = new Map((analysis.tensors || []).map((tensor) => [Number(tensor.index), tensor]));
+  const input = {
+    nodes: (analysis.ops || []).map((op) => ({
+      id: `op:${op.index}`,
+      index: Number(op.index),
+      label: String(op.name || `OP_${op.index}`),
+      domain: String(op.domain || analysis.format || "operator"),
+      stage: String(op.stage_key ?? op.stage_index ?? "") || null,
+      topo_depth: Number.isSafeInteger(Number(op.topo_depth)) ? Number(op.topo_depth) : Number(op.index),
+      macs: exactMetric(op.macs_decimal ?? op.macs),
+      estimated_bytes: exactMetric(op.estimated_bytes),
+      quantization: { state: String(op.quantization_state || "none") },
+      placement: { status: providerLabel(analysis, op) },
+    })),
+    edges: graph.edges.map((edge, index) => ({
+      id: `edge:${index}:${edge.from}:${edge.to}:${edge.tensorId}`,
+      from: `op:${edge.from}`,
+      to: `op:${edge.to}`,
+      tensor_index: Number(edge.tensorId),
+      tensor_name: tensorByIndex.get(Number(edge.tensorId))?.name || `tensor_${edge.tensorId}`,
+      byte_length: exactTensorBytes(tensorByIndex.get(Number(edge.tensorId)), edge.bytes),
+    })),
+  };
+  const projection = buildHierarchicalGraphProjection(input);
+  const idToIndex = new Map(projection.nodes.map((group, index) => [group.id, index]));
+  const nodes = projection.nodes.map((group, index) => ({
+    op: {
+      index,
+      name: group.label,
+      stage_key: group.label,
+      output_shapes: [],
+      _hierarchy_group: group,
+    },
+    column: 0,
+    distance: 0,
+    outputDtype: null,
+  }));
+  const edges = projection.edges.map((edge, index) => ({
+    from: idToIndex.get(edge.from),
+    to: idToIndex.get(edge.to),
+    tensorId: -(index + 1),
+    bytes: Number(edge.assessed_payload_bytes?.number || 0),
+    dtype: null,
+    edgeCount: edge.edge_count,
+  }));
+  const layout = layoutFullGraph(nodes, edges, { minimumColumns: 1, columnWidth: 280, rankHeight: 126, marginY: 70 });
+  const groupByOp = new Map();
+  for (const group of projection.nodes) for (const index of group.member_op_indices || []) groupByOp.set(Number(index), group);
+  return { projection, graph: { nodes, edges }, layout, groupByOp };
+}
+
+function exactTensorBytes(tensor, fallback) {
+  const explicit = tensor?.byte_length ?? tensor?.storage_bytes ?? tensor?.payload_bytes;
+  if (explicit != null && Number.isFinite(Number(explicit)) && Number(explicit) >= 0) return exactMetric(explicit);
+  const shape = Array.isArray(tensor?.shape) ? tensor.shape.map(Number) : [];
+  const width = dtypeBytes(tensor?.dtype);
+  if (shape.length && shape.every((value) => Number.isSafeInteger(value) && value >= 0) && width != null) {
+    return exactMetric(shape.reduce((product, value) => product * value, 1) * width);
+  }
+  return fallback != null && Number.isFinite(Number(fallback)) && Number(fallback) > 0 ? exactMetric(fallback) : null;
+}
+
+function dtypeBytes(dtype) {
+  const key = String(dtype || "").toUpperCase();
+  if (["FLOAT64", "DOUBLE", "INT64", "UINT64"].includes(key)) return 8;
+  if (["FLOAT32", "FLOAT", "INT32", "UINT32"].includes(key)) return 4;
+  if (["FLOAT16", "BFLOAT16", "INT16", "UINT16"].includes(key)) return 2;
+  if (["INT8", "UINT8", "BOOL", "BOOLEAN"].includes(key)) return 1;
+  return null;
+}
+
+function renderHierarchySvg(root, hierarchy, state, actions) {
+  root.replaceChildren();
+  const { graph, layout, projection } = hierarchy;
+  const svg = svgElement("svg", {
+    class: "nv-graph nv-hierarchy-graph",
+    role: "img",
+    "aria-label": "Hierarchical model graph with exact contracted tensor relationships",
+    tabindex: "0",
+    viewBox: state.viewBox.join(" "),
+    preserveAspectRatio: "xMidYMid meet",
+  });
+  const defs = svgElement("defs");
+  const marker = svgElement("marker", { id: "nv-hierarchy-arrow", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: "auto-start-reverse" });
+  marker.append(svgElement("path", { d: "M 0 0 L 10 5 L 0 10 z", class: "nv-arrow" }));
+  defs.append(marker);
+  svg.append(defs);
+  const edges = svgElement("g", { class: "nv-edge-layer" });
+  for (const edge of graph.edges) {
+    const from = layout.positions.get(edge.from);
+    const to = layout.positions.get(edge.to);
+    if (!from || !to) continue;
+    const x1 = from.x + NODE_WIDTH / 2;
+    const y1 = from.y + NODE_HEIGHT;
+    const x2 = to.x + NODE_WIDTH / 2;
+    const y2 = to.y;
+    const curve = Math.max(24, Math.abs(y2 - y1) * 0.5);
+    const path = svgElement("path", {
+      class: "nv-edge nv-hierarchy-edge",
+      d: `M ${x1} ${y1} C ${x1} ${y1 + curve}, ${x2} ${y2 - curve}, ${x2} ${y2}`,
+      "marker-end": "url(#nv-hierarchy-arrow)",
+    });
+    const title = svgElement("title");
+    title.textContent = `${edge.edgeCount} serialized tensor edge${edge.edgeCount === 1 ? "" : "s"}`;
+    path.append(title);
+    edges.append(path);
+  }
+  svg.append(edges);
+  const term = state.search.trim().toLowerCase();
+  const selectedGroup = hierarchy.groupByOp.get(Number(state.selectedOpIndex));
+  const nodes = svgElement("g", { class: "nv-node-layer" });
+  for (const placed of layout.nodes) {
+    const group = placed.op._hierarchy_group;
+    const searchable = `${group.label} ${(group.member_op_indices || []).join(" ")}`.toLowerCase();
+    const node = svgElement("g", {
+      class: `nv-node nv-hierarchy-node${selectedGroup?.id === group.id ? " selected" : ""}${term && !searchable.includes(term) ? " search-dim" : ""}`,
+      transform: `translate(${placed.x} ${placed.y})`,
+      tabindex: "0",
+      role: "button",
+      "aria-label": `${group.label}; ${group.member_count} operators; open operator detail`,
+      "data-group-id": group.id,
+    });
+    node.append(svgElement("rect", { width: NODE_WIDTH, height: NODE_HEIGHT, rx: 5 }));
+    const kicker = svgElement("text", { x: 12, y: 18, class: "nv-node-index" });
+    kicker.textContent = `${projection.level.toUpperCase()}  ${group.first_op_index}-${group.last_op_index}`;
+    const label = svgElement("text", { x: 12, y: 42, class: "nv-node-title" });
+    label.textContent = clipLabel(group.label, 28);
+    const detail = svgElement("text", { x: 12, y: 64, class: "nv-node-meta" });
+    detail.textContent = `${group.member_count} ops / ${group.placement.status}`;
+    const relation = svgElement("text", { x: 12, y: 81, class: "nv-node-evidence" });
+    relation.textContent = "exact contracted edges";
+    node.append(kicker, label, detail, relation);
+    const open = () => actions.openGroup(group);
+    node.addEventListener("click", open);
+    node.addEventListener("keydown", (event) => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); open(); } });
+    nodes.append(node);
+  }
+  svg.append(nodes);
+  root.append(svg);
+  installHierarchyNavigation(root, svg, layout, state);
+}
+
+function installHierarchyNavigation(root, svg, layout, state) {
+  const update = (next) => {
+    state.viewBox = clampViewBox(next, layout);
+    svg.setAttribute("viewBox", state.viewBox.join(" "));
+    const readout = root.closest(".nv-shell")?.querySelector(".nv-zoom-level");
+    if (readout) readout.textContent = `${zoomPercent(state.viewBox, layout)}%`;
+  };
+  let drag = null;
+  svg.addEventListener("pointerdown", (event) => {
+    if (event.target.closest?.(".nv-node")) return;
+    svg.setPointerCapture(event.pointerId);
+    drag = { x: event.clientX, y: event.clientY, viewBox: [...state.viewBox] };
+  });
+  svg.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    const bounds = svg.getBoundingClientRect();
+    update([drag.viewBox[0] - (event.clientX - drag.x) / Math.max(1, bounds.width) * drag.viewBox[2], drag.viewBox[1] - (event.clientY - drag.y) / Math.max(1, bounds.height) * drag.viewBox[3], drag.viewBox[2], drag.viewBox[3]]);
+  });
+  for (const name of ["pointerup", "pointercancel"]) svg.addEventListener(name, () => { drag = null; });
+  svg.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    const bounds = svg.getBoundingClientRect();
+    const px = Math.max(0, Math.min(1, (event.clientX - bounds.left) / Math.max(1, bounds.width)));
+    const py = Math.max(0, Math.min(1, (event.clientY - bounds.top) / Math.max(1, bounds.height)));
+    const anchorX = state.viewBox[0] + state.viewBox[2] * px;
+    const anchorY = state.viewBox[1] + state.viewBox[3] * py;
+    update(zoomViewBoxAt(state.viewBox, Math.exp(Math.max(-360, Math.min(360, event.deltaY)) * 0.00135), anchorX, anchorY, layout));
+  }, { passive: false });
+  svg.addEventListener("keydown", (event) => {
+    if (event.key === "+" || event.key === "=") update(zoomViewBoxAt(state.viewBox, 0.8, state.viewBox[0] + state.viewBox[2] / 2, state.viewBox[1] + state.viewBox[3] / 2, layout));
+    else if (event.key === "-") update(zoomViewBoxAt(state.viewBox, 1.2, state.viewBox[0] + state.viewBox[2] / 2, state.viewBox[1] + state.viewBox[3] / 2, layout));
+    else if (event.key === "0") update([layout.bounds.x, layout.bounds.y, layout.bounds.width, layout.bounds.height]);
+    else return;
+    event.preventDefault();
+  });
+  update(state.viewBox);
+}
+
+function renderHierarchyDetail(root, hierarchy, selectedOpIndex, openGroup) {
+  const group = hierarchy.groupByOp.get(Number(selectedOpIndex)) || hierarchy.projection.nodes[0];
+  root.replaceChildren();
+  if (!group) return;
+  const head = element("div", "nv-detail-head");
+  head.append(element("span", "nv-kicker", hierarchy.projection.level.toUpperCase()), element("h3", "", group.label));
+  const metrics = element("div", "nv-detail-grid");
+  for (const [label, value] of [
+    ["Operators", formatNumber(group.member_count)],
+    ["Range", `#${group.first_op_index}-#${group.last_op_index}`],
+    ["Placement", group.placement.status],
+    ["Quantization", group.quantization.state],
+  ]) {
+    const row = element("div");
+    row.append(element("span", "", label), element("strong", "", value));
+    metrics.append(row);
+  }
+  const action = button("Open operators", "secondary-action");
+  action.addEventListener("click", () => openGroup(group));
+  root.append(head, element("p", "", hierarchy.projection.interpretation_boundary), metrics, action);
+}
+
+function exactMetric(value) {
+  if (typeof value === "string" && /^\d+$/.test(value)) return { decimal: value, number: Number(value) <= Number.MAX_SAFE_INTEGER ? Number(value) : null };
+  const number = Number(value);
+  return Number.isSafeInteger(number) && number >= 0 ? { decimal: String(number), number } : null;
+}
+
+function clipLabel(value, maximum) { const text = String(value || ""); return text.length <= maximum ? text : `${text.slice(0, maximum - 1)}…`; }
+
 export function createNodeViewController({
   root,
   mode = "audit",
@@ -985,6 +1246,8 @@ export function createNodeViewController({
     viewBox: [0, 0, 1000, 600],
     graph: null,
     layout: null,
+    hierarchy: null,
+    lod: "operators",
     projection: null,
     projectionIndex: { ops: new Map(), edges: new Map() },
     focusedIndices: null,
@@ -992,26 +1255,32 @@ export function createNodeViewController({
     expanded: false,
   };
 
+  function activeLayout() {
+    return state.lod === "hierarchy" && state.hierarchy ? state.hierarchy.layout : state.layout;
+  }
+
   function fit() {
-    if (!state.layout) return;
+    const layout = activeLayout();
+    if (!layout) return;
     state.viewBox = clampViewBox([
-      state.layout.bounds.x,
-      state.layout.bounds.y,
-      Math.max(320, state.layout.bounds.width),
-      Math.max(240, state.layout.bounds.height),
-    ], state.layout);
+      layout.bounds.x,
+      layout.bounds.y,
+      Math.max(320, layout.bounds.width),
+      Math.max(240, layout.bounds.height),
+    ], layout);
   }
 
   function frameTop() {
-    if (!state.layout) return;
-    const width = Math.max((mountedRoot?.clientWidth || 0) < 600 ? 500 : 720, state.layout.bounds.width);
-    const height = Math.min(state.layout.bounds.height, Math.max(560, Math.min(760, width * 0.78)));
+    const layout = activeLayout();
+    if (!layout) return;
+    const width = Math.max((mountedRoot?.clientWidth || 0) < 600 ? 500 : 720, layout.bounds.width);
+    const height = Math.min(layout.bounds.height, Math.max(560, Math.min(760, width * 0.78)));
     state.viewBox = clampViewBox([
-      state.layout.bounds.x + (state.layout.bounds.width - width) / 2,
-      state.layout.bounds.y,
+      layout.bounds.x + (layout.bounds.width - width) / 2,
+      layout.bounds.y,
       width,
       height,
-    ], state.layout);
+    ], layout);
   }
 
   function focusIndices(indices) {
@@ -1116,24 +1385,58 @@ export function createNodeViewController({
   }
 
   function zoom(factor) {
-    const selected = state.layout?.positions?.get(Number(state.selectedOpIndex));
+    const layout = activeLayout();
+    const selected = state.lod === "operators" ? layout?.positions?.get(Number(state.selectedOpIndex)) : null;
     const anchorSelection = state.viewScope === "selection" && selected;
     const anchorX = anchorSelection ? selected.x + NODE_WIDTH / 2 : state.viewBox[0] + state.viewBox[2] / 2;
     const anchorY = anchorSelection ? selected.y + NODE_HEIGHT / 2 : state.viewBox[1] + state.viewBox[3] / 2;
-    state.viewBox = zoomViewBoxAt(state.viewBox, factor, anchorX, anchorY, state.layout);
+    state.viewBox = zoomViewBoxAt(state.viewBox, factor, anchorX, anchorY, layout);
   }
 
-  function selectOp(index, { notify = false } = {}) {
+  function openHierarchyGroup(group) {
+    if (!group || !state.layout) return;
+    state.lod = "operators";
+    state.focusedIndices = new Set((group.member_op_indices || []).map(Number));
+    const selected = state.focusedIndices.has(Number(state.selectedOpIndex))
+      ? Number(state.selectedOpIndex)
+      : Number(group.first_op_index);
+    if (Number.isSafeInteger(selected)) state.selectedOpIndex = selected;
+    focusIndices(state.focusedIndices);
+    render();
+  }
+
+  function showHierarchy() {
+    if (!state.hierarchy) return;
+    state.lod = "hierarchy";
+    state.focusedIndices = null;
+    fit();
+    render();
+  }
+
+  function revealOp(index) {
+    const numeric = Number(index);
+    if (!state.analysis?.ops?.some((op) => op.index === numeric)) return false;
+    state.selectedOpIndex = numeric;
+    if (window.matchMedia?.("(max-width: 680px)").matches) state.inspectorOpen = true;
+    if (state.hierarchy) {
+      const group = state.hierarchy.groupByOp.get(numeric);
+      if (group) openHierarchyGroup(group);
+    } else {
+      ensureSelectedVisible();
+      render();
+    }
+    return true;
+  }
+
+  function selectOp(index, { notify = false, openInspector = false } = {}) {
     const numeric = Number(index);
     if (!state.analysis?.ops?.some((op) => op.index === numeric)) return;
     state.selectedOpIndex = numeric;
     if (state.viewScope === "selection") applyViewScope("selection");
     else if (notify) ensureSelectedVisible();
+    if (openInspector || (notify && window.matchMedia?.("(max-width: 680px)").matches)) state.inspectorOpen = true;
     if (notify) onSelectOp(numeric);
     render();
-    if (notify && window.matchMedia?.("(max-width: 680px)").matches) {
-      requestAnimationFrame(() => mountedRoot?.querySelector(".nv-detail")?.scrollIntoView({ behavior: "smooth", block: "start" }));
-    }
   }
 
   function setAnalysis(analysis) {
@@ -1145,10 +1448,13 @@ export function createNodeViewController({
     const graphIndex = buildGraphIndex(analysis);
     state.graph = collectFullGraph(analysis, graphIndex);
     state.layout = layoutFullGraph(state.graph.nodes, state.graph.edges, { minimumColumns: interfaceColumnCount(analysis) });
+    state.hierarchy = analysis?.ops?.length > HIERARCHY_LOD_THRESHOLD ? buildNodeHierarchy(analysis, state.graph) : null;
+    state.lod = state.hierarchy ? "hierarchy" : "operators";
     if (!analysis?.ops?.some((op) => op.index === state.selectedOpIndex)) {
       state.selectedOpIndex = analysis?.ops?.[0]?.index ?? 0;
     }
-    applyViewScope();
+    if (state.hierarchy) fit();
+    else applyViewScope();
     render();
   }
 
@@ -1169,12 +1475,28 @@ export function createNodeViewController({
     state.viewBox = [0, 0, 1000, 600];
     state.graph = null;
     state.layout = null;
+    state.hierarchy = null;
+    state.lod = "operators";
     state.projection = null;
     state.projectionIndex = { ops: new Map(), edges: new Map() };
     state.focusedIndices = null;
     state.inspectorOpen = true;
     state.expanded = false;
     mountedRoot?.replaceChildren();
+  }
+
+  function reviewState() {
+    return {
+      selected_op_index: Number(state.selectedOpIndex),
+      overlay: state.overlay,
+      search: state.search || null,
+      level_of_detail: state.lod,
+      view_scope: state.viewScope,
+      viewport: state.viewBox.map((value) => Number(value)),
+      inspector_open: state.inspectorOpen,
+      expanded: state.expanded,
+      focused_op_indices: state.focusedIndices ? [...state.focusedIndices].sort((a, b) => a - b) : null,
+    };
   }
 
   function mount(nextRoot) {
@@ -1195,6 +1517,8 @@ export function createNodeViewController({
       const graphIndex = buildGraphIndex(analysis);
       state.graph = collectFullGraph(analysis, graphIndex);
       state.layout = layoutFullGraph(state.graph.nodes, state.graph.edges, { minimumColumns: interfaceColumnCount(analysis) });
+      state.hierarchy = analysis?.ops?.length > HIERARCHY_LOD_THRESHOLD ? buildNodeHierarchy(analysis, state.graph) : null;
+      state.lod = state.hierarchy ? "hierarchy" : "operators";
       graphChanged = true;
     }
     state.projection = projection;
@@ -1208,7 +1532,8 @@ export function createNodeViewController({
       state.selectedOpIndex = analysis?.ops?.[0]?.index ?? 0;
     }
     if (graphChanged || (mode === "redesign" && state.viewScope !== "full")) {
-      applyViewScope();
+      if (state.hierarchy && mode !== "redesign") fit();
+      else applyViewScope();
     } else if (selectionChanged) {
       ensureSelectedVisible();
     }
@@ -1226,7 +1551,7 @@ export function createNodeViewController({
     search.setAttribute("aria-label", "Search graph nodes");
     search.addEventListener("input", () => {
       state.search = search.value;
-      renderSvg(viewport, state.analysis, state.graph, state.layout, state, actions);
+      render();
     });
     search.addEventListener("keydown", (event) => {
       if (event.key !== "Enter" || !search.value.trim()) return;
@@ -1237,7 +1562,10 @@ export function createNodeViewController({
           .toLowerCase()
           .includes(term);
       });
-      if (match) selectOp(match.index, { notify: true });
+      if (match) {
+        if (state.hierarchy) revealOp(match.index);
+        onSelectOp(match.index);
+      }
     });
     const overlays = element("div", "nv-segments");
     const overlayOptions = mode === "redesign" ? [
@@ -1250,6 +1578,9 @@ export function createNodeViewController({
       ["quant", "Quantization"],
       ["latency", "Steady time"],
     ];
+    if (mode !== "redesign" && state.analysis?.external_node_edge_evidence_overlay) {
+      overlayOptions.push(["external", "External evidence"]);
+    }
     for (const [value, label] of overlayOptions) {
       const control = button(label, state.overlay === value ? "active" : "");
       control.setAttribute("aria-pressed", String(state.overlay === value));
@@ -1258,6 +1589,20 @@ export function createNodeViewController({
         render();
       });
       overlays.append(control);
+    }
+    if (state.hierarchy && mode !== "redesign") {
+      const hierarchyControl = button("Architecture", state.lod === "hierarchy" ? "active" : "");
+      hierarchyControl.title = "Show all presentation groups with exact contracted tensor relationships";
+      hierarchyControl.setAttribute("aria-pressed", String(state.lod === "hierarchy"));
+      hierarchyControl.addEventListener("click", showHierarchy);
+      const operatorControl = button("Operators", state.lod === "operators" ? "active" : "");
+      operatorControl.title = "Open the operator group containing the selected node";
+      operatorControl.setAttribute("aria-pressed", String(state.lod === "operators"));
+      operatorControl.addEventListener("click", () => {
+        const group = state.hierarchy.groupByOp.get(Number(state.selectedOpIndex)) || state.hierarchy.projection.nodes[0];
+        openHierarchyGroup(group);
+      });
+      overlays.append(hierarchyControl, operatorControl);
     }
     const viewControls = element("div", "nv-view-controls");
     if (mode === "redesign") {
@@ -1284,20 +1629,25 @@ export function createNodeViewController({
       const topButton = button("Start", "secondary-action");
       topButton.title = "Return to the beginning of the top-down graph";
       topButton.addEventListener("click", () => {
+        if (window.matchMedia?.("(max-width: 680px)").matches) state.inspectorOpen = false;
         frameTop();
-        renderSvg(viewport, state.analysis, state.graph, state.layout, state, actions);
+        render();
       });
       const fitButton = button("Overview", "secondary-action");
       fitButton.title = "Fit the complete graph in the viewport";
       fitButton.addEventListener("click", () => {
         fit();
-        renderSvg(viewport, state.analysis, state.graph, state.layout, state, actions);
+        render();
       });
       const selectedButton = button("Selected", "secondary-action");
-      selectedButton.title = "Frame the selected operator and its direct tensor neighbors";
+      selectedButton.title = state.lod === "hierarchy" ? "Open the group containing the selected operator" : "Frame the selected operator and its direct tensor neighbors";
       selectedButton.addEventListener("click", () => {
+        if (state.lod === "hierarchy" && state.hierarchy) {
+          openHierarchyGroup(state.hierarchy.groupByOp.get(Number(state.selectedOpIndex)) || state.hierarchy.projection.nodes[0]);
+          return;
+        }
         frameSelection();
-        renderSvg(viewport, state.analysis, state.graph, state.layout, state, actions);
+        render();
       });
       viewControls.append(topButton, fitButton, selectedButton);
     }
@@ -1321,18 +1671,18 @@ export function createNodeViewController({
       control.setAttribute("aria-label", title);
       control.addEventListener("click", () => {
         zoom(factor);
-        renderSvg(viewport, state.analysis, state.graph, state.layout, state, actions);
+        render();
       });
       viewControls.append(control);
     }
-    viewControls.append(element("output", "nv-zoom-level", `${zoomPercent(state.viewBox, state.layout)}%`));
+    viewControls.append(element("output", "nv-zoom-level", `${zoomPercent(state.viewBox, activeLayout())}%`));
     for (const [label, title, factor] of [["+", "Zoom in", 0.8]]) {
       const control = button(label, "nv-zoom-button");
       control.title = title;
       control.setAttribute("aria-label", title);
       control.addEventListener("click", () => {
         zoom(factor);
-        renderSvg(viewport, state.analysis, state.graph, state.layout, state, actions);
+        render();
       });
       viewControls.append(control);
     }
@@ -1378,9 +1728,12 @@ export function createNodeViewController({
     const contractSummary = mode === "redesign"
       ? projectionContractSummary(state.analysis, state.projection, state.projectionIndex)
       : null;
-    const changeSummary = summary
+    const hierarchySummary = state.hierarchy && state.lod === "hierarchy"
+      ? `${formatNumber(state.hierarchy.projection.nodes.length)} groups / ${formatNumber(state.hierarchy.projection.conservation.inter_group_edge_count)} inter-group tensor edges / ${formatNumber(state.graph.nodes.length)} ops`
+      : null;
+    const changeSummary = hierarchySummary || (summary
       ? `${formatNumber(summary.direct_edit_op_count || 0)} direct / ${formatNumber(summary.propagated_op_count || 0)} auto / ${formatNumber(summary.changed_edge_count || 0)} changed edges`
-      : `${formatNumber(state.graph.nodes.length)} nodes / ${formatNumber(state.graph.edges.length)} tensor edges`;
+      : `${formatNumber(state.graph.nodes.length)} nodes / ${formatNumber(state.graph.edges.length)} tensor edges`);
     const conditionSummary = contractSummary
       ? `${formatNumber(contractSummary.issue + contractSummary.blocked)} issue / ${formatNumber(contractSummary.watch)} watch / ${formatNumber(contractSummary.satisfied)} satisfied`
       : "";
@@ -1404,23 +1757,37 @@ export function createNodeViewController({
       editNode: onEditNode,
       returnToGraph: () => viewport.scrollIntoView({ behavior: "smooth", block: "start" }),
     };
-    renderSvg(viewport, state.analysis, state.graph, state.layout, state, actions);
-    renderDetail(
-      detail,
-      state.analysis,
-      state.graph,
-      state.selectedOpIndex,
-      actions,
-      state.projection,
-      state.projectionIndex,
-      mode,
-    );
+    if (state.lod === "hierarchy" && state.hierarchy) {
+      actions.openGroup = openHierarchyGroup;
+      renderHierarchySvg(viewport, state.hierarchy, state, actions);
+      renderHierarchyDetail(detail, state.hierarchy, state.selectedOpIndex, openHierarchyGroup);
+    } else {
+      renderSvg(viewport, state.analysis, state.graph, state.layout, state, actions);
+      renderDetail(
+        detail,
+        state.analysis,
+        state.graph,
+        state.selectedOpIndex,
+        actions,
+        state.projection,
+        state.projectionIndex,
+        mode,
+      );
+    }
+    const closeInspector = button("x", "nv-detail-close");
+    closeInspector.title = "Close inspector";
+    closeInspector.setAttribute("aria-label", "Close inspector");
+    closeInspector.addEventListener("click", () => {
+      state.inspectorOpen = false;
+      render();
+    });
+    detail.prepend(closeInspector);
     layout.append(viewport, detail);
     shell.append(heading, toolbar, layout);
     mountedRoot.replaceChildren(shell);
   }
 
-  return { setAnalysis, setProjection, mount, sync, render, selectOp, fit, resetInteractionState };
+  return { setAnalysis, setProjection, mount, sync, render, selectOp, revealOp, fit, reviewState, resetInteractionState };
 }
 
 function indexProjection(projection) {

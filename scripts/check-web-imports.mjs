@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { collectFileSizes } from "./size-utils.mjs";
@@ -15,11 +16,12 @@ const importTargets = [
   ...libFiles,
   "web/onnx.js",
   "pkg/tflite_wasm_audit.js",
-  "web/protected/deepbom/pkg/deepbom_wasm.js",
 ];
+const protectedTarget = "web/protected/deepbom/pkg/deepbom_wasm.js";
+if (existsSync(protectedTarget)) importTargets.push(protectedTarget);
 
 for (const target of importTargets) {
   await import(pathToFileURL(path.resolve(target)).href);
 }
 
-console.log(`Web module import smoke passed (${importTargets.length} modules).`);
+console.log(`Web module import smoke passed (${importTargets.length} modules; protected integration ${existsSync(protectedTarget) ? "included" : "omitted at the public boundary"}).`);

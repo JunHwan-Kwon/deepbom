@@ -399,6 +399,17 @@ try {
   if (defaultGraph.activeTab !== "node" || !defaultGraph.graphVisible || !defaultGraph.resourceHidden || !defaultGraph.blocksHidden) {
     throw new Error(`Graph and Tensor Explorer is not the default Explorer view: ${JSON.stringify(defaultGraph)}`);
   }
+  const acceleratorSelector = await page.locator("#acceleratorSwitcherBar").evaluate((bar) => ({
+    hidden: bar.hidden,
+    labels: [...bar.querySelectorAll("button")].map((button) => button.textContent.trim()),
+    boundary: bar.querySelector(".accelerator-switcher-boundary")?.textContent || "",
+    overflow: Math.max(0, bar.scrollWidth - bar.clientWidth),
+  }));
+  if (acceleratorSelector.hidden || !acceleratorSelector.labels.some((label) => /GPU|NNAPI/i.test(label))
+    || !acceleratorSelector.boundary.includes("does not change the selected CPU roofline")
+    || acceleratorSelector.overflow > 1) {
+    throw new Error(`Accelerator eligibility selector is absent or semantically mixed with CPU cost profiles: ${JSON.stringify(acceleratorSelector)}`);
+  }
 
   await page.locator('[data-explorer-tab="resource"]').click();
   await page.locator("#resourceMapPanel .evidence-treemap-tile").first().waitFor();
@@ -430,9 +441,18 @@ try {
     throw new Error(`Explorer Resource Map traffic denominator is incomplete: ${JSON.stringify(trafficMap)}`);
   }
   await page.locator("#resourceMapPanel .evidence-treemap-tile").first().click();
-  if (!(await page.locator('[data-explorer-tab="ops"]').evaluate((button) => button.classList.contains("active")))) {
-    throw new Error("Explorer Resource Map tile did not open its Operator Table row.");
+  if (!(await page.locator('[data-explorer-tab="node"]').evaluate((button) => button.classList.contains("active")))) {
+    throw new Error("Explorer Resource Map tile did not open its evidence-linked Node inspector.");
   }
+  const resourceWhy = await page.locator("#evidenceWhyDrawer").evaluate((drawer) => ({
+    visible: !drawer.hidden,
+    title: drawer.querySelector("h2")?.textContent || "",
+    content: drawer.textContent || "",
+  }));
+  if (!resourceWhy.visible || !resourceWhy.title.includes("Logical traffic") || !resourceWhy.content.includes("Formula / denominator")) {
+    throw new Error(`Resource Map did not synchronize the Why drawer: ${JSON.stringify(resourceWhy)}`);
+  }
+  await page.locator("#closeEvidenceWhy").click();
 
   await page.locator('[data-explorer-tab="blocks"]').click();
   await page.locator("#blocksExplorerPanel .xr-block-layout").waitFor();
@@ -748,7 +768,7 @@ try {
     svgWidth: panel.querySelector(".nv-graph")?.getBoundingClientRect().width || 0,
     nodeWidth: panel.querySelector(".nv-node rect")?.getBoundingClientRect().width || 0,
     layoutColumns: getComputedStyle(panel.querySelector(".nv-layout")).gridTemplateColumns.split(" ").length,
-    detailTop: panel.querySelector(".nv-detail")?.getBoundingClientRect().top || 0,
+    detailVisible: getComputedStyle(panel.querySelector(".nv-detail")).display !== "none",
     viewportTop: panel.querySelector(".nv-viewport")?.getBoundingClientRect().top || 0,
     returnVisible: getComputedStyle(panel.querySelector(".nv-return-graph")).display !== "none",
   }));
@@ -757,7 +777,7 @@ try {
     || graphMobile.svgWidth > 390
     || graphMobile.nodeWidth < 100
     || graphMobile.layoutColumns !== 1
-    || graphMobile.detailTop <= graphMobile.viewportTop
+    || graphMobile.detailVisible
     || !graphMobile.returnVisible) {
     throw new Error(`Top-down Graph mobile layout overflows or collapses: ${JSON.stringify(graphMobile)}`);
   }
@@ -767,14 +787,16 @@ try {
   const mobileSelection = await page.locator("#nodeViewPanel").evaluate((panel) => ({
     detail: panel.querySelector(".nv-detail")?.textContent || "",
     detailTop: panel.querySelector(".nv-detail")?.getBoundingClientRect().top || 0,
+    detailBottom: panel.querySelector(".nv-detail")?.getBoundingClientRect().bottom || 0,
+    closeVisible: getComputedStyle(panel.querySelector(".nv-detail-close")).display !== "none",
   }));
-  if (!mobileSelection.detail.includes("OP #003") || !mobileSelection.detail.includes("INT8 compute") || mobileSelection.detailTop > 220) {
+  if (!mobileSelection.detail.includes("OP #003") || !mobileSelection.detail.includes("INT8 compute")
+    || mobileSelection.detailTop < 160 || mobileSelection.detailBottom > 836 || !mobileSelection.closeVisible) {
     throw new Error(`Mobile node selection did not surface its evidence: ${JSON.stringify(mobileSelection)}`);
   }
-  await page.locator("#nodeViewPanel .nv-return-graph").click();
+  await page.locator("#nodeViewPanel .nv-detail-close").click();
   await page.waitForTimeout(350);
-  const returnedViewportTop = await page.locator("#nodeViewPanel .nv-viewport").evaluate((viewport) => viewport.getBoundingClientRect().top);
-  if (returnedViewportTop > 160) throw new Error(`Mobile graph return action did not restore the canvas: ${returnedViewportTop}`);
+  if (await page.locator("#nodeViewPanel .nv-detail").isVisible()) throw new Error("Mobile bottom-sheet inspector did not close without moving the graph viewport.");
   await page.locator("#nodeViewPanel").screenshot({ path: graphMobileScreenshot });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.locator("#nodeViewPanel .nv-node").nth(3).click();

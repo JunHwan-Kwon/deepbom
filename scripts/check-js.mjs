@@ -1,17 +1,21 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { collectFileSizes } from "./size-utils.mjs";
 
+const requiredRoots = ["web", "scripts"];
+for (const root of requiredRoots) {
+  if (!existsSync(root)) throw new Error(`Required JavaScript source root is missing: ${root}`);
+}
 const roots = [
   "web",
   "worker",
   "scripts",
-];
+].filter((root) => existsSync(root));
 const deadFunctionGuardFiles = [
   "web/app.js",
   "web/admin.js",
   "worker/index.js",
-];
+].filter((file) => existsSync(file));
 
 const files = (await Promise.all(roots.map((root) => collectFileSizes(root, {
   relativeRoot: ".",

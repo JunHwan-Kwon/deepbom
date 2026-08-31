@@ -154,6 +154,8 @@ try {
       document.querySelector("#root"), analysis, runtimeEvidence, { doc: document },
     );
     globalThis.actionCounts = {};
+    globalThis.evidenceSelections = [];
+    globalThis.addEventListener("deepbom:evidence-select", (event) => globalThis.evidenceSelections.push(event.detail));
     for (const id of ["runDeepBom", "runtimeAssignmentInput", "deploymentAction", "graphAction", "kernelAction"]) {
       document.getElementById(id).addEventListener("click", () => {
         globalThis.actionCounts[id] = (globalThis.actionCounts[id] || 0) + 1;
@@ -222,6 +224,22 @@ try {
   const actionCounts = await page.evaluate(() => globalThis.actionCounts);
   assert.equal(actionCounts.runtimeAssignmentInput, 1, "runtime import action wiring");
   assert.equal(actionCounts.deploymentAction, 1, "detail action wiring");
+
+  const runtimeFixture = {
+    artifact_sha256: SHA,
+    runtime_identity_status: "bound",
+    assignments: [{ op_index: 0, provider: "XNNPACK", runtime_node_id: "delegate-node-0", mapping_method: "explicit op_index" }],
+    runtime_graph: { nodes: [{ id: "generated-copy-1", provider: "CPU" }] },
+  };
+  await page.evaluate(({ analysis, runtime }) => globalThis.renderPlacementCase(analysis, runtime), { analysis: cases.tflite, runtime: runtimeFixture });
+  await page.locator('.runtime-source-reconciliation tr[data-source-op-index="0"]').click();
+  await page.locator('.runtime-source-reconciliation tr[data-runtime-node-id="generated-copy-1"]').focus();
+  await page.keyboard.press("Enter");
+  const evidenceSelections = await page.evaluate(() => globalThis.evidenceSelections);
+  assert.deepEqual(evidenceSelections.slice(-2), [
+    { op_index: 0, runtime_node_id: "delegate-node-0", source: "runtime-reconciliation" },
+    { op_index: null, runtime_node_id: "generated-copy-1", source: "runtime-reconciliation" },
+  ], "runtime/source rows must update the shared evidence cursor by exact imported identity.");
 
   await page.locator("#root").screenshot({ path: path.join(SCREENSHOTS, "light-desktop.png") });
   await page.evaluate(() => document.documentElement.dataset.theme = "dark");

@@ -17,7 +17,7 @@ const analysis = {
       { block_id: "b1", display_name: "Head", op_indices: [2, 3] },
     ],
     stages: [
-      { stage_id: "s0", index: 0, display_name: "Feature extraction", op_indices: [0, 1] },
+      { stage_id: "s0", index: 0, display_name: "Feature extraction + unnamed group", op_indices: [0, 1] },
       { stage_id: "s1", index: 1, display_name: "Prediction", op_indices: [2, 3] },
     ],
   },
@@ -40,6 +40,8 @@ assert.equal(resource.unassessedCount, 1);
 assert.equal(resource.mappedGroupCount, 2);
 assert.equal(resource.assessedGroupCount, 2);
 assert.equal(resource.conservationStatus, "exact");
+assert.ok(resource.items.every((item) => !/unnamed group/i.test(item.groupLabel)), "internal unnamed-group labels must not reach the review UI");
+assert.match(resource.items.find((item) => item.index === 0).groupLabel, /Ungrouped operators/);
 
 const grouped = layoutGroupedTreemap(resource.items, 1000, 500);
 assert.equal(grouped.tiles.length, 2);

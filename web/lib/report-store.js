@@ -1,3 +1,5 @@
+import { buildGraphDiffSnapshot } from "./artifact-diff.js";
+
 // Local report history + model-version comparison, entirely in-browser.
 //
 // Every completed audit stores a compact snapshot (identity, counts, contracts,
@@ -141,6 +143,7 @@ export function buildAuditSnapshot(analysis, { analyzerVersion = "", rulepackVer
       p50_ms: r.p50_ms ?? r.p50 ?? null,
       mean_ms: r.mean_ms ?? r.mean ?? null,
     })),
+    graphDiff: buildGraphDiffSnapshot(analysis),
     // Full raw static-audit report body (ungated markdown) so "Reopen" shows a
     // real report without the original model. Weights are never included.
     reportMarkdown,

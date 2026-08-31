@@ -13,12 +13,13 @@ const SMOKE = [
   "scripts/check-parser-robustness.mjs",
   "scripts/check-analysis-invariants.mjs",
   "scripts/check-evidence-treemap.mjs",
+  "scripts/check-evidence-workbench.mjs",
   "scripts/check-product-guidance-contracts.mjs",
   "scripts/check-litert-runtime-assets.mjs",
   "scripts/check-sw-assets.mjs",
   "scripts/check-service-worker-lifecycle.mjs",
   "scripts/check-offline-device-controller.mjs",
-  "scripts/check-worker-config.mjs",
+  ...(existsSync("worker/index.js") ? ["scripts/check-worker-config.mjs"] : []),
 ];
 
 const FORMATS = [
@@ -103,11 +104,12 @@ const startIndex = fromValue ? checks.indexOf(fromValue) : 0;
 if (startIndex < 0) throw new Error(`Unknown ${tier} --from check: ${fromValue}`);
 const selected = checks.slice(startIndex);
 const timeoutMs = Number.parseInt(process.env.DEEPBOM_CHECK_TIMEOUT_MS || "600000", 10);
-for (const [offset, script] of selected.entries()) {
+for (const [offset, command] of selected.entries()) {
   const index = startIndex + offset;
   const started = performance.now();
-  console.log(`\n[${tier} ${index + 1}/${checks.length}] ${script}`);
-  await runNode(script, [], { timeoutMs });
+  const [script, ...args] = command.split(/\s+/).filter(Boolean);
+  console.log(`\n[${tier} ${index + 1}/${checks.length}] ${command}`);
+  await runNode(script, args, { timeoutMs });
   console.log(`[${tier} ${index + 1}/${checks.length}] completed in ${((performance.now() - started) / 1000).toFixed(1)}s`);
 }
 console.log(`DeepBOM ${tier} tier passed (${startIndex + 1}-${checks.length}/${checks.length}; ${selected.length} checks).`);

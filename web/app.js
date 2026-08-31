@@ -285,7 +285,11 @@ import { createExplorerDecisionView } from "./lib/explorer-decision-view.js";
 import { createExplorerRedesignController } from "./lib/explorer-redesign.js";
 import { createQuantEvidenceController } from "./lib/quant-evidence-view.js";
 import { createNodeViewController } from "./lib/node-view.js";
-import { renderExecutionPlacementView } from "./lib/execution-placement-view.js";
+import { renderExecutionPlacementView as renderExecutionPlacementViewBase } from "./lib/execution-placement-view.js";
+import {
+  acceleratorProfilesForAnalysis,
+  renderAcceleratorProfileSwitcher,
+} from "./lib/accelerator-profile-switcher.js";
 import { createCalibrationValidationController } from "./lib/calibration-validation-view.js";
 import { createDeploymentFrontierController } from "./lib/deployment-frontier.js";
 import { createDeploymentDeltaController } from "./lib/deployment-delta.js";
@@ -359,6 +363,7 @@ import { bindAppElements } from "./lib/elements.js";
 import { installQuantEvidenceChains, renderQuantEvidenceChains } from "./lib/quant-evidence-chains.js";
 import { ensureQuantResearchCoverage } from "./lib/quant-research-applicability.js";
 import { createGraphWorkspace } from "./lib/app-graph-workspace.js";
+import { createEvidenceCursor } from "./lib/evidence-cursor.js";
 import { buildOnnxRuntimeShapeBinding } from "./lib/onnx-runtime-shape-binding.js";
 import { createDeepBomWorkspace } from "./lib/app-deepbom-workspace.js";
 import {
@@ -373,10 +378,18 @@ import {
   writeReportHistorySettings,
   pruneAuditSnapshots,
 } from "./lib/report-store.js";
+import { renderArtifactDiffWorkspace } from "./lib/artifact-diff-view.js";
+import { createEvidenceWhyDrawer } from "./lib/evidence-why-drawer.js";
+import { buildReviewState, buildSelfContainedReviewHtml } from "./lib/review-export.js";
+import {
+  buildNodeEdgeEvidenceOverlayTemplate,
+  validateNodeEdgeEvidenceOverlay,
+} from "./lib/node-edge-evidence-overlay.js";
 
 function mk(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
 
 let graphWorkspace = null;
+const evidenceCursor = createEvidenceCursor();
 function jumpToGraphOp(opIndex) {
   return graphWorkspace?.jumpToGraphOp(opIndex);
 }
@@ -470,6 +483,13 @@ const {
   clearReportsBtn,
   comparisonResult,
   comparisonPre,
+  comparisonVisual,
+  evidenceWhyDrawer,
+  evidenceWhyTitle,
+  evidenceWhySubtitle,
+  evidenceWhyBody,
+  copyEvidenceWhy,
+  closeEvidenceWhy,
   downloadComparison,
   closeComparison,
   adminPanel,
@@ -556,6 +576,7 @@ const {
   deviceRegistryList,
   deviceRegistryRefresh,
   targetSwitcherBar,
+  acceleratorSwitcherBar,
   insightDashboard,
   modelGlancePanel,
   perfVisuals,
@@ -664,6 +685,10 @@ const {
   downloadRuntimeCapturePlan,
   runtimeAssignmentStatus,
   clearRuntimeAssignment,
+  nodeEvidenceOverlayInput,
+  downloadNodeEvidenceOverlayTemplate,
+  clearNodeEvidenceOverlay,
+  nodeEvidenceOverlayStatus,
   tensorStatsBar,
   tensorBody,
   tensorSearch,
@@ -692,6 +717,7 @@ const {
   regulatoryReportPreviewTitle,
   regulatoryReportPreviewStatus,
   downloadMarkdown,
+  downloadReviewHtml,
   printPublicReport,
   downloadPublicVerificationManifest,
   downloadRegulatoryReport,
@@ -722,6 +748,15 @@ const {
   deepBomAccessNote,
 } = appElements;
 
+const evidenceWhyController = createEvidenceWhyDrawer({
+  root: evidenceWhyDrawer,
+  title: evidenceWhyTitle,
+  subtitle: evidenceWhySubtitle,
+  body: evidenceWhyBody,
+  copyButton: copyEvidenceWhy,
+  closeButton: closeEvidenceWhy,
+});
+
 const auditProgressController = createAuditProgressController({
   root: auditProgress,
   bar: auditProgressBar,
@@ -734,6 +769,7 @@ const liteRtRuntime = createLiteRtRuntimeLoader({
 const ensureLiteRtRuntime = liteRtRuntime.ensure;
 
 let current = null;
+let selectedAcceleratorProfileId = "";
 let currentDeploymentFrontier = null;
 let currentDeploymentDelta = null;
 let currentDelegationRepair = null;
@@ -748,7 +784,14 @@ let currentTensorFilter = "";       // tensor explorer: search term
 let currentTensorRoleFilter = "";   // tensor explorer: all|constant|activation|fanout|quant
 let currentKernelFilter = "all";
 let runtimeAssignmentEvidence = null;
+let nodeEdgeEvidenceOverlay = null;
 let productionInterfaceContract = null;
+
+function clearNodeEdgeEvidenceOverlayState() {
+  nodeEdgeEvidenceOverlay = null;
+  if (nodeEvidenceOverlayStatus) nodeEvidenceOverlayStatus.textContent = "No external node/edge evidence overlay imported.";
+  if (clearNodeEvidenceOverlay) clearNodeEvidenceOverlay.hidden = true;
+}
 let pendingRuntimeProfile = null;
 let pendingModelFile = null;
 let pendingModelInspection = null;
@@ -1479,6 +1522,19 @@ registerTextExport(downloadMarkdown, TEXT_EXPORT_ARTIFACTS.engineeringReport, as
     profile: "engineering",
   });
 }, textExportOptions);
+
+downloadReviewHtml?.addEventListener("click", async () => {
+  if (!current || !reportTargetBinding().canCopy) return;
+  await withBusyButton(downloadReviewHtml, "Preparing", async () => {
+    try {
+      await ensureModelHash();
+      downloadText(currentArtifactFilename("review.html"), currentReviewHtml(), "text/html");
+      setStatus("Read-only review HTML downloaded", "ok");
+    } catch (error) {
+      setStatus(`Review HTML failed: ${shortError(error)}`, "error");
+    }
+  }, updateExportLockState);
+});
 registerTextExport(downloadRegulatoryReport, TEXT_EXPORT_ARTIFACTS.regulatoryReport, async () => {
   const formatter = await loadRegulatoryFormatter();
   const reportContext = currentReportContext();
@@ -1541,6 +1597,7 @@ graphWorkspace = createGraphWorkspace({
   compute_weight_histogram,
   downloadTextArtifact,
   ensureLiteRtRuntime,
+  evidenceCursor,
   explorerDecisionController,
   explorerExecutionPlacementPanel,
   explorerRedesignController,
@@ -1848,6 +1905,7 @@ async function loadProtectedSourceAnalysis({ openModule = false } = {}) {
     if (openModule) setActiveModule("deepbom");
     const manifest = await ensureDeepBomAllowed();
     await runDeepBomAnalysis(manifest, { activateWorkflow: openModule });
+    renderAcceleratorSwitcher();
   } catch (error) {
     console.error(error);
     deepBomStatus.textContent = "Blocked";
@@ -2033,6 +2091,51 @@ document.getElementById("downloadRuntimeEvidenceSidecar")?.addEventListener("cli
     setStatus(error instanceof Error ? error.message : String(error), "error");
   }
 });
+
+nodeEvidenceOverlayInput?.addEventListener("change", async () => {
+  const file = nodeEvidenceOverlayInput.files?.[0];
+  nodeEvidenceOverlayInput.value = "";
+  if (!file || !current) return;
+  try {
+    if (file.size > 32 * 1024 * 1024) throw new Error("Node/edge evidence overlay exceeds the 32 MiB JSON limit.");
+    await ensureModelHash();
+    const parsed = JSON.parse(await file.text());
+    nodeEdgeEvidenceOverlay = validateNodeEdgeEvidenceOverlay(parsed, current);
+    current.external_node_edge_evidence_overlay = nodeEdgeEvidenceOverlay;
+    if (nodeEvidenceOverlayStatus) {
+      nodeEvidenceOverlayStatus.textContent = `${nodeEdgeEvidenceOverlay.nodes.length} node rows and ${nodeEdgeEvidenceOverlay.edges.length} edge rows imported from ${nodeEdgeEvidenceOverlay.source.label}.`;
+    }
+    if (clearNodeEvidenceOverlay) clearNodeEvidenceOverlay.hidden = false;
+    renderGraphExplorer(current);
+    renderReportPanel();
+    setStatus("Hash-bound node/edge evidence overlay imported.", "ok");
+  } catch (error) {
+    setStatus(error instanceof Error ? error.message : String(error), "error");
+  }
+});
+
+downloadNodeEvidenceOverlayTemplate?.addEventListener("click", async () => {
+  if (!current) return setStatus("Run a static audit before exporting an overlay template.", "error");
+  try {
+    await ensureModelHash();
+    const template = buildNodeEdgeEvidenceOverlayTemplate(current);
+    downloadText(currentArtifactFilename("node_edge_evidence_overlay.template.json"), `${JSON.stringify(template, null, 2)}\n`, "application/json");
+  } catch (error) {
+    setStatus(error instanceof Error ? error.message : String(error), "error");
+  }
+});
+
+clearNodeEvidenceOverlay?.addEventListener("click", () => {
+  nodeEdgeEvidenceOverlay = null;
+  if (current) delete current.external_node_edge_evidence_overlay;
+  if (nodeEvidenceOverlayStatus) nodeEvidenceOverlayStatus.textContent = "No external node/edge evidence overlay imported.";
+  clearNodeEvidenceOverlay.hidden = true;
+  if (current) renderGraphExplorer(current);
+  renderReportPanel();
+});
+
+globalThis.addEventListener("deepbom:evidence-select", (event) => handleEvidenceSelection(event.detail || {}));
+globalThis.addEventListener("deepbom:evidence-explain", (event) => evidenceWhyController.open(event.detail || {}));
 
 document.addEventListener("click", (e) => {
   const tabBtn = e.target.closest("[data-explorer-tab]");
@@ -2829,6 +2932,7 @@ function updateExportLockState() {
     "Download a login-free, watermarked Engineering Report whose visible body is bound by SHA-256.",
   );
   downloadMarkdown.disabled = !current || !reportTargetReady;
+  if (downloadReviewHtml) downloadReviewHtml.disabled = !current || !reportTargetReady;
   setAccountLockedButtons(
     [downloadRawData, downloadCsv, downloadMermaid, downloadGraphSvg, downloadVisualPngs, downloadEngineeringBundle],
     rawLocked,
@@ -3399,9 +3503,21 @@ function renderAuditClaimBoundary(format, analysis = null) {
     format,
     analysis,
     runtimeEvidence: runtimeAssignmentEvidence,
+    placementOptions: executionPlacementOptions(),
   });
   renderFormatCapabilityMatrix(formatCapabilityPanel, format, { analysis, runtimeEvidence: runtimeAssignmentEvidence });
   renderRuntimeEvidenceClosure(runtimeEvidenceClosure, analysis, runtimeAssignmentEvidence);
+}
+
+function executionPlacementOptions() {
+  return {
+    selectedProfileId: selectedAcceleratorProfileId,
+    onProfileSelect: selectAcceleratorProfile,
+  };
+}
+
+function renderExecutionPlacementView(root, analysis, runtimeEvidence = null) {
+  return renderExecutionPlacementViewBase(root, analysis, runtimeEvidence, executionPlacementOptions());
 }
 
 function syncFormatWorkflowVisibility(analysis = current) {
@@ -3569,6 +3685,7 @@ async function stageModelFile(file, { bundleFiles = [], bundleName = "", bundleF
   currentExternalDataFiles = [];
   syncExternalDataControl(detectModelFormat(file.name));
   pendingModelInspection = null;
+  clearNodeEdgeEvidenceOverlayState();
   current = null;
   currentDeploymentFrontier = null;
   currentDeploymentDelta = null;
@@ -3677,6 +3794,7 @@ async function stageExternalDataSelection(files) {
     });
     currentExternalDataFiles = records;
     reportVerification = null;
+    clearNodeEdgeEvidenceOverlayState();
     current = null;
     currentDeploymentFrontier = null;
     currentDeploymentDelta = null;
@@ -4024,8 +4142,57 @@ function renderTargetSwitcher() {
   targetSwitcherBar.replaceChildren(label, ...pills, addCustom);
 }
 
+function selectAcceleratorProfile(profileId, { navigate = false } = {}) {
+  const profiles = acceleratorProfilesForAnalysis(current, runtimeAssignmentEvidence);
+  const profile = profiles.find((item) => item.profile_id === profileId);
+  if (!profile) return false;
+  selectedAcceleratorProfileId = profile.profile_id;
+  renderAcceleratorSwitcher();
+  renderExecutionPlacementViewBase(document.getElementById("executionPlacementPanel"), current, runtimeAssignmentEvidence, executionPlacementOptions());
+  renderExecutionPlacementViewBase(explorerExecutionPlacementPanel, current, runtimeAssignmentEvidence, executionPlacementOptions());
+  if (navigate) {
+    setActiveAuditTab("accelerator");
+    setActiveWorkspace("audit", { force: true });
+    document.getElementById("executionPlacementPanel")?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+  return true;
+}
+
+function renderAcceleratorSwitcher() {
+  selectedAcceleratorProfileId = renderAcceleratorProfileSwitcher(acceleratorSwitcherBar, {
+    analysis: current,
+    runtimeEvidence: runtimeAssignmentEvidence,
+    selectedProfileId: selectedAcceleratorProfileId,
+    onSelect: (profileId) => selectAcceleratorProfile(profileId, { navigate: true }),
+    onLoadSourceLedgers: () => runDeepBom?.click(),
+  });
+}
+
+function handleEvidenceSelection(selection) {
+  if (!current) return;
+  const state = evidenceCursor.select({
+    artifact_sha256: current.model_sha256 || null,
+    ...selection,
+  }, { source: "finding" });
+  if (state.op_index != null) {
+    setActiveWorkspace("graph", { force: true });
+    switchExplorerTab("node");
+    selectGraphOp(current, state.op_index, { scrollTable: false, fromEvidenceCursor: true });
+    nodeViewPanel?.scrollIntoView({ block: "start", behavior: "smooth" });
+  } else if (state.tensor_index != null) {
+    setActiveWorkspace("graph", { force: true });
+    graphWorkspace?.selectTensor(current, state.tensor_index, { fromEvidenceCursor: true });
+  }
+}
+
 async function render(analysis, { keepTab = false, keepModule = false } = {}) {
   const modelFormat = String(analysis?.format || "tflite").toLowerCase();
+  if (nodeEdgeEvidenceOverlay?.artifact_sha256 === analysis?.model_sha256) {
+    analysis.external_node_edge_evidence_overlay = nodeEdgeEvidenceOverlay;
+  }
+  if (analysis?.model_sha256 && evidenceCursor.get().artifact_sha256 !== analysis.model_sha256) {
+    evidenceCursor.reset(analysis.model_sha256, { source: "artifact-render" });
+  }
   ensureQuantResearchCoverage(analysis);
   document.body.dataset.modelFormat = modelFormat;
   renderAuditClaimBoundary(modelFormat, analysis);
@@ -4054,6 +4221,7 @@ async function render(analysis, { keepTab = false, keepModule = false } = {}) {
   if (!keepTab) switchExplorerTab("node");
   renderGraphScenarioState();
   renderTargetSwitcher();
+  renderAcceleratorSwitcher();
   auditProgressController.begin(88, "Rendering deployment evidence", { ceiling: 90, step: 9 });
   await nextPaint();
   deploymentFrontierController.render(analysis);
@@ -4083,7 +4251,10 @@ async function render(analysis, { keepTab = false, keepModule = false } = {}) {
   coreIsolationController.render();
   renderInferencePanel(analysis);
   resetDeepBomPanel();
-  renderFindings(findingsBody, analysis);
+  renderFindings(findingsBody, analysis, {
+    onSelectEvidence: handleEvidenceSelection,
+    onExplain: (explanation) => evidenceWhyController.open(explanation),
+  });
   auditProgressController.begin(98, "Rendering graph explorer", { ceiling: 99, step: 12 });
   await nextPaint();
   renderGraphExplorer(analysis);
@@ -4207,14 +4378,43 @@ function canonicalGraphSvgText() {
   return exportGraphVisualization(graph, { view, format: "svg" }).text;
 }
 
+function currentReviewState() {
+  return buildReviewState({
+    analysis: current,
+    cursor: evidenceCursor.get(),
+    graphView: nodeViewController.reviewState(),
+    workspace: getActiveWorkspace(),
+    auditTab: getActiveAuditTab(),
+    acceleratorProfileId: selectedAcceleratorProfileId,
+    comparison: null,
+    runtimeEvidence: runtimeAssignmentEvidence,
+    externalOverlay: nodeEdgeEvidenceOverlay,
+  });
+}
+
+function currentReviewHtml() {
+  return buildSelfContainedReviewHtml({
+    analysis: current,
+    graphSvg: canonicalGraphSvgText(),
+    reviewState: currentReviewState(),
+    runtimeEvidence: runtimeAssignmentEvidence,
+  });
+}
+
 async function buildEngineeringBundleFiles() {
   const formatter = await loadRawExportFormatter();
-  return formatter.buildEngineeringBundleArtifactFiles(current, {
+  const files = formatter.buildEngineeringBundleArtifactFiles(current, {
     reportContext: currentReportContext(),
     rawEvidenceContext: currentRawEvidenceContext(),
     mlBomDocument: await buildMlBom(current, currentModelBytes),
     graphSvgText: canonicalGraphSvgText(),
   });
+  files.push(zipTextFile("reports/review.html", currentReviewHtml()));
+  files.push(zipTextFile("evidence/review_state.json", `${JSON.stringify(currentReviewState(), null, 2)}\n`));
+  if (nodeEdgeEvidenceOverlay) {
+    files.push(zipTextFile("evidence/external_node_edge_overlay.json", `${JSON.stringify(nodeEdgeEvidenceOverlay, null, 2)}\n`));
+  }
+  return files;
 }
 
 async function buildRawDataFiles() {
@@ -4750,6 +4950,7 @@ function showSnapshotSummary(snap) {
     ? snap.reportMarkdown
     : `# Stored Audit Snapshot\n\n\`\`\`json\n${JSON.stringify(snap, null, 2)}\n\`\`\`\n`;
   comparisonPre.textContent = lastComparisonMarkdown;
+  comparisonVisual?.replaceChildren();
   comparisonResult.hidden = false;
   comparisonResult.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -4761,6 +4962,15 @@ async function runComparison() {
   if (!a || !b) return;
   lastComparisonMarkdown = buildComparisonReport(a, b);
   comparisonPre.textContent = lastComparisonMarkdown;
+  renderArtifactDiffWorkspace(comparisonVisual, a, b, {
+    onSelect: (match) => {
+      evidenceCursor.select({
+        artifact_sha256: b.sha256 || null,
+        op_index: match.right.index,
+        report_anchor: `artifact-diff:${match.left.index}:${match.right.index}`,
+      }, { source: "artifact-diff" });
+    },
+  });
   comparisonResult.hidden = false;
   comparisonResult.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }

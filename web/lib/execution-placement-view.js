@@ -1,12 +1,17 @@
 import { buildExecutionPlacementEvidence } from "./execution-placement-evidence.js";
 import { formatBytes, formatNumber } from "./format.js";
 
-export function renderExecutionPlacementView(root, analysis, runtimeEvidence = null, { doc = globalThis.document } = {}) {
+export function renderExecutionPlacementView(root, analysis, runtimeEvidence = null, {
+  doc = globalThis.document,
+  selectedProfileId = "",
+  onProfileSelect = null,
+} = {}) {
   if (!root) return;
   if (!analysis) {
     root.hidden = true;
     root.replaceChildren();
     root.onclick = null;
+    root.onkeydown = null;
     return;
   }
   root.hidden = false;
@@ -18,10 +23,15 @@ export function renderExecutionPlacementView(root, analysis, runtimeEvidence = n
       placementHeader(doc, evidence),
       ...(evidence.banner ? [placementBanner(doc, evidence.banner)] : []),
       placementTopology(doc, evidence),
-      placementBody(doc, evidence),
+      placementBody(doc, evidence, { selectedProfileId, onProfileSelect }, analysis, runtimeEvidence),
       placementActions(doc, actionsFor(evidence, analysis)),
     );
     root.onclick = (event) => handleAction(event, doc);
+    root.onkeydown = (event) => {
+      if (!["Enter", " "].includes(event.key) || !event.target.closest?.("[data-runtime-node-id], [data-source-op-index]")) return;
+      event.preventDefault();
+      handleAction(event, doc);
+    };
   } catch (error) {
     root.dataset.placementFormat = String(analysis.format || "unknown").toLowerCase();
     root.dataset.placementState = "invalid";
@@ -35,6 +45,7 @@ export function renderExecutionPlacementView(root, analysis, runtimeEvidence = n
       placementBanner(doc, error instanceof Error ? error.message : String(error)),
     );
     root.onclick = null;
+    root.onkeydown = null;
   }
 }
 
@@ -94,7 +105,7 @@ function placementRelation(doc, label, externalBoundary) {
   return relation;
 }
 
-function placementBody(doc, evidence) {
+function placementBody(doc, evidence, profileOptions = {}, analysis = null, runtimeEvidence = null) {
   const root = el(doc, "div", "execution-placement-body");
   root.append(el(doc, "strong", "execution-placement-flow-label", evidence.flow.label));
   if (evidence.flow.segments.length) {
@@ -130,9 +141,84 @@ function placementBody(doc, evidence) {
     }
     root.append(portfolios);
   }
-  if (evidence.static_profiles.length) root.append(staticProfileExplorer(doc, evidence.static_profiles, evidence));
+  if (evidence.static_profiles.length) root.append(staticProfileExplorer(doc, evidence.static_profiles, evidence, profileOptions));
   if (evidence.configuration_preflights.length) root.append(configurationPreflightView(doc, evidence.configuration_preflights));
+  const reconciliation = runtimeSourceReconciliation(doc, analysis, runtimeEvidence);
+  if (reconciliation) root.append(reconciliation);
   if (evidence.flow.segments.length) root.append(el(doc, "p", "execution-placement-note", evidence.interpretation_boundary));
+  return root;
+}
+
+function runtimeSourceReconciliation(doc, analysis, runtimeEvidence) {
+  const runtime = runtimeEvidence?.runtimeAssignmentEvidence || runtimeEvidence?.runtime_assignment || runtimeEvidence;
+  const assignments = Array.isArray(runtime?.assignments) ? runtime.assignments : [];
+  const nativeGraph = runtime?.source?.adapter?.native_capture?.runtime_graph
+    || runtime?.source?.adapter?.native_capture?.optimized_graph
+    || runtime?.runtime_graph
+    || null;
+  const runtimeNodes = Array.isArray(nativeGraph?.nodes) ? nativeGraph.nodes : [];
+  if (!assignments.length && !runtimeNodes.length) return null;
+  const root = el(doc, "details", "runtime-source-reconciliation");
+  root.open = true;
+  const summary = doc.createElement("summary");
+  const explicitlyMapped = assignments.filter((row) => Number.isSafeInteger(Number(row.op_index))).length;
+  summary.textContent = `Source to lowered runtime graph | ${explicitlyMapped} mapped source op${explicitlyMapped === 1 ? "" : "s"} | ${runtimeNodes.length} runtime node${runtimeNodes.length === 1 ? "" : "s"}`;
+  root.append(summary);
+  const tableWrap = el(doc, "div", "placement-boundary-table-wrap");
+  const table = doc.createElement("table");
+  const thead = doc.createElement("thead");
+  const header = doc.createElement("tr");
+  for (const label of ["Source op", "Runtime node / lowering", "Provider", "Mapping evidence", "Kernel / dispatch"]) header.append(el(doc, "th", "", label));
+  thead.append(header);
+  const tbody = doc.createElement("tbody");
+  for (const assignment of assignments) {
+    const opIndex = Number(assignment.op_index);
+    const source = analysis?.ops?.find((op) => Number(op.index) === opIndex);
+    const runtimeIdentity = [
+      assignment.runtime_node_name,
+      assignment.runtime_node_index == null ? null : `runtime #${assignment.runtime_node_index}`,
+      ...(assignment.lowerings || []).map((row) => row.lowering_id || (row.runtime_node_id == null ? null : `runtime #${row.runtime_node_id}`)),
+    ].filter(Boolean);
+    const kernels = [assignment.kernel, assignment.kernel_id, ...(assignment.dispatches || []).map((row) => row.kernel || row.kernel_id)].filter(Boolean);
+    const runtimeNodeId = assignment.runtime_node_id ?? assignment.runtime_node_index ?? assignment.runtime_node_name
+      ?? assignment.lowerings?.[0]?.runtime_node_id ?? assignment.lowerings?.[0]?.lowering_id ?? null;
+    const tr = doc.createElement("tr");
+    if (Number.isSafeInteger(opIndex) && source) {
+      tr.tabIndex = 0;
+      tr.setAttribute("role", "button");
+      tr.dataset.sourceOpIndex = String(opIndex);
+      tr.title = `Open source operator #${opIndex}`;
+    }
+    if (runtimeNodeId != null) tr.dataset.runtimeNodeId = String(runtimeNodeId);
+    const values = [
+      source ? `#${opIndex} ${source.name}` : `Unmapped source identity ${String(assignment.op_index ?? "missing")}`,
+      runtimeIdentity.join(" / ") || "Runtime node identity not exposed",
+      assignment.provider || "not exposed",
+      assignment.mapping_method || "not exposed",
+      kernels.join(" / ") || "not exposed",
+    ];
+    for (const value of values) tr.append(el(doc, "td", "", value));
+    tbody.append(tr);
+  }
+  for (const node of runtimeNodes.filter((row) => !Number.isSafeInteger(Number(row.source_op_index)))) {
+    const tr = doc.createElement("tr");
+    tr.className = "runtime-source-unmapped";
+    const runtimeNodeId = node.id ?? node.name ?? null;
+    if (runtimeNodeId != null) {
+      tr.tabIndex = 0;
+      tr.setAttribute("role", "button");
+      tr.dataset.runtimeNodeId = String(runtimeNodeId);
+      tr.title = "Select this unmapped runtime node evidence.";
+    }
+    for (const value of ["No source mapping", node.name || node.id || "runtime node", node.provider || "not exposed", "UNMAPPED", node.kernel || "not exposed"]) tr.append(el(doc, "td", "", value));
+    tbody.append(tr);
+  }
+  table.append(thead, tbody);
+  tableWrap.append(table);
+  root.append(
+    tableWrap,
+    el(doc, "p", "execution-placement-note", "A runtime node is linked to a source operator only when the imported evidence carries an explicit original-op identity. Fusion, generated nodes, and unmatched runtime nodes are not assigned by name similarity."),
+  );
   return root;
 }
 
@@ -186,9 +272,9 @@ function configurationPreflightView(doc, preflights) {
   return root;
 }
 
-function staticProfileExplorer(doc, profiles, evidence) {
+function staticProfileExplorer(doc, profiles, evidence, { selectedProfileId = "", onProfileSelect = null } = {}) {
   const root = el(doc, "section", "placement-profile-explorer");
-  const comparison = placementProfileComparison(doc, profiles);
+  const comparison = placementProfileComparison(doc, profiles, { selectedProfileId, onProfileSelect });
   if (comparison) root.append(comparison);
   const hasAccelerator = profiles.some((profile) => profileClass(profile) === "accelerator");
   const head = el(doc, "div", "placement-profile-head");
@@ -209,7 +295,7 @@ function staticProfileExplorer(doc, profiles, evidence) {
     option.textContent = profile.label;
     select.append(option);
   }
-  const preferred = preferredProfile(profiles);
+  const preferred = profiles.find((profile) => profile.profile_id === selectedProfileId) || preferredProfile(profiles);
   select.value = preferred.profile_id;
   field.append(select);
   head.append(title, field);
@@ -218,13 +304,17 @@ function staticProfileExplorer(doc, profiles, evidence) {
     const profile = profiles.find((item) => item.profile_id === select.value) || profiles[0];
     renderStaticProfile(doc, body, profile);
   };
-  select.addEventListener("change", render);
+  select.addEventListener("change", () => {
+    render();
+    const profile = profiles.find((item) => item.profile_id === select.value);
+    if (profileClass(profile) === "accelerator") onProfileSelect?.(profile.profile_id);
+  });
   render();
   root.append(head, body);
   return root;
 }
 
-function placementProfileComparison(doc, profiles) {
+function placementProfileComparison(doc, profiles, { selectedProfileId = "", onProfileSelect = null } = {}) {
   const acceleratorProfiles = profiles.filter((profile) => profileClass(profile) === "accelerator");
   const cpuProfiles = profiles.filter((profile) => profileClass(profile) === "cpu");
   if (!acceleratorProfiles.length || !cpuProfiles.length) return null;
@@ -237,14 +327,16 @@ function placementProfileComparison(doc, profiles) {
   );
   const grid = el(doc, "div", "placement-profile-comparison-grid");
   grid.append(
-    placementComparisonCard(doc, "Accelerator backend", acceleratorProfiles, preferredProfile(acceleratorProfiles)),
+    placementComparisonCard(doc, "Accelerator backend", acceleratorProfiles,
+      acceleratorProfiles.find((profile) => profile.profile_id === selectedProfileId) || preferredProfile(acceleratorProfiles),
+      onProfileSelect),
     placementComparisonCard(doc, "CPU baseline", cpuProfiles, preferredCpuProfile(cpuProfiles)),
   );
   root.append(head, grid, el(doc, "p", "execution-placement-note", "Logical boundary exposure is a serialized-shape edge sum, not observed CPU-to-accelerator transfer. GPU roofline, generated shader or kernel, occupancy, memory plan, and latency remain NOT ASSESSED."));
   return root;
 }
 
-function placementComparisonCard(doc, label, profiles, preferred) {
+function placementComparisonCard(doc, label, profiles, preferred, onProfileSelect = null) {
   const root = el(doc, "article", "placement-profile-comparison-card");
   root.dataset.profileClass = label.startsWith("CPU") ? "cpu" : "accelerator";
   const field = el(doc, "label", "placement-profile-select placement-profile-comparison-select");
@@ -262,7 +354,10 @@ function placementComparisonCard(doc, label, profiles, preferred) {
   const summary = el(doc, "dl", "placement-profile-comparison-summary");
   const render = () => renderPlacementComparisonSummary(doc, summary,
     profiles.find((profile) => profile.profile_id === select.value) || profiles[0]);
-  select.addEventListener("change", render);
+  select.addEventListener("change", () => {
+    render();
+    if (root.dataset.profileClass === "accelerator") onProfileSelect?.(select.value);
+  });
   render();
   root.append(field, summary);
   return root;
@@ -493,8 +588,32 @@ function profileClass(profile) {
 
 function placementMetric(doc, label, value, tone) {
   const node = el(doc, "div", `placement-profile-metric ${tone}`);
-  node.append(el(doc, "span", "", label), el(doc, "strong", "", typeof value === "number" ? formatNumber(value) : value));
+  const head = el(doc, "span", "placement-profile-metric-label", label);
+  const why = el(doc, "button", "evidence-why-trigger", "Why?");
+  why.type = "button";
+  why.title = `Explain ${label}`;
+  why.setAttribute("aria-label", `Explain ${label}`);
+  why.addEventListener("click", () => globalThis.dispatchEvent?.(new CustomEvent("deepbom:evidence-explain", {
+    detail: {
+      title: label,
+      value,
+      evidence_class: placementMetricEvidenceClass(label),
+      method: "Computed from the selected source-backed execution-profile ledger and the analyzed source graph.",
+      source_pointers: ["execution_placement.static_profiles", "analysis.ops", "analysis.tensors"],
+      conditions: ["Applies only to the selected build, backend, and precision condition shown in this profile."],
+      limitations: ["Does not establish observed runtime assignment, physical bus transfer, kernel selection, or latency."],
+      report_pointer: `execution_placement.static_profiles.metrics[${label}]`,
+    },
+  })));
+  head.append(why);
+  node.append(head, el(doc, "strong", "", typeof value === "number" ? formatNumber(value) : value));
   return node;
+}
+
+function placementMetricEvidenceClass(label) {
+  if (/build profile/i.test(label)) return "OBSERVED";
+  if (/plan in browser/i.test(label)) return "DERIVED";
+  return "PREDICTED";
 }
 
 function stateLabel(state) {
@@ -547,6 +666,19 @@ function actionsFor(evidence, analysis) {
 }
 
 function handleAction(event, doc) {
+  const runtimeRow = event.target.closest?.("[data-runtime-node-id], [data-source-op-index]");
+  const sourceOp = runtimeRow?.dataset.sourceOpIndex;
+  const runtimeNodeId = runtimeRow?.dataset.runtimeNodeId;
+  if (runtimeRow) {
+    globalThis.dispatchEvent?.(new CustomEvent("deepbom:evidence-select", {
+      detail: {
+        op_index: sourceOp == null ? null : Number(sourceOp),
+        runtime_node_id: runtimeNodeId || null,
+        source: "runtime-reconciliation",
+      },
+    }));
+    return;
+  }
   const actionId = event.target.closest("[data-placement-action]")?.dataset.placementAction;
   if (!actionId) return;
   if (actionId === "source") return doc?.getElementById("runDeepBom")?.click();

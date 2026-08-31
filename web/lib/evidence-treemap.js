@@ -42,6 +42,10 @@ function stableText(value, fallback) {
   return text || fallback;
 }
 
+function displayGroupLabel(value, fallback) {
+  return stableText(value, fallback).replace(/\bunnamed group\b/gi, "Ungrouped operators");
+}
+
 function formatInteger(value) {
   return Math.round(Number(value || 0)).toLocaleString("en-US");
 }
@@ -67,7 +71,7 @@ function buildBlockLookup(analysis) {
     for (const opIndex of block.op_indices || []) {
       lookup.set(Number(opIndex), {
         id: stableText(block.block_id, `block-${opIndex}`),
-        label: stableText(block.display_name, stableText(block.block_id, `Block ${opIndex}`)),
+        label: displayGroupLabel(block.display_name, stableText(block.block_id, `Block ${opIndex}`)),
       });
     }
   }
@@ -92,7 +96,7 @@ function buildStageLookup(analysis) {
     for (const opIndex of indices) {
       lookup.set(Number(opIndex), {
         id: stableText(stage.stage_id, `stage-${stage.index}`),
-        label: stableText(stage.display_name, stableText(stage.key, `Stage ${stage.index}`)),
+        label: displayGroupLabel(stage.display_name, stableText(stage.key, `Stage ${stage.index}`)),
       });
     }
   }
@@ -107,7 +111,7 @@ function groupForOp(op, groupBy, stageLookup, blockLookup) {
   }
   return stageLookup.get(Number(op.index)) || {
     id: `stage-${op.stage_index ?? "unassigned"}`,
-    label: op.stage_key ? stableText(op.stage_key, "Unassigned stage") : `Stage ${op.stage_index ?? "unassigned"}`,
+    label: op.stage_key ? displayGroupLabel(op.stage_key, "Unclassified stage") : Number.isSafeInteger(Number(op.stage_index)) ? `Stage ${op.stage_index}` : "Unclassified stage",
   };
 }
 
@@ -549,7 +553,9 @@ export function renderEvidenceTreemap(container, presentation, { onSelect = null
     outline.style.width = `${group.rect.w / layout.width * 100}%`;
     outline.style.height = `${group.rect.h / layout.height * 100}%`;
     const label = document.createElement("span");
-    label.textContent = group.label;
+    label.textContent = /^unnamed$/i.test(String(group.label || "")) ? "Unclassified group" : group.label;
+    const groupArea = group.rect.w / layout.width * group.rect.h / layout.height;
+    if (groupArea < 0.012 || group.rect.w / layout.width < 0.08 || group.rect.h / layout.height < 0.07) label.hidden = true;
     outline.append(label);
     canvas.append(outline);
   }
@@ -563,11 +569,16 @@ export function renderEvidenceTreemap(container, presentation, { onSelect = null
     tile.style.height = `${item.rect.h / layout.height * 100}%`;
     tile.setAttribute("aria-label", tileAccessibleLabel(item, presentation));
     tile.title = tileAccessibleLabel(item, presentation);
+    const widthShare = item.rect.w / layout.width;
+    const heightShare = item.rect.h / layout.height;
+    const areaShare = widthShare * heightShare;
+    const showText = widthShare >= 0.055 && heightShare >= 0.065 && areaShare >= 0.006;
+    if (!showText) tile.classList.add("compact-tile");
     const label = document.createElement("strong");
     label.textContent = item.shortLabel;
     const value = document.createElement("span");
     value.textContent = formatMetric(item.value, presentation.unit);
-    tile.append(label, value);
+    if (showText) tile.append(label, value);
     tile.addEventListener("click", () => selectItem(item, tile));
     canvas.append(tile);
   }

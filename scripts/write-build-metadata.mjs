@@ -359,6 +359,9 @@ export function publicRulepackHashBasis(basis) {
 
 function computeBundleContentDigest({ publicDistribution = false } = {}) {
   const files = collectBundleContentFiles({ publicDistribution });
+  const selectedRoots = BUNDLE_CONTENT_ROOTS
+    .map(normalizePath)
+    .filter((entry) => existsSync(path.join(root, entry)));
   const fileDigests = files.map((relativePath) => {
     const bytes = readFileSync(path.join(root, relativePath));
     return {
@@ -382,7 +385,7 @@ function computeBundleContentDigest({ publicDistribution = false } = {}) {
       digest_set_schema: BUILD_FILE_DIGEST_SET_SCHEMA,
     },
     selection: {
-      roots: BUNDLE_CONTENT_ROOTS.map(normalizePath),
+      roots: selectedRoots,
       file_excludes: [...BUNDLE_CONTENT_FILE_EXCLUDES, "**/.gitignore"].sort(),
       directory_excludes: [
         ...BUNDLE_CONTENT_DIR_EXCLUDES,
@@ -417,7 +420,7 @@ function computeBundleContentDigest({ publicDistribution = false } = {}) {
       `${files.length} files`,
       BUILD_CONTENT_HASH_METHOD,
       `manifest ${BUILD_CONTENT_MANIFEST_SCHEMA} SHA-256 ${manifestSha256}`,
-      `roots: ${BUNDLE_CONTENT_ROOTS.map(normalizePath).join(", ")}`,
+      `roots: ${selectedRoots.join(", ")}`,
       `file excludes: ${manifest.selection.file_excludes.join(", ")}`,
       `directory excludes: ${manifest.selection.directory_excludes.join(", ")}`,
     ],

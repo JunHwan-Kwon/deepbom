@@ -35,6 +35,7 @@ export function createGraphWorkspace(workspace) {
     compute_weight_histogram,
     downloadTextArtifact,
     ensureLiteRtRuntime,
+    evidenceCursor,
     explorerDecisionController,
     explorerExecutionPlacementPanel,
     explorerRedesignController,
@@ -343,7 +344,11 @@ function renderInferencePanel(analysis) {
 }
 
 function renderGraphExplorer(analysis) {
-  workspace.selectedOpIndex = analysis.ops.length ? 0 : null;
+  const cursor = evidenceCursor?.get?.();
+  const cursorMatches = cursor?.artifact_sha256 && cursor.artifact_sha256 === analysis.model_sha256;
+  workspace.selectedOpIndex = cursorMatches && analysis.ops.some((op) => Number(op.index) === cursor.op_index)
+    ? cursor.op_index
+    : analysis.ops[0]?.index ?? null;
   graphStats.textContent = `${analysis.ops.length} ops / ${analysis.tensors.length} tensors`;
   updateGraphModeHint(workspace.currentGraphMode);
 
@@ -385,8 +390,21 @@ function renderResourceMap(analysis) {
     },
     onSelect: (item) => {
       if (item.kind !== "op") return;
-      switchExplorerTab("ops");
-      selectGraphOp(analysis, item.index, { scrollTable: true });
+      switchExplorerTab("node");
+      selectGraphOp(analysis, item.index, { scrollTable: false, source: "resource-map", openInspector: true });
+      globalThis.dispatchEvent?.(new CustomEvent("deepbom:evidence-explain", {
+        detail: {
+          title: `${presentation.metricLabel} for ${item.label}`,
+          value: `${item.value} ${presentation.unit}`,
+          evidence_class: presentation.evidenceClass,
+          method: "Tile area is the selected metric divided by the exact sum of positive assessed values in this map.",
+          formula: `share = ${item.value} / ${presentation.total}`,
+          source_pointers: [`analysis.${presentation.scope === "operators" ? "ops" : "tensors"}[index=${item.index}]`],
+          conditions: [`Group: ${item.groupLabel}`, `Color overlay: ${presentation.colorBy}`],
+          limitations: [presentation.boundary],
+          report_pointer: `explorer.resource_map.items[index=${item.index}]`,
+        },
+      }));
     },
   });
 }
@@ -901,6 +919,8 @@ function renderTensorExplorer(analysis) {
     ...rows.map(({ t, tensorRole, fanOut, hasQuant, quantMode, isModelInput, isModelOutput }) => {
       const tr = document.createElement("tr");
       tr.className = "tensor-row";
+      tr.classList.toggle("selected", evidenceCursor?.get?.().tensor_index === Number(t.index));
+      tr.dataset.tensorIndex = String(t.index);
       tr.tabIndex = 0;
       tr.setAttribute("role", "button");
       const role = tensorRole;
@@ -977,12 +997,21 @@ function renderTensorExplorer(analysis) {
         mkTd("tensor-quant", quantStr),
       );
       // Click → jump to producer op
+      const selectThisTensor = () => {
+        if (!workspace.current) return;
+        evidenceCursor?.select?.({
+          artifact_sha256: workspace.current.model_sha256 || null,
+          tensor_index: Number(t.index),
+          op_index: producerOpIdx == null ? null : Number(producerOpIdx),
+        }, { source: "tensor-table" });
+        tensorBody?.querySelectorAll?.("tr.selected").forEach((row) => row.classList.remove("selected"));
+        tr.classList.add("selected");
+      };
       const navigateToProducer = () => {
-        if (producerOpIdx != null && workspace.current) {
-          // Switch to ops tab and select this op
-          switchExplorerTab("ops");
-          selectGraphOp(workspace.current, producerOpIdx, { scrollTable: true });
-        }
+        selectThisTensor();
+        if (producerOpIdx == null || !workspace.current) return;
+        switchExplorerTab("ops");
+        selectGraphOp(workspace.current, producerOpIdx, { scrollTable: true, keepTensor: true });
       };
       tr.addEventListener("click", navigateToProducer);
       tr.addEventListener("keydown", (event) => {
@@ -1479,11 +1508,19 @@ function renderCurrentKernelInspector(placement = false) {
 function selectGraphOp(analysis, opIndex, options = {}) {
   const op = analysis.ops.find((item) => item.index === opIndex);
   if (!op) return;
+  if (!options.fromEvidenceCursor) {
+    evidenceCursor?.select?.({
+      artifact_sha256: analysis.model_sha256 || null,
+      op_index: Number(opIndex),
+      tensor_index: options.keepTensor ? evidenceCursor?.get?.().tensor_index ?? null : null,
+    }, { source: options.source || "graph-workspace" });
+  }
   if (options.fromGraph && graphSearch.value.trim() && !opMatchesSearch(analysis, op, graphSearch.value.trim().toLowerCase())) {
     graphSearch.value = "";
   }
   workspace.selectedOpIndex = opIndex;
-  nodeViewController.selectOp(opIndex);
+  if (options.fromEvidenceCursor) nodeViewController.revealOp(opIndex);
+  else nodeViewController.selectOp(opIndex, { openInspector: options.openInspector === true });
   quantEvidenceController.selectOp(opIndex);
   renderGraphOpRows(analysis);
   renderOpDetail(analysis, opIndex);
@@ -1492,6 +1529,27 @@ function selectGraphOp(analysis, opIndex, options = {}) {
   if (options.scrollTable) {
     requestAnimationFrame(() => scrollGraphTableToOp(opIndex));
   }
+}
+
+function selectTensor(analysis, tensorIndex, { fromEvidenceCursor = false } = {}) {
+  const tensor = analysis?.tensors?.find?.((item) => Number(item?.index) === Number(tensorIndex))
+    || analysis?.tensors?.[Number(tensorIndex)];
+  if (!tensor || Number(tensor.index) !== Number(tensorIndex)) return false;
+  if (!fromEvidenceCursor) {
+    evidenceCursor?.select?.({
+      artifact_sha256: analysis.model_sha256 || null,
+      tensor_index: Number(tensorIndex),
+      op_index: null,
+    }, { source: "tensor" });
+  }
+  switchExplorerTab("tensors");
+  renderTensorExplorer(analysis);
+  requestAnimationFrame(() => {
+    const row = tensorBody?.querySelector?.(`tr[data-tensor-index="${Number(tensorIndex)}"]`);
+    row?.scrollIntoView({ block: "center", behavior: "smooth" });
+    row?.focus({ preventScroll: true });
+  });
+  return true;
 }
 
 function updateOpNav(analysis) {
@@ -1881,6 +1939,7 @@ function renderRoofline(analysis) {
     switchExplorerTab,
     renderCurrentKernelInspector,
     selectGraphOp,
+    selectTensor,
     updateOpNav,
     selectGraphNodeFromMap,
     scrollGraphTableToOp,

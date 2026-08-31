@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { copyFile, lstat, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
@@ -94,6 +95,7 @@ async function exportPublicSource(files) {
   await copyFile(path.join(root, "channels", "LICENSE"), path.join(output, "LICENSE"));
   await copyFile(path.join(root, "docs", "PUBLIC_README.md"), path.join(output, "README.md"));
   await rewritePublicPackageMetadata();
+  writePublicBuildMetadata();
   const records = [];
   for (const file of await collectFiles(output)) {
     records.push(await fileRecord(file, normalize(path.relative(output, file))));
@@ -111,6 +113,15 @@ async function exportPublicSource(files) {
   await writeFile(path.join(output, "PUBLIC_SOURCE_MANIFEST.json"), `${JSON.stringify(manifest, null, 2)}\n`);
   await assertExportHasNoForbiddenPaths(output);
   console.log(`Built clean public source export at ${output} (${records.length} files plus manifest).`);
+}
+
+function writePublicBuildMetadata() {
+  execFileSync(process.execPath, ["scripts/write-build-metadata.mjs", "--public-distribution"], {
+    cwd: output,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  assert(existsSync(path.join(output, "web", "lib", "build-metadata.js")), "Public build metadata was not generated.");
 }
 
 async function rewritePublicPackageMetadata() {
