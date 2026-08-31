@@ -132,7 +132,7 @@ export function formatAuditButtonLabel(format, { rerun = false } = {}) {
 export function stagedArtifactContext(format) {
   const scope = formatEvidenceScope(format);
   const copy = scope.id === "tflite"
-    ? "Choose the TFLite static target profile below, then run the artifact audit. Runtime build and observed delegate assignment remain separate evidence."
+    ? "Choose the TFLite CPU cost profile below. GPU and NNAPI source eligibility is evaluated separately in Accelerator; build inclusion and observed placement require imported evidence."
     : scope.id === "onnx"
       ? "Run the target-independent graph and ORT compatibility audit first. Bind the exact ORT version, execution provider, build flags, and device through runtime evidence afterward."
       : `${scope.depth}. No generic CPU target is applied to this format.`;

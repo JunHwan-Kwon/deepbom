@@ -130,7 +130,7 @@ function placementBody(doc, evidence) {
     }
     root.append(portfolios);
   }
-  if (evidence.static_profiles.length) root.append(staticProfileExplorer(doc, evidence.static_profiles));
+  if (evidence.static_profiles.length) root.append(staticProfileExplorer(doc, evidence.static_profiles, evidence));
   if (evidence.configuration_preflights.length) root.append(configurationPreflightView(doc, evidence.configuration_preflights));
   if (evidence.flow.segments.length) root.append(el(doc, "p", "execution-placement-note", evidence.interpretation_boundary));
   return root;
@@ -186,15 +186,18 @@ function configurationPreflightView(doc, preflights) {
   return root;
 }
 
-function staticProfileExplorer(doc, profiles) {
+function staticProfileExplorer(doc, profiles, evidence) {
   const root = el(doc, "section", "placement-profile-explorer");
   const comparison = placementProfileComparison(doc, profiles);
   if (comparison) root.append(comparison);
+  const hasAccelerator = profiles.some((profile) => profileClass(profile) === "accelerator");
   const head = el(doc, "div", "placement-profile-head");
   const title = el(doc, "div");
   title.append(
     el(doc, "strong", "", "Detailed independent projection"),
-    el(doc, "span", "", "Inspect one source-backed backend ledger without combining provider priority"),
+    el(doc, "span", "", !hasAccelerator && evidence?.format === "tflite"
+      ? "XNNPACK CPU is loaded; GPU/NNAPI source profiles are not loaded in this run"
+      : "Inspect one source-backed backend ledger without combining provider priority"),
   );
   const field = el(doc, "label", "placement-profile-select placement-profile-detail-select");
   field.append(el(doc, "span", "", "Backend"));

@@ -4014,11 +4014,11 @@ function renderTargetSwitcher() {
   });
   const label = document.createElement("span");
   label.className = "target-switcher-label";
-  label.textContent = "Static TFLite target:";
+  label.textContent = "CPU cost profile:";
   const addCustom = document.createElement("button");
   addCustom.type = "button";
   addCustom.className = "target-pill target-pill-add";
-  addCustom.title = "Create a custom target profile from a built-in one";
+  addCustom.title = "Create a custom CPU cost profile from a built-in one";
   addCustom.append(Object.assign(document.createElement("strong"), { textContent: "+ Custom" }));
   addCustom.addEventListener("click", () => openCustomTargetEditor());
   targetSwitcherBar.replaceChildren(label, ...pills, addCustom);

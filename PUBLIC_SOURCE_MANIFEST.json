@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "d5abe5f2187d3a94bb7b16c7ac27d152bcef2b4a",
+  "source_commit": "5d9afac1c36e505270e14fa5e57a23ab7444cf9a",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 881,
@@ -1182,8 +1182,8 @@
     },
     {
       "path": "scripts/check-deployment-frontier-viewer.mjs",
-      "byte_length": 52957,
-      "sha256": "1bf30287158fd917907560483a61711d4c66f8f5632a15a97dead29337884f43"
+      "byte_length": 56799,
+      "sha256": "7b87a3730d798935413e18b59d38d287d32d801c0348adaa0587673f7d98685d"
     },
     {
       "path": "scripts/check-deployment-frontier.mjs",
@@ -2717,8 +2717,8 @@
     },
     {
       "path": "web/app.js",
-      "byte_length": 288113,
-      "sha256": "10f4731163b840fcfa741ed0dc4a5fd5d72ba68dd40fdc1c4faf9fa4fab4aeab"
+      "byte_length": 288111,
+      "sha256": "9d949ab267beac5079d3b64d11cf6682020cf8f72dbdf93b22218eecb2f2ef4b"
     },
     {
       "path": "web/auth-complete.html",
@@ -2767,8 +2767,8 @@
     },
     {
       "path": "web/index.html",
-      "byte_length": 135398,
-      "sha256": "50982d66102f40ea6ddf4e39ecbe536329bdf827ed5d465f87e8038b5fabde6e"
+      "byte_length": 135392,
+      "sha256": "acb65760a5550953708a053da45316e9f8af23f3f77e92300d6d5ed3a73662fb"
     },
     {
       "path": "web/lib/accelerator-profile-binding.js",
@@ -2987,8 +2987,8 @@
     },
     {
       "path": "web/lib/custom-target-editor.js",
-      "byte_length": 8625,
-      "sha256": "5fc4aff6024ecf9a72ba71b8b57eb08aab852f9c8545d3eb63e425154dbba2ff"
+      "byte_length": 8627,
+      "sha256": "b0e3315c5ca03bae1405416b76d728748bf4fafd0b1109968eec486557856741"
     },
     {
       "path": "web/lib/custom-targets.js",
@@ -3087,13 +3087,13 @@
     },
     {
       "path": "web/lib/execution-placement-evidence.js",
-      "byte_length": 40917,
-      "sha256": "9d88b1396ae0fe9446176e0476f1858a321e158630166925d2724c3b33ca8dce"
+      "byte_length": 41126,
+      "sha256": "cc1f24a3f89a65831ff760716bd44b4704239a29b32e2f79ea1d17513c222ea5"
     },
     {
       "path": "web/lib/execution-placement-view.js",
-      "byte_length": 27429,
-      "sha256": "c459073a688edcbddf32fc1fb5b2f3cbac6a75dbfc42539dd3fa3197ce422773"
+      "byte_length": 27686,
+      "sha256": "b087d95e65a7115929e555c2c1d55fa41d127846e1a41f37a838a914c08b0852"
     },
     {
       "path": "web/lib/executorch-build-binding.js",
@@ -3157,8 +3157,8 @@
     },
     {
       "path": "web/lib/format-evidence-scope.js",
-      "byte_length": 11778,
-      "sha256": "f725452f585da444025dca1469d8f79541b0b7aa18fcff9800db0cf42d35739a"
+      "byte_length": 11810,
+      "sha256": "abb4f967f255baf900266596e024606724c5b15f9d4b4b83f6249ae471240597"
     },
     {
       "path": "web/lib/format-workflow-ui.js",
@@ -4383,7 +4383,7 @@
     {
       "path": "web/sw.js",
       "byte_length": 14473,
-      "sha256": "989104b28e42fd600308f98dc64e2340751ec2d8b52bb3a1ffff7c0dba038963"
+      "sha256": "9193e35cabdfdabe506bb2fb4b90645ea05b5289ecb3e2cddc8f910338286f68"
     },
     {
       "path": "web/test.html",

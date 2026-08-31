@@ -90,8 +90,15 @@ try {
   const resolvedTargets = await page.locator("#targetSwitcherBar").evaluate((bar) => ({
     hidden: bar.hidden,
     targetCount: bar.querySelectorAll(".target-pill").length,
+    ariaLabel: bar.getAttribute("aria-label"),
+    label: bar.querySelector(".target-switcher-label")?.textContent?.trim() || "",
   }));
-  if (resolvedTargets.hidden || resolvedTargets.targetCount < 7) {
+  const stagedContext = await page.locator("#artifactContextCopy").textContent();
+  if (resolvedTargets.hidden
+    || resolvedTargets.targetCount < 7
+    || resolvedTargets.ariaLabel !== "TFLite CPU cost profiles"
+    || resolvedTargets.label !== "CPU cost profile:"
+    || !stagedContext.includes("GPU and NNAPI source eligibility is evaluated separately in Accelerator")) {
     throw new Error(`TFLite staging did not resolve the static target conditions: ${JSON.stringify(resolvedTargets)}`);
   }
   await page.locator('[data-target-id="android_mid_a55"]').click();
@@ -113,6 +120,49 @@ try {
   await page.waitForFunction(() => /audit run complete|Audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 90_000 });
   const auditStatus = await page.locator("#status").textContent();
   if (!auditStatus.includes("audit run complete")) throw new Error(auditStatus);
+  await page.locator('[data-audit-tab="accelerator"]').click();
+  await page.waitForFunction(() => {
+    const panel = document.querySelector("#executionPlacementPanel");
+    return panel && !panel.hidden && panel.getClientRects().length > 0;
+  }, null, { timeout: 30_000 });
+  const acceleratorSurface = await page.locator("#executionPlacementPanel").evaluate((panel) => ({
+    text: panel.textContent || "",
+    acceleratorProfile: panel.querySelector('[data-profile-class="accelerator"] select')?.value || "",
+    cpuProfile: panel.querySelector('[data-profile-class="cpu"] select')?.value || "",
+    detailProfile: panel.querySelector(".placement-profile-detail-select select")?.value || "",
+    loadSourceAction: [...panel.querySelectorAll("button")].some((button) => button.textContent?.includes("Load GPU / NNAPI source ledger")),
+    overflow: Math.max(0, panel.scrollWidth - panel.clientWidth),
+  }));
+  const sourceLedgerLoaded = Boolean(acceleratorSurface.acceleratorProfile);
+  if (acceleratorSurface.detailProfile !== (sourceLedgerLoaded ? "tflite_gpu" : "xnnpack_cpu")
+    || sourceLedgerLoaded && (acceleratorSurface.acceleratorProfile !== "tflite_gpu"
+      || acceleratorSurface.cpuProfile !== "xnnpack_cpu"
+      || !acceleratorSurface.text.includes("Accelerator and CPU eligibility comparison"))
+    || !sourceLedgerLoaded && (!acceleratorSurface.loadSourceAction
+      || !acceleratorSurface.text.includes("GPU/NNAPI source profiles are not loaded in this run"))
+    || !acceleratorSurface.text.includes("GPU roofline")
+    || acceleratorSurface.overflow > 1) {
+    throw new Error(`Accelerator evidence is not integrated into the audited web surface: ${JSON.stringify(acceleratorSurface)}`);
+  }
+  const acceleratorDesktopPath = path.join(output, "accelerator-evidence-desktop.png");
+  await page.locator("#executionPlacementPanel").screenshot({ path: acceleratorDesktopPath });
+  await page.setViewportSize({ width: 390, height: 844 });
+  const acceleratorMobile = await page.locator("#executionPlacementPanel").evaluate((panel) => ({
+    documentOverflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
+    panelOverflow: Math.max(0, panel.scrollWidth - panel.clientWidth),
+    backendSelectHeight: panel.querySelector(".placement-profile-detail-select select")?.getBoundingClientRect().height || 0,
+    topologyColumns: getComputedStyle(panel.querySelector(".execution-placement-levels")).gridTemplateColumns.split(" ").length,
+  }));
+  if (acceleratorMobile.documentOverflow > 1
+    || acceleratorMobile.panelOverflow > 1
+    || acceleratorMobile.backendSelectHeight < 43.5
+    || acceleratorMobile.topologyColumns !== 1) {
+    throw new Error(`Accelerator evidence mobile layout is invalid: ${JSON.stringify(acceleratorMobile)}`);
+  }
+  const acceleratorMobilePath = path.join(output, "accelerator-evidence-mobile.png");
+  await page.locator("#executionPlacementPanel").screenshot({ path: acceleratorMobilePath });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.locator('[data-audit-tab="overview"]').click();
   const overview = await page.evaluate(() => {
     const cards = [...document.querySelectorAll("#summary .metric")];
     const byLabel = Object.fromEntries(cards.map((card) => [
@@ -757,7 +807,10 @@ try {
   }
   await onnxFixture.locator('[data-frontier-view="divergence"]').click();
   const onnxPairCount = await onnxFixture.locator(".frontier-bar-row").count();
-  if (onnxPairCount !== 28) throw new Error(`ONNX frontier should render 28 pairs for eight EP profiles, found ${onnxPairCount}.`);
+  const expectedOnnxPairCount = expectedOnnxProviderCount * (expectedOnnxProviderCount - 1) / 2;
+  if (onnxPairCount !== expectedOnnxPairCount) {
+    throw new Error(`ONNX frontier should render ${expectedOnnxPairCount} pairs for ${expectedOnnxProviderCount} EP profiles, found ${onnxPairCount}.`);
+  }
   await onnxFixture.locator('[data-frontier-view="frontier"]').click();
   const onnxDesktopPath = path.join(output, "deployment-frontier-onnx-desktop.png");
   await onnxFixture.screenshot({ path: onnxDesktopPath });
@@ -792,6 +845,8 @@ try {
   console.log(`graph_full_desktop=${graphFullDesktopPath}`);
   console.log(`audit_progress_desktop=${auditProgressDesktopPath}`);
   console.log(`audit_progress_mobile=${auditProgressMobilePath}`);
+  console.log(`accelerator_desktop=${acceleratorDesktopPath}`);
+  console.log(`accelerator_mobile=${acceleratorMobilePath}`);
   console.log(`divergence_desktop=${divergenceDesktopPath}`);
   console.log(`divergence_mobile=${divergenceMobilePath}`);
   console.log(`mobile=${mobilePath}`);

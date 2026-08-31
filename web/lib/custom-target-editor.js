@@ -69,7 +69,7 @@ export function createCustomTargetEditor({ getBuiltInProfiles, onSaved }) {
     form.method = "dialog";
 
     const head = element("div", "custom-target-head");
-    head.append(element("h3", null, "Custom target profile"));
+    head.append(element("h3", null, "Custom CPU cost profile"));
     head.append(element("p", "custom-target-intro",
       "Start from a built-in profile and retune its planning numbers. Only changed "
       + "fields are recorded, and the saved profile carries its own hash, its base, "

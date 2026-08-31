@@ -171,7 +171,7 @@ function tfliteEvidence(analysis, runtime) {
     }, opItemId);
   const sourceDetail = alternate
     ? `XNNPACK ${candidateCount}/${ops.length} candidate ops; GPU and NNAPI artifact-visible candidates are separately source-pinned below.`
-    : `XNNPACK ${candidateCount}/${ops.length} candidate ops. GPU/NNAPI source profiles are available from the protected source ledger.`;
+    : `XNNPACK ${candidateCount}/${ops.length} candidate ops. GPU/NNAPI source profiles are not loaded in this run; no accelerator eligibility is inferred.`;
   return baseEvidence(analysis, {
     format: "tflite",
     itemKind: "serialized_operator",
@@ -204,7 +204,9 @@ function tfliteEvidence(analysis, runtime) {
     staticProfiles,
     note: observed
       ? "Observed rows apply only to the imported runtime capture; static XNNPACK and alternate-delegate ledgers remain separate comparisons."
-      : "GPU and NNAPI rows are per-delegate source eligibility portfolios. They are not combined into a fictitious multi-delegate partition.",
+      : alternate
+        ? "GPU and NNAPI rows are per-delegate source eligibility portfolios. They are not combined into a fictitious multi-delegate partition."
+        : "GPU and NNAPI source profiles are not loaded in this run. XNNPACK remains the only detailed static projection shown; no accelerator eligibility is inferred.",
     runtimeObservation: assignmentObservation(assignments, ops.length),
   });
 }
