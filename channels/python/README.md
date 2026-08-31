@@ -24,5 +24,9 @@ Set `DEEPBOM_ENGINE` only for a deliberately supplied engine build and bind it
 with `DEEPBOM_ENGINE_SHA256`. TensorRT options import configuration or observed
 parser evidence; NVIDIA runtime libraries are not bundled.
 
+For the installed version, `deepbom --help` and `deepbom capabilities --compact`
+are authoritative. The current source inventory is maintained in the
+[generated CLI reference](https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/CLI_REFERENCE.md).
+
 This public channel package is licensed under Apache-2.0. Protected analyzers
 and private rulepack-generation sources are not included.

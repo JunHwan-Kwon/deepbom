@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "eed0923af31bc9b305c85b1970c9cbbbd96acf53",
+  "source_commit": "d5abe5f2187d3a94bb7b16c7ac27d152bcef2b4a",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 879,
+  "file_count": 881,
   "files": [
     {
       "path": ".gitattributes",
@@ -17,8 +17,8 @@
     },
     {
       "path": ".github/workflows/public-quality.yml",
-      "byte_length": 1459,
-      "sha256": "41613b63d1a8e5e17add60ae6fda68997378ea24f10f152c0c45456582e8bb6b"
+      "byte_length": 1492,
+      "sha256": "dd4b73819fe027c1c7e25c756f44f70923e8b239e64f9c850692031a88e2cc37"
     },
     {
       "path": ".github/workflows/release-channels.yml",
@@ -62,8 +62,8 @@
     },
     {
       "path": "README.md",
-      "byte_length": 4718,
-      "sha256": "23178a076ada57a12f88a6f42e2d5f3e2665472b1b849d8e83ec4754686655a3"
+      "byte_length": 4857,
+      "sha256": "8ff9b70d49f21678381bda3fd500ae9b7541102a3515358f9e358303915d4b8f"
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
@@ -82,8 +82,8 @@
     },
     {
       "path": "bin/deepbom.mjs",
-      "byte_length": 76593,
-      "sha256": "f35094bbe52b05d563347a1b2fb341ac286f78396386a5d7ef40947cb0d85905"
+      "byte_length": 76679,
+      "sha256": "f621c16faf500ce197f6a9594e17a0c0506febf35030a6a18550b3a41b4b042e"
     },
     {
       "path": "bin/graph-png-export.mjs",
@@ -117,8 +117,8 @@
     },
     {
       "path": "channels/README.md",
-      "byte_length": 2514,
-      "sha256": "29ef606bcbe1fd9d1ec41863b79fab6774b156aa7d6346074de33a37c58ffecc"
+      "byte_length": 2621,
+      "sha256": "4faabd49a444f01f7f1c9148518d242d381410f54539d642d5f97c769f5dc20a"
     },
     {
       "path": "channels/cargo/Cargo.lock",
@@ -132,8 +132,8 @@
     },
     {
       "path": "channels/cargo/README.md",
-      "byte_length": 1313,
-      "sha256": "3bfbbf9602bebf1d2218d51672435d3239407c362c176c96b8dd1f567218a505"
+      "byte_length": 1564,
+      "sha256": "550960978870d29b6a29715741a1891d7c81a395899d3c3688cdc9314dd8d8c1"
     },
     {
       "path": "channels/cargo/src/main.rs",
@@ -157,13 +157,13 @@
     },
     {
       "path": "channels/npm/README.md",
-      "byte_length": 2373,
-      "sha256": "4ddbb764acd03410fe78bb3dbc9ef928da1ea9036632ce3177e0fa639245518b"
+      "byte_length": 2624,
+      "sha256": "8c6513657cbac3c7a24541557cceb1623889b90df367ab2e2eb412f81788248b"
     },
     {
       "path": "channels/python/README.md",
-      "byte_length": 1372,
-      "sha256": "8a878c1f0392cac7a91074f82bd67d79c735a9d2fe4db14c41bbf2786385ee3f"
+      "byte_length": 1623,
+      "sha256": "5a7deabcb6047742fbb2d11a835855f44c557e50255082a2133fef765b2a4e09"
     },
     {
       "path": "channels/python/pyproject.toml",
@@ -197,8 +197,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 32528,
-      "sha256": "b4b516ddbe1b155bd9938f8ba2c7d498d8a682f8529c487bd720c1656fdfe853"
+      "byte_length": 32580,
+      "sha256": "ebb42f2ea3f2218afe248d719dfed779c2c65f5e6a46496ad2fb360131521f0e"
     },
     {
       "path": "corpus/README.md",
@@ -467,8 +467,13 @@
     },
     {
       "path": "docs/CLI_AUTOMATION.md",
-      "byte_length": 4533,
-      "sha256": "39d04977edba7921ddadc60045ff9f0c40d78a6f2e52f6bad32f27ccd02dc4b2"
+      "byte_length": 4812,
+      "sha256": "a1db6cec6941c5e324b37dfa821c4ca5aa4e9ede6e9b5e890c94b5bc80b0c170"
+    },
+    {
+      "path": "docs/CLI_REFERENCE.md",
+      "byte_length": 7509,
+      "sha256": "f9f42b8f7c224667201a75dc59833bc767b56f1d0931ea7e37aebe5b924fd7d6"
     },
     {
       "path": "docs/CYCLONEDX_20_QUANTIZATION_CONTRIBUTION.md",
@@ -477,8 +482,8 @@
     },
     {
       "path": "docs/DELIVERY_OPERATIONS.md",
-      "byte_length": 8145,
-      "sha256": "c44b1c9540509a2b049ef5736afc63e7b402d385a3de7685b1f3f68604654731"
+      "byte_length": 8383,
+      "sha256": "51eb5c6ee6beabb6f486ce31f06501d584e1a7d0ec05c2019586b838dc76101e"
     },
     {
       "path": "docs/PROJECT_STATUS.md",
@@ -497,8 +502,8 @@
     },
     {
       "path": "docs/PUBLIC_README.md",
-      "byte_length": 4718,
-      "sha256": "23178a076ada57a12f88a6f42e2d5f3e2665472b1b849d8e83ec4754686655a3"
+      "byte_length": 4857,
+      "sha256": "8ff9b70d49f21678381bda3fd500ae9b7541102a3515358f9e358303915d4b8f"
     },
     {
       "path": "docs/REPRESENTATIVE_DATASET_CAPTURE.md",
@@ -627,8 +632,8 @@
     },
     {
       "path": "package.json",
-      "byte_length": 20269,
-      "sha256": "fe709cc5795d6ac36ddcf350e2fdcd9360f8c2b3d38217d0e039ab9f60a4ccbc"
+      "byte_length": 20400,
+      "sha256": "cb2238202378e4c27d39f12e865887c5fadfde39fee071b7e08da57aad6b9528"
     },
     {
       "path": "pkg/LICENSE",
@@ -877,8 +882,8 @@
     },
     {
       "path": "scripts/build-public-source-export.mjs",
-      "byte_length": 8539,
-      "sha256": "76047614c8b253bbe26b67758061e863b6f40bc3d0bb5d488e3678e823cfda92"
+      "byte_length": 8605,
+      "sha256": "f569ba9a8ba5265ea435ca4bd55c023d443b0b6f42f1a46f4c2483b765733b80"
     },
     {
       "path": "scripts/build-release.mjs",
@@ -982,8 +987,8 @@
     },
     {
       "path": "scripts/check-all.mjs",
-      "byte_length": 9749,
-      "sha256": "6d50862cf74cce581eb3e020be4d7cd7ace81f0fb412ba757cad81c97002af54"
+      "byte_length": 9792,
+      "sha256": "30c5a8f7e33fe099a3c6b30cc86a2be0edb6db311125f0da07a4c343806dcad1"
     },
     {
       "path": "scripts/check-analysis-invariants.mjs",
@@ -1047,8 +1052,8 @@
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
-      "byte_length": 32195,
-      "sha256": "288f7be57b6c46d40a30eade926f6c592870cbddf0ad602db42ff9e1e2a44152"
+      "byte_length": 32253,
+      "sha256": "640c9d56446bebacaa24660d4b4b10167ab72bc60f5e48fa459a0e955c9de1f8"
     },
     {
       "path": "scripts/check-cli-automation.mjs",
@@ -1828,7 +1833,7 @@
     {
       "path": "scripts/check-source-budget.mjs",
       "byte_length": 10690,
-      "sha256": "fa05680c77dd4b7555b257e57f0878f717dad2aed9c2246fe05ba72bd65d09cb"
+      "sha256": "4b13f593baf51530da5eb436753b68ec69feba51887961b2d1150051da8c9657"
     },
     {
       "path": "scripts/check-standardization-evidence.mjs",
@@ -1907,8 +1912,8 @@
     },
     {
       "path": "scripts/check-tier.mjs",
-      "byte_length": 4486,
-      "sha256": "1ee9dd0b6d659285bdf50a37e09757d0af1d14a84c34522fa558907a87d5960a"
+      "byte_length": 4529,
+      "sha256": "37ff0ecd40c22b86bcbd922a130b68cb092d475608dfecab40586254e2223c77"
     },
     {
       "path": "scripts/check-wasm-hardening.mjs",
@@ -2044,6 +2049,11 @@
       "path": "scripts/generate-accelerator-llm-samples.py",
       "byte_length": 9398,
       "sha256": "d54864d88ade470ce2a06871ba2ca33bcb4d5a026ebeae47809a164093c96771"
+    },
+    {
+      "path": "scripts/generate-cli-docs.mjs",
+      "byte_length": 6193,
+      "sha256": "9f205faf18d00f5dc2303a4db2a1f83b3069b172ce1cce448b128c000b244dde"
     },
     {
       "path": "scripts/generate-cyclonedx-17-example.mjs",
@@ -2417,8 +2427,8 @@
     },
     {
       "path": "scripts/verify-public-source-export.mjs",
-      "byte_length": 6472,
-      "sha256": "0ae5eb9fc8d4a8f09d0b6d5af56981f0f5d8fd9b92e2928052d64730446a446b"
+      "byte_length": 6855,
+      "sha256": "6971d97abffc8c74ec22aefb87b31bec2d2795b67acc618abd3ea4097692a89c"
     },
     {
       "path": "scripts/verify-python-wheel-matrix.py",

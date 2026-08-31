@@ -110,6 +110,7 @@ for (const snippet of [
   "timeout-minutes: 10",
   "DEEPBOM_CHECK_TIMEOUT_MS: 120000",
   "npm run check:public-source",
+  "npm run check:cli-docs",
   "npm run check:cli",
   "npm run check:formats:core",
 ]) expect(publicQualityWorkflow.includes(snippet), `Public core quality should contain: ${snippet}`);
@@ -411,6 +412,7 @@ function checkPublicDistributionCiContract() {
     "node scripts/verify-public-source-export.mjs .",
     "node scripts/check-git-privacy.mjs",
     "node scripts/check-ci-deploy-contract.mjs",
+    "npm run check:cli-docs",
     "npm run check:cli",
     "npm run check:formats:core",
   ]) {

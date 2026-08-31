@@ -80,6 +80,7 @@ const RELEASE = [
   "scripts/check-private-wasm-contract.mjs",
   "scripts/check-channel-equivalence.mjs",
   "scripts/check-public-package-boundary.mjs",
+  "scripts/generate-cli-docs.mjs --check",
   "scripts/check-cli-automation.mjs",
   "scripts/check-source-budget.mjs",
   "scripts/check-ci-deploy-contract.mjs",

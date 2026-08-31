@@ -27,3 +27,7 @@ override requires both `DEEPBOM_ENGINE` and its exact
 The launcher contains no parser or numerical-analysis implementation. Static
 provider/delegate placement remains predicted or conditionally eligible unless
 identity-bound runtime evidence is imported.
+
+For the installed version, `deepbom --help` and `deepbom capabilities --compact`
+are authoritative. The current source inventory is maintained in the
+[generated CLI reference](https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/CLI_REFERENCE.md).

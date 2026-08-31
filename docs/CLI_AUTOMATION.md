@@ -4,6 +4,11 @@ DEEPBOM exposes one analysis implementation through npm, Python, Cargo, and the
 repository CLI. Python and Cargo are verified launchers; they do not contain a
 second parser or a second numerical rule set.
 
+The complete human-readable command and option inventory is generated directly
+from the executable and capability document in
+[the CLI reference](CLI_REFERENCE.md). Run `npm run generate:cli-docs` after a
+CLI contract change; `npm run check:cli-docs` rejects a stale reference.
+
 ## Discovery
 
 Use capability discovery instead of parsing help text:

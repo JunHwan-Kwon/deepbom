@@ -17,6 +17,7 @@ const CHECKS = [
   "scripts/check-advanced-copy-contract.mjs",
   "scripts/check-deepbom-analysis-contract.mjs",
   "scripts/check-cli.mjs",
+  "scripts/generate-cli-docs.mjs --check",
   "scripts/check-cli-automation.mjs",
   "scripts/check-nvidia-accelerator-profile.mjs",
   "scripts/check-remote-artifact-resolver.mjs",

@@ -54,5 +54,6 @@ jobs:
           node scripts/check-ci-deploy-contract.mjs
       - name: Verify CLI and browser-independent format analyzers
         run: |
+          npm run check:cli-docs
           npm run check:cli
           npm run check:formats:core

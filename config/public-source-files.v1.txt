@@ -90,6 +90,7 @@ corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.con
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.quantize_config.json
 corpus/standardization-evidence.v1.json
 docs/CLI_AUTOMATION.md
+docs/CLI_REFERENCE.md
 docs/CYCLONEDX_20_QUANTIZATION_CONTRIBUTION.md
 docs/DELIVERY_OPERATIONS.md
 docs/PROJECT_STATUS.md
@@ -405,6 +406,7 @@ scripts/fixtures/onnx_recursive_scope.onnx
 scripts/fixtures/onnx_zero_dim_identity.onnx
 scripts/fixtures/report-boundary-analysis.v1.json.gz
 scripts/generate-accelerator-llm-samples.py
+scripts/generate-cli-docs.mjs
 scripts/generate-cyclonedx-17-example.mjs
 scripts/generate-executorch-operator-signatures.mjs
 scripts/generate-gguf-backend-contract.mjs

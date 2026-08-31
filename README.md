@@ -37,7 +37,9 @@ The default is a terminal-sized evidence summary. `--json` and `--compact`
 expose complete format evidence; `--format envelope` provides the canonical
 cross-format contract; CycloneDX 1.7 and OASIS SARIF 2.1.0 are standard
 projections. `--policy-output` records a hash-bound gate result when `--fail-on`
-is selected. See [`docs/CLI_AUTOMATION.md`](docs/CLI_AUTOMATION.md).
+is selected. See [`docs/CLI_AUTOMATION.md`](docs/CLI_AUTOMATION.md). The complete
+option inventory is generated from the executable in
+[`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md).
 
 `verify` compares the serialized external tensor ABI with a supplied,
 artifact-bound production declaration. `diff` uses the canonical deterministic
@@ -62,6 +64,7 @@ Run the public correctness gates:
 
 ```bash
 npm run check:cli
+npm run check:cli-docs
 npm run check:cli-automation
 npm run check:formats
 npm run check:rust

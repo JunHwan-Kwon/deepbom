@@ -2,6 +2,8 @@
 
 These adapters expose one analysis implementation through several installation
 surfaces. They do not contain format parsers or numerical analysis logic.
+The executable command inventory is maintained in the
+[generated CLI reference](../docs/CLI_REFERENCE.md).
 
 | Channel | Runtime | Analysis implementation |
 | --- | --- | --- |

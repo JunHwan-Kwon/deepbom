@@ -42,5 +42,9 @@ multi-file artifact sets rather than collapsed to one unqualified file hash.
 Static provider/delegate placement remains predicted or conditionally eligible
 unless an identity-bound runtime or parser observation is imported.
 
+For the installed version, `deepbom --help` and `deepbom capabilities --compact`
+are authoritative. The current source inventory is maintained in the
+[generated CLI reference](https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/CLI_REFERENCE.md).
+
 This public channel package is licensed under Apache-2.0. Protected analyzers
 and private rulepack-generation sources are not included.

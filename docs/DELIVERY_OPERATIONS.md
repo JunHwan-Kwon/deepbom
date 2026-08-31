@@ -61,6 +61,7 @@ build, dist, cache, and egg-info directories before packaging.
 | Web layout, copy, or browser orchestration | `npm run check:deploy`, `npm run build:release`, dist asset and budget checks | Manual private web deploy |
 | Parser or shared analysis calculation | `npm run check:cli`, `npm run check:formats`, affected exact check, then `npm run check:release` before publication | Public PR quality; private full quality when hosted UI is affected |
 | Public package adapter | source/privacy/CLI checks on pull requests; exact tarball boundary after the channel build | Public PR quality for source contracts; package boundary and `--release-contract` only in the manual channel release |
+| CLI command, option, or capability inventory | `npm run generate:cli-docs`, then `npm run check:cli-docs`; generated reference and channel links must be committed together | Public PR quality when executable or channel source changes |
 | CLI automation output or exit contract | `npm run check:cli-automation`; add `npm run check:cli` when analysis routing changes | Public PR quality; full channel equivalence only before publication |
 | Private WASM or rulepack generator | private WASM/rulepack checks plus public boundary checks | Manual private full quality and web deploy |
 | Corpus manifest or aggregate evidence | corpus-specific deterministic verifier | Public PR quality only when public evidence changes |

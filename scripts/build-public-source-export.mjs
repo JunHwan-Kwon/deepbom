@@ -70,10 +70,12 @@ async function verifyAllowlist(files) {
   for (const required of [
     "bin/deepbom.mjs",
     "channels/LICENSE",
+    "docs/CLI_REFERENCE.md",
     "docs/PUBLIC_PRIVATE_BOUNDARY.md",
     "scripts/build-channel-artifacts.mjs",
     "scripts/build-public-source-export.mjs",
     "scripts/check-public-package-boundary.mjs",
+    "scripts/generate-cli-docs.mjs",
     "src/lib.rs",
   ]) assert(files.includes(required), `Public source allowlist is missing required member ${required}.`);
   assert(!files.some((file) => forbiddenPrefixes.some((prefix) => file.startsWith(prefix))), "Protected source prefix entered public allowlist.");
