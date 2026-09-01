@@ -255,18 +255,25 @@ export function installPublicSampleLibrary({ models, select, focus, glance, grid
     table.className = "sample-verification-table";
     const thead = document.createElement("thead");
     const header = document.createElement("tr");
-    for (const value of ["Evidence", "Expected", "Observed", "Status"]) header.append(textElement("th", "", value));
+    for (const value of ["Evidence", "Expected", "Observed", "Status"]) {
+      const cell = textElement("th", "", value);
+      cell.scope = "col";
+      header.append(cell);
+    }
     thead.append(header);
     const tbody = document.createElement("tbody");
     for (const row of result.checks) {
       const tr = document.createElement("tr");
       tr.className = row.status;
-      tr.append(
-        textElement("th", "", row.label),
-        textElement("td", "", displayEvidenceValue(row.expected, row.kind)),
-        textElement("td", "", displayEvidenceValue(row.observed, row.kind)),
-        textElement("td", "sample-verification-cell-status", row.status === "pass" ? "Pass" : "Mismatch"),
-      );
+      const evidence = textElement("th", "", row.label);
+      evidence.scope = "row";
+      const expected = textElement("td", "", displayEvidenceValue(row.expected, row.kind));
+      expected.dataset.label = "Expected";
+      const observed = textElement("td", "", displayEvidenceValue(row.observed, row.kind));
+      observed.dataset.label = "Observed";
+      const statusCell = textElement("td", "sample-verification-cell-status", row.status === "pass" ? "Pass" : "Mismatch");
+      statusCell.dataset.label = "Status";
+      tr.append(evidence, expected, observed, statusCell);
       tbody.append(tr);
     }
     table.append(thead, tbody);

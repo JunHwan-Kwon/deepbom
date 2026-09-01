@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "4a2793b31e4f27e53bf4ba9f7d1a2b062c1c80b2",
+  "source_commit": "cf70c27d5784fd55b6f11303a9541ee5268869a0",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 922,
@@ -1247,8 +1247,8 @@
     },
     {
       "path": "scripts/check-deployment-frontier-viewer.mjs",
-      "byte_length": 57067,
-      "sha256": "75e77caa2f1231688366413bf032b041837cbc44065e2e05afa5a9109844e58b"
+      "byte_length": 68713,
+      "sha256": "b14be0c59535425adf228d029a755434832cd2b32fdfc5abeada89548cc378ad"
     },
     {
       "path": "scripts/check-deployment-frontier.mjs",
@@ -2832,8 +2832,8 @@
     },
     {
       "path": "web/app.js",
-      "byte_length": 298183,
-      "sha256": "9ecde2b8e153d61da8d8d97e5fa60d7872cf47c72cdb848f1220824a97c2732c"
+      "byte_length": 303183,
+      "sha256": "f858fa5d8b983e941223099c6a01e2fc3542f32b90ff461f69db94f4dbfa96a2"
     },
     {
       "path": "web/auth-complete.html",
@@ -2852,8 +2852,8 @@
     },
     {
       "path": "web/device-workspace.css",
-      "byte_length": 54516,
-      "sha256": "4221d32f0235761608c47aad13a6d09833589190366806c1159f6e079ad1c98f"
+      "byte_length": 56024,
+      "sha256": "19b93b67e4e7f5210427619162f0a8c181ee2f832f71cb092bafa41908ac8c97"
     },
     {
       "path": "web/execution-placement.css",
@@ -2882,8 +2882,8 @@
     },
     {
       "path": "web/index.html",
-      "byte_length": 137266,
-      "sha256": "92d9e49ceb3aa3a382884aeeb6ffeeb80163705f0ffeba52df4c312b0361449d"
+      "byte_length": 137879,
+      "sha256": "2a01c3b6d1bd8ee0c113bc05c60282c01bdd25316351772501a8868cbc72bd2b"
     },
     {
       "path": "web/lib/accelerator-binding.js",
@@ -3038,7 +3038,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 76163,
-      "sha256": "5d9989082732a91440cd69bc16ca9a47b140fea162f056d74048ea1f8ffd965c"
+      "sha256": "3bf0a67750569cf39c002c892c5f3369409c486a015967b46238f4dc7f4dc6e5"
     },
     {
       "path": "web/lib/bundle.js",
@@ -3212,8 +3212,8 @@
     },
     {
       "path": "web/lib/elements.js",
-      "byte_length": 30097,
-      "sha256": "347faa1cf441a4e05bad68272265e1787934ddced11245760bed06db72ccecae"
+      "byte_length": 30231,
+      "sha256": "549d8bc001979777ded601b687d4def8a48e61a92fcf57deb7d696926ed5fa23"
     },
     {
       "path": "web/lib/evidence-cursor.js",
@@ -3492,8 +3492,8 @@
     },
     {
       "path": "web/lib/modal-accessibility.js",
-      "byte_length": 2470,
-      "sha256": "6212bba984b5ac87dca40609f635e63ae8dd4130f5577d32887dd412f49f0cd1"
+      "byte_length": 2530,
+      "sha256": "e84bed83f3ebbe577e496b851b74ba5403c95f60eb2b13f8db151b0d5ae15c6f"
     },
     {
       "path": "web/lib/model-file.js",
@@ -3837,8 +3837,8 @@
     },
     {
       "path": "web/lib/privacy-ui.js",
-      "byte_length": 1480,
-      "sha256": "bc9799294b67fa688b7767b07533f3a6841194b8a6cfb1b57e9276bbf7df45b2"
+      "byte_length": 1575,
+      "sha256": "5c17920aa393bb33befc6ede52558eb9995cb6a93284fa73acb7aea4caf7d59a"
     },
     {
       "path": "web/lib/protocols.js",
@@ -4267,8 +4267,8 @@
     },
     {
       "path": "web/lib/sample-library.js",
-      "byte_length": 14220,
-      "sha256": "055ac2e15ded9cb1fef713aeed15cf8b677cb6bbff7e2df6bb2c4b040f347af9"
+      "byte_length": 14539,
+      "sha256": "4f8931d09d5fd195cb97635938d01ebf0aba094bfd5ee1ac7a28b86c5574c56d"
     },
     {
       "path": "web/lib/sample-models.js",
@@ -4502,8 +4502,8 @@
     },
     {
       "path": "web/research-theme.css",
-      "byte_length": 41937,
-      "sha256": "64abb12dcab3864f8fd71f3f244591e8b892e7d216edc25c86b33378e0baac76"
+      "byte_length": 43054,
+      "sha256": "0505e95d3df7929c4b3fa8c4cebe6a3cc743ad6fcff1236cd6344e515db1bc38"
     },
     {
       "path": "web/samples/MNISTClassifier.mlmodel",
@@ -4582,13 +4582,13 @@
     },
     {
       "path": "web/styles.css",
-      "byte_length": 257193,
-      "sha256": "dfd6c6f5620a73c99ecb12adede700924d1b85f1365d67962bb0b051a1c88d5f"
+      "byte_length": 259821,
+      "sha256": "461d466765ed46e0c57a62a98e3f4c94c72d5cc5c4c2311f910eaf9f30663d34"
     },
     {
       "path": "web/sw.js",
       "byte_length": 14996,
-      "sha256": "bd4beff5a02d94f5329fda4ad84f18d53dccfcdbdc718dbec6b70e05f91bd0ab"
+      "sha256": "4b4e508d205974949ac323bf2ae40f15ef7a54971b4f915ff5692c75824fb004"
     },
     {
       "path": "web/test.html",

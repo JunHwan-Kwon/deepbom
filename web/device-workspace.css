@@ -1253,8 +1253,57 @@ td.mono { font-family: monospace; font-size: 11px; }
 
 .sample-verification-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 10px;
+}
+
+@media (max-width: 560px) {
+  .sample-verification { overflow: visible; }
+  .sample-verification-table,
+  .sample-verification-table tbody,
+  .sample-verification-table tr,
+  .sample-verification-table th,
+  .sample-verification-table td {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .sample-verification-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .sample-verification-table tbody tr {
+    margin-block: 7px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+  }
+  .sample-verification-table tbody th {
+    padding: 0 0 6px;
+    border: 0;
+    color: var(--ink);
+    font-size: 11px;
+  }
+  .sample-verification-table td {
+    display: grid;
+    grid-template-columns: minmax(72px, 0.32fr) minmax(0, 1fr);
+    gap: 8px;
+    padding: 4px 0;
+    border: 0;
+  }
+  .sample-verification-table td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 750;
+    text-transform: uppercase;
+  }
 }
 
 .sample-verification-table th,
@@ -2045,6 +2094,23 @@ td.tail-underpowered {
   color: var(--muted);
   padding: 0 10px;
   font-size: 12px;
+  white-space: nowrap;
+}
+
+.evidence-cursor-status {
+  min-width: 0;
+  max-width: 360px;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-elevated);
+  color: var(--ink-soft);
+  font-size: 11px;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

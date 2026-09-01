@@ -129,6 +129,22 @@ body {
   line-height: 1.42;
 }
 
+.skip-link {
+  position: fixed;
+  inset-block-start: 8px;
+  inset-inline-start: 8px;
+  z-index: 3000;
+  padding: 9px 12px;
+  border: 2px solid var(--blue);
+  border-radius: 4px;
+  background: var(--surface-elevated);
+  color: var(--ink);
+  font-weight: 750;
+  transform: translateY(-160%);
+}
+
+.skip-link:focus { transform: translateY(0); }
+
 p {
   text-wrap: pretty;
 }
@@ -587,7 +603,7 @@ body.workspace-input .layout {
 .run-audit-button:disabled {
   border-color: var(--line-strong);
   background: #dce3de;
-  color: #717d76;
+  color: #455149;
 }
 
 .sample-model-control {
@@ -1067,7 +1083,42 @@ tbody tr:hover {
 :root[data-theme="dark"] .run-audit-button:disabled {
   border-color: var(--line-strong);
   background: #242c28;
-  color: #7e8983;
+  color: #bbc5bf;
+}
+
+:root[data-theme="dark"] .qe-tensor-item:hover span,
+:root[data-theme="dark"] .qe-tensor-item:hover small,
+:root[data-theme="dark"] .qe-tensor-item.active span,
+:root[data-theme="dark"] .qe-tensor-item.active small {
+  color: var(--ink-soft);
+}
+
+:root[data-theme="dark"] .interface-direction {
+  color: var(--blue);
+  background: var(--surface-elevated);
+}
+
+:root[data-theme="dark"] .interface-direction.direction-output {
+  color: var(--good);
+}
+
+@media (max-width: 720px) {
+  .topbar a,
+  .topbar button,
+  .citation-row a,
+  .citation-row button,
+  .sample-verification-details > summary {
+    min-height: 24px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    margin: 0;
+  }
 }
 
 :root[data-theme="dark"] .sample-profile.selected {

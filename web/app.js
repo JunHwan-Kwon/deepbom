@@ -510,6 +510,7 @@ const {
   modelPlan,
   formatCapabilityPanel,
   workflowConsole,
+  targetStaleNotice,
   selectedModelName,
   selectedModelMeta,
   analysisEstimate,
@@ -519,6 +520,7 @@ const {
   auditProgressBar,
   auditProgressLabel,
   workflowMode,
+  evidenceCursorStatus,
   workflowNextAction,
   workflowNextDetail,
   workflowSteps,
@@ -755,6 +757,25 @@ const evidenceWhyController = createEvidenceWhyDrawer({
   closeButton: closeEvidenceWhy,
 });
 
+function renderEvidenceCursorStatus(state = evidenceCursor.get()) {
+  if (!evidenceCursorStatus) return;
+  const coordinates = [
+    state.finding_id ? `finding ${state.finding_id}` : "",
+    state.op_index != null ? `op #${String(state.op_index).padStart(3, "0")}` : "",
+    state.tensor_index != null ? `tensor T${state.tensor_index}` : "",
+    state.runtime_node_id ? `runtime ${state.runtime_node_id}` : "",
+    state.report_anchor ? `report ${state.report_anchor}` : "",
+  ].filter(Boolean);
+  evidenceCursorStatus.textContent = coordinates.length
+    ? `Evidence cursor: ${coordinates.join(" · ")}`
+    : state.artifact_sha256
+      ? "Evidence cursor: artifact bound; no item selected"
+      : "Evidence cursor: no selection";
+}
+
+evidenceCursor.subscribe((state) => renderEvidenceCursorStatus(state));
+renderEvidenceCursorStatus();
+
 const auditProgressController = createAuditProgressController({
   root: auditProgress,
   bar: auditProgressBar,
@@ -802,6 +823,8 @@ let pendingPublicSampleCompanions = null;
 let selectedOpIndex = null;
 let activeTargetId = "";
 let reportTargetRequestedId = "";
+let targetAnalysisTransition = null;
+let targetAnalysisTransitionPromise = null;
 const targetAnalysisCache = new Map();
 let opTableSortKey = "";
 let opTableSortDir = -1;
@@ -1315,12 +1338,9 @@ targetSelect.addEventListener("change", async () => {
   const requestedTargetId = targetSelect.value;
   const preserveReportWorkspace = getActiveWorkspace() === "output" && REPORT_WORKSPACES.has(activeModule);
   const preservedReportModule = preserveReportWorkspace ? activeModule : "";
-  writeSavedTarget(requestedTargetId);
-  reportTargetRequestedId = requestedTargetId;
   if (currentModelBytes && currentFilename) {
     try {
-      updateWorkflowState("running");
-      await analyzeLoadedModel(currentFilename, requestedTargetId, {
+      await requestTargetAnalysis(requestedTargetId, {
         keepTab: true,
         keepModule: preserveReportWorkspace,
       });
@@ -1340,6 +1360,7 @@ targetSelect.addEventListener("change", async () => {
       }
     }
   } else if (pendingModelFile) {
+    writeSavedTarget(requestedTargetId);
     renderStagedModel(pendingModelFile, pendingModelInspection);
   }
 });
@@ -1360,11 +1381,7 @@ reportTargetAnalyzeBtn?.addEventListener("click", async () => {
   reportTargetAnalyzeBtn.disabled = true;
   reportTargetAnalyzeBtn.textContent = binding.state === "cached" ? "Loading analyzed target..." : "Analyzing target...";
   try {
-    targetSelect.value = binding.targetId;
-    writeSavedTarget(binding.targetId);
-    reportTargetRequestedId = binding.targetId;
-    updateWorkflowState("running");
-    await analyzeLoadedModel(currentFilename, binding.targetId, {
+    await requestTargetAnalysis(binding.targetId, {
       keepTab: true,
       keepModule: true,
     });
@@ -2203,6 +2220,7 @@ function initPrivacyAgreement() {
     researchConsent,
     agreementBackdrop,
     body: document.body,
+    fallbackFocus: fileInput,
     onAccept: () => {
       appendConsentLog({ kind: "consent-restored", policyVersion: AGREEMENT_POLICY_VERSION });
       renderConsentPanel();
@@ -3481,6 +3499,96 @@ function selectedTargetId() {
   return activeTargetId || targetSelect.value || targetProfiles[0]?.id || "android_mid_a55";
 }
 
+function targetLabel(targetId) {
+  return targetProfiles.find((profile) => profile.id === targetId)?.label
+    || TARGET_PILL_LABELS[targetId]
+    || targetId
+    || "unbound target";
+}
+
+function syncTargetTransitionUi() {
+  const transition = targetAnalysisTransition;
+  const analyzedId = current?.target_profile?.id || activeTargetId || "";
+  const requestedId = transition?.requestedTargetId || "";
+  const stale = Boolean(transition && analyzedId && analyzedId !== requestedId);
+  workflowConsole?.classList.toggle("target-results-stale", stale);
+  if (transition) workflowConsole?.setAttribute("aria-busy", "true");
+  else workflowConsole?.removeAttribute("aria-busy");
+  if (!targetStaleNotice) return;
+  targetStaleNotice.hidden = !transition;
+  targetStaleNotice.classList.toggle("stale", stale);
+  if (!transition) {
+    targetStaleNotice.textContent = "";
+    return;
+  }
+  targetStaleNotice.textContent = stale
+    ? `Displayed results remain bound to ${targetLabel(analyzedId)}. Reanalysis for ${targetLabel(requestedId)} is running; do not interpret the existing panels as results for the requested target.`
+    : `Analysis for ${targetLabel(requestedId)} is running. Target-bound results will be available after the audit completes.`;
+}
+
+async function requestTargetAnalysis(requestedTargetId, { keepTab = true, keepModule = false } = {}) {
+  if (!requestedTargetId) throw new Error("A target profile is required.");
+  if (targetAnalysisTransitionPromise) {
+    if (targetAnalysisTransition?.requestedTargetId === requestedTargetId) return targetAnalysisTransitionPromise;
+    throw new Error(`Target analysis for ${targetLabel(targetAnalysisTransition?.requestedTargetId)} is already running.`);
+  }
+  if (!currentModelBytes || !currentFilename) throw new Error("Select an artifact before changing the analyzed target.");
+  const previousWorkspace = getActiveWorkspace();
+  const previousModule = activeModule;
+  const previous = {
+    current,
+    currentDeploymentFrontier,
+    currentDeploymentDelta,
+    currentDelegationRepair,
+    runtimeAssignmentEvidence,
+    activeTargetId,
+    reportTargetRequestedId,
+    targetSelectValue: targetSelect.value,
+    runAuditDisabled: runAudit.disabled,
+  };
+  targetAnalysisTransition = {
+    requestedTargetId,
+    previousTargetId: current?.target_profile?.id || activeTargetId || "",
+  };
+  targetSelect.value = requestedTargetId;
+  targetSelect.disabled = true;
+  runAudit.disabled = true;
+  updateWorkflowState("running");
+  renderTargetSwitcher();
+  const transitionPromise = (async () => {
+    try {
+      const result = await analyzeLoadedModel(currentFilename, requestedTargetId, { keepTab, keepModule });
+      writeSavedTarget(requestedTargetId);
+      return result;
+    } catch (error) {
+      current = previous.current;
+      currentDeploymentFrontier = previous.currentDeploymentFrontier;
+      currentDeploymentDelta = previous.currentDeploymentDelta;
+      currentDelegationRepair = previous.currentDelegationRepair;
+      runtimeAssignmentEvidence = previous.runtimeAssignmentEvidence;
+      activeTargetId = previous.activeTargetId;
+      reportTargetRequestedId = previous.reportTargetRequestedId;
+      targetSelect.value = previous.targetSelectValue;
+      if (current) {
+        await render(current, { keepTab: true, keepModule: true });
+        setActiveModule(previousModule);
+        setActiveWorkspace(previousWorkspace, { force: true });
+      }
+      throw error;
+    } finally {
+      targetAnalysisTransition = null;
+      targetAnalysisTransitionPromise = null;
+      targetSelect.disabled = false;
+      runAudit.disabled = previous.runAuditDisabled;
+      syncTargetTransitionUi();
+      renderTargetSwitcher();
+    }
+  })();
+  targetAnalysisTransitionPromise = transitionPromise;
+  renderTargetSwitcher();
+  return transitionPromise;
+}
+
 let _sessionNonce = null;
 let _sessionNonceFetchedAt = 0;
 
@@ -3956,9 +4064,6 @@ async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = fal
     runtimeAssignmentEvidence = null;
   }
   if (pendingRuntimeProfile) runtimeProfileModal.close();
-  activeTargetId = targetId;
-  reportTargetRequestedId = targetId;
-  if (targetSelect.querySelector(`option[value="${targetId}"]`)) targetSelect.value = targetId;
   await nextPaint();
   const metadataOnly = ["gguf", "safetensors", "coreml"].includes(format);
   const cachedAnalysis = metadataOnly ? null : targetAnalysisCache.get(cacheKey);
@@ -4062,11 +4167,14 @@ async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = fal
     auditProgressController.set(78, format === "onnx" ? "Assembling ONNX evidence" : "Assembling container evidence", "running", { step: 7 });
   }
   await nextPaint();
-  updateDeploymentDeltaForCurrent(format);
+  updateDeploymentDeltaForCurrent(format, targetId);
   const elapsedMs = performance.now() - started;
   setStatus("Rendering audit");
   auditProgressController.begin(86, "Rendering audit overview", { ceiling: 87, step: 8 });
   await nextPaint();
+  activeTargetId = targetId;
+  reportTargetRequestedId = targetId;
+  if (targetSelect.querySelector(`option[value="${targetId}"]`)) targetSelect.value = targetId;
   await render(current, { keepTab, keepModule });
   sampleLibraryController?.verifyActive(current);
   submitStructureTelemetry().catch((error) => console.warn("Structure telemetry skipped", error));
@@ -4093,12 +4201,17 @@ function renderTargetSwitcher() {
   const activeFormat = String(current?.format || pendingModelInspection?.formatId || "").toLowerCase();
   if (activeFormat !== "tflite") { targetSwitcherBar.hidden = true; return; }
   targetSwitcherBar.hidden = false;
-  const selectedId = selectedTargetId();
+  const analyzedId = current?.target_profile?.id || activeTargetId || "";
+  const selectedId = analyzedId || targetSelect.value || selectedTargetId();
+  const pendingId = targetAnalysisTransition?.requestedTargetId || "";
+  const transitionRunning = Boolean(targetAnalysisTransitionPromise);
   const pills = targetProfiles.map((profile) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = `target-pill${profile.id === selectedId ? " active" : ""}`;
+    btn.className = `target-pill${profile.id === selectedId ? " active" : ""}${profile.id === pendingId && profile.id !== selectedId ? " pending" : ""}`;
     btn.dataset.targetId = profile.id;
+    btn.disabled = transitionRunning;
+    if (profile.id === selectedId) btn.setAttribute("aria-current", "true");
     const cached = targetAnalysisCache.has(profile.id);
     const ready = document.createElement("span");
     ready.className = `target-pill-ready${cached ? " loaded" : ""}`;
@@ -4118,17 +4231,15 @@ function renderTargetSwitcher() {
     }
     btn.addEventListener("click", async () => {
       if (profile.id === selectedTargetId()) return;
-      targetSelect.value = profile.id;
-      writeSavedTarget(profile.id);
-      reportTargetRequestedId = profile.id;
       if (!currentModelBytes || !currentFilename) {
+        targetSelect.value = profile.id;
+        writeSavedTarget(profile.id);
         if (pendingModelFile) renderStagedModel(pendingModelFile, pendingModelInspection);
         else renderTargetSwitcher();
         return;
       }
       try {
-        updateWorkflowState("running");
-        await analyzeLoadedModel(currentFilename, profile.id, { keepTab: true });
+        await requestTargetAnalysis(profile.id, { keepTab: true });
       } catch (err) {
         console.error("[targetSwitch]", err);
         updateWorkflowState("error");
@@ -4145,9 +4256,11 @@ function renderTargetSwitcher() {
   addCustom.type = "button";
   addCustom.className = "target-pill target-pill-add";
   addCustom.title = "Create a custom CPU cost profile from a built-in one";
+  addCustom.disabled = transitionRunning;
   addCustom.append(Object.assign(document.createElement("strong"), { textContent: "+ Custom" }));
   addCustom.addEventListener("click", () => openCustomTargetEditor());
   targetSwitcherBar.replaceChildren(label, ...pills, addCustom);
+  syncTargetTransitionUi();
 }
 
 function selectAcceleratorProfile(profileId, { navigate = false } = {}) {
@@ -4296,7 +4409,7 @@ async function ensureModelHash() {
   return current.model_sha256;
 }
 
-function updateDeploymentDeltaForCurrent(format) {
+function updateDeploymentDeltaForCurrent(format, targetId = selectedTargetId()) {
   if (currentDeploymentDelta?.baseline?.sha256 === deploymentDeltaBaseline?.sha256
     && currentDeploymentDelta?.candidate?.sha256 === current?.model_sha256) {
     current.deployment_delta = currentDeploymentDelta;
@@ -4305,7 +4418,7 @@ function updateDeploymentDeltaForCurrent(format) {
   currentDeploymentDelta = null;
   if (current) delete current.deployment_delta;
   if (format !== "tflite" || !deploymentDeltaBaseline || !current?.model_sha256 || deploymentDeltaBaseline.sha256 === current.model_sha256) return;
-  const targetIds = deploymentFrontierTargetIds(targetProfiles, selectedTargetId());
+  const targetIds = deploymentFrontierTargetIds(targetProfiles, targetId);
   if (targetIds.length < 2) {
     current.deployment_delta_error = "At least two pinned target profiles are required.";
     return;

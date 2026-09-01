@@ -16,12 +16,14 @@ export function openModal(backdrop, { focus = null } = {}) {
 
 export function closeModal(backdrop, { fallbackFocus = null } = {}) {
   if (!backdrop) return;
+  const wasOpen = !backdrop.hidden;
   backdrop.hidden = true;
   backdrop.inert = true;
   backdrop.setAttribute("aria-hidden", "true");
   if (!document.querySelector('[role="dialog"]:not([hidden])')) document.body.classList.remove("modal-open");
   const returnFocus = returnFocusByModal.get(backdrop);
   returnFocusByModal.delete(backdrop);
+  if (!wasOpen) return;
   requestAnimationFrame(() => {
     const target = validFocusTarget(returnFocus) ? returnFocus : fallbackFocus;
     target?.focus();

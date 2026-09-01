@@ -78,7 +78,16 @@ try {
     }
     await page.locator("#privacyAgree").check();
     await page.locator("#acceptAgreement").click();
+    await page.waitForFunction(() => document.activeElement?.id === "fileInput");
     await page.setViewportSize({ width: 1440, height: 1000 });
+  }
+  const navigationSemantics = await page.evaluate(() => ({
+    skipTarget: document.querySelector(".skip-link")?.getAttribute("href") || "",
+    mainId: document.querySelector("main")?.id || "",
+    navigationLabel: document.querySelector("nav[aria-label='Audit workflow']")?.getAttribute("aria-label") || "",
+  }));
+  if (navigationSemantics.skipTarget !== "#mainContent" || navigationSemantics.mainId !== "mainContent" || navigationSemantics.navigationLabel !== "Audit workflow") {
+    throw new Error(`Skip navigation or workflow landmark is missing: ${JSON.stringify(navigationSemantics)}`);
   }
   await page.locator("#fileInput").setInputFiles({
     name: LONG_MODEL_NAME,
@@ -120,6 +129,54 @@ try {
   await page.waitForFunction(() => /audit run complete|Audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 90_000 });
   const auditStatus = await page.locator("#status").textContent();
   if (!auditStatus.includes("audit run complete")) throw new Error(auditStatus);
+  for (const theme of ["light", "dark"]) {
+    const contrast = await contrastContract(page, theme);
+    const failed = Object.entries(contrast).filter(([, value]) => value < 4.5);
+    if (failed.length) throw new Error(`${theme} evidence-label contrast failed: ${JSON.stringify(contrast)}`);
+  }
+  const cursorInitial = await page.locator("#evidenceCursorStatus").textContent();
+  if (!cursorInitial.includes("artifact bound")) throw new Error(`Evidence cursor is not discoverable after audit: ${cursorInitial}`);
+  await page.locator('[data-workflow-step="findings"]').click();
+  await page.locator(".finding-card-header").first().click();
+  const cursorFinding = await page.locator("#evidenceCursorStatus").textContent();
+  if (!cursorFinding.includes("finding ")) throw new Error(`Finding selection did not update the visible evidence cursor: ${cursorFinding}`);
+  await page.locator(".finding-card").first().evaluate((card) => { card.open = true; });
+  await page.locator(".finding-card").first().locator("button", { hasText: "Why?" }).click();
+  if (!await page.locator("#evidenceWhyDrawer").isVisible()) throw new Error("Evidence Why drawer is not reachable from a finding.");
+  await page.setViewportSize({ width: 390, height: 844 });
+  const whyMobile = await page.locator("#evidenceWhyDrawer").evaluate((drawer) => {
+    const rect = drawer.getBoundingClientRect();
+    return {
+      bottom: Math.round(window.innerHeight - rect.bottom),
+      left: Math.round(rect.left),
+      width: Math.round(rect.width),
+      viewportWidth: document.documentElement.clientWidth,
+      maxHeight: getComputedStyle(drawer).maxHeight,
+      overflowY: getComputedStyle(drawer).overflowY,
+    };
+  });
+  if (Math.abs(whyMobile.bottom) > 1 || Math.abs(whyMobile.left) > 1 || whyMobile.width !== whyMobile.viewportWidth
+    || whyMobile.maxHeight === "none" || whyMobile.overflowY !== "auto") {
+    throw new Error(`Evidence Why drawer is not a mobile bottom sheet: ${JSON.stringify(whyMobile)}`);
+  }
+  const smallMobileTargets = await page.evaluate(() => [...document.querySelectorAll(".topbar a, .topbar button")]
+    .filter((element) => element.getClientRects().length)
+    .map((element) => ({ text: element.textContent?.trim() || element.getAttribute("aria-label") || element.id, rect: element.getBoundingClientRect() }))
+    .filter(({ rect }) => rect.width < 24 || rect.height < 24)
+    .map(({ text, rect }) => ({ text, width: Math.round(rect.width), height: Math.round(rect.height) })));
+  if (smallMobileTargets.length) throw new Error(`Mobile header touch targets are below 24px: ${JSON.stringify(smallMobileTargets)}`);
+  await page.locator("#closeEvidenceWhy").click();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const reviewExport = await page.locator("#downloadReviewHtml").evaluate((button) => ({ text: button.textContent, title: button.title, disabled: button.disabled }));
+  if (reviewExport.text !== "Download review.html" || !reviewExport.title.includes("self-contained") || reviewExport.disabled) {
+    throw new Error(`review.html export is not discoverable after audit: ${JSON.stringify(reviewExport)}`);
+  }
+  for (let round = 0; round < 2; round += 1) {
+    for (const step of ["audit", "findings", "graph", "runtime", "output"]) {
+      await page.locator(`[data-workflow-step="${step}"]`).click();
+    }
+  }
+  await page.locator('[data-workflow-step="audit"]').click();
   await page.locator('[data-audit-tab="accelerator"]').click();
   await page.waitForFunction(() => {
     const panel = document.querySelector("#executionPlacementPanel");
@@ -151,6 +208,33 @@ try {
   const acceleratorDesktopPath = path.join(output, "accelerator-evidence-desktop.png");
   await page.locator("#executionPlacementPanel").screenshot({ path: acceleratorDesktopPath });
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => {
+    if (document.querySelector(".sample-verification-details")) return;
+    const panel = document.querySelector("#sampleVerificationPanel");
+    panel.hidden = false;
+    panel.classList.add("sample-verification");
+    panel.innerHTML = `<details class="sample-verification-details"><summary>Review expected versus observed checks</summary><table class="sample-verification-table"><thead><tr><th>Evidence</th><th>Expected</th><th>Observed</th><th>Status</th></tr></thead><tbody><tr class="pass"><th>Artifact SHA-256</th><td data-label="Expected">f08d447cde49...</td><td data-label="Observed">f08d447cde49...</td><td data-label="Status" class="sample-verification-cell-status">Pass</td></tr><tr class="pass"><th>MAC count</th><td data-label="Expected">300,775,552</td><td data-label="Observed">300,775,552</td><td data-label="Status" class="sample-verification-cell-status">Pass</td></tr></tbody></table></details>`;
+  });
+  await page.locator(".sample-verification-details").evaluate((details) => { details.open = true; });
+  const verificationMobile = await page.locator(".sample-verification").evaluate((panel) => ({
+    documentOverflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
+    panelOverflow: Math.max(0, panel.scrollWidth - panel.clientWidth),
+    tableWidth: panel.querySelector(".sample-verification-table")?.getBoundingClientRect().width || 0,
+    viewportWidth: document.documentElement.clientWidth,
+    cardRows: panel.querySelectorAll(".sample-verification-table tbody tr").length,
+    labeledCells: panel.querySelectorAll(".sample-verification-table td[data-label]").length,
+  }));
+  if (verificationMobile.documentOverflow > 1 || verificationMobile.panelOverflow > 1
+    || verificationMobile.tableWidth > verificationMobile.viewportWidth + 1
+    || verificationMobile.cardRows < 1 || verificationMobile.labeledCells !== verificationMobile.cardRows * 3) {
+    throw new Error(`Expanded verified-result table escapes the mobile viewport: ${JSON.stringify(verificationMobile)}`);
+  }
+  await page.locator(".sample-verification-details").evaluate((details) => { details.open = false; });
+  await page.evaluate(() => {
+    const panel = document.querySelector("#sampleVerificationPanel");
+    panel.replaceChildren();
+    panel.hidden = true;
+  });
   const acceleratorMobile = await page.locator("#executionPlacementPanel").evaluate((panel) => ({
     documentOverflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
     panelOverflow: Math.max(0, panel.scrollWidth - panel.clientWidth),
@@ -658,11 +742,33 @@ try {
     throw new Error(`Report controls do not preserve long evidence labels on mobile: ${JSON.stringify(reportsMobile)}`);
   }
 
+  const priorTargetLabel = await page.locator("#targetConditionSummary .target-condition-card").first().textContent();
   await page.locator('[data-target-id="zynq_ultrascale_plus_a53"]').evaluate((button) => button.click());
+  await page.waitForFunction(() => !document.querySelector("#targetStaleNotice")?.hidden, null, { timeout: 10_000 });
+  const pendingTargetState = await page.evaluate(() => ({
+    notice: document.querySelector("#targetStaleNotice")?.textContent || "",
+    stale: document.querySelector("#targetStaleNotice")?.classList.contains("stale"),
+    busy: document.querySelector("#workflowConsole")?.getAttribute("aria-busy"),
+    active: document.querySelector("#targetSwitcherBar .target-pill.active")?.dataset.targetId || "",
+    pending: document.querySelector("#targetSwitcherBar .target-pill.pending")?.dataset.targetId || "",
+    enabledTargetCount: [...document.querySelectorAll("#targetSwitcherBar .target-pill")].filter((button) => !button.disabled).length,
+  }));
+  if (!priorTargetLabel.includes("Cortex-A55") || !pendingTargetState.stale || pendingTargetState.busy !== "true"
+    || pendingTargetState.active !== "android_mid_a55" || pendingTargetState.pending !== "zynq_ultrascale_plus_a53"
+    || pendingTargetState.enabledTargetCount !== 0
+    || !pendingTargetState.notice.includes("remain bound") || !pendingTargetState.notice.includes("Zynq")) {
+    throw new Error(`Target transition does not preserve and label stale evidence: ${JSON.stringify(pendingTargetState)}`);
+  }
   await page.waitForFunction(() => /audit run complete|Audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 120_000 });
   const switchedTargetAuditStatus = await page.locator("#status").textContent();
   const zynqTargetActive = await page.locator('[data-target-id="zynq_ultrascale_plus_a53"]').getAttribute("class");
-  if (!switchedTargetAuditStatus.includes("audit run complete") || !zynqTargetActive?.includes("active")) {
+  const targetTransitionClosed = await page.evaluate(() => ({
+    noticeHidden: document.querySelector("#targetStaleNotice")?.hidden,
+    busy: document.querySelector("#workflowConsole")?.hasAttribute("aria-busy"),
+    pending: document.querySelectorAll("#targetSwitcherBar .target-pill.pending").length,
+  }));
+  if (!switchedTargetAuditStatus.includes("audit run complete") || !zynqTargetActive?.includes("active")
+    || !targetTransitionClosed.noticeHidden || targetTransitionClosed.busy || targetTransitionClosed.pending) {
     throw new Error(`Post-audit target switch did not complete on the requested target: ${JSON.stringify({ switchedTargetAuditStatus, zynqTargetActive })}`);
   }
   const zynqTargetFrontier = await panelState(page);
@@ -865,6 +971,58 @@ try {
   await browser?.close().catch(() => {});
   await new Promise((resolve) => server.close(resolve));
   if (process.exitCode) await rm(output, { recursive: true, force: true });
+}
+
+async function contrastContract(browserPage, theme) {
+  return browserPage.evaluate((requestedTheme) => {
+    document.documentElement.dataset.theme = requestedTheme;
+    const fixture = document.createElement("section");
+    fixture.id = "contrastContractFixture";
+    fixture.style.cssText = "position:fixed;left:-10000px;top:0;width:520px;padding:20px;background:var(--surface);z-index:-1";
+    fixture.innerHTML = `
+      <span data-contrast="heuristic" class="finding-confidence finding-conf-static-wasm">HEURISTIC</span>
+      <em data-contrast="maturity" class="maturity-badge maturity-beta">HEURISTIC</em>
+      <div class="glance-component-legend"><span data-contrast="compute" class="component-compute">Compute 72.1%</span></div>
+      <span data-contrast="predicted" class="capability-state partial">Predicted</span>
+      <button type="button" class="qe-tensor-item active"><span data-contrast="tensor-detail">Tensor detail</span><small data-contrast="tensor-small">UINT8 input/output</small></button>
+      <span data-contrast="input" class="interface-direction">input</span>
+      <span data-contrast="output" class="interface-direction direction-output">output</span>
+      <div class="segment-bar"><button type="button" data-contrast="id-061" class="segment-block pareto-3">#061</button><button type="button" data-contrast="id-004" class="segment-block pareto-1">#004</button></div>
+      <button data-contrast="running" class="run-audit-button" type="button" disabled>Running</button>`;
+    document.body.append(fixture);
+    const parse = (value) => {
+      const values = String(value).match(/[\d.]+/g)?.map(Number) || [];
+      const unitRange = String(value).startsWith("color(srgb");
+      const scale = unitRange ? 255 : 1;
+      return { r: (values[0] || 0) * scale, g: (values[1] || 0) * scale, b: (values[2] || 0) * scale, a: values[3] ?? 1 };
+    };
+    const blend = (foreground, background) => ({
+      r: foreground.r * foreground.a + background.r * (1 - foreground.a),
+      g: foreground.g * foreground.a + background.g * (1 - foreground.a),
+      b: foreground.b * foreground.a + background.b * (1 - foreground.a),
+      a: 1,
+    });
+    const background = (element) => {
+      if (!element || element === document) return parse(getComputedStyle(document.documentElement).backgroundColor);
+      const parent = element.parentElement ? background(element.parentElement) : parse(getComputedStyle(document.documentElement).backgroundColor);
+      return blend(parse(getComputedStyle(element).backgroundColor), parent);
+    };
+    const luminance = ({ r, g, b }) => [r, g, b]
+      .map((value) => value / 255)
+      .map((value) => value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+      .reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+    const ratio = (element) => {
+      const bg = background(element);
+      const fg = blend(parse(getComputedStyle(element).color), bg);
+      const [light, dark] = [luminance(fg), luminance(bg)].sort((a, b) => b - a);
+      return Number(((light + 0.05) / (dark + 0.05)).toFixed(2));
+    };
+    const result = Object.fromEntries([...fixture.querySelectorAll("[data-contrast]")]
+      .map((element) => [element.dataset.contrast, ratio(element)]));
+    fixture.remove();
+    document.documentElement.dataset.theme = "light";
+    return result;
+  }, theme);
 }
 
 async function panelState(browserPage) {

@@ -13,6 +13,7 @@ export function initPrivacyAgreementUi({
   researchConsent,
   agreementBackdrop,
   body,
+  fallbackFocus = null,
   onSyncError = (error) => console.warn("Consent sync skipped", error),
   onAccept = () => {},
 }) {
@@ -20,7 +21,7 @@ export function initPrivacyAgreementUi({
   if (readAgreementAccepted()) {
     privacyAgree.checked = true;
     acceptAgreement.disabled = false;
-    closePrivacyAgreementUi({ agreementBackdrop, body });
+    closePrivacyAgreementUi({ agreementBackdrop, body, fallbackFocus });
     onAccept();
     return;
   }
@@ -39,12 +40,12 @@ export function initPrivacyAgreementUi({
     writeResearchConsent(researchConsent.checked);
     syncResearchConsent().catch(onSyncError);
     writeAgreementAccepted();
-    closePrivacyAgreementUi({ agreementBackdrop, body });
+    closePrivacyAgreementUi({ agreementBackdrop, body, fallbackFocus });
     onAccept();
   });
 }
 
-export function closePrivacyAgreementUi({ agreementBackdrop, body }) {
-  closeModal(agreementBackdrop);
+export function closePrivacyAgreementUi({ agreementBackdrop, body, fallbackFocus = null }) {
+  closeModal(agreementBackdrop, { fallbackFocus });
   body.classList.remove("privacy-locked");
 }

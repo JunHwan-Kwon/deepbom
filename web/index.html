@@ -188,6 +188,7 @@
     <link rel="stylesheet" href="./research-theme.css" />
   </head>
   <body>
+    <a class="skip-link" href="#mainContent">Skip to analysis workspace</a>
     <header class="topbar">
       <div>
         <p class="eyebrow">ON-DEVICE Pipeline</p>
@@ -484,7 +485,7 @@
       </section>
     </div>
 
-    <main class="layout">
+    <main class="layout" id="mainContent" tabindex="-1">
       <section class="session-anchor" id="sessionAnchor" aria-label="Pinned model session">
         <section class="upload-panel" id="dropzone">
           <div class="artifact-intro">
@@ -682,10 +683,13 @@
             </div>
             <aside class="workflow-head-actions" aria-label="Analysis and session state">
               <span class="analysis-depth-state" data-analysis-depth-mode="deep" role="status">Full analysis</span>
+              <output class="evidence-cursor-status" id="evidenceCursorStatus" title="Shared selection across findings, graph operators, tensors, runtime evidence, and review exports">Evidence cursor: no selection</output>
               <strong id="workflowMode">No artifact selected</strong>
             </aside>
           </div>
-          <div class="workflow-rail" id="workflowRail" role="tablist" aria-label="Audit workflow">
+          <div class="target-stale-notice" id="targetStaleNotice" role="status" aria-live="polite" hidden></div>
+          <nav class="workflow-navigation" aria-label="Audit workflow">
+          <div class="workflow-rail" id="workflowRail" role="tablist" aria-label="Workflow stages">
             <button class="workflow-step active" type="button" data-workflow-step="input">
               <span>Input</span>
               <strong>Artifact</strong>
@@ -749,6 +753,7 @@
               <p>Evidence reports</p>
             </button>
           </div>
+          </nav>
           <section class="audit-workbench" id="auditWorkbench" hidden aria-label="Audit detail selector">
             <div class="module-head audit-selector-head">
               <div>
@@ -1128,7 +1133,7 @@
                 </div>
                 <div class="export-buttons">
                   <button id="downloadMarkdown" type="button" disabled>Engineering Report HTML</button>
-                  <button id="downloadReviewHtml" class="secondary-action" type="button" disabled>Review HTML</button>
+                  <button id="downloadReviewHtml" class="secondary-action" type="button" title="Download a self-contained, read-only review.html" disabled>Download review.html</button>
                   <button id="printPublicReport" class="secondary-action" type="button" disabled>Print Public Summary PDF</button>
                   <button id="downloadPublicVerificationManifest" class="secondary-action" type="button" disabled>Verification Manifest</button>
                   <button id="downloadRawData" type="button">Raw Evidence Package / Sign in</button>
@@ -2104,7 +2109,7 @@
       </section>
     </main>
 
-    <aside id="evidenceWhyDrawer" class="evidence-why-drawer" hidden aria-hidden="true" tabindex="-1" aria-labelledby="evidenceWhyTitle">
+    <aside id="evidenceWhyDrawer" class="evidence-why-drawer" role="dialog" hidden aria-hidden="true" tabindex="-1" aria-labelledby="evidenceWhyTitle">
       <header>
         <div>
           <span>Evidence ledger</span>
