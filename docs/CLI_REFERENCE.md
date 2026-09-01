@@ -78,10 +78,13 @@ Options:
   --request <json>       Bound redesign request for explore
   --external-data-dir <directory>
                           Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory
-  --context <tokens>     GGUF context-length scenario
-  --batch <count>        GGUF scenario batch size (default: 1)
-  --state-bits <bits>    GGUF KV-state width: 8, 16, or 32 (default: 16)
-  --memory-mib <MiB>     Compare the static lower bound with a declared capacity
+  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract
+  --images <count>       Declared image count; requires --tokens-per-image
+  --tokens-per-image <count>
+                          Declared projector output tokens per image; never inferred
+  --batch <count>        LLM scenario batch size (default: 1)
+  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)
+  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity
   --tensorrt-profile <json>
                           Bind an ONNX TensorRT native/ORT EP build profile
   --tensorrt-parser-evidence <json>

@@ -713,6 +713,68 @@
 .llm-contract-ledger dt { color: var(--muted); }
 .llm-contract-ledger dd { color: var(--ink-soft); }
 
+.llm-token-budget-workbench {
+  margin-top: 16px;
+  padding: 13px 0 4px;
+  border-top: 1px solid var(--line-strong);
+}
+
+.llm-scenario-form {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(112px, 1fr)) auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: 10px;
+}
+
+.llm-scenario-field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.llm-scenario-field input,
+.llm-scenario-field select {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  padding: 8px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+}
+
+.llm-scenario-field input:focus-visible,
+.llm-scenario-field select:focus-visible,
+.llm-scenario-run:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.llm-scenario-run {
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--on-accent);
+  background: var(--accent);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.llm-scenario-message {
+  min-height: 16px;
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.llm-scenario-result .llm-contract-band { margin-top: 6px; }
+
 .llm-table-scroll { max-width: 100%; overflow-x: auto; border-top: 1px solid var(--line); }
 .llm-contract-table { width: 100%; min-width: 620px; border-collapse: collapse; font-size: 10px; }
 .llm-contract-table th,
@@ -744,6 +806,8 @@
   .llm-contract-table { min-width: 540px; }
   .llm-encoding-table { min-width: 700px; }
   .llm-memory-table { min-width: 980px; }
+  .llm-scenario-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .llm-scenario-run { grid-column: 1 / -1; width: 100%; min-height: 44px; }
 }
 
 /* ── Haar Pattern Sweep Panel ───────────────────────────────────────────── */

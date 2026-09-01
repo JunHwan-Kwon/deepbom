@@ -1,4 +1,5 @@
 import { renderLlmDeviceFeasibilityView } from "./llm-device-feasibility-view.js";
+import { buildLlmTokenBudgetScenario } from "./llm-token-budget-scenario.js";
 
 function node(doc, tag, className, text = null) {
   const element = doc.createElement(tag);
@@ -55,6 +56,126 @@ function table(doc, headers, rows, className = "") {
   element.append(head, body);
   scroll.append(element);
   return scroll;
+}
+
+function scenarioField(doc, label, { name, value = "", min = 1, max = Number.MAX_SAFE_INTEGER, placeholder = "", required = false } = {}) {
+  const field = node(doc, "label", "llm-scenario-field");
+  field.append(node(doc, "span", "", label));
+  const input = node(doc, "input");
+  input.type = "number";
+  input.name = name;
+  input.min = String(min);
+  input.max = String(max);
+  input.step = "1";
+  input.value = value === "" ? "" : String(value);
+  input.placeholder = placeholder;
+  input.required = required;
+  field.append(input);
+  return field;
+}
+
+function scenarioSelect(doc, label, { name, value, options = [], required = false } = {}) {
+  const field = node(doc, "label", "llm-scenario-field");
+  field.append(node(doc, "span", "", label));
+  const select = node(doc, "select");
+  select.name = name;
+  select.required = required;
+  for (const optionValue of options) {
+    const option = node(doc, "option", "", String(optionValue));
+    option.value = String(optionValue);
+    option.selected = String(optionValue) === String(value);
+    select.append(option);
+  }
+  field.append(select);
+  return field;
+}
+
+function renderTokenBudgetResult(doc, target, scenario) {
+  target.replaceChildren();
+  if (!scenario) return;
+  const tokenBudget = scenario.token_budget || {};
+  const memory = scenario.memory_feasibility || {};
+  target.append(metricBand(doc, "Declared token-budget result", [
+    ["Assessment", `${scenario.status} / ${scenario.evidence_class}`],
+    ["Text / image tokens", `${valueText(tokenBudget.text_tokens)} / ${exactText(tokenBudget.image_tokens)}`],
+    ["Total context tokens", exactText(tokenBudget.total_context_tokens)],
+    ["Serialized context", `${valueText(scenario.serialized_context_contract?.context_length)} / ${valueText(scenario.serialized_context_contract?.assessment)}`],
+    ["Logical state", byteText(scenario.state_projection?.logical_state_bytes)],
+    ["Conditional resident-set lower bound", byteText(memory.static_lower_bound_bytes)],
+    ["Declared capacity", memory.declared_capacity_bytes ? byteText(memory.declared_capacity_bytes) : "not declared"],
+    ["Capacity assessment", memory.status],
+    ["Fit claim", memory.fit_claim],
+    ["Scenario SHA-256", scenario.scenario_sha256],
+  ], scenario.status === "derived_scenario_exceeds_serialized_context" ? "risk" : "partial"));
+  target.append(node(doc, "p", "llm-boundary-note", scenario.boundary));
+}
+
+function declaredTokenBudgetView(doc, analysis, contract) {
+  const section = node(doc, "section", "llm-token-budget-workbench");
+  section.append(node(doc, "h4", "llm-section-title", "Declared text + image token budget"));
+  section.append(node(doc, "p", "llm-boundary-note", "Use an externally known projector token count. DEEPBOM does not infer image tokens from an architecture name or assume that this artifact is multimodal."));
+  const kvElements = contract?.state?.kv_projection?.elements_per_token_per_batch;
+  if (!kvElements?.decimal) {
+    section.append(node(doc, "p", "llm-empty", "Not assessable: a statically derived KV-state cardinality is unavailable for this artifact."));
+    return section;
+  }
+
+  const existing = analysis.llm_token_budget_scenario || null;
+  const form = node(doc, "form", "llm-scenario-form");
+  const defaultText = existing?.token_budget?.text_tokens
+    || Math.min(Number(contract.architecture?.context_length) || 2048, 2048);
+  form.append(
+    scenarioField(doc, "Text tokens", { name: "textTokens", value: defaultText, required: true }),
+    scenarioField(doc, "Images", { name: "images", value: existing?.token_budget?.image_count ?? 1, min: 0, max: 1024, required: true }),
+    scenarioField(doc, "Tokens per image", { name: "tokensPerImage", value: existing?.token_budget?.tokens_per_image ?? "", max: 1_000_000, placeholder: "declare" }),
+    scenarioField(doc, "Batch", { name: "batch", value: existing?.token_budget?.batch_size ?? 1, max: 65_536, required: true }),
+    scenarioSelect(doc, "State bits", {
+      name: "stateBits",
+      value: existing?.token_budget?.state_storage_bits ?? 16,
+      options: [8, 16, 32],
+      required: true,
+    }),
+    scenarioField(doc, "Capacity MiB (optional)", {
+      name: "capacityMib",
+      value: existing?.memory_feasibility?.declared_capacity_bytes?.decimal
+        ? Number(BigInt(existing.memory_feasibility.declared_capacity_bytes.decimal) / (1024n * 1024n)) : "",
+      max: 1_048_576,
+    }),
+  );
+  const action = node(doc, "button", "llm-scenario-run", "Calculate lower bound");
+  action.type = "submit";
+  form.append(action);
+  const message = node(doc, "p", "llm-scenario-message");
+  message.setAttribute("role", "status");
+  message.setAttribute("aria-live", "polite");
+  const result = node(doc, "div", "llm-scenario-result");
+  renderTokenBudgetResult(doc, result, existing);
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    try {
+      const values = new FormData(form);
+      const images = Number(values.get("images"));
+      const tokensPerImageRaw = String(values.get("tokensPerImage") || "").trim();
+      const capacityRaw = String(values.get("capacityMib") || "").trim();
+      const scenario = buildLlmTokenBudgetScenario(analysis, {
+        textTokens: Number(values.get("textTokens")),
+        imageCount: images,
+        tokensPerImage: images > 0 && tokensPerImageRaw ? Number(tokensPerImageRaw) : null,
+        batchSize: Number(values.get("batch")),
+        stateStorageBits: Number(values.get("stateBits")),
+        memoryCapacityBytes: capacityRaw ? BigInt(capacityRaw) * 1024n * 1024n : null,
+        source: "web_declared",
+      });
+      analysis.llm_token_budget_scenario = scenario;
+      message.textContent = "Scenario calculated and attached to subsequent report exports.";
+      renderTokenBudgetResult(doc, result, scenario);
+    } catch (error) {
+      message.textContent = error?.message || String(error);
+      result.replaceChildren();
+    }
+  });
+  section.append(form, message, result);
+  return section;
 }
 
 export function renderOnDeviceLlmView(container, analysis = {}) {
@@ -136,7 +257,7 @@ export function renderOnDeviceLlmView(container, analysis = {}) {
       ["Fit claim", memory.fit_claim === "not_emitted" ? "not emitted" : memory.fit_claim],
     ], memory.status?.startsWith("assessed") ? "assessed" : "partial"),
   );
-  container.append(grid);
+  container.append(grid, declaredTokenBudgetView(doc, analysis, contract));
 
   const graph = contract.serialized_graph;
   if (graph) {

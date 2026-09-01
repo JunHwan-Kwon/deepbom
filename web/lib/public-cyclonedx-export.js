@@ -99,7 +99,7 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
     : null;
   const llmEvidence = ["tflite", "onnx", "gguf", "safetensors"].includes(format) && llm?.schema === "deepbom.on_device_llm_contract.v2";
   const serializedLlmContainer = ["gguf", "safetensors"].includes(format) && llmEvidence;
-  const cliScenario = analysis?.cli_context_scenario;
+  const cliScenario = analysis?.llm_token_budget_scenario || analysis?.cli_context_scenario;
   const quantizationProperties = serializedLlmContainer ? [
     ["deepbom:model:storageEncodingClassification", cleanText(quantization.classification) || "storage_only"],
     ["deepbom:model:storageEncodingBasis", format === "gguf"
@@ -185,6 +185,13 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
     ["deepbom:model:llmStaticPoolFitClaim", llm.static_memory_placement?.fit_claim],
     ["deepbom:model:llmCliScenarioSchema", cliScenario?.schema],
     ["deepbom:model:llmCliScenarioContextLength", cliScenario?.context_length],
+    ["deepbom:model:llmCliScenarioTextTokenCount", cliScenario?.token_budget?.text_tokens ?? cliScenario?.text_context_length],
+    ["deepbom:model:llmCliScenarioImageCount", cliScenario?.token_budget?.image_count ?? cliScenario?.image_count],
+    ["deepbom:model:llmCliScenarioTokensPerImage", cliScenario?.token_budget?.tokens_per_image ?? cliScenario?.tokens_per_image],
+    ["deepbom:model:llmCliScenarioImageTokenCount", cliScenario?.token_budget?.image_tokens?.decimal ?? cliScenario?.image_token_count],
+    ["deepbom:model:llmCliScenarioTotalContextTokens", cliScenario?.token_budget?.total_context_tokens?.decimal ?? cliScenario?.context_length],
+    ["deepbom:model:llmCliScenarioContextAssessment", cliScenario?.serialized_context_contract?.assessment],
+    ["deepbom:model:llmCliScenarioSha256", cliScenario?.scenario_sha256],
     ["deepbom:model:llmCliScenarioBatchSize", cliScenario?.batch_size],
     ["deepbom:model:llmCliScenarioStateStorageBits", cliScenario?.state_storage_bits],
     ["deepbom:model:llmCliScenarioMemoryStatus", cliScenario?.memory_feasibility?.status],

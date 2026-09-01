@@ -340,6 +340,7 @@ function formatExtensionSummary(analysis, format) {
 
 export function buildArtifactEvidenceEnvelope(analysis = {}, options = {}) {
   const format = text(analysis.format || options.format || "unknown").toLowerCase();
+  const llmTokenBudgetScenario = analysis?.llm_token_budget_scenario || analysis?.cli_context_scenario || null;
   const macCoverage = deriveMacCoverage(analysis);
   const interfaces = buildInterfaceQuantizationContractLedger(analysis);
   const files = externalFiles(analysis);
@@ -359,6 +360,7 @@ export function buildArtifactEvidenceEnvelope(analysis = {}, options = {}) {
     artifact_set: analysis?.artifact_set || null,
     cpu_cost_target_binding: analysis?.cpu_cost_target_binding || null,
     accelerator_profile_binding: analysis?.accelerator_profile_binding || null,
+    ...(llmTokenBudgetScenario ? { llm_token_budget_scenario: llmTokenBudgetScenario } : {}),
     accelerator_bindings: collectAcceleratorBindings(
       analysis,
       options.runtimeEvidence || options.runtimeAssignmentEvidence || null,
@@ -401,6 +403,16 @@ export function validateArtifactEvidenceEnvelope(envelope) {
   if (envelope?.accelerator_profile_binding) {
     try { validateNvidiaAcceleratorProfileBinding(envelope.accelerator_profile_binding); }
     catch { errors.push("invalid_accelerator_profile_binding"); }
+  }
+  if (envelope?.llm_token_budget_scenario) {
+    const scenario = { ...envelope.llm_token_budget_scenario };
+    const declaredSha256 = scenario.scenario_sha256;
+    delete scenario.scenario_sha256;
+    if (scenario.schema !== "deepbom.llm_token_budget_scenario.v1"
+      || !sha256(declaredSha256)
+      || declaredSha256 !== sha256TextHex(canonicalJson(scenario))) {
+      errors.push("invalid_llm_token_budget_scenario");
+    }
   }
   if (!Array.isArray(envelope?.accelerator_bindings)) errors.push("accelerator_bindings_missing");
   for (const binding of envelope?.accelerator_bindings || []) {

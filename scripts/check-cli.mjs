@@ -61,6 +61,8 @@ assert.match(run(["--help"]).stdout, /--edgetpu-compiler-evidence <json>/, "Edge
 assert.match(run(["--help"]).stdout, /deepbom placement <artifact>/, "N-way placement comparison is discoverable");
 assert.match(run(["--help"]).stdout, /--litert-qualcomm-evidence <json>/, "LiteRT Qualcomm compiler binding is discoverable");
 assert.match(run(["--help"]).stdout, /--review-policy <json>/, "repeat-review policy is discoverable");
+assert.match(run(["--help"]).stdout, /--images <count>/, "multimodal image-count scenario is discoverable");
+assert.match(run(["--help"]).stdout, /--tokens-per-image <count>/, "explicit projector token budget is discoverable");
 
 for (const [artifact, expectedFormat] of cases) {
   const result = run(["audit", artifact, "--compact"]);
@@ -84,6 +86,7 @@ const invalidOnnxScan = run(["audit", cases[1][0], "--scan", "structure"], false
 assert.notEqual(invalidOnnxScan.status, 0);
 assert.match(invalidOnnxScan.stderr, /does not provide a truthful structure scan path/);
 const ggufScenario = JSON.parse(run(["gguf", cases[2][0], "--context", "8192", "--batch", "2", "--state-bits", "8", "--memory-mib", "1", "--compact"]).stdout);
+assert.equal(ggufScenario.cli_context_scenario?.schema, "deepbom.llm_token_budget_scenario.v1", "GGUF CLI uses the common LLM token-budget schema");
 assert.equal(ggufScenario.cli_context_scenario?.context_length, 8192, "GGUF context scenario binding");
 assert.equal(ggufScenario.cli_context_scenario?.batch_size, 2, "GGUF batch scenario binding");
 assert.equal(ggufScenario.cli_context_scenario?.state_storage_bits, 8, "GGUF state-width scenario binding");
@@ -95,6 +98,15 @@ assert.equal(BigInt(ggufScenario.cli_context_scenario.memory_feasibility.static_
   BigInt(ggufScenario.cli_context_scenario.memory_feasibility.serialized_weight_floor_bytes.decimal)
     + BigInt(ggufScenario.cli_context_scenario.memory_feasibility.logical_kv_state_bytes.decimal), "GGUF memory lower-bound conservation");
 assert.equal(ggufScenario.gguf?.semantic_contract?.context_length, gguf.gguf?.semantic_contract?.context_length, "GGUF scenario must not mutate serialized context");
+const ggufImageScenario = JSON.parse(run(["gguf", cases[2][0], "--context", "1024", "--images", "2", "--tokens-per-image", "64", "--compact"]).stdout);
+assert.equal(ggufImageScenario.cli_context_scenario?.token_budget?.text_tokens, 1024, "declared text-token count");
+assert.equal(ggufImageScenario.cli_context_scenario?.token_budget?.image_tokens?.decimal, "128", "declared image-token product");
+assert.equal(ggufImageScenario.cli_context_scenario?.token_budget?.total_context_tokens?.decimal, "1152", "total multimodal context conservation");
+assert.equal(ggufImageScenario.cli_context_scenario?.context_length, 1152, "legacy context alias is the total token budget");
+assert.match(ggufImageScenario.cli_context_scenario?.scenario_sha256, /^[a-f0-9]{64}$/, "token-budget scenario identity");
+const missingImageWidth = run(["gguf", cases[2][0], "--context", "1024", "--images", "2"], false);
+assert.notEqual(missingImageWidth.status, 0);
+assert.match(missingImageWidth.stderr, /--images and --tokens-per-image must be provided together/);
 assert.match(run(["gguf", "--help"]).stdout, /--context <tokens>/, "subcommand help");
 assert.match(run(["gguf", "--help"]).stdout, /--memory-mib <MiB>/, "GGUF memory scenario help");
 assert.match(run(["gguf", "--help"]).stdout, /--llm-memory-profile <json>/, "LLM static pool profile help");
@@ -105,6 +117,12 @@ assert.equal(ggufScenarioProperties.get("deepbom:model:llmCliScenarioContextLeng
 assert.equal(ggufScenarioProperties.get("deepbom:model:llmCliScenarioBatchSize"), "2", "CycloneDX retains CLI batch scenario");
 assert.match(ggufScenarioProperties.get("deepbom:model:llmCliScenarioResidencyAssumption"), /simultaneously resident/, "CycloneDX retains CLI residency assumption");
 assert.equal(ggufScenarioProperties.get("deepbom:model:llmCliScenarioMemoryFitClaim"), "not_emitted", "CycloneDX retains lower-bound-only memory claim boundary");
+
+const ggufImageScenarioCycloneDx = JSON.parse(run(["gguf", cases[2][0], "--context", "1024", "--images", "2", "--tokens-per-image", "64", "--format", "cyclonedx", "--timestamp", "2026-08-18T00:00:00.000Z", "--compact"]).stdout);
+const ggufImageProperties = new Map(ggufImageScenarioCycloneDx.metadata.component.properties.map((row) => [row.name, row.value]));
+assert.equal(ggufImageProperties.get("deepbom:model:llmCliScenarioImageCount"), "2", "CycloneDX retains image count");
+assert.equal(ggufImageProperties.get("deepbom:model:llmCliScenarioTokensPerImage"), "64", "CycloneDX retains projector token width");
+assert.equal(ggufImageProperties.get("deepbom:model:llmCliScenarioTotalContextTokens"), "1152", "CycloneDX retains total multimodal context");
 
 const timestamp = "2026-08-18T00:00:00.000Z";
 const cyclonedx = JSON.parse(run([
@@ -518,9 +536,12 @@ assert.equal(first, second, "TFLite analysis JSON must be deterministic");
 const wrongCommand = run(["gguf", cases[1][0]], false);
 assert.notEqual(wrongCommand.status, 0);
 assert.match(wrongCommand.stderr, /requires a GGUF artifact/);
-const invalidContext = run(["audit", cases[1][0], "--context", "8192"], false);
-assert.notEqual(invalidContext.status, 0);
-assert.match(invalidContext.stderr, /valid only for GGUF/);
+const unboundOnnxContext = JSON.parse(run(["audit", cases[1][0], "--context", "8192", "--compact"]).stdout);
+assert.equal(unboundOnnxContext.llm_token_budget_scenario?.status, "not_assessable_kv_contract_unbound");
+assert.equal(unboundOnnxContext.llm_token_budget_scenario?.memory_feasibility?.fit_claim, "not_emitted");
+const invalidContextFormat = run(["audit", cases[4][0], "--context", "8192"], false);
+assert.notEqual(invalidContextFormat.status, 0);
+assert.match(invalidContextFormat.stderr, /require a TFLite, ONNX, GGUF, or SafeTensors artifact/);
 const invalidStateBits = run(["gguf", cases[2][0], "--context", "8192", "--state-bits", "12"], false);
 assert.notEqual(invalidStateBits.status, 0);
 assert.match(invalidStateBits.stderr, /must be 8, 16, or 32/);

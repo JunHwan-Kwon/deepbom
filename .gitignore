@@ -51,6 +51,9 @@ pkg/README.md
 protected/target_inversion_wasm/pkg/
 protected/target_inversion_wasm/target*/
 protected/target_inversion_wasm/
+
+# This public arithmetic module is not a credential despite its filename.
+!web/lib/llm-token-budget-scenario.js
 *.tflite
 # Public reference sample models (Apache-2.0 upstream releases) are the one
 # deliberate exception — never place user or research models here.

@@ -106,6 +106,7 @@ const APP_ASSETS = [
   "./lib/llm-layer-storage.js",
   "./lib/llm-static-memory-placement.js",
   "./lib/llm-memory-feasibility.js",
+  "./lib/llm-token-budget-scenario.js",
   "./lib/tensorrt-llm-source-metadata.js",
   "./lib/tensorrt-llm-contract.js",
   "./lib/coreml-blob.js",

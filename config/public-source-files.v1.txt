@@ -689,6 +689,7 @@ web/lib/llm-layer-storage.js
 web/lib/llm-memory-feasibility.js
 web/lib/llm-specialized-projection.js
 web/lib/llm-static-memory-placement.js
+web/lib/llm-token-budget-scenario.js
 web/lib/mac-coverage.js
 web/lib/markdown-report.js
 web/lib/metadata-model-adapters.js

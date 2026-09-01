@@ -51,12 +51,8 @@ import { evaluateReviewPolicy, validateReviewPolicy } from "../web/lib/review-po
 import { buildOnnxExternalDataStructureBinding, onnxExternalInitializerElementCount } from "../web/lib/onnx-external-data-structure-binding.js";
 import {
   buildCanonicalGatedDecoderProjection,
-  buildKvStateProjection,
 } from "../web/lib/transformer-architecture-projection.js";
-import {
-  compareLlmMemoryCapacity,
-  LLM_STATIC_RESIDENCY_ASSUMPTION,
-} from "../web/lib/llm-memory-feasibility.js";
+import { buildLlmTokenBudgetScenario } from "../web/lib/llm-token-budget-scenario.js";
 import {
   buildCliCapabilities,
   buildSarifDocument,
@@ -186,18 +182,17 @@ async function main(argv) {
   if (parsed.command === "gguf" && format !== "gguf") {
     throw new Error(`The gguf command requires a GGUF artifact, received ${format}.`);
   }
-  if ((parsed.context || parsed.batch !== 1 || parsed.stateBits !== 16 || parsed.memoryMib) && format !== "gguf") {
-    throw new Error("--context, --batch, --state-bits, and --memory-mib are valid only for GGUF artifacts.");
+  const llmScenarioRequested = parsed.context || parsed.batch !== 1 || parsed.stateBits !== 16
+    || parsed.memoryMib || parsed.images || parsed.tokensPerImage;
+  if (llmScenarioRequested && !["tflite", "onnx", "gguf", "safetensors"].includes(format)) {
+    throw new Error("LLM token-budget options require a TFLite, ONNX, GGUF, or SafeTensors artifact with a statically derived KV-state contract.");
   }
-  if (!parsed.context && (parsed.batch !== 1 || parsed.stateBits !== 16 || parsed.memoryMib)) {
-    throw new Error("--batch, --state-bits, and --memory-mib require --context.");
+  if (!parsed.context && (parsed.batch !== 1 || parsed.stateBits !== 16 || parsed.memoryMib || parsed.images || parsed.tokensPerImage)) {
+    throw new Error("--batch, --state-bits, --memory-mib, --images, and --tokens-per-image require --context.");
   }
-
-  if (parsed.context) analysis.cli_context_scenario = buildGgufContextScenario(analysis, parsed.context, {
-    batchSize: parsed.batch,
-    stateBits: parsed.stateBits,
-    memoryMib: parsed.memoryMib,
-  });
+  if ((parsed.images > 0) !== (parsed.tokensPerImage != null)) {
+    throw new Error("--images and --tokens-per-image must be provided together.");
+  }
   const artifact = input.kind === "file"
     ? { ...(await identifyCliFile(input)), format }
     : packageIdentity(analysis, format, filename);
@@ -265,6 +260,18 @@ async function main(argv) {
     if (!analysis.on_device_llm) analysis.on_device_llm = buildOnDeviceLlmContract(analysis);
     const sidecar = await readJsonSidecar(parsed.llmMemoryProfile, "llm_static_memory_profile");
     analysis.on_device_llm.static_memory_placement = buildLlmStaticMemoryPlacement(analysis.on_device_llm, analysis, sidecar);
+  }
+  if (parsed.context) {
+    if (!analysis.on_device_llm) analysis.on_device_llm = buildOnDeviceLlmContract(analysis);
+    const scenario = buildCliLlmTokenBudgetScenario(analysis, parsed.context, {
+      imageCount: parsed.images,
+      tokensPerImage: parsed.tokensPerImage,
+      batchSize: parsed.batch,
+      stateBits: parsed.stateBits,
+      memoryMib: parsed.memoryMib,
+    });
+    analysis.llm_token_budget_scenario = scenario;
+    analysis.cli_context_scenario = scenario;
   }
   if ((parsed.tensorrtProfile || parsed.tensorrtParserEvidence || parsed.tensorrtEngineInspector) && format !== "onnx") {
     throw new Error("--tensorrt-profile, --tensorrt-parser-evidence, and --tensorrt-engine-inspector apply only to ONNX artifacts.");
@@ -487,7 +494,7 @@ async function preflightOutputDestinations(parsed) {
 function validateCapabilitiesInvocation(parsed) {
   if (parsed.input) throw new Error("The capabilities command does not accept an artifact path.");
   assertNoOptions(parsed, [
-    "targetProfile", "contract", "request", "context", "batch", "stateBits", "memoryMib", "tensorrtProfile",
+    "targetProfile", "contract", "request", "context", "images", "tokensPerImage", "batch", "stateBits", "memoryMib", "tensorrtProfile",
     "tensorrtParserEvidence", "tensorrtEngineInspector", "tensorrtLlmConfig", "tensorrtLlmBinding",
     "llmMemoryProfile", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
   ], "capabilities");
@@ -509,7 +516,7 @@ function validateAcceleratorInvocation(parsed) {
     throw new Error("The accelerator command requires: deepbom accelerator collect nvidia.");
   }
   assertNoOptions(parsed, [
-    "targetProfile", "contract", "request", "context", "batch", "stateBits", "memoryMib", "tensorrtProfile",
+    "targetProfile", "contract", "request", "context", "images", "tokensPerImage", "batch", "stateBits", "memoryMib", "tensorrtProfile",
     "tensorrtParserEvidence", "tensorrtEngineInspector", "tensorrtLlmConfig", "tensorrtLlmBinding",
     "llmMemoryProfile", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
   ], "accelerator collect nvidia");
@@ -527,7 +534,7 @@ function validateAcceleratorInvocation(parsed) {
 async function runDiffCommand(parsed, targetBinding) {
   assertCommandOutputFormat(parsed, "diff");
   assertNoOptions(parsed, [
-    "contract", "request", "context", "batch", "stateBits", "memoryMib", "tensorrtProfile", "tensorrtParserEvidence", "tensorrtEngineInspector",
+    "contract", "request", "context", "images", "tokensPerImage", "batch", "stateBits", "memoryMib", "tensorrtProfile", "tensorrtParserEvidence", "tensorrtEngineInspector",
     "tensorrtLlmConfig", "tensorrtLlmBinding", "llmMemoryProfile", "externalDataRoot", "executorchBuild",
   ], "diff");
   const baselineSource = await resolveCliArtifactSource(parsed.input, parsed);
@@ -955,50 +962,46 @@ function enforceArtifactIdentity(analysis, artifact) {
   analysis.model_sha256 = artifact.sha256;
 }
 
-function buildGgufContextScenario(analysis, contextLength, { batchSize = 1, stateBits = 16, memoryMib = null } = {}) {
+function buildCliLlmTokenBudgetScenario(analysis, textTokens, {
+  imageCount = 0, tokensPerImage = null, batchSize = 1, stateBits = 16, memoryMib = null,
+} = {}) {
+  const capacityBytes = memoryMib == null ? null : BigInt(memoryMib) * 1024n * 1024n;
+  const scenario = buildLlmTokenBudgetScenario(analysis, {
+    textTokens,
+    imageCount,
+    tokensPerImage,
+    batchSize,
+    stateStorageBits: stateBits,
+    memoryCapacityBytes: capacityBytes,
+    source: "cli_argument",
+  });
+  const totalContext = scenario.token_budget.total_context_tokens.value;
   const contract = analysis.gguf?.semantic_contract;
-  if (!contract || typeof contract !== "object") {
-    return {
-      schema: "deepbom.gguf_cli_context_scenario.v1",
-      status: "NOT_ASSESSABLE",
-      evidence_class: "DECLARED/DERIVED_SCENARIO",
-      context_length: contextLength,
-      reason: "GGUF semantic contract is unavailable.",
-    };
-  }
-  const keyHeadWidth = contract.attention_key_length || contract.derived_attention_head_width;
-  const valueHeadWidth = contract.attention_value_length || contract.derived_attention_head_width;
-  const kvReady = [contract.block_count, contract.attention_head_count_kv, keyHeadWidth, valueHeadWidth]
-    .every(isPositiveSafeInteger);
-  const decoderReady = kvReady && [
-    contract.tokenizer?.vocabulary_count,
-    contract.embedding_length,
-    contract.feed_forward_length,
-    contract.attention_head_count,
-  ].every(isPositiveSafeInteger) && keyHeadWidth === valueHeadWidth;
-  const kvStateProjection = kvReady ? buildKvStateProjection({
-    layerCount: contract.block_count,
-    kvHeadCount: contract.attention_head_count_kv,
+  const keyHeadWidth = contract?.attention_key_length || contract?.derived_attention_head_width;
+  const valueHeadWidth = contract?.attention_value_length || contract?.derived_attention_head_width;
+  const decoderReady = totalContext != null && [
+    contract?.block_count,
+    contract?.attention_head_count_kv,
     keyHeadWidth,
     valueHeadWidth,
-    contextLength,
-  }) : null;
-  const stateElements = exactInteger(kvStateProjection?.elements_at_context_batch_one);
-  const serializedWeightBytes = exactInteger(analysis?.tensor_storage_summary?.byte_length_decimal);
-  const stateBytes = stateElements == null ? null : stateElements * BigInt(batchSize) * BigInt(stateBits / 8);
-  const staticLowerBound = serializedWeightBytes == null || stateBytes == null ? null : serializedWeightBytes + stateBytes;
-  const capacityBytes = memoryMib == null ? null : BigInt(memoryMib) * 1024n * 1024n;
-  const capacityComparison = compareLlmMemoryCapacity(staticLowerBound, capacityBytes);
-  return {
-    schema: "deepbom.gguf_cli_context_scenario.v1",
-    status: kvReady ? "ASSESSED" : "NOT_ASSESSABLE",
-    evidence_class: "DECLARED/DERIVED_SCENARIO",
-    context_length: contextLength,
+    contract?.tokenizer?.vocabulary_count,
+    contract?.embedding_length,
+    contract?.feed_forward_length,
+    contract?.attention_head_count,
+  ].every(isPositiveSafeInteger) && keyHeadWidth === valueHeadWidth;
+  const { scenario_sha256: _baseScenarioSha256, ...scenarioBody } = scenario;
+  const body = {
+    ...scenarioBody,
+    context_length: totalContext,
+    text_context_length: textTokens,
+    image_count: imageCount,
+    tokens_per_image: tokensPerImage,
+    image_token_count: scenario.token_budget.image_tokens.value,
     batch_size: batchSize,
     state_storage_bits: stateBits,
     context_source: "cli_argument",
-    serialized_context_length: contract.context_length ?? null,
-    kv_state_projection: kvStateProjection,
+    serialized_context_length: scenario.serialized_context_contract.context_length,
+    kv_state_projection: scenario.state_projection,
     compute_projection: decoderReady ? buildCanonicalGatedDecoderProjection({
       vocabularySize: contract.tokenizer.vocabulary_count,
       hiddenSize: contract.embedding_length,
@@ -1007,38 +1010,17 @@ function buildGgufContextScenario(analysis, contextLength, { batchSize = 1, stat
       attentionHeadCount: contract.attention_head_count,
       kvHeadCount: contract.attention_head_count_kv,
       headWidth: keyHeadWidth,
-      contextLength,
+      contextLength: totalContext,
     }) : null,
     compute_projection_status: decoderReady ? "assessed_registered_canonical_decoder_scenario"
-      : "not_assessable_incomplete_or_nonuniform_attention_metadata",
+      : "not_emitted_without_registered_gguf_canonical_decoder_contract",
     memory_feasibility: {
-      schema: "deepbom.gguf_cli_memory_scenario.v1",
-      status: capacityComparison.status,
-      evidence_class: staticLowerBound == null ? "NOT_ASSESSABLE" : "OBSERVED_STORAGE_PLUS_DERIVED_CONDITIONAL_STATE",
-      capacity_scope: "single_aggregate_primary_memory_budget",
-      residency_assumption: LLM_STATIC_RESIDENCY_ASSUMPTION,
-      serialized_weight_floor_bytes: serializedWeightBytes == null ? null : exact(serializedWeightBytes),
-      logical_kv_state_bytes: stateBytes == null ? null : exact(stateBytes),
-      static_lower_bound_bytes: staticLowerBound == null ? null : exact(staticLowerBound),
-      declared_capacity_bytes: capacityBytes == null ? null : exact(capacityBytes),
-      deficit_bytes: capacityComparison.deficit_bytes,
-      headroom_after_lower_bound_bytes: capacityComparison.headroom_after_lower_bound_bytes,
-      fit_claim: capacityComparison.fit_claim,
-      boundary: "Under the emitted simultaneous-residency assumption, exact serialized tensor bytes plus logical KV-state bytes form a conditional resident-set lower bound. A declared capacity at or above that bound does not establish fit because weight paging/offload policy, runtime-expanded weights, packing, replicas, graph/workspace memory, allocator alignment, backend-private allocations, application memory, and operating-system reserve are unbound.",
+      ...scenario.memory_feasibility,
+      logical_kv_state_bytes: scenario.state_projection.state_kind === "transformer_kv"
+        ? scenario.memory_feasibility.logical_state_bytes : null,
     },
-    boundary: "The CLI context is a user-declared scenario. It does not replace the serialized GGUF context contract or establish runtime allocation, backend lowering, kernel choice, latency, or device residency.",
   };
-}
-
-function exactInteger(value) {
-  if (value && typeof value === "object" && /^\d+$/.test(String(value.decimal || ""))) return BigInt(value.decimal);
-  if (typeof value === "string" && /^\d+$/.test(value)) return BigInt(value);
-  if (Number.isSafeInteger(value) && value >= 0) return BigInt(value);
-  return null;
-}
-
-function exact(value) {
-  return { value: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null, decimal: String(value) };
+  return { ...body, scenario_sha256: createHash("sha256").update(canonicalJson(body)).digest("hex") };
 }
 
 function isPositiveSafeInteger(value) {
@@ -1089,7 +1071,7 @@ function buildHumanSummary(analysis, artifact) {
     }
     lines.push(`Placement: ${placement.join(" | ")} under the stated rulepack and build conditions`);
   }
-  appendMemoryScenario(lines, analysis?.cli_context_scenario?.memory_feasibility);
+  appendTokenBudgetScenario(lines, analysis?.llm_token_budget_scenario || analysis?.cli_context_scenario);
   if (findings.length) {
     lines.push(`Findings: ${findings.length}`);
     for (const finding of findings.slice(0, 5)) lines.push(`  - ${finding.title || finding.finding_id || finding.id || "Unnamed finding"}`);
@@ -1240,6 +1222,22 @@ function appendMemoryScenario(lines, memory) {
   lines.push(`Memory scenario: ${parts.join(" | ")}`);
 }
 
+function appendTokenBudgetScenario(lines, scenario) {
+  if (!scenario || typeof scenario !== "object") return;
+  const budget = scenario.token_budget || {};
+  const total = exactDecimal(budget.total_context_tokens?.decimal ?? scenario.context_length);
+  if (total !== null) {
+    const parts = [`${formatInteger(total)} total context tokens`, `${formatInteger(budget.text_tokens ?? scenario.text_context_length ?? total)} text`];
+    if (Number(budget.image_count ?? scenario.image_count) > 0) {
+      parts.push(`${formatInteger(budget.image_count ?? scenario.image_count)} image(s)`);
+      parts.push(`${formatInteger(budget.tokens_per_image ?? scenario.tokens_per_image)} tokens/image`);
+    }
+    parts.push(scenario.serialized_context_contract?.assessment || "serialized context not assessed");
+    lines.push(`Token scenario: ${parts.join(" | ")}`);
+  }
+  appendMemoryScenario(lines, scenario.memory_feasibility);
+}
+
 function evidenceBoundary(format) {
   if (format === "GGUF" || format === "SAFETENSORS") {
     return "the container does not serialize an executable DAG; runtime lowering, placement, latency, and task quality require separate evidence.";
@@ -1319,6 +1317,8 @@ function parseArguments(argv) {
     errorFormat: "text",
     timestamp: "",
     context: null,
+    images: 0,
+    tokensPerImage: null,
     batch: 1,
     stateBits: 16,
     memoryMib: null,
@@ -1361,6 +1361,8 @@ function parseArguments(argv) {
     else if (token === "--request") parsed.request = requiredValue(values, token);
     else if (token === "--view") parsed.view = requiredValue(values, token).toLowerCase();
     else if (token === "--context") parsed.context = positiveInteger(requiredValue(values, token), token);
+    else if (token === "--images") parsed.images = positiveInteger(requiredValue(values, token), token);
+    else if (token === "--tokens-per-image") parsed.tokensPerImage = positiveInteger(requiredValue(values, token), token);
     else if (token === "--batch") parsed.batch = positiveInteger(requiredValue(values, token), token);
     else if (token === "--state-bits") parsed.stateBits = stateBits(requiredValue(values, token));
     else if (token === "--memory-mib") parsed.memoryMib = positiveInteger(requiredValue(values, token), token);
@@ -1508,7 +1510,7 @@ async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_B
 }
 
 function printHelp() {
-  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     GGUF context-length scenario\n  --batch <count>        GGUF scenario batch size (default: 1)\n  --state-bits <bits>    GGUF KV-state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the static lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis, envelope, cyclonedx, or sarif (audit/gguf only)\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Exit 2 for findings at/above informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Emit the complete formatted evidence JSON\n  --compact              Emit the complete compact evidence JSON\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
+  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis, envelope, cyclonedx, or sarif (audit/gguf only)\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Exit 2 for findings at/above informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Emit the complete formatted evidence JSON\n  --compact              Emit the complete compact evidence JSON\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
   process.stdout.write("\nNVIDIA accelerator binding:\n  --accelerator-profile <json>\n                          Bind an observed NVIDIA host profile without inferring selected-build or runtime assignment\n  --accelerator-device <index>\n                          Select one device when the bound profile contains multiple NVIDIA devices\n");
   process.stdout.write("\nN-way placement comparison:\n  deepbom placement <artifact> [--profiles <id,id|all>] [--json|--compact]\n  --profiles <ids|all>   Compare selected independent profiles (default: all available profiles)\n");
   process.stdout.write("\nCompiled accelerator evidence:\n  --coreml-compute-plan <json>\n                          Import an artifact- and compiled-model-bound MLComputePlan estimate; not executed placement\n  --edgetpu-compiler-evidence <json>\n                          Import an artifact/compiler/invocation/compiled-artifact-bound Edge TPU operation ledger\n  --litert-qualcomm-evidence <json>\n                          Import an artifact/source/compiler/QNN-plan-bound operation ledger\n");

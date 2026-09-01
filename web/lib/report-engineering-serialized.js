@@ -27,6 +27,7 @@ export function onDeviceLlmEvidenceMarkdown(analysis) {
   const medical = llm.medical_ai_claim_boundary || {};
   const serializedGraph = llm.serialized_graph || null;
   const tensorRtLlm = llm.tensorrt_llm || {};
+  const declaredTokenBudget = analysis?.llm_token_budget_scenario || analysis?.cli_context_scenario || null;
   const sidecarRows = Array.isArray(tokenizer.definition_files) ? tokenizer.definition_files : [];
   const scenarioRows = Array.isArray(state.scenario_matrix) ? state.scenario_matrix : [];
   const encodingRows = Array.isArray(storage.encoding_inventory) ? storage.encoding_inventory : [];
@@ -87,6 +88,18 @@ export function onDeviceLlmEvidenceMarkdown(analysis) {
       ["Medical AI claim boundary", medical.status || "not established by model artifact"],
       ["Deployment declaration coverage", medical.declaration?.coverage ? `${medical.declaration.coverage.declared}/${medical.declaration.coverage.required}; ${medical.declaration.evidence_class}` : "0/9; NOT_ASSESSABLE"],
     ]),
+    declaredTokenBudget ? "### Declared Text And Image Token Budget" : "",
+    declaredTokenBudget ? markdownTable(["Field", "Declared or derived value"], [
+      ["Status / evidence", `${declaredTokenBudget.status} / ${declaredTokenBudget.evidence_class}`],
+      ["Text / images / tokens per image", `${declaredTokenBudget.token_budget?.text_tokens ?? "?"} / ${declaredTokenBudget.token_budget?.image_count ?? 0} / ${declaredTokenBudget.token_budget?.tokens_per_image ?? "not declared"}`],
+      ["Image / total context tokens", `${declaredTokenBudget.token_budget?.image_tokens?.decimal ?? "0"} / ${declaredTokenBudget.token_budget?.total_context_tokens?.decimal ?? declaredTokenBudget.context_length ?? "?"}`],
+      ["Serialized context assessment", `${declaredTokenBudget.serialized_context_contract?.context_length ?? "not bound"} / ${declaredTokenBudget.serialized_context_contract?.assessment ?? "not assessed"}`],
+      ["Logical state bytes", declaredTokenBudget.state_projection?.logical_state_bytes?.decimal ?? "not derived"],
+      ["Conditional resident-set lower bound", declaredTokenBudget.memory_feasibility?.static_lower_bound_bytes?.decimal ?? "not derived"],
+      ["Capacity assessment / fit claim", `${declaredTokenBudget.memory_feasibility?.status ?? "not assessed"} / ${declaredTokenBudget.memory_feasibility?.fit_claim ?? "not emitted"}`],
+      ["Scenario SHA-256", code(declaredTokenBudget.scenario_sha256 || "not emitted")],
+    ]) : "",
+    declaredTokenBudget ? `> ${declaredTokenBudget.boundary}` : "",
     serializedGraph ? "### Serialized Transformer Graph Evidence" : "",
     serializedGraph ? markdownTable(["Field", "Observed value"], [
       ["Assessment", `${serializedGraph.status}; ${serializedGraph.evidence_class}`],

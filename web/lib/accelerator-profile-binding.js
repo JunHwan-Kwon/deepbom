@@ -86,16 +86,18 @@ function buildLlmAcceleratorResidency(analysis, capacityValue) {
   const capacity = exactFrom(capacityValue);
   const feasibility = contract.memory_feasibility;
   const scenarios = [];
-  const cliScenario = analysis?.cli_context_scenario;
+  const cliScenario = analysis?.llm_token_budget_scenario || analysis?.cli_context_scenario;
   if (exactFrom(cliScenario?.memory_feasibility?.static_lower_bound_bytes) != null
-    && exactFrom(cliScenario?.memory_feasibility?.logical_kv_state_bytes) != null) {
+    && exactFrom(cliScenario?.memory_feasibility?.logical_state_bytes
+      || cliScenario?.memory_feasibility?.logical_kv_state_bytes) != null) {
     scenarios.push({
       scenario_source: "cli_declared",
-      state_kind: "transformer_kv",
+      state_kind: cliScenario?.state_projection?.state_kind || "transformer_kv",
       context_length: cliScenario.context_length,
       batch_size: cliScenario.batch_size,
       storage_bits: cliScenario.state_storage_bits,
-      logical_state_bytes: cliScenario.memory_feasibility.logical_kv_state_bytes,
+      logical_state_bytes: cliScenario.memory_feasibility.logical_state_bytes
+        || cliScenario.memory_feasibility.logical_kv_state_bytes,
       static_lower_bound_bytes: cliScenario.memory_feasibility.static_lower_bound_bytes,
     });
   }

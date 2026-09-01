@@ -6,6 +6,7 @@ import { buildOnDeviceLlmContract, validateOnDeviceLlmContract } from "../web/li
 import { assessOnDeviceLlmRuntimeManifest, buildLlmStateScenarioMatrix } from "../web/lib/on-device-llm-runtime-manifest.js";
 import { buildLlmMemoryFeasibility, compareLlmMemoryCapacity } from "../web/lib/llm-memory-feasibility.js";
 import { buildLlmStaticMemoryPlacement } from "../web/lib/llm-static-memory-placement.js";
+import { buildLlmTokenBudgetScenario, validateLlmTokenBudgetScenario } from "../web/lib/llm-token-budget-scenario.js";
 import { canonicalJson } from "../web/lib/report-utils.js";
 import { sha256TextHex } from "../web/lib/sha256-sync.js";
 import { registerSafeTensorsSerializedConformance } from "../web/lib/report-conformance-serialized-containers.js";
@@ -146,12 +147,42 @@ assert.equal(llm.storage.layer_storage.layer_tensor_count, 19);
 assert.equal(llm.storage.layer_storage.layer_bytes.decimal, "2784");
 assert.equal(llm.storage.layer_storage.non_layer_bytes.decimal, "528");
 assert.equal(llm.storage.layer_storage.conservation.status, "pass");
+const multimodalScenario = buildLlmTokenBudgetScenario(analysis, {
+  textTokens: 8,
+  imageCount: 1,
+  tokensPerImage: 4,
+  batchSize: 2,
+  stateStorageBits: 16,
+  memoryCapacityBytes: 4096n,
+  source: "test_declared",
+});
+assert.equal(multimodalScenario.status, "assessed_conditional_token_budget");
+assert.equal(multimodalScenario.token_budget.total_context_tokens.decimal, "12");
+assert.equal(multimodalScenario.serialized_context_contract.assessment, "within_serialized_context");
+const expectedScenarioStateBytes = BigInt(llm.state.kv_projection.elements_per_token_per_batch.decimal) * 12n * 2n * 2n;
+assert.equal(multimodalScenario.state_projection.logical_state_bytes.decimal, String(expectedScenarioStateBytes));
+assert.equal(BigInt(multimodalScenario.memory_feasibility.static_lower_bound_bytes.decimal),
+  BigInt(llm.storage.serialized_tensor_bytes_decimal) + expectedScenarioStateBytes);
+assert.match(multimodalScenario.scenario_sha256, /^[a-f0-9]{64}$/);
+assert.deepEqual(validateLlmTokenBudgetScenario(analysis, multimodalScenario), []);
+const overContextScenario = buildLlmTokenBudgetScenario(analysis, {
+  textTokens: 13, imageCount: 1, tokensPerImage: 4, source: "test_declared",
+});
+assert.equal(overContextScenario.status, "derived_scenario_exceeds_serialized_context");
+assert.throws(() => buildLlmTokenBudgetScenario(analysis, { textTokens: 8, imageCount: 1 }), /tokensPerImage/);
+const tamperedScenario = structuredClone(multimodalScenario);
+tamperedScenario.token_budget.image_tokens.decimal = "5";
+assert.deepEqual(validateLlmTokenBudgetScenario(analysis, tamperedScenario), ["llm_token_budget_recomputation_mismatch"]);
+analysis.llm_token_budget_scenario = multimodalScenario;
 const llmReport = buildEngineeringReport(analysis, { generatedAt: "2026-08-25T00:00:00.000Z" });
 assert(llmReport.includes("### Serialized Layer Storage Ledger") && llmReport.includes("2784 B layer + 528 B non-layer"));
+assert(llmReport.includes("### Declared Text And Image Token Budget") && llmReport.includes(multimodalScenario.scenario_sha256));
 const llmBom = buildPublicCycloneDx17ArtifactContract(analysis, { generatedAt: "2026-08-25T00:00:00.000Z" });
 const llmProperties = new Map(llmBom.metadata.component.properties.map((row) => [row.name, row.value]));
 assert.equal(llmProperties.get("deepbom:model:llmLayerStorageStatus"), "assessed_exact_serialized_layer_storage");
 assert.equal(llmProperties.get("deepbom:model:llmLayerSerializedBytes"), "2784");
+assert.equal(llmProperties.get("deepbom:model:llmCliScenarioImageTokenCount"), "4");
+assert.equal(llmProperties.get("deepbom:model:llmCliScenarioTotalContextTokens"), "12");
 const evidenceBom = buildCycloneDxEvidenceDocument(analysis, { generatedAt: "2026-08-25T00:00:00.000Z" });
 const evidenceProperties = new Map(evidenceBom.metadata.component.properties.map((row) => [row.name, row.value]));
 assert.equal(evidenceProperties.get("deepbom:model:llmLayerStorageStatus"), "assessed_exact_serialized_layer_storage");
@@ -159,6 +190,11 @@ assert.equal(evidenceProperties.get("deepbom:model:llmNonLayerSerializedBytes"),
 const artifactEnvelope = buildArtifactEvidenceEnvelope(analysis, { generatedAt: "2026-08-25T00:00:00.000Z" });
 assert(artifactEnvelope.capabilities.assessed.includes("llm_layer_storage"));
 assert.equal(artifactEnvelope.capabilities.conservation.valid, true);
+assert.equal(artifactEnvelope.llm_token_budget_scenario?.scenario_sha256, multimodalScenario.scenario_sha256);
+delete analysis.llm_token_budget_scenario;
+const envelopeWithoutTokenScenario = buildArtifactEvidenceEnvelope(analysis, { generatedAt: "2026-08-25T00:00:00.000Z" });
+assert.equal(Object.hasOwn(envelopeWithoutTokenScenario, "llm_token_budget_scenario"), false);
+analysis.llm_token_budget_scenario = multimodalScenario;
 assert.equal(llm.memory_feasibility.status, "assessed_static_lower_bound_scenarios");
 assert.equal(llm.memory_feasibility.minimum_static_lower_bound_bytes.decimal, "3440");
 assert.equal(llm.memory_feasibility.maximum_static_lower_bound_bytes.decimal, "5360");
