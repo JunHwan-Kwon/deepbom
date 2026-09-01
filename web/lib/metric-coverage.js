@@ -1772,15 +1772,15 @@ const SPECS = [
   spec("tflite.delegation", "TFLite XNNPACK delegation and boundary prediction", {
     formats: ["tflite"], keys: ["predicted_partition_boundaries", "xnnpack_assumption", "xnnpack_chains", "xnnpack_chain_breaks", "xnnpack_effective_chain_breaks", "xnnpack_structural_chain_breaks", "xnnpack_zero_mac_chain_breaks", "xnnpack_longest_chain", "delegated_macs", "fallback_macs", "delegated_mac_percent", "delegated_estimated_bytes", "fallback_estimated_bytes", "fallback_byte_percent", "fallback_traffic_by_op_family"], status: (a) => emitted(a?.predicted_partition_boundaries) ? objectStatus(a.predicted_partition_boundaries, "assessed") : Array.isArray(a?.ops) ? "assessed" : "not_assessed",
     evidenceClass: "PREDICTED/DERIVED", pointers: ["/evidence/static_analysis/predicted_partition_boundaries", "/evidence/static_analysis/xnnpack_chains"],
-    report: "## Delegation Prediction Coverage", viewer: ["Overview", "Explorer", "Deployment Sensitivity Proxy"], method: "Apply the pinned delegate rule basis, build contiguous predicted domains, and derive exact graph-edge logical payloads." }),
+    report: "## Delegation Prediction Coverage", viewer: ["Overview", "Explorer", "Deployment Sensitivity"], method: "Apply the pinned delegate rule basis, build contiguous predicted domains, and derive exact graph-edge logical payloads." }),
   spec("tflite.xnnpack_candidates", "Pinned XNNPACK lowering and microkernel candidates", {
     formats: ["tflite"], keys: ["xnnpack_selector_assessment_status", "xnnpack_selector_evidence_schema", "xnnpack_selector_evidence_access", "xnnpack_selector_evidence_provenance"], status: (a) => String(a?.xnnpack_selector_assessment_status || "not_loaded") === "complete" ? "assessed" : "not_assessed",
     evidenceClass: "SOURCE_ENUMERATED_CANDIDATE", pointers: ["/evidence/static_analysis/xnnpack_selector_evidence_provenance", "/evidence/static_analysis/ops"],
-    report: "## Pinned XNNPACK Kernel Candidates", viewer: ["Explorer", "Deployment Sensitivity Proxy"], method: "Filter pinned source configurations by artifact-visible facts and retain every unresolved runtime selector dimension." }),
+    report: "## Pinned XNNPACK Kernel Candidates", viewer: ["Explorer", "Deployment Sensitivity"], method: "Filter pinned source configurations by artifact-visible facts and retain every unresolved runtime selector dimension." }),
   spec("tflite.alternate_delegate_candidates", "Pinned TFLite GPU and NNAPI source candidates", {
     formats: ["tflite"], keys: ["tflite_delegate_compatibility_evidence"], status: (a) => String(a?.tflite_delegate_compatibility_evidence?.assessment_status || "not_loaded").startsWith("assessed_") ? "assessed" : "not_assessed",
     evidenceClass: "SOURCE_PINNED/DERIVED_PARTIAL", pointers: ["/evidence/static_analysis/tflite_delegate_compatibility_evidence"],
-    report: "## TFLite GPU and NNAPI Source Compatibility", viewer: ["Overview", "Explorer", "Deployment Sensitivity Proxy"], method: "Enumerate pinned TensorFlow GPU parser and NNAPI Validate registrations, apply only artifact-visible definite exclusions, and preserve selected-build, runtime/device, and assignment predicates as unresolved requirements." }),
+    report: "## TFLite GPU and NNAPI Source Compatibility", viewer: ["Overview", "Explorer", "Deployment Sensitivity"], method: "Enumerate pinned TensorFlow GPU parser and NNAPI Validate registrations, apply only artifact-visible definite exclusions, and preserve selected-build, runtime/device, and assignment predicates as unresolved requirements." }),
   spec("tflite.arena", "TFLite ArenaPlanner declared-shape projection", {
     formats: ["tflite"], keys: ["tensor_arena_plan"], status: (a) => objectStatus(a?.tensor_arena_plan),
     pointers: ["/evidence/static_analysis/tensor_arena_plan"], report: "## TFLite ArenaPlanner Declared-Shape Projection", viewer: ["Overview", "Explorer"],
@@ -1791,13 +1791,13 @@ const SPECS = [
     report: "## Movement And Packing Estimates", viewer: ["Overview", "Explorer"], method: "Count explicit movement payload and graph-boundary payload exactly; apply disclosed target-profile bandwidth and setup assumptions only to packing estimates." }),
   spec("tflite.deployment_frontier", "Cross-target deployment frontier", {
     formats: ["tflite"], keys: ["deployment_frontier", "deployment_frontier_error"], status: (a) => objectStatus(a?.deployment_frontier), evidenceClass: "DERIVED/ESTIMATED",
-    pointers: ["/evidence/static_analysis/deployment_frontier"], report: "## Deployment Frontier", viewer: ["Deployment Sensitivity Proxy"], method: "Re-evaluate the same op ledger across pinned target profiles and conserve normalized target-pair divergence attribution." }),
+    pointers: ["/evidence/static_analysis/deployment_frontier"], report: "## Deployment Frontier", viewer: ["Deployment Sensitivity"], method: "Re-evaluate the same op ledger across pinned target profiles and conserve normalized target-pair divergence attribution." }),
   spec("tflite.deployment_delta", "Bound prior-artifact deployment delta", {
     formats: ["tflite"], keys: ["deployment_delta", "deployment_delta_error"], status: (a) => objectStatus(a?.deployment_delta), evidenceClass: "DERIVED/ESTIMATED",
-    pointers: ["/evidence/static_analysis/deployment_delta"], report: "## Deployment Delta", viewer: ["Drift Analysis", "Deployment Sensitivity Proxy"], method: "Align independently parsed artifacts and conserve signed target-profile component deltas without claiming semantic lineage." }),
+    pointers: ["/evidence/static_analysis/deployment_delta"], report: "## Deployment Delta", viewer: ["Drift Analysis", "Deployment Sensitivity"], method: "Align independently parsed artifacts and conserve signed target-profile component deltas without claiming semantic lineage." }),
   spec("tflite.delegation_repair", "Delegation repair counterfactuals", {
     formats: ["tflite"], keys: ["delegation_repair", "delegation_repair_error"], status: (a) => objectStatus(a?.delegation_repair), evidenceClass: "PREDICTED/DERIVED",
-    pointers: ["/evidence/static_analysis/delegation_repair"], report: "## Delegation Repair Lab", viewer: ["Deployment Sensitivity Proxy"], method: "Toggle each op and complete predicted CPU island while rebuilding segments and boundary edges exactly." }),
+    pointers: ["/evidence/static_analysis/delegation_repair"], report: "## Delegation Repair Lab", viewer: ["Deployment Sensitivity"], method: "Toggle each op and complete predicted CPU island while rebuilding segments and boundary edges exactly." }),
   spec("tflite.quant_research_coverage", "Quantization research artifact class and lab denominator", {
     formats: ["tflite"], keys: ["quant_research_coverage"], status: (a) => objectStatus(a?.quant_research_coverage || buildQuantResearchCoverage(a)),
     evidenceClass: "DERIVED", pointers: ["/evidence/static_analysis/quant_research_coverage"],
@@ -1858,10 +1858,10 @@ const SPECS = [
   spec("onnx.ort_source_compatibility", "Pinned ORT runtime floor and EP source compatibility", {
     formats: ["onnx"], keys: ["ort_compatibility_assessment_status", "ort_compatibility_evidence_schema", "ort_compatibility_evidence_access", "ort_compatibility_evidence", "ort_assignment_capture_capability"], status: (a) => objectStatus(a?.ort_compatibility_evidence), evidenceClass: "DERIVED_NECESSARY_MINIMUM/SOURCE_MATCH",
     pointers: ["/evidence/static_analysis/ort_compatibility_evidence", "/evidence/static_analysis/ort_assignment_capture_capability", "/evidence/static_analysis/runtime_compat"],
-    report: "## Execution Provider Source Compatibility", viewer: ["Explorer", "Deployment Sensitivity Proxy"], method: "Resolve imported opsets to pinned schemas, evaluate machine-registered source type/rank/constant/output/explicit-attribute conditions against artifact facts, and remove only definite failures without inferring GetCapability assignment." }),
+    report: "## Execution Provider Source Compatibility", viewer: ["Explorer", "Deployment Sensitivity"], method: "Resolve imported opsets to pinned schemas, evaluate machine-registered source type/rank/constant/output/explicit-attribute conditions against artifact facts, and remove only definite failures without inferring GetCapability assignment." }),
   spec("onnx.ep_portability", "ONNX EP portability frontier", {
     formats: ["onnx"], keys: ["ort_ep_portability_frontier"], status: (a) => objectStatus(a?.ort_ep_portability_frontier), evidenceClass: "DERIVED_FROM_PINNED_SOURCE_AND_ARTIFACT_VISIBLE_DEFINITE_EXCLUSIONS",
-    pointers: ["/evidence/static_analysis/ort_ep_portability_frontier"], report: "## ONNX EP Portability Frontier", viewer: ["Deployment Sensitivity Proxy"],
+    pointers: ["/evidence/static_analysis/ort_ep_portability_frontier"], report: "## ONNX EP Portability Frontier", viewer: ["Deployment Sensitivity"],
     method: "Preserve source-version intersections and separately intersect the candidate sets remaining after deterministic artifact-visible definite exclusions." }),
   spec("onnx.tensorrt_static_preflight", "TensorRT configuration, parser, and optimized-engine inspector evidence", {
     formats: ["onnx"], keys: ["tensorrt_static_preflight"], status: (a) => objectStatus(a?.tensorrt_static_preflight), evidenceClass: "DERIVED_CONFIGURATION_PREFLIGHT/PARSER_OBSERVED_CONFIGURATION_BOUND",
@@ -1875,7 +1875,7 @@ const SPECS = [
     formats: ["tflite", "onnx"],
     status: (_a, _f, c) => c?.runtimeAssignment ? objectStatus(c.runtimeAssignment) : "not_assessed", evidenceClass: "OBSERVED/DERIVED",
     pointers: ["/evidence/runtime_results/runtime_assignment", "/evidence/runtime_results/runtime_assignment_comparison"],
-    report: "## Runtime Environment And Reproducibility", viewer: ["Benchmark", "Deployment Sensitivity Proxy"],
+    report: "## Runtime Environment And Reproducibility", viewer: ["Benchmark", "Deployment Sensitivity"],
     exports: ["engineering_evidence.json", "runtime/assignment_comparison.csv", "runtime/boundary_comparison.csv"], method: "Import capture-bound runtime placement, map only identities supported by the source, and compare assessed graph relations." }),
   spec("runtime.onnx_internal_shape_binding", "Observed ONNX internal shape and runtime-bound cost closure", {
     formats: ["onnx"],

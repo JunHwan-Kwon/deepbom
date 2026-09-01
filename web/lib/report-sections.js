@@ -36,7 +36,7 @@ export function evidenceClassLegend() {
     ["HEURISTIC", "Composite triage index or label built from bounded analyzer signals; no pass/fail or deployment-readiness meaning."],
     ["ESTIMATED", "Modeled from target profile, static performance assumptions, cache/roofline heuristics, or byte estimates."],
     ["PREDICTED", "Predicted from runtime/delegate rulepack rather than confirmed delegate logs."],
-    ["PROXY", "Indirect stability, topology, or weight-space signal used to prioritize follow-up validation."],
+    ["PROXY", "Experimental composite or indirect descriptor without a validated accuracy, latency, robustness, or release threshold."],
     ["NOT_ASSESSABLE", "Cannot be assessed from the deployment artifact alone."],
   ]);
 }
@@ -601,9 +601,9 @@ export function weightIndicatorMarkdown({
   deployCurvatureResult = null,
 } = {}) {
   return markdownTable(["Indicator", "Evidence", "Result", "Boundary"], [
-    ["DEEPBOM weight/topology proxy", "PROXY", deepBomResult ? (deepBomResult.score_assessment?.status === "ASSESSED" ? `basin=${score100(deepBomResult.basin_proxy_score)}, topology=${score100(deepBomResult.topology_stress_score)}` : `NOT_ASSESSABLE: ${deepBomResult.score_assessment?.reason || "required score inputs unavailable"}`) : "not run", "Not a generalization proof."],
+    ["Experimental artifact composites", "PROXY", deepBomResult ? (deepBomResult.score_assessment?.status === "ASSESSED" ? `artifact=${score100(deepBomResult.basin_proxy_score)}, topology=${score100(deepBomResult.topology_stress_score)}` : `NOT_ASSESSABLE: ${deepBomResult.score_assessment?.reason || "required score inputs unavailable"}`) : "not run", "Unvalidated fixed-weight summaries; no accuracy, latency, robustness, or release threshold."],
     ["Input perturbation drift", "MEASURED_SYNTHETIC", perturbationResult?.drift ? `max=${formatDrift(perturbationResult.drift.max_abs)} ${perturbationResult.output_profile?.unit || ""}` : "not run", "Synthetic/prepared local inputs only."],
     ["Weight perturbation", "MEASURED_SYNTHETIC", perturbationResult?.weight_perturbation ? `${perturbationResult.weight_perturbation.touched_tensors} tensor(s)` : "not available/not run", "Local model-byte copy; raw weights not exported."],
-    ["Research deployment-sensitivity proxy", "MEASURED_SYNTHETIC", deployCurvatureResult?.basin ? `${Number(deployCurvatureResult.basin.score || 0).toFixed(1)} / 100` : "not run", "Deployment-function local finite difference; not Hessian/PAC-Bayes."],
+    ["Experimental deployment-sensitivity composite", "PROXY", deployCurvatureResult?.basin ? `${Number(deployCurvatureResult.basin.score || 0).toFixed(1)} / 100` : "not run", "Composite is unvalidated; raw finite-difference components are MEASURED_SYNTHETIC, not Hessian/PAC-Bayes."],
   ]);
 }

@@ -10,10 +10,10 @@ export const ACCESS_REQUEST_PROFILES = {
     type: "research_collab",
     capability: "research_access",
     features: [
-      "Artifact Geometry: deploy-artifact weight/topology proxy analysis",
+      "Artifact Geometry: experimental deploy-artifact composites and their deterministic components",
       "Perturbation: local input/output drift and weight sensitivity",
       "Backend Consistency: backend availability and output drift",
-      "Deployment Sensitivity Proxy: finite-difference deployment-function probe",
+      "Deployment Sensitivity: finite-difference deployment-function observations",
     ],
   },
   medical_ai: {
@@ -164,10 +164,10 @@ export function selectableModuleIdFor(tabs, requestedId, fallbackIds = ["enginee
 
 export function moduleWorkflowDescription(moduleId, fallback = "") {
   return {
-    deepbom: "Weight/topology proxy",
+    deepbom: "Artifact descriptors",
     perturbation: "Input/output drift",
     runtime_basin: "Backend drift",
-    deployment_sensitivity: "Finite-difference proxy",
+    deployment_sensitivity: "Finite-difference observations",
   }[moduleId] || fallback;
 }
 

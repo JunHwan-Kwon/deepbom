@@ -9,7 +9,7 @@ export const REGULATORY_BUNDLE_MODULE_SPECS = [
     workspace: "deepbom",
     label: "DEEPBOM",
     path: "research/deepbom.json",
-    detail: "Deploy-artifact weight/topology proxy JSON.",
+    detail: "Experimental deploy-artifact composites and deterministic component JSON.",
     queuedDetail: "Waiting to run DEEPBOM locally.",
   },
   {
@@ -34,7 +34,7 @@ export const REGULATORY_BUNDLE_MODULE_SPECS = [
     capability: "deployment_sensitivity",
     id: "deploy_curvature",
     workspace: "deployment_sensitivity",
-    label: "Deployment Sensitivity Proxy",
+    label: "Deployment Sensitivity",
     path: "research/deploy_curvature_basin.json",
     detail: "Research-stage finite-difference deployment-function sensitivity proxy JSON.",
     queuedDetail: "Waiting to run the deployment-sensitivity proxy.",

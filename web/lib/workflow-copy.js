@@ -135,7 +135,7 @@ export function workflowActionCopyFor(workspace, fallback = {}, format = "tflite
     deepbom: ["Run Artifact Geometry", "Execute the controlled local WASM module and review the artifact-derived weight and topology descriptors."],
     perturbation: ["Run Perturbation", "Execute local input perturbation and output drift evidence for the deployment artifact."],
     runtime_basin: ["Run Backend Consistency", "Execute local backend availability and output drift checks."],
-    deployment_sensitivity: ["Run Deployment Sensitivity Proxy", "Execute research-stage finite-difference deployment-function probes."],
+    deployment_sensitivity: ["Run Deployment Sensitivity", "Execute research-stage finite-difference deployment-function observations."],
     output: ["Review reports and evidence", "Download a login-free, watermarked Engineering or Regulatory Support Report and its verification manifest. Sign-in remains limited to reusable raw derivatives and controlled research bundles."],
   }[workspace];
   return {

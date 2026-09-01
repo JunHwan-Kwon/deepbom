@@ -249,7 +249,7 @@ export function buildRegulatoryReport(analysis, {
       "ESTIMATED cache/roofline/speedup values depend on the selected target profile and must be rerun after target changes.",
       "PREDICTED delegate partitions are based on local rulepack/runtime support profiles and are not confirmed delegate logs.",
       "MEASURED_SYNTHETIC results use synthetic or prepared browser-local inputs and are not clinical validation.",
-      "PROXY weight/topology/perturbation indicators prioritize follow-up validation; they do not prove generalization.",
+      "PROXY weight/topology/perturbation composites are descriptive and experimentally unvalidated; they do not establish prioritization thresholds, accuracy, latency, robustness, or generalization.",
     ]),
     "",
     "## 15. Engineering Evidence Appendix",

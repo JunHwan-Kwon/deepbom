@@ -277,7 +277,7 @@ export function scopeAndEvidenceBoundaryMarkdown(title = "## Scope And Evidence 
       "compute, memory, cache, and selected target-profile suitability estimates",
       "delegate/runtime compatibility predictions",
       "browser-local synthetic runtime and numerical consistency evidence when executed",
-      "deployment-artifact weight/topology, perturbation, and deploy-function proxy signals when executed",
+      "deployment-artifact weight/topology descriptors and synthetic perturbation observations when executed",
       "artifact-level security-relevant indicators (custom-like ops, external references, buffer integrity) and documented local-processing posture",
     ]),
     "",
@@ -295,7 +295,7 @@ export function scopeAndEvidenceBoundaryMarkdown(title = "## Scope And Evidence 
       "`HEURISTIC` values are analyzer triage indices or labels, not pass/fail decisions or deployment-readiness evidence.",
       "`ESTIMATED` and `PREDICTED` values require target profiling or runtime logs before they should be treated as confirmed deployment behavior.",
       "`MEASURED_SYNTHETIC` values are local browser/runtime measurements on synthetic or prepared inputs, not clinical validation.",
-      "`PROXY` indicators prioritize follow-up validation and do not prove generalization.",
+      "`PROXY` indicators are descriptive experimental composites with no validated prioritization threshold; they do not prove accuracy, latency, robustness, or generalization.",
     ]),
   ].join("\n");
 }

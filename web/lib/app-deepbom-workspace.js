@@ -59,8 +59,6 @@ export function createDeepBomWorkspace(ctx) {
     setStatus,
     shortError,
     statusForEntropy,
-    statusForHigherScore01,
-    statusForLowerStress01,
     updateModuleAccessState,
     updateWorkflowState,
   } = ctx;
@@ -164,10 +162,10 @@ function renderDeepBomSkeleton() {
   }
 
   deepBomGrid.replaceChildren(
-    skelSection("Proxy Scores", [
-      { label: "Output Stability", hint: "Weight/topology output stability heuristic. Higher is calmer." },
-      { label: "Quant Stress", hint: "Scale CV, quant risk, and coverage pressure. Lower is better." },
-      { label: "Topology Stress", hint: "Graph complexity: low-intensity mix and chain break pressure. Lower is better." },
+    skelSection("Experimental Composites", [
+      { label: "Artifact Composite", hint: "Unvalidated fixed-weight summary of artifact descriptors; not an accuracy or stability score." },
+      { label: "Quant Composite", hint: "Unvalidated combination of scale CV, quant-risk count, metadata coverage, and byte repetition." },
+      { label: "Topology Composite", hint: "Unvalidated combination of low-intensity mix, chain breaks, fallback bytes, and byte entropy." },
     ]),
     skelSection("XNNPACK Selector Evidence", [
       { label: "Selector Coverage", hint: "Eligible TFLite compute ops assessed by the protected pinned-source rulepack." },
@@ -248,15 +246,15 @@ function renderDeploymentSensitivitySkeleton() {
 
   deploymentSensitivityResultPanel.hidden = false;
   deploymentSensitivityStatus.textContent = "Ready";
-  deploymentSensitivityNotes.textContent = "Run the Deployment Sensitivity Proxy to probe local finite-difference curvature and output-basin response.";
+  deploymentSensitivityNotes.textContent = "Run Deployment Sensitivity to collect local finite-difference output observations and an explicitly unvalidated composite.";
   deploymentSensitivityProtocols.replaceChildren();
   deploymentSensitivityGrid.replaceChildren(
     skelCard("Deploy Curvature", "Finite-difference probes executed on the deployed TFLite/LiteRT function in this browser."),
     skelCard("Directional Curvature", "Central finite-difference RMS normalized by input perturbation L2² along one local input direction."),
     skelCard("Raw 2nd Diff RMS", "RMS of y(x+eps) − 2y(x) + y(x−eps) across returned output tensors."),
     skelCard("Local Lipschitz", "Max first-order RMS output drift divided by input perturbation L2 norm."),
-    skelCard("Basin Radius", "Largest tested epsilon band that preserved first-output argmax under this local direction."),
-    skelCard("Deploy Basin Score", "Deploy-domain output-stability proxy combining curvature, drift, cosine distance, decision margin, and top-1 stability."),
+    skelCard("Tested Rank-Stability Radius", "Largest tested epsilon band that preserved first-output argmax for this synthetic local direction."),
+    skelCard("Experimental Stability Composite", "Unvalidated fixed-weight summary; inspect curvature, drift, margin, and rank-change components instead."),
     skelCard("Decision Margin", "Top-1 minus top-2 margin on the first output tensor."),
     skelCard("Top-1 Stability", "Whether the first-output argmax survives ±eps and 2eps probes."),
     skelCard("Probe Consistency", "Whether the 2eps probe stays distinct from the ±eps drift summaries."),
@@ -275,14 +273,8 @@ function renderDeepBomResult(result, { updateWorkflow = true } = {}) {
   if (updateWorkflow) updateWorkflowState("module");
   deepBomStatus.textContent = result.posture || "Complete";
   const scoresAssessed = result.score_assessment?.status === "ASSESSED";
-  const basinStatus = scoresAssessed
-    ? statusForHigherScore01(result.basin_proxy_score)
-    : { tone: "info", label: "not assessable" };
-  const quantStatus = scoresAssessed
-    ? statusForLowerStress01(result.quant_stress_score)
-    : { tone: "info", label: "not assessable" };
-  const topologyStatus = scoresAssessed
-    ? statusForLowerStress01(result.topology_stress_score)
+  const compositeStatus = scoresAssessed
+    ? { tone: "info", label: "experimental", criteria: "Deterministic composite with disclosed fixed weights; no validated accuracy, latency, robustness, or release threshold." }
     : { tone: "info", label: "not assessable" };
   const entropyStatus = statusForEntropy(result.byte_entropy_bits_per_byte || 0);
 
@@ -296,11 +288,11 @@ function renderDeepBomResult(result, { updateWorkflow = true } = {}) {
   const basinMid = result.basin_proxy_score;
   const quantMid = result.quant_stress_score;
   const topoMid = result.topology_stress_score;
-  const basinScore = deepBomSignalValue(result, "Basin proxy",
+  const basinScore = deepBomSignalValue(result, "Artifact composite",
     scoreWithSensitivity(basinMid, result.basin_proxy_sensitivity_low, result.basin_proxy_sensitivity_high));
-  const quantScore = deepBomSignalValue(result, "Quant stress",
+  const quantScore = deepBomSignalValue(result, "Quant composite",
     scoreWithSensitivity(quantMid, result.quant_stress_sensitivity_low, result.quant_stress_sensitivity_high));
-  const topologyScore = deepBomSignalValue(result, "Topology stress",
+  const topologyScore = deepBomSignalValue(result, "Topology composite",
     scoreWithSensitivity(topoMid, result.topology_stress_sensitivity_low, result.topology_stress_sensitivity_high));
 
   // Weight tensor stats (from actual weight bytes)
@@ -330,15 +322,15 @@ function renderDeepBomResult(result, { updateWorkflow = true } = {}) {
     return wrap;
   }
 
-  const proxySection = deepBomSection("Proxy Scores", [
-    deepBomMetric("Output Stability", basinScore, scoresAssessed ? "Heuristic output stability score. The range is a deterministic +/-10% assumption sensitivity envelope, not a confidence interval." : result.score_assessment?.reason || "Required score inputs were not assessed.", { ...basinStatus, ...(basinMid == null ? {} : { score01: basinMid }) }),
-    deepBomMetric("Quant Stress", quantScore, scoresAssessed ? "Scale coefficient-of-variation, quant risk, and coverage pressure. Lower is better." : result.score_assessment?.reason || "Required score inputs were not assessed.", { ...quantStatus, ...(quantMid == null ? {} : { score01: quantMid }) }),
-    deepBomMetric("Topology Stress", topologyScore, scoresAssessed ? "Graph complexity: low-intensity mix, chain breaks, delegate pressure. Lower is better." : result.score_assessment?.reason || "Required score inputs were not assessed.", { ...topologyStatus, ...(topoMid == null ? {} : { score01: topoMid }) }),
+  const proxySection = deepBomSection("Experimental Composites", [
+    deepBomMetric("Artifact Composite", basinScore, scoresAssessed ? "Fixed-weight artifact summary. The range is a deterministic +/-10% assumption sensitivity envelope, not a confidence interval or measured stability." : result.score_assessment?.reason || "Required score inputs were not assessed.", { ...compositeStatus, ...(basinMid == null ? {} : { score01: basinMid }) }),
+    deepBomMetric("Quant Composite", quantScore, scoresAssessed ? "Fixed-weight combination of scale coefficient-of-variation, quant-risk count, metadata coverage, and byte repetition. No validated decision threshold." : result.score_assessment?.reason || "Required score inputs were not assessed.", { ...compositeStatus, ...(quantMid == null ? {} : { score01: quantMid }) }),
+    deepBomMetric("Topology Composite", topologyScore, scoresAssessed ? "Fixed-weight combination of low-intensity mix, predicted chain breaks, fallback bytes, and byte entropy. It is not a latency or accuracy estimate." : result.score_assessment?.reason || "Required score inputs were not assessed.", { ...compositeStatus, ...(topoMid == null ? {} : { score01: topoMid }) }),
   ]);
 
   const fingerprintSection = deepBomSection("File Fingerprint", [
     deepBomMetric("Byte Entropy", `${Number(result.byte_entropy_bits_per_byte || 0).toFixed(2)} bits/B`, "Raw model-byte diversity. Watch < 4.5 bits/B may indicate atypical artifact structure.", entropyStatus),
-    deepBomMetric("Quantized Tensors", formatPercent1(quantizedRatio), "Fraction of all tensors declared quantized (INT8/UINT8).", { tone: "info", label: "info", criteria: "High ratio is expected for post-training quantized models; low ratio alongside a high quant stress score may indicate mismatch." }),
+    deepBomMetric("Quantized Tensors", formatPercent1(quantizedRatio), "Fraction of all tensors declared quantized (INT8/UINT8).", { tone: "info", label: "info", criteria: "Coverage is descriptive. Inspect tensor contracts and quantization findings before drawing a deployment conclusion." }),
     deepBomMetric("Zero Byte Ratio", formatPercent1(result.zero_byte_ratio || 0), "Proportion of zero bytes. Elevated ratios may indicate padding or sparsity.", { tone: "info", label: "info", criteria: "Interpret with model format and sparsity/packing context." }),
     deepBomMetric("High Bit Ratio", formatPercent1(result.high_bit_ratio || 0), "Proportion of bytes ≥ 128. Complements zero-byte ratio for artifact fingerprinting.", { tone: "info", label: "info", criteria: "Interpret alongside byte entropy and zero-byte ratio." }),
     deepBomMetric("Repeated Byte Ratio", formatPercent1(result.repeated_byte_ratio || 0), "Max single-byte frequency. High values indicate sparse or padding-heavy artifacts.", { tone: "info", label: "info", criteria: "Ratio >20% may indicate padding, sparsity, or aggressive quantization." }),
@@ -949,15 +941,13 @@ function renderDeepBomResult(result, { updateWorkflow = true } = {}) {
     }
   }
 
-  // One-line interpretation in notes area
-  const basin = Number(basinMid);
-  const basinWord = basin >= 0.7 ? "Calmer artifact" : basin >= 0.5 ? "Mixed proxy" : "Sensitive proxy";
-  const quantWord = quantMid >= 0.65 ? "High quant pressure" : quantMid >= 0.4 ? "Moderate quant pressure" : "Low quant stress";
+  // One-line scope summary. Composite values are intentionally not graded.
+  const compositeNote = scoresAssessed ? "Experimental composites; inspect components" : "Artifact composites not assessable";
   const cvNote = maxScaleCv > 0 ? ` (scale CV ${maxScaleCv.toFixed(2)})` : "";
   const riskNote = quantRiskOps.length > 0 ? ` · ${quantRiskOps.length} quant-risk ops` : "";
   const memNote = memBoundCount > 0 ? ` · ${memBoundCount}/${memBoundCount + computeBoundCount} low-intensity` : "";
   const selectorNote = selector?.assessment_status === "complete" ? ` · selector ${selector.assessed_op_count || 0} ops / ${selector.candidate_configuration_count || 0} configurations` : "";
-  deepBomNotes.textContent = `${basinWord} · ${quantWord}${cvNote}${riskNote}${memNote}${selectorNote}`;
+  deepBomNotes.textContent = `${compositeNote}${cvNote}${riskNote}${memNote}${selectorNote}`;
 
   downloadDeepBom.hidden = false;
   updateModuleAccessState();

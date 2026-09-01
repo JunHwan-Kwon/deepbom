@@ -257,7 +257,7 @@ async function assertCaseAccess(testCase, page) {
   if (testCase.id === "research") {
     assert(base.moduleTabs.deepbom.badge === "Not run", "research: DEEPBOM should be runnable.");
     assert(base.moduleTabs.runtime_basin.badge === "Not run", "research: Runtime Basin should be runnable.");
-    assert(base.moduleTabs.deployment_sensitivity.badge === "Not run", "research: Deployment Sensitivity Proxy should be runnable.");
+    assert(base.moduleTabs.deployment_sensitivity.badge === "Not run", "research: Deployment Sensitivity should be runnable.");
     assert(!base.buttons.rawDisabled, "controlled module account: account-bound exports should remain enabled.");
     await page.runDeepBom();
     await page.runResearchModule("runtime_basin", "#perturbationPanelAction", "#runtimeBasinStatus");
@@ -267,7 +267,7 @@ async function assertCaseAccess(testCase, page) {
     assert(/Complete|Rank changed/.test(snapshot.perturbationStatus), `research: Perturbation should finish, got ${snapshot.perturbationStatus}. ${snapshot.perturbationDetail}`);
     assert(snapshot.runtimeBasinStatus === "Complete", `research: Runtime Basin should finish, got ${snapshot.runtimeBasinStatus}.`);
     assert(snapshot.moduleTabs.runtime_basin.badge === "Complete", "research: Runtime Basin should complete.");
-    assert(snapshot.moduleTabs.deployment_sensitivity.badge === "Complete", "research: Deployment Sensitivity Proxy should complete.");
+    assert(snapshot.moduleTabs.deployment_sensitivity.badge === "Complete", "research: Deployment Sensitivity should complete.");
     return;
   }
   if (testCase.id === "medical_ai") {

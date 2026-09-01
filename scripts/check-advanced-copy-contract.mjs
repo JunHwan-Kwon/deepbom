@@ -11,6 +11,7 @@ import {
   perturbationProtocolGroups,
   runtimeBasinProtocolGroups,
 } from "../web/lib/protocols.js";
+import { buildFindingsRegister } from "../web/lib/report-findings.js";
 import { createCheck } from "./check-assert.mjs";
 
 const { done, expect, expectEqual } = createCheck("Research module copy contract check");
@@ -54,17 +55,17 @@ expect(appSource.includes('from "./lib/app-deepbom-workspace.js"') && appSource.
 expect(deepBomWorkspaceSource.includes('deepBomSection("XNNPACK Selector Evidence"'), "Research result should expose protected selector coverage as a first-class result section.");
 expect(deepBomWorkspaceSource.includes("Open Kernel Inspector") && deepBomWorkspaceSource.includes('data-explorer-tab="kernels"'), "Research selector result should provide a direct Kernel Inspector command.");
 
-expectEqual(moduleWorkflowDescription("deepbom"), "Weight/topology proxy", "DEEPBOM workflow description should be capability-oriented.");
+expectEqual(moduleWorkflowDescription("deepbom"), "Artifact descriptors", "DEEPBOM workflow description should be capability-oriented.");
 expectEqual(moduleWorkflowDescription("perturbation"), "Input/output drift", "Perturbation workflow description should avoid version branding.");
 expectEqual(moduleWorkflowDescription("runtime_basin"), "Backend drift", "Runtime basin workflow description should describe the check.");
-expectEqual(moduleWorkflowDescription("deployment_sensitivity"), "Finite-difference proxy", "Deployment Sensitivity workflow description should describe research-stage evidence.");
+expectEqual(moduleWorkflowDescription("deployment_sensitivity"), "Finite-difference observations", "Deployment Sensitivity workflow description should describe research-stage evidence.");
 
 expectEqual(authorizedStates.engineering_report.label, "Report", "Engineering Report should remain an open report surface.");
 expectEqual(authorizedStates.regulatory_report.label, "Report", "Regulatory Support Report should remain an open report surface.");
 expectEqual(authorizedStates.deepbom.label, "Run", "DEEPBOM should show Run when authorized.");
 expectEqual(authorizedStates.perturbation.label, "Run", "Perturbation should show Run when authorized.");
 expectEqual(authorizedStates.runtime_basin.label, "Run", "Backend Consistency should show Run when authorized.");
-expectEqual(authorizedStates.deployment_sensitivity.label, "Run", "Deployment Sensitivity Proxy should show Run when authorized.");
+expectEqual(authorizedStates.deployment_sensitivity.label, "Run", "Deployment Sensitivity should show Run when authorized.");
 expectEqual(anonymousStates.deepbom.label, "Sign in", "Locked Research module should ask anonymous users to sign in.");
 
 expectEqual(
@@ -136,5 +137,15 @@ for (const group of protocolSets.flat()) {
     expect(!bannedVisibleCopy.test(text), `Protocol item should not use ambiguous visible copy: ${text}`);
   }
 }
+
+const protocolCopy = JSON.stringify(protocolSets);
+expect(protocolCopy.includes("No validated") || protocolCopy.includes("not empirically calibrated"), "Experimental composite protocols must disclose their unvalidated interpretation boundary.");
+expect(!/ok\s*[<>]=?\s*70|ok\s*[<>]=?\s*40|risk\s*[<>]=?\s*65/i.test(protocolCopy), "Experimental composites must not expose unvalidated decision thresholds.");
+expect(!deepBomWorkspaceSource.includes("Calmer artifact") && !deepBomWorkspaceSource.includes("High quant pressure"), "Artifact composites must not be translated into unvalidated qualitative grades.");
+const compositeOnlyFindings = buildFindingsRegister(
+  { format: "tflite", ops: [], tensors: [], summary: {} },
+  { deepBomResult: { score_assessment: { status: "ASSESSED" }, topology_stress_score: 0.99, quant_stress_score: 0.99, basin_proxy_score: 0.01 } },
+);
+expect(!compositeOnlyFindings.some((finding) => finding.finding_id === "EA-PRX-0001"), "An unvalidated artifact composite must not enter the actionable findings register.");
 
 done("Research module copy contract passed (module action labels, statuses, and protocol wording).");

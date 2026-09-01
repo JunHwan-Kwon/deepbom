@@ -155,7 +155,7 @@
             },
             {
               "@type": "Question",
-              "name": "What is DEEPBOM's artifact perturbation geometry proxy?",
+              "name": "What are DEEPBOM's artifact perturbation observations?",
               "acceptedAnswer": {
                 "@type": "Answer",
                 "text": "DEEPBOM evaluates a deterministic synthetic-input scalar functional: RMS output change between the unperturbed artifact and filter-normalized weight perturbations. It reports 2D output-drift grids, centered finite-difference projected-curvature descriptors, and raw directional λ_max variation across independently seeded slices. The input basis, seeds, radius, stencil, included constants, and INT8 dequantization policy are disclosed with the result. This is not training loss, a full-space Hessian, a 3D reconstruction, or evidence of generalization, accuracy, robustness, clinical performance, or release readiness."
@@ -724,7 +724,7 @@
               </summary>
               <button class="workflow-step" type="button" data-workflow-step="deepbom" data-workflow-module="deepbom" data-analysis-depth="deep">
                 <span>Artifact</span>
-                <strong>Geometry Proxy</strong>
+                <strong>Artifact Descriptors</strong>
                 <p>Weight/topology descriptors</p>
               </button>
               <button class="workflow-step" type="button" data-workflow-step="runtime_basin" data-workflow-module="runtime_basin" data-analysis-depth="deep">
@@ -739,8 +739,8 @@
               </button>
               <button class="workflow-step" type="button" data-workflow-step="deployment_sensitivity" data-workflow-module="deployment_sensitivity" data-analysis-depth="deep">
                 <span>Finite difference</span>
-                <strong>Deployment Sensitivity Proxy</strong>
-                <p>Local deploy proxy</p>
+                <strong>Deployment Sensitivity</strong>
+                <p>Synthetic local observations</p>
               </button>
             </details>
             <button class="workflow-step" type="button" data-workflow-step="output">
@@ -845,7 +845,7 @@
               </button>
               <button class="module-tab" type="button" data-module-tab="deployment_sensitivity" data-feature-id="deployment_sensitivity" data-analysis-depth="deep">
                 <span>Research</span>
-                <strong>Deployment Sensitivity Proxy</strong>
+                <strong>Deployment Sensitivity</strong>
                 <em>Locked</em>
               </button>
               <button class="module-tab active" type="button" data-module-tab="engineering_report">
@@ -940,7 +940,7 @@
                 <div class="module-panel-head">
                   <div>
                     <span>Research analysis</span>
-                    <h3><em class="maturity-badge maturity-research">Research preview</em> Deployment Sensitivity Proxy: finite-difference probes on the deployed function.</h3>
+                    <h3><em class="maturity-badge maturity-research">Research preview</em> Deployment Sensitivity: finite-difference observations on the deployed function.</h3>
                     <p id="deploymentSensitivityPanelNote">Runs locally against the deployed TFLite runtime path and reports finite-difference deployment-function sensitivity evidence.</p>
                   </div>
                   <button class="secondary-action" id="deploymentSensitivityPanelAction" type="button" data-request-feature="research">Request module access</button>
@@ -974,8 +974,8 @@
             <div class="deepbom-panel" id="deepBomPanel" hidden>
               <div class="section-head">
                 <div>
-                  <h2>Artifact Geometry Proxy</h2>
-                  <p>Local deploy-artifact weight and topology descriptors. They prioritize follow-up validation and are not training-loss, accuracy, or release-readiness evidence.</p>
+                  <h2>Artifact Descriptors</h2>
+                  <p>Local deploy-artifact weight and topology descriptors. Composite values are experimental and are not training-loss, accuracy, latency, robustness, or release-readiness evidence.</p>
                 </div>
                 <span id="deepBomStatus">Not loaded</span>
               </div>
@@ -1033,11 +1033,11 @@
             </div>
           </section>
           <section class="module-panel" data-module-panel="deployment_sensitivity" data-analysis-depth="deep">
-            <div class="module-result-placeholder">No Deployment Sensitivity Proxy result yet. Run it from the Explorer controls above.</div>
+            <div class="module-result-placeholder">No Deployment Sensitivity result yet. Run it from the Explorer controls above.</div>
             <div class="deepbom-panel" id="deploymentSensitivityResultPanel" hidden>
               <div class="section-head">
                 <div>
-                  <h2>Deployment Sensitivity Proxy</h2>
+                  <h2>Deployment Sensitivity</h2>
                   <p>Runs local finite-difference probes on the deployed model function and reports research-stage sensitivity proxies, not operational-stability evidence.</p>
                 </div>
                 <span id="deploymentSensitivityStatus">Not run</span>
@@ -2131,7 +2131,7 @@
         <li><strong>INT8 quantization audit:</strong> identifies static anomalies and contract discontinuities (per-channel scale/zero-point anomalies and serialized activation precision boundaries) that may increase the risk of numerical or task-level regression and warrant reference-data testing. Boundary-operator counts are not presented as runtime float-island counts.</li>
         <li><strong>XNNPACK partition prediction:</strong> uses a pinned static rulepack to predict partition boundaries and transition-cost signals for TFLite. Runtime assignment and tensor-copy materialization require target profiling.</li>
         <li><strong>Roofline model:</strong> classifies each op into low/mixed/high-intensity static posture bands against configurable target profiles (Cortex-A55, Cortex-A72, AVX2, WASM SIMD).</li>
-        <li><strong>Artifact perturbation geometry proxy:</strong> evaluates RMS synthetic-output drift over filter-normalized 2D weight perturbations. The result discloses the deterministic input basis, scalar functional, seeds, radius, centered finite-difference stencil, included constant policy, and quantized-weight dequantization policy. It is not a training-loss or generalization certificate.</li>
+        <li><strong>Artifact perturbation observations:</strong> evaluates RMS synthetic-output drift over filter-normalized 2D weight perturbations. The result discloses the deterministic input basis, scalar functional, seeds, radius, centered finite-difference stencil, included constant policy, and quantized-weight dequantization policy. It is not a training-loss or generalization certificate.</li>
         <li><strong>Multi-projection geometry summary:</strong> K independently seeded 2D slices summarize directional variation around the artifact parameters. Raw directional λ_max CV is reported without converting it into a validated reliability or isotropy score; no 3D reconstruction is claimed.</li>
         <li><strong>Haar wavelet decomposition:</strong> LL/LH/HL/HH energy fractions describe the spatial-frequency composition of stored convolutional kernels and synthetic or observed activation maps. Sensitivity or robustness interpretation requires separate perturbation and output evidence.</li>
         <li><strong>Artifact Viewer:</strong> sidebar layer navigator with per-layer filter spatial visualization, on-demand per-layer perturbation surface, and L2-per-channel bar chart.</li>

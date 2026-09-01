@@ -166,11 +166,8 @@ import {
   statusForBackendCoverage,
   statusForCosineDistance,
   statusForEntropy,
-  statusForHigherScore01,
-  statusForLowerStress01,
   statusForMaxDrift,
   statusForRmsDrift,
-  statusForScore100,
   statusForTop1Flip,
   statusFromSeverityLabel,
   statusInfo,
@@ -1810,8 +1807,6 @@ const deepBomWorkspace = createDeepBomWorkspace({
   setStatus,
   shortError,
   statusForEntropy,
-  statusForHigherScore01,
-  statusForLowerStress01,
   updateModuleAccessState,
   updateWorkflowState,
   get current() { return current; },
@@ -1953,7 +1948,7 @@ deploymentSensitivityPanelAction.addEventListener("click", async () => {
   deploymentSensitivityPanelAction.setAttribute("aria-busy", "true");
   deploymentSensitivityStatus.textContent = "Authorizing…";
   try {
-    if (!(await ensureResearchModuleAllowed("deployment_sensitivity", "Deployment Sensitivity Proxy analysis"))) {
+    if (!(await ensureResearchModuleAllowed("deployment_sensitivity", "Deployment Sensitivity analysis"))) {
       deploymentSensitivityStatus.textContent = "Blocked";
       return;
     }
@@ -3108,7 +3103,7 @@ function updateModuleAccessState() {
   }
   updateResearchModulePanel(deploymentSensitivityPanelNote, deploymentSensitivityPanelAction, deploymentSensitivityAllowed, current, {
     availableNote: "Runs deploy-domain finite-difference stability probes on the TFLite runtime path.",
-    availableAction: "Run Deployment Sensitivity Proxy",
+    availableAction: "Run Deployment Sensitivity",
     requestNote: "Request Researcher access to run deploy-domain finite-difference probes.",
     requestAction: "Request Researcher access",
   });
@@ -6708,7 +6703,7 @@ async function runDeployCurvatureBasinAnalysis() {
       };
       deploymentSensitivityStatus.textContent = "TFLite path required";
       deploymentSensitivityGrid.replaceChildren(
-        deepBomMetric("Runtime path", "TFLite required", "Deployment Sensitivity Proxy probes currently run through LiteRT.js and therefore require a TFLite artifact.", statusBlocked("ONNX deployment-sensitivity analysis requires ONNX Runtime output probes with finite-difference input control.")),
+        deepBomMetric("Runtime path", "TFLite required", "Deployment Sensitivity observations currently run through LiteRT.js and therefore require a TFLite artifact.", statusBlocked("ONNX deployment-sensitivity analysis requires ONNX Runtime output probes with finite-difference input control.")),
         deepBomMetric("Model format", modelFormatAdapter(current?.format).label, "No TFLite finite-difference path is declared for this artifact format.", statusInfo()),
       );
       renderDeploymentSensitivityProtocols(null, null);
@@ -6726,7 +6721,6 @@ async function runDeployCurvatureBasinAnalysis() {
     const margin = decisionMargin(baseline.outputs[0]);
     const basin = computeDeployBasinProxy(plusDrift, minusDrift, wideDrift, curvature, margin);
     const profile = outputDriftProfileForAnalysis(current);
-    const basinStatus = statusForScore100(basin.score);
     const wideMinusIdentical = driftLooksIdentical(wideDrift, minusDrift);
     const widePlusIdentical = driftLooksIdentical(wideDrift, plusDrift);
     const widePlusDelta = driftDeltaSummary(wideDrift, plusDrift);
@@ -6773,15 +6767,15 @@ async function runDeployCurvatureBasinAnalysis() {
       deepBomMetric("Directional Curvature", formatDrift(curvature.normalizedRms), "Central finite-difference RMS normalized by input perturbation L2^2 along one local input direction.", statusInfo("Relative metric; compare across same model/input contract and perturbation scale.")),
       deepBomMetric("Raw 2nd Diff RMS", `${formatDrift(curvature.rawRms)} ${profile.unit}`, "RMS of y(x+eps)-2y(x)+y(x-eps) across returned output tensors.", statusInfo("Raw output-unit second difference; compare within the same dtype/output contract.")),
       deepBomMetric("Local Lipschitz", formatDrift(curvature.localLipschitz), "Max first-order RMS output drift divided by input perturbation L2 norm.", statusInfo("Relative sensitivity metric; lower is calmer for the same input scale.")),
-      deepBomMetric("Basin Radius", basin.radiusLabel, "Largest tested epsilon band that preserved first-output argmax under this local direction.", basin.top1Stable ? { tone: "good", label: "ok", criteria: "ok if >=2 epsilon remains rank-stable; warn if only 1 epsilon; risk if <1 epsilon." } : { tone: "warn", label: "warn", criteria: "ok if >=2 epsilon remains rank-stable; warn if only 1 epsilon; risk if <1 epsilon." }),
-      deepBomMetric("Deploy Basin Score", `${basin.score.toFixed(1)} / 100`, "Deploy-domain output-stability proxy combining finite-difference curvature, output drift, cosine distance, decision margin, and top-1 stability. This is intentionally separate from DEEPBOM's weight/topology proxy.", basinStatus),
+      deepBomMetric("Tested Rank-Stability Radius", basin.radiusLabel, "Largest tested epsilon band that preserved first-output argmax for this synthetic local direction; no pass/fail threshold is implied.", statusInfo("Observed rank behavior for this input, direction, dtype, and perturbation scale only.")),
+      deepBomMetric("Experimental Stability Composite", `${basin.score.toFixed(1)} / 100`, "Unvalidated fixed-weight summary of finite-difference curvature, output drift, cosine distance, decision margin, and top-1 stability. Inspect the component observations instead of using this value as a decision threshold.", { tone: "info", label: "experimental", criteria: "No demonstrated correlation with device latency, representative-data accuracy, robustness, or release readiness." }),
       deepBomMetric("Decision Margin", `${formatDrift(margin.margin)} ${profile.unit}`, margin.ready ? `Top-1 minus top-2 margin on the first output tensor. Status: ${margin.status}.` : "First output tensor did not expose at least two values.", margin.ready ? statusInfo(margin.detail || "Compare with max output drift; margin below drift can indicate rank instability.") : statusBlocked("Requires at least two output values.")),
       deepBomMetric("Top-1 Stability", basin.top1Stable ? "Stable" : "Changed", `+eps flip=${plusDrift.top1Flip ? "yes" : "no"} / -eps flip=${minusDrift.top1Flip ? "yes" : "no"} / 2eps flip=${wideDrift.top1Flip ? "yes" : "no"}.`, statusForTop1Flip(!basin.top1Stable)),
       deepBomMetric("Probe Consistency", consistencyWarning ? "Check" : "Distinct", consistencyWarning || "2eps drift is distinct from both +eps and -eps drift summaries.", consistencyWarning ? { tone: "warn", label: "watch", criteria: "watch when 2eps collapses to the same drift summary as +/-eps; common with quantized plateaus or saturated output regions." } : statusInfo("Independent perturbation probes produced distinct drift summaries.")),
       deepBomMetric("Input Probe", `${formatNumber(plus.inputPerturbation.touched)} values`, `epsilon=${plus.inputPerturbation.epsilonLabel}; L2=${formatDrift(plus.inputPerturbation.l2)}; source=synthetic tensor.`, statusInfo()),
     );
     renderDeploymentSensitivityProtocols(basin, curvature);
-    deploymentSensitivityNotes.textContent = `Executed research-stage deploy-domain finite-difference stability probes around the current input contract. Compared ${formatNumber(curvature.count)} output values across ${baseline.outputs.length} output tensor(s). Baseline run ${baseline.runMs.toFixed(2)} ms; +eps ${plus.runMs.toFixed(2)} ms; -eps ${minus.runMs.toFixed(2)} ms; 2eps ${wide.runMs.toFixed(2)} ms.${consistencyWarning ? ` ${consistencyWarning}` : ""}`;
+    deploymentSensitivityNotes.textContent = `Executed research-stage deploy-domain finite-difference probes around the current input contract. Compared ${formatNumber(curvature.count)} output values across ${baseline.outputs.length} output tensor(s). Baseline run ${baseline.runMs.toFixed(2)} ms; +eps ${plus.runMs.toFixed(2)} ms; -eps ${minus.runMs.toFixed(2)} ms; 2eps ${wide.runMs.toFixed(2)} ms. Raw observations are measured synthetic evidence; the 0-100 composite is unvalidated.${consistencyWarning ? ` ${consistencyWarning}` : ""}`;
     updateWorkflowState("pro");
     setStatus("Curvature complete", "ok");
     return deployCurvatureResult;

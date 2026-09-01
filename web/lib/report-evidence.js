@@ -824,16 +824,16 @@ export function buildWeightIndicatorEvidence({
     perturbation_analysis: perturbationResult || null,
     deploy_curvature_basin: deployCurvatureResult || null,
     module_assessments: {
-      deepbom: assessment(deepBomResult, "DEEPBOM weight/topology proxy module was not run."),
+      deepbom: assessment(deepBomResult, "DEEPBOM experimental artifact-composite module was not run."),
       perturbation_analysis: assessment(perturbationResult, "Perturbation module was not run."),
-      deploy_curvature_basin: assessment(deployCurvatureResult, "Deploy curvature basin module was not run."),
+      deploy_curvature_basin: assessment(deployCurvatureResult, "Deployment sensitivity module was not run."),
     },
     terminology: {
       preferred: [
-        "Weight-Space Stability Indicators",
-        "Artifact Stability Proxy",
-        "Local Synthetic Perturbation Sensitivity",
-        "Deployment Fragility Indicator",
+        "Stored-Weight Descriptors",
+        "Experimental Artifact Composite",
+        "Local Synthetic Perturbation Observations",
+        "Deployment-Function Sensitivity Descriptor",
       ],
       avoided_claims: [
         "poor generalization",
@@ -905,8 +905,8 @@ export function buildRuntimeEvidence({
           : "Every browser-local benchmark attempt failed before measured execution; no latency evidence was produced." }
         : { status: "not_assessed", value: null, reason: "Browser-local benchmark was not run." },
       runtime_basin: runtimeBasinResult != null
-        ? { status: "assessed", value: runtimeBasinResult, reason: "Runtime basin module completed." }
-        : { status: "not_assessed", value: null, reason: "Runtime basin module was not run." },
+        ? { status: "assessed", value: runtimeBasinResult, reason: "Backend consistency module completed." }
+        : { status: "not_assessed", value: null, reason: "Backend consistency module was not run." },
       preprocessing_consequence_atlas: preprocessingConsequenceResult != null
         ? { status: "assessed", value: preprocessingConsequenceResult, reason: "Every explicit preprocessing counterfactual was replayed twice through the browser-local LiteRT.js WASM runtime and independently verified against the source tensor witness, input/output digests, difference counts, equivalence classes, and SHA-256 ledgers." }
         : { status: "not_assessed", value: null, reason: "Preprocessing consequence replay was not run in this browser session." },

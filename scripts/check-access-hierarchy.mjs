@@ -21,7 +21,7 @@ expect(!hasAccessProfile("verified", "research"), "Verified accounts should not 
 
 const verifiedStates = moduleAccessStatesFor({ report: true, export: true, raw_export: true }, { role: "user", email_verified: true });
 expectEqual(verifiedStates.engineering_report.label, "Report", "Engineering reports should remain open regardless of account state.");
-expectEqual(verifiedStates.deepbom.label, "Module access", "DEEPBOM Basin Proxy should remain authorization-controlled.");
+expectEqual(verifiedStates.deepbom.label, "Module access", "DEEPBOM experimental artifact descriptors should remain authorization-controlled.");
 const publicStates = moduleAccessStatesFor({}, null);
 expectEqual(publicStates.engineering_report.label, "Report", "Public users should be able to reach the complete watermarked report workspace.");
 expectEqual(publicStates.engineering_report.locked, false, "Public report workspace and watermarked report export must remain selectable.");

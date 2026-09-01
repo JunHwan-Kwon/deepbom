@@ -1,5 +1,5 @@
 import { alignmentLabel, bottleneckDistributionData, predictedPartitionBoundaryInventory } from "./analysis.js";
-import { formatBytes, formatNumber, formatPercent, formatPercentRange, formatScientific, formatUs, maxBy, padOp, score100 } from "./format.js";
+import { formatBytes, formatNumber, formatPercent, formatPercentRange, formatScientific, formatUs, maxBy, padOp } from "./format.js";
 import { deriveTfliteBatchOneProjection } from "./dynamic-shape-cost.js";
 import { ANALYZER_METADATA } from "./report-metadata.js";
 import { buildQuantizationContractChecks } from "./report-quantization-contracts.js";
@@ -20,7 +20,6 @@ const FINDING_CLASSES = {
   runtime_compatibility: "runtime compatibility",
   evidence_reproducibility: "evidence reproducibility",
   lineage: "lineage requirement",
-  artifact_proxy: "deployment-risk (requires confirmation)",
   synthetic_sensitivity: "deployment-risk (requires confirmation)",
   integrity: "defect / integrity concern",
   limitation: "limitation",
@@ -145,7 +144,6 @@ const FINDING_EVIDENCE_PATHS = Object.freeze({
   "EA-ONX-0068": ["/evidence/static_analysis/onnx_shape_inference/tfidf_vectorizer_inference/rows", "/evidence/static_analysis/onnx_shape_inference/tfidf_vectorizer_inference/source_documents", "/evidence/static_analysis/tensors"],
   "EA-ONX-0069": ["/evidence/static_analysis/onnx_shape_inference/tfidf_vectorizer_inference/rows", "/evidence/static_analysis/ops"],
   "EA-ONX-0070": ["/evidence/static_analysis/onnx_shape_inference/tfidf_vectorizer_inference/partial_rows", "/evidence/static_analysis/onnx_shape_inference/tfidf_vectorizer_inference/rows"],
-  "EA-PRX-0001": ["/evidence/weight_indicators/deepbom"],
   "EA-SYN-0001": ["/evidence/weight_indicators/deploy_curvature_basin"],
   "EA-LIM-0001": ["/evidence/static_analysis"],
 });
@@ -259,7 +257,6 @@ export function possibleEffectsForCategory(category) {
     runtime: ["backend-specific latency anomaly", "numeric drift", "silent fallback"],
     evidence_reproducibility: ["report reproducibility gap", "audit-trace ambiguity", "target-profile drift"],
     lineage: ["source-artifact traceability gap", "converter drift", "release-manifest omission"],
-    artifact_proxy: ["verification prioritization", "runtime fragility signal"],
     synthetic_sensitivity: ["output plateau", "rank instability under perturbation"],
     limitation: ["not assessable from deployment artifact alone"],
   };
@@ -2583,20 +2580,6 @@ export function buildFindingsRegister(analysis, {
       interpretation: "Browser accelerator availability does not imply native delegate speed or numeric equivalence.",
       recommendation: "Use target runtime profiling for deployment claims and keep browser result as compatibility evidence.",
       relevance: "execution integrity; runtime compatibility",
-    }));
-  }
-  const deepTopology = deepBomResult?.topology_stress_score;
-  if (Number.isFinite(deepTopology) && deepTopology >= 0.65) {
-    findings.push(finding({
-      id: "EA-PRX-0001",
-      category: "artifact_proxy",
-      title: "Elevated topology stress proxy",
-      evidence: "PROXY",
-      priority: "Medium",
-      observation: `topology_stress=${score100(deepTopology)}`,
-      interpretation: "Topology/delegate pressure proxy is elevated for a deployment artifact; it is not a generalization claim.",
-      recommendation: "Prioritize representative-data validation and runtime profiling for this graph region.",
-      relevance: "risk-management input; follow-up verification prioritization",
     }));
   }
   const consistencyWarning = deployCurvatureResult?.drift_consistency?.warning;

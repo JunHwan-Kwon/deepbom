@@ -8,8 +8,8 @@ export function deepBomProtocolGroups(result = null) {
   const caveatCount = (result?.caveats || []).length;
 
   const summaryItems = [
-    { name: "Evidence type", detail: "Deploy-artifact proxy: weight distributions, quantization metadata, graph topology, low-intensity mix, and delegate pressure." },
-    { name: "Use", detail: "Prioritize target profiling and robustness follow-up. Not an accuracy, Hessian, or generalization certificate." },
+    { name: "Evidence type", detail: "Experimental deploy-artifact composites over weight distributions, quantization metadata, graph topology, low-intensity mix, and predicted delegate pressure." },
+    { name: "Use", detail: "Descriptive research output only. No empirical accuracy, latency, robustness, Hessian, or generalization threshold has been established." },
     hasWs ? { name: "Weight tensors", detail: `${ws.analyzed_count} constant tensor(s) analyzed from artifact bytes${ws.has_quantized ? "; includes INT8/UINT8 quantized tensors" : ""}.` } : null,
     anomalyCount ? { name: "Anomalies", status: "executed", detail: `${anomalyCount} cross-validation anomaly/anomalies flagged. Review Caveats section.` } : null,
     caveatCount ? { name: "Caveats", detail: `${caveatCount} scope/limitation note(s). See Caveats section.` } : null,
@@ -21,11 +21,11 @@ export function deepBomProtocolGroups(result = null) {
       items: summaryItems,
     },
     {
-      title: "Status Criteria",
+      title: "Interpretation Boundary",
       items: [
-        { name: "Output Stability", detail: "Artifact-derived heuristic: ok >= 70 / 100; warn 50–69 / 100; risk < 50 / 100. Higher is calmer. Not an accuracy, loss, or generalization score." },
-        { name: "Quant Stress", detail: "ok < 40 / 100; warn 40–64 / 100; risk >= 65 / 100. Lower is better." },
-        { name: "Topology Stress", detail: "ok < 40 / 100; warn 40–64 / 100; risk >= 65 / 100. Lower is better." },
+        { name: "Artifact composite", detail: "Deterministic fixed-weight summary. No validated ok/warn/risk threshold or measured stability interpretation." },
+        { name: "Quant composite", detail: "Component values and formula are reproducible; the aggregate weighting is not empirically calibrated." },
+        { name: "Topology composite", detail: "Predicted chain and byte descriptors are inputs; the aggregate is not an observed latency or accuracy signal." },
         { name: "Byte Entropy", detail: "watch < 4.5 bits/B; otherwise info. File-byte signal only." },
       ],
     },
@@ -115,17 +115,17 @@ export function deploymentSensitivityProtocolGroups({ basin = null, curvature = 
       items: executed
         ? [
           { name: "Deploy curvature", status: "executed", detail: "Finite-difference probes of the deployed function f(x) through the local runtime path." },
-          { name: "Deploy basin", status: "executed", detail: "Local proxy from perturbation radius, top-1 stability, output drift, margin, and curvature signals." },
+          { name: "Experimental stability composite", status: "executed", detail: "Unvalidated fixed-weight summary of perturbation radius, top-1 stability, output drift, margin, and directional finite-difference signals." },
         ]
         : [
           { name: "Deploy stability probes", status: "not_run", detail: "Run a supported TFLite artifact through the local runtime path to compute research-stage finite-difference stability evidence." },
         ],
     },
     {
-      title: "Status Criteria",
+      title: "Interpretation Boundary",
       items: [
-        { name: "Basin score", detail: "ok >= 70 / 100; warn 50-69.9 / 100; risk < 50 / 100. Higher is better." },
-        { name: "Basin radius", detail: "ok if >=2 epsilon remains rank-stable; warn if only 1 epsilon; risk if <1 epsilon." },
+        { name: "Experimental composite", detail: "No validated ok/warn/risk threshold; inspect the raw curvature, drift, margin, and rank-change observations." },
+        { name: "Tested rank-stability radius", detail: "Reports only the largest tested epsilon band that preserved the first-output argmax for this synthetic direction." },
         { name: "Curvature/Lipschitz", detail: "Relative deploy-function metrics. Compare across the same model, input contract, dtype, and perturbation scale." },
       ],
     },

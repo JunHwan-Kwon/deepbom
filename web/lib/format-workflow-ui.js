@@ -274,7 +274,7 @@ export function syncFormatWorkflowVisibilityView({
   if (kernelTab) kernelTab.textContent = "Execution Placement";
   if (deepStep) {
     deepStep.querySelector("span").textContent = onnx ? "Deployment" : "Artifact";
-    deepStep.querySelector("strong").textContent = onnx ? "ORT EP Compatibility" : "Geometry Proxy";
+    deepStep.querySelector("strong").textContent = onnx ? "ORT EP Compatibility" : "Artifact Descriptors";
     deepStep.querySelector("p").textContent = onnx ? "Pinned source candidates" : "Weight/topology descriptors";
   }
   if (deepTab) {

@@ -9,24 +9,6 @@ const DEFAULT_DRIFT_PROFILE = {
   maxWarn: 0.01,
 };
 
-export function statusForHigherScore01(value) {
-  const score = Number(value || 0) * 100;
-  if (score >= 70) return { tone: "good", label: "ok", criteria: "ok >= 70; warn 50-69.9; risk < 50. Higher is better." };
-  if (score >= 50) return { tone: "warn", label: "warn", criteria: "ok >= 70; warn 50-69.9; risk < 50. Higher is better." };
-  return { tone: "risk", label: "risk", criteria: "ok >= 70; warn 50-69.9; risk < 50. Higher is better." };
-}
-
-export function statusForScore100(value) {
-  return statusForHigherScore01(Number(value || 0) / 100);
-}
-
-export function statusForLowerStress01(value) {
-  const score = Number(value || 0) * 100;
-  if (score < 40) return { tone: "good", label: "ok", criteria: "ok < 40; warn 40-64.9; risk >= 65. Lower is better." };
-  if (score < 65) return { tone: "warn", label: "warn", criteria: "ok < 40; warn 40-64.9; risk >= 65. Lower is better." };
-  return { tone: "risk", label: "risk", criteria: "ok < 40; warn 40-64.9; risk >= 65. Lower is better." };
-}
-
 export function statusForEntropy(value) {
   const entropy = Number(value || 0);
   if (entropy > 0 && entropy < 4.5) return { tone: "warn", label: "watch", criteria: "watch < 4.5 bits/B; otherwise info. Interpret with file format and sparsity context." };

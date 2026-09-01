@@ -84,7 +84,7 @@ export function outputDriftGeometryProtocol({ gridSize, radius } = {}) {
 
 export function outputDriftProjectionCopy({ seeds, gridSize, radius } = {}) {
   return {
-    title: `Output-drift geometry proxy — ${seeds} seeds × ${gridSize}×${gridSize} grid (r=${radius}) · INT8 vs f64`,
+    title: `Output-drift perturbation surface — ${seeds} seeds × ${gridSize}×${gridSize} grid (r=${radius}) · INT8 vs f64`,
     method: "Scalar functional: RMS change in the model output relative to the unperturbed artifact under a deterministic synthetic input, not training loss. Directions are filter-normalized Gaussian draws (Li et al. 2018 normalization only). INT8 uses requantized LiteRT.js inference; f64 uses dequantized weights in the WASM synthetic forward path. Projected curvature uses the centered finite-difference stencil; bands and ± values use sample SEM (s/√n).",
   };
 }
@@ -1225,7 +1225,7 @@ export function driftDeltaSummary(left, right) {
 
 export function deployProbeConsistencyWarning(widePlusIdentical, wideMinusIdentical) {
   if (widePlusIdentical && wideMinusIdentical) {
-    return "The 2eps drift summary is identical to both +eps and -eps. This usually means the local probe is in a quantized plateau, saturated output region, or runtime path with coarse output resolution; validate with prepared/calibration inputs before interpreting basin radius.";
+    return "The 2eps drift summary is identical to both +eps and -eps. This usually means the local probe is in a quantized plateau, saturated output region, or runtime path with coarse output resolution; validate with prepared/calibration inputs before interpreting the tested rank-stability radius.";
   }
   if (widePlusIdentical) {
     return "The 2eps drift summary is identical to +eps even though the input perturbation amplitude doubled. For INT8 models this can be legitimate plateau/saturation behavior, but it should be reported explicitly and checked with representative calibration inputs.";
@@ -1281,7 +1281,7 @@ export function computeDeployBasinProxy(plusDrift, minusDrift, wideDrift, curvat
     score,
     radiusLabel,
     top1Stable: !smallFlip && !wideFlip,
-    score_basis: "deploy-domain output stability from finite-difference probes; not the same metric as DEEPBOM weight/topology basin proxy",
+    score_basis: "unvalidated fixed-weight experimental composite over deploy-domain finite-difference probes; not a loss-landscape, accuracy, latency, robustness, or release metric",
   };
 }
 
