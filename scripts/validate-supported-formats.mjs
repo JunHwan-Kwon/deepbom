@@ -468,10 +468,13 @@ async function validateBrowserSelection(items) {
   const server = createStaticServer(ROOT);
   const browserErrors = [];
   let browser;
+  let context;
+  let page;
   try {
     await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
     browser = await launchChromium(chromium);
-    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+    context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+    page = await context.newPage();
     await installLocalValidationApi(page);
     page.on("pageerror", (error) => {
       const detail = `page: ${error.message}`;
@@ -636,7 +639,11 @@ async function validateBrowserSelection(items) {
       errors: browserErrors,
     };
   } finally {
+    if (page && !page.isClosed()) await page.close({ runBeforeUnload: false });
+    if (context) await context.close();
     if (browser) await browser.close();
+    server.closeIdleConnections?.();
+    server.closeAllConnections?.();
     await new Promise((resolve) => server.close(resolve));
   }
 }

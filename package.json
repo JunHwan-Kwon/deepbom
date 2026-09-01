@@ -108,6 +108,7 @@
     "check:cli-automation": "node scripts/check-cli-automation.mjs",
     "check:nvidia-accelerator": "node scripts/check-nvidia-accelerator-profile.mjs",
     "check:remote-artifact-resolver": "node scripts/check-remote-artifact-resolver.mjs",
+    "check:artifact-ir": "node scripts/check-artifact-ir.mjs",
     "check:cli-graph": "node scripts/check-cli-graph-export.mjs",
     "check:channels": "node scripts/check-channel-equivalence.mjs",
     "check:cargo-engine-release": "node scripts/check-cargo-engine-release.mjs",

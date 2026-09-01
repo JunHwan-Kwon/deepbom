@@ -4,6 +4,17 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Added the evidence-preserving `deepbom.artifact_ir.v2` ledger with separate
+  serialized graph, storage topology, architecture projection, scoped
+  quantization, static placement, and imported runtime layers. Existing
+  `deepbom.graph_ir.v1` visualization output is now a deterministic
+  compatibility projection from this ledger, and graphless containers no
+  longer receive synthetic execution-order edges.
+- Published a JSON Schema and fail-closed multi-format conservation suite for
+  Artifact IR identity, references, byte/MAC totals, graph applicability, and
+  tamper detection. Engineering evidence, Raw Data, Deployment Contract Pack,
+  CycloneDX references, Web visualization, and CLI graph JSON now bind the
+  same IR digest.
 - Added a shared `deepbom.mac_coverage.v1` calculation path so TFLite,
   ONNX, Core ML, GGUF, and SafeTensors ML-BOM exports retain explicit MAC
   numerators, denominators, and non-assessment reasons without coercing an
@@ -58,6 +69,13 @@ All notable archival releases of DEEPBOM are documented here.
   separately modularized cross-format MAC coverage, N-way placement comparison,
   and source-pinned Core ML/Qualcomm adapters; per-file, generated, private-
   source, and application-entry ceilings remain unchanged.
+- Raised the handwritten runtime ceiling from 11,264 KiB to 11,392 KiB for the
+  separately modularized Artifact Evidence IR and its v1 compatibility
+  projection; per-file, generated, private-source, and application-entry
+  ceilings remain unchanged.
+- Raised the documentation-source ceiling from 320 KiB to 352 KiB for the
+  published Artifact IR JSON Schema and its CLI contract documentation;
+  runtime and per-file ceilings remain unchanged.
 - Raised the verification-source ceiling from 3,072 KiB to 3,136 KiB for the
   isolated parser coordinator and the accelerator, review-policy, expected-
   output, and Worker timeout regression contracts; runtime and per-file

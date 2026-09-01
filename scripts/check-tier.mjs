@@ -70,6 +70,7 @@ const RELEASE = [
   "scripts/check-access-hierarchy.mjs",
   "scripts/check-export-artifact-contract.mjs",
   "scripts/check-export-contract-documents.mjs",
+  "scripts/check-artifact-ir.mjs",
   "scripts/check-runtime-contract.mjs",
   "scripts/check-runtime-evidence-sidecar.mjs",
   "scripts/check-cyclonedx-20-quantization-evidence.mjs",

@@ -29,6 +29,7 @@ import {
   bindTfliteDelegateRequirement,
 } from "./tflite-build-configuration-binding.js";
 import { tensorRtCycloneDxPropertyEntries } from "./tensorrt-cyclonedx-properties.js";
+import { buildArtifactEvidenceIr, validateArtifactEvidenceIr } from "./artifact-ir.js";
 
 const CYCLONEDX_SCHEMA = "http://cyclonedx.org/schema/bom-1.7.schema.json";
 const LITERT_INT8_SPEC = "https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec";
@@ -46,6 +47,7 @@ export const DEPLOYMENT_CONTRACT_FILES = Object.freeze({
   cyclonedx: "deepbom_cyclonedx_evidence.cdx.json",
   cyclonedx20Preview: "deepbom_cyclonedx_2_0_parameter_contract.preview.cdx.json",
   artifactEnvelope: "deepbom_artifact_evidence_envelope.json",
+  artifactIr: "deepbom_artifact_ir.json",
   interfaceContracts: "deepbom_interface_contracts.json",
   formulation: "deepbom_observed_formulation.cdx.json",
   runtime: "deepbom_runtime_requirements.json",
@@ -813,6 +815,9 @@ function cycloneDxSubject(analysis, options = {}, externalReferences = []) {
     },
     properties: properties([
       ["deepbom:contract:schema", "deepbom.cyclonedx_evidence_profile.v1.3"],
+      ["deepbom:model:artifactIrSchema", options.artifactIr?.schema],
+      ["deepbom:model:artifactIrSha256", options.artifactIr?.artifact_ir_sha256],
+      ["deepbom:model:artifactIrLocation", options.artifactIrLocation],
       ["deepbom:model:format", identity.format],
       ["deepbom:model:versionBasis", contentVersion.basis],
       ["deepbom:model:schemaOrOpset", identity.schema_or_opset],
@@ -930,12 +935,21 @@ function cycloneDxEnvelope(subject, generatedAt, options = {}, formulation = nul
 
 export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
   const generatedAt = options.generatedAt || new Date().toISOString();
+  const irIdentity = artifactIdentity(analysis, options);
+  const artifactIr = options.artifactIr ? validateArtifactEvidenceIr(options.artifactIr) : (SHA256_PATTERN.test(irIdentity.sha256) ? buildArtifactEvidenceIr(analysis, {
+    filename: irIdentity.name,
+    format: irIdentity.format,
+    sha256: irIdentity.sha256,
+    size: irIdentity.byte_length ?? 0,
+    artifact_set_sha256: analysis?.artifact_set?.artifact_set_sha256 || null,
+  }) : null);
   const artifactEnvelope = options.artifactEvidenceEnvelope || buildArtifactEvidenceEnvelope(analysis, {
     ...options,
     generatedAt,
     provenance: analyzerProvenance(options),
   });
   const envelopeHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.artifactEnvelope);
+  const artifactIrHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.artifactIr);
   const interfaceHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.interfaceContracts);
   const runtimeHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.runtime);
   const missingHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.missingFields);
@@ -945,18 +959,26 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
     ...optionalExternalReference(options, "engineeringEvidence", "evidence", "engineering_evidence.json", "External Engineering Bundle evidence ledger."),
     ...optionalExternalReference(options, "engineeringReport", "quality-metrics", "engineering_report.md", "External human-readable Engineering Report."),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.artifactEnvelope, bundleReferenceComment("Canonical artifact evidence envelope.", Boolean(envelopeHash)), envelopeHash),
+    ...(options.artifactIr ? [externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.artifactIr, bundleReferenceComment("Canonical Artifact Evidence IR with graph, storage, architecture, quantization, and overlay separation.", Boolean(artifactIrHash)), artifactIrHash)] : []),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.interfaceContracts, bundleReferenceComment("Canonical external tensor numerical-contract ledger.", Boolean(interfaceHash)), interfaceHash),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.cyclonedx20Preview, bundleReferenceComment("Commit-pinned CycloneDX 2.0 non-conformant proposal fixture; the pinned draft schema closure is unavailable and this is not a 2.0 conformance claim.", Boolean(cycloneDx20PreviewHash)), cycloneDx20PreviewHash),
     externalReference("formulation", DEPLOYMENT_CONTRACT_FILES.formulation, bundleReferenceComment("Artifact-observed formulation and declaration comparison.", Boolean(formulationHash)), formulationHash),
     externalReference("configuration", DEPLOYMENT_CONTRACT_FILES.runtime, bundleReferenceComment("Machine-readable runtime requirement manifest.", Boolean(runtimeHash)), runtimeHash),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.missingFields, bundleReferenceComment("Machine-readable release-lineage field gap specification.", Boolean(missingHash)), missingHash),
   ];
-  const subject = cycloneDxSubject(analysis, { ...options, artifactEvidenceEnvelope: artifactEnvelope }, references);
+  const subject = cycloneDxSubject(analysis, {
+    ...options,
+    artifactEvidenceEnvelope: artifactEnvelope,
+    artifactIr,
+    artifactIrLocation: options.artifactIr ? DEPLOYMENT_CONTRACT_FILES.artifactIr : null,
+  }, references);
   const components = supportingComponents(artifactEnvelope);
   return cycloneDxEnvelope(subject.component, generatedAt, options, null, properties([
     ["deepbom:profile", "artifact-numerical-and-runtime-contract-evidence"],
     ["deepbom:artifactEvidenceEnvelopeSchema", artifactEnvelope.schema],
     ["deepbom:artifactEvidenceEnvelopeSha256", artifactEnvelope.envelope_sha256],
+    ["deepbom:artifactIrSchema", artifactIr?.schema],
+    ["deepbom:artifactIrSha256", artifactIr?.artifact_ir_sha256],
     ["deepbom:model:cpuCostTargetBindingSource", artifactEnvelope.cpu_cost_target_binding?.binding_source],
     ["deepbom:model:cpuCostTargetHostObserved", artifactEnvelope.cpu_cost_target_binding?.host_observed],
     ["deepbom:model:cpuCostTargetProfileId", artifactEnvelope.cpu_cost_target_binding?.profile_id],
@@ -2143,6 +2165,14 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
     ...shared,
     provenance: analyzerProvenance(shared),
   });
+  const irIdentity = artifactIdentity(analysis, shared);
+  const artifactIr = buildArtifactEvidenceIr(analysis, {
+    filename: irIdentity.name,
+    format: irIdentity.format,
+    sha256: irIdentity.sha256,
+    size: irIdentity.byte_length ?? 0,
+    artifact_set_sha256: analysis?.artifact_set?.artifact_set_sha256 || null,
+  });
   const canonicalInterfaceLedger = artifactEnvelope.interfaces || buildInterfaceQuantizationContractLedger(analysis);
   const contractShared = { ...shared, interfaceLedger: canonicalInterfaceLedger };
   const interfaceContracts = buildInterfaceContractLedgerDocument(analysis, contractShared);
@@ -2153,6 +2183,7 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
   const missing = buildMissingProvenanceFieldSpecification(analysis, shared);
   const firstHashes = {
     [DEPLOYMENT_CONTRACT_FILES.artifactEnvelope]: jsonMemberSha256(artifactEnvelope),
+    [DEPLOYMENT_CONTRACT_FILES.artifactIr]: jsonMemberSha256(artifactIr),
     [DEPLOYMENT_CONTRACT_FILES.interfaceContracts]: jsonMemberSha256(interfaceContracts),
     [DEPLOYMENT_CONTRACT_FILES.cyclonedx20Preview]: jsonMemberSha256(cycloneDx20Preview),
     [DEPLOYMENT_CONTRACT_FILES.runtime]: jsonMemberSha256(runtime),
@@ -2161,6 +2192,7 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
   const evidence = buildCycloneDxEvidenceDocument(analysis, {
     ...shared,
     artifactEvidenceEnvelope: artifactEnvelope,
+    artifactIr,
     externalDocumentHashes: firstHashes,
   });
   const evidenceHash = jsonMemberSha256(evidence);
@@ -2175,6 +2207,7 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
     cyclonedx_evidence: evidence,
     cyclonedx_2_0_parameter_contract_preview: cycloneDx20Preview,
     artifact_evidence_envelope: artifactEnvelope,
+    artifact_ir: artifactIr,
     interface_contract_ledger: interfaceContracts,
     observed_formulation: formulation,
     runtime_requirement_manifest: runtime,

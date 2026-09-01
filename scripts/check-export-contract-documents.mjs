@@ -212,8 +212,8 @@ const options = {
 const set = buildDeploymentContractDocuments(analysis, options);
 expectEqual(set.schema, "deepbom.deployment_contract_export_set.v1.4", "export-set schema");
 expectEqual(set.generated_at, GENERATED_AT, "stable generation timestamp");
-expectEqual(Object.keys(set.documents).length, 7, "document count");
-expectEqual(new Set(Object.values(set.files)).size, 7, "unique contract filenames");
+expectEqual(Object.keys(set.documents).length, 8, "document count");
+expectEqual(new Set(Object.values(set.files)).size, 8, "unique contract filenames");
 expectEqual(set.files.interfaceContracts, DEPLOYMENT_CONTRACT_FILES.interfaceContracts, "interface contract filename");
 expectEqual(set.files.runtime, DEPLOYMENT_CONTRACT_FILES.runtime, "runtime contract filename");
 expectEqual(JSON.stringify(set), JSON.stringify(buildDeploymentContractDocuments(analysis, options)), "deterministic export document set");
@@ -224,6 +224,7 @@ for (const [filename, digest] of Object.entries(set.integrity.member_sha256)) {
     cyclonedx: "cyclonedx_evidence",
     cyclonedx20Preview: "cyclonedx_2_0_parameter_contract_preview",
     artifactEnvelope: "artifact_evidence_envelope",
+    artifactIr: "artifact_ir",
     interfaceContracts: "interface_contract_ledger",
     formulation: "observed_formulation",
     runtime: "runtime_requirement_manifest",
@@ -233,7 +234,11 @@ for (const [filename, digest] of Object.entries(set.integrity.member_sha256)) {
 }
 
 const cycloneDx = set.documents.cyclonedx_evidence;
+expectEqual(set.documents.artifact_ir.schema, "deepbom.artifact_ir.v2", "Artifact IR schema");
+expectEqual(set.documents.artifact_ir.artifact.sha256, SHA, "Artifact IR subject identity");
 assertCycloneDx17(cycloneDx, "evidence BOM");
+expectEqual(propertyMap(cycloneDx.metadata.component.properties).get("deepbom:model:artifactIrLocation"), DEPLOYMENT_CONTRACT_FILES.artifactIr, "packaged Artifact IR location");
+expect(cycloneDx.metadata.component.externalReferences.some((row) => row.url === DEPLOYMENT_CONTRACT_FILES.artifactIr && row.hashes?.[0]?.content === set.integrity.member_sha256[DEPLOYMENT_CONTRACT_FILES.artifactIr]), "packaged Artifact IR external reference and digest");
 expectEqual(cycloneDx.$schema, "http://cyclonedx.org/schema/bom-1.7.schema.json", "CycloneDX official schema identifier");
 expectEqual(cycloneDx.specVersion, "1.7", "CycloneDX specification version");
 expectEqual(cycloneDx.metadata.component.type, "machine-learning-model", "CycloneDX component type");
@@ -672,10 +677,10 @@ expectEqual(onnxRuntime.onnx_execution_provider_source_profiles.profiles.length,
 expectEqual(onnxRuntime.numerical_abi_requirements.length, 0, "TFLite numerical ABI suppression for ONNX");
 expectEqual(buildMissingProvenanceFieldSpecification(onnx, options).fields.find((item) => item.id === "representative_dataset_id").status, "not_applicable", "float calibration dataset applicability");
 
-for (const document of [
-  buildCycloneDxEvidenceDocument(analysis, options),
-  buildObservedFormulationDocument(analysis, options),
-]) assertCycloneDx17(document, "direct CycloneDX builder");
+const standaloneCycloneDx = buildCycloneDxEvidenceDocument(analysis, options);
+expectEqual(propertyMap(standaloneCycloneDx.metadata.component.properties).has("deepbom:model:artifactIrLocation"), false, "standalone CycloneDX must not claim an absent Artifact IR sibling");
+expectEqual(propertyMap(standaloneCycloneDx.properties).get("deepbom:artifactIrSha256"), set.documents.artifact_ir.artifact_ir_sha256, "standalone CycloneDX retains Artifact IR identity");
+for (const document of [standaloneCycloneDx, buildObservedFormulationDocument(analysis, options)]) assertCycloneDx17(document, "direct CycloneDX builder");
 
 const licensedAnalysis = structuredClone(analysis);
 licensedAnalysis.metadata_presence = {
@@ -795,6 +800,7 @@ for (const [key, filename] of Object.entries(sampleSet.files)) {
     cyclonedx: "cyclonedx_evidence",
     cyclonedx20Preview: "cyclonedx_2_0_parameter_contract_preview",
     artifactEnvelope: "artifact_evidence_envelope",
+    artifactIr: "artifact_ir",
     interfaceContracts: "interface_contract_ledger",
     formulation: "observed_formulation",
     runtime: "runtime_requirement_manifest",
@@ -803,7 +809,7 @@ for (const [key, filename] of Object.entries(sampleSet.files)) {
   if (updateReferences) writeFileSync(`${exampleDir}/${filename}`, `${JSON.stringify(sampleSet.documents[documentKey], null, 2)}\n`);
   const stored = JSON.parse(readFileSync(`${exampleDir}/${filename}`, "utf8"));
   storedExamples[filename] = stored;
-  const storedSubjectHash = stored.metadata?.component?.hashes?.[0]?.content || stored.subject?.sha256 || stored.identity?.sha256;
+  const storedSubjectHash = stored.metadata?.component?.hashes?.[0]?.content || stored.subject?.sha256 || stored.identity?.sha256 || stored.artifact?.sha256;
   expectEqual(storedSubjectHash, sampleRepair.artifact_sha256, `${filename} public artifact binding`);
   if (filename.endsWith(".cdx.json") && key !== "cyclonedx20Preview") assertCycloneDx17(stored, `${filename} stored public example`);
   if (key === "cyclonedx20Preview") {

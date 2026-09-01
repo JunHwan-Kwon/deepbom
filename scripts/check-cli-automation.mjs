@@ -40,6 +40,7 @@ assert.deepEqual(capabilities.commands.find((row) => row.name === "accelerator c
 assert.equal(capabilities.inputs.remote_sources.huggingface, "full_commit_required");
 assert.equal(capabilities.inputs.remote_sources.remote_code_execution, false);
 assert.equal(capabilities.commands.find((row) => row.name === "graph").outputs.includes("deepbom.graph_ir.v1"), true);
+assert.equal(capabilities.commands.find((row) => row.name === "graph").outputs.includes("deepbom.artifact_ir.v2"), true);
 assert.deepEqual(capabilities.commands.find((row) => row.name === "placement").outputs,
   ["deepbom.placement_comparison.v1"]);
 assert.equal(capabilities.accelerator_profiles.imports.litert_qualcomm_compiler_dispatch_evidence,

@@ -314,19 +314,20 @@
       "version": "1.96.0-dev",
       "platform": "windows-x64",
       "command": "npm run check:deploy",
-      "elapsed_seconds": 126.13,
-      "check_count": 69,
+      "elapsed_seconds": 156.4,
+      "check_count": 70,
       "conclusion": "success",
       "conditions": [
         "bounded_non_browser_gate",
         "isolated_parser_robustness_and_format_routing",
         "export_cyclonedx_accelerator_and_review_policy_contracts",
+        "artifact_ir_schema_identity_conservation_and_tamper_contracts",
         "service_worker_cache_version_bound",
         "public_private_boundary_and_git_privacy",
         "single_source_release_identity_alignment",
         "no_full_corpus_or_browser_matrix"
       ],
-      "qualification": "The first measurement completed every product check and reached only the delivery-ledger self-check; this row registers that same-source observation so the bounded preflight can close deterministically on replay."
+      "qualification": "The measured run completed all 70 product checks, including Artifact Evidence IR validation, and reached only the delivery-ledger self-check; this row binds that same-source observation so the bounded preflight can close deterministically on replay."
     },
     {
       "kind": "local_channel_build",

@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-artifact-ir-v2.schema.json",
+  "title": "DEEPBOM Artifact Evidence IR v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "method_version",
+    "hash_contract",
+    "artifact",
+    "evidence_layers",
+    "graph",
+    "storage_topology",
+    "architecture_projection",
+    "quantization_contracts",
+    "overlays",
+    "completeness",
+    "interpretation_boundary",
+    "artifact_ir_sha256"
+  ],
+  "properties": {
+    "schema": { "const": "deepbom.artifact_ir.v2" },
+    "method_version": { "const": "2.0.0" },
+    "hash_contract": {
+      "type": "object",
+      "required": ["algorithm", "canonicalization", "source_encoding", "excluded_pointers"],
+      "properties": {
+        "algorithm": { "const": "SHA-256" },
+        "canonicalization": { "const": "RFC8785-JCS" },
+        "source_encoding": { "const": "UTF-8" },
+        "excluded_pointers": {
+          "type": "array",
+          "prefixItems": [{ "const": "/artifact_ir_sha256" }],
+          "minItems": 1,
+          "maxItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifact": { "$ref": "#/$defs/artifact" },
+    "evidence_layers": { "type": "object" },
+    "graph": { "$ref": "#/$defs/graph" },
+    "storage_topology": { "$ref": "#/$defs/storage" },
+    "architecture_projection": { "$ref": "#/$defs/architecture" },
+    "quantization_contracts": { "$ref": "#/$defs/quantization" },
+    "overlays": { "$ref": "#/$defs/overlays" },
+    "completeness": { "type": "object" },
+    "interpretation_boundary": { "type": "string", "minLength": 1 },
+    "artifact_ir_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "exactInteger": {
+      "type": "object",
+      "required": ["decimal", "number"],
+      "properties": {
+        "decimal": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" },
+        "number": { "type": ["integer", "null"], "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["filename", "format", "sha256", "byte_length", "artifact_set_sha256"],
+      "properties": {
+        "filename": { "type": "string", "minLength": 1 },
+        "format": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "byte_length": { "anyOf": [{ "$ref": "#/$defs/exactInteger" }, { "type": "null" }] },
+        "artifact_set_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }
+      },
+      "additionalProperties": false
+    },
+    "graph": {
+      "type": "object",
+      "required": ["status", "executable_graph_status", "scopes", "operators", "values", "inputs", "outputs", "totals", "completeness", "interpretation_boundary"],
+      "properties": {
+        "status": { "enum": ["serialized", "not_serialized"] },
+        "executable_graph_status": { "type": "string" },
+        "primary_scope_ref": { "type": ["string", "null"] },
+        "scopes": { "type": "array", "items": { "$ref": "#/$defs/identified" } },
+        "operators": { "type": "array", "items": { "$ref": "#/$defs/operator" } },
+        "values": { "type": "array", "items": { "$ref": "#/$defs/value" } },
+        "inputs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "outputs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "totals": { "type": "object" },
+        "completeness": { "type": "string" },
+        "interpretation_boundary": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [{
+        "if": { "properties": { "status": { "const": "not_serialized" } }, "required": ["status"] },
+        "then": {
+          "properties": {
+            "scopes": { "type": "array", "maxItems": 0 },
+            "operators": { "type": "array", "maxItems": 0 },
+            "values": { "type": "array", "maxItems": 0 },
+            "inputs": { "type": "array", "maxItems": 0 },
+            "outputs": { "type": "array", "maxItems": 0 }
+          }
+        }
+      }],
+      "additionalProperties": false
+    },
+    "identified": {
+      "type": "object",
+      "required": ["id"],
+      "properties": { "id": { "type": "string", "minLength": 1 } }
+    },
+    "operator": {
+      "type": "object",
+      "required": ["id", "scope_ref", "native_index", "op_type", "inputs", "outputs", "metrics", "native_source", "completeness"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "scope_ref": { "type": "string", "minLength": 1 },
+        "native_index": { "type": "integer", "minimum": 0 },
+        "op_type": { "type": "string", "minLength": 1 },
+        "inputs": { "type": "array", "items": { "$ref": "#/$defs/port" } },
+        "outputs": { "type": "array", "items": { "$ref": "#/$defs/port" } },
+        "metrics": { "type": "object" },
+        "native_source": { "type": "object" },
+        "completeness": { "type": "string" }
+      }
+    },
+    "port": {
+      "type": "object",
+      "required": ["port", "value_ref"],
+      "properties": {
+        "port": { "type": "integer", "minimum": 0 },
+        "value_ref": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "value": {
+      "type": "object",
+      "required": ["id", "scope_ref", "native_index", "name", "dtype", "shape", "producer", "consumers", "roles", "storage_refs", "native_source"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "scope_ref": { "type": "string", "minLength": 1 },
+        "native_index": { "type": "integer", "minimum": 0 },
+        "name": { "type": "string" },
+        "dtype": { "type": "string" },
+        "shape": { "type": "array" },
+        "producer": { "type": ["object", "null"] },
+        "consumers": { "type": "array" },
+        "roles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "storage_refs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "native_source": { "type": "object" }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "required": ["status", "objects", "totals", "interpretation_boundary"],
+      "properties": {
+        "status": { "type": "string" },
+        "objects": { "type": "array", "items": { "$ref": "#/$defs/identified" } },
+        "totals": { "type": "object" },
+        "interpretation_boundary": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "architecture": {
+      "type": "object",
+      "required": ["status", "executable_graph_status", "kind", "nodes", "relationships", "totals", "interpretation_boundary"],
+      "properties": {
+        "status": { "type": "string" },
+        "executable_graph_status": { "type": "string" },
+        "kind": { "type": ["string", "null"] },
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/identified" } },
+        "relationships": { "type": "array" },
+        "totals": { "type": "object" },
+        "interpretation_boundary": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "quantization": {
+      "type": "object",
+      "required": ["status", "records", "totals", "interpretation_boundary"],
+      "properties": {
+        "status": { "type": "string" },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "subject_ref", "mapping", "parameterization", "storage", "parameters", "source", "completeness"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "subject_ref": { "type": "string", "minLength": 1 },
+              "mapping": { "type": "object" },
+              "parameterization": { "type": "object" },
+              "storage": { "type": "object" },
+              "parameters": { "type": "object" },
+              "source": { "type": "object" },
+              "completeness": { "type": "string" }
+            }
+          }
+        },
+        "totals": { "type": "object" },
+        "interpretation_boundary": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "overlays": {
+      "type": "object",
+      "required": ["static", "runtime"],
+      "properties": {
+        "static": { "type": "array", "items": { "$ref": "#/$defs/identified" } },
+        "runtime": { "type": "array", "items": { "$ref": "#/$defs/identified" } }
+      },
+      "additionalProperties": false
+    }
+  }
+}

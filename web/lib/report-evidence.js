@@ -28,6 +28,7 @@ import { buildRuntimeDataMovementEvidence } from "./runtime-data-movement-eviden
 import { buildRuntimeEvidenceSidecar } from "./runtime-evidence-sidecar.js";
 import { buildOnnxRuntimeShapeBinding } from "./onnx-runtime-shape-binding.js";
 import { buildSecurityPostureEvidence, collectRuntimeWarnings } from "./report-security-posture.js";
+import { buildArtifactEvidenceIr } from "./artifact-ir.js";
 
 export function buildStaticAnalysisExport(analysis) {
   const { _markdown, roofline_csv, core_isolation_csv, stage_mermaid, findings: _nativeFindings, recommendations: _nativeRecommendations, ...rest } = analysis || {};
@@ -1060,6 +1061,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
     runtimeEvidence: rawEvidenceContext.runtimeEvidence || reportContext.runtimeEvidence || null,
   };
   const staticAnalysis = buildStaticAnalysisExport(analysis);
+  const artifactIr = buildReportArtifactIr(analysis, identity);
   const modelStructure = buildModelStructureEvidence(analysis, identity);
   const quantization = buildQuantizationEvidence(analysis, identity);
   const runtimeResults = buildRuntimeEvidence({ analysis, ...runtimeEvidence });
@@ -1079,6 +1081,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
   const evidenceRoot = {
     evidence: {
       static_analysis: staticAnalysis,
+      ...(artifactIr ? { artifact_ir: artifactIr } : {}),
       quantization,
       runtime_results: runtimeResults,
       execution_placement: executionPlacement,
@@ -1105,6 +1108,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
     model: identity,
     evidence: {
       static_analysis: staticAnalysis,
+      ...(artifactIr ? { artifact_ir: artifactIr } : {}),
       model_structure: modelStructure,
       quantization,
       runtime_results: runtimeResults,
@@ -1139,6 +1143,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
     model: identity,
     evidence: {
       static_analysis: staticAnalysis,
+      ...(artifactIr ? { artifact_ir: artifactIr } : {}),
       model_structure: modelStructure,
       quantization,
       runtime_results: runtimeResults,
@@ -1211,12 +1216,14 @@ export function buildRawDataArtifactFiles(analysis, {
   graphSvgText = "",
   visualPngFiles = [],
 } = {}) {
+  const artifactIr = buildReportArtifactIr(analysis, rawEvidenceContext.identity || {});
   const files = [
     zipTextFile("static/raw_static_audit.md", analysis?._markdown || buildStaticAuditMarkdown(analysis, analysis?.model_sha256 || "") || ""),
     zipTextFile("static/roofline.csv", analysis?.roofline_csv || ""),
     zipTextFile("static/core_isolation_roofline.csv", analysis?.core_isolation_csv || ""),
     zipTextFile("static/stage_graph.mmd", analysis?.stage_mermaid || ""),
     zipTextFile("static/static_analysis.json", jsonForDownload(buildStaticAnalysisExport(analysis))),
+    ...(artifactIr ? [zipTextFile("static/artifact_ir.json", jsonForDownload(artifactIr))] : []),
     zipTextFile("static/arena_plan.csv", buildArenaPlanCsv(analysis)),
     zipTextFile("static/mlbom_cdx.json", jsonForDownload(mlBomDocument || {})),
     ...buildRawEvidenceFiles(analysis, rawEvidenceContext),
@@ -1241,4 +1248,18 @@ export function buildRawDataArtifactFiles(analysis, {
   }
   files.push(...(visualPngFiles || []));
   return files;
+}
+
+function buildReportArtifactIr(analysis, identity = {}) {
+  const size = Number(identity.byte_length?.number ?? identity.byte_length ?? identity.file_size_bytes
+    ?? analysis?.file_size_bytes ?? analysis?.file_size ?? 0);
+  const sha256 = String(identity.sha256 || identity.hash || analysis?.model_sha256 || analysis?.artifact_sha256 || "").trim().toLowerCase();
+  if (!/^[a-f0-9]{64}$/.test(sha256)) return null;
+  return buildArtifactEvidenceIr(analysis, {
+    filename: identity.filename || identity.name || analysis?.filename || "model",
+    format: analysis?.format,
+    sha256,
+    size: Number.isSafeInteger(size) && size >= 0 ? size : 0,
+    artifact_set_sha256: analysis?.artifact_set?.artifact_set_sha256 || null,
+  });
 }

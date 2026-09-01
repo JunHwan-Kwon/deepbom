@@ -42,16 +42,16 @@ jobs:
           node-version: 24.12.0
           cache: npm
           package-manager-cache: true
-      - name: Install pinned dependencies
-        run: npm ci
-      - name: Audit public dependency graph
-        run: npm audit --audit-level=high
-      - name: Verify clean public source boundary
+      - name: Verify immutable public source boundary
         run: |
           npm run check:public-source
           node scripts/verify-public-source-export.mjs .
           node scripts/check-git-privacy.mjs
           node scripts/check-ci-deploy-contract.mjs
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Audit public dependency graph
+        run: npm audit --audit-level=high
       - name: Verify CLI and browser-independent format analyzers
         run: |
           npm run check:cli-docs

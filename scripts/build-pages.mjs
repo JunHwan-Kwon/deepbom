@@ -71,6 +71,11 @@ await copyFile(
   path.join(root, "web", ".well-known", "deepbom-signing-keys.json"),
   path.join(dist, ".well-known", "deepbom-signing-keys.json"),
 );
+await mkdir(path.join(dist, "schemas"), { recursive: true });
+await copyFile(
+  path.join(root, "docs", "schemas", "deepbom-artifact-ir-v2.schema.json"),
+  path.join(dist, "schemas", "deepbom-artifact-ir-v2.schema.json"),
+);
 const webIndexHtml = await readFile(path.join(dist, "web", "index.html"), "utf8");
 await writeFile(path.join(dist, "index.html"), shellHtml(webIndexHtml));
 await writeFile(path.join(dist, "medical.html"), shellHtml(webIndexHtml, "Medical Evidence Workspace / DEEPBOM"));

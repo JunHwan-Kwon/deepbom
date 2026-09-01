@@ -27,7 +27,7 @@ asset verification, and equivalence checks are documented in
 | `verify` | 1 | `deepbom.cli_interface_contract_verification.v1` |
 | `diff` | 2 | `deepbom.deployment_delta.v1.1` |
 | `explore` | 1 | `deepbom.redesign_pareto.v1` |
-| `graph` | 1 | `svg`<br>`png`<br>`html`<br>`mermaid`<br>`dot`<br>`deepbom.graph_ir.v1`<br>`deepbom.visualization_manifest.v1` |
+| `graph` | 1 | `svg`<br>`png`<br>`html`<br>`mermaid`<br>`dot`<br>`deepbom.artifact_ir.v2`<br>`deepbom.graph_ir.v1`<br>`deepbom.visualization_manifest.v1` |
 | `placement` | 1 | `deepbom.placement_comparison.v1` |
 | `accelerator collect nvidia` | none | `deepbom.accelerator_profile.v1` |
 | `capabilities` | none | `deepbom.cli_capabilities.v1` |

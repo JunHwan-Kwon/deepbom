@@ -108,6 +108,7 @@ docs/STANDARDIZATION_EVIDENCE.md
 docs/SUPPORT_MATRIX.md
 docs/ZENODO_RELEASE.md
 docs/native-runtime-capture.md
+docs/schemas/deepbom-artifact-ir-v2.schema.json
 docs/zenodo-validation-metadata.json
 examples/expected-output/README.md
 examples/expected-output/gpu-partition-probe.expected.json
@@ -143,6 +144,7 @@ reference/cyclonedx/1.7/bom-1.7.schema.json
 reference/cyclonedx/1.7/cryptography-defs.schema.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/README.md
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_artifact_evidence_envelope.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_artifact_ir.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_2_0_parameter_contract.preview.cdx.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_evidence.cdx.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_interface_contracts.json
@@ -206,6 +208,7 @@ scripts/check-affine-interface-mismatch.py
 scripts/check-all.mjs
 scripts/check-analysis-invariants.mjs
 scripts/check-artifact-bundle.mjs
+scripts/check-artifact-ir.mjs
 scripts/check-assert.mjs
 scripts/check-backend-placement-projection.mjs
 scripts/check-browser-import-contract.mjs
@@ -591,6 +594,7 @@ web/lib/artifact-bundle.js
 web/lib/artifact-diff-view.js
 web/lib/artifact-diff.js
 web/lib/artifact-evidence-envelope.js
+web/lib/artifact-ir.js
 web/lib/artifact-overview.js
 web/lib/artifact-set.js
 web/lib/audit-progress.js

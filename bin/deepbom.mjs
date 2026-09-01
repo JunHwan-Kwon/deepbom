@@ -26,7 +26,8 @@ import { collectNvidiaAcceleratorProfile } from "./nvidia-accelerator-collector.
 import { resolveArtifactSource } from "./remote-artifact-resolver.mjs";
 import { resolveHuggingFaceOnnxExternalDataClosure, resolveHuggingFaceSafeTensorsClosure } from "./remote-artifact-closure.mjs";
 import { finalizeArtifactSet } from "../web/lib/artifact-set.js";
-import { buildCanonicalGraphIr } from "../web/lib/graph-ir.js";
+import { buildArtifactEvidenceIr } from "../web/lib/artifact-ir.js";
+import { projectArtifactIrToCanonicalGraph } from "../web/lib/graph-ir.js";
 import { exportGraphVisualization } from "../web/lib/graph-export.js";
 import { exportGraphPng } from "./graph-png-export.mjs";
 import { buildNvidiaAcceleratorProfileBinding } from "../web/lib/accelerator-profile-binding.js";
@@ -635,14 +636,15 @@ async function runExploreCommand(parsed, analysis, artifact, input, target) {
 }
 
 async function runGraphCommand(parsed, analysis, artifact) {
-  const graph = buildCanonicalGraphIr(analysis, { ...artifact, artifact_set_sha256: analysis.artifact_set?.artifact_set_sha256 || null });
+  const artifactIr = buildArtifactEvidenceIr(analysis, { ...artifact, artifact_set_sha256: analysis.artifact_set?.artifact_set_sha256 || null });
+  const graph = projectArtifactIrToCanonicalGraph(artifactIr);
   if (parsed.outputFormat === "png") {
     const exported = exportGraphPng(graph, { view: parsed.view });
     if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, exported.bytes, { noClobber: parsed.noClobber });
     else process.stdout.write(exported.bytes);
     return;
   }
-  const exported = exportGraphVisualization(graph, { view: parsed.view, format: parsed.outputFormat, compact: parsed.compact });
+  const exported = exportGraphVisualization(graph, { view: parsed.view, format: parsed.outputFormat, compact: parsed.compact, artifactIr });
   if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, exported.text, { noClobber: parsed.noClobber });
   else process.stdout.write(exported.text);
 }

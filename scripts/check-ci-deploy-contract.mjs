@@ -418,6 +418,11 @@ function checkPublicDistributionCiContract() {
   ]) {
     expect(publicQualityWorkflow.includes(snippet), `Public core quality should contain: ${snippet}`);
   }
+  expect(
+    publicQualityWorkflow.indexOf("node scripts/verify-public-source-export.mjs .")
+      < publicQualityWorkflow.indexOf("run: npm ci"),
+    "Public source bytes must be verified before npm postinstall regenerates local build metadata.",
+  );
   for (const forbidden of [
     "actions/setup-python",
     "playwright install",

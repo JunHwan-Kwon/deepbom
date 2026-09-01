@@ -35,6 +35,7 @@ deepbom verify model.tflite --contract production-interface.json
 deepbom diff baseline.tflite candidate.tflite
 deepbom explore model.tflite
 deepbom placement model.tflite --profiles xnnpack_cpu,tflite_coreml_delegate,litert_qualcomm_qnn
+deepbom graph model.onnx --format json --output artifact-graph.json
 ```
 
 The default is a terminal-sized evidence summary. `--json` and `--compact`
@@ -46,6 +47,14 @@ keeps execution, coverage, and finding-policy states independent. See
 [`docs/CLI_AUTOMATION.md`](docs/CLI_AUTOMATION.md). The complete
 option inventory is generated from the executable in
 [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md).
+
+The graph JSON output includes the evidence-preserving
+`deepbom.artifact_ir.v2` ledger and a deterministic `deepbom.graph_ir.v1`
+visualization compatibility projection. Serialized graph, storage topology,
+architecture grouping, scoped quantization, static placement, and imported
+runtime evidence remain separate. The v2 JSON Schema is published at
+[`docs/schemas/deepbom-artifact-ir-v2.schema.json`](docs/schemas/deepbom-artifact-ir-v2.schema.json)
+and at `https://deepbom.org/schemas/deepbom-artifact-ir-v2.schema.json`.
 
 `verify` compares the serialized external tensor ABI with a supplied,
 artifact-bound production declaration. `diff` uses the canonical deterministic

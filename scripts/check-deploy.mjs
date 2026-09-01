@@ -18,6 +18,7 @@ const CHECKS = [
   "scripts/check-regulatory-bundle-contract.mjs",
   "scripts/check-export-artifact-contract.mjs",
   "scripts/check-export-contract-documents.mjs",
+  "scripts/check-artifact-ir.mjs",
   "scripts/check-html-entrypoints.mjs",
   "scripts/check-importmap-runtime-cache.mjs",
   "scripts/check-hash-contract.mjs",

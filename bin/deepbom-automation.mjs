@@ -21,7 +21,7 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       { name: "verify", input_count: 1, outputs: ["deepbom.cli_interface_contract_verification.v1"] },
       { name: "diff", input_count: 2, outputs: ["deepbom.deployment_delta.v1.1"] },
       { name: "explore", input_count: 1, outputs: ["deepbom.redesign_pareto.v1"] },
-      { name: "graph", input_count: 1, outputs: ["svg", "png", "html", "mermaid", "dot", "deepbom.graph_ir.v1", "deepbom.visualization_manifest.v1"] },
+      { name: "graph", input_count: 1, outputs: ["svg", "png", "html", "mermaid", "dot", "deepbom.artifact_ir.v2", "deepbom.graph_ir.v1", "deepbom.visualization_manifest.v1"] },
       { name: "placement", input_count: 1, outputs: ["deepbom.placement_comparison.v1"] },
       { name: "accelerator collect nvidia", input_count: 0, outputs: ["deepbom.accelerator_profile.v1"] },
       { name: "capabilities", input_count: 0, outputs: [CLI_CAPABILITIES_SCHEMA] },

@@ -167,6 +167,18 @@
           "value": "deepbom.cyclonedx_evidence_profile.v1.3"
         },
         {
+          "name": "deepbom:model:artifactIrSchema",
+          "value": "deepbom.artifact_ir.v2"
+        },
+        {
+          "name": "deepbom:model:artifactIrSha256",
+          "value": "24cbf23569cd15337a35c363fc869742a99e84c2dc89662595fbddd7eadb34a5"
+        },
+        {
+          "name": "deepbom:model:artifactIrLocation",
+          "value": "deepbom_artifact_ir.json"
+        },
+        {
           "name": "deepbom:model:format",
           "value": "tflite"
         },
@@ -452,6 +464,17 @@
             {
               "alg": "SHA-256",
               "content": "d9a7772bd32bc92940af269e48ed120daa8d9a66f0f78ee17dc771bafcdc4d9f"
+            }
+          ]
+        },
+        {
+          "type": "evidence",
+          "url": "deepbom_artifact_ir.json",
+          "comment": "Canonical Artifact Evidence IR with graph, storage, architecture, quantization, and overlay separation. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "ad94e6a50ebeaed300a660f4583dccf26e713539b6adcc0c5365e11defd53368"
             }
           ]
         },
@@ -781,6 +804,14 @@
     {
       "name": "deepbom:artifactEvidenceEnvelopeSha256",
       "value": "a5ddcc0172d1992cd222839e9c66d526c6141c8b589b44217c9102b21b178177"
+    },
+    {
+      "name": "deepbom:artifactIrSchema",
+      "value": "deepbom.artifact_ir.v2"
+    },
+    {
+      "name": "deepbom:artifactIrSha256",
+      "value": "24cbf23569cd15337a35c363fc869742a99e84c2dc89662595fbddd7eadb34a5"
     },
     {
       "name": "deepbom:accelerator:bindingCount",

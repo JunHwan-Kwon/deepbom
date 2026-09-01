@@ -26,6 +26,7 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 | Packaged public CLI corpus sweep | 113 hash-bound artifacts; bounded human and compact JSON output in fresh processes | 403.9 s |
 | CLI automation contract 1.95.0 | capability discovery, canonical envelope, pinned OASIS SARIF validation, finding policy, structured errors, reproducible timestamp, and atomic output | 4.3 s |
 | Private web 1.95.0 preflight | 69 bounded parser, export, cache, privacy, CLI identity, and deployment-contract checks; no browser or corpus matrix | 121.825 s |
+| Private web 1.96.0-dev preflight | 70 bounded parser, export, Artifact Evidence IR, cache, privacy, CLI identity, and deployment-contract checks; no browser or corpus matrix | 156.4 s |
 | Local Windows 1.95.0 channel build | npm, executable, Python wheel, and Cargo launcher with the automation module and no protected source | 150.626 s |
 | Local Windows 1.95.0 platform smoke | native executable and installed Python capability discovery plus TFLite/WASM and ONNX execution parity | 173.056 s |
 | Local Windows 1.95.0 release-contract equivalence | capability, envelope, SARIF, and policy parity plus all prior npm, native, Python, Cargo, format, and tamper contracts | 557.443 s |
@@ -69,7 +70,7 @@ build, dist, cache, and egg-info directories before packaging.
 The web deployment gate is the bounded `scripts/check-deploy.mjs` set. The
 exhaustive release tier remains available as `npm run check:release`; it must not
 be wired back into every Cloudflare deployment. The measured preflight budget is
-240 seconds; the current successful baseline is 121.825 seconds for 69 checks.
+240 seconds; the current measured baseline is 156.4 seconds for 70 checks.
 
 ## Cross-platform release rule
 
