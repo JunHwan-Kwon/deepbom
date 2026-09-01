@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "66a4f263d8bf25ebef99221d227a128b4c379c28",
+  "source_commit": "c2c4f91d12258bdb733026600015a471a2520acb",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 918,
@@ -1232,8 +1232,8 @@
     },
     {
       "path": "scripts/check-deployment-frontier-viewer.mjs",
-      "byte_length": 56799,
-      "sha256": "7b87a3730d798935413e18b59d38d287d32d801c0348adaa0587673f7d98685d"
+      "byte_length": 57067,
+      "sha256": "75e77caa2f1231688366413bf032b041837cbc44065e2e05afa5a9109844e58b"
     },
     {
       "path": "scripts/check-deployment-frontier.mjs",
@@ -1322,8 +1322,8 @@
     },
     {
       "path": "scripts/check-explorer-redesign-viewer.mjs",
-      "byte_length": 109192,
-      "sha256": "31adb432074a74cb79c86cfe6644eaf106556ab2a1f3bf35f8f6cf20bcf2e7bc"
+      "byte_length": 109326,
+      "sha256": "f6d9efcb118291f2d8b5d82223513f12c99aad570f856810f6c930ae8a105a77"
     },
     {
       "path": "scripts/check-explorer-redesign.mjs",
@@ -2882,8 +2882,8 @@
     },
     {
       "path": "web/lib/accelerator-profile-switcher.js",
-      "byte_length": 3937,
-      "sha256": "3dcfcda2ea0ed74b043e8b8e913c9501e1190754e085d8c3374ab1c4239357fc"
+      "byte_length": 4439,
+      "sha256": "742bae0a24339e4e802278ed2c207da80453ab9e8eefe7edeee63ec92cbcd315"
     },
     {
       "path": "web/lib/access-policy.js",
@@ -3018,7 +3018,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 76006,
-      "sha256": "436581ddeaf30de550faf992b37404d853fbd4a9c6c8a894174f98b09e978058"
+      "sha256": "282ab9b519573a53ddd6c794bbc5185043d1304408ff6042b87d8089cd396f4b"
     },
     {
       "path": "web/lib/bundle.js",
@@ -4568,7 +4568,7 @@
     {
       "path": "web/sw.js",
       "byte_length": 14970,
-      "sha256": "216046ed13ccdd905505cf9fc4831b9d52933ae68495f77c524bfb5932d49e32"
+      "sha256": "bd54436bade8062d975ff4dfd8597284e00d2359f9b0ba1001e6ff1c169e078a"
     },
     {
       "path": "web/test.html",

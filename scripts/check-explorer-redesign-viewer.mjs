@@ -6,8 +6,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { launchChromium } from "./browser-launch.mjs";
+import { readVersionContract } from "./version-contract.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const VERSION = await readVersionContract(ROOT);
 const SERVE_ROOT = process.env.DEEPBOM_VIEWER_ROOT
   ? path.resolve(ROOT, process.env.DEEPBOM_VIEWER_ROOT)
   : ROOT;
@@ -142,7 +144,8 @@ try {
     || !firstVisit.glance.includes("0 / 0") || !firstVisit.glance.includes("Predicted break ops1")
     || !firstVisit.context.includes("Why this matters for medical AI")
     || !firstVisit.context.includes("zero-weight, shape/op/dtype/quantization-equivalent synthetic reconstruction")
-    || !firstVisit.build.includes("Application 1.95.0 · source") || !firstVisit.build.includes("· content")
+    || !firstVisit.build.includes(`Application ${VERSION.displayVersion} · source`)
+    || !firstVisit.build.includes("· content")
     || !firstVisit.buildVisible || firstVisit.authorSummaryPresent || !firstVisit.citationVisible || !firstVisit.doiVisible
     || !firstVisit.affiliationVisible || !firstVisit.linkedinVisible
     || !firstVisit.evidenceSummaryVisible

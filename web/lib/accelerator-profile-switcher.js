@@ -15,6 +15,8 @@ export function renderAcceleratorProfileSwitcher(root, {
   onLoadSourceLedgers = null,
 } = {}) {
   if (!root) return "";
+  const isTflite = String(analysis?.format || "").toLowerCase() === "tflite";
+  const protectedSourceLedgersLoaded = Boolean(analysis?.tflite_delegate_compatibility_evidence);
   let profiles = [];
   try {
     profiles = acceleratorProfilesForAnalysis(analysis, runtimeEvidence);
@@ -22,7 +24,7 @@ export function renderAcceleratorProfileSwitcher(root, {
     console.warn("Accelerator profile projection unavailable", error);
   }
   if (!profiles.length) {
-    if (String(analysis?.format || "").toLowerCase() !== "tflite") {
+    if (!isTflite) {
       root.hidden = true;
       root.replaceChildren();
       return "";
@@ -47,8 +49,15 @@ export function renderAcceleratorProfileSwitcher(root, {
     control.addEventListener("click", () => onSelect?.(profile.profile_id));
     return control;
   });
+  const pending = isTflite && !protectedSourceLedgersLoaded
+    ? ["TFLite GPU", "NNAPI"].map((name) => pendingButton(name))
+    : [];
+  const load = isTflite && !protectedSourceLedgersLoaded
+    ? button("Load source ledgers", "target-pill target-pill-add")
+    : null;
+  load?.addEventListener("click", () => onLoadSourceLedgers?.());
   root.hidden = false;
-  root.replaceChildren(label(), ...pills, boundary());
+  root.replaceChildren(label(), ...pills, ...pending, ...(load ? [load] : []), boundary());
   return selected;
 }
 

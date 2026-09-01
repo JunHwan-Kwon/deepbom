@@ -127,19 +127,23 @@ try {
   }, null, { timeout: 30_000 });
   const acceleratorSurface = await page.locator("#executionPlacementPanel").evaluate((panel) => ({
     text: panel.textContent || "",
-    acceleratorProfile: panel.querySelector('[data-profile-class="accelerator"] select')?.value || "",
-    cpuProfile: panel.querySelector('[data-profile-class="cpu"] select')?.value || "",
+    acceleratorProfiles: [...panel.querySelectorAll('.placement-profile-comparison-card[data-profile-class="accelerator"]')]
+      .map((card) => card.dataset.profileId || ""),
+    cpuProfiles: [...panel.querySelectorAll('.placement-profile-comparison-card[data-profile-class="cpu"]')]
+      .map((card) => card.dataset.profileId || ""),
     detailProfile: panel.querySelector(".placement-profile-detail-select select")?.value || "",
     loadSourceAction: [...panel.querySelectorAll("button")].some((button) => button.textContent?.includes("Load GPU / NNAPI source ledger")),
     overflow: Math.max(0, panel.scrollWidth - panel.clientWidth),
   }));
-  const sourceLedgerLoaded = Boolean(acceleratorSurface.acceleratorProfile);
-  if (acceleratorSurface.detailProfile !== (sourceLedgerLoaded ? "tflite_gpu" : "xnnpack_cpu")
-    || sourceLedgerLoaded && (acceleratorSurface.acceleratorProfile !== "tflite_gpu"
-      || acceleratorSurface.cpuProfile !== "xnnpack_cpu"
-      || !acceleratorSurface.text.includes("Accelerator and CPU eligibility comparison"))
+  const sourceLedgerLoaded = acceleratorSurface.acceleratorProfiles.includes("tflite_gpu");
+  const expectedDetailProfile = sourceLedgerLoaded ? "tflite_gpu" : "litert_qualcomm_qnn";
+  if (acceleratorSurface.detailProfile !== expectedDetailProfile
+    || !acceleratorSurface.acceleratorProfiles.includes(expectedDetailProfile)
+    || !acceleratorSurface.cpuProfiles.includes("xnnpack_cpu")
+    || !acceleratorSurface.text.includes("N-way execution-path comparison")
+    || sourceLedgerLoaded && acceleratorSurface.loadSourceAction
     || !sourceLedgerLoaded && (!acceleratorSurface.loadSourceAction
-      || !acceleratorSurface.text.includes("GPU/NNAPI source profiles are not loaded in this run"))
+      || !acceleratorSurface.text.includes("GPU/NNAPI profiles are not loaded in this run"))
     || !acceleratorSurface.text.includes("GPU roofline")
     || acceleratorSurface.overflow > 1) {
     throw new Error(`Accelerator evidence is not integrated into the audited web surface: ${JSON.stringify(acceleratorSurface)}`);
