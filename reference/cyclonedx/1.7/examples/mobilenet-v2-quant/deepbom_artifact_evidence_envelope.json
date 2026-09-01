@@ -10,7 +10,81 @@
     "schema_or_opset": null
   },
   "artifact_set": null,
+  "cpu_cost_target_binding": null,
   "accelerator_profile_binding": null,
+  "accelerator_bindings": [
+    {
+      "schema": "deepbom.accelerator_binding.v1",
+      "profile_id": "litert_qualcomm_qnn",
+      "provider": "qualcomm",
+      "backend": "litert_qnn",
+      "device_class": "npu",
+      "binding_source": "source_rulepack",
+      "evidence_stage": "source_eligibility",
+      "artifact_sha256": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+      "source_rulepack_sha256": "27ad083d654c9aabaeaca3d3265c44791f187cf0a9308868fe1149a0daf0e7e2",
+      "selected_build_sha256": null,
+      "compiled_plan_sha256": null,
+      "runtime_trace_sha256": null,
+      "host_profile_sha256": null,
+      "configuration": {
+        "source_commit": "e8b1ea421cf527584589213c8f5127a8ae8cc997",
+        "source_path": "litert/vendors/qualcomm/compiler/Qualcomm_QNN_Compiler.md",
+        "source_repository": "https://github.com/google-ai-edge/LiteRT"
+      },
+      "coverage": {
+        "assessed_operation_count": 65,
+        "definite_exclusion_count": 0,
+        "source_candidate_operation_count": 65,
+        "unresolved_operation_count": 0
+      },
+      "claims": {
+        "source_eligibility": true,
+        "selected_build": false,
+        "compiled_plan": false,
+        "observed_assignment": false,
+        "measured_execution": false
+      },
+      "interpretation_boundary": "Pinned LiteRT Qualcomm compiler legalization registry precheck. Per-op legalization predicates, selected QNN SDK/plugin build, SoC/backend capability, compiled QNN graph, dispatch, execution, transfer, and latency remain unresolved until identity-bound evidence is imported.",
+      "binding_sha256": "3f1cb3a274cfa7bc9df6a3c8755e9d36e01d11f20f51f0e2123ec24665fcbf1b"
+    },
+    {
+      "schema": "deepbom.accelerator_binding.v1",
+      "profile_id": "tflite_coreml_delegate",
+      "provider": "apple",
+      "backend": "tflite_coreml_delegate",
+      "device_class": "heterogeneous_accelerator",
+      "binding_source": "source_rulepack",
+      "evidence_stage": "source_eligibility",
+      "artifact_sha256": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+      "source_rulepack_sha256": "bcbc76d3f53bb09fd54543cc5512444918f8e718f6d3efc343e0a7fb7698ed5f",
+      "selected_build_sha256": null,
+      "compiled_plan_sha256": null,
+      "runtime_trace_sha256": null,
+      "host_profile_sha256": null,
+      "configuration": {
+        "source_commit": "87bbf65b8d23d3f06912b1b2183587e1884bc45c",
+        "source_path": "tensorflow/lite/delegates/coreml/coreml_delegate.mm",
+        "source_repository": "https://github.com/tensorflow/tensorflow"
+      },
+      "coverage": {
+        "assessed_operation_count": 65,
+        "definite_exclusion_count": 65,
+        "source_candidate_operation_count": 0,
+        "unresolved_operation_count": 0
+      },
+      "claims": {
+        "source_eligibility": true,
+        "selected_build": false,
+        "compiled_plan": false,
+        "observed_assignment": false,
+        "measured_execution": false
+      },
+      "interpretation_boundary": "Pinned TensorFlow Core ML delegate registration, FP16GraphPartitionHelper, serialized op version, constant-FP16 DEQUANTIZE full-versus-partial delegation rule, and visible first-input dtype precheck. Op-specific validators, selected Apple OS/Core ML version and options, delegate build, compiled partition, device selection, execution, and latency remain unresolved.",
+      "binding_sha256": "f176117d21ebb7aee58bda7befcb2407647b99ed0ff06ef8b4ac5f9a4b130862"
+    }
+  ],
+  "policy_identity": null,
   "capabilities": {
     "schema": "deepbom.artifact_capability_manifest.v1",
     "format": "tflite",
@@ -488,7 +562,16 @@
     "operator_count": 65,
     "tensor_count": 173,
     "total_macs": 300775552,
-    "mac_assessment_status": "assessed"
+    "mac_assessment_status": "assessed",
+    "mac_coverage": {
+      "schema": "deepbom.mac_coverage.v1",
+      "format": "tflite",
+      "status": "assessed",
+      "compute_ops": 53,
+      "assessed_compute_ops": 53,
+      "unassessed_compute_ops": 0,
+      "reason": null
+    }
   },
   "external_files": [],
   "metadata": {
@@ -2524,5 +2607,5 @@
     ]
   },
   "evidence_boundary": "Serialized artifact facts and deterministic static derivations. Declarations and runtime measurements are accepted only through separately identified inputs.",
-  "envelope_sha256": "0592a46efd95ea2d4a84b01767d0c9d55347fdabf0a6acc28461048161e2c188"
+  "envelope_sha256": "a5ddcc0172d1992cd222839e9c66d526c6141c8b589b44217c9102b21b178177"
 }

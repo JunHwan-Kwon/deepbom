@@ -60,6 +60,42 @@ No threshold is enabled by default. Organizations must choose a threshold that
 matches their review policy; DEEPBOM does not silently turn research limitations
 or predicted deployment risks into a release policy.
 
+For repeat review, `--review-policy policy.json` replaces `--fail-on`. Its
+result keeps command completion, required-analysis coverage, and finding policy
+as independent states. Exceptions require an exact artifact scope, owner,
+reason, creation time, and optional expiry; target, analyzer, and rulepack
+identity constraints are re-evaluated on every run. Coverage loss is never
+reported as a resolved finding.
+
+```console
+deepbom audit model.tflite --format envelope \
+  --review-policy review-policy.json \
+  --policy-output review-result.json
+```
+
+## CPU and accelerator bindings
+
+`--target` and `--target-profile` bind a TFLite CPU cost model. The envelope
+records whether the target came from the default assumption, an explicit id, or
+a profile file; it always records `host_observed: false`.
+
+Accelerator evidence is separate and uses the shared
+`deepbom.accelerator_binding.v1` lifecycle. Supported imports include an
+MLComputePlan (`--coreml-compute-plan`), an Edge TPU compiler operation ledger
+(`--edgetpu-compiler-evidence`), TensorRT parser/engine evidence, and an NVIDIA
+host profile. A compiled plan never becomes observed assignment without a
+separate runtime trace.
+
+For deterministic N-way source/compiled-plan comparison, use:
+
+```console
+deepbom placement model.tflite --profiles xnnpack_cpu,tflite_coreml_delegate,litert_qualcomm_qnn --compact
+```
+
+The result is `deepbom.placement_comparison.v1`. Every selected row must
+classify the complete canonical graph; no provider order, physical transfer,
+generated kernel, latency, or task-correctness claim is inferred.
+
 ## Reproducibility and output safety
 
 ```console

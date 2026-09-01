@@ -1,6 +1,14 @@
 import { runNode } from "./run-utils.mjs";
 
 const CHECKS = [
+  "scripts/sync-version.mjs --check",
+  "scripts/check-expected-output.mjs",
+  "scripts/check-review-policy.mjs",
+  "scripts/check-accelerator-binding.mjs",
+  "scripts/check-mlbom-conservation.mjs",
+  "scripts/check-placement-comparison.mjs",
+  "scripts/check-runtime-accelerator-import.mjs",
+  "scripts/check-static-audit-worker-client.mjs",
   "scripts/write-build-metadata.mjs",
   "scripts/check-build-metadata.mjs",
   "scripts/check-zenodo-release.mjs",
@@ -39,7 +47,7 @@ const CHECKS = [
   "scripts/check-package-verifier.mjs",
   "scripts/check-model-file-contract.mjs",
   "scripts/check-format-routing.mjs",
-  "scripts/check-parser-robustness.mjs",
+  "scripts/check-parser-robustness-isolated.mjs",
   "scripts/generate-executorch-operator-signatures.mjs --check",
   "scripts/check-executorch-analysis.mjs",
   "scripts/check-format-quantization-isolation.mjs",

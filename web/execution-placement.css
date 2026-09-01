@@ -238,9 +238,47 @@
 
 .placement-profile-comparison-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 10px;
   margin-top: 10px;
+}
+
+.placement-profile-comparison-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.placement-profile-comparison-toggle {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  gap: 7px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.placement-profile-comparison-toggle:has(input:checked) {
+  border-color: var(--accent-2);
+  background: var(--surface-soft);
+}
+
+.placement-profile-comparison-toggle input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent-2);
+}
+
+.placement-profile-comparison-toggle:focus-within {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
 }
 
 .placement-profile-comparison-card {
@@ -255,14 +293,23 @@
   border-top-color: var(--blue);
 }
 
-.placement-profile-comparison-select {
-  grid-template-columns: minmax(0, 1fr);
-  align-items: stretch;
+.placement-profile-comparison-identity > span,
+.placement-profile-comparison-identity > strong,
+.placement-profile-comparison-identity > small {
+  display: block;
 }
 
-.placement-profile-comparison-select select {
-  width: 100%;
-  min-height: 40px;
+.placement-profile-comparison-identity > span,
+.placement-profile-comparison-identity > small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.placement-profile-comparison-identity > strong {
+  margin-top: 3px;
+  color: var(--text);
+  font-size: 12px;
+  overflow-wrap: anywhere;
 }
 
 .placement-profile-comparison-summary {
@@ -337,7 +384,7 @@
     padding: 9px;
   }
 
-  .placement-profile-comparison-select select {
+  .placement-profile-comparison-toggle {
     min-height: 44px;
   }
 

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       expected_version:
-        description: Exact package.json version
+        description: Exact release/version.json base version
         required: true
         type: string
       publish:
@@ -15,6 +15,9 @@ on:
 
 permissions:
   contents: read
+
+env:
+  DEEPBOM_RELEASE_VERSION: ${{ inputs.expected_version }}
 
 concurrency:
   group: deepbom-installation-channels-${{ github.ref }}
@@ -64,6 +67,8 @@ jobs:
       - name: Verify release identity
         shell: bash
         run: |
+          node scripts/sync-version.mjs --validate-release "${{ inputs.expected_version }}"
+          node scripts/sync-version.mjs --release "${{ inputs.expected_version }}"
           actual="$(node -p "require('./package.json').version")"
           test "$actual" = "${{ inputs.expected_version }}"
           if [[ "${{ inputs.publish }}" == "true" ]]; then
@@ -133,6 +138,8 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+      - name: Materialize release metadata
+        run: node scripts/sync-version.mjs --release "${{ inputs.expected_version }}"
       - uses: actions/download-artifact@v6
         with:
           pattern: deepbom-wheel-*
@@ -156,6 +163,8 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+      - name: Materialize release metadata
+        run: node scripts/sync-version.mjs --release "${{ inputs.expected_version }}"
       - uses: actions/download-artifact@v6
         with:
           pattern: deepbom-engine-*
@@ -211,6 +220,8 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+      - name: Materialize release metadata
+        run: node scripts/sync-version.mjs --release "${{ inputs.expected_version }}"
       - name: Install declared Cargo MSRV
         shell: pwsh
         run: rustup toolchain install 1.85.0 --profile minimal --no-self-update
@@ -240,6 +251,8 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+      - name: Materialize release metadata
+        run: node scripts/sync-version.mjs --release "${{ inputs.expected_version }}"
       - name: Publish verified launcher
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

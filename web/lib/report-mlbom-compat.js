@@ -5,6 +5,7 @@ import {
   predictedPartitionBoundaryInventory,
 } from "./analysis.js";
 import { tensorShapeText } from "./format.js";
+import { deriveMacCoverage, deriveQuantizedComputeAssessment } from "./mac-coverage.js";
 import { collectArtifactIntegrity } from "./report-integrity.js";
 
 const DETAIL_POINTER = "engineering_evidence.json#/evidence/static_analysis";
@@ -67,6 +68,10 @@ export function buildMlBomCompatibilityProjection(analysis, {
   const validSerialNumber = /^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(serialNumber);
   const artifactSet = analysis?.artifact_set;
   const accelerator = analysis?.accelerator_profile_binding;
+  const macCoverage = deriveMacCoverage(analysis, quant);
+  const quantizedAssessment = deriveQuantizedComputeAssessment(analysis, quant, macCoverage);
+  const computeOperators = finite(quant.compute_ops ?? macCoverage.compute_ops);
+  const quantizedComputeOperators = finite(quant.quantized_compute_ops);
 
   const componentProperties = compact([
     property("deepbom:compatibility:profile", "deepbom.compact_mlbom_compatibility.v2"),
@@ -77,15 +82,19 @@ export function buildMlBomCompatibilityProjection(analysis, {
     property("mlbom:model:operatorCount", finite(analysis?.operator_count)),
     property("mlbom:model:tensorCount", finite(analysis?.tensor_count)),
     property("mlbom:model:totalMacs", finite(analysis?.total_macs)),
-    property("mlbom:model:macAssessmentStatus", analysis?.mac_assessment?.status || (format === "tflite" ? "assessed" : "not_assessed")),
-    property("mlbom:model:macAssessedComputeOps", finite(analysis?.mac_assessment?.assessed_compute_ops)),
-    property("mlbom:model:macComputeOps", finite(analysis?.mac_assessment?.compute_ops ?? quant.compute_ops)),
+    property("mlbom:model:macAssessmentStatus", macCoverage.status),
+    property("mlbom:model:macAssessmentReason", macCoverage.reason),
+    property("mlbom:model:macAssessedComputeOps", finite(macCoverage.assessed_compute_ops)),
+    property("mlbom:model:macComputeOps", finite(macCoverage.compute_ops)),
     property("mlbom:model:quantizationClassification", quant.classification),
     property("mlbom:model:fullIntegerQuantized", typeof quant.full_integer === "boolean" ? quant.full_integer : null),
     property("mlbom:model:quantizedComputeMacRatio", quantizedRatio),
-    property("mlbom:model:quantizedComputeMacAssessment", quantizedRatio == null ? "not_assessed_mac_coverage_incomplete" : "assessed"),
-    property("mlbom:model:quantizedComputeOperators", finite(quant.quantized_compute_ops)),
-    property("mlbom:model:computeOperators", finite(quant.compute_ops)),
+    property("mlbom:model:quantizedComputeMacAssessment", quantizedAssessment.mac_status),
+    property("mlbom:model:quantizedComputeMacAssessmentReason", quantizedAssessment.mac_reason),
+    property("mlbom:model:quantizedComputeOperatorAssessment", quantizedAssessment.operator_status),
+    property("mlbom:model:quantizedComputeOperatorAssessmentReason", quantizedAssessment.operator_reason),
+    property("mlbom:model:quantizedComputeOperators", quantizedComputeOperators),
+    property("mlbom:model:computeOperators", computeOperators),
     property("mlbom:model:quantizedComputeMacs", finite(quant.quantized_compute_macs)),
     property("mlbom:model:computeMacs", finite(quant.compute_macs)),
     property("mlbom:target:id", target.id || targetId),

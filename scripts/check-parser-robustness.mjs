@@ -5,7 +5,7 @@
 //   rejected  - threw a domain Error (desired fail-closed behaviour)
 //   accepted  - returned an analysis (suspicious when the input is invalid)
 //   crash     - threw TypeError/RangeError/non-Error (unhandled internal fault)
-//   hang      - exceeded the per-case time budget
+//   timeout   - exceeded the per-case time budget
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -17,6 +17,21 @@ const { readArtifactBundle, inspectArtifactBundle } = await import(pathToFileURL
 
 const CASE_TIMEOUT_MS = 8000;
 const results = [];
+const descriptors = [];
+const isolationMode = String(process.env.DEEPBOM_PARSER_ROBUSTNESS_MODE || "standalone");
+const selectedCaseId = String(process.env.DEEPBOM_PARSER_ROBUSTNESS_CASE || "");
+
+function caseId(group, name) {
+  return `${group}:${name}`;
+}
+
+function selected(group, name, expectation) {
+  const id = caseId(group, name);
+  descriptors.push({ id, group, name, expectation, timeout_ms: group === "fuzz" ? 120000 : 15000 });
+  if (isolationMode === "list") return false;
+  if (isolationMode === "case") return id === selectedCaseId;
+  return true;
+}
 
 function file(name, bytes, relativePath) {
   const blob = new File([bytes], name);
@@ -25,6 +40,7 @@ function file(name, bytes, relativePath) {
 }
 
 async function run(group, name, expectation, thunk) {
+  if (!selected(group, name, expectation)) return null;
   let timer;
   const started = performance.now();
   let outcome;
@@ -35,7 +51,7 @@ async function run(group, name, expectation, thunk) {
     ]);
     outcome = { status: "accepted", detail: summarize(value) };
   } catch (error) {
-    if (error?.message === "__TIMEOUT__") outcome = { status: "hang", detail: `>${CASE_TIMEOUT_MS}ms` };
+    if (error?.message === "__TIMEOUT__") outcome = { status: "timeout", detail: `>${CASE_TIMEOUT_MS}ms` };
     else if (typeof error === "string") outcome = { status: "rejected", detail: `[thrown as string, not Error] ${error}` };
     else if (!(error instanceof Error)) outcome = { status: "crash", detail: `non-Error thrown: ${String(error)}` };
     else if (error instanceof TypeError || error instanceof RangeError || error instanceof ReferenceError) {
@@ -502,6 +518,8 @@ function mulberry32(seed) {
 }
 
 async function fuzz(label, base, invoke, iterations, headerBias) {
+  const name = `${label} x${iterations}`;
+  if (!selected("fuzz", name, "no-fault")) return;
   const random = mulberry32(0x51ed4a);
   const faults = [];
   let rejected = 0;
@@ -534,7 +552,7 @@ async function fuzz(label, base, invoke, iterations, headerBias) {
     if (performance.now() - started > 4000) faults.push({ kind: "slow", seeds, detail: `${Math.round(performance.now() - started)}ms` });
   }
   results.push({
-    group: "fuzz", name: `${label} x${iterations}`, expectation: "no-fault",
+    group: "fuzz", name, expectation: "no-fault",
     status: faults.length ? "crash" : "rejected",
     detail: faults.length ? `${faults.length} faults; first: ${faults[0].kind} @ ${faults[0].seeds.join(",")} -> ${faults[0].detail}` : `${accepted} accepted / ${rejected} cleanly rejected`,
     duration_ms: 0,
@@ -566,7 +584,7 @@ for (const [group, rows] of byGroup) {
   for (const row of rows) {
     const mark = row.verdict === "ok" ? "  ok " : ">>FAIL";
     console.log(`${mark} [${row.status.padEnd(8)}] ${row.name}`);
-    if (row.verdict !== "ok" || row.status === "crash" || row.status === "hang") console.log(`         -> ${row.detail}`);
+    if (row.verdict !== "ok" || row.status === "crash" || row.status === "timeout") console.log(`         -> ${row.detail}`);
   }
 }
 console.log(`\nTOTAL ${results.length} cases, ${failures.length} unexpected`);
@@ -574,4 +592,12 @@ if (failures.length) process.exitCode = 1;
 if (failures.length) {
   console.log("\nUNEXPECTED BEHAVIOUR:");
   for (const row of failures) console.log(`  [${row.group}] ${row.name}\n     status=${row.status} (${row.duration_ms}ms) detail=${row.detail}`);
+}
+
+if (isolationMode === "list") {
+  console.log(`DEEPBOM_PARSER_CASES_JSON=${JSON.stringify(descriptors)}`);
+} else if (isolationMode === "case") {
+  const row = results[0] || null;
+  console.log(`DEEPBOM_PARSER_RESULT_JSON=${JSON.stringify(row)}`);
+  if (!row || results.length !== 1 || row.verdict !== "ok") process.exitCode = 1;
 }

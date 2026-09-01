@@ -4,6 +4,9 @@ import { canonicalJson, normalizeJsonContractValue } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { validateArtifactSet } from "./artifact-set.js";
 import { validateNvidiaAcceleratorProfileBinding } from "./accelerator-profile-binding.js";
+import { collectAcceleratorBindings, validateAcceleratorBinding } from "./accelerator-binding.js";
+import { validateCpuCostTargetBinding } from "./cpu-target-binding.js";
+import { deriveMacCoverage } from "./mac-coverage.js";
 
 export const ARTIFACT_EVIDENCE_SCHEMA = "deepbom.artifact_evidence_envelope.v1";
 export const EVIDENCE_CLASSES = Object.freeze([
@@ -258,13 +261,6 @@ function assessmentState(status, value) {
   return "partial";
 }
 
-function macAssessmentStatus(analysis, format) {
-  const explicit = text(analysis?.mac_assessment?.status);
-  if (explicit) return explicit;
-  if (format !== "tflite" || finite(analysis?.total_macs) == null || !Array.isArray(analysis?.ops)) return "not_assessed";
-  return analysis.ops.every((op) => finite(op?.macs) != null) ? "assessed" : "not_assessed";
-}
-
 function findingRows(analysis, options) {
   let findings = Array.isArray(options?.findings) ? options.findings : null;
   if (!findings) {
@@ -344,6 +340,7 @@ function formatExtensionSummary(analysis, format) {
 
 export function buildArtifactEvidenceEnvelope(analysis = {}, options = {}) {
   const format = text(analysis.format || options.format || "unknown").toLowerCase();
+  const macCoverage = deriveMacCoverage(analysis);
   const interfaces = buildInterfaceQuantizationContractLedger(analysis);
   const files = externalFiles(analysis);
   const findings = findingRows(analysis, options);
@@ -360,14 +357,22 @@ export function buildArtifactEvidenceEnvelope(analysis = {}, options = {}) {
     generated_at: text(options.generatedAt) || null,
     identity,
     artifact_set: analysis?.artifact_set || null,
+    cpu_cost_target_binding: analysis?.cpu_cost_target_binding || null,
     accelerator_profile_binding: analysis?.accelerator_profile_binding || null,
+    accelerator_bindings: collectAcceleratorBindings(
+      analysis,
+      options.runtimeEvidence || options.runtimeAssignmentEvidence || null,
+      identity.sha256,
+    ),
+    policy_identity: analysis?.policy_identity || null,
     capabilities: capabilityManifest(analysis, format),
     interfaces,
     graph: {
       operator_count: ["gguf", "safetensors"].includes(format) ? null : finite(analysis.operator_count ?? analysis.ops?.length),
       tensor_count: finite(analysis.tensor_count ?? analysis.tensors?.length),
       total_macs: finite(analysis.total_macs),
-      mac_assessment_status: macAssessmentStatus(analysis, format),
+      mac_assessment_status: macCoverage.status,
+      mac_coverage: macCoverage,
     },
     external_files: files,
     metadata: observedMetadata(analysis),
@@ -389,10 +394,20 @@ export function validateArtifactEvidenceEnvelope(envelope) {
     try { validateArtifactSet(envelope.artifact_set); }
     catch { errors.push("invalid_artifact_set"); }
   }
+  if (envelope?.cpu_cost_target_binding) {
+    try { validateCpuCostTargetBinding(envelope.cpu_cost_target_binding); }
+    catch { errors.push("invalid_cpu_cost_target_binding"); }
+  }
   if (envelope?.accelerator_profile_binding) {
     try { validateNvidiaAcceleratorProfileBinding(envelope.accelerator_profile_binding); }
     catch { errors.push("invalid_accelerator_profile_binding"); }
   }
+  if (!Array.isArray(envelope?.accelerator_bindings)) errors.push("accelerator_bindings_missing");
+  for (const binding of envelope?.accelerator_bindings || []) {
+    try { validateAcceleratorBinding(binding); }
+    catch { errors.push(`invalid_accelerator_binding:${text(binding?.profile_id) || "unknown"}`); }
+  }
+  if (envelope?.policy_identity && !validPolicyIdentity(envelope.policy_identity)) errors.push("invalid_policy_identity");
   if (!Array.isArray(envelope?.interfaces?.parameters)) errors.push("interface_ledger_missing");
   for (const file of envelope?.external_files || []) {
     if (!sha256(file.sha256)) errors.push(`invalid_external_file_sha256:${file.path}`);
@@ -405,4 +420,11 @@ export function validateArtifactEvidenceEnvelope(envelope) {
   delete expected.envelope_sha256;
   if (envelope?.envelope_sha256 !== sha256TextHex(canonicalJson(expected))) errors.push("envelope_sha256_mismatch");
   return { valid: errors.length === 0, errors };
+}
+
+function validPolicyIdentity(value) {
+  return value?.schema === "deepbom.review_policy.v1"
+    && sha256(value?.policy_sha256)
+    && sha256(value?.source_file_sha256)
+    && ["observe", "enforce"].includes(value?.mode);
 }

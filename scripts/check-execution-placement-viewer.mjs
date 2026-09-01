@@ -196,9 +196,12 @@ try {
   }
 
   await page.evaluate(({ analysis }) => globalThis.renderPlacementCase(analysis), { analysis: cases.tflite });
-  assert.equal(await page.locator(".placement-profile-comparison-card").count(), 2, "TFLite should compare one accelerator and one CPU projection side by side.");
-  assert.equal(await page.locator('[data-profile-class="accelerator"] select').inputValue(), "tflite_gpu", "TFLite GPU profile should be the default accelerator projection.");
-  assert.equal(await page.locator('[data-profile-class="cpu"] select').inputValue(), "xnnpack_cpu", "XNNPACK should be the default CPU projection.");
+  assert.equal(await page.locator(".placement-profile-comparison-card").count(), 2, "TFLite should begin with one accelerator and one CPU projection.");
+  assert.deepEqual((await page.locator(".placement-profile-comparison-card").evaluateAll((nodes) => nodes.map((node) => node.dataset.profileId))).sort(),
+    ["tflite_gpu", "xnnpack_cpu"], "Default comparison should bind TFLite GPU and XNNPACK by profile identity.");
+  await page.locator('.placement-profile-comparison-toggle input[value="tflite_coreml_delegate"]').check();
+  assert.equal(await page.locator(".placement-profile-comparison-card").count(), 3, "N-way comparison should add a third source profile without replacing either baseline.");
+  assert.equal(await page.locator('[data-profile-id="tflite_coreml_delegate"]').count(), 1, "Core ML source profile should render by exact profile ID.");
   assert.equal(await page.locator(".placement-profile-detail-select select").inputValue(), "tflite_gpu", "Detailed projection should retain the preferred accelerator profile.");
   const comparisonText = await page.locator(".placement-profile-comparison").innerText();
   assert.match(comparisonText, /Boundary exposure/i);
@@ -254,7 +257,7 @@ try {
   assert.equal(new Set(mobile.levels.map((level) => Math.round(level.left))).size, 1, "mobile vertical level alignment");
   assert(mobile.levels.every((level, index) => !index || level.top > mobile.levels[index - 1].bottom), "mobile level order");
   assert(mobile.actionHeights.every((height) => height >= 44), `mobile action target heights ${mobile.actionHeights}`);
-  assert(mobile.comparisonSelectHeights.every((height) => height >= 44), `mobile comparison target heights ${mobile.comparisonSelectHeights}`);
+  assert(mobile.comparisonToggleHeights.every((height) => height >= 44), `mobile comparison target heights ${mobile.comparisonToggleHeights}`);
   assert.equal(mobile.comparisonColumns, 1, "mobile accelerator/CPU comparison should stack into one column");
   assert(mobile.comparisonCards.every((card) => card.width <= mobile.rootWidth + 0.5), `mobile comparison card overflow ${JSON.stringify(mobile.comparisonCards)}`);
   assert.equal(mobile.scrollHintDisplay, "block", "mobile segment-scroll instruction");
@@ -305,7 +308,7 @@ async function placementState(page) {
         ? getComputedStyle(root.querySelector(".execution-placement-scroll-hint")).display
         : "absent",
       actionHeights: [...root.querySelectorAll(".execution-placement-actions button")].map((node) => node.getBoundingClientRect().height),
-      comparisonSelectHeights: [...root.querySelectorAll(".placement-profile-comparison-select select")].map((node) => node.getBoundingClientRect().height),
+      comparisonToggleHeights: [...root.querySelectorAll(".placement-profile-comparison-toggle")].map((node) => node.getBoundingClientRect().height),
       comparisonColumns: comparisonGrid ? getComputedStyle(comparisonGrid).gridTemplateColumns.split(" ").filter(Boolean).length : 0,
       comparisonCards: [...root.querySelectorAll(".placement-profile-comparison-card")].map((node) => {
         const rect = node.getBoundingClientRect();

@@ -11,13 +11,16 @@ values that cannot be assessed statically.
 
 ## Quick start
 
-Requirements: Node.js 20 or newer, Rust for Rust-source checks, and Python 3.9
-or newer when building the Python channel.
+Run the published CLI without cloning the repository (Node.js 20 or newer):
 
 ```bash
-npm ci
-node bin/deepbom.mjs audit web/samples/mobilenet_v2_1.0_224_quant.tflite --compact
+npx deepbom audit "https://raw.githubusercontent.com/JunHwan-Kwon/deepbom/main/web/samples/gpu_partition_probe.onnx#sha256=82a2feef00eb6ab03d82f2b30cd17f4d826e2d8307cb059eccd6a0f3120059b2"
 ```
+
+The pinned expected values and independent verifier are in
+[`examples/expected-output`](examples/expected-output/README.md). Source builds
+require Rust and, for the Python channel, Python 3.9 or newer; maintainer setup
+is documented separately below.
 
 Verified release channels expose the same analysis implementation:
 
@@ -31,13 +34,16 @@ deepbom audit model.gguf --compact
 deepbom verify model.tflite --contract production-interface.json
 deepbom diff baseline.tflite candidate.tflite
 deepbom explore model.tflite
+deepbom placement model.tflite --profiles xnnpack_cpu,tflite_coreml_delegate,litert_qualcomm_qnn
 ```
 
 The default is a terminal-sized evidence summary. `--json` and `--compact`
 expose complete format evidence; `--format envelope` provides the canonical
 cross-format contract; CycloneDX 1.7 and OASIS SARIF 2.1.0 are standard
 projections. `--policy-output` records a hash-bound gate result when `--fail-on`
-is selected. See [`docs/CLI_AUTOMATION.md`](docs/CLI_AUTOMATION.md). The complete
+is selected. `--review-policy` adds identity-scoped, expiring exceptions and
+keeps execution, coverage, and finding-policy states independent. See
+[`docs/CLI_AUTOMATION.md`](docs/CLI_AUTOMATION.md). The complete
 option inventory is generated from the executable in
 [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md).
 
@@ -47,6 +53,12 @@ multi-target TFLite deployment-delta ledger, and `explore` exposes the existing
 WASM redesign Pareto search without claiming trained-model accuracy. A strict
 custom TFLite target can be bound with `--target-profile profile.json`; the CLI
 records both the source-file SHA-256 and the resolved Rust profile SHA-256.
+Accelerator evidence is separate from that CPU cost profile. Source-pinned
+TFLite Core ML and LiteRT Qualcomm QNN profiles, Core ML MLComputePlan, Edge TPU
+and Qualcomm compiler reports, TensorRT parser/engine evidence, and NVIDIA host
+profiles use a shared staged binding without promoting static or compiled
+evidence to observed execution. `placement` compares any available profiles
+over one conserved graph ledger without inventing backend priority.
 
 The Cargo launcher downloads only the engine matching its exact package version
 and platform from the corresponding immutable GitHub Release. It validates the
@@ -86,6 +98,11 @@ The browser workbench is available at [deepbom.org](https://deepbom.org/).
 Static compatibility does not establish observed execution-provider assignment,
 device latency, task accuracy, clinical validity, or release readiness. Runtime
 claims require an identity-bound runtime capture.
+
+The detailed format and accelerator boundary is maintained in
+[`docs/SUPPORT_MATRIX.md`](docs/SUPPORT_MATRIX.md). Bugs can be reported without
+sharing model bytes using
+[`docs/MODEL_FREE_BUG_REPORTING.md`](docs/MODEL_FREE_BUG_REPORTING.md).
 
 ## Distribution boundary
 

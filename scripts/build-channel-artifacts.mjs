@@ -7,9 +7,12 @@ import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { resolveNpmCommand } from "./run-utils.mjs";
 import { writeBuildMetadata } from "./write-build-metadata.mjs";
+import { readVersionContract } from "./version-contract.mjs";
+import { RELEASE_GENERATED_TRACKED_ARTIFACTS } from "./release-generated-artifacts.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageDocument = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
+const versionContract = await readVersionContract(root);
 const output = resolveOutput(process.argv.slice(2));
 const withDist = process.argv.includes("--with-dist");
 const publicLicense = path.join(root, "channels", "LICENSE");
@@ -17,10 +20,10 @@ const wasmSource = withDist
   ? path.join(root, "dist", "pkg", "tflite_wasm_audit_bg.wasm")
   : path.join(root, "pkg", "tflite_wasm_audit_bg.wasm");
 const gitCommit = runCapture("git", ["rev-parse", "HEAD"]).trim();
-const gitState = runCapture("git", ["status", "--porcelain=v1", "--untracked-files=all", "--", ".", ":!.local-validation", ":!dist", ":!web/lib/build-metadata.js"]).trim() ? "dirty" : "clean";
+const gitState = runCapture("git", ["status", "--porcelain=v1", "--untracked-files=all", "--", ".", ":!.local-validation", ":!dist", ":!web/lib/build-metadata.js", ...RELEASE_GENERATED_TRACKED_ARTIFACTS.map((file) => `:!${file}`)]).trim() ? "dirty" : "clean";
 const wasmSha256 = createHash("sha256").update(await readFile(wasmSource)).digest("hex");
 writeBuildMetadata({ publicDistribution: true });
-await assertChannelVersions(packageDocument.version);
+await assertChannelVersions(versionContract);
 assertLocalOutput(output);
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
@@ -131,6 +134,14 @@ run(executable, ["--version"]);
 const engineManifest = {
   schema: "deepbom.packaged_engine.v1",
   version: packageDocument.version,
+  version_contract: {
+    base_version: versionContract.baseVersion,
+    channel: versionContract.channel,
+    display_version: versionContract.displayVersion,
+    npm_version: versionContract.npmVersion,
+    python_version: versionContract.pythonVersion,
+    cargo_version: versionContract.cargoVersion,
+  },
   platform: process.platform,
   arch: process.arch,
   executable: { filename: executableName, ...(await fileRecord(engineRoot, executable)) },
@@ -177,7 +188,17 @@ const manifest = {
   analysis_entrypoint: "bundled bin/deepbom.mjs",
   supported_formats: ["tflite", "onnx", "gguf", "safetensors", "coreml", "executorch"],
   supported_packages: ["onnx_external_data", "safetensors_sharded_repository", "coreml_mlpackage"],
-  accelerator_contracts: ["nvidia_accelerator_profile", "accelerator_profile_binding", "tensorrt_static_preflight", "tensorrt_parser_evidence", "tensorrt_llm_config_binding"],
+  accelerator_contracts: [
+    "accelerator_binding",
+    "nvidia_accelerator_profile",
+    "accelerator_profile_binding",
+    "coreml_compute_plan",
+    "edgetpu_compiler_evidence",
+    "tensorrt_static_preflight",
+    "tensorrt_parser_evidence",
+    "tensorrt_engine_inspector",
+    "tensorrt_llm_config_binding",
+  ],
   acquisition_contracts: ["artifact_set", "remote_artifact_acquisition"],
   visualization_contracts: ["graph_ir", "visualization_manifest", "svg", "png", "html", "mermaid", "dot"],
   build_runtime: { node: process.versions.node, platform: process.platform, arch: process.arch },
@@ -239,17 +260,18 @@ async function fileRecord(base, file) {
   return { path: relative(base, file), byte_length: bytes.byteLength, sha256: createHash("sha256").update(bytes).digest("hex") };
 }
 
-async function assertChannelVersions(version) {
+async function assertChannelVersions(contract) {
   const sources = [
-    ["bin/deepbom.mjs", /const VERSION = [^\n]+: "([^"]+)";/],
-    ["channels/python/pyproject.toml", /^version\s*=\s*"([^"]+)"/m],
-    ["channels/python/src/deepbom/__init__.py", /^__version__\s*=\s*"([^"]+)"/m],
-    ["channels/cargo/Cargo.toml", /^version\s*=\s*"([^"]+)"/m],
+    ["package.json", /"version"\s*:\s*"([^"]+)"/, contract.npmVersion],
+    ["bin/deepbom.mjs", /const VERSION = [^\n]+: "([^"]+)";/, contract.displayVersion],
+    ["channels/python/pyproject.toml", /^version\s*=\s*"([^"]+)"/m, contract.pythonVersion],
+    ["channels/python/src/deepbom/__init__.py", /^__version__\s*=\s*"([^"]+)"/m, contract.pythonVersion],
+    ["channels/cargo/Cargo.toml", /^version\s*=\s*"([^"]+)"/m, contract.cargoVersion],
   ];
-  for (const [relativePath, pattern] of sources) {
+  for (const [relativePath, pattern, expected] of sources) {
     const source = await readFile(path.join(root, relativePath), "utf8");
     const observed = source.match(pattern)?.[1];
-    if (observed !== version) throw new Error(`Release version drift: package.json=${version}, ${relativePath}=${observed || "missing"}.`);
+    if (observed !== expected) throw new Error(`Release version drift: expected ${relativePath}=${expected}, observed ${observed || "missing"}.`);
   }
 }
 

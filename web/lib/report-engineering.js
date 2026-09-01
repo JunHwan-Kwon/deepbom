@@ -24,6 +24,7 @@ import { tfliteSubgraphInventoryMarkdown } from "./report-engineering-tflite-sub
 import { tfliteAlternateDelegateCompatibilityMarkdown } from "./report-engineering-tflite-delegates.js";
 import { analyzerContentVersion } from "./cyclonedx-identity.js";
 import { buildExecutionPlacementEvidence } from "./execution-placement-evidence.js";
+import { collectAcceleratorBindings } from "./accelerator-binding.js";
 import { executionPlacementCoverageRows, executionPlacementMarkdown, executionPlacementRuntimeMetricResults } from "./report-execution-placement.js";
 import { buildOnnxRuntimeShapeBinding } from "./onnx-runtime-shape-binding.js";
 import { delegationRuleBasisText, formatRidge, intensityPosture, peakArenaReconciliation, simdAssumptionsForAnalysis, xnnpackBuildRequirementsSummary } from "./report-engineering-derivations.js";
@@ -2028,6 +2029,7 @@ function serializedArtifactEngineeringReportArtifacts(sourceAnalysis, {
   const analysis = fieldAccess.analysis;
   const format = String(analysis.format || "").toLowerCase();
   const executionPlacement = executionPlacementEvidence || buildExecutionPlacementEvidence(analysis, runtimeEvidence);
+  const acceleratorBindings = collectAcceleratorBindings(analysis, runtimeEvidence);
   const calibrationValidation = runtimeEvidence?.calibrationValidationResult || runtimeEvidence?.representative_dataset_validation || null;
   const importedRuntimeEvidence = runtimeEvidence?.runtimeAssignmentEvidence || runtimeEvidence?.runtime_assignment || null;
   const coreMlComputePlan = importedRuntimeEvidence?.schema === "deepbom.coreml_compute_plan.v1" ? importedRuntimeEvidence : null;
@@ -2206,6 +2208,7 @@ export function buildEngineeringReportArtifacts(analysis, {
   const fieldAccess = createAnalysisFieldAccessTracker(sourceAnalysis);
   analysis = fieldAccess.analysis;
   const executionPlacement = executionPlacementEvidence || buildExecutionPlacementEvidence(analysis, runtimeEvidence);
+  const acceleratorBindings = collectAcceleratorBindings(analysis, runtimeEvidence);
   const quant = modelQuantizationStatus(analysis);
   const batchOneProjection = deriveTfliteBatchOneProjection(analysis);
   const findings = buildFindingsRegister(analysis, {
@@ -2375,6 +2378,22 @@ export function buildEngineeringReportArtifacts(analysis, {
       ...(onnx ? [["Algorithm-dependent arithmetic", `${formatNumber(analysis.mac_assessment?.algorithm_dependent_arithmetic_ops || 0)} transform op(s) excluded from the nominal tensor-contraction MAC denominator because the serialized operator does not select an implementation algorithm`]] : []),
       ...(onnx ? [["Assessed arithmetic operations", `${analysis.mac_assessment?.total_assessed_ops_decimal ?? formatNumber(analysis.mac_assessment?.total_assessed_ops ?? analysis.total_ops ?? 0)}; numeric mirror ${analysis.mac_assessment?.total_assessed_ops == null ? "withheld outside safe integer range" : formatNumber(analysis.mac_assessment.total_assessed_ops)}; ${analysis.mac_assessment?.safe_number_mirror_status || "mirror status not emitted"}`]] : []),
       ["Target profile version", `${analysis.target_profile?.id || "unknown"} @ rulepack ${ANALYZER_METADATA.rulepackVersion}`],
+      ["CPU target binding contract", analysis.cpu_cost_target_binding
+        ? `${analysis.cpu_cost_target_binding.schema}; profile ${analysis.cpu_cost_target_binding.profile_id}`
+        : "not bound"],
+      ["CPU target binding source", analysis.cpu_cost_target_binding?.binding_source || "not bound"],
+      ["CPU target host observation", analysis.cpu_cost_target_binding?.host_observed === false
+        ? "false; selected CPU cost profiles are planning inputs, not host detection"
+        : "not established"],
+      ["CPU target binding digest", analysis.cpu_cost_target_binding?.profile_sha256 || "not bound"],
+      ["CPU target source input", analysis.cpu_cost_target_binding?.source_input
+        ? `${analysis.cpu_cost_target_binding.source_input.filename}; ${formatNumber(analysis.cpu_cost_target_binding.source_input.byte_length)} B; source SHA-256 ${analysis.cpu_cost_target_binding.source_input.source_sha256}; normalized profile SHA-256 ${analysis.cpu_cost_target_binding.source_input.normalized_profile_sha256}; duplicate-key validation ${analysis.cpu_cost_target_binding.source_input.duplicate_key_validation}`
+        : "not applicable for a built-in target profile"],
+      ["Accelerator evidence binding count", formatNumber(acceleratorBindings.length)],
+      ...acceleratorBindings.map((binding) => [
+        `Accelerator ${binding.profile_id}`,
+        `${binding.provider}/${binding.backend}; ${binding.evidence_stage}; binding SHA-256 ${binding.binding_sha256}; ${binding.interpretation_boundary}`,
+      ]),
       ["Profile source", `Rulepack planning assumptions for ${analysis.target_profile?.label || analysis.target_profile?.id || "selected target"}; illustrative profile, not a measured device specification`],
       ["Target architecture", targetValue(analysis, analysis.target_profile?.architecture || "not emitted")],
       ["SIMD width", targetValue(analysis, analysis.target_profile?.simd_width_bits ? `${formatNumber(analysis.target_profile.simd_width_bits)} bits` : "not emitted")],

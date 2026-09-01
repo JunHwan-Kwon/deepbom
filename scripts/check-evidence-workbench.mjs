@@ -8,11 +8,19 @@ import {
   buildNodeEdgeEvidenceOverlayTemplate,
   validateNodeEdgeEvidenceOverlay,
 } from "../web/lib/node-edge-evidence-overlay.js";
-import { buildReviewState, buildSelfContainedReviewHtml } from "../web/lib/review-export.js";
+import { buildReviewState, buildSelfContainedReviewHtml, compareReviewSessions } from "../web/lib/review-export.js";
 
 const SHA_A = "a".repeat(64);
 const SHA_B = "b".repeat(64);
 const base = analysis(SHA_A);
+base.cpu_cost_target_binding = {
+  schema: "deepbom.cpu_cost_target_binding.v1",
+  profile_id: "android_mid_a55",
+  profile_sha256: "c".repeat(64),
+  binding_source: "explicit_id",
+  host_observed: false,
+  source_input: null,
+};
 
 const cursor = createEvidenceCursor({ schema: "deepbom.evidence_cursor.v1", artifact_sha256: SHA_A });
 const cursorEvents = [];
@@ -81,7 +89,19 @@ assert.throws(() => validateNodeEdgeEvidenceOverlay({ ...template, nodes: [{ ...
 assert.throws(() => validateNodeEdgeEvidenceOverlay({ ...template, nodes: [{ ...template.nodes[0], metrics: [{ ...template.nodes[0].metrics[0], value: null, evidence_class: "MEASURED" }] }] }, base), /NOT_ASSESSABLE/);
 assert.throws(() => validateNodeEdgeEvidenceOverlay({ ...template, source: { label: "runtime", collected_at: "yesterday" } }, base), /RFC 3339/);
 
-const reviewState = buildReviewState({ analysis: base, cursor: cursor.get(), graphView: { overlay: "structure" }, workspace: "graph" });
+const reviewState = buildReviewState({ analysis: base, cursor: cursor.get(), graphView: { overlay: "structure", viewport: { scale: 1 } }, workspace: "graph", coverageSummary: { assessed: ["graph", "interfaces"] } });
+assert.equal(reviewState.schema, "deepbom.review_session.v1");
+assert.equal(reviewState.artifact_identity.sha256, SHA_A);
+assert.equal(reviewState.selected_subject.finding_id, "EA-2");
+assert.deepEqual(reviewState.viewport, { scale: 1 });
+assert.equal(reviewState.cpu_cost_target_binding.binding_source, "explicit_id");
+assert.equal(reviewState.cpu_cost_target_binding.host_observed, false);
+const changedSession = buildReviewState({ analysis: changed, coverageSummary: { assessed: ["graph"] } });
+const sessionComparison = compareReviewSessions(reviewState, changedSession);
+assert.equal(sessionComparison.axes.artifact_changed, true);
+assert.equal(sessionComparison.axes.cpu_target_changed, true);
+assert.equal(sessionComparison.coverage.status, "coverage_regression");
+assert.deepEqual(sessionComparison.coverage.regressions, ["interfaces"]);
 const html = buildSelfContainedReviewHtml({
   analysis: { ...base, model_bytes: "DO_NOT_EXPORT_THIS_PAYLOAD", findings: [{ id: "EA-1", title: "Review", severity: "medium", category: "deployment", confidence: "static", impact: "Check the condition.", evidence: [{ source: "/ops/1", text: "Derived evidence" }] }] },
   graphSvg: '<svg xmlns="http://www.w3.org/2000/svg"><text>graph</text></svg>',

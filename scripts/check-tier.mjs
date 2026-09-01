@@ -10,7 +10,7 @@ const SMOKE = [
   "scripts/check-dom-contract.mjs",
   "scripts/check-workflow-contract.mjs",
   "scripts/check-hash-contract.mjs",
-  "scripts/check-parser-robustness.mjs",
+  "scripts/check-parser-robustness-isolated.mjs",
   "scripts/check-analysis-invariants.mjs",
   "scripts/check-evidence-treemap.mjs",
   "scripts/check-evidence-workbench.mjs",

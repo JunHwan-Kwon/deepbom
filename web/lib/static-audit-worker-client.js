@@ -1,6 +1,9 @@
 const WORKER_URL = new URL("../workers/static-audit-worker.js", import.meta.url);
 
-export function createStaticAuditWorkerClient({ createWorker = null } = {}) {
+export function createStaticAuditWorkerClient({ createWorker = null, inactivityTimeoutMs = 300_000 } = {}) {
+  if (!Number.isSafeInteger(inactivityTimeoutMs) || inactivityTimeoutMs <= 0) {
+    throw new Error("Static audit Worker inactivity timeout must be a positive safe integer.");
+  }
   let worker = null;
   let sequence = 0;
   let loadedBytes = null;
@@ -21,16 +24,21 @@ export function createStaticAuditWorkerClient({ createWorker = null } = {}) {
     const request = pending.get(data?.id);
     if (!request) return;
     if (data.type === "status") {
+      armTimeout(data.id, request);
       request.onStatus?.(data.phase || "Analyzing artifact");
       return;
     }
     pending.delete(data.id);
+    clearTimeout(request.timeoutId);
     if (data.type === "result") request.resolve(data.result);
     else request.reject(new Error(data.error?.message || "Static audit worker failed."));
   }
 
   function failWorker(message) {
-    for (const request of pending.values()) request.reject(new Error(message));
+    for (const request of pending.values()) {
+      clearTimeout(request.timeoutId);
+      request.reject(new Error(message));
+    }
     pending.clear();
     worker?.terminate();
     worker = null;
@@ -41,9 +49,19 @@ export function createStaticAuditWorkerClient({ createWorker = null } = {}) {
   function request(operation, payload = {}, onStatus = null) {
     const id = ++sequence;
     return new Promise((resolve, reject) => {
-      pending.set(id, { resolve, reject, onStatus });
+      const state = { resolve, reject, onStatus, operation, timeoutId: null };
+      pending.set(id, state);
+      armTimeout(id, state);
       ensureWorker().postMessage({ id, operation, payload });
     });
+  }
+
+  function armTimeout(id, state) {
+    clearTimeout(state.timeoutId);
+    state.timeoutId = setTimeout(() => {
+      if (!pending.has(id)) return;
+      failWorker(`Static audit worker timed out after ${inactivityTimeoutMs} ms without progress during ${state.operation}.`);
+    }, inactivityTimeoutMs);
   }
 
   async function ensureModel(bytes, filename, onStatus) {

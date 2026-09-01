@@ -1,9 +1,10 @@
 import { buildExecutionPlacementEvidence } from "./execution-placement-evidence.js";
+import { placementProfileClass } from "./placement-comparison.js";
 
 export function acceleratorProfilesForAnalysis(analysis, runtimeEvidence = null) {
   if (!analysis) return [];
   return buildExecutionPlacementEvidence(analysis, runtimeEvidence).static_profiles
-    .filter((profile) => profileClass(profile) === "accelerator");
+    .filter((profile) => placementProfileClass(profile) === "accelerator");
 }
 
 export function renderAcceleratorProfileSwitcher(root, {
@@ -51,15 +52,8 @@ export function renderAcceleratorProfileSwitcher(root, {
   return selected;
 }
 
-function profileClass(profile) {
-  const identity = `${profile?.profile_id || ""} ${profile?.label || ""}`.toLowerCase();
-  if (/(gpu|directml|webgpu|webnn|nnapi|qnn|coreml|tensorrt|cuda|rocm|metal|vulkan|opencl)/.test(identity)) return "accelerator";
-  if (/(cpu|xnnpack|wasm)/.test(identity)) return "cpu";
-  return "other";
-}
-
 function preferredProfile(profiles) {
-  const rank = ["tflite_gpu", "webgpu", "directml", "tensorrt", "qnn", "coreml", "nnapi", "tflite_nnapi"];
+  const rank = ["tflite_gpu", "webgpu", "directml", "tensorrt", "litert_qualcomm_qnn", "qnn", "tflite_coreml_delegate", "coreml", "nnapi", "tflite_nnapi", "google_edgetpu_compiled_plan"];
   return [...profiles].sort((left, right) => {
     const leftRank = rank.indexOf(String(left.profile_id || "").toLowerCase());
     const rightRank = rank.indexOf(String(right.profile_id || "").toLowerCase());

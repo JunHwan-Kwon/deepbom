@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v533";
+const CACHE_NAME = "tflite-wasm-static-audit-v535";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -25,7 +25,13 @@ const APP_ASSETS = [
   "./bootstrap.js",
   "./app.js",
   "./lib/analysis-depth-mode.js",
+  "./lib/accelerator-binding.js",
   "./lib/accelerator-profile-switcher.js",
+  "./lib/edgetpu-compiler-evidence.js",
+  "./lib/litert-qualcomm-evidence.js",
+  "./lib/placement-comparison.js",
+  "./lib/tflite-accelerator-source-profiles.js",
+  "./lib/cpu-target-binding.js",
   "./lib/offline-device-controller.js",
   "./lib/app-deepbom-workspace.js",
   "./lib/app-graph-workspace.js",

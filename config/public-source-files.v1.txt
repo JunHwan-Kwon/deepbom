@@ -6,9 +6,11 @@
 .zenodo.json
 CHANGELOG.md
 CITATION.cff
+CONTRIBUTING.md
 Cargo.lock
 Cargo.toml
 README.md
+SECURITY.md
 THIRD_PARTY_NOTICES.md
 bin/deepbom-automation.mjs
 bin/deepbom-input.mjs
@@ -93,6 +95,8 @@ docs/CLI_AUTOMATION.md
 docs/CLI_REFERENCE.md
 docs/CYCLONEDX_20_QUANTIZATION_CONTRIBUTION.md
 docs/DELIVERY_OPERATIONS.md
+docs/KNOWN_ISSUES.md
+docs/MODEL_FREE_BUG_REPORTING.md
 docs/PROJECT_STATUS.md
 docs/PUBLIC_MULTIFORMAT_CORPUS.md
 docs/PUBLIC_PRIVATE_BOUNDARY.md
@@ -101,9 +105,13 @@ docs/REPRESENTATIVE_DATASET_CAPTURE.md
 docs/REPRODUCIBILITY.md
 docs/SOFTWARE_RECORD.md
 docs/STANDARDIZATION_EVIDENCE.md
+docs/SUPPORT_MATRIX.md
 docs/ZENODO_RELEASE.md
 docs/native-runtime-capture.md
 docs/zenodo-validation-metadata.json
+examples/expected-output/README.md
+examples/expected-output/gpu-partition-probe.expected.json
+examples/expected-output/gpu-partition-probe.human.txt
 native/capture-run.schema.json
 native/instrumentation/CMakeLists.txt
 native/instrumentation/deepbom_runtime_trace.cc
@@ -161,6 +169,7 @@ reference/xnnpack-readme/README-v2.20.0.md
 reference/xnnpack-readme/README-v2.21.0.md
 reference/xnnpack-readme/rule-manifest-v2.21.0.json
 reference/xnnpack-readme/version-diff.json
+release/version.json
 scripts/bootstrap-instrumented-runtime.mjs
 scripts/browser-launch.mjs
 scripts/build-cargo-engine-release.mjs
@@ -186,6 +195,7 @@ scripts/capture-pinned-ort-profile.mjs
 scripts/capture-pinned-runtime.mjs
 scripts/capture-tensorrt-engine-inspector.mjs
 scripts/capture-tensorrt-parser.mjs
+scripts/check-accelerator-binding.mjs
 scripts/check-access-hierarchy.mjs
 scripts/check-accumulator-atlas-viewer.mjs
 scripts/check-accumulator-atlas.mjs
@@ -247,6 +257,7 @@ scripts/check-evidence-workbench.mjs
 scripts/check-execution-placement-evidence.mjs
 scripts/check-execution-placement-viewer.mjs
 scripts/check-executorch-analysis.mjs
+scripts/check-expected-output.mjs
 scripts/check-explorer-question-view.mjs
 scripts/check-explorer-redesign-dist.mjs
 scripts/check-explorer-redesign-viewer.mjs
@@ -282,6 +293,7 @@ scripts/check-litert-runtime-assets.mjs
 scripts/check-live-product.mjs
 scripts/check-live-sw.mjs
 scripts/check-metadata-model-adapters.mjs
+scripts/check-mlbom-conservation.mjs
 scripts/check-model-file-contract.mjs
 scripts/check-native-capture-pipeline.mjs
 scripts/check-numerical-abi-propagation-viewer.mjs
@@ -314,7 +326,9 @@ scripts/check-ort-profile-viewer.mjs
 scripts/check-ort-reduced-operator-config.mjs
 scripts/check-ort-rulepack-generated.mjs
 scripts/check-package-verifier.mjs
+scripts/check-parser-robustness-isolated.mjs
 scripts/check-parser-robustness.mjs
+scripts/check-placement-comparison.mjs
 scripts/check-preprocessing-consequence-viewer.mjs
 scripts/check-preprocessing-consequence.mjs
 scripts/check-preprocessing-realizability-viewer.mjs
@@ -346,8 +360,10 @@ scripts/check-residual-contract-distortion.mjs
 scripts/check-residual-coverage-ledger.mjs
 scripts/check-residual-step-response-viewer.mjs
 scripts/check-residual-step-response.mjs
+scripts/check-review-policy.mjs
 scripts/check-rounding-equivalence-viewer.mjs
 scripts/check-rounding-equivalence.mjs
+scripts/check-runtime-accelerator-import.mjs
 scripts/check-runtime-arena-memory.mjs
 scripts/check-runtime-arena-viewer.mjs
 scripts/check-runtime-assignment-viewer.mjs
@@ -365,6 +381,7 @@ scripts/check-service-worker-lifecycle.mjs
 scripts/check-size-utils.mjs
 scripts/check-source-budget.mjs
 scripts/check-standardization-evidence.mjs
+scripts/check-static-audit-worker-client.mjs
 scripts/check-sw-assets.mjs
 scripts/check-sw-version.mjs
 scripts/check-tensor-inventory.mjs
@@ -465,6 +482,7 @@ scripts/sweep-public-cli-corpus.mjs
 scripts/sweep-public-multiformat-corpus.mjs
 scripts/sweep-safetensors-architecture-corpus.mjs
 scripts/sync-huggingface-community-corpus.mjs
+scripts/sync-version.mjs
 scripts/tensorrt-capture-lib.mjs
 scripts/tensorrt-engine-inspector-capture-lib.mjs
 scripts/test-live-permissions.mjs
@@ -489,6 +507,7 @@ scripts/verify-supported-format-outputs.mjs
 scripts/verify-tensorrt-source-pins.mjs
 scripts/verify-tflite-runtime-info-pin.mjs
 scripts/verify-xnnpack-source-pin.mjs
+scripts/version-contract.mjs
 scripts/visualizer-parity.mjs
 scripts/wasm-binary-hardening.mjs
 scripts/write-build-metadata.mjs
@@ -551,6 +570,7 @@ web/explorer-evidence.css
 web/explorer-question.css
 web/explorer-redesign.css
 web/index.html
+web/lib/accelerator-binding.js
 web/lib/accelerator-profile-binding.js
 web/lib/accelerator-profile-switcher.js
 web/lib/access-policy.js
@@ -597,6 +617,7 @@ web/lib/coreml-metadata-adapter.js
 web/lib/coreml-mil-program.js
 web/lib/coreml-neural-network.js
 web/lib/corpus-validation-provenance.js
+web/lib/cpu-target-binding.js
 web/lib/custom-target-editor.js
 web/lib/custom-targets.js
 web/lib/cyclonedx-20-preview.js
@@ -611,6 +632,7 @@ web/lib/dom.js
 web/lib/download.js
 web/lib/dynamic-shape-cost-conformance.js
 web/lib/dynamic-shape-cost.js
+web/lib/edgetpu-compiler-evidence.js
 web/lib/elements.js
 web/lib/evidence-cursor.js
 web/lib/evidence-level-report.js
@@ -657,11 +679,13 @@ web/lib/interface-contract.js
 web/lib/kernel-inspector.js
 web/lib/kernel-witness-worker.js
 web/lib/kernel-witness.js
+web/lib/litert-qualcomm-evidence.js
 web/lib/llm-device-feasibility-view.js
 web/lib/llm-layer-storage.js
 web/lib/llm-memory-feasibility.js
 web/lib/llm-specialized-projection.js
 web/lib/llm-static-memory-placement.js
+web/lib/mac-coverage.js
 web/lib/markdown-report.js
 web/lib/metadata-model-adapters.js
 web/lib/metric-coverage.js
@@ -725,6 +749,7 @@ web/lib/ort-compatibility-evidence.js
 web/lib/ort-reduced-operator-config.js
 web/lib/ort-selected-build-binding.js
 web/lib/performance-visuals.js
+web/lib/placement-comparison.js
 web/lib/preprocess-ui.js
 web/lib/preprocess.js
 web/lib/preprocessing-consequence-core.js
@@ -802,6 +827,7 @@ web/lib/residual-contract-distortion.js
 web/lib/residual-step-response-worker.js
 web/lib/residual-step-response.js
 web/lib/review-export.js
+web/lib/review-policy.js
 web/lib/rgb-png.js
 web/lib/rounding-equivalence-worker.js
 web/lib/rounding-equivalence.js
@@ -840,6 +866,7 @@ web/lib/tensorrt-llm-source-metadata.js
 web/lib/tensorrt-profile-cost.js
 web/lib/tensorrt-source-metadata.js
 web/lib/tensorrt-static-preflight.js
+web/lib/tflite-accelerator-source-profiles.js
 web/lib/tflite-benchmark.js
 web/lib/tflite-build-configuration-binding.js
 web/lib/tflite-delegate-compatibility.js

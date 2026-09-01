@@ -32,8 +32,8 @@ const analysis = {
   model_sha256: SHA,
   file_size_bytes: 4096,
   operator_count: 3,
-  tensor_count: 4,
-  quantized_tensors: 4,
+  tensor_count: 6,
+  quantized_tensors: 6,
   per_channel_tensors: 0,
   quantization_status: {
     classification: "full_integer",
@@ -112,11 +112,19 @@ const analysis = {
       index: 3, name: "probabilities", dtype: "UINT8", shape: [1, 2], constant_buffer: false,
       quant_scales: 1, quant_zero_points: 1, scale_sample: [0.00390625], zero_point_sample: [0],
     },
+    {
+      index: 4, name: "conv_activation", dtype: "UINT8", shape: [1, 16, 16, 2], constant_buffer: false,
+      quant_scales: 1, quant_zero_points: 1, scale_sample: [0.015625], zero_point_sample: [128],
+    },
+    {
+      index: 5, name: "depthwise_activation", dtype: "UINT8", shape: [1, 16, 16, 2], constant_buffer: false,
+      quant_scales: 1, quant_zero_points: 1, scale_sample: [0.015625], zero_point_sample: [128],
+    },
   ],
   ops: [
-    { index: 0, name: "CONV_2D", inputs: [0, 1], outputs: [3], xnnpack_chain_id: 0, xnnpack_build_requirement: "--define tflite_with_xnnpack_qu8=true; runtime build configuration not embedded" },
-    { index: 1, name: "DEPTHWISE_CONV_2D", inputs: [3, 2], outputs: [3], xnnpack_chain_id: 0, xnnpack_build_requirement: "--define tflite_with_xnnpack_qu8=true; runtime build configuration not embedded" },
-    { index: 2, name: "SOFTMAX", inputs: [3], outputs: [3], xnnpack_chain_id: -1, xnnpack_build_requirement: "" },
+    { index: 0, name: "CONV_2D", inputs: [0, 1], outputs: [4], xnnpack_chain_id: 0, xnnpack_build_requirement: "--define tflite_with_xnnpack_qu8=true; runtime build configuration not embedded" },
+    { index: 1, name: "DEPTHWISE_CONV_2D", inputs: [4, 2], outputs: [5], xnnpack_chain_id: 0, xnnpack_build_requirement: "--define tflite_with_xnnpack_qu8=true; runtime build configuration not embedded" },
+    { index: 2, name: "SOFTMAX", inputs: [5], outputs: [3], xnnpack_chain_id: -1, xnnpack_build_requirement: "" },
   ],
   weight_integrity: {
     exact_zero_kernel_slice_count: 11,

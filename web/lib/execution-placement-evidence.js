@@ -9,6 +9,10 @@ import {
   summarizeTfliteDelegateBuildBinding,
   tfliteBuildRequirementsBound,
 } from "./tflite-build-configuration-binding.js";
+import { buildPlacementComparison, validatePlacementComparison } from "./placement-comparison.js";
+import { buildTfliteAdditionalSourceProfiles } from "./tflite-accelerator-source-profiles.js";
+import { buildEdgeTpuCompilerProjection } from "./edgetpu-compiler-evidence.js";
+import { buildLiteRtQualcommCompilerProjection } from "./litert-qualcomm-evidence.js";
 
 export const EXECUTION_PLACEMENT_EVIDENCE_SCHEMA = "deepbom.execution_placement_evidence.v1";
 
@@ -79,6 +83,8 @@ export function validateExecutionPlacementEvidence(evidence, { analysis = null }
     try { validateBackendPlacementProjection(projection, { analysis }); }
     catch (error) { issues.push(String(error?.message || error)); break; }
   }
+  try { validatePlacementComparison(evidence.placement_comparison, analysis, rows(evidence.static_profiles)); }
+  catch (error) { issues.push(String(error?.message || error)); }
   for (const preflight of rows(evidence.configuration_preflights)) {
     if (!preflight?.schema || !preflight?.status || !preflight?.trust_boundary
       || !Number.isSafeInteger(preflight.blocking_issue_count) || !Number.isSafeInteger(preflight.unresolved_issue_count)) {
@@ -160,7 +166,20 @@ function tfliteEvidence(analysis, runtime) {
         rulepack_sha256: alternate.rulepack_sha256 || null,
       },
       })),
+    ...buildTfliteAdditionalSourceProfiles(analysis),
   ] : [];
+  if (analysis.edgetpu_compiler_evidence) {
+    staticProfiles.push(buildEdgeTpuCompilerProjection(analysis, analysis.edgetpu_compiler_evidence));
+  }
+  if (analysis.litert_qualcomm_evidence) {
+    staticProfiles.push(buildLiteRtQualcommCompilerProjection(analysis, analysis.litert_qualcomm_evidence));
+  }
+  const portfolioIds = new Set(["xnnpack", ...alternateProfiles.map((profile) => profile.id)]);
+  const additionalPortfolios = staticProfiles
+    .filter((profile) => profile.profile_id !== "xnnpack_cpu" && !portfolioIds.has(profile.profile_id))
+    .map((profile) => portfolio(profile.profile_id, profile.label,
+      profile.state_counts.CONDITIONALLY_ELIGIBLE, profile.op_count,
+      profile.evidence_class, "independent conditionally eligible operations"));
   const segments = observed
     ? assignmentSegments(ops, assignments.byOp)
     : contiguous(ops, (op) => {
@@ -170,8 +189,8 @@ function tfliteEvidence(analysis, runtime) {
         : [`cpu-${op.xnnpack_break_class || "fallback"}`, "CPU fallback", fallbackTone(op)];
     }, opItemId);
   const sourceDetail = alternate
-    ? `XNNPACK ${candidateCount}/${ops.length} candidate ops; GPU and NNAPI artifact-visible candidates are separately source-pinned below.`
-    : `XNNPACK ${candidateCount}/${ops.length} candidate ops. GPU/NNAPI source profiles are not loaded in this run; no accelerator eligibility is inferred.`;
+    ? `XNNPACK ${candidateCount}/${ops.length} candidate ops; GPU, NNAPI, Core ML, and Qualcomm QNN artifact-visible candidates are separate source-pinned profiles.`
+    : `XNNPACK ${candidateCount}/${ops.length} candidate ops; Core ML and Qualcomm QNN source prechecks are loaded. GPU/NNAPI profiles require the protected source ledger for this run.`;
   return baseEvidence(analysis, {
     format: "tflite",
     itemKind: "serialized_operator",
@@ -200,13 +219,13 @@ function tfliteEvidence(analysis, runtime) {
     flow: flow(observed ? "Observed assignment flow" : "Conditional XNNPACK partition flow",
       observed ? "OBSERVED_RUNTIME_ASSIGNMENT" : "SOURCE_PINNED_PREDICTED_PARTITION",
       ops.length, observed ? assignments.rows.length : ops.length, segments),
-    portfolios: [portfolio("xnnpack", "XNNPACK", candidateCount, ops.length, "SOURCE_PINNED_PREDICTED", "conditionally delegatable operators"), ...alternateProfiles],
+    portfolios: [portfolio("xnnpack", "XNNPACK", candidateCount, ops.length, "SOURCE_PINNED_PREDICTED", "conditionally delegatable operators"), ...alternateProfiles, ...additionalPortfolios],
     staticProfiles,
     note: observed
       ? "Observed rows apply only to the imported runtime capture; static XNNPACK and alternate-delegate ledgers remain separate comparisons."
       : alternate
-        ? "GPU and NNAPI rows are per-delegate source eligibility portfolios. They are not combined into a fictitious multi-delegate partition."
-        : "GPU and NNAPI source profiles are not loaded in this run. XNNPACK remains the only detailed static projection shown; no accelerator eligibility is inferred.",
+        ? "Each delegate/compiler row is an independent source eligibility or imported compiler-result portfolio. They are not combined into a fictitious multi-delegate partition."
+        : "Core ML and Qualcomm QNN profiles remain independent source prechecks. GPU/NNAPI profiles are not loaded in this run, and no multi-backend priority or assignment is inferred.",
     runtimeObservation: assignmentObservation(assignments, ops.length),
   });
 }
@@ -392,6 +411,7 @@ function execuTorchEvidence(analysis) {
 }
 
 function baseEvidence(analysis, values) {
+  const staticProfiles = values.staticProfiles || [];
   return {
     schema: EXECUTION_PLACEMENT_EVIDENCE_SCHEMA,
     method_version: "1.0.0",
@@ -407,7 +427,8 @@ function baseEvidence(analysis, values) {
     levels: values.levels,
     flow: values.flow,
     portfolios: values.portfolios,
-    static_profiles: values.staticProfiles || [],
+    static_profiles: staticProfiles,
+    placement_comparison: buildPlacementComparison(analysis, staticProfiles),
     configuration_preflights: values.configurationPreflights || [],
     interpretation_boundary: values.note,
     runtime_observation: values.runtimeObservation,

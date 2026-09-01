@@ -5,6 +5,7 @@ import {
   validateExecutionPlacementEvidence,
 } from "../web/lib/execution-placement-evidence.js";
 import { formatEvidenceScope } from "../web/lib/format-evidence-scope.js";
+import { executionPlacementMarkdown } from "../web/lib/report-execution-placement.js";
 
 const sha = "a".repeat(64);
 const ops = (names) => names.map((name, index) => ({ index, name }));
@@ -25,6 +26,7 @@ const conserves = (evidence) => {
 const tflite = {
   format: "tflite",
   model_sha256: sha,
+  tensors: [],
   ops: ops(["CONV_2D", "RELU", "AVERAGE_POOL_2D", "CONV_2D", "ADD"]).map((op, index) => ({
     ...op,
     xnnpack_chain_id: [0, 0, -1, 1, 1][index],
@@ -51,9 +53,12 @@ assert.equal(tfliteStatic.flow.covered_item_count, 5);
 assert.deepEqual(tfliteStatic.flow.segments.map((row) => row.item_count), [2, 1, 2]);
 assert.deepEqual(tfliteStatic.portfolios.map((row) => [row.id, row.candidate_count, row.total_count]), [
   ["xnnpack", 4, 5], ["gpu", 3, 5], ["nnapi", 2, 5],
+  ["tflite_coreml_delegate", 5, 5], ["litert_qualcomm_qnn", 5, 5],
 ]);
 assert(tfliteStatic.banner, "An unbound XNNPACK build requirement must remain visible.");
 conserves(tfliteStatic);
+assert.match(executionPlacementMarkdown(tfliteStatic), /N-way Placement Comparison/,
+  "engineering report must render the canonical N-way comparison rather than recomputing it");
 
 const tfliteAlternateInventoryPresenceOnly = buildExecutionPlacementEvidence(tflite, {
   tflite_delegate_build_inventory: { schema: "fixture-selected-build" },

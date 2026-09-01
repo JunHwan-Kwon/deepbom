@@ -81,6 +81,14 @@ function properties(entries) {
   return entries.map(([name, value]) => property(name, value)).filter(Boolean);
 }
 
+function acceleratorBindingPropertyEntries(bindings) {
+  const rows = Array.isArray(bindings) ? bindings : [];
+  return [
+    ["deepbom:accelerator:bindingCount", rows.length],
+    ["deepbom:accelerator:bindingDetailPointer", "deepbom_artifact_evidence_envelope.json#/accelerator_bindings"],
+  ];
+}
+
 function llmCycloneDxPropertyEntries(analysis) {
   const llm = analysis?.on_device_llm;
   if (llm?.schema !== "deepbom.on_device_llm_contract.v2") return [];
@@ -949,6 +957,14 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
     ["deepbom:profile", "artifact-numerical-and-runtime-contract-evidence"],
     ["deepbom:artifactEvidenceEnvelopeSchema", artifactEnvelope.schema],
     ["deepbom:artifactEvidenceEnvelopeSha256", artifactEnvelope.envelope_sha256],
+    ["deepbom:model:cpuCostTargetBindingSource", artifactEnvelope.cpu_cost_target_binding?.binding_source],
+    ["deepbom:model:cpuCostTargetHostObserved", artifactEnvelope.cpu_cost_target_binding?.host_observed],
+    ["deepbom:model:cpuCostTargetProfileId", artifactEnvelope.cpu_cost_target_binding?.profile_id],
+    ["deepbom:model:cpuCostTargetProfileSha256", artifactEnvelope.cpu_cost_target_binding?.profile_sha256],
+    ...acceleratorBindingPropertyEntries(artifactEnvelope.accelerator_bindings),
+    ["deepbom:review:policySchema", artifactEnvelope.policy_identity?.schema],
+    ["deepbom:review:policySha256", artifactEnvelope.policy_identity?.policy_sha256],
+    ["deepbom:review:policyMode", artifactEnvelope.policy_identity?.mode],
     ["deepbom:evidenceBoundary", ["gguf", "safetensors"].includes(String(analysis?.format || "").toLowerCase())
       ? "Deployment artifact identity, exact tensor storage, declared LLM architecture fields, hash-bound selected repository sidecars, conditional state/compute scenarios, and lower-bound-only memory feasibility where complete. Runtime-private memory, complete allocation or assignment, prompt behavior, task accuracy, clinical validity or utility, safety/effectiveness, and release readiness remain separately bound."
       : "Deployment artifact identity, graph totals, complete internal tensor dtype inventory, graph-level quantization state, deterministic static derivations, and serialized external I/O contracts. Runtime assignment, source-data preprocessing, task accuracy, clinical performance, and release readiness remain separately bound."],

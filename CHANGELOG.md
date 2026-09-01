@@ -4,6 +4,15 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Added a shared `deepbom.mac_coverage.v1` calculation path so TFLite,
+  ONNX, Core ML, GGUF, and SafeTensors ML-BOM exports retain explicit MAC
+  numerators, denominators, and non-assessment reasons without coercing an
+  unknown Core ML execution precision to zero.
+- Added `deepbom.placement_comparison.v1`, Web N-way profile selection, and the
+  `deepbom placement` CLI command over one canonical graph/tensor ledger.
+  Source-pinned TFLite Core ML and LiteRT Qualcomm QNN profiles, imported Edge
+  TPU compiler reports, and imported Qualcomm compiler/dispatch evidence remain
+  independent evidence portfolios rather than a fabricated joint assignment.
 - Separated CPU cost profiles from source-backed accelerator eligibility in the
   audit controls. TFLite GPU and NNAPI remain visibly unavailable until their
   pinned source ledgers are loaded; accelerator selection never changes the CPU
@@ -40,6 +49,19 @@ All notable archival releases of DEEPBOM are documented here.
   separately modularized evidence cursor, hierarchy, diff, overlay, accelerator
   switcher, explanation, and read-only review surfaces; per-file, generated,
   private-source, and application-entry ceilings remain unchanged.
+- Raised the handwritten runtime ceiling from 11,184 KiB to 11,248 KiB for the
+  separately modularized CPU-target provenance, accelerator lifecycle binding,
+  Edge TPU compiler evidence, and identity-bound review-policy contracts;
+  per-file, generated, private-source, and application-entry ceilings remain
+  unchanged.
+- Raised the handwritten runtime ceiling from 11,248 KiB to 11,264 KiB for the
+  separately modularized cross-format MAC coverage, N-way placement comparison,
+  and source-pinned Core ML/Qualcomm adapters; per-file, generated, private-
+  source, and application-entry ceilings remain unchanged.
+- Raised the verification-source ceiling from 3,072 KiB to 3,136 KiB for the
+  isolated parser coordinator and the accelerator, review-policy, expected-
+  output, and Worker timeout regression contracts; runtime and per-file
+  ceilings are unchanged.
 - Preserved incomplete ONNX MAC ledgers as not assessed instead of exposing
   their assessed subtotal as a complete zero-valued model total; UI, graph
   exports, engineering/regulatory reports, conformance checks, and CLI output

@@ -451,7 +451,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "9e1277d856e894e99e9b0ebeeaf6798dc33abc28e005d1a93edf743d8b08792e"
+              "content": "d9a7772bd32bc92940af269e48ed120daa8d9a66f0f78ee17dc771bafcdc4d9f"
             }
           ]
         },
@@ -780,7 +780,15 @@
     },
     {
       "name": "deepbom:artifactEvidenceEnvelopeSha256",
-      "value": "0592a46efd95ea2d4a84b01767d0c9d55347fdabf0a6acc28461048161e2c188"
+      "value": "a5ddcc0172d1992cd222839e9c66d526c6141c8b589b44217c9102b21b178177"
+    },
+    {
+      "name": "deepbom:accelerator:bindingCount",
+      "value": "2"
+    },
+    {
+      "name": "deepbom:accelerator:bindingDetailPointer",
+      "value": "deepbom_artifact_evidence_envelope.json#/accelerator_bindings"
     },
     {
       "name": "deepbom:evidenceBoundary",

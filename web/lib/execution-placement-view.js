@@ -1,10 +1,13 @@
 import { buildExecutionPlacementEvidence } from "./execution-placement-evidence.js";
 import { formatBytes, formatNumber } from "./format.js";
+import { placementProfileClass } from "./placement-comparison.js";
 
 export function renderExecutionPlacementView(root, analysis, runtimeEvidence = null, {
   doc = globalThis.document,
   selectedProfileId = "",
+  selectedProfileIds = [],
   onProfileSelect = null,
+  onProfileSelectionChange = null,
 } = {}) {
   if (!root) return;
   if (!analysis) {
@@ -23,7 +26,7 @@ export function renderExecutionPlacementView(root, analysis, runtimeEvidence = n
       placementHeader(doc, evidence),
       ...(evidence.banner ? [placementBanner(doc, evidence.banner)] : []),
       placementTopology(doc, evidence),
-      placementBody(doc, evidence, { selectedProfileId, onProfileSelect }, analysis, runtimeEvidence),
+      placementBody(doc, evidence, { selectedProfileId, selectedProfileIds, onProfileSelect, onProfileSelectionChange }, analysis, runtimeEvidence),
       placementActions(doc, actionsFor(evidence, analysis)),
     );
     root.onclick = (event) => handleAction(event, doc);
@@ -272,11 +275,18 @@ function configurationPreflightView(doc, preflights) {
   return root;
 }
 
-function staticProfileExplorer(doc, profiles, evidence, { selectedProfileId = "", onProfileSelect = null } = {}) {
+function staticProfileExplorer(doc, profiles, evidence, {
+  selectedProfileId = "",
+  selectedProfileIds = [],
+  onProfileSelect = null,
+  onProfileSelectionChange = null,
+} = {}) {
   const root = el(doc, "section", "placement-profile-explorer");
-  const comparison = placementProfileComparison(doc, profiles, { selectedProfileId, onProfileSelect });
+  const comparison = placementProfileComparison(doc, profiles, {
+    selectedProfileId, selectedProfileIds, onProfileSelect, onProfileSelectionChange,
+  });
   if (comparison) root.append(comparison);
-  const hasAccelerator = profiles.some((profile) => profileClass(profile) === "accelerator");
+  const hasAccelerator = profiles.some((profile) => placementProfileClass(profile) === "accelerator");
   const head = el(doc, "div", "placement-profile-head");
   const title = el(doc, "div");
   title.append(
@@ -307,60 +317,87 @@ function staticProfileExplorer(doc, profiles, evidence, { selectedProfileId = ""
   select.addEventListener("change", () => {
     render();
     const profile = profiles.find((item) => item.profile_id === select.value);
-    if (profileClass(profile) === "accelerator") onProfileSelect?.(profile.profile_id);
+    if (placementProfileClass(profile) === "accelerator") onProfileSelect?.(profile.profile_id);
   });
   render();
   root.append(head, body);
   return root;
 }
 
-function placementProfileComparison(doc, profiles, { selectedProfileId = "", onProfileSelect = null } = {}) {
-  const acceleratorProfiles = profiles.filter((profile) => profileClass(profile) === "accelerator");
-  const cpuProfiles = profiles.filter((profile) => profileClass(profile) === "cpu");
-  if (!acceleratorProfiles.length || !cpuProfiles.length) return null;
+function placementProfileComparison(doc, profiles, {
+  selectedProfileId = "",
+  selectedProfileIds = [],
+  onProfileSelect = null,
+  onProfileSelectionChange = null,
+} = {}) {
+  if (profiles.length < 2) return null;
+  const availableIds = new Set(profiles.map((profile) => profile.profile_id));
+  const requested = selectedProfileIds.filter((id) => availableIds.has(id));
+  const defaults = defaultComparisonProfiles(profiles, selectedProfileId).map((profile) => profile.profile_id);
+  const selected = new Set(requested.length ? requested : defaults);
 
   const root = el(doc, "section", "placement-profile-comparison");
   const head = el(doc, "div", "placement-profile-comparison-head");
   head.append(
-    el(doc, "strong", "", "Accelerator and CPU eligibility comparison"),
-    el(doc, "span", "", "Independent source projections over one graph and tensor ledger; no provider priority or timing is inferred"),
+    el(doc, "strong", "", "N-way execution-path comparison"),
+    el(doc, "span", "", "Choose independent source or compiler profiles over one graph and tensor ledger; no provider priority or timing is inferred"),
   );
+  const controls = el(doc, "div", "placement-profile-comparison-controls");
   const grid = el(doc, "div", "placement-profile-comparison-grid");
-  grid.append(
-    placementComparisonCard(doc, "Accelerator backend", acceleratorProfiles,
-      acceleratorProfiles.find((profile) => profile.profile_id === selectedProfileId) || preferredProfile(acceleratorProfiles),
-      onProfileSelect),
-    placementComparisonCard(doc, "CPU baseline", cpuProfiles, preferredCpuProfile(cpuProfiles)),
-  );
-  root.append(head, grid, el(doc, "p", "execution-placement-note", "Logical boundary exposure is a serialized-shape edge sum, not observed CPU-to-accelerator transfer. GPU roofline, generated shader or kernel, occupancy, memory plan, and latency remain NOT ASSESSED."));
+  const renderGrid = () => {
+    grid.replaceChildren(...profiles.filter((profile) => selected.has(profile.profile_id))
+      .map((profile) => placementComparisonCard(doc, profile)));
+  };
+  for (const profile of profiles) {
+    const label = el(doc, "label", "placement-profile-comparison-toggle");
+    const checkbox = doc.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = profile.profile_id;
+    checkbox.checked = selected.has(profile.profile_id);
+    checkbox.setAttribute("aria-label", `Compare ${profile.label}`);
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) selected.add(profile.profile_id);
+      else if (selected.size > 1) selected.delete(profile.profile_id);
+      else checkbox.checked = true;
+      renderGrid();
+      const ids = profiles.map((item) => item.profile_id).filter((id) => selected.has(id));
+      onProfileSelectionChange?.(ids);
+      if (checkbox.checked && placementProfileClass(profile) === "accelerator") onProfileSelect?.(profile.profile_id);
+    });
+    label.append(checkbox, el(doc, "span", "", profile.label));
+    controls.append(label);
+  }
+  renderGrid();
+  root.append(head, controls, grid, el(doc, "p", "execution-placement-note", "Logical boundary exposure is a serialized-shape edge sum, not observed CPU-to-accelerator transfer. GPU roofline, generated shader or kernel, occupancy, memory plan, and latency remain NOT ASSESSED."));
   return root;
 }
 
-function placementComparisonCard(doc, label, profiles, preferred, onProfileSelect = null) {
+function placementComparisonCard(doc, profile) {
   const root = el(doc, "article", "placement-profile-comparison-card");
-  root.dataset.profileClass = label.startsWith("CPU") ? "cpu" : "accelerator";
-  const field = el(doc, "label", "placement-profile-select placement-profile-comparison-select");
-  field.append(el(doc, "span", "", label));
-  const select = doc.createElement("select");
-  select.setAttribute("aria-label", `${label} eligibility profile`);
-  for (const profile of profiles) {
-    const option = doc.createElement("option");
-    option.value = profile.profile_id;
-    option.textContent = profile.label;
-    select.append(option);
-  }
-  select.value = preferred.profile_id;
-  field.append(select);
+  root.dataset.profileClass = placementProfileClass(profile);
+  root.dataset.profileId = profile.profile_id;
+  const field = el(doc, "div", "placement-profile-comparison-identity");
+  field.append(
+    el(doc, "span", "", placementProfileClass(profile) === "cpu" ? "CPU baseline" : "Accelerator / compiler profile"),
+    el(doc, "strong", "", profile.label),
+    el(doc, "small", "", profile.evidence_class),
+  );
   const summary = el(doc, "dl", "placement-profile-comparison-summary");
-  const render = () => renderPlacementComparisonSummary(doc, summary,
-    profiles.find((profile) => profile.profile_id === select.value) || profiles[0]);
-  select.addEventListener("change", () => {
-    render();
-    if (root.dataset.profileClass === "accelerator") onProfileSelect?.(select.value);
-  });
-  render();
+  renderPlacementComparisonSummary(doc, summary, profile);
   root.append(field, summary);
   return root;
+}
+
+function defaultComparisonProfiles(profiles, selectedProfileId) {
+  const cpu = profiles.filter((profile) => placementProfileClass(profile) === "cpu");
+  const accelerators = profiles.filter((profile) => placementProfileClass(profile) === "accelerator");
+  const selectedAccelerator = accelerators.find((profile) => profile.profile_id === selectedProfileId)
+    || (accelerators.length ? preferredProfile(accelerators) : null);
+  return [...new Map([
+    ...(cpu.length ? [preferredCpuProfile(cpu)] : []),
+    ...(selectedAccelerator ? [selectedAccelerator] : []),
+    ...(!cpu.length && !selectedAccelerator ? profiles.slice(0, 2) : []),
+  ].map((profile) => [profile.profile_id, profile])).values()];
 }
 
 function renderPlacementComparisonSummary(doc, root, profile) {
@@ -577,13 +614,6 @@ function preferredCpuProfile(profiles) {
     const rightRank = rank.indexOf(String(right.profile_id).toLowerCase());
     return (leftRank < 0 ? rank.length : leftRank) - (rightRank < 0 ? rank.length : rightRank);
   })[0];
-}
-
-function profileClass(profile) {
-  const id = `${profile?.profile_id || ""} ${profile?.label || ""}`.toLowerCase();
-  if (/(gpu|directml|webgpu|webnn|nnapi|qnn|coreml|tensorrt|cuda|rocm|metal|vulkan|opencl)/.test(id)) return "accelerator";
-  if (/(cpu|xnnpack|wasm)/.test(id)) return "cpu";
-  return "other";
 }
 
 function placementMetric(doc, label, value, tone) {

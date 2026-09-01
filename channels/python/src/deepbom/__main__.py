@@ -70,7 +70,12 @@ def _verified_engine() -> tuple[Path, Optional[Path]]:
     except (OSError, ValueError, json.JSONDecodeError) as error:
         raise RuntimeError(f"The packaged DEEPBOM engine manifest is invalid: {error}") from error
     system, architecture = _runtime_identity()
-    if manifest.get("schema") != "deepbom.packaged_engine.v1" or manifest.get("version") != __version__:
+    version_contract = manifest.get("version_contract")
+    if (
+        manifest.get("schema") != "deepbom.packaged_engine.v1"
+        or not isinstance(version_contract, dict)
+        or version_contract.get("python_version") != __version__
+    ):
         raise RuntimeError("The packaged DEEPBOM engine manifest has an incompatible schema or version.")
     if manifest.get("platform") != system or manifest.get("arch") != architecture:
         raise RuntimeError(

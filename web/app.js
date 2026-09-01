@@ -281,6 +281,7 @@ import { createPerformanceVisualController } from "./lib/performance-visuals.js"
 import { createCoreIsolationController } from "./lib/core-isolation-view.js";
 import { createAuditProgressController } from "./lib/audit-progress.js";
 import { createStaticAuditWorkerClient } from "./lib/static-audit-worker-client.js";
+import { buildCpuCostTargetBinding } from "./lib/cpu-target-binding.js";
 import { createExplorerDecisionView } from "./lib/explorer-decision-view.js";
 import { createExplorerRedesignController } from "./lib/explorer-redesign.js";
 import { createQuantEvidenceController } from "./lib/quant-evidence-view.js";
@@ -770,6 +771,7 @@ const ensureLiteRtRuntime = liteRtRuntime.ensure;
 
 let current = null;
 let selectedAcceleratorProfileId = "";
+let selectedPlacementProfileIds = [];
 let currentDeploymentFrontier = null;
 let currentDeploymentDelta = null;
 let currentDelegationRepair = null;
@@ -3512,7 +3514,9 @@ function renderAuditClaimBoundary(format, analysis = null) {
 function executionPlacementOptions() {
   return {
     selectedProfileId: selectedAcceleratorProfileId,
+    selectedProfileIds: selectedPlacementProfileIds,
     onProfileSelect: selectAcceleratorProfile,
+    onProfileSelectionChange: selectPlacementProfiles,
   };
 }
 
@@ -3944,7 +3948,7 @@ function selectedTargetLabel() {
   return targetProfiles.find((profile) => profile.id === selectedTargetId())?.label || selectedTargetId();
 }
 
-async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = false, keepModule = false, finalize = true } = {}) {
+async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = false, keepModule = false, finalize = true, targetBindingSource = null } = {}) {
   setStatus("Parsing artifact");
   auditProgressController.begin(16, "Starting isolated static analysis", { ceiling: 31, step: 3 });
   await nextPaint();
@@ -3988,6 +3992,15 @@ async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = fal
   if (["onnx", "executorch"].includes(format)) syncExternalDataControl(format);
   auditProgressController.begin(32, "Binding artifact SHA-256", { ceiling: 41, step: 4 });
   await ensureModelHash();
+  if (targetProfileApplicable && current?.target_profile) {
+    const bindingSource = targetBindingSource
+      || (targetOverride || readSavedTarget() ? "explicit_id" : "default_assumption");
+    current.cpu_cost_target_binding = buildCpuCostTargetBinding(current.target_profile, {
+      bindingSource,
+    });
+  } else if (current) {
+    delete current.cpu_cost_target_binding;
+  }
   if (["onnx", "tflite"].includes(format)) {
     current.on_device_llm = buildOnDeviceLlmContract(current);
   }
@@ -4147,6 +4160,9 @@ function selectAcceleratorProfile(profileId, { navigate = false } = {}) {
   const profile = profiles.find((item) => item.profile_id === profileId);
   if (!profile) return false;
   selectedAcceleratorProfileId = profile.profile_id;
+  if (!selectedPlacementProfileIds.includes(profile.profile_id)) {
+    selectedPlacementProfileIds = [...selectedPlacementProfileIds, profile.profile_id];
+  }
   renderAcceleratorSwitcher();
   renderExecutionPlacementViewBase(document.getElementById("executionPlacementPanel"), current, runtimeAssignmentEvidence, executionPlacementOptions());
   renderExecutionPlacementViewBase(explorerExecutionPlacementPanel, current, runtimeAssignmentEvidence, executionPlacementOptions());
@@ -4156,6 +4172,12 @@ function selectAcceleratorProfile(profileId, { navigate = false } = {}) {
     document.getElementById("executionPlacementPanel")?.scrollIntoView({ block: "start", behavior: "smooth" });
   }
   return true;
+}
+
+function selectPlacementProfiles(profileIds) {
+  selectedPlacementProfileIds = [...new Set((profileIds || []).map(String))];
+  renderExecutionPlacementViewBase(document.getElementById("executionPlacementPanel"), current, runtimeAssignmentEvidence, executionPlacementOptions());
+  renderExecutionPlacementViewBase(explorerExecutionPlacementPanel, current, runtimeAssignmentEvidence, executionPlacementOptions());
 }
 
 function renderAcceleratorSwitcher() {
@@ -4386,7 +4408,10 @@ function currentReviewState() {
     workspace: getActiveWorkspace(),
     auditTab: getActiveAuditTab(),
     acceleratorProfileId: selectedAcceleratorProfileId,
-    comparison: null,
+    comparison: {
+      schema: "deepbom.review_placement_selection.v1",
+      selected_profile_ids: selectedPlacementProfileIds,
+    },
     runtimeEvidence: runtimeAssignmentEvidence,
     externalOverlay: nodeEdgeEvidenceOverlay,
   });

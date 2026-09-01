@@ -46,6 +46,15 @@ export function executionPlacementMarkdown(evidence) {
     profile.evidence_class,
     profile.detail,
   ]);
+  const comparisonRows = (evidence.placement_comparison?.rows || []).map((profile) => [
+    profile.label,
+    profile.profile_class,
+    `${formatNumber(profile.conditionally_eligible_ops)} / ${formatNumber(profile.op_count)}`,
+    formatNumber(profile.definite_exclusion_ops),
+    formatNumber(profile.unresolved_ops),
+    formatNumber(profile.boundary_edge_count),
+    profile.evidence_class,
+  ]);
   const staticProfileSections = (evidence.static_profiles || []).map((profile) => {
     const counts = profile.state_counts;
     const payload = profile.boundary_payload;
@@ -122,6 +131,7 @@ export function executionPlacementMarkdown(evidence) {
       ? markdownTable(["Run", "Cardinality", "Item range", "State"], flowRows)
       : "No joint placement flow is asserted for this evidence state.",
     portfolioRows.length ? `### Independent Source Portfolios\n\n${markdownTable(["Profile", "Candidates", "Evidence", "Meaning"], portfolioRows)}` : "",
+    comparisonRows.length ? `### N-way Placement Comparison\n\n${markdownTable(["Profile", "Class", "Conditionally eligible", "Excluded", "Unresolved", "Logical boundary edges", "Evidence"], comparisonRows)}\n\n> ${evidence.placement_comparison.interpretation_boundary}` : "",
     ...staticProfileSections,
     ...configurationPreflights,
     `> ${evidence.interpretation_boundary}`,

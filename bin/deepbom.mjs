@@ -30,6 +30,23 @@ import { buildCanonicalGraphIr } from "../web/lib/graph-ir.js";
 import { exportGraphVisualization } from "../web/lib/graph-export.js";
 import { exportGraphPng } from "./graph-png-export.mjs";
 import { buildNvidiaAcceleratorProfileBinding } from "../web/lib/accelerator-profile-binding.js";
+import {
+  buildCoreMlAcceleratorBinding,
+  buildEdgeTpuAcceleratorBinding,
+  buildLiteRtQualcommAcceleratorBinding,
+  buildNvidiaHostAcceleratorBinding,
+  buildTensorRtAcceleratorBinding,
+  buildTfliteAcceleratorBindings,
+  buildTfliteAdditionalAcceleratorBindings,
+  mergeAcceleratorBindings,
+} from "../web/lib/accelerator-binding.js";
+import { parseCoreMlComputePlanDocument } from "../web/lib/coreml-compute-plan.js";
+import { parseEdgeTpuCompilerEvidence } from "../web/lib/edgetpu-compiler-evidence.js";
+import { parseLiteRtQualcommEvidence } from "../web/lib/litert-qualcomm-evidence.js";
+import { buildExecutionPlacementEvidence } from "../web/lib/execution-placement-evidence.js";
+import { buildPlacementComparison } from "../web/lib/placement-comparison.js";
+import { buildCpuCostTargetBinding } from "../web/lib/cpu-target-binding.js";
+import { evaluateReviewPolicy, validateReviewPolicy } from "../web/lib/review-policy.js";
 import { buildOnnxExternalDataStructureBinding, onnxExternalInitializerElementCount } from "../web/lib/onnx-external-data-structure-binding.js";
 import {
   buildCanonicalGatedDecoderProjection,
@@ -63,7 +80,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.95.0";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.0-dev";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 
 async function main(argv) {
@@ -115,6 +132,14 @@ async function main(argv) {
     ? await readJsonSidecar(parsed.executorchBuild, "executorch_selected_build_attestation") : null;
   const acceleratorProfile = parsed.acceleratorProfile
     ? await readJsonSidecar(parsed.acceleratorProfile, "nvidia_accelerator_profile") : null;
+  const reviewPolicyInput = parsed.reviewPolicy
+    ? await readJsonSidecar(parsed.reviewPolicy, "review_policy") : null;
+  const coreMlComputePlanInput = parsed.coreMlComputePlan
+    ? await readJsonSidecar(parsed.coreMlComputePlan, "coreml_compute_plan") : null;
+  const edgeTpuCompilerInput = parsed.edgeTpuCompilerEvidence
+    ? await readJsonSidecar(parsed.edgeTpuCompilerEvidence, "edgetpu_compiler_evidence") : null;
+  const liteRtQualcommInput = parsed.liteRtQualcommEvidence
+    ? await readJsonSidecar(parsed.liteRtQualcommEvidence, "litert_qualcomm_compiler_dispatch_evidence") : null;
   let preanalyzedOnnx = null;
   if (input.kind === "file" && detectedFormat === "onnx" && resolvedSource.acquisition?.source?.kind === "huggingface" && !parsed.externalDataRoot) {
     const bytes = await readCliFileBytes(input);
@@ -185,14 +210,42 @@ async function main(argv) {
   enforceArtifactIdentity(analysis, artifact);
   analysis.cli_scan_policy = scanPolicy;
   analysis.artifact_set = buildCliArtifactSet(artifact, resolvedSource.acquisition, analysis, resolvedSource.closure);
-  if (targetBinding.evidence) {
-    analysis.cli_target_profile_input = {
-      ...targetBinding.evidence,
-      resolved_target_id: analysis.target_profile?.id || null,
-      resolved_target_profile_sha256: analysis.target_profile?.profile_sha256 || null,
-    };
+  analysis.accelerator_bindings = [];
+  if (format === "tflite") {
+    analysis.cpu_cost_target_binding = buildCpuCostTargetBinding(analysis.target_profile, {
+      bindingSource: targetBinding.bindingSource,
+      sourceInput: targetBinding.evidence,
+    });
+    if (targetBinding.evidence) {
+      analysis.cli_target_profile_input = {
+        ...targetBinding.evidence,
+        resolved_target_id: analysis.target_profile?.id || null,
+        resolved_target_profile_sha256: analysis.target_profile?.profile_sha256 || null,
+      };
+    }
   }
   const artifactSha256 = artifact.sha256;
+  if (coreMlComputePlanInput) {
+    if (format !== "coreml") throw new Error("--coreml-compute-plan applies only to a Core ML artifact or package.");
+    analysis.coreml_compute_plan = parseCoreMlComputePlanDocument(coreMlComputePlanInput.document, analysis, {
+      fileSha256: coreMlComputePlanInput.sha256,
+    });
+    analysis.accelerator_bindings.push(buildCoreMlAcceleratorBinding(analysis, analysis.coreml_compute_plan));
+  }
+  if (edgeTpuCompilerInput) {
+    if (format !== "tflite") throw new Error("--edgetpu-compiler-evidence applies only to a TFLite artifact.");
+    analysis.edgetpu_compiler_evidence = parseEdgeTpuCompilerEvidence(edgeTpuCompilerInput.document, analysis, {
+      fileSha256: edgeTpuCompilerInput.sha256,
+    });
+    analysis.accelerator_bindings.push(buildEdgeTpuAcceleratorBinding(analysis, analysis.edgetpu_compiler_evidence));
+  }
+  if (liteRtQualcommInput) {
+    if (format !== "tflite") throw new Error("--litert-qualcomm-evidence applies only to a TFLite artifact.");
+    analysis.litert_qualcomm_evidence = parseLiteRtQualcommEvidence(liteRtQualcommInput.document, analysis, {
+      fileSha256: liteRtQualcommInput.sha256,
+    });
+    analysis.accelerator_bindings.push(buildLiteRtQualcommAcceleratorBinding(analysis, analysis.litert_qualcomm_evidence));
+  }
   if (["onnx", "tflite"].includes(format)) analysis.on_device_llm = buildOnDeviceLlmContract(analysis);
   if (parsed.llmMemoryProfile && !["gguf", "safetensors"].includes(format)) {
     throw new Error("--llm-memory-profile applies only to GGUF or SafeTensors artifacts with an exact layer-storage contract.");
@@ -222,22 +275,40 @@ async function main(argv) {
       ? await readJsonDocument(parsed.tensorrtProfile)
       : parserEvidence?.build_profile || null;
     analysis.tensorrt_static_preflight = buildTensorRtStaticPreflight(analysis, buildProfile, parserEvidence, engineInspectorEvidence);
+    const tensorRtBinding = buildTensorRtAcceleratorBinding(analysis, analysis.tensorrt_static_preflight);
+    if (tensorRtBinding) analysis.accelerator_bindings.push(tensorRtBinding);
   }
   if (acceleratorProfile) {
     analysis.accelerator_profile_binding = buildNvidiaAcceleratorProfileBinding(analysis, acceleratorProfile, {
       deviceIndex: parsed.acceleratorDeviceIndex,
     });
+    analysis.accelerator_bindings.push(buildNvidiaHostAcceleratorBinding(analysis, analysis.accelerator_profile_binding));
   } else if (parsed.acceleratorDeviceIndex != null) {
     throw new Error("--accelerator-device requires --accelerator-profile.");
   }
+  analysis.accelerator_bindings = mergeAcceleratorBindings(
+    analysis.accelerator_bindings,
+    buildTfliteAcceleratorBindings(analysis),
+    buildTfliteAdditionalAcceleratorBindings(analysis),
+  );
+  const reviewPolicy = reviewPolicyInput ? validateReviewPolicy(reviewPolicyInput.document) : null;
+  if (reviewPolicy) {
+    analysis.policy_identity = {
+      schema: reviewPolicy.schema,
+      policy_sha256: reviewPolicy.policy_sha256,
+      source_file_sha256: reviewPolicyInput.sha256,
+      mode: reviewPolicy.mode,
+    };
+  }
 
   if (parsed.command === "graph") return runGraphCommand(parsed, analysis, artifact);
+  if (parsed.command === "placement") return runPlacementCommand(parsed, analysis, artifact);
 
   if (parsed.command === "verify") return runVerifyCommand(parsed, analysis, artifact);
   if (parsed.command === "explore") return runExploreCommand(parsed, analysis, artifact, input, targetBinding.value);
 
   const generatedAt = resolveGenerationTimestamp(parsed.timestamp);
-  const envelope = parsed.outputFormat === "envelope" || parsed.outputFormat === "sarif" || parsed.failOn !== "none"
+  const envelope = parsed.outputFormat === "envelope" || parsed.outputFormat === "sarif" || parsed.failOn !== "none" || reviewPolicy
     ? buildArtifactEvidenceEnvelope(analysis, {
         hash: artifactSha256,
         fileSizeBytes: artifact.size,
@@ -255,7 +326,14 @@ async function main(argv) {
     const validation = validateArtifactEvidenceEnvelope(envelope);
     if (!validation.valid) throw new Error(`Canonical evidence envelope validation failed: ${validation.errors.join(", ")}`);
   }
-  const policyResult = envelope ? evaluateFindingPolicy(envelope, parsed.failOn) : null;
+  const policyResult = reviewPolicy
+    ? evaluateReviewPolicy(envelope, reviewPolicy, {
+        analyzerVersion: VERSION,
+        rulepackVersion: analysis.rulepack_version || null,
+        evaluatedAt: generatedAt || new Date().toISOString(),
+        sourceFileSha256: reviewPolicyInput.sha256,
+      })
+    : envelope ? evaluateFindingPolicy(envelope, parsed.failOn) : null;
   const document = parsed.outputFormat === "cyclonedx"
     ? buildMlBomDocument(analysis, {
         hash: artifactSha256,
@@ -276,19 +354,26 @@ async function main(argv) {
     await writeOutputAtomically(parsed.policyOutput, `${JSON.stringify(policyResult, null, parsed.compact ? 0 : 2)}\n`, { noClobber: parsed.noClobber });
   }
   if (policyResult?.status === "block") {
-    process.stderr.write(`deepbom: finding policy blocked ${policyResult.blocking_finding_count} finding(s) at or above ${policyResult.fail_on}.\n`);
+    const blockingCount = policyResult.blocking_finding_count ?? policyResult.finding_policy?.blocking_finding_count ?? 0;
+    const threshold = policyResult.fail_on ?? policyResult.finding_policy?.fail_on ?? "configured policy";
+    process.stderr.write(`deepbom: review policy blocked (${blockingCount} finding(s) at or above ${threshold}; coverage ${policyResult.coverage_status || "not evaluated"}).\n`);
     process.exitCode = 2;
   }
 }
 
 async function resolveTargetBinding(parsed) {
-  if (!parsed.targetProfile) return { value: parsed.target || DEFAULT_TARGET, evidence: null };
+  if (!parsed.targetProfile) return {
+    value: parsed.target || DEFAULT_TARGET,
+    evidence: null,
+    bindingSource: parsed.targetExplicit ? "explicit_id" : "default_assumption",
+  };
   if (parsed.targetExplicit) throw new Error("--target and --target-profile are mutually exclusive.");
   const sidecar = await readJsonSidecar(parsed.targetProfile, "target_profile", MAX_TARGET_PROFILE_BYTES);
   const validated = validateCustomTargetSpec(sidecar.document);
   const normalized = canonicalJson(validated);
   return {
     value: JSON.stringify(validated),
+    bindingSource: "profile_file",
     evidence: {
       schema: "deepbom.cli_target_profile_input.v1",
       filename: sidecar.path,
@@ -335,10 +420,18 @@ function validateInvocation(parsed) {
   if (parsed.acceleratorProfile && !["audit", "gguf", "graph"].includes(parsed.command)) {
     throw new Error("--accelerator-profile is valid only with audit, gguf, or graph.");
   }
+  if ((parsed.coreMlComputePlan || parsed.edgeTpuCompilerEvidence || parsed.liteRtQualcommEvidence)
+      && !["audit", "graph", "placement"].includes(parsed.command)) {
+    throw new Error("Compiled accelerator evidence is valid only with audit, graph, or placement.");
+  }
+  if (parsed.reviewPolicy && !["audit", "gguf"].includes(parsed.command)) {
+    throw new Error("--review-policy is valid only with audit or gguf.");
+  }
   if (parsed.acceleratorDeviceIndex != null && !parsed.acceleratorProfile) {
     throw new Error("--accelerator-device requires --accelerator-profile.");
   }
-  if (parsed.policyOutput && parsed.failOn === "none") throw new Error("--policy-output requires --fail-on.");
+  if (parsed.reviewPolicy && parsed.failOnExplicit) throw new Error("--review-policy and --fail-on are mutually exclusive sources of finding policy.");
+  if (parsed.policyOutput && parsed.failOn === "none" && !parsed.reviewPolicy) throw new Error("--policy-output requires --fail-on or --review-policy.");
   if (parsed.noClobber && !parsed.output && !parsed.policyOutput) throw new Error("--no-clobber requires --output or --policy-output.");
   if (parsed.noClobber && parsed.output === "-" && !parsed.policyOutput) {
     throw new Error("--no-clobber cannot protect stdout; provide a file path with --output.");
@@ -363,6 +456,23 @@ function validateInvocation(parsed) {
     if (parsed.timestamp) throw new Error("The graph command is deterministic and does not accept --timestamp.");
     if (parsed.contract || parsed.request) throw new Error("The graph command does not accept verify or redesign sidecars.");
   }
+  if (parsed.command === "placement") {
+    if (parsed.failOn !== "none" || parsed.policyOutput || parsed.reviewPolicy) throw new Error("The placement command does not accept finding-policy options.");
+    if (parsed.timestamp) throw new Error("The placement command is deterministic and does not accept --timestamp.");
+    if (parsed.contract || parsed.request) throw new Error("The placement command does not accept verify or redesign sidecars.");
+    if (parsed.formatExplicit) throw new Error("The placement command emits deepbom.placement_comparison.v1; --format is not supported.");
+  } else if (parsed.placementProfilesExplicit) {
+    throw new Error("--profiles is valid only with the placement command.");
+  }
+}
+
+async function runPlacementCommand(parsed, analysis, artifact) {
+  const runtimeEvidence = analysis.coreml_compute_plan || null;
+  const execution = buildExecutionPlacementEvidence(analysis, runtimeEvidence);
+  const document = parsed.placementProfiles == null
+    ? execution.placement_comparison
+    : buildPlacementComparison(analysis, execution.static_profiles, { selectedProfileIds: parsed.placementProfiles });
+  await emitDocument(parsed, document, () => buildPlacementSummary(document, artifact));
 }
 
 async function preflightOutputDestinations(parsed) {
@@ -378,12 +488,13 @@ function validateCapabilitiesInvocation(parsed) {
   assertNoOptions(parsed, [
     "targetProfile", "contract", "request", "context", "batch", "stateBits", "memoryMib", "tensorrtProfile",
     "tensorrtParserEvidence", "tensorrtEngineInspector", "tensorrtLlmConfig", "tensorrtLlmBinding",
-    "llmMemoryProfile", "acceleratorProfile", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
+    "llmMemoryProfile", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
   ], "capabilities");
   if (parsed.targetExplicit || parsed.failOn !== "none") throw new Error("The capabilities command does not accept target or finding-policy options.");
   if (parsed.deviceIndex != null || parsed.includeDeviceIdentifiers) throw new Error("The capabilities command does not accept NVIDIA collector options.");
   if (parsed.acceleratorDeviceIndex != null) throw new Error("The capabilities command does not accept --accelerator-device.");
   if (parsed.scanExplicit) throw new Error("The capabilities command does not accept --scan.");
+  if (parsed.placementProfilesExplicit) throw new Error("The capabilities command does not accept --profiles.");
   if (parsed.maxDownloadExplicit) throw new Error("The capabilities command does not accept --max-download-gib.");
   if (parsed.timestamp) throw new Error("The capabilities command does not accept --timestamp.");
   if (parsed.noClobber && !parsed.output) throw new Error("--no-clobber requires --output.");
@@ -399,10 +510,11 @@ function validateAcceleratorInvocation(parsed) {
   assertNoOptions(parsed, [
     "targetProfile", "contract", "request", "context", "batch", "stateBits", "memoryMib", "tensorrtProfile",
     "tensorrtParserEvidence", "tensorrtEngineInspector", "tensorrtLlmConfig", "tensorrtLlmBinding",
-    "llmMemoryProfile", "acceleratorProfile", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
+    "llmMemoryProfile", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
   ], "accelerator collect nvidia");
   if (parsed.acceleratorDeviceIndex != null) throw new Error("The collector uses --device, not --accelerator-device.");
   if (parsed.scanExplicit) throw new Error("The accelerator collect nvidia command does not accept --scan.");
+  if (parsed.placementProfilesExplicit) throw new Error("The accelerator collect nvidia command does not accept --profiles.");
   if (parsed.targetExplicit || parsed.failOn !== "none") throw new Error("The accelerator collect nvidia command does not accept target or finding-policy options.");
   if (parsed.maxDownloadExplicit) throw new Error("The accelerator collect nvidia command does not accept --max-download-gib.");
   if (parsed.timestamp) throw new Error("The accelerator collect nvidia command records its observation time and does not accept --timestamp.");
@@ -1046,6 +1158,22 @@ function buildExploreSummary(pareto) {
   return `${lines.join("\n")}\n`;
 }
 
+function buildPlacementSummary(comparison, artifact) {
+  const lines = [
+    `DEEPBOM ${VERSION} N-way placement comparison`,
+    `Artifact: ${artifact.filename}`,
+    `Identity: sha256:${artifact.sha256}`,
+    `Profiles: ${comparison.rows.length}/${comparison.available_profile_ids.length} selected/available`,
+  ];
+  if (!comparison.rows.length) lines.push("Placement: not applicable; no static execution profile exists for this artifact class.");
+  for (const row of comparison.rows) {
+    lines.push(`  - ${row.profile_id}: ${row.conditionally_eligible_ops}/${row.op_count} conditionally eligible | ${row.definite_exclusion_ops} excluded | ${row.unresolved_ops} unresolved | ${row.boundary_edge_count} logical boundary edges`);
+  }
+  lines.push(`Evidence boundary: ${comparison.interpretation_boundary}`);
+  lines.push("Machine output: rerun with --json or --compact for source identities, exact state counts, and boundary payloads.");
+  return `${lines.join("\n")}\n`;
+}
+
 function buildCapabilitiesSummary(capabilities) {
   const commands = capabilities.commands.map((row) => row.name).join(", ");
   const formats = capabilities.inputs.standalone_extensions.join(", ");
@@ -1164,7 +1292,7 @@ function parseArguments(argv) {
   const first = values[0] || "";
   if (["-h", "--help", "help"].includes(first)) return { help: true };
   if (["-v", "--version", "version"].includes(first)) return { version: true };
-  const command = ["audit", "gguf", "verify", "diff", "explore", "graph", "capabilities", "accelerator"].includes(first) ? values.shift() : "audit";
+  const command = ["audit", "gguf", "verify", "diff", "explore", "graph", "placement", "capabilities", "accelerator"].includes(first) ? values.shift() : "audit";
   const acceleratorAction = command === "accelerator" ? values.shift() || "" : "";
   const acceleratorProvider = command === "accelerator" ? values.shift() || "" : "";
   const parsed = {
@@ -1182,7 +1310,9 @@ function parseArguments(argv) {
     outputFormat: command === "graph" ? "svg" : "analysis",
     output: "",
     policyOutput: "",
+    reviewPolicy: "",
     failOn: "none",
+    failOnExplicit: false,
     noClobber: false,
     errorFormat: "text",
     timestamp: "",
@@ -1200,6 +1330,11 @@ function parseArguments(argv) {
     scanExplicit: false,
     acceleratorProfile: "",
     acceleratorDeviceIndex: null,
+    coreMlComputePlan: "",
+    edgeTpuCompilerEvidence: "",
+    liteRtQualcommEvidence: "",
+    placementProfiles: null,
+    placementProfilesExplicit: false,
     externalDataRoot: "",
     executorchBuild: "",
     cacheDir: "",
@@ -1239,6 +1374,13 @@ function parseArguments(argv) {
     }
     else if (token === "--accelerator-profile") parsed.acceleratorProfile = requiredValue(values, token);
     else if (token === "--accelerator-device") parsed.acceleratorDeviceIndex = parseNonNegativeInteger(requiredValue(values, token), token);
+    else if (token === "--coreml-compute-plan") parsed.coreMlComputePlan = requiredValue(values, token);
+    else if (token === "--edgetpu-compiler-evidence") parsed.edgeTpuCompilerEvidence = requiredValue(values, token);
+    else if (token === "--litert-qualcomm-evidence") parsed.liteRtQualcommEvidence = requiredValue(values, token);
+    else if (token === "--profiles") {
+      parsed.placementProfiles = parsePlacementProfiles(requiredValue(values, token));
+      parsed.placementProfilesExplicit = true;
+    }
     else if (token === "--external-data-dir") parsed.externalDataRoot = requiredValue(values, token);
     else if (token === "--executorch-build") parsed.executorchBuild = requiredValue(values, token);
     else if (token === "--cache-dir") parsed.cacheDir = requiredValue(values, token);
@@ -1256,7 +1398,11 @@ function parseArguments(argv) {
     }
     else if (token === "--output" || token === "-o") parsed.output = requiredValue(values, token);
     else if (token === "--policy-output") parsed.policyOutput = requiredValue(values, token);
-    else if (token === "--fail-on") parsed.failOn = normalizeFailOn(requiredValue(values, token));
+    else if (token === "--review-policy") parsed.reviewPolicy = requiredValue(values, token);
+    else if (token === "--fail-on") {
+      parsed.failOn = normalizeFailOn(requiredValue(values, token));
+      parsed.failOnExplicit = true;
+    }
     else if (token === "--no-clobber") parsed.noClobber = true;
     else if (token === "--error-format") parsed.errorFormat = requiredValue(values, token).toLowerCase();
     else if (token === "--timestamp") parsed.timestamp = normalizeTimestamp(requiredValue(values, token));
@@ -1291,6 +1437,16 @@ function requiredValue(values, option) {
   const value = values.shift();
   if (!value || value.startsWith("--")) throw new Error(`${option} requires a value.`);
   return value;
+}
+
+function parsePlacementProfiles(value) {
+  if (String(value).trim().toLowerCase() === "all") return null;
+  const profiles = String(value).split(",").map((item) => item.trim()).filter(Boolean);
+  if (!profiles.length || profiles.some((item) => !/^[a-z0-9][a-z0-9_.-]*$/i.test(item))) {
+    throw new Error("--profiles must be all or a comma-separated list of placement profile IDs.");
+  }
+  if (new Set(profiles).size !== profiles.length) throw new Error("--profiles must not contain duplicate profile IDs.");
+  return profiles;
 }
 
 function normalizeTimestamp(value) {
@@ -1352,9 +1508,12 @@ async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_B
 function printHelp() {
   process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     GGUF context-length scenario\n  --batch <count>        GGUF scenario batch size (default: 1)\n  --state-bits <bits>    GGUF KV-state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the static lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis, envelope, cyclonedx, or sarif (audit/gguf only)\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Exit 2 for findings at/above informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Emit the complete formatted evidence JSON\n  --compact              Emit the complete compact evidence JSON\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
   process.stdout.write("\nNVIDIA accelerator binding:\n  --accelerator-profile <json>\n                          Bind an observed NVIDIA host profile without inferring selected-build or runtime assignment\n  --accelerator-device <index>\n                          Select one device when the bound profile contains multiple NVIDIA devices\n");
+  process.stdout.write("\nN-way placement comparison:\n  deepbom placement <artifact> [--profiles <id,id|all>] [--json|--compact]\n  --profiles <ids|all>   Compare selected independent profiles (default: all available profiles)\n");
+  process.stdout.write("\nCompiled accelerator evidence:\n  --coreml-compute-plan <json>\n                          Import an artifact- and compiled-model-bound MLComputePlan estimate; not executed placement\n  --edgetpu-compiler-evidence <json>\n                          Import an artifact/compiler/invocation/compiled-artifact-bound Edge TPU operation ledger\n  --litert-qualcomm-evidence <json>\n                          Import an artifact/source/compiler/QNN-plan-bound operation ledger\n");
   process.stdout.write("\nNVIDIA accelerator observation:\n  deepbom accelerator collect nvidia [--device <index>] [--json|--compact]\n  --device <index>        Collect one NVIDIA device index (default: all devices)\n  --include-device-identifiers\n                          Include raw GPU UUID and PCI bus ID; hashes are always emitted\n");
   process.stdout.write("\nRemote immutable artifact input:\n  hf://owner/repo@<40-hex-commit>/path\n  gs://bucket/object#generation=<generation>\n  https://host/path#sha256=<64-hex>\n  --expected-sha256 <hex> Add an independent content digest requirement\n  --cache-dir <directory> Use a content-addressed cache directory\n  --offline               Refuse network access and require a verified cache receipt\n  --max-download-gib <n>  Bound one remote download (default: 50, maximum: 1024)\n");
   process.stdout.write("\nBounded scan policy:\n  --scan <mode>           auto, structure, integrity, or full\n  GGUF/SafeTensors use range reads; auto selects structure above 10 GiB and streamed integrity above 2 GiB.\n  Monolithic TFLite/ONNX/ExecuTorch files above 1 GiB fail before full-file allocation.\n");
+  process.stdout.write("\nRepeat-review policy:\n  --review-policy <json> Bind required analysis coverage, finding threshold, and identity-scoped expiring exceptions\n  --policy-output <path> Write the deterministic policy decision JSON\n  --review-policy and --fail-on are mutually exclusive policy sources.\n");
   process.stdout.write("\nDeterministic graph export:\n  deepbom graph <artifact> --view structure --format svg -o graph.svg\n  --view <kind>           structure, placement, quantization, or architecture\n  --format <kind>         svg, png, html, mermaid, dot, or json for graph\n");
   process.stdout.write("\nTensorRT optimized-engine option:\n  --tensorrt-engine-inspector <json>\n                          Import identity-bound TensorRT optimized-engine inspector evidence\n");
   process.stdout.write("\nExecuTorch selected-build option:\n  --executorch-build <json>\n                          Bind backend/operator inventories and runtime binary digests to a PTE audit\n");

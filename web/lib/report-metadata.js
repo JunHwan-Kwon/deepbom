@@ -166,6 +166,7 @@ export const ANALYZER_METADATA = Object.freeze({
     tfliteBenchmarkProfileAdapter: "deepbom.tflite_benchmark_profile_adapter.v1",
     runtimeAssignmentComparison: "deepbom.runtime_assignment_comparison.v1.4",
     executionPlacementEvidence: "deepbom.execution_placement_evidence.v1",
+    placementComparison: "deepbom.placement_comparison.v1",
     predictedRuntimeBoundarySummary: "deepbom.predicted_runtime_boundary_summary.v1",
     observedPartitionBoundaryEdges: "deepbom.observed_partition_boundary_edges.v1",
     weightIndicatorEvidence: "deepbom.weight_indicator_evidence.v1.1",

@@ -11,6 +11,9 @@ import { sha256TextHex } from "../web/lib/sha256-sync.js";
 import { buildInterfaceQuantizationContractLedger } from "../web/lib/quantization-contract-summary.js";
 import { EXECUTORCH_BACKEND_REGISTRY_SOURCE, EXECUTORCH_SELECTED_BUILD_ATTESTATION_SCHEMA } from "../web/lib/executorch-build-binding.js";
 import { TENSORRT_ENGINE_INSPECTOR_EVIDENCE_SCHEMA, tensorRtParserObservationIdentity } from "../web/lib/tensorrt-engine-inspector.js";
+import { buildCoreMlComputePlanTemplate } from "../web/lib/coreml-compute-plan.js";
+import { COREML_DEPLOYMENT_SOURCE } from "../web/lib/coreml-deployment-contract.js";
+import { tfliteAcceleratorSourceManifest } from "../web/lib/tflite-accelerator-source-profiles.js";
 import { decodeFixtureBase64, EXECUTORCH_ADD_PTE_BASE64 } from "./fixtures/executorch-fixtures.mjs";
 
 const cases = [
@@ -53,6 +56,11 @@ assert.match(run(["--help"]).stdout, /--offline\s+Refuse network access/, "offli
 assert.match(run(["--help"]).stdout, /deepbom graph <artifact>/, "deterministic graph export is discoverable");
 assert.match(run(["--help"]).stdout, /--scan <mode>\s+auto, structure, integrity, or full/, "bounded scan modes are discoverable");
 assert.match(run(["--help"]).stdout, /--accelerator-profile <json>/, "NVIDIA profile binding is discoverable");
+assert.match(run(["--help"]).stdout, /--coreml-compute-plan <json>/, "Core ML plan binding is discoverable");
+assert.match(run(["--help"]).stdout, /--edgetpu-compiler-evidence <json>/, "Edge TPU compiler binding is discoverable");
+assert.match(run(["--help"]).stdout, /deepbom placement <artifact>/, "N-way placement comparison is discoverable");
+assert.match(run(["--help"]).stdout, /--litert-qualcomm-evidence <json>/, "LiteRT Qualcomm compiler binding is discoverable");
+assert.match(run(["--help"]).stdout, /--review-policy <json>/, "repeat-review policy is discoverable");
 
 for (const [artifact, expectedFormat] of cases) {
   const result = run(["audit", artifact, "--compact"]);
@@ -180,6 +188,135 @@ try {
 
   const onnxAnalysis = JSON.parse(run(["audit", cases[1][0], "--compact"]).stdout);
   const tfliteAnalysis = JSON.parse(run(["audit", cases[0][0], "--compact"]).stdout);
+  const coreMlAnalysis = JSON.parse(run(["audit", cases[4][0], "--compact"]).stdout);
+  assert.equal(tfliteAnalysis.cpu_cost_target_binding?.binding_source, "default_assumption", "default TFLite target must remain an explicit planning assumption");
+  assert.equal(tfliteAnalysis.cpu_cost_target_binding?.host_observed, false, "CPU cost target must never claim host observation");
+  assert.equal(tfliteAnalysis.cpu_cost_target_binding?.profile_sha256, tfliteAnalysis.target_profile.profile_sha256,
+    "CPU cost target binding must retain the resolved profile digest");
+  const explicitTarget = JSON.parse(run(["audit", cases[0][0], "--target", "android_mid_a55", "--compact"]).stdout);
+  assert.equal(explicitTarget.cpu_cost_target_binding?.binding_source, "explicit_id", "an explicit built-in target id must be distinguishable from the default");
+  assert.equal(explicitTarget.cpu_cost_target_binding?.profile_sha256, tfliteAnalysis.cpu_cost_target_binding.profile_sha256,
+    "binding provenance must not change the selected target calculation");
+  const targetEnvelope = JSON.parse(run(["audit", cases[0][0], "--format", "envelope", "--compact"]).stdout);
+  assert.equal(targetEnvelope.cpu_cost_target_binding?.binding_source, "default_assumption", "canonical envelope must retain CPU target provenance");
+  assert.equal(Array.isArray(targetEnvelope.accelerator_bindings), true, "canonical envelope must carry the accelerator binding ledger");
+  assert.equal(targetEnvelope.accelerator_bindings.some((row) => row.profile_id === "tflite_coreml_delegate"), true,
+    "canonical envelope must retain the source-pinned TFLite Core ML profile");
+  assert.equal(targetEnvelope.accelerator_bindings.some((row) => row.profile_id === "litert_qualcomm_qnn"), true,
+    "canonical envelope must retain the source-pinned LiteRT Qualcomm profile");
+
+  const placement = JSON.parse(run(["placement", cases[0][0], "--compact"]).stdout);
+  assert.equal(placement.schema, "deepbom.placement_comparison.v1", "placement CLI schema");
+  assert.deepEqual(placement.available_profile_ids, ["xnnpack_cpu", "tflite_coreml_delegate", "litert_qualcomm_qnn"],
+    "placement CLI must expose independent source profiles in deterministic order");
+  const selectedPlacement = JSON.parse(run(["placement", cases[0][0], "--profiles", "xnnpack_cpu,tflite_coreml_delegate", "--compact"]).stdout);
+  assert.deepEqual(selectedPlacement.selected_profile_ids, ["xnnpack_cpu", "tflite_coreml_delegate"], "placement CLI N-way selection");
+  const unknownPlacement = run(["placement", cases[0][0], "--profiles", "missing"], false);
+  assert.notEqual(unknownPlacement.status, 0, "unknown placement profile must fail closed");
+  assert.match(unknownPlacement.stderr, /unavailable/);
+
+  const reviewPolicyPath = path.join(temp, "review-policy.json");
+  const reviewPolicyOutputPath = path.join(temp, "review-policy-result.json");
+  await writeFile(reviewPolicyPath, JSON.stringify({
+    schema: "deepbom.review_policy.v1",
+    mode: "enforce",
+    fail_on: "none",
+    required_capabilities: ["artifact_identity", "graph"],
+    exceptions: [],
+  }), "utf8");
+  const policyAudit = JSON.parse(run(["audit", cases[0][0], "--review-policy", reviewPolicyPath,
+    "--policy-output", reviewPolicyOutputPath, "--format", "envelope", "--compact"]).stdout);
+  assert.equal(policyAudit.policy_identity?.schema, "deepbom.review_policy.v1", "review policy identity must enter the envelope");
+  assert.match(policyAudit.policy_identity?.policy_sha256, /^[a-f0-9]{64}$/, "review policy normalized digest");
+  const policyConflict = run(["audit", cases[0][0], "--review-policy", reviewPolicyPath, "--fail-on", "high"], false);
+  assert.notEqual(policyConflict.status, 0, "review policy and legacy threshold must be mutually exclusive");
+  assert.match(policyConflict.stderr, /mutually exclusive/);
+
+  const edgeTpuPath = path.join(temp, "edgetpu-compiler-evidence.json");
+  await writeFile(edgeTpuPath, JSON.stringify({
+    schema: "deepbom.edgetpu_compiler_evidence.v1",
+    artifact_sha256: tfliteAnalysis.model_sha256,
+    compiler: { name: "edgetpu_compiler", version: "fixture", binary_sha256: "6".repeat(64) },
+    invocation: { options: ["--delegate_search_step=1"] },
+    compiled_artifact_sha256: "7".repeat(64),
+    compiler_report_sha256: "8".repeat(64),
+    operations: tfliteAnalysis.ops.map((op, index) => ({
+      op_index: op.index ?? index,
+      op_name: op.name,
+      mapping: index === tfliteAnalysis.ops.length - 1 ? "unmapped" : "mapped",
+      reason: index === tfliteAnalysis.ops.length - 1 ? "fixture_compiler_report" : null,
+    })),
+  }), "utf8");
+  const edgeTpuBound = JSON.parse(run(["audit", cases[0][0], "--edgetpu-compiler-evidence", edgeTpuPath, "--compact"]).stdout);
+  const edgeTpuBinding = edgeTpuBound.accelerator_bindings.find((row) => row.profile_id === "google_edgetpu_compiler");
+  assert.equal(edgeTpuBinding?.evidence_stage, "compiled_plan", "Edge TPU compiler evidence stage");
+  assert.equal(edgeTpuBinding?.claims?.observed_assignment, false, "Edge TPU compiler report must not become observed assignment");
+  assert.equal(edgeTpuBound.edgetpu_compiler_evidence.summary.operation_count, tfliteAnalysis.ops.length,
+    "Edge TPU operation classification conservation");
+  const wrongEdgeTpu = run(["audit", cases[1][0], "--edgetpu-compiler-evidence", edgeTpuPath], false);
+  assert.notEqual(wrongEdgeTpu.status, 0);
+  assert.match(wrongEdgeTpu.stderr, /only to a TFLite artifact/);
+
+  const qualcommSource = tfliteAcceleratorSourceManifest().profiles.find((row) => row.id === "litert_qualcomm_qnn");
+  const qualcommPath = path.join(temp, "litert-qualcomm-evidence.json");
+  await writeFile(qualcommPath, JSON.stringify({
+    schema: "deepbom.litert_qualcomm_compiler_dispatch_evidence.v1",
+    artifact_sha256: tfliteAnalysis.model_sha256,
+    source: { litert_commit: qualcommSource.source.commit, rulepack_sha256: qualcommSource.rulepack_sha256 },
+    compiler: { name: "litert-qualcomm-compiler", version: "fixture", binary_sha256: "1".repeat(64) },
+    invocation: { options: ["--soc_model=fixture"] },
+    compiled_plan_sha256: "2".repeat(64),
+    operations: tfliteAnalysis.ops.map((op, index) => ({
+      op_index: op.index ?? index,
+      op_name: op.name,
+      compile_status: index === tfliteAnalysis.ops.length - 1 ? "not_compiled" : "compiled",
+      reason: index === tfliteAnalysis.ops.length - 1 ? "fixture_compiler_rejection" : null,
+    })),
+    dispatch: { status: "not_observed" },
+  }), "utf8");
+  const qualcommBound = JSON.parse(run(["audit", cases[0][0], "--litert-qualcomm-evidence", qualcommPath, "--compact"]).stdout);
+  const qualcommBinding = qualcommBound.accelerator_bindings.find((row) => row.profile_id === "litert_qualcomm_qnn_compiled_plan");
+  assert.equal(qualcommBinding?.evidence_stage, "compiled_plan", "LiteRT Qualcomm compiled plan evidence stage");
+  assert.equal(qualcommBinding?.claims?.observed_assignment, false, "Qualcomm compiler result must not become observed assignment");
+  const qualcommPlacement = JSON.parse(run(["placement", cases[0][0], "--litert-qualcomm-evidence", qualcommPath,
+    "--profiles", "litert_qualcomm_qnn_compiled_plan", "--compact"]).stdout);
+  assert.equal(qualcommPlacement.rows[0].conditionally_eligible_ops, tfliteAnalysis.ops.length - 1,
+    "Qualcomm imported compiler projection must conserve the operation ledger");
+  const wrongQualcomm = run(["placement", cases[1][0], "--litert-qualcomm-evidence", qualcommPath], false);
+  assert.notEqual(wrongQualcomm.status, 0);
+  assert.match(wrongQualcomm.stderr, /only to a TFLite artifact/);
+
+  const coreMlTemplate = buildCoreMlComputePlanTemplate(coreMlAnalysis);
+  coreMlTemplate.runtime = {
+    coremltools_version: "9.0-fixture",
+    coremltools_compute_plan_source_sha256: COREML_DEPLOYMENT_SOURCE.compute_plan_sha256,
+    compiled_model_content_sha256: "9".repeat(64),
+    platform: "macOS fixture",
+    architecture: "arm64",
+    platform_system: "Darwin",
+    macos_version: "15.6",
+    os_build: "24G84",
+    hardware_model: "Mac-fixture",
+    python_version: "3.12",
+    available_compute_devices: [{ type: "CPU", source_class: "MLCPUComputeDevice", instance_count: 1 }],
+  };
+  coreMlTemplate.capture.capture_id = "cli-coreml-plan";
+  coreMlTemplate.capture.collected_at = "2026-08-18T00:00:00.000Z";
+  coreMlTemplate.capture.collector.source_sha256 = "a".repeat(64);
+  coreMlTemplate.structure.rows = coreMlAnalysis.ops.map((op, index) => ({
+    op_index: op.index ?? index,
+    operator_type: coreMlTemplate.structure.kind === "program" ? op.mil_operation_type : op.name,
+    identity: op.coreml_layer_name,
+    preferred_compute_device: "CPU",
+    supported_compute_devices: ["CPU"],
+    estimated_cost_weight: coreMlAnalysis.ops.length ? 1 / coreMlAnalysis.ops.length : null,
+  }));
+  const coreMlPlanPath = path.join(temp, "coreml-plan.json");
+  await writeFile(coreMlPlanPath, JSON.stringify(coreMlTemplate), "utf8");
+  const coreMlBound = JSON.parse(run(["audit", cases[4][0], "--coreml-compute-plan", coreMlPlanPath, "--compact"]).stdout);
+  const coreMlBinding = coreMlBound.accelerator_bindings.find((row) => row.provider === "apple");
+  assert.equal(coreMlBinding?.evidence_stage, "compiled_plan", "Core ML compute plan evidence stage");
+  assert.equal(coreMlBinding?.claims?.observed_assignment, false, "MLComputePlan must remain anticipated rather than observed assignment");
   const interfaceLedger = buildInterfaceQuantizationContractLedger(tfliteAnalysis);
   const interfaceContractPath = path.join(temp, "interface-contract.json");
   await writeFile(interfaceContractPath, JSON.stringify({
@@ -224,6 +361,9 @@ try {
   assert.match(customTarget.cli_target_profile_input.source_sha256, /^[a-f0-9]{64}$/, "custom target source file SHA-256");
   assert.equal(customTarget.cli_target_profile_input.resolved_target_profile_sha256, customTarget.target_profile.profile_sha256,
     "custom target input evidence binds the resolved Rust profile");
+  assert.equal(customTarget.cpu_cost_target_binding?.binding_source, "profile_file", "custom target binding source");
+  assert.equal(customTarget.cpu_cost_target_binding?.source_input?.source_sha256, customTarget.cli_target_profile_input.source_sha256,
+    "custom target binding must retain the profile-file identity");
   const duplicateTargetPath = path.join(temp, "duplicate-target.json");
   await writeFile(duplicateTargetPath, '{"base":"android_mid_a55","base":"rpi4_a72","id":"custom:duplicate","label":"Duplicate","overrides":{}}', "utf8");
   const duplicateTarget = run(["audit", cases[0][0], "--target-profile", duplicateTargetPath], false);
@@ -302,6 +442,8 @@ try {
   const observed = JSON.parse(run(["audit", cases[1][0], "--tensorrt-parser-evidence", evidencePath, "--compact"]).stdout);
   assert.equal(observed.tensorrt_static_preflight.status, "parser_observed_all_supported");
   assert.equal(observed.tensorrt_static_preflight.projection.state_counts.CONDITIONALLY_ELIGIBLE, onnxAnalysis.ops.length);
+  assert.equal(observed.accelerator_bindings.find((row) => row.backend === "tensorrt")?.evidence_stage,
+    "selected_build", "TensorRT parser observation must remain selected-build evidence");
   const engineInformation = {
     Layers: [{
       Name: "conv [ONNX Layer: Conv_0]", LayerType: "Convolution",
@@ -334,6 +476,9 @@ try {
     "--tensorrt-parser-evidence", evidencePath, "--tensorrt-engine-inspector", inspectorPath, "--compact"]).stdout);
   assert.equal(engineInspected.tensorrt_static_preflight.status, "engine_inspected_parser_observed_all_supported");
   assert.equal(engineInspected.tensorrt_static_preflight.engine_inspector_evidence.engine_layer_count, 1);
+  const engineBinding = engineInspected.accelerator_bindings.find((row) => row.backend === "tensorrt");
+  assert.equal(engineBinding?.evidence_stage, "compiled_plan", "TensorRT engine inspector evidence stage");
+  assert.equal(engineBinding?.claims?.observed_assignment, false, "TensorRT engine metadata must not imply observed original-op assignment");
   const wrongFormatTrt = run(["audit", cases[0][0], "--tensorrt-profile", profilePath], false);
   assert.notEqual(wrongFormatTrt.status, 0);
   assert.match(wrongFormatTrt.stderr, /apply only to ONNX/);

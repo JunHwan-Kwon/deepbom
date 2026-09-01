@@ -1,0 +1,24 @@
+{
+  "schema": "deepbom.expected_output.v1",
+  "artifact": {
+    "path": "web/samples/gpu_partition_probe.onnx",
+    "source": "scripts/generate-accelerator-llm-samples.py v1.0.0",
+    "license": "Apache-2.0",
+    "byte_length": 1350,
+    "sha256": "82a2feef00eb6ab03d82f2b30cd17f4d826e2d8307cb059eccd6a0f3120059b2"
+  },
+  "analysis": {
+    "format": "onnx",
+    "operator_count": 5,
+    "tensor_count": 9,
+    "total_macs": 6912,
+    "mac_assessment_status": "assessed",
+    "total_assessed_macs": 6912,
+    "assessed_compute_ops": 1,
+    "compute_ops": 1,
+    "shape_inference_status": "partial"
+  },
+  "fixed_timestamp": "2026-08-31T00:00:00.000Z",
+  "artifact_evidence_envelope_sha256": "b2c8cce0af09212685daf08e054a0e1d5124c5e8d84b253b0052d9df1e568731",
+  "claim_boundary": "Static artifact evidence does not establish observed runtime assignment, latency, task quality, clinical validity, or release readiness."
+}

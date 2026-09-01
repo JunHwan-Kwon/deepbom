@@ -35,6 +35,8 @@ import {
   TENSORRT_PARSER_OBSERVATION_SCHEMA,
 } from "./tensorrt-static-preflight.js";
 import { TENSORRT_ENGINE_INSPECTOR_EVIDENCE_SCHEMA } from "./tensorrt-engine-inspector.js";
+import { EDGETPU_COMPILER_EVIDENCE_SCHEMA, parseEdgeTpuCompilerEvidence } from "./edgetpu-compiler-evidence.js";
+import { LITERT_QUALCOMM_EVIDENCE_SCHEMA, parseLiteRtQualcommEvidence } from "./litert-qualcomm-evidence.js";
 import { parseStrictJson } from "./strict-json.js";
 
 export function installRuntimeEvidenceController({
@@ -81,6 +83,18 @@ export function installRuntimeEvidenceController({
         ? new TextDecoder().decode(bytes)
         : null;
       const jsonValue = jsonText == null ? null : parseJsonForSchema(jsonText);
+      if (jsonValue?.schema === EDGETPU_COMPILER_EVIDENCE_SCHEMA) {
+        analysis.edgetpu_compiler_evidence = parseEdgeTpuCompilerEvidence(jsonValue, analysis, { fileSha256: sourceFileSha256 });
+        onChanged();
+        setStatus("Edge TPU compiler evidence imported", "ok");
+        return;
+      }
+      if (jsonValue?.schema === LITERT_QUALCOMM_EVIDENCE_SCHEMA) {
+        analysis.litert_qualcomm_evidence = parseLiteRtQualcommEvidence(jsonValue, analysis, { fileSha256: sourceFileSha256 });
+        onChanged();
+        setStatus("LiteRT Qualcomm compiler/dispatch evidence imported", "ok");
+        return;
+      }
       if (jsonValue?.schema === TENSORRT_ENGINE_INSPECTOR_EVIDENCE_SCHEMA) {
         const existing = analysis.tensorrt_static_preflight;
         if (!existing?.build_profile) throw new Error("TensorRT engine-inspector evidence requires a bound build profile.");
@@ -208,6 +222,11 @@ export function installRuntimeEvidenceController({
   });
 
   clearButton?.addEventListener("click", () => {
+    const analysis = getAnalysis();
+    if (analysis) {
+      delete analysis.edgetpu_compiler_evidence;
+      delete analysis.litert_qualcomm_evidence;
+    }
     setEvidence(null);
     onChanged();
     setStatus("Runtime evidence cleared", "ok");

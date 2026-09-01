@@ -28,6 +28,7 @@ asset verification, and equivalence checks are documented in
 | `diff` | 2 | `deepbom.deployment_delta.v1.1` |
 | `explore` | 1 | `deepbom.redesign_pareto.v1` |
 | `graph` | 1 | `svg`<br>`png`<br>`html`<br>`mermaid`<br>`dot`<br>`deepbom.graph_ir.v1`<br>`deepbom.visualization_manifest.v1` |
+| `placement` | 1 | `deepbom.placement_comparison.v1` |
 | `accelerator collect nvidia` | none | `deepbom.accelerator_profile.v1` |
 | `capabilities` | none | `deepbom.cli_capabilities.v1` |
 
@@ -50,10 +51,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.95.0`:
+`1.96.0-dev`:
 
 ```console
-DEEPBOM 1.95.0
+DEEPBOM 1.96.0-dev
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -112,6 +113,18 @@ NVIDIA accelerator binding:
   --accelerator-device <index>
                           Select one device when the bound profile contains multiple NVIDIA devices
 
+N-way placement comparison:
+  deepbom placement <artifact> [--profiles <id,id|all>] [--json|--compact]
+  --profiles <ids|all>   Compare selected independent profiles (default: all available profiles)
+
+Compiled accelerator evidence:
+  --coreml-compute-plan <json>
+                          Import an artifact- and compiled-model-bound MLComputePlan estimate; not executed placement
+  --edgetpu-compiler-evidence <json>
+                          Import an artifact/compiler/invocation/compiled-artifact-bound Edge TPU operation ledger
+  --litert-qualcomm-evidence <json>
+                          Import an artifact/source/compiler/QNN-plan-bound operation ledger
+
 NVIDIA accelerator observation:
   deepbom accelerator collect nvidia [--device <index>] [--json|--compact]
   --device <index>        Collect one NVIDIA device index (default: all devices)
@@ -131,6 +144,11 @@ Bounded scan policy:
   --scan <mode>           auto, structure, integrity, or full
   GGUF/SafeTensors use range reads; auto selects structure above 10 GiB and streamed integrity above 2 GiB.
   Monolithic TFLite/ONNX/ExecuTorch files above 1 GiB fail before full-file allocation.
+
+Repeat-review policy:
+  --review-policy <json> Bind required analysis coverage, finding threshold, and identity-scoped expiring exceptions
+  --policy-output <path> Write the deterministic policy decision JSON
+  --review-policy and --fail-on are mutually exclusive policy sources.
 
 Deterministic graph export:
   deepbom graph <artifact> --view structure --format svg -o graph.svg
