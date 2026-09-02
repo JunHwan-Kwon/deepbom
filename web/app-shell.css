@@ -51,7 +51,7 @@ html {
   display: none !important;
 }
 
-body:not([data-model-format="tflite"]) [data-format-scope="tflite"],
+body:not([data-model-format="tflite"]) [data-format-scope="tflite"]:not([data-audit-tab]),
 body:not([data-model-format="tflite"]) [data-visual-scope="xnnpack"],
 body:not([data-model-format="tflite"]) .format-tflite {
   display: none !important;

@@ -1,0 +1,16 @@
+{
+  "schema": "deepbom.artifact_ir_import_policy.v1",
+  "source_roots": ["web", "bin", "scripts"],
+  "internal_module_prefix": "web/lib/artifact-ir/internal/",
+  "internal_module_importers": [
+    "web/lib/artifact-ir.js",
+    "web/lib/artifact-ir/internal/"
+  ],
+  "protected_symbols": {
+    "buildArtifactEvidenceIrUnchecked": [
+      "web/lib/artifact-ir.js",
+      "web/lib/artifact-ir-context.js"
+    ]
+  },
+  "removed_symbols": ["buildArtifactEvidenceIr"]
+}

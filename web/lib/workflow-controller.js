@@ -172,7 +172,7 @@ export function createWorkflowController({
     workflowConsole.hidden = state === "idle";
     auditWorkbench.hidden = !(hasAnalysis && activeWorkspace === "audit");
     const activeTab = auditTabs.find((tab) => tab.dataset.auditTab === activeAuditTab);
-    const applicable = activeTab?.dataset.applicabilityStatus !== "not_applicable";
+    const applicable = activeTab?.dataset.applicabilityStatus === "applicable";
     if (auditApplicabilityBoundary) auditApplicabilityBoundary.hidden = !(hasAnalysis && activeWorkspace === "audit" && !applicable);
     summary.hidden = !(hasAnalysis && activeWorkspace === "audit" && applicable && activeAuditTab === "overview");
     insightDashboard.hidden = !(hasAnalysis && activeWorkspace === "audit" && applicable && activeAuditTab === "overview");
@@ -221,13 +221,17 @@ export function createWorkflowController({
     const copy = auditFocusCopyFor(activeAuditTab, getFormat() || "tflite");
     if (auditFocusTitle) auditFocusTitle.textContent = copy.title;
     if (auditFocusCopy) auditFocusCopy.textContent = copy.detail;
-    if (auditApplicabilityBoundary && selected?.dataset.applicabilityStatus === "not_applicable") {
-      if (auditApplicabilityStatus) auditApplicabilityStatus.textContent = "Not applicable";
-      if (auditApplicabilityTitle) auditApplicabilityTitle.textContent = `${copy.title} is not applicable`;
+    if (auditApplicabilityBoundary && selected?.dataset.applicabilityStatus !== "applicable") {
+      const statusLabel = selected.dataset.applicabilityStatus === "not_assessable"
+        ? "Not assessable" : selected.dataset.applicabilityStatus === "not_assessed_yet" ? "Not assessed yet" : "Not applicable";
+      if (auditApplicabilityStatus) auditApplicabilityStatus.textContent = statusLabel;
+      if (auditApplicabilityTitle) auditApplicabilityTitle.textContent = `${copy.title} is ${statusLabel.toLowerCase()}`;
       if (auditApplicabilityReason) auditApplicabilityReason.textContent = selected.dataset.applicabilityReason || "This evidence domain is not applicable to the selected artifact class.";
       if (auditApplicabilityRequired) auditApplicabilityRequired.textContent = selected.dataset.applicabilityRequired
         ? `Required evidence: ${selected.dataset.applicabilityRequired}`
-        : "No missing file is implied by this state.";
+        : selected.dataset.applicabilityStatus === "not_applicable"
+          ? "No missing file is implied by this state."
+          : "Additional evidence is required before this domain can be assessed.";
     }
     syncEvidenceNavigation();
     updateVisibility();

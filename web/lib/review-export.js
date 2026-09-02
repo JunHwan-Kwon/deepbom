@@ -18,6 +18,7 @@ export function buildReviewState({ analysis, cursor, graphView, workspace, audit
   };
   const rulepackIdentities = reviewRulepackIdentities(analysis);
   const artifactIr = analysis?.artifact_ir || null;
+  const runtimeSubjectRefs = artifactIrRuntimeSubjectRefs(artifactIr);
   return {
     schema: REVIEW_STATE_SCHEMA,
     artifact_identity: artifactIdentity,
@@ -29,6 +30,7 @@ export function buildReviewState({ analysis, cursor, graphView, workspace, audit
       primary_scope_ref: artifactIr.graph?.primary_scope_ref || null,
       nested_scope_count: Math.max(0, Number(artifactIr.graph?.totals?.scope_count || 0) - 1),
       runtime_overlay_count: artifactIr.overlays?.runtime?.length || 0,
+      runtime_subject_refs: runtimeSubjectRefs,
     } : null,
     artifact_sha256: artifactIdentity.sha256 || "",
     format: artifactIdentity.format || "",
@@ -137,6 +139,7 @@ export function buildSelfContainedReviewHtml({ analysis, graphSvg, reviewState, 
   const safeSvg = String(graphSvg || "").replace(/^<\?xml[^>]+>\s*/, "");
   const graphDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(safeSvg)}`;
   const stateJson = escapeHtml(JSON.stringify(reviewState, null, 2));
+  const machineReadableState = jsonScript(reviewState);
   const findingHtml = findings.map((finding, index) => `<details${index === 0 ? " open" : ""}><summary><strong>${escapeHtml(finding.title)}</strong><span>${escapeHtml(`${finding.severity || ""} / ${finding.category || ""}`)}</span></summary><p>${escapeHtml(finding.impact || "")}</p><table><tbody>${(finding.evidence || []).map((row) => `<tr><th>${escapeHtml(row.source || "Evidence")}</th><td>${escapeHtml(row.text || "")}</td></tr>`).join("")}</tbody></table>${finding.actions?.length ? `<h4>Recommended action</h4><ul>${finding.actions.map((action) => `<li>${escapeHtml(action)}</li>`).join("")}</ul>` : ""}<h4>Evidence explanation</h4><pre>${escapeHtml(JSON.stringify(explanations[index], null, 2))}</pre></details>`).join("");
   const runtimeHtml = runtimeRows.length
     ? `<table><thead><tr><th>Source op</th><th>Runtime node</th><th>Provider</th><th>Mapping</th></tr></thead><tbody>${runtimeRows.map((row) => `<tr><td>${escapeHtml(row.source)}</td><td>${escapeHtml(row.runtime)}</td><td>${escapeHtml(row.provider)}</td><td>${escapeHtml(row.mapping)}</td></tr>`).join("")}</tbody></table>`
@@ -144,7 +147,7 @@ export function buildSelfContainedReviewHtml({ analysis, graphSvg, reviewState, 
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline';"><title>${escapeHtml(analysis?.filename || "artifact")} | DEEPBOM review</title><style>${reviewCss()}</style></head><body>
 <header><p>DEEPBOM READ-ONLY REVIEW</p><h1>${escapeHtml(analysis?.filename || "Deployment artifact")}</h1><dl><div><dt>Artifact SHA-256</dt><dd>${escapeHtml(analysis?.model_sha256 || "unbound")}</dd></div><div><dt>Format</dt><dd>${escapeHtml(analysis?.format || "unknown")}</dd></div><div><dt>Evidence boundary</dt><dd>Artifact evidence plus explicitly imported, hash-bound runtime evidence only.</dd></div></dl></header>
-<main><section><h2>Graph</h2><div class="graph"><img src="${escapeHtml(graphDataUrl)}" alt="Static artifact graph"></div></section><section><h2>Findings and evidence</h2>${findingHtml || "<p>No findings were emitted.</p>"}</section><section><h2>Source to runtime reconciliation</h2>${runtimeHtml}<p class="boundary">Runtime nodes are linked only through explicit original-op identity. Name similarity is not used.</p></section><section><h2>Review state</h2><pre>${stateJson}</pre></section></main>
+<main><section><h2>Graph</h2><div class="graph"><img src="${escapeHtml(graphDataUrl)}" alt="Static artifact graph"></div></section><section><h2>Findings and evidence</h2>${findingHtml || "<p>No findings were emitted.</p>"}</section><section><h2>Source to runtime reconciliation</h2>${runtimeHtml}<p class="boundary">Runtime nodes are linked only through explicit original-op identity. Name similarity is not used.</p></section><section><h2>Review state</h2><pre>${stateJson}</pre><script id="deepbom-review-state" type="application/json">${machineReadableState}</script></section></main>
 <footer>Generated locally. This file contains no original model bytes or raw tensor values. It is a review aid, not a task-accuracy, clinical-validity, or release-readiness certificate.</footer></body></html>\n`;
 }
 
@@ -174,6 +177,12 @@ function runtimeSummary(value) {
   };
 }
 
+function artifactIrRuntimeSubjectRefs(artifactIr) {
+  return [...new Set((artifactIr?.overlays?.runtime || [])
+    .flatMap((overlay) => (overlay?.rows || []).map((row) => String(row?.subject_ref || "").trim()))
+    .filter(Boolean))].sort();
+}
+
 function runtimeReconciliationRows(analysis, value) {
   const runtime = value?.runtimeAssignmentEvidence || value?.runtime_assignment || value;
   const assignments = Array.isArray(runtime?.assignments) ? runtime.assignments : [];
@@ -191,3 +200,4 @@ function reviewCss() {
 }
 
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]); }
+function jsonScript(value) { return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`); }

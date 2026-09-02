@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-08-31T11:35:00.000Z",
+  "recorded_at": "2026-09-02T11:10:59.000Z",
   "scope": "Public installation channels and private web delivery",
   "observations": [
     {
@@ -314,20 +314,22 @@
       "version": "1.96.0-dev",
       "platform": "windows-x64",
       "command": "npm run check:deploy",
-      "elapsed_seconds": 156.4,
-      "check_count": 70,
+      "elapsed_seconds": 155.533,
+      "check_count": 73,
       "conclusion": "success",
       "conditions": [
         "bounded_non_browser_gate",
         "isolated_parser_robustness_and_format_routing",
         "export_cyclonedx_accelerator_and_review_policy_contracts",
         "artifact_ir_schema_identity_conservation_and_tamper_contracts",
+        "artifact_ir_import_and_consumer_boundaries",
+        "evidence_applicability_ui_contract",
         "service_worker_cache_version_bound",
         "public_private_boundary_and_git_privacy",
         "single_source_release_identity_alignment",
         "no_full_corpus_or_browser_matrix"
       ],
-      "qualification": "The measured run completed all 70 product checks, including Artifact Evidence IR validation, and reached only the delivery-ledger self-check; this row binds that same-source observation so the bounded preflight can close deterministically on replay."
+      "qualification": "All 73 bounded product checks passed locally after adding Artifact IR import, consumer-routing, and applicability contracts. The clean 1.96.0 release-validation manifest independently binds the publication commit and artifacts."
     },
     {
       "kind": "local_channel_build",
@@ -365,6 +367,74 @@
       "platform": "windows-x64",
       "command": "npm run check:channels -- --no-build --release-contract",
       "elapsed_seconds": 561.426,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "capability_envelope_sarif_policy_and_review_contract_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_wasm_tamper_rejection"
+      ]
+    },
+    {
+      "kind": "private_web_preflight",
+      "version": "1.96.0",
+      "platform": "windows-x64",
+      "command": "npm run check:deploy",
+      "elapsed_seconds": 150.91,
+      "check_count": 73,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "isolated_parser_robustness_and_format_routing",
+        "export_cyclonedx_accelerator_and_review_policy_contracts",
+        "artifact_ir_schema_identity_conservation_and_tamper_contracts",
+        "artifact_ir_import_and_consumer_boundaries",
+        "evidence_applicability_ui_contract",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy",
+        "single_source_release_identity_alignment",
+        "no_full_corpus_or_browser_matrix"
+      ],
+      "qualification": "All 73 bounded product checks passed on the release-version source after the channel observations were materialized. Browser and corpus matrices remain owned by the exhaustive quality gate."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.96.0",
+      "platform": "windows-x64",
+      "command": "npm run build:channels",
+      "elapsed_seconds": 216.515,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball",
+        "single_executable_engine",
+        "python_wheel",
+        "cargo_launcher_source",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.96.0",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 179.016,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.96.0",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 582.732,
       "conclusion": "success",
       "conditions": [
         "installed_npm_all_formats_and_package_forms",

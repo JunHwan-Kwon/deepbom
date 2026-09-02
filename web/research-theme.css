@@ -2198,7 +2198,7 @@ textarea {
   border-bottom-color: var(--line);
   background: var(--surface-tint);
 }
-.audit-lens-tabs .audit-tab { min-height: 38px; padding-block: 5px; }
+.audit-lens-tabs .audit-tab { min-height: 44px; padding-block: 5px; }
 .audit-lens-tabs .audit-tab strong { font-size: 11px; }
 .audit-tab.not-applicable { border-inline-start: 2px dashed var(--line-strong); }
 .audit-tab.not-applicable strong::after { content: " · N/A"; color: var(--muted); font-size: 9px; }

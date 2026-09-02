@@ -4,6 +4,29 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.0 - 2026-09-02
+
+- Closed the Artifact IR stabilization contract across six export surfaces,
+  embedded a non-executable machine-readable state in `review.html`, rejected
+  stale artifact/runtime context injection, and required every imported runtime
+  subject to resolve to a canonical operator or architecture node.
+- Split Artifact IR construction into identity, graph, storage, architecture,
+  quantization, overlay, and validation modules behind one context facade. A
+  machine-readable import and consumer policy now rejects unclassified raw
+  ledger readers and direct unchecked-builder imports.
+- Kept all five evidence domains and three analysis lenses discoverable across
+  six formats, including explicit not-applicable, not-assessable, and
+  not-assessed-yet states. Added desktop/mobile and light/dark browser
+  regression baselines for all ten evidence classes.
+- Added a clean-source release-validation manifest that records each local
+  quality, deployment, public-source, and channel-equivalence command with its
+  duration, toolchain, commit, log, and output digests. The bounded deployment
+  gate now contains 73 checks and measured 155.533 seconds on Windows x64.
+- Added every split Artifact IR module to service-worker cache coverage and
+  advanced the cache generation from v542 to v543.
+- Ordered quality validation so the current clean source provenance is generated
+  and verified before deterministic expected-output checks; stale ignored build
+  metadata can no longer alter a release check according to local run history.
 - Made `--output-format` the unambiguous CLI spelling while retaining
   `--format` as a backward-compatible alias; existing raw analysis output and
   automation contracts remain unchanged for the 1.96 stabilization cycle.
@@ -44,9 +67,10 @@ All notable archival releases of DEEPBOM are documented here.
 - Tightened the public Artifact IR JSON Schema and semantic validator around
   nested-scope ownership, cross-scope ports, storage/quantization totals,
   overlay identity, and runtime reconciliation cardinality.
-- Raised only the verification-source budget by 16 KiB to retain the new
-  multi-format scope, reconciliation, consumer, and tamper regressions; runtime,
-  generated-data, documentation, and corpus budgets are unchanged.
+- Raised only the verification-source budget by 48 KiB to retain the new
+  multi-format scope, reconciliation, consumer, tamper, browser, and release
+  regressions; runtime, generated-data, documentation, and corpus budgets are
+  unchanged.
 - Published a JSON Schema and fail-closed multi-format conservation suite for
   Artifact IR identity, references, byte/MAC totals, graph applicability, and
   tamper detection. Engineering evidence, Raw Data, Deployment Contract Pack,

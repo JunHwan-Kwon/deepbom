@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v542";
+const CACHE_NAME = "tflite-wasm-static-audit-v543";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -36,6 +36,15 @@ const APP_ASSETS = [
   "./lib/app-deepbom-workspace.js",
   "./lib/app-graph-workspace.js",
   "./lib/artifact-ir.js",
+  "./lib/artifact-ir/internal/architecture.js",
+  "./lib/artifact-ir/internal/constants.js",
+  "./lib/artifact-ir/internal/graph.js",
+  "./lib/artifact-ir/internal/identity.js",
+  "./lib/artifact-ir/internal/overlays.js",
+  "./lib/artifact-ir/internal/quantization.js",
+  "./lib/artifact-ir/internal/shared.js",
+  "./lib/artifact-ir/internal/storage.js",
+  "./lib/artifact-ir/internal/validation.js",
   "./lib/artifact-ir-context.js",
   "./lib/artifact-ir-runtime.js",
   "./lib/graph-ir.js",

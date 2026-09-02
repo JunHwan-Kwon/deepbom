@@ -36,8 +36,17 @@ function notApplicable(code, text) {
   return record(APPLICABILITY_STATUS.NOT_APPLICABLE, code, text);
 }
 
+function notAssessable(code, text, requiredEvidence) {
+  return record(APPLICABILITY_STATUS.NOT_ASSESSABLE, code, text, requiredEvidence);
+}
+
+function notAssessedYet(requiredEvidence = "Run the static artifact audit.") {
+  return record(APPLICABILITY_STATUS.NOT_ASSESSED_YET, "STATIC_AUDIT_NOT_RUN", "The selected artifact has not been statically audited yet.", requiredEvidence);
+}
+
 export function auditTabApplicability(format, analysis = null) {
   const id = String(format || analysis?.format || "").toLowerCase();
+  if (!analysis || typeof analysis !== "object") return Object.freeze(Object.fromEntries(Object.keys(TAB_LABELS).map((tab) => [tab, notAssessedYet()])));
   const graphRows = Array.isArray(analysis?.ops) ? analysis.ops.length : 0;
   const serializedLlm = analysis?.on_device_llm?.serialized_graph;
   const hasSerializedLlmEvidence = ["tflite", "onnx"].includes(id) && Boolean(serializedLlm) && (
@@ -70,6 +79,8 @@ export function auditTabApplicability(format, analysis = null) {
       : notApplicable("EXECUTABLE_COST_GRAPH_NOT_SERIALIZED", `${noDag} Runtime memory requirements may still be imported separately.`),
     stage: graphSerialized
       ? available("Serialized graph scopes and architecture stages are available.")
+      : ["coreml", "executorch"].includes(id)
+        ? notAssessable("SERIALIZED_GRAPH_NOT_MATERIALIZED", `${id.toUpperCase()} can serialize an executable graph, but no canonical operator scope was materialized for this artifact.`, "A successfully parsed serialized graph or an imported source-bound execution plan.")
       : notApplicable("EXECUTABLE_GRAPH_NOT_SERIALIZED", llmContainer
         ? `${noDag} Use the On-device LLM lens for source-bound architecture projection.`
         : noDag),

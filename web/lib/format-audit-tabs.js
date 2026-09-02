@@ -22,7 +22,7 @@ export function updateFormatSpecificAuditLabels({
     tab.dataset.applicabilityReasonCode = record?.reason_code || "APPLICABILITY_NOT_RESOLVED";
     tab.dataset.applicabilityReason = record?.reason_text || "Applicability was not resolved.";
     tab.dataset.applicabilityRequired = record?.required_evidence || "";
-    tab.classList.toggle("not-applicable", tab.dataset.applicabilityStatus === APPLICABILITY_STATUS.NOT_APPLICABLE);
+    tab.classList.toggle("not-applicable", tab.dataset.applicabilityStatus !== APPLICABILITY_STATUS.APPLICABLE);
   }
   const mobileAuditView = auditTabs[0]?.closest(".audit-workbench")?.querySelector("#mobileAuditView");
   for (const option of mobileAuditView?.options || []) {
@@ -30,8 +30,8 @@ export function updateFormatSpecificAuditLabels({
     option.hidden = false;
     option.disabled = false;
     if (!option.dataset.baseLabel) option.dataset.baseLabel = option.textContent;
-    option.textContent = record?.applicability_status === APPLICABILITY_STATUS.NOT_APPLICABLE
-      ? `${option.dataset.baseLabel} - not applicable`
+    option.textContent = record?.applicability_status !== APPLICABILITY_STATUS.APPLICABLE
+      ? `${option.dataset.baseLabel} - ${applicabilityStatusLabel(record?.applicability_status)}`
       : option.dataset.baseLabel;
   }
 
@@ -58,10 +58,17 @@ export function updateFormatSpecificAuditLabels({
   for (const tab of auditTabs) {
     const record = applicability[tab.dataset.auditTab];
     const label = accessibleLabels[tab.dataset.auditTab] || applicabilityLabel(tab.dataset.auditTab);
-    tab.setAttribute("aria-label", record?.applicability_status === APPLICABILITY_STATUS.NOT_APPLICABLE
-      ? `${label}. Not applicable: ${record.reason_text}`
+    tab.setAttribute("aria-label", record?.applicability_status !== APPLICABILITY_STATUS.APPLICABLE
+      ? `${label}. ${applicabilityStatusLabel(record?.applicability_status)}: ${record.reason_text}`
       : label);
     tab.title = record?.reason_text || label;
   }
   return available;
+}
+
+function applicabilityStatusLabel(status) {
+  if (status === APPLICABILITY_STATUS.NOT_APPLICABLE) return "not applicable";
+  if (status === APPLICABILITY_STATUS.NOT_ASSESSABLE) return "not assessable";
+  if (status === APPLICABILITY_STATUS.NOT_ASSESSED_YET) return "not assessed yet";
+  return "applicable";
 }

@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "1.96.0-dev",
+  "version": "1.96.0",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
   "homepage": "https://deepbom.org",
   "repository": {
@@ -110,7 +110,9 @@
     "check:remote-artifact-resolver": "node scripts/check-remote-artifact-resolver.mjs",
     "check:artifact-ir": "node scripts/check-artifact-ir.mjs",
     "check:artifact-ir-boundary": "node scripts/check-artifact-ir-import-boundary.mjs",
+    "check:artifact-ir-consumers": "node scripts/check-artifact-ir-consumers.mjs",
     "check:evidence-ui-contract": "node scripts/check-evidence-ui-contract.mjs",
+    "check:ir-stabilization-ui": "node scripts/check-ir-stabilization-ui.mjs",
     "check:cli-graph": "node scripts/check-cli-graph-export.mjs",
     "check:channels": "node scripts/check-channel-equivalence.mjs",
     "check:cargo-engine-release": "node scripts/check-cargo-engine-release.mjs",
@@ -122,6 +124,7 @@
     "check:formats:core": "node scripts/check-tier.mjs formats-core",
     "check:format-evidence": "node scripts/check-tier.mjs format-evidence",
     "check:release": "node scripts/check-tier.mjs release",
+    "validate:release-local": "node scripts/run-release-validation.mjs",
     "check:deep": "node scripts/check-all.mjs",
     "check:live-product": "node scripts/check-live-product.mjs",
     "check:external-test-access": "node scripts/check-external-test-access.mjs",

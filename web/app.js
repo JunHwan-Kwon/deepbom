@@ -2033,10 +2033,10 @@ runInference.addEventListener("click", async () => {
 
 for (const control of [backendSelect, warmupInput, runsInput]) {
   control.addEventListener("input", () => {
-    if (current && getActiveWorkspace() === "runtime") renderInferencePanel(current);
+    if (current && getActiveWorkspace() === "runtime") renderInferencePanel(currentAnalysisView());
   });
   control.addEventListener("change", () => {
-    if (current && getActiveWorkspace() === "runtime") renderInferencePanel(current);
+    if (current && getActiveWorkspace() === "runtime") renderInferencePanel(currentAnalysisView());
   });
 }
 
@@ -2120,7 +2120,7 @@ installRuntimeEvidenceController({
     renderFormatCapabilityMatrix(formatCapabilityPanel, current?.format, { analysis: currentAnalysisView(), runtimeEvidence: runtimeAssignmentEvidence });
     renderRuntimeEvidenceClosure(runtimeEvidenceClosure, currentAnalysisView(), runtimeAssignmentEvidence);
     coreIsolationController.render();
-    renderAuditClaimBoundary(current?.format, current);
+    renderAuditClaimBoundary(current?.format, currentAnalysisView());
     renderReportPanel();
   },
   setStatus,
@@ -3748,7 +3748,7 @@ async function analyzeFile(file) {
     pendingModelFile = file;
     const scope = formatEvidenceScope(current?.format || format, { analysis: currentAnalysisView(), runtimeEvidence: runtimeAssignmentEvidence });
     analysisPlanStatus.textContent = scope.completion;
-    renderAuditClaimBoundary(current?.format || format, current);
+    renderAuditClaimBoundary(current?.format || format, currentAnalysisView());
     syncFormatWorkflowVisibility(current);
     updateWorkflowState("audited");
     renderDeepBomSkeleton();
@@ -4366,15 +4366,14 @@ async function render(analysis, { keepTab = false, keepModule = false } = {}) {
   }
   ensureQuantResearchCoverage(analysis);
   document.body.dataset.modelFormat = modelFormat;
-  renderAuditClaimBoundary(modelFormat, analysis);
-  syncFormatWorkflowVisibility(analysis);
+  renderAuditClaimBoundary(modelFormat, artifactView);
+  syncFormatWorkflowVisibility(artifactView);
   if (modelFormat !== "tflite") {
     opFilterXnn = "";
-    if (getActiveAuditTab() === "xnnpack") setActiveAuditTab("overview");
   }
   updateFormatSpecificAuditLabels({
     modelFormat,
-    analysis,
+    analysis: artifactView,
     auditTabs,
     activeTab: getActiveAuditTab,
     selectTab: setActiveAuditTab,
@@ -4383,44 +4382,44 @@ async function render(analysis, { keepTab = false, keepModule = false } = {}) {
   if (!keepTab) setActiveAuditTab("overview");
   updateExportLockState();
   resetResearchModulePanels();
-  renderSummary(analysis);
+  renderSummary(artifactView);
   renderReportPanel();
   renderInsightDashboard(artifactView);
-  if (!graphScenarioMatchesAnalysis(activeGraphScenario, analysis)) activeGraphScenario = null;
-  explorerDecisionController.render(analysis, { activeScenario: activeGraphScenario });
-  explorerRedesignController.render(analysis);
+  if (!graphScenarioMatchesAnalysis(activeGraphScenario, artifactView)) activeGraphScenario = null;
+  explorerDecisionController.render(artifactView, { activeScenario: activeGraphScenario });
+  explorerRedesignController.render(artifactView);
   if (!keepTab) switchExplorerTab("node");
   renderGraphScenarioState();
   renderTargetSwitcher();
   renderAcceleratorSwitcher();
   auditProgressController.begin(88, "Rendering deployment evidence", { ceiling: 90, step: 9 });
   await nextPaint();
-  deploymentFrontierController.render(analysis);
-  deploymentDeltaController.render(currentDeploymentDelta, analysis);
-  delegationRepairController.render(analysis);
-  quantizationLatticeController.render(analysis);
-  accumulatorAtlasController.render(analysis);
-  requantizationFidelityController.render(analysis);
+  deploymentFrontierController.render(artifactView);
+  deploymentDeltaController.render(currentDeploymentDelta, artifactView);
+  delegationRepairController.render(artifactView);
+  quantizationLatticeController.render(artifactView);
+  accumulatorAtlasController.render(artifactView);
+  requantizationFidelityController.render(artifactView);
   auditProgressController.begin(91, "Rendering numerical labs", { ceiling: 94, step: 10 });
   await nextPaint();
-  kernelWitnessController.render(analysis);
-  channelVitalityController.render(analysis);
-  roundingEquivalenceController.render(analysis);
-  accumulatorReachabilityController.render(analysis);
-  numericalAbiPropagationController.render(analysis);
-  inputCounterexampleController.render(analysis);
-  preprocessingRealizabilityController.render(analysis);
-  preprocessingConsequenceController.render(analysis);
-  contractMigrationController.render(analysis);
-  residualStepResponseController.render(analysis);
-  residualContractDistortionController.render(analysis);
-  renderQuantEvidenceChains(analysis);
+  kernelWitnessController.render(artifactView);
+  channelVitalityController.render(artifactView);
+  roundingEquivalenceController.render(artifactView);
+  accumulatorReachabilityController.render(artifactView);
+  numericalAbiPropagationController.render(artifactView);
+  inputCounterexampleController.render(artifactView);
+  preprocessingRealizabilityController.render(artifactView);
+  preprocessingConsequenceController.render(artifactView);
+  contractMigrationController.render(artifactView);
+  residualStepResponseController.render(artifactView);
+  residualContractDistortionController.render(artifactView);
+  renderQuantEvidenceChains(artifactView);
   syncDeploymentDeltaControls();
   auditProgressController.begin(95, "Rendering findings", { ceiling: 97, step: 11 });
   await nextPaint();
   performanceVisualController.render(artifactView);
   coreIsolationController.render();
-  renderInferencePanel(analysis);
+  renderInferencePanel(artifactView);
   resetDeepBomPanel();
   renderFindings(findingsBody, artifactView, {
     onSelectEvidence: handleEvidenceSelection,

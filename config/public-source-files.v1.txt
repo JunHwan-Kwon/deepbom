@@ -36,6 +36,8 @@ channels/python/requirements-build.txt
 channels/python/setup.py
 channels/python/src/deepbom/__init__.py
 channels/python/src/deepbom/__main__.py
+config/artifact-ir-consumer-policy.v1.json
+config/artifact-ir-import-policy.v1.json
 config/delivery-operations.v1.json
 config/public-source-files.v1.txt
 corpus/README.md
@@ -208,6 +210,7 @@ scripts/check-affine-interface-mismatch.py
 scripts/check-all.mjs
 scripts/check-analysis-invariants.mjs
 scripts/check-artifact-bundle.mjs
+scripts/check-artifact-ir-consumers.mjs
 scripts/check-artifact-ir-import-boundary.mjs
 scripts/check-artifact-ir.mjs
 scripts/check-assert.mjs
@@ -289,6 +292,7 @@ scripts/check-importmap-runtime-cache.mjs
 scripts/check-input-counterexample-viewer.mjs
 scripts/check-input-counterexample.mjs
 scripts/check-interface-contract-comparison.mjs
+scripts/check-ir-stabilization-ui.mjs
 scripts/check-js.mjs
 scripts/check-kernel-inspector-contract.mjs
 scripts/check-kernel-witness-viewer.mjs
@@ -473,6 +477,7 @@ scripts/run-huggingface-community-corpus-sweep.mjs
 scripts/run-native-capture.mjs
 scripts/run-public-model-corpus-sweep.mjs
 scripts/run-quant-policy-boundary-corpus-sweep.mjs
+scripts/run-release-validation.mjs
 scripts/run-utils.mjs
 scripts/rust-source-utils.mjs
 scripts/safetensors-architecture-corpus-lib.mjs
@@ -599,6 +604,15 @@ web/lib/artifact-evidence-envelope.js
 web/lib/artifact-ir-context.js
 web/lib/artifact-ir-runtime.js
 web/lib/artifact-ir.js
+web/lib/artifact-ir/internal/architecture.js
+web/lib/artifact-ir/internal/constants.js
+web/lib/artifact-ir/internal/graph.js
+web/lib/artifact-ir/internal/identity.js
+web/lib/artifact-ir/internal/overlays.js
+web/lib/artifact-ir/internal/quantization.js
+web/lib/artifact-ir/internal/shared.js
+web/lib/artifact-ir/internal/storage.js
+web/lib/artifact-ir/internal/validation.js
 web/lib/artifact-overview.js
 web/lib/artifact-set.js
 web/lib/audit-progress.js

@@ -1,4 +1,5 @@
 import { buildArtifactEvidenceIrUnchecked, validateArtifactEvidenceIr } from "./artifact-ir.js";
+import { normalizeArtifactIrRuntimeOverlay } from "./artifact-ir-runtime.js";
 import { projectArtifactIrToCanonicalGraph } from "./graph-ir.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
@@ -22,7 +23,7 @@ export function getArtifactIrContext(analysis, artifact = {}, { runtimeEvidence 
   if (cached?.cache_key === cacheKey) return cached.context;
 
   const artifactIr = buildArtifactEvidenceIrUnchecked(analysis, normalizedArtifact, { runtimeEvidence });
-  const context = contextFromArtifactIr(analysis, artifactIr);
+  const context = contextFromArtifactIr(analysis, artifactIr, { runtimeSignature });
   CACHE.set(analysis, { cache_key: cacheKey, context });
   return context;
 }
@@ -39,28 +40,56 @@ export function resolveArtifactIrContext(analysis, artifact = {}, {
     if (validated.artifact_ir_sha256 !== artifactIrContext.graph_ir?.artifact_ir_sha256) {
       throw new Error("Artifact IR context graph binding is inconsistent.");
     }
+    requireRuntimeIdentity(validated, runtimeEvidence, artifactIrContext.runtime_signature);
     return artifactIrContext;
   }
   const supplied = artifactIr || analysis.artifact_ir || null;
   if (supplied) {
     const validated = validateArtifactEvidenceIr(supplied);
     requireArtifactIdentity(validated, analysis, artifact);
-    return contextFromArtifactIr(analysis, validated);
+    requireRuntimeIdentity(validated, runtimeEvidence);
+    return contextFromArtifactIr(analysis, validated, {
+      runtimeSignature: runtimeEvidence == null ? null : sha256TextHex(canonicalJson(runtimeEvidence)),
+    });
   }
   return getArtifactIrContext(analysis, artifact, { runtimeEvidence });
 }
 
-function contextFromArtifactIr(analysis, artifactIr) {
+function contextFromArtifactIr(analysis, artifactIr, { runtimeSignature = null } = {}) {
   const graphIr = projectArtifactIrToCanonicalGraph(artifactIr);
   const primaryView = buildPrimaryScopeAnalysisView(analysis, artifactIr);
   return Object.freeze({
     artifact_ir: artifactIr,
+    runtime_signature: runtimeSignature,
     graph_ir: graphIr,
     primary_view: primaryView,
     operator_by_subject_ref: new Map(artifactIr.graph.operators.map((row) => [row.id, row])),
     value_by_subject_ref: new Map(artifactIr.graph.values.map((row) => [row.id, row])),
     scope_by_ref: new Map(artifactIr.graph.scopes.map((row) => [row.id, row])),
   });
+}
+
+function requireRuntimeIdentity(artifactIr, runtimeEvidence, contextRuntimeSignature = null) {
+  if (!hasMaterialRuntimeEvidence(runtimeEvidence)) return;
+  const expectedSignature = sha256TextHex(canonicalJson(runtimeEvidence));
+  if (contextRuntimeSignature != null && contextRuntimeSignature !== expectedSignature) {
+    throw new Error("Artifact IR context is stale for the supplied runtime evidence.");
+  }
+  const expected = normalizeArtifactIrRuntimeOverlay(
+    runtimeEvidence,
+    artifactIr.graph,
+    artifactIr.architecture_projection,
+    artifactIr.artifact.sha256,
+  );
+  if (canonicalJson(expected) !== canonicalJson(artifactIr.overlays.runtime)) {
+    throw new Error("Artifact IR runtime overlay is stale for the supplied runtime evidence.");
+  }
+}
+
+function hasMaterialRuntimeEvidence(runtimeEvidence) {
+  return runtimeEvidence && typeof runtimeEvidence === "object"
+    && [runtimeEvidence.runtime_nodes, runtimeEvidence.rows, runtimeEvidence.assignments]
+      .some((rows) => Array.isArray(rows) && rows.length > 0);
 }
 
 function requireArtifactIdentity(artifactIr, analysis, artifact) {
@@ -71,26 +100,32 @@ function requireArtifactIdentity(artifactIr, analysis, artifact) {
 }
 
 export function buildPrimaryScopeAnalysisView(analysis, artifactIr) {
-  if (artifactIr?.graph?.status !== "serialized") return analysis;
-  const primaryScopeRef = artifactIr.graph.primary_scope_ref;
-  const nativeOps = new Map((Array.isArray(analysis.ops) ? analysis.ops : []).map((row, index) => [nativeIndex(row, index), row]));
-  const nativeTensors = new Map((Array.isArray(analysis.tensors) ? analysis.tensors : []).map((row, index) => [nativeIndex(row, index), row]));
-  const ops = artifactIr.graph.operators.filter((row) => row.scope_ref === primaryScopeRef).map((canonical) => ({
-    ...(nativeOps.get(canonical.native_index) || canonicalOperatorFallback(canonical, artifactIr.graph.values)),
-    index: canonical.native_index,
-    artifact_ir_subject_ref: canonical.id,
-    artifact_ir_scope_ref: canonical.scope_ref,
-    artifact_ir_contract: canonical,
-  }));
-  const tensors = artifactIr.graph.values.filter((row) => row.scope_ref === primaryScopeRef).map((canonical) => ({
-    ...(nativeTensors.get(canonical.native_index) || canonicalValueFallback(canonical)),
-    index: canonical.native_index,
-    artifact_ir_subject_ref: canonical.id,
-    artifact_ir_scope_ref: canonical.scope_ref,
-    artifact_ir_contract: canonical,
-  }));
+  const graphSerialized = artifactIr?.graph?.status === "serialized";
+  const primaryScopeRef = graphSerialized ? artifactIr.graph.primary_scope_ref : null;
+  const nativeOps = Array.isArray(analysis.ops) ? analysis.ops : [];
+  const nativeTensors = Array.isArray(analysis.tensors) ? analysis.tensors : [];
+  const opByNativeIndex = new Map(nativeOps.map((row, index) => [nativeIndex(row, index), row]));
+  const tensorByNativeIndex = new Map(nativeTensors.map((row, index) => [nativeIndex(row, index), row]));
+  const ops = graphSerialized
+    ? artifactIr.graph.operators.filter((row) => row.scope_ref === primaryScopeRef).map((canonical) => ({
+      ...(opByNativeIndex.get(canonical.native_index) || canonicalOperatorFallback(canonical, artifactIr.graph.values)),
+      index: canonical.native_index,
+      artifact_ir_subject_ref: canonical.id,
+      artifact_ir_scope_ref: canonical.scope_ref,
+      artifact_ir_contract: canonical,
+    }))
+    : nativeOps;
+  const tensors = graphSerialized
+    ? artifactIr.graph.values.filter((row) => row.scope_ref === primaryScopeRef).map((canonical) => ({
+      ...(tensorByNativeIndex.get(canonical.native_index) || canonicalValueFallback(canonical)),
+      index: canonical.native_index,
+      artifact_ir_subject_ref: canonical.id,
+      artifact_ir_scope_ref: canonical.scope_ref,
+      artifact_ir_contract: canonical,
+    }))
+    : nativeTensors;
   const view = {};
-  const canonicalKeys = new Set(["ops", "tensors", "artifact_ir", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"]);
+  const canonicalKeys = new Set(["ops", "tensors", "artifact_ir", "artifact_ir_consumer_view", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"]);
   const passthroughKeys = new Set([
     ...Object.keys(analysis),
     "_markdown",
@@ -116,10 +151,18 @@ export function buildPrimaryScopeAnalysisView(analysis, artifactIr) {
     ops,
     tensors,
     artifact_ir: artifactIr,
+    artifact_ir_consumer_view: true,
     artifact_ir_primary_scope_ref: primaryScopeRef,
-    artifact_ir_nested_scope_count: artifactIr.graph.scopes.filter((row) => row.id !== primaryScopeRef).length,
+    artifact_ir_nested_scope_count: graphSerialized
+      ? artifactIr.graph.scopes.filter((row) => row.id !== primaryScopeRef).length
+      : 0,
   });
   return view;
+}
+
+export function isArtifactIrConsumerView(analysis) {
+  return analysis?.artifact_ir_consumer_view === true
+    && analysis?.artifact_ir?.schema === "deepbom.artifact_ir.v2";
 }
 
 function canonicalOperatorFallback(operator, values) {

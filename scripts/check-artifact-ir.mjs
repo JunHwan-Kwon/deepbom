@@ -10,12 +10,12 @@ import { analyzeExecuTorchModel } from "../web/executorch.js";
 import { analyzeOnnxModel } from "../web/onnx.js";
 import { buildGraphDiffSnapshot } from "../web/lib/artifact-diff.js";
 import { validateArtifactEvidenceIr } from "../web/lib/artifact-ir.js";
-import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
+import { getArtifactIrContext, isArtifactIrConsumerView, resolveArtifactIrContext } from "../web/lib/artifact-ir-context.js";
 import { buildEngineeringEvidenceDocument, buildRawDataArtifactFiles } from "../web/lib/report-evidence.js";
-import { buildDeploymentContractDocuments } from "../web/lib/report-export-contracts.js";
+import { buildDeploymentContractDocuments, DEPLOYMENT_CONTRACT_FILES } from "../web/lib/report-export-contracts.js";
 import { buildMlBomDocument } from "../web/lib/report-mlbom.js";
 import { buildPublicCycloneDxDocuments } from "../web/lib/public-cyclonedx-export.js";
-import { buildReviewState } from "../web/lib/review-export.js";
+import { buildReviewState, buildSelfContainedReviewHtml } from "../web/lib/review-export.js";
 import { decodeFixtureBase64, EXECUTORCH_ADD_PTE_BASE64 } from "./fixtures/executorch-fixtures.mjs";
 
 const root = path.resolve(".");
@@ -87,6 +87,27 @@ assert(tflite.overlays.static.some((row) => row.kind === "static_placement"), "T
 const coreml = outputs.get("coreml").artifact_ir;
 assert(coreml.storage_topology.objects.length > 0, "Core ML serialized parameters must be represented as storage objects");
 assert(coreml.storage_topology.objects.length < coreml.graph.values.length, "Core ML logical graph values must not be reclassified wholesale as serialized payload objects");
+
+for (const format of ["gguf", "safetensors"]) {
+  const analysis = {
+    filename: `graphless.${format}`,
+    format,
+    model_sha256: format === "gguf" ? "a".repeat(64) : "b".repeat(64),
+    file_size_bytes: 16,
+    ops: [],
+    tensors: [],
+  };
+  const context = getArtifactIrContext(analysis, {
+    filename: analysis.filename,
+    format,
+    sha256: analysis.model_sha256,
+    size: analysis.file_size_bytes,
+  });
+  assert.equal(isArtifactIrConsumerView(context.primary_view), true, `${format} graphless consumers must retain the canonical Artifact IR binding`);
+  assert.equal(context.primary_view.artifact_ir, context.artifact_ir, `${format} graphless consumer Artifact IR identity`);
+  assert.equal(context.primary_view.artifact_ir_primary_scope_ref, null, `${format} graphless consumer primary scope`);
+  assert.equal(context.primary_view.artifact_ir_nested_scope_count, 0, `${format} graphless consumer nested scope count`);
+}
 
 const recursiveOnnx = runGraph("scripts/fixtures/onnx_recursive_scope.onnx");
 assert.equal(validateSchema(recursiveOnnx.artifact_ir), true, `recursive ONNX JSON Schema validation: ${formatAjvErrors(validateSchema.errors)}`);
@@ -186,6 +207,7 @@ const runtimeContext = getArtifactIrContext(runtimeAnalysis, { filename: runtime
   } : null,
 });
 assert.equal(runtimeContext.primary_view.artifact_ir, runtimeContext.artifact_ir, "shared consumer view must retain its canonical Artifact IR binding");
+assert.equal(isArtifactIrConsumerView(runtimeContext.primary_view), true, "serialized consumer view must be marked as Artifact IR-backed");
 assert.equal(runtimeContext.primary_view.ops[0].artifact_ir_subject_ref, "operator:scope:onnx:main_graph:0", "shared consumer op identity");
 const crossOutputBytes = await readFile(path.join(root, "web/samples/sample_cnn_float.onnx"));
 const crossOutputSha = createHash("sha256").update(crossOutputBytes).digest("hex");
@@ -230,6 +252,13 @@ const publicCycloneDx = buildPublicCycloneDxDocuments(crossOutputContext.primary
   hash: crossOutputSha, fileSizeBytes: crossOutputBytes.length, generatedAt: "2026-09-02T00:00:00.000Z", artifactIr: crossOutputContext.artifact_ir,
 }).documents.cyclonedx_evidence;
 const reviewState = buildReviewState({ analysis: crossOutputContext.primary_view, runtimeEvidence: reportRuntimeEvidence });
+const reviewHtml = buildSelfContainedReviewHtml({
+  analysis: crossOutputContext.primary_view,
+  graphSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>',
+  reviewState,
+  runtimeEvidence: reportRuntimeEvidence,
+});
+const embeddedReviewState = JSON.parse(reviewHtml.match(/<script id="deepbom-review-state" type="application\/json">([^<]+)<\/script>/)?.[1] || "null");
 const expectedIrSha = crossOutputContext.artifact_ir.artifact_ir_sha256;
 const outputIrShas = {
   ui: crossOutputContext.artifact_ir.artifact_ir_sha256,
@@ -248,8 +277,26 @@ for (const [surface, artifactIr] of [
 ]) {
   assert(artifactIr.overlays.runtime.length > 0, `${surface} must preserve the runtime overlay rather than reproducing an empty IR`);
   assert.equal(artifactIr.overlays.runtime[0].rows.length, 2, `${surface} runtime subject-reference conservation`);
+  assertRuntimeSubjectsResolve(artifactIr, surface);
 }
 assert.equal(reviewState.artifact_ir_identity.runtime_overlay_count, 1, "review state runtime-overlay conservation");
+assert.deepEqual(reviewState.artifact_ir_identity.runtime_subject_refs,
+  ["operator:scope:onnx:main_graph:0", "operator:scope:onnx:main_graph:1"], "review state runtime subject-reference conservation");
+assert.equal(embeddedReviewState?.artifact_ir_identity?.sha256, expectedIrSha, "rendered review.html Artifact IR digest conservation");
+assert.equal(embeddedReviewState?.artifact_ir_identity?.runtime_overlay_count, 1, "rendered review.html runtime-overlay conservation");
+assert.deepEqual(embeddedReviewState?.artifact_ir_identity?.runtime_subject_refs,
+  reviewState.artifact_ir_identity.runtime_subject_refs, "rendered review.html runtime subject-reference conservation");
+const packagedCycloneDx = deploymentContracts.documents.cyclonedx_evidence;
+const artifactIrReference = packagedCycloneDx.metadata.component.externalReferences
+  .find((row) => row.url === DEPLOYMENT_CONTRACT_FILES.artifactIr);
+assert(artifactIrReference, "packaged CycloneDX must reference its Artifact IR sibling");
+assert.equal(artifactIrReference.hashes?.[0]?.content,
+  deploymentContracts.integrity.member_sha256[DEPLOYMENT_CONTRACT_FILES.artifactIr],
+  "packaged CycloneDX Artifact IR sibling digest conservation");
+assert.equal(propertyValue(packagedCycloneDx.metadata.component.properties, "deepbom:model:artifactIrLocation"),
+  DEPLOYMENT_CONTRACT_FILES.artifactIr, "packaged CycloneDX Artifact IR location conservation");
+assert.equal(reviewHtml.includes("<script id=\"deepbom-review-state\" type=\"application/json\">"), true,
+  "review.html must expose a non-executable machine-readable review state");
 runtimeAnalysis.findings = [{ id: "EA-TEST-0001" }];
 assert.equal(runtimeContext.primary_view.findings[0].id, "EA-TEST-0001", "shared consumer view must expose post-build finding updates without rebuilding the IR");
 const tamperedView = structuredClone(runtimeContext.primary_view);
@@ -286,6 +333,40 @@ const tamperedDigest = structuredClone(onnxFirst.artifact_ir);
 tamperedDigest.artifact_ir_sha256 = "0".repeat(64);
 assert.throws(() => validateArtifactEvidenceIr(tamperedDigest), /SHA-256 is invalid/, "tampered Artifact IR digest must fail closed");
 
+const runtimeRemovedWithStaleDigest = structuredClone(crossOutputContext.artifact_ir);
+runtimeRemovedWithStaleDigest.overlays.runtime = [];
+runtimeRemovedWithStaleDigest.completeness.runtime_overlay_count = 0;
+assert.throws(() => validateArtifactEvidenceIr(runtimeRemovedWithStaleDigest), /SHA-256 is invalid/,
+  "runtime removal under a stale Artifact IR digest must fail closed");
+
+assert.equal(resolveArtifactIrContext(crossOutputAnalysis, runtimeIdentity, {
+  artifactIrContext: crossOutputContext,
+  runtimeEvidence: crossOutputRuntimeEvidence,
+}), crossOutputContext, "matching runtime evidence may reuse the canonical Artifact IR context");
+assert.throws(() => resolveArtifactIrContext(crossOutputAnalysis, runtimeIdentity, {
+  artifactIrContext: crossOutputContext,
+  runtimeEvidence: {
+    ...crossOutputRuntimeEvidence,
+    runtime_nodes: crossOutputRuntimeEvidence.runtime_nodes.map((row) => ({ ...row, backend: "different_ep" })),
+  },
+}), /stale for the supplied runtime evidence/, "stale Artifact IR context injection must fail closed");
+assert.throws(() => resolveArtifactIrContext(crossOutputAnalysis, runtimeIdentity, {
+  artifactIr: outputs.get("onnx").artifact_ir,
+  runtimeEvidence: crossOutputRuntimeEvidence,
+}), /runtime overlay is stale|not bound to the active artifact/, "runtime evidence must not bind to an Artifact IR without its normalized overlay");
+
+const mismatchedArtifactIr = structuredClone(crossOutputContext.artifact_ir);
+mismatchedArtifactIr.artifact.sha256 = "f".repeat(64);
+delete mismatchedArtifactIr.artifact_ir_sha256;
+const mismatchedBody = structuredClone(mismatchedArtifactIr);
+mismatchedArtifactIr.artifact_ir_sha256 = createHash("sha256").update(canonicalJsonForTest(mismatchedBody)).digest("hex");
+assert.throws(() => resolveArtifactIrContext(crossOutputAnalysis, {
+  filename: crossOutputAnalysis.filename,
+  format: "onnx",
+  sha256: crossOutputSha,
+  size: crossOutputBytes.length,
+}, { artifactIr: mismatchedArtifactIr }), /not bound to the active artifact|Artifact IR/, "mismatched Artifact IR identity must fail closed");
+
 console.log("Artifact Evidence IR checks passed (7 serialized artifact fixtures; schema, identity, scope conservation, explicit runtime reconciliation, graphless, and tamper contracts).");
 
 function runGraph(file) {
@@ -311,4 +392,20 @@ function formatAjvErrors(errors) {
 
 function propertyValue(properties, name) {
   return (properties || []).find((row) => row.name === name)?.value || null;
+}
+
+function assertRuntimeSubjectsResolve(artifactIr, surface) {
+  const subjects = new Set([
+    ...artifactIr.graph.operators.map((row) => row.id),
+    ...artifactIr.architecture_projection.nodes.map((row) => row.id),
+  ]);
+  for (const overlay of artifactIr.overlays.runtime) {
+    for (const row of overlay.rows) assert(subjects.has(row.subject_ref), `${surface} contains unresolved runtime subject ${row.subject_ref}`);
+  }
+}
+
+function canonicalJsonForTest(value) {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalJsonForTest).join(",")}]`;
+  return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalJsonForTest(value[key])}`).join(",")}}`;
 }

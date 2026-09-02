@@ -1511,7 +1511,7 @@ function spec(id, label, {
 const SPECS = [
   spec("artifact.canonical_ir", "Canonical Artifact Evidence IR", {
     formats: ["tflite", "onnx", "coreml", "mlmodel", "gguf", "safetensors", "executorch", "pte", "ptd"],
-    keys: ["artifact_ir", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"],
+    keys: ["artifact_ir", "artifact_ir_consumer_view", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"],
     status: (analysis) => analysis?.artifact_ir?.schema === "deepbom.artifact_ir.v2"
       && /^[a-f0-9]{64}$/.test(String(analysis.artifact_ir?.artifact_ir_sha256 || ""))
       ? "assessed" : "not_assessed",

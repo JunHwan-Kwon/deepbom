@@ -76,7 +76,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.0-dev";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.0";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 
 async function main(argv) {
@@ -320,7 +320,7 @@ async function main(argv) {
   if (parsed.command === "placement") return runPlacementCommand(parsed, analysisView, artifact);
 
   if (parsed.command === "verify") return runVerifyCommand(parsed, analysisView, artifact);
-  if (parsed.command === "explore") return runExploreCommand(parsed, analysis, artifact, input, targetBinding.value);
+  if (parsed.command === "explore") return runExploreCommand(parsed, analysisView, artifact, input, targetBinding.value);
 
   const generatedAt = resolveGenerationTimestamp(parsed.timestamp);
   const envelope = parsed.outputFormat === "envelope" || parsed.outputFormat === "sarif" || parsed.failOn !== "none" || reviewPolicy
