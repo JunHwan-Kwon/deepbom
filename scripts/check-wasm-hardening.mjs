@@ -1,12 +1,21 @@
 import { existsSync, readFileSync } from "node:fs";
 import { inspectWasmFile } from "./wasm-binary-hardening.mjs";
 
+const protectedCargoPath = "protected/deepbom_wasm/Cargo.toml";
+const protectedWasmPath = "web/protected/deepbom/pkg/deepbom_wasm_bg.wasm";
+const protectedSourcePresent = existsSync(protectedCargoPath);
+const protectedWasmPresent = existsSync(protectedWasmPath);
 const artifacts = [
   ["public analyzer", "pkg/tflite_wasm_audit_bg.wasm"],
-  ["protected DEEPBOM", "web/protected/deepbom/pkg/deepbom_wasm_bg.wasm"],
+  ...(protectedSourcePresent && protectedWasmPresent
+    ? [["protected DEEPBOM", protectedWasmPath]]
+    : []),
 ];
 
 const failures = [];
+if (protectedSourcePresent !== protectedWasmPresent) {
+  failures.push(`protected DEEPBOM: source/artifact boundary mismatch (${protectedCargoPath}=${protectedSourcePresent}, ${protectedWasmPath}=${protectedWasmPresent})`);
+}
 const expectedPublicAnalyzerExports = [
   "analyze_tflite",
   "analyze_tflite_for_target",
@@ -82,7 +91,7 @@ const buildSource = readFileSync("scripts/build-wasm.mjs", "utf8");
 for (const filePath of artifacts.slice(0, 2).map(([, filePath]) => filePath)) {
   if (!buildSource.includes(filePath)) failures.push(`build-wasm.mjs does not harden ${filePath}`);
 }
-for (const cargoPath of ["protected/deepbom_wasm/Cargo.toml"]) {
+for (const cargoPath of protectedSourcePresent ? [protectedCargoPath] : []) {
   const source = readFileSync(cargoPath, "utf8");
   if (/wasm-opt\s*=\s*false/.test(source) || !source.includes('"-Oz"') || !source.includes('"--strip-producers"')) {
     failures.push(`${cargoPath}: optimized stripped release profile is not enabled`);
@@ -90,4 +99,5 @@ for (const cargoPath of ["protected/deepbom_wasm/Cargo.toml"]) {
 }
 
 if (failures.length) throw new Error(`WASM hardening check failed:\n${failures.map((item) => `  - ${item}`).join("\n")}`);
-console.log(`WASM hardening check passed (${artifacts.length} binaries; custom sections 0; internal source paths 0; public analyzer exports ${expectedPublicAnalyzerExports.length}; protected analysis exports 2).`);
+const protectedSummary = protectedSourcePresent ? "protected analysis exports 2" : "protected integration omitted at the public boundary";
+console.log(`WASM hardening check passed (${artifacts.length} binaries; custom sections 0; internal source paths 0; public analyzer exports ${expectedPublicAnalyzerExports.length}; ${protectedSummary}).`);

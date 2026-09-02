@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "94da77e4b3ce3d18018155cce17f32d9a0f6eb91",
+  "source_commit": "6f7a33ea0701f28545c841516a49f58dc42a4df7",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 924,
@@ -708,7 +708,7 @@
     {
       "path": "pkg/tflite_wasm_audit_bg.wasm",
       "byte_length": 1996521,
-      "sha256": "30b8f618c02868534faf444c9a4e32365f62b6b9bb15089abf31910c5afa8a6f"
+      "sha256": "9e52c1933eb1e1744dcf4a16d6f74ec6d86e345fc59d82edd59dce94d254d905"
     },
     {
       "path": "pkg/tflite_wasm_audit_bg.wasm.d.ts",
@@ -2022,8 +2022,8 @@
     },
     {
       "path": "scripts/check-wasm-hardening.mjs",
-      "byte_length": 3908,
-      "sha256": "c49e3d8ea88e1db388e11e155286ab97a60c2998700e7037abc03a0e75eb7a11"
+      "byte_length": 4578,
+      "sha256": "656ffd14d10504c81707570550f4b6461967c5d34948b7b31ea193a516f797ba"
     },
     {
       "path": "scripts/check-web-imports.mjs",
@@ -3043,7 +3043,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 76500,
-      "sha256": "de229c3ce4a5491a74e1f233d65a5ee89cf256d0e34bcdf8bad56838eb9da856"
+      "sha256": "39671e05275da3c71b252fbbe84e21faf115a5c0c1ab921409eccc2f59bfc2d8"
     },
     {
       "path": "web/lib/bundle.js",
@@ -4598,7 +4598,7 @@
     {
       "path": "web/sw.js",
       "byte_length": 15070,
-      "sha256": "4294e7e7ac101d71b5b53665f182472111a04c1fae729449ce41a38278946130"
+      "sha256": "ccd6f24f8deda07b9a3ddc6868ffebfff911ef9d40c94fa96b616042cc8105a7"
     },
     {
       "path": "web/test.html",
