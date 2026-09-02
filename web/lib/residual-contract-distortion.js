@@ -57,6 +57,7 @@ export function createResidualContractDistortionController({ root, status, summa
     worker?.terminate();
     worker = null;
     resizeObserver?.disconnect();
+    resizeObserver = null;
     if (!result || String(current?.format || "").toLowerCase() !== "tflite") {
       if (root) root.hidden = true;
       if (downloadButton) downloadButton.disabled = true;
@@ -96,6 +97,7 @@ export function createResidualContractDistortionController({ root, status, summa
   function renderBody() {
     if (!body || !current?.residual_contract_distortion) return;
     resizeObserver?.disconnect();
+    resizeObserver = null;
     const result = current.residual_contract_distortion;
     const row = result.residual_adds.find((item) => item.op_index === selectedOp)
       || result.residual_adds.find((item) => item.assessment_status === "assessed");

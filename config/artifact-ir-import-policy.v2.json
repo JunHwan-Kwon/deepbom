@@ -1,0 +1,39 @@
+{
+  "schema": "deepbom.artifact_ir_import_policy.v2",
+  "source_roots": ["web", "bin", "scripts"],
+  "internal_module_prefix": "web/lib/artifact-ir/internal/",
+  "internal_module_importers": {
+    "web/lib/artifact-ir/internal/constants.js": [
+      "web/lib/artifact-ir.js",
+      "web/lib/artifact-ir/internal/architecture.js",
+      "web/lib/artifact-ir/internal/quantization.js",
+      "web/lib/artifact-ir/internal/shared.js",
+      "web/lib/artifact-ir/internal/storage.js",
+      "web/lib/artifact-ir/internal/validation.js"
+    ],
+    "web/lib/artifact-ir/internal/shared.js": [
+      "web/lib/artifact-ir.js",
+      "web/lib/artifact-ir/internal/architecture.js",
+      "web/lib/artifact-ir/internal/graph.js",
+      "web/lib/artifact-ir/internal/identity.js",
+      "web/lib/artifact-ir/internal/overlays.js",
+      "web/lib/artifact-ir/internal/quantization.js",
+      "web/lib/artifact-ir/internal/storage.js",
+      "web/lib/artifact-ir/internal/validation.js"
+    ],
+    "web/lib/artifact-ir/internal/identity.js": ["web/lib/artifact-ir.js"],
+    "web/lib/artifact-ir/internal/graph.js": ["web/lib/artifact-ir.js"],
+    "web/lib/artifact-ir/internal/storage.js": ["web/lib/artifact-ir.js"],
+    "web/lib/artifact-ir/internal/architecture.js": ["web/lib/artifact-ir.js"],
+    "web/lib/artifact-ir/internal/quantization.js": ["web/lib/artifact-ir.js"],
+    "web/lib/artifact-ir/internal/overlays.js": ["web/lib/artifact-ir.js"],
+    "web/lib/artifact-ir/internal/validation.js": ["web/lib/artifact-ir.js"]
+  },
+  "protected_symbols": {
+    "buildArtifactEvidenceIrUnchecked": [
+      "web/lib/artifact-ir.js",
+      "web/lib/artifact-ir-context.js"
+    ]
+  },
+  "removed_symbols": ["buildArtifactEvidenceIr"]
+}

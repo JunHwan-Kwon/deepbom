@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v543";
+const CACHE_NAME = "tflite-wasm-static-audit-v544";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -35,6 +35,7 @@ const APP_ASSETS = [
   "./lib/offline-device-controller.js",
   "./lib/app-deepbom-workspace.js",
   "./lib/app-graph-workspace.js",
+  "./lib/artifact-set.js",
   "./lib/artifact-ir.js",
   "./lib/artifact-ir/internal/architecture.js",
   "./lib/artifact-ir/internal/constants.js",

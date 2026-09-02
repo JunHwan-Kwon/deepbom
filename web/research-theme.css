@@ -1790,7 +1790,7 @@ textarea {
     grid-template-areas:
       "theme auth"
       "status status";
-    gap: 8px 10px;
+    gap: 7px 10px;
   }
 
   .theme-toggle {
@@ -2246,6 +2246,28 @@ textarea {
 .mac-cumulative-curve text { fill: var(--viz-meta); font: 9px var(--mono); }
 
 @media (max-width: 820px) {
+  button,
+  select,
+  summary,
+  [role="button"] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .citation-copy-button,
+  .theme-toggle,
+  .auth-widget > button,
+  .evidence-class-disclosure > summary,
+  .session-anchor .sample-model-control select,
+  .session-anchor .workflow-step {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  body .topbar button,
+  body .author-details .citation-copy-button,
+  .llm-device-feasibility > header select,
+  .llm-scenario-field select {
+    min-height: 44px;
+  }
   .analysis-palette { grid-template-columns: minmax(0, 1fr); }
   .analysis-palette > header { border-inline-end: 0; border-bottom: 1px solid var(--line); }
   .analysis-palette > header p { display: none; }

@@ -4,6 +4,29 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.1 - 2026-09-03
+
+- Closed the remaining Artifact IR round-trip gaps with a nested-scope runtime
+  fusion fixture, rendered `review.html` verification, runtime subject
+  resolution, applicability-state preservation, and CycloneDX sibling digest
+  checks across the shared export context.
+- Replaced the Artifact IR import-boundary text scan with parser-derived ESM
+  edges and exact per-module importer policy, keeping the unchecked builder
+  reachable only through the canonical context facade.
+- Added real browser audits for TFLite, ONNX, Core ML, GGUF, SafeTensors, and
+  ExecuTorch across fixed evidence domains and lenses, including mobile state,
+  focus, touch-target, stale-content, heap, and detached-DOM regressions.
+- Fixed retained Explorer and residual-distortion DOM state, made Arena peak and
+  pan/zoom behavior responsive, and aligned local single-file artifact-set
+  identity so Web and installed CLI Artifact IR digests match for TFLite and
+  ONNX fixtures. Added the shared artifact-set module to offline precaching and
+  advanced the service-worker cache generation from v543 to v544.
+- Pinned deterministic expected-output evidence to the clean release envelope
+  while requiring dirty development builds to add exactly one reproducibility
+  finding and otherwise preserve the same canonical evidence body.
+- Updated the development-only Ajv URI dependency lock to patched `fast-uri`
+  3.1.7; the release source now reports zero npm audit vulnerabilities.
+
 ## 1.96.0 - 2026-09-02
 
 - Closed the Artifact IR stabilization contract across six export surfaces,

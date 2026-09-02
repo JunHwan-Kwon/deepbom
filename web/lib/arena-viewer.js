@@ -13,6 +13,13 @@ const DTYPE_COLORS = Object.freeze({
   BOOL: "#94a3b8",
 });
 
+const resizeObservers = new WeakMap();
+
+function disconnectResizeObserver(container) {
+  resizeObservers.get(container)?.disconnect();
+  resizeObservers.delete(container);
+}
+
 function element(tag, className, text = "") {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -208,6 +215,9 @@ function renderArenaCanvas(container, analysis, plan, formatBytes, onSelectOp) {
   }
 
   const occupancy = peakRootOccupancy(allocations, opCount, arenaBytes);
+  canvas.dataset.peakMarker = "rendered";
+  canvas.dataset.peakOp = String(occupancy.peak_op);
+  canvas.dataset.peakBytes = String(occupancy.peak_bytes);
   const peakX = xFor(occupancy.peak_op);
   context.save();
   context.strokeStyle = peakColor;
@@ -272,13 +282,20 @@ function renderArenaCanvas(container, analysis, plan, formatBytes, onSelectOp) {
   scroll.tabIndex = 0;
   scroll.setAttribute("aria-label", "Scrollable ArenaPlanner allocation map");
   let zoom = 1;
-  const applyZoom = () => { canvas.style.width = `${Math.round(cssWidth * zoom)}px`; };
+  const fittedWidth = () => Math.max(1, Math.min(cssWidth, scroll.clientWidth || cssWidth));
+  const applyZoom = () => { canvas.style.width = `${Math.round(fittedWidth() * zoom)}px`; };
   zoomOut.addEventListener("click", () => { zoom = Math.max(1, zoom - 0.25); applyZoom(); });
   fit.addEventListener("click", () => { zoom = 1; applyZoom(); scroll.scrollLeft = 0; });
   zoomIn.addEventListener("click", () => { zoom = Math.min(3, zoom + 0.25); applyZoom(); });
   toolbar.append(fit, zoomOut, zoomIn);
   scroll.append(canvas);
   container.append(toolbar, scroll, tooltip);
+  applyZoom();
+  if (typeof ResizeObserver === "function") {
+    const observer = new ResizeObserver(() => applyZoom());
+    observer.observe(scroll);
+    resizeObservers.set(container, observer);
+  }
 }
 
 export function renderTensorArenaViewer(container, analysis, {
@@ -287,6 +304,7 @@ export function renderTensorArenaViewer(container, analysis, {
   runtimeEvidence = null,
 } = {}) {
   if (!container) return;
+  disconnectResizeObserver(container);
   container.replaceChildren();
   const liveness = analysis?.tensor_liveness || {};
   const plan = analysis?.tensor_arena_plan || null;

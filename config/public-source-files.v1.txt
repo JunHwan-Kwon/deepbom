@@ -37,7 +37,7 @@ channels/python/setup.py
 channels/python/src/deepbom/__init__.py
 channels/python/src/deepbom/__main__.py
 config/artifact-ir-consumer-policy.v1.json
-config/artifact-ir-import-policy.v1.json
+config/artifact-ir-import-policy.v2.json
 config/delivery-operations.v1.json
 config/public-source-files.v1.txt
 corpus/README.md

@@ -64,7 +64,7 @@ for (const required of [
   "docs/CLI_REFERENCE.md",
   "docs/PUBLIC_PRIVATE_BOUNDARY.md",
   "scripts/check-artifact-ir-import-boundary.mjs",
-  "config/artifact-ir-import-policy.v1.json",
+  "config/artifact-ir-import-policy.v2.json",
   "scripts/check-artifact-ir-consumers.mjs",
   "config/artifact-ir-consumer-policy.v1.json",
   "scripts/check-evidence-ui-contract.mjs",

@@ -112,6 +112,7 @@ async function collectArtifactRecords() {
   const candidates = [
     ["public_source_manifest", ".local-validation/public-source/PUBLIC_SOURCE_MANIFEST.json"],
     ["channel_release_manifest", ".local-validation/channel-release/channel-release-manifest.json"],
+    ["ui_regression_baseline", ".local-validation/1.96-stabilization/ui/ui-regression-baseline.v1.json"],
     ["deployment_hardening", "dist/deployment-hardening.json"],
   ];
   const records = {};
@@ -123,6 +124,21 @@ async function collectArtifactRecords() {
         const channel = JSON.parse(bytes.toString("utf8"));
         records[name].source_git_commit = channel.source?.git_commit || null;
         records[name].source_git_state = channel.source?.git_state || null;
+      } else if (name === "ui_regression_baseline") {
+        const baseline = JSON.parse(bytes.toString("utf8"));
+        if (baseline.schema !== "deepbom.ir_stabilization_ui_baseline.v1"
+          || baseline.source_commit !== sourceCommit
+          || !Array.isArray(baseline.rows) || baseline.rows.length < 16) {
+          throw new Error("UI regression baseline is stale or incomplete for the release source commit.");
+        }
+        const semanticRows = baseline.rows.filter((row) => row.web_cli_semantic_digest?.status === "equal");
+        if (!semanticRows.some((row) => row.artifact_format === "tflite")
+          || !semanticRows.some((row) => row.artifact_format === "onnx")) {
+          throw new Error("UI regression baseline is missing TFLite or ONNX Web/CLI semantic-digest equality.");
+        }
+        records[name].source_git_commit = baseline.source_commit;
+        records[name].row_count = baseline.rows.length;
+        records[name].web_cli_semantic_digest_formats = semanticRows.map((row) => row.artifact_format).sort();
       }
     } catch (error) {
       if (error?.code !== "ENOENT") throw error;

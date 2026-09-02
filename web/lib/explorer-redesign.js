@@ -2057,6 +2057,8 @@ export function createExplorerRedesignController({
     resetInteractionState() {
       const projectionWasRunning = state.running;
       clearTimeout(projectionTimer);
+      redesignNodeController?.resetInteractionState();
+      redesignNodeController = null;
       state.requestRevision += 1;
       state.selectedBlockId = "";
       state.blockSort = "execution";

@@ -34,6 +34,10 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 | Local Windows 1.96.0 channel build | release-version npm, executable, Python wheel, and Cargo launcher | 216.515 s |
 | Local Windows 1.96.0 platform smoke | installed Python and standalone TFLite/WASM plus ONNX execution parity | 179.016 s |
 | Local Windows 1.96.0 release-contract equivalence | npm full-format/package and command parity, native/Python execution, Cargo binding, and packaged-WASM tamper rejection | 582.732 s |
+| Private web 1.96.1 preflight | 73 bounded parser, export, Artifact IR, cache, privacy, and deployment checks; no browser or corpus matrix | 142.745 s |
+| Local Windows 1.96.1 channel build | release-version npm, executable, Python wheel, and Cargo launcher | 213.834 s |
+| Local Windows 1.96.1 platform smoke | installed Python and standalone TFLite/WASM plus ONNX execution parity | 179.704 s |
+| Local Windows 1.96.1 release-contract equivalence | npm full-format/package and command parity, native/Python execution, Cargo binding, and packaged-WASM tamper rejection | 575.075 s |
 
 The 1.94.4 run is retained as timing and incident evidence. It is not a known-good
 quality baseline. A registry success is never treated as sufficient without a
@@ -74,7 +78,7 @@ build, dist, cache, and egg-info directories before packaging.
 The web deployment gate is the bounded `scripts/check-deploy.mjs` set. The
 exhaustive release tier remains available as `npm run check:release`; it must not
 be wired back into every Cloudflare deployment. The measured preflight budget is
-240 seconds; the current measured baseline is 150.910 seconds for 73 checks.
+240 seconds; the current measured baseline is 142.745 seconds for 73 checks.
 
 ## Cross-platform release rule
 

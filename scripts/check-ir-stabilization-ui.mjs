@@ -6,10 +6,27 @@ import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright";
 import { launchChromium } from "./browser-launch.mjs";
+import { decodeFixtureBase64, EXECUTORCH_ADD_PTE_BASE64 } from "./fixtures/executorch-fixtures.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUTPUT = path.join(ROOT, ".local-validation", "1.96-stabilization", "ui");
 const EVIDENCE_CLASSES = ["OBSERVED", "SOURCE_BACKED", "DERIVED", "DERIVED_WITH_HEURISTIC_THRESHOLD", "PREDICTED", "ESTIMATED", "DECLARED_UNVERIFIED", "MEASURED", "NOT_ASSESSABLE", "NOT_APPLICABLE"];
+const AUDIT_TABS = ["overview", "quant", "accelerator", "roofline", "stage", "xnnpack", "quant-labs", "llm"];
+const FORMAT_CASES = [
+  { format: "onnx", file: "web/samples/sample_cnn_float.onnx", name: "sample_cnn_float.onnx" },
+  { format: "coreml", file: "web/samples/MNISTClassifier.mlmodel", name: "MNISTClassifier.mlmodel" },
+  { format: "gguf", file: "web/samples/tinymqa1m.Q4_0.gguf", name: "tinymqa1m.Q4_0.gguf" },
+  { format: "safetensors", file: "web/samples/nanofable-1m-fp16.safetensors", name: "nanofable-1m-fp16.safetensors" },
+  { format: "executorch", name: "add.pte", buffer: Buffer.from(decodeFixtureBase64(EXECUTORCH_ADD_PTE_BASE64)) },
+];
+const EXPECTED_APPLICABILITY = Object.freeze({
+  tflite: { overview: "applicable", quant: "applicable", accelerator: "applicable", roofline: "applicable", stage: "applicable", xnnpack: "applicable", "quant-labs": "applicable", llm: "not_applicable" },
+  onnx: { overview: "applicable", quant: "applicable", accelerator: "applicable", roofline: "applicable", stage: "applicable", xnnpack: "not_applicable", "quant-labs": "applicable", llm: "not_applicable" },
+  coreml: { overview: "applicable", quant: "applicable", accelerator: "applicable", roofline: "not_applicable", stage: "applicable", xnnpack: "not_applicable", "quant-labs": "not_applicable", llm: "not_applicable" },
+  gguf: { overview: "applicable", quant: "applicable", accelerator: "applicable", roofline: "not_applicable", stage: "not_applicable", xnnpack: "not_applicable", "quant-labs": "not_applicable", llm: "applicable" },
+  safetensors: { overview: "applicable", quant: "applicable", accelerator: "applicable", roofline: "not_applicable", stage: "not_applicable", xnnpack: "not_applicable", "quant-labs": "not_applicable", llm: "applicable" },
+  executorch: { overview: "applicable", quant: "applicable", accelerator: "applicable", roofline: "not_applicable", stage: "applicable", xnnpack: "not_applicable", "quant-labs": "not_applicable", llm: "not_applicable" },
+});
 const server = createStaticServer();
 const rows = [];
 const diagnostics = [];
@@ -30,8 +47,20 @@ try {
     await page.locator("#privacyAgree").check();
     await page.locator("#acceptAgreement").click();
   }
+  const pendingNavigation = await navigationState(page);
+  if (pendingNavigation.statuses.some((row) => row.status !== "not_assessed_yet") || pendingNavigation.hiddenTabs.length
+    || pendingNavigation.hiddenOptions.length || pendingNavigation.disabledOptions.length) {
+    throw new Error(`Pre-audit applicability state is not explicit: ${JSON.stringify(pendingNavigation)}`);
+  }
   await runVerifiedExample(page);
   await page.locator('[data-workflow-step="audit"]').click();
+  const tfliteNavigation = await verifyFormatNavigation(page, "tflite", "desktop");
+  tfliteNavigation.web_cli_semantic_digest = await verifyWebCliSemanticDigest(
+    page,
+    path.join(ROOT, "web", "samples", "mobilenet_v2_1.0_224_quant.tflite"),
+  );
+  rows.push(tfliteNavigation);
+  await verifyWhyDrawerFocusRestoration(page);
 
   for (const theme of ["light", "dark"]) {
     await page.evaluate((value) => { document.documentElement.dataset.theme = value; }, theme);
@@ -69,19 +98,25 @@ try {
     }
   }
 
+  for (const entry of FORMAT_CASES) {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await runAudit(page, entry.file ? path.join(ROOT, entry.file) : null, entry.name, entry.buffer || null);
+    await page.locator('[data-workflow-step="audit"]').click();
+    const desktopNavigation = await verifyFormatNavigation(page, entry.format, "desktop");
+    if (entry.format === "onnx") {
+      desktopNavigation.web_cli_semantic_digest = await verifyWebCliSemanticDigest(page, path.join(ROOT, entry.file));
+    }
+    rows.push(desktopNavigation);
+    await page.setViewportSize({ width: 390, height: 844 });
+    rows.push(await verifyFormatNavigation(page, entry.format, "mobile"));
+  }
+
   await page.setViewportSize({ width: 1440, height: 1000 });
   await runAudit(page, path.join(ROOT, "web", "samples", "tinymqa1m.Q4_0.gguf"), "tinymqa1m.Q4_0.gguf");
   await page.locator('[data-workflow-step="audit"]').click();
-  await page.locator('[data-audit-tab="xnnpack"]').click();
-  await requireApplicabilityBoundary(page, "not_applicable", "TFLite");
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.locator("#mobileAuditView").selectOption("xnnpack");
-  await requireApplicabilityBoundary(page, "not_applicable", "TFLite");
-
-  await page.setViewportSize({ width: 1440, height: 1000 });
   const heapBefore = await usedHeap(page);
   for (let round = 0; round < 3; round += 1) {
-    for (const tab of ["overview", "quant", "accelerator", "roofline", "stage", "xnnpack", "quant-labs", "llm"]) {
+    for (const tab of AUDIT_TABS) {
       await page.locator(`[data-audit-tab="${tab}"]`).click();
     }
   }
@@ -99,7 +134,9 @@ try {
   }));
   ggufState.heap_before = heapBefore;
   ggufState.heap_after = heapAfter;
+  ggufState.detached_dom = await detachedDomNodes(page);
   if (ggufState.hidden_audit_tabs.length || ggufState.document_overflow_px > 1) throw new Error(`GGUF lens regression: ${JSON.stringify(ggufState)}`);
+  if (ggufState.detached_dom.count !== 0) throw new Error(`Detached DOM nodes remained after repeated tab navigation: ${JSON.stringify(ggufState.detached_dom)}`);
   rows.push({ artifact_format: "gguf", theme: "dark", viewport: "desktop", ...ggufState });
   if (diagnostics.length) throw new Error(`Browser diagnostics:\n${diagnostics.join("\n")}`);
 
@@ -125,8 +162,9 @@ async function runVerifiedExample(page) {
   if (!status.includes("audit run complete")) throw new Error(`Verified TFLite example failed: ${status}`);
 }
 
-async function runAudit(page, modelPath, name) {
-  await page.locator("#fileInput").setInputFiles({ name, mimeType: "application/octet-stream", buffer: await readFile(modelPath) });
+async function runAudit(page, modelPath, name, suppliedBuffer = null) {
+  const buffer = suppliedBuffer || await readFile(modelPath);
+  await page.locator("#fileInput").setInputFiles({ name, mimeType: "application/octet-stream", buffer });
   await page.waitForFunction(() => !document.querySelector("#runAudit")?.disabled, null, { timeout: 30_000 });
   await page.locator("#runAudit").click();
   await page.waitForFunction(() => /audit run complete|Audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 120_000 });
@@ -134,16 +172,53 @@ async function runAudit(page, modelPath, name) {
   if (!status.includes("audit run complete")) throw new Error(`${name}: ${status}`);
 }
 
-async function requireApplicabilityBoundary(page, expectedStatus, reasonFragment) {
-  const state = await page.locator("#auditApplicabilityBoundary").evaluate((node) => ({
-    hidden: node.hidden,
-    status: document.querySelector('[data-audit-lens="true"].active')?.dataset.applicabilityStatus,
-    text: node.textContent || "",
-    active: document.querySelector('[data-audit-lens="true"].active')?.dataset.auditTab,
-  }));
-  if (state.hidden || state.status !== expectedStatus || state.active !== "xnnpack" || !state.text.includes(reasonFragment)) {
-    throw new Error(`Applicability boundary did not preserve the selected lens: ${JSON.stringify(state)}`);
+async function verifyFormatNavigation(page, format, viewport) {
+  const expected = EXPECTED_APPLICABILITY[format];
+  const before = await navigationState(page);
+  const actual = Object.fromEntries(before.statuses.map((row) => [row.tab, row.status]));
+  if (JSON.stringify(actual) !== JSON.stringify(expected) || before.hiddenTabs.length || before.hiddenOptions.length
+    || before.disabledOptions.length || before.documentOverflowPx > 1) {
+    throw new Error(`${format}/${viewport} fixed navigation failed: ${JSON.stringify({ expected, ...before })}`);
   }
+  for (const tab of AUDIT_TABS) {
+    if (viewport === "mobile") await page.locator("#mobileAuditView").selectOption(tab);
+    else await page.locator(`[data-audit-tab="${tab}"]`).click();
+    const selected = await page.evaluate(() => {
+      const selectedTab = document.querySelector("#mobileAuditView")?.value || "overview";
+      const active = document.querySelector(`[data-audit-tab="${CSS.escape(selectedTab)}"]`);
+      const boundary = document.querySelector("#auditApplicabilityBoundary");
+      return {
+        tab: active?.dataset.auditTab || null,
+        status: active?.dataset.applicabilityStatus || null,
+        reasonCode: active?.dataset.applicabilityReasonCode || null,
+        reason: active?.dataset.applicabilityReason || "",
+        boundaryHidden: boundary?.hidden ?? true,
+        boundaryText: boundary?.textContent || "",
+      };
+    });
+    if (selected.tab !== tab || selected.status !== expected[tab]) throw new Error(`${format}/${viewport}/${tab} selection drift: ${JSON.stringify(selected)}`);
+    if (selected.status === "applicable") {
+      if (!selected.boundaryHidden) throw new Error(`${format}/${viewport}/${tab} exposed a stale applicability boundary.`);
+    } else if (selected.boundaryHidden || !selected.reasonCode || !selected.reason || !selected.boundaryText.includes(selected.reason)) {
+      throw new Error(`${format}/${viewport}/${tab} did not expose its current applicability reason: ${JSON.stringify(selected)}`);
+    }
+  }
+  const after = await navigationState(page);
+  if (viewport === "mobile") {
+    const undersized = await mobileTouchTargetFailures(page);
+    if (undersized.length) throw new Error(`${format}/${viewport} contains undersized effective touch targets: ${JSON.stringify(undersized)}`);
+  }
+  return { artifact_format: format, theme: "current", viewport, navigation_status: "pass", ...after };
+}
+
+async function navigationState(page) {
+  return page.evaluate(() => ({
+    statuses: [...document.querySelectorAll("[data-audit-tab]")].map((tab) => ({ tab: tab.dataset.auditTab, status: tab.dataset.applicabilityStatus })),
+    hiddenTabs: [...document.querySelectorAll("[data-audit-tab][hidden]")].map((tab) => tab.dataset.auditTab),
+    hiddenOptions: [...document.querySelectorAll("#mobileAuditView option")].filter((option) => option.hidden).map((option) => option.value),
+    disabledOptions: [...document.querySelectorAll("#mobileAuditView option")].filter((option) => option.disabled).map((option) => option.value),
+    documentOverflowPx: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
+  }));
 }
 
 async function evidenceContrast(page, classes) {
@@ -191,6 +266,126 @@ async function usedHeap(page) {
   return page.evaluate(() => Number.isFinite(performance?.memory?.usedJSHeapSize) ? performance.memory.usedJSHeapSize : null);
 }
 
+async function detachedDomNodes(page) {
+  const session = await page.context().newCDPSession(page);
+  try {
+    await session.send("DOM.enable");
+    await session.send("HeapProfiler.enable");
+    await session.send("HeapProfiler.collectGarbage");
+    const result = await session.send("DOM.getDetachedDomNodes");
+    return {
+      count: result.detachedNodes?.length || 0,
+      rows: (result.detachedNodes || []).map((row) => ({
+        node_name: row.treeNode?.nodeName || null,
+        local_name: row.treeNode?.localName || null,
+        child_node_count: row.treeNode?.childNodeCount || 0,
+        attributes: row.treeNode?.attributes || [],
+        retained_node_count: row.retainedNodeIds?.length || 0,
+      })),
+    };
+  } finally {
+    await session.detach();
+  }
+}
+
+async function verifyWebCliSemanticDigest(page, artifactPath) {
+  await page.locator('[data-workflow-step="output"]').click();
+  await page.waitForFunction(() => !document.querySelector("#downloadReviewHtml")?.disabled, null, { timeout: 30_000 });
+  await page.evaluate(() => {
+    const original = URL.createObjectURL.bind(URL);
+    globalThis.__deepbomCapturedReviewDownload = { original, text: null, type: null };
+    URL.createObjectURL = (blob) => {
+      Promise.resolve(blob.text()).then((text) => {
+        globalThis.__deepbomCapturedReviewDownload.text = text;
+        globalThis.__deepbomCapturedReviewDownload.type = blob.type;
+      });
+      return original(blob);
+    };
+  });
+  await page.evaluate(() => document.querySelector("#downloadReviewHtml")?.click());
+  await page.waitForFunction(() => Boolean(globalThis.__deepbomCapturedReviewDownload?.text), null, { timeout: 30_000 });
+  const reviewHtml = await page.evaluate(() => {
+    const captured = globalThis.__deepbomCapturedReviewDownload;
+    URL.createObjectURL = captured.original;
+    delete globalThis.__deepbomCapturedReviewDownload;
+    return captured.text;
+  });
+  const embedded = JSON.parse(reviewHtml.match(/<script id="deepbom-review-state" type="application\/json">([^<]+)<\/script>/)?.[1] || "null");
+  const webSha = embedded?.artifact_ir_identity?.sha256 || null;
+  if (!/^[a-f0-9]{64}$/.test(webSha || "")) throw new Error(`Browser review.html did not preserve an Artifact IR SHA-256: ${JSON.stringify(embedded?.artifact_ir_identity || null)}`);
+  const cliArguments = [
+    path.join(ROOT, "bin", "deepbom.mjs"),
+    "graph",
+    artifactPath,
+    "--format",
+    "json",
+    "--compact",
+  ];
+  if (embedded?.format === "tflite" && embedded?.cpu_cost_target_binding?.profile_id) {
+    cliArguments.push("--target", embedded.cpu_cost_target_binding.profile_id);
+  }
+  const cli = JSON.parse(execFileSync(process.execPath, cliArguments, {
+    cwd: ROOT,
+    encoding: "utf8",
+    maxBuffer: 256 * 1024 * 1024,
+  }));
+  const webIr = await page.evaluate(() => globalThis.__deepbomIrStabilizationTestHook?.() || null);
+  if (webIr?.artifact_ir_sha256 !== webSha) {
+    throw new Error(`Browser review.html and in-memory Artifact IR diverged: ${webSha} != ${webIr?.artifact_ir_sha256 || "missing"}`);
+  }
+  const cliSha = cli?.artifact_ir?.artifact_ir_sha256 || null;
+  if (webSha !== cliSha) {
+    throw new Error(`Web/CLI Artifact IR semantic digest mismatch for ${path.basename(artifactPath)}: ${webSha} != ${cliSha}; ${JSON.stringify(summarizeIrDifference(webIr, cli?.artifact_ir))}`);
+  }
+  await page.locator('[data-workflow-step="audit"]').click();
+  return { artifact_ir_sha256: webSha, status: "equal" };
+}
+
+function summarizeIrDifference(webIr, cliIr) {
+  return {
+    artifact: { web: webIr?.artifact, cli: cliIr?.artifact },
+    graph_totals_equal: JSON.stringify(webIr?.graph?.totals) === JSON.stringify(cliIr?.graph?.totals),
+    storage_totals_equal: JSON.stringify(webIr?.storage_topology?.totals) === JSON.stringify(cliIr?.storage_topology?.totals),
+    quantization_totals_equal: JSON.stringify(webIr?.quantization_contracts?.totals) === JSON.stringify(cliIr?.quantization_contracts?.totals),
+    static_overlay_equal: JSON.stringify(webIr?.overlays?.static) === JSON.stringify(cliIr?.overlays?.static),
+    completeness_equal: JSON.stringify(webIr?.completeness) === JSON.stringify(cliIr?.completeness),
+  };
+}
+
+async function mobileTouchTargetFailures(page) {
+  return page.evaluate(() => {
+    const visible = (node) => Boolean(node?.getClientRects().length);
+    const candidates = [...document.querySelectorAll('button, select, input[type="checkbox"], summary, [role="button"]')]
+      .filter(visible)
+      .filter((node) => !node.disabled && node.getAttribute("aria-hidden") !== "true");
+    return candidates.map((node) => {
+      const effective = node.matches('input[type="checkbox"]') && node.closest("label") || node;
+      const rect = effective.getBoundingClientRect();
+      return {
+        id: node.id || node.dataset.auditTab || node.textContent?.trim().slice(0, 32) || node.tagName,
+        width: rect.width,
+        height: rect.height,
+        minWidth: getComputedStyle(effective).minWidth,
+        minHeight: getComputedStyle(effective).minHeight,
+      };
+    }).filter((row) => row.width < 43.5 || row.height < 43.5);
+  });
+}
+
+async function verifyWhyDrawerFocusRestoration(page) {
+  const trigger = page.locator('[data-audit-tab="overview"]');
+  await trigger.focus();
+  await page.evaluate(() => globalThis.dispatchEvent(new CustomEvent("deepbom:evidence-explain", { detail: {
+    title: "Focus restoration fixture",
+    value: "observed",
+    evidence_class: "OBSERVED",
+  } })));
+  await page.waitForFunction(() => !document.querySelector("#evidenceWhyDrawer")?.hidden);
+  if (await page.evaluate(() => document.activeElement?.id) !== "evidenceWhyDrawer") throw new Error("Evidence explanation drawer did not receive focus.");
+  await page.locator("#closeEvidenceWhy").click();
+  if (await page.evaluate(() => document.activeElement?.dataset?.auditTab) !== "overview") throw new Error("Evidence explanation drawer did not restore trigger focus.");
+}
+
 function createStaticServer() {
   return createServer(async (request, response) => {
     try {
@@ -198,7 +393,14 @@ function createStaticServer() {
       const relative = url.pathname === "/web/" ? "web/index.html" : decodeURIComponent(url.pathname).replace(/^\/+/, "");
       const file = path.resolve(ROOT, relative);
       if (!file.startsWith(`${ROOT}${path.sep}`)) return send(response, 403, "text/plain", "forbidden");
-      send(response, 200, mimeType(file), await readFile(file));
+      let body = await readFile(file);
+      if (relative === "web/app.js") {
+        body = Buffer.concat([
+          body,
+          Buffer.from("\nglobalThis.__deepbomIrStabilizationTestHook = () => currentArtifactIrContext?.artifact_ir || null;\n", "utf8"),
+        ]);
+      }
+      send(response, 200, mimeType(file), body);
     } catch {
       send(response, 404, "text/plain", "not found");
     }

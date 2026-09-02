@@ -25,7 +25,7 @@ import { identifyCliFile, loadCliBundleMembers, loadCliInput, loadExecuTorchExte
 import { collectNvidiaAcceleratorProfile } from "./nvidia-accelerator-collector.mjs";
 import { resolveArtifactSource } from "./remote-artifact-resolver.mjs";
 import { resolveHuggingFaceOnnxExternalDataClosure, resolveHuggingFaceSafeTensorsClosure } from "./remote-artifact-closure.mjs";
-import { finalizeArtifactSet } from "../web/lib/artifact-set.js";
+import { buildSingleFileArtifactSet, finalizeArtifactSet } from "../web/lib/artifact-set.js";
 import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
 import { exportGraphVisualization } from "../web/lib/graph-export.js";
 import { exportGraphPng } from "./graph-png-export.mjs";
@@ -76,7 +76,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.0";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.1";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 
 async function main(argv) {
@@ -886,6 +886,14 @@ function buildCliArtifactSet(artifact, acquisition, analysis, closure) {
   const bundleFiles = Array.isArray(analysis?.artifact_bundle?.files) ? analysis.artifact_bundle.files : [];
   const closureFiles = Array.isArray(closure?.members) ? closure.members : [];
   const sourceFiles = closureFiles.length ? closureFiles : bundleFiles;
+  if (!acquisition && !sourceFiles.length) {
+    return buildSingleFileArtifactSet({
+      filename: artifact.filename,
+      format: artifact.format,
+      sha256: artifact.sha256,
+      byteLength: artifact.size,
+    });
+  }
   const primaryIndex = sourceFiles.length ? selectArtifactSetPrimary(sourceFiles) : 0;
   const files = sourceFiles.length ? sourceFiles.map((row, index) => ({
     role: index === primaryIndex ? "primary" : artifactSetRole(row.role),

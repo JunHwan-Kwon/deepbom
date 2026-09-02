@@ -54,6 +54,7 @@ try {
   const desktopPath = path.join(output, "runtime-arena-desktop.png");
   await page.locator("#fixture").screenshot({ path: desktopPath });
   requireViewerContract(desktop, false);
+  await requireArenaInteraction(page, desktop.canvasWidth, false);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await waitForAnimationFrames(page, 2);
@@ -61,6 +62,7 @@ try {
   const mobilePath = path.join(output, "runtime-arena-mobile.png");
   await page.locator("#fixture").screenshot({ path: mobilePath });
   requireViewerContract(mobile, true);
+  await requireArenaInteraction(page, mobile.canvasWidth, true);
 
   if (browserErrors.length) throw new Error(`Browser errors:\n${browserErrors.join("\n")}`);
   console.log(`Runtime arena viewer passed (projected ${runtimeEvidence.arena_reconciliation.projected_combined_arena_bytes} B, observed ${runtimeMemory.peak_combined_arena_bytes} B, ${desktop.differenceRows} visible differences, desktop/mobile body overflow 0).`);
@@ -126,6 +128,14 @@ async function inspect(page) {
       note: fixture.querySelector(".arena-runtime-table-note")?.textContent || "",
       canvasWidth: canvas?.clientWidth || 0,
       nonBlankPixels,
+      peakMarker: canvas?.dataset.peakMarker || null,
+      peakOp: canvas?.dataset.peakOp || null,
+      peakBytes: canvas?.dataset.peakBytes || null,
+      toolbarControls: [...fixture.querySelectorAll(".arena-map-toolbar button")].map((button) => ({
+        title: button.title,
+        ariaLabel: button.getAttribute("aria-label"),
+        height: button.getBoundingClientRect().height,
+      })),
     };
   });
 }
@@ -140,8 +150,40 @@ function requireViewerContract(state, mobile) {
     || state.fixtureOverflow > 1
     || state.canvasWidth < (mobile ? 320 : 900)
     || state.nonBlankPixels < 1_000
+    || state.peakMarker !== "rendered"
+    || !/^\d+$/.test(state.peakOp || "")
+    || !/^\d+$/.test(state.peakBytes || "")
+    || state.toolbarControls.length !== 3
+    || state.toolbarControls.some((row) => !row.title || !row.ariaLabel || (mobile && row.height < 43.5))
     || (mobile && !state.tableScrollable)) {
     throw new Error(`Runtime arena ${mobile ? "mobile" : "desktop"} contract failed: ${JSON.stringify(state)}`);
+  }
+}
+
+async function requireArenaInteraction(page, initialWidth, mobile) {
+  const zoomIn = page.locator('.arena-map-toolbar button[aria-label="Zoom in arena map"]');
+  const fit = page.locator('.arena-map-toolbar button[aria-label="Fit arena map to width"]');
+  await zoomIn.click();
+  await waitForAnimationFrames(page, 1);
+  const zoomed = await page.locator(".arena-map-scroll").evaluate((scroll) => {
+    const canvas = scroll.querySelector("canvas");
+    scroll.scrollLeft = Math.min(80, Math.max(0, scroll.scrollWidth - scroll.clientWidth));
+    return {
+      canvasWidth: canvas?.clientWidth || 0,
+      scrollable: scroll.scrollWidth > scroll.clientWidth,
+      scrollLeft: scroll.scrollLeft,
+    };
+  });
+  if (zoomed.canvasWidth <= initialWidth || !zoomed.scrollable || zoomed.scrollLeft <= 0) {
+    throw new Error(`Arena ${mobile ? "mobile" : "desktop"} zoom/pan failed: ${JSON.stringify({ initialWidth, ...zoomed })}`);
+  }
+  await fit.click();
+  const fitted = await page.locator(".arena-map-scroll").evaluate((scroll) => ({
+    canvasWidth: scroll.querySelector("canvas")?.clientWidth || 0,
+    scrollLeft: scroll.scrollLeft,
+  }));
+  if (Math.abs(fitted.canvasWidth - initialWidth) > 1 || fitted.scrollLeft !== 0) {
+    throw new Error(`Arena ${mobile ? "mobile" : "desktop"} fit reset failed: ${JSON.stringify({ initialWidth, ...fitted })}`);
   }
 }
 
@@ -150,7 +192,7 @@ function createStaticServer(root) {
     try {
       const url = new URL(request.url, "http://127.0.0.1");
       if (url.pathname === "/arena-fixture") {
-        return send(response, 200, "text/html; charset=utf-8", `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/web/styles.css"></head><body><main id="fixture" style="width:min(1180px,calc(100% - 24px));margin:16px auto;padding:12px;box-sizing:border-box;background:var(--surface);border:1px solid var(--line);border-radius:6px"></main></body></html>`);
+        return send(response, 200, "text/html; charset=utf-8", `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/web/styles.css"><link rel="stylesheet" href="/web/research-theme.css"></head><body><main id="fixture" style="width:min(1180px,calc(100% - 24px));margin:16px auto;padding:12px;box-sizing:border-box;background:var(--surface);border:1px solid var(--line);border-radius:6px"></main></body></html>`);
       }
       const relative = decodeURIComponent(url.pathname).replace(/^\/+/, "");
       const file = path.resolve(root, relative);

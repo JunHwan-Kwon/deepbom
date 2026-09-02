@@ -19,6 +19,7 @@
     "shape_inference_status": "partial"
   },
   "fixed_timestamp": "2026-08-31T00:00:00.000Z",
-  "artifact_evidence_envelope_sha256": "c1ae4a7487a2b8f2adb1b0342be7b5c6a623c069580e5e9109f6ccaad96e0f26",
+  "artifact_set_sha256": "447201ee68f40f19d7602debdb8f15f3daba4d749bcfaa759fd22ff956730ce8",
+  "artifact_evidence_envelope_sha256": "220c95f182b3d5e23bf0eb0765348835e8961d0d6db9594b077589dd85a8cff9",
   "claim_boundary": "Static artifact evidence does not establish observed runtime assignment, latency, task quality, clinical validity, or release readiness."
 }

@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "1.96.0",
+  "version": "1.96.1",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
   "homepage": "https://deepbom.org",
   "repository": {
@@ -284,6 +284,7 @@
     "ajv-draft-04": "1.0.0",
     "ajv-formats": "3.0.1",
     "ajv-formats-draft2019": "1.6.1",
+    "es-module-lexer": "1.7.0",
     "esbuild": "0.28.1",
     "onnxruntime-node": "1.26.0",
     "playwright": "^1.61.1",

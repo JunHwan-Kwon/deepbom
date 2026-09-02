@@ -4,6 +4,37 @@ import { sha256TextHex } from "./sha256-sync.js";
 export const ARTIFACT_SET_SCHEMA = "deepbom.artifact_set.v1";
 const SHA256 = /^[a-f0-9]{64}$/;
 
+export function buildSingleFileArtifactSet({ filename, format, sha256, byteLength }) {
+  const size = Number(byteLength);
+  return finalizeArtifactSet({
+    schema: ARTIFACT_SET_SCHEMA,
+    evidence_class: "OBSERVED_ACQUISITION",
+    source: {
+      kind: "local",
+      canonical_locator: `local:${filename}`,
+      immutability: { kind: "sha256", value: sha256 },
+    },
+    subject: {
+      filename,
+      format,
+      sha256,
+      byte_length: { decimal: String(size), number: size },
+      identity_basis: "artifact_file_bytes",
+    },
+    files: [{
+      role: "primary",
+      path: filename,
+      sha256,
+      byte_length: { decimal: String(size), number: size },
+    }],
+    trust: {
+      remote_code_execution: "forbidden",
+      pickle_execution: "forbidden",
+      model_code_execution: "forbidden",
+    },
+  });
+}
+
 export function finalizeArtifactSet(document) {
   const body = clone(document);
   delete body.artifact_set_sha256;

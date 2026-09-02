@@ -297,6 +297,57 @@ assert.equal(propertyValue(packagedCycloneDx.metadata.component.properties, "dee
   DEPLOYMENT_CONTRACT_FILES.artifactIr, "packaged CycloneDX Artifact IR location conservation");
 assert.equal(reviewHtml.includes("<script id=\"deepbom-review-state\" type=\"application/json\">"), true,
   "review.html must expose a non-executable machine-readable review state");
+
+const recursiveBytes = await readFile(path.join(root, "scripts/fixtures/onnx_recursive_scope.onnx"));
+const recursiveSha = createHash("sha256").update(recursiveBytes).digest("hex");
+const recursiveAnalysis = analyzeOnnxModel(new Uint8Array(recursiveBytes), "onnx_recursive_scope.onnx");
+recursiveAnalysis.model_sha256 = recursiveSha;
+recursiveAnalysis.file_size_bytes = recursiveBytes.length;
+const nestedFusionRefs = ["operator:scope:onnx:main_graph:1", "operator:scope:onnx:nested:2:0"];
+const recursiveContext = getArtifactIrContext(recursiveAnalysis, {
+  filename: recursiveAnalysis.filename,
+  format: "onnx",
+  sha256: recursiveSha,
+  size: recursiveBytes.length,
+}, { runtimeEvidence: {
+  artifact_sha256: recursiveSha,
+  runtime_nodes: [{
+    runtime_node_ref: "fused:nested-scope:0",
+    backend: "fixture_ep",
+    source_subject_refs: nestedFusionRefs,
+  }],
+} });
+const recursiveSurfaces = materializeArtifactIrSurfaces(recursiveAnalysis, recursiveContext, recursiveSha, recursiveBytes.length);
+const recursiveExpectedSha = recursiveContext.artifact_ir.artifact_ir_sha256;
+assert.deepEqual(new Set(Object.values(recursiveSurfaces.irShas)), new Set([recursiveExpectedSha]),
+  `nested-scope runtime-fusion Artifact IR identity: ${JSON.stringify(recursiveSurfaces.irShas)}`);
+for (const [surface, artifactIr] of recursiveSurfaces.materializedIr) {
+  assert.equal(artifactIr.graph.totals.scope_count, 6, `${surface} nested-scope conservation`);
+  assert.equal(artifactIr.graph.totals.materialized_scope_count, 6, `${surface} materialized-scope conservation`);
+  assert.equal(artifactIr.overlays.runtime.length, 1, `${surface} nested runtime-overlay conservation`);
+  assert.equal(artifactIr.overlays.runtime[0].summary.fused_runtime_node_count, 1, `${surface} runtime-fusion conservation`);
+  assert.deepEqual(artifactIr.overlays.runtime[0].runtime_nodes[0].source_subject_refs, nestedFusionRefs,
+    `${surface} cross-scope runtime subject conservation`);
+  assertRuntimeSubjectsResolve(artifactIr, surface);
+}
+assert.equal(recursiveSurfaces.reviewState.artifact_ir_identity.nested_scope_count, 5,
+  "review state nested-scope conservation for runtime-bound IR");
+assert.equal(recursiveSurfaces.reviewState.artifact_ir_identity.runtime_overlay_count, 1,
+  "review state nested runtime-overlay conservation");
+assert.deepEqual(recursiveSurfaces.reviewState.artifact_ir_identity.runtime_subject_refs, nestedFusionRefs,
+  "review state cross-scope runtime subject conservation");
+assert.equal(recursiveSurfaces.embeddedReviewState.artifact_ir_identity.nested_scope_count, 5,
+  "rendered review.html nested-scope conservation");
+assert.equal(recursiveSurfaces.embeddedReviewState.artifact_ir_identity.runtime_overlay_count, 1,
+  "rendered review.html nested runtime-overlay conservation");
+assert.deepEqual(recursiveSurfaces.embeddedReviewState.artifact_ir_identity.runtime_subject_refs, nestedFusionRefs,
+  "rendered review.html cross-scope runtime subject conservation");
+const recursiveArtifactIrReference = recursiveSurfaces.packagedCycloneDx.metadata.component.externalReferences
+  .find((row) => row.url === DEPLOYMENT_CONTRACT_FILES.artifactIr);
+assert(recursiveArtifactIrReference, "nested-scope packaged CycloneDX must reference its Artifact IR sibling");
+assert.equal(recursiveArtifactIrReference.hashes?.[0]?.content,
+  recursiveSurfaces.deploymentContracts.integrity.member_sha256[DEPLOYMENT_CONTRACT_FILES.artifactIr],
+  "nested-scope packaged CycloneDX Artifact IR sibling digest conservation");
 runtimeAnalysis.findings = [{ id: "EA-TEST-0001" }];
 assert.equal(runtimeContext.primary_view.findings[0].id, "EA-TEST-0001", "shared consumer view must expose post-build finding updates without rebuilding the IR");
 const tamperedView = structuredClone(runtimeContext.primary_view);
@@ -402,6 +453,66 @@ function assertRuntimeSubjectsResolve(artifactIr, surface) {
   for (const overlay of artifactIr.overlays.runtime) {
     for (const row of overlay.rows) assert(subjects.has(row.subject_ref), `${surface} contains unresolved runtime subject ${row.subject_ref}`);
   }
+}
+
+function materializeArtifactIrSurfaces(analysis, artifactIrContext, sha256, byteLength) {
+  const identity = { filename: analysis.filename, format: analysis.format, sha256, byte_length: byteLength };
+  const reportContext = { identity, runtimeEvidence: {}, artifactIrContext };
+  const rawEvidenceContext = { ...reportContext };
+  const mlBomDocument = buildMlBomDocument(artifactIrContext.primary_view, {
+    hash: sha256,
+    fileSizeBytes: byteLength,
+    artifactIr: artifactIrContext.artifact_ir,
+    timestamp: "2026-09-02T00:00:00.000Z",
+  });
+  const engineeringEvidence = buildEngineeringEvidenceDocument(artifactIrContext.primary_view, {
+    reportContext,
+    rawEvidenceContext,
+    mlBomDocument,
+  });
+  const rawFiles = buildRawDataArtifactFiles(artifactIrContext.primary_view, { rawEvidenceContext });
+  const rawArtifactIr = JSON.parse(rawFiles.find((row) => row.name === "static/artifact_ir.json").data);
+  const deploymentContracts = buildDeploymentContractDocuments(artifactIrContext.primary_view, {
+    hash: sha256,
+    fileSizeBytes: byteLength,
+    generatedAt: "2026-09-02T00:00:00.000Z",
+    artifactIrContext,
+  });
+  const publicCycloneDx = buildPublicCycloneDxDocuments(artifactIrContext.primary_view, {
+    hash: sha256,
+    fileSizeBytes: byteLength,
+    generatedAt: "2026-09-02T00:00:00.000Z",
+    artifactIr: artifactIrContext.artifact_ir,
+  }).documents.cyclonedx_evidence;
+  const reviewState = buildReviewState({ analysis: artifactIrContext.primary_view, runtimeEvidence: {} });
+  const reviewHtml = buildSelfContainedReviewHtml({
+    analysis: artifactIrContext.primary_view,
+    graphSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>',
+    reviewState,
+    runtimeEvidence: {},
+  });
+  const embeddedReviewState = JSON.parse(reviewHtml.match(/<script id="deepbom-review-state" type="application\/json">([^<]+)<\/script>/)?.[1] || "null");
+  const packagedCycloneDx = deploymentContracts.documents.cyclonedx_evidence;
+  return {
+    deploymentContracts,
+    packagedCycloneDx,
+    reviewState,
+    embeddedReviewState,
+    materializedIr: [
+      ["UI", artifactIrContext.artifact_ir],
+      ["engineering report", engineeringEvidence.evidence.artifact_ir],
+      ["raw ZIP", rawArtifactIr],
+      ["deployment pack", deploymentContracts.documents.artifact_ir],
+    ],
+    irShas: {
+      ui: artifactIrContext.artifact_ir.artifact_ir_sha256,
+      engineering_report: engineeringEvidence.evidence.artifact_ir.artifact_ir_sha256,
+      raw_zip: rawArtifactIr.artifact_ir_sha256,
+      deployment_pack: deploymentContracts.documents.artifact_ir.artifact_ir_sha256,
+      public_cyclonedx: propertyValue(publicCycloneDx.properties, "deepbom:artifactIrSha256"),
+      review: reviewState.artifact_ir_identity.sha256,
+    },
+  };
 }
 
 function canonicalJsonForTest(value) {

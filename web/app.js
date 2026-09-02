@@ -216,6 +216,7 @@ import {
   renderOpDetailPanel,
 } from "./lib/graph-ui.js";
 import { getArtifactIrContext } from "./lib/artifact-ir-context.js";
+import { buildSingleFileArtifactSet } from "./lib/artifact-set.js";
 import { exportGraphVisualization } from "./lib/graph-export.js";
 import {
   buildModelIdentity,
@@ -1244,6 +1245,13 @@ registerServiceWorker();
 
 initPrivacyAgreement();
 initPinnedSessionOffset();
+updateFormatSpecificAuditLabels({
+  modelFormat: "",
+  analysis: null,
+  auditTabs,
+  activeTab: getActiveAuditTab,
+  selectTab: setActiveAuditTab,
+});
 updateWorkflowState("idle");
 updateModuleAccessState();
 initAuth();
@@ -4439,6 +4447,14 @@ async function ensureModelHash() {
   if (!current || !currentModelBytes) return "";
   if (!current.model_sha256) {
     current.model_sha256 = currentModelPayloadLoaded ? await sha256Hex(currentModelBytes) : await sha256FileHex(pendingModelFile);
+  }
+  if (!current.artifact_set && currentExternalDataFiles.length === 0) {
+    current.artifact_set = buildSingleFileArtifactSet({
+      filename: current.filename || currentFilename || pendingModelFile?.name || "model",
+      format: current.format || detectModelFormat(currentFilename || pendingModelFile?.name || ""),
+      sha256: current.model_sha256,
+      byteLength: current.file_size_bytes ?? current.file_size ?? currentModelBytes.byteLength,
+    });
   }
   if (!current._markdown) {
     current._markdown = current.format === "onnx" && current.markdown
