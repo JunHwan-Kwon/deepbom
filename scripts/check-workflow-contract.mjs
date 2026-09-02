@@ -278,7 +278,7 @@ function checkReportTargetBindingContract() {
     [appSource.includes("analyzeLoadedModel(currentFilename, requestedTargetId"), "top-level target changes must pass the newly selected target explicitly"],
     [appSource.includes("keepModule: preserveReportWorkspace") && appSource.includes('setActiveWorkspace("output", { force: true })'), "report-target analysis must preserve the Reports workspace"],
     [appSource.includes("reportBindingMatchesAnalysis(binding, analysis)"), "report copy must enforce target-bound or artifact-only binding semantics"],
-    [appSource.includes("formatter.buildEngineeringReport(analysis, currentReportContext())"), "report copy must regenerate from the target-bound analysis object"],
+    [appSource.includes("formatter.buildEngineeringReport(artifactIrBackedView(analysis), currentReportContext())"), "report copy must regenerate from the target-bound analysis through the canonical Artifact IR consumer view"],
     [!appSource.includes('const text = reportPreview?.textContent || "";'), "report copy must not reuse a possibly stale preview string"],
     [styleSource.includes(".report-target-bar") && styleSource.includes(".report-target-actions"), "report target controls need responsive layout rules"],
   ]) {

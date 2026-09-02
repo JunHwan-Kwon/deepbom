@@ -1,5 +1,5 @@
-function tensorMeta(analysis, tensorId) {
-  const t = analysis.tensors[tensorId];
+function tensorMeta(analysis, tensorId, tensors = tensorByIndex(analysis)) {
+  const t = tensors.get(Number(tensorId));
   if (!t) return { bytes: 0, dtype: null };
   const shape = t.shape ?? [];
   const shapeKnown = Array.isArray(shape) && shape.every((dim) => Number.isSafeInteger(Number(dim)) && Number(dim) >= 0);
@@ -18,17 +18,19 @@ function tensorMeta(analysis, tensorId) {
 }
 
 export function collectFullGraph(analysis, graphIndex) {
-  const nodeSet = new Set(analysis.ops.map((op) => op.index));
-  const nodes = analysis.ops.map((op) => ({
+  const ops = Array.isArray(analysis?.ops) ? analysis.ops : [];
+  const tensors = tensorByIndex(analysis);
+  const nodeSet = new Set(ops.map((op) => op.index));
+  const nodes = ops.map((op) => ({
     op, column: 0, distance: 0,
-    outputDtype: analysis.tensors[op.outputs?.[0]]?.dtype ?? null,
+    outputDtype: tensors.get(Number(op.outputs?.[0]))?.dtype ?? null,
   }));
   const edges = [];
-  for (const op of analysis.ops) {
+  for (const op of ops) {
     for (const tensorId of op.outputs) {
       for (const consumer of graphIndex.consumers.get(tensorId) || []) {
         if (nodeSet.has(consumer)) {
-          const { bytes, dtype } = tensorMeta(analysis, tensorId);
+          const { bytes, dtype } = tensorMeta(analysis, tensorId, tensors);
           edges.push({ from: op.index, to: consumer, tensorId, bytes, dtype });
         }
       }
@@ -38,15 +40,17 @@ export function collectFullGraph(analysis, graphIndex) {
 }
 
 export function collectNeighborhood(analysis, graphIndex, centerIndex, depth) { // analysis used for tensor bytes
+  const opByIndex = new Map((Array.isArray(analysis?.ops) ? analysis.ops : []).map((op) => [Number(op.index), op]));
+  const tensors = tensorByIndex(analysis);
   const nodes = new Map();
   const queue = [{ index: centerIndex, column: 0, distance: 0 }];
   const seen = new Set([centerIndex]);
 
   while (queue.length) {
     const item = queue.shift();
-    const op = analysis.ops[item.index];
+    const op = opByIndex.get(Number(item.index));
     if (!op) continue;
-    nodes.set(item.index, { op, column: item.column, distance: item.distance, outputDtype: analysis.tensors[op.outputs?.[0]]?.dtype ?? null });
+    nodes.set(item.index, { op, column: item.column, distance: item.distance, outputDtype: tensors.get(Number(op.outputs?.[0]))?.dtype ?? null });
     if (item.distance >= depth || nodes.size > 120) continue;
 
     const prev = op.inputs
@@ -73,13 +77,20 @@ export function collectNeighborhood(analysis, graphIndex, centerIndex, depth) { 
     for (const tensorId of item.op.outputs) {
       for (const consumer of graphIndex.consumers.get(tensorId) || []) {
         if (nodes.has(consumer)) {
-          const { bytes, dtype } = tensorMeta(analysis, tensorId);
+          const { bytes, dtype } = tensorMeta(analysis, tensorId, tensors);
           edges.push({ from: item.op.index, to: consumer, tensorId, bytes, dtype });
         }
       }
     }
   }
   return { nodes: [...nodes.values()], edges };
+}
+
+function tensorByIndex(analysis) {
+  return new Map((Array.isArray(analysis?.tensors) ? analysis.tensors : []).map((tensor, position) => {
+    const candidate = Number(tensor?.index);
+    return [Number.isSafeInteger(candidate) && candidate >= 0 ? candidate : position, tensor];
+  }));
 }
 
 export function layoutNeighborhood(nodes) {

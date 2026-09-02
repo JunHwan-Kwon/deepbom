@@ -21,7 +21,7 @@
   ],
   "properties": {
     "schema": { "const": "deepbom.artifact_ir.v2" },
-    "method_version": { "const": "2.0.0" },
+    "method_version": { "const": "2.1.0" },
     "hash_contract": {
       "type": "object",
       "required": ["algorithm", "canonicalization", "source_encoding", "excluded_pointers"],
@@ -39,13 +39,13 @@
       "additionalProperties": false
     },
     "artifact": { "$ref": "#/$defs/artifact" },
-    "evidence_layers": { "type": "object" },
+    "evidence_layers": { "$ref": "#/$defs/evidenceLayers" },
     "graph": { "$ref": "#/$defs/graph" },
     "storage_topology": { "$ref": "#/$defs/storage" },
     "architecture_projection": { "$ref": "#/$defs/architecture" },
     "quantization_contracts": { "$ref": "#/$defs/quantization" },
     "overlays": { "$ref": "#/$defs/overlays" },
-    "completeness": { "type": "object" },
+    "completeness": { "$ref": "#/$defs/completeness" },
     "interpretation_boundary": { "type": "string", "minLength": 1 },
     "artifact_ir_sha256": { "$ref": "#/$defs/sha256" }
   },
@@ -72,19 +72,31 @@
       },
       "additionalProperties": false
     },
+    "evidenceLayers": {
+      "type": "object",
+      "required": ["native_evidence", "canonical_ir", "static_projection", "runtime_evidence"],
+      "properties": {
+        "native_evidence": { "const": "artifact_serialized_or_hash_bound_sidecar_facts" },
+        "canonical_ir": { "const": "format_neutral_identity_and_relationship_projection" },
+        "static_projection": { "const": "separate_overlay_not_graph_fact" },
+        "runtime_evidence": { "enum": ["not_imported", "imported_identity_bound_overlay"] }
+      },
+      "additionalProperties": false
+    },
     "graph": {
       "type": "object",
-      "required": ["status", "executable_graph_status", "scopes", "operators", "values", "inputs", "outputs", "totals", "completeness", "interpretation_boundary"],
+      "required": ["status", "executable_graph_status", "scopes", "scope_relationships", "operators", "values", "inputs", "outputs", "totals", "completeness", "interpretation_boundary"],
       "properties": {
         "status": { "enum": ["serialized", "not_serialized"] },
         "executable_graph_status": { "type": "string" },
         "primary_scope_ref": { "type": ["string", "null"] },
-        "scopes": { "type": "array", "items": { "$ref": "#/$defs/identified" } },
+        "scopes": { "type": "array", "items": { "$ref": "#/$defs/scope" } },
+        "scope_relationships": { "type": "array", "items": { "$ref": "#/$defs/scopeRelationship" } },
         "operators": { "type": "array", "items": { "$ref": "#/$defs/operator" } },
         "values": { "type": "array", "items": { "$ref": "#/$defs/value" } },
         "inputs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
         "outputs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-        "totals": { "type": "object" },
+        "totals": { "$ref": "#/$defs/graphTotals" },
         "completeness": { "type": "string" },
         "interpretation_boundary": { "type": "string", "minLength": 1 }
       },
@@ -93,6 +105,7 @@
         "then": {
           "properties": {
             "scopes": { "type": "array", "maxItems": 0 },
+            "scope_relationships": { "type": "array", "maxItems": 0 },
             "operators": { "type": "array", "maxItems": 0 },
             "values": { "type": "array", "maxItems": 0 },
             "inputs": { "type": "array", "maxItems": 0 },
@@ -107,20 +120,82 @@
       "required": ["id"],
       "properties": { "id": { "type": "string", "minLength": 1 } }
     },
+    "scope": {
+      "type": "object",
+      "required": ["id", "kind", "native_index", "name", "materialization_status", "parent_scope_ref", "invocation_semantics"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "native_index": { "type": "integer", "minimum": 0 },
+        "name": { "type": "string", "minLength": 1 },
+        "materialization_status": { "enum": ["materialized", "inventory_only"] },
+        "parent_scope_ref": { "type": ["string", "null"] },
+        "invocation_semantics": { "type": "string", "minLength": 1 },
+        "declared_operator_count": { "type": ["integer", "null"], "minimum": 0 },
+        "declared_value_count": { "type": ["integer", "null"], "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "scopeRelationship": {
+      "type": "object",
+      "required": ["id", "relation", "source_scope_ref", "source_operator_ref", "target_scope_ref", "role"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "relation": { "type": "string", "minLength": 1 },
+        "source_scope_ref": { "type": "string", "minLength": 1 },
+        "source_operator_ref": { "type": ["string", "null"] },
+        "target_scope_ref": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
     "operator": {
       "type": "object",
-      "required": ["id", "scope_ref", "native_index", "op_type", "inputs", "outputs", "metrics", "native_source", "completeness"],
+      "required": ["id", "legacy_graph_node_id", "scope_ref", "native_index", "op_type", "name", "domain", "version", "inputs", "outputs", "metrics", "quantization_summary", "topology", "native_source", "completeness"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "scope_ref": { "type": "string", "minLength": 1 },
         "native_index": { "type": "integer", "minimum": 0 },
         "op_type": { "type": "string", "minLength": 1 },
+        "legacy_graph_node_id": { "type": "string", "minLength": 1 },
+        "name": { "type": ["string", "null"] },
+        "domain": { "type": "string", "minLength": 1 },
+        "version": { "type": ["integer", "null"] },
         "inputs": { "type": "array", "items": { "$ref": "#/$defs/port" } },
         "outputs": { "type": "array", "items": { "$ref": "#/$defs/port" } },
-        "metrics": { "type": "object" },
-        "native_source": { "type": "object" },
+        "metrics": { "$ref": "#/$defs/operatorMetrics" },
+        "quantization_summary": { "$ref": "#/$defs/quantizationSummary" },
+        "topology": { "$ref": "#/$defs/topology" },
+        "native_source": { "$ref": "#/$defs/nativeSource" },
         "completeness": { "type": "string" }
-      }
+      },
+      "additionalProperties": false
+    },
+    "operatorMetrics": {
+      "type": "object",
+      "required": ["macs", "mac_assessment_status", "logical_io_bytes"],
+      "properties": {
+        "macs": { "anyOf": [{ "$ref": "#/$defs/exactInteger" }, { "type": "null" }] },
+        "mac_assessment_status": { "type": "string", "minLength": 1 },
+        "logical_io_bytes": { "anyOf": [{ "$ref": "#/$defs/exactInteger" }, { "type": "null" }] }
+      },
+      "additionalProperties": false
+    },
+    "quantizationSummary": {
+      "type": "object",
+      "required": ["state", "risk"],
+      "properties": { "state": { "type": "string", "minLength": 1 }, "risk": { "type": "string", "minLength": 1 } },
+      "additionalProperties": false
+    },
+    "topology": {
+      "type": "object",
+      "required": ["depth", "role", "stage"],
+      "properties": {
+        "depth": { "type": ["integer", "null"], "minimum": 0 },
+        "role": { "type": ["string", "null"] },
+        "stage": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
     },
     "port": {
       "type": "object",
@@ -133,29 +208,105 @@
     },
     "value": {
       "type": "object",
-      "required": ["id", "scope_ref", "native_index", "name", "dtype", "shape", "producer", "consumers", "roles", "storage_refs", "native_source"],
+      "required": ["id", "scope_ref", "native_index", "name", "value_kind", "dtype", "shape", "shape_signature", "shape_contract_status", "producer", "consumers", "roles", "storage_refs", "logical_byte_length", "native_source"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "scope_ref": { "type": "string", "minLength": 1 },
         "native_index": { "type": "integer", "minimum": 0 },
         "name": { "type": "string" },
         "dtype": { "type": "string" },
-        "shape": { "type": "array" },
-        "producer": { "type": ["object", "null"] },
-        "consumers": { "type": "array" },
+        "value_kind": { "type": "string", "minLength": 1 },
+        "shape": { "$ref": "#/$defs/shape" },
+        "shape_signature": { "anyOf": [{ "$ref": "#/$defs/shape" }, { "type": "null" }] },
+        "shape_contract_status": { "type": "string", "minLength": 1 },
+        "producer": { "anyOf": [{ "$ref": "#/$defs/operatorPortReference" }, { "type": "null" }] },
+        "consumers": { "type": "array", "items": { "$ref": "#/$defs/operatorPortReference" } },
         "roles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
         "storage_refs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
-        "native_source": { "type": "object" }
-      }
+        "logical_byte_length": { "anyOf": [{ "$ref": "#/$defs/exactInteger" }, { "type": "null" }] },
+        "native_source": { "$ref": "#/$defs/nativeSource" }
+      },
+      "additionalProperties": false
+    },
+    "shape": { "type": "array", "items": { "anyOf": [{ "type": "integer" }, { "type": "string" }] } },
+    "operatorPortReference": {
+      "type": "object",
+      "required": ["operator_ref", "port"],
+      "properties": { "operator_ref": { "type": "string", "minLength": 1 }, "port": { "type": "integer", "minimum": 0 } },
+      "additionalProperties": false
+    },
+    "nativeSource": {
+      "type": "object",
+      "required": ["format", "path"],
+      "properties": {
+        "format": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "byte_range": { "type": ["object", "null"] },
+        "payload_offset_basis": { "type": "string" }
+      },
+      "additionalProperties": false
     },
     "storage": {
       "type": "object",
       "required": ["status", "objects", "totals", "interpretation_boundary"],
       "properties": {
         "status": { "type": "string" },
-        "objects": { "type": "array", "items": { "$ref": "#/$defs/identified" } },
-        "totals": { "type": "object" },
+        "objects": { "type": "array", "items": { "$ref": "#/$defs/storageObject" } },
+        "totals": { "$ref": "#/$defs/storageTotals" },
         "interpretation_boundary": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "storageObject": {
+      "type": "object",
+      "required": ["id", "native_index", "name", "dtype", "shape", "serialized_byte_length", "byte_range", "payload_sha256", "encoding", "native_source"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "native_index": { "type": "integer", "minimum": 0 },
+        "source_parameter_index": { "type": "integer", "minimum": 0 },
+        "scope_ref": { "type": "string", "minLength": 1 },
+        "name": { "type": "string" },
+        "dtype": { "type": "string", "minLength": 1 },
+        "shape": { "$ref": "#/$defs/shape" },
+        "serialized_byte_length": { "$ref": "#/$defs/exactInteger" },
+        "byte_range": { "$ref": "#/$defs/byteRange" },
+        "payload_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+        "encoding": { "$ref": "#/$defs/storageEncoding" },
+        "native_source": { "$ref": "#/$defs/nativeSource" }
+      },
+      "additionalProperties": false
+    },
+    "byteRange": {
+      "type": "object",
+      "required": ["status", "offset_basis", "start", "end_exclusive"],
+      "properties": {
+        "status": { "enum": ["exact", "length_only", "not_assessed"] },
+        "offset_basis": { "type": ["string", "null"] },
+        "start": { "$ref": "#/$defs/nonnegativeIntegerOrStringOrNull" },
+        "end_exclusive": { "$ref": "#/$defs/nonnegativeIntegerOrStringOrNull" }
+      },
+      "additionalProperties": false
+    },
+    "nonnegativeIntegerOrStringOrNull": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" }, { "type": "null" }] },
+    "storageEncoding": {
+      "type": "object",
+      "required": ["family", "name", "block_elements", "block_bytes"],
+      "properties": {
+        "family": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "block_elements": { "type": ["integer", "null"], "minimum": 1 },
+        "block_bytes": { "type": ["integer", "null"], "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "storageTotals": {
+      "type": "object",
+      "required": ["object_count", "serialized_object_bytes_sum", "exact_range_count", "payload_digest_count"],
+      "properties": {
+        "object_count": { "type": "integer", "minimum": 0 },
+        "serialized_object_bytes_sum": { "$ref": "#/$defs/exactInteger" },
+        "exact_range_count": { "type": "integer", "minimum": 0 },
+        "payload_digest_count": { "type": "integer", "minimum": 0 }
       },
       "additionalProperties": false
     },
@@ -166,10 +317,34 @@
         "status": { "type": "string" },
         "executable_graph_status": { "type": "string" },
         "kind": { "type": ["string", "null"] },
-        "nodes": { "type": "array", "items": { "$ref": "#/$defs/identified" } },
-        "relationships": { "type": "array" },
-        "totals": { "type": "object" },
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/architectureNode" } },
+        "relationships": { "type": "array", "maxItems": 0 },
+        "totals": { "$ref": "#/$defs/architectureTotals" },
         "interpretation_boundary": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "architectureNode": {
+      "type": "object",
+      "required": ["id", "kind", "native_index", "label", "tensor_count", "serialized_bytes"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["decoder_layer_storage_group", "storage_namespace"] },
+        "native_index": { "type": "integer", "minimum": 0 },
+        "label": { "type": "string", "minLength": 1 },
+        "tensor_count": { "type": ["integer", "null"], "minimum": 0 },
+        "serialized_bytes": { "anyOf": [{ "$ref": "#/$defs/exactInteger" }, { "type": "null" }] },
+        "grouping_basis": { "type": ["object", "null"] },
+        "storage_object_refs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+      },
+      "additionalProperties": false
+    },
+    "architectureTotals": {
+      "type": "object",
+      "required": ["node_count", "relationship_count"],
+      "properties": {
+        "node_count": { "type": "integer", "minimum": 0 },
+        "relationship_count": { "type": "integer", "minimum": 0 }
       },
       "additionalProperties": false
     },
@@ -186,17 +361,96 @@
             "properties": {
               "id": { "type": "string", "minLength": 1 },
               "subject_ref": { "type": "string", "minLength": 1 },
-              "mapping": { "type": "object" },
-              "parameterization": { "type": "object" },
-              "storage": { "type": "object" },
-              "parameters": { "type": "object" },
-              "source": { "type": "object" },
+              "related_storage_refs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+              "mapping": { "$ref": "#/$defs/quantizationMapping" },
+              "parameterization": { "$ref": "#/$defs/quantizationParameterization" },
+              "storage": { "$ref": "#/$defs/quantizationStorage" },
+              "parameters": { "$ref": "#/$defs/quantizationParameters" },
+              "source": { "$ref": "#/$defs/quantizationSource" },
               "completeness": { "type": "string" }
-            }
+            },
+            "additionalProperties": false
           }
         },
-        "totals": { "type": "object" },
+        "totals": {
+          "type": "object",
+          "required": ["record_count", "affine_record_count", "block_encoding_record_count", "complete_record_count", "partial_record_count"],
+          "properties": {
+            "record_count": { "type": "integer", "minimum": 0 },
+            "affine_record_count": { "type": "integer", "minimum": 0 },
+            "block_encoding_record_count": { "type": "integer", "minimum": 0 },
+            "complete_record_count": { "type": "integer", "minimum": 0 },
+            "partial_record_count": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
         "interpretation_boundary": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "quantizationMapping": {
+      "type": "object",
+      "required": ["family", "scheme", "zero_point_constraint"],
+      "properties": {
+        "family": { "type": "string", "minLength": 1 },
+        "scheme": { "type": "string", "minLength": 1 },
+        "zero_point_constraint": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "quantizationParameterization": {
+      "type": "object",
+      "required": ["kind", "axes", "block_size"],
+      "properties": {
+        "kind": { "enum": ["per_tensor", "per_axis", "per_block", "per_group"] },
+        "axes": { "type": "array", "items": { "type": "integer" }, "uniqueItems": true },
+        "block_size": { "type": ["integer", "null"], "minimum": 1 },
+        "group_count": { "type": ["integer", "null"], "minimum": 0 },
+        "axis_status": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "quantizationStorage": {
+      "type": "object",
+      "required": ["data_type", "code_min", "code_max", "block_bytes"],
+      "properties": {
+        "data_type": { "type": "string", "minLength": 1 },
+        "code_min": { "type": ["integer", "null"] },
+        "code_max": { "type": ["integer", "null"] },
+        "code_domain_status": { "type": "string", "minLength": 1 },
+        "block_bytes": { "type": ["integer", "null"], "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "quantizationParameters": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "type": "string", "minLength": 1 },
+        "scale": { "anyOf": [{ "$ref": "#/$defs/parameterDescriptor" }, { "type": "null" }] },
+        "zero_point": { "anyOf": [{ "$ref": "#/$defs/parameterDescriptor" }, { "type": "null" }] },
+        "additive_bias": { "anyOf": [{ "$ref": "#/$defs/parameterDescriptor" }, { "type": "null" }] },
+        "lookup_table": { "anyOf": [{ "$ref": "#/$defs/parameterDescriptor" }, { "type": "null" }] }
+      },
+      "additionalProperties": false
+    },
+    "parameterDescriptor": {
+      "type": "object",
+      "required": ["count", "sha256", "inline_values", "inline_status"],
+      "properties": {
+        "count": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" }, { "type": "null" }] },
+        "sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+        "inline_values": { "type": ["array", "null"], "items": { "type": "number" } },
+        "inline_status": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "quantizationSource": {
+      "type": "object",
+      "required": ["native_locator", "evidence_class"],
+      "properties": {
+        "native_locator": { "$ref": "#/$defs/nativeSource" },
+        "evidence_class": { "type": "string", "minLength": 1 }
       },
       "additionalProperties": false
     },
@@ -204,8 +458,123 @@
       "type": "object",
       "required": ["static", "runtime"],
       "properties": {
-        "static": { "type": "array", "items": { "$ref": "#/$defs/identified" } },
-        "runtime": { "type": "array", "items": { "$ref": "#/$defs/identified" } }
+        "static": { "type": "array", "items": { "$ref": "#/$defs/staticOverlay" } },
+        "runtime": { "type": "array", "items": { "$ref": "#/$defs/runtimeOverlay" } }
+      },
+      "additionalProperties": false
+    },
+    "graphTotals": {
+      "type": "object",
+      "required": ["scope_count", "materialized_scope_count", "scope_relationship_count", "operator_count", "value_count", "relationship_count", "macs", "assessed_macs", "serialized_scope_assessed_macs", "mac_assessment"],
+      "properties": {
+        "scope_count": { "type": "integer", "minimum": 0 },
+        "materialized_scope_count": { "type": "integer", "minimum": 0 },
+        "scope_relationship_count": { "type": "integer", "minimum": 0 },
+        "operator_count": { "type": "integer", "minimum": 0 },
+        "value_count": { "type": "integer", "minimum": 0 },
+        "relationship_count": { "type": "integer", "minimum": 0 },
+        "macs": { "anyOf": [{ "$ref": "#/$defs/exactInteger" }, { "type": "null" }] },
+        "assessed_macs": { "anyOf": [{ "$ref": "#/$defs/exactInteger" }, { "type": "null" }] },
+        "serialized_scope_assessed_macs": { "anyOf": [{ "$ref": "#/$defs/exactInteger" }, { "type": "null" }] },
+        "mac_assessment": { "type": ["object", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "staticOverlay": {
+      "type": "object",
+      "required": ["id", "kind", "evidence_class", "summary", "rows", "interpretation_boundary"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "static_placement" },
+        "evidence_class": { "type": "string", "minLength": 1 },
+        "summary": { "type": "object" },
+        "rows": { "type": "array", "items": { "$ref": "#/$defs/overlayRow" } },
+        "interpretation_boundary": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "runtimeOverlay": {
+      "type": "object",
+      "required": ["id", "kind", "evidence_class", "summary", "runtime_nodes", "rows", "interpretation_boundary"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "runtime_assignment" },
+        "evidence_class": { "const": "IMPORTED_IDENTITY_BOUND_RUNTIME_EVIDENCE" },
+        "summary": { "$ref": "#/$defs/runtimeSummary" },
+        "runtime_nodes": { "type": "array", "items": { "$ref": "#/$defs/runtimeNode" } },
+        "rows": { "type": "array", "items": { "$ref": "#/$defs/runtimeAssignmentRow" } },
+        "interpretation_boundary": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "overlayRow": {
+      "type": "object",
+      "required": ["subject_ref", "state", "backend", "evidence_state", "evidence_class", "reason_codes", "unresolved_predicates"],
+      "properties": {
+        "subject_ref": { "type": "string", "minLength": 1 },
+        "state": { "type": "string", "minLength": 1 },
+        "backend": { "type": ["string", "null"] },
+        "evidence_state": { "type": "string", "minLength": 1 },
+        "evidence_class": { "type": "string", "minLength": 1 },
+        "reason_codes": { "type": "array", "items": { "type": "string" } },
+        "unresolved_predicates": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "runtimeNode": {
+      "type": "object",
+      "required": ["runtime_node_ref", "backend", "source_subject_refs", "mapping_cardinality", "mapping_basis", "runtime_node_kind", "evidence_class"],
+      "properties": {
+        "runtime_node_ref": { "type": "string", "minLength": 1 },
+        "backend": { "type": ["string", "null"] },
+        "source_subject_refs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "mapping_cardinality": { "enum": ["unmapped", "one_to_one", "fused_one_to_many"] },
+        "mapping_basis": { "enum": ["explicit_subject_ref_import", "explicit_primary_scope_native_index_import", "explicit_subject_ref_and_native_index_import", "explicit_unmapped_runtime_node"] },
+        "runtime_node_kind": { "type": ["string", "null"] },
+        "evidence_class": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "runtimeAssignmentRow": {
+      "type": "object",
+      "required": ["subject_ref", "runtime_node_ref", "backend", "evidence_class", "mapping_cardinality"],
+      "properties": {
+        "subject_ref": { "type": "string", "minLength": 1 },
+        "runtime_node_ref": { "type": "string", "minLength": 1 },
+        "backend": { "type": ["string", "null"] },
+        "evidence_class": { "type": "string", "minLength": 1 },
+        "mapping_cardinality": { "enum": ["one_to_one", "fused_one_to_many"] }
+      },
+      "additionalProperties": false
+    },
+    "runtimeSummary": {
+      "type": "object",
+      "required": ["runtime_node_count", "mapped_runtime_node_count", "unmapped_runtime_node_count", "one_to_one_runtime_node_count", "fused_runtime_node_count", "source_subject_reference_count", "distinct_source_subject_count", "canonical_subject_count", "canonical_subject_coverage_status", "name_similarity_mapping_used"],
+      "properties": {
+        "runtime_node_count": { "type": "integer", "minimum": 0 },
+        "mapped_runtime_node_count": { "type": "integer", "minimum": 0 },
+        "unmapped_runtime_node_count": { "type": "integer", "minimum": 0 },
+        "one_to_one_runtime_node_count": { "type": "integer", "minimum": 0 },
+        "fused_runtime_node_count": { "type": "integer", "minimum": 0 },
+        "source_subject_reference_count": { "type": "integer", "minimum": 0 },
+        "distinct_source_subject_count": { "type": "integer", "minimum": 0 },
+        "canonical_subject_count": { "type": "integer", "minimum": 0 },
+        "canonical_subject_coverage_status": { "enum": ["complete_explicit_mapping", "partial_explicit_mapping", "not_mapped"] },
+        "name_similarity_mapping_used": { "const": false }
+      },
+      "additionalProperties": false
+    },
+    "completeness": {
+      "type": "object",
+      "required": ["graph", "storage", "architecture", "quantization", "static_overlay_count", "runtime_overlay_count", "unknown_is_zero"],
+      "properties": {
+        "graph": { "type": "string", "minLength": 1 },
+        "storage": { "type": "string", "minLength": 1 },
+        "architecture": { "type": "string", "minLength": 1 },
+        "quantization": { "type": "string", "minLength": 1 },
+        "static_overlay_count": { "type": "integer", "minimum": 0 },
+        "runtime_overlay_count": { "type": "integer", "minimum": 0 },
+        "unknown_is_zero": { "const": false }
       },
       "additionalProperties": false
     }

@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { resolveNpmCommand } from "./run-utils.mjs";
+import { writeBuildMetadata } from "./write-build-metadata.mjs";
 import { buildInterfaceQuantizationContractLedger } from "../web/lib/quantization-contract-summary.js";
 
 const root = process.cwd();
@@ -14,6 +16,20 @@ const platformSmoke = process.argv.includes("--platform-smoke");
 const releaseContract = process.argv.includes("--release-contract");
 if (platformSmoke && releaseContract) throw new Error("--platform-smoke and --release-contract are mutually exclusive.");
 if (!process.argv.includes("--no-build")) run(process.execPath, ["scripts/build-channel-artifacts.mjs"]);
+const buildMetadataPath = path.join(root, "web", "lib", "build-metadata.js");
+const priorBuildMetadata = existsSync(buildMetadataPath) ? readFileSync(buildMetadataPath) : null;
+let buildMetadataRestored = false;
+const restoreBuildMetadata = () => {
+  if (buildMetadataRestored) return;
+  if (priorBuildMetadata) writeFileSync(buildMetadataPath, priorBuildMetadata);
+  else rmSync(buildMetadataPath, { force: true });
+  buildMetadataRestored = true;
+};
+process.on("exit", restoreBuildMetadata);
+// Every packaged channel is built from the public-distribution provenance
+// contract. Compare it with the source CLI under that same contract, while
+// preserving the private monorepo metadata outside this check.
+writeBuildMetadata({ publicDistribution: true });
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 assert.equal(manifest.schema, "deepbom.channel_release.v1");
 

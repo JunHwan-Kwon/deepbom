@@ -10,6 +10,23 @@ All notable archival releases of DEEPBOM are documented here.
   `deepbom.graph_ir.v1` visualization output is now a deterministic
   compatibility projection from this ledger, and graphless containers no
   longer receive synthetic execution-order edges.
+- Advanced the Artifact IR method to `2.1.0`: all exactly decoded TFLite
+  subgraphs and ONNX nested/function scopes are materialized with conserved
+  scope-local ports and values, ExecuTorch is covered by a serialized PTE
+  regression fixture, and static placement remains primary-scope-only.
+- Added artifact-bound runtime reconciliation for canonical subject references
+  and primary native op indices, including explicit one-to-many fusion. Missing
+  bindings remain unreconciled and runtime names are never similarity-matched.
+- Routed shared Web, CLI, report, diff, graph-export, and CycloneDX consumers
+  through one cached primary-scope IR view. Canonical operators and values stay
+  fixed while session findings, deployment deltas, and runtime imports remain
+  live, and runtime-evidence changes rebuild only the affected overlay context.
+- Tightened the public Artifact IR JSON Schema and semantic validator around
+  nested-scope ownership, cross-scope ports, storage/quantization totals,
+  overlay identity, and runtime reconciliation cardinality.
+- Raised only the verification-source budget by 16 KiB to retain the new
+  multi-format scope, reconciliation, consumer, and tamper regressions; runtime,
+  generated-data, documentation, and corpus budgets are unchanged.
 - Published a JSON Schema and fail-closed multi-format conservation suite for
   Artifact IR identity, references, byte/MAC totals, graph applicability, and
   tamper detection. Engineering evidence, Raw Data, Deployment Contract Pack,

@@ -172,7 +172,7 @@
         },
         {
           "name": "deepbom:model:artifactIrSha256",
-          "value": "24cbf23569cd15337a35c363fc869742a99e84c2dc89662595fbddd7eadb34a5"
+          "value": "aebc2c7a01e063ecb9dcef899dde35832f6801789eaf4921d2d6adb9e63a70bb"
         },
         {
           "name": "deepbom:model:artifactIrLocation",
@@ -474,7 +474,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "ad94e6a50ebeaed300a660f4583dccf26e713539b6adcc0c5365e11defd53368"
+              "content": "b41d5bdb61b5030d501c18ccc68dd9d08985cc29ed0f1f181215e15fd5088437"
             }
           ]
         },
@@ -811,7 +811,7 @@
     },
     {
       "name": "deepbom:artifactIrSha256",
-      "value": "24cbf23569cd15337a35c363fc869742a99e84c2dc89662595fbddd7eadb34a5"
+      "value": "aebc2c7a01e063ecb9dcef899dde35832f6801789eaf4921d2d6adb9e63a70bb"
     },
     {
       "name": "deepbom:accelerator:bindingCount",

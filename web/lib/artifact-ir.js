@@ -2,7 +2,7 @@ import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 
 export const ARTIFACT_IR_SCHEMA = "deepbom.artifact_ir.v2";
-export const ARTIFACT_IR_METHOD_VERSION = "2.0.0";
+export const ARTIFACT_IR_METHOD_VERSION = "2.1.0";
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const GRAPH_FORMATS = new Set(["tflite", "onnx", "coreml", "mlmodel", "executorch", "pte", "ptd"]);
@@ -19,7 +19,7 @@ export function buildArtifactEvidenceIr(analysis, artifact = {}, { runtimeEviden
   const storage = buildStorageTopology(analysis, format, tensors);
   const architecture = buildArchitectureProjection(analysis, format, tensors);
   const quantization = buildQuantizationContracts(analysis, format, graph, storage, tensors);
-  const overlays = buildOverlays(analysis, format, graph, architecture, runtimeEvidence);
+  const overlays = buildOverlays(analysis, format, graph, architecture, runtimeEvidence, identity.sha256);
   const body = {
     schema: ARTIFACT_IR_SCHEMA,
     method_version: ARTIFACT_IR_METHOD_VERSION,
@@ -66,13 +66,13 @@ function buildSerializedGraph(analysis, format, tensors) {
   const producer = new Map();
   const consumers = new Map();
   const operators = ops.map((op) => {
-    const inputIndices = integerArray(op.inputs);
-    const outputIndices = integerArray(op.outputs);
+    const inputPorts = tensorPorts(op.inputs, scope.id);
+    const outputPorts = tensorPorts(op.outputs, scope.id);
     const operatorRef = operatorId(scope.id, op.index);
-    outputIndices.forEach((index, port) => {
+    outputPorts.forEach(({ native_index: index, port }) => {
       if (!producer.has(index)) producer.set(index, { operator_ref: operatorRef, port });
     });
-    inputIndices.forEach((index, port) => {
+    inputPorts.forEach(({ native_index: index, port }) => {
       if (!consumers.has(index)) consumers.set(index, []);
       consumers.get(index).push({ operator_ref: operatorRef, port });
     });
@@ -85,8 +85,8 @@ function buildSerializedGraph(analysis, format, tensors) {
       name: optionalText(op.graph_node_name || op.coreml_layer_name || op.name),
       domain: String(op.domain || format),
       version: optionalInteger(op.version ?? op.op_version),
-      inputs: inputIndices.map((index, port) => ({ port, value_ref: valueId(scope.id, index) })),
-      outputs: outputIndices.map((index, port) => ({ port, value_ref: valueId(scope.id, index) })),
+      inputs: inputPorts.map(({ port, value_ref }) => ({ port, value_ref })),
+      outputs: outputPorts.map(({ port, value_ref }) => ({ port, value_ref })),
       metrics: {
         macs: exactInteger(op.macs_decimal ?? op.macs),
         mac_assessment_status: String(op.macs_status || (op.macs_decimal != null || op.macs != null ? "assessed" : "not_assessed")),
@@ -128,31 +128,40 @@ function buildSerializedGraph(analysis, format, tensors) {
     logical_byte_length: logicalTensorBytes(tensor),
     native_source: nativeValueLocator(format, scope, tensor, index),
   }));
-  const nestedScopes = additionalScopes(analysis, format, scope.id);
+  const additional = materializeAdditionalScopes(analysis, format, scope.id);
+  const scopes = [scope, ...additional.scopes];
+  const allOperators = [...operators, ...additional.operators];
+  const allValues = [...values, ...additional.values];
   const macAssessment = graphMacAssessment(analysis, operators);
+  const serializedScopeAssessedMacs = allOperators.reduce((sum, row) => sum + BigInt(row.metrics?.macs?.decimal || "0"), 0n);
   return {
     status: "serialized",
     executable_graph_status: "serialized_artifact_graph",
     primary_scope_ref: scope.id,
-    scopes: [scope, ...nestedScopes],
-    operators,
-    values,
+    scopes,
+    scope_relationships: additional.scope_relationships,
+    operators: allOperators,
+    values: allValues,
     inputs: values.filter((value) => value.roles.includes("graph_input")).map((value) => value.id),
     outputs: values.filter((value) => value.roles.includes("graph_output")).map((value) => value.id),
     totals: {
-      scope_count: 1 + nestedScopes.length,
-      materialized_scope_count: 1,
-      operator_count: operators.length,
-      value_count: values.length,
-      relationship_count: values.reduce((sum, value) => sum + value.consumers.length, 0),
+      scope_count: scopes.length,
+      materialized_scope_count: scopes.filter((row) => row.materialization_status === "materialized").length,
+      scope_relationship_count: additional.scope_relationships.length,
+      operator_count: allOperators.length,
+      value_count: allValues.length,
+      relationship_count: allValues.reduce((sum, value) => sum + value.consumers.length, 0),
       macs: macAssessment.total,
       assessed_macs: macAssessment.assessed,
+      serialized_scope_assessed_macs: exact(serializedScopeAssessedMacs),
       mac_assessment: macAssessment.assessment,
     },
-    completeness: nestedScopes.length
-      ? "primary_scope_materialized_nested_scope_inventory_preserved"
+    completeness: additional.scopes.length
+      ? additional.scopes.every((row) => row.materialization_status === "materialized")
+        ? "all_serialized_scopes_materialized"
+        : "primary_scope_materialized_nested_scope_inventory_preserved"
       : "serialized_scope_materialized",
-    interpretation_boundary: "Operators, values, ports, and producer-consumer relationships come from the serialized artifact. Nested scopes are materialized only when their operator/value ledgers are present; an inventory-only nested scope is not flattened into the primary graph.",
+    interpretation_boundary: "Operators, values, ports, and producer-consumer relationships come from the serialized artifact. Primary-scope assessed_macs is the model-entry nominal total. serialized_scope_assessed_macs is only the sum of independently serialized scope rows and is not an execution total for conditional, repeated, or function scopes.",
   };
 }
 
@@ -161,8 +170,8 @@ function notSerializedGraph(format) {
     status: "not_serialized",
     executable_graph_status: "not_serialized_by_format",
     primary_scope_ref: null,
-    scopes: [], operators: [], values: [], inputs: [], outputs: [],
-    totals: { scope_count: 0, materialized_scope_count: 0, operator_count: 0, value_count: 0, relationship_count: 0, macs: null, assessed_macs: null, mac_assessment: null },
+    scopes: [], scope_relationships: [], operators: [], values: [], inputs: [], outputs: [],
+    totals: { scope_count: 0, materialized_scope_count: 0, scope_relationship_count: 0, operator_count: 0, value_count: 0, relationship_count: 0, macs: null, assessed_macs: null, serialized_scope_assessed_macs: null, mac_assessment: null },
     completeness: "complete_not_applicable",
     interpretation_boundary: `${format || "This container"} does not serialize an executable operator graph. Runtime frameworks may construct one externally; DEEPBOM does not infer it from tensor names or architecture order.`,
   };
@@ -171,6 +180,27 @@ function notSerializedGraph(format) {
 function buildStorageTopology(analysis, format, tensors) {
   const tensorObjects = tensors.map((tensor, position) => storageObject(format, tensor, tensorIndex(tensor, position)))
     .filter((row) => BigInt(row.serialized_byte_length?.decimal || "0") > 0n);
+  const nestedTfliteObjects = format === "tflite" ? list(analysis?.tflite_subgraph_inventory?.rows)
+    .filter((row) => Number(row.subgraph_index) !== 0)
+    .flatMap((row) => list(row.tensor_intrinsics).map((tensor, position) => {
+      const index = nonNegativeInteger(tensor.tensor_index) ?? position;
+      const byteLength = exactInteger(tensor.buffer_data_length);
+      const start = nonNegativeInteger(tensor.buffer_data_offset);
+      return {
+        id: scopedStorageId(`scope:tflite:subgraph:${row.subgraph_index}`, index),
+        native_index: index,
+        scope_ref: `scope:tflite:subgraph:${row.subgraph_index}`,
+        name: String(tensor.name || `tensor_${index}`),
+        dtype: String(tensor.dtype || "UNKNOWN").toUpperCase(),
+        shape: dimensions(tensor.shape),
+        serialized_byte_length: byteLength,
+        byte_range: start != null && byteLength ? { status: "exact", offset_basis: "artifact_absolute", start, end_exclusive: safeExactSum(start, byteLength.decimal) }
+          : { status: byteLength ? "length_only" : "not_assessed", offset_basis: null, start: null, end_exclusive: null },
+        payload_sha256: null,
+        encoding: { family: "scalar_or_declared_tensor_encoding", name: String(tensor.dtype || "UNKNOWN").toUpperCase(), block_elements: null, block_bytes: null },
+        native_source: { format: "tflite", path: `SubGraph[${row.subgraph_index}].tensors[${index}].buffer` },
+      };
+    }).filter((row) => BigInt(row.serialized_byte_length?.decimal || "0") > 0n)) : [];
   const parameterObjects = (["coreml", "mlmodel"].includes(format) ? list(analysis?.weight_integrity?.parameters) : []).map((parameter, index) => ({
     id: `storage:parameter:${index}`,
     source_parameter_index: index,
@@ -184,7 +214,7 @@ function buildStorageTopology(analysis, format, tensors) {
     encoding: { family: parameter.quantization ? "coreml_declared_quantized_weight" : "scalar_or_declared_parameter_encoding", name: String(parameter.storage || parameter.dtype || "UNKNOWN"), block_elements: null, block_bytes: null },
     native_source: { format, path: `weight_integrity.parameters[${index}]` },
   })).filter((row) => BigInt(row.serialized_byte_length?.decimal || "0") > 0n);
-  const objects = [...tensorObjects, ...parameterObjects];
+  const objects = [...tensorObjects, ...nestedTfliteObjects, ...parameterObjects];
   const bytes = objects.reduce((sum, row) => sum + BigInt(row.serialized_byte_length?.decimal || "0"), 0n);
   return {
     status: objects.length ? "assessed_serialized_objects" : "not_applicable_no_serialized_tensor_payload_ledger",
@@ -382,11 +412,12 @@ function buildQuantizationContracts(analysis, format, graph, storage, tensors) {
   };
 }
 
-function buildOverlays(analysis, format, graph, architecture, runtimeEvidence) {
+function buildOverlays(analysis, format, graph, architecture, runtimeEvidence, artifactSha256) {
   const staticRows = [];
   let staticSummary = null;
+  const primaryOperators = graph.operators.filter((row) => row.scope_ref === graph.primary_scope_ref);
   if (graph.status === "serialized" && format === "tflite") {
-    for (const operator of graph.operators) {
+    for (const operator of primaryOperators) {
       const op = list(analysis.ops).find((row) => Number(row?.index) === operator.native_index);
       const eligible = op?.xnnpack_supported === true;
       staticRows.push({
@@ -402,9 +433,9 @@ function buildOverlays(analysis, format, graph, architecture, runtimeEvidence) {
     staticSummary = { profile_id: "xnnpack", backend: "XNNPACK", original_op_engine_selection_claim: false };
   } else if (graph.status === "serialized" && format === "onnx") {
     const projection = analysis?.tensorrt_static_preflight?.projection;
-    if (projection && list(projection.rows).length === graph.operators.length) {
+    if (projection && list(projection.rows).length === primaryOperators.length) {
       const byIndex = new Map(list(projection.rows).map((row) => [Number(row.op_index), row]));
-      for (const operator of graph.operators) {
+      for (const operator of primaryOperators) {
         const row = byIndex.get(operator.native_index);
         if (!row) throw new Error(`Artifact IR TensorRT overlay is missing operator ${operator.native_index}.`);
         staticRows.push({
@@ -462,24 +493,131 @@ function buildOverlays(analysis, format, graph, architecture, runtimeEvidence) {
     rows: staticRows,
     interpretation_boundary: "Static eligibility or residency candidates do not establish selected-build acceptance, executed assignment, physical transfer, kernel choice, or latency.",
   }] : [];
-  const runtime = normalizeRuntimeOverlay(runtimeEvidence, graph, architecture);
+  const runtime = normalizeRuntimeOverlay(runtimeEvidence, graph, architecture, artifactSha256);
   return { static: staticOverlay, runtime };
 }
 
-function normalizeRuntimeOverlay(runtimeEvidence, graph, architecture) {
+function normalizeRuntimeOverlay(runtimeEvidence, graph, architecture, artifactSha256) {
   if (!runtimeEvidence || typeof runtimeEvidence !== "object") return [];
-  const rows = list(runtimeEvidence.rows || runtimeEvidence.assignments).map((row) => ({
-    subject_ref: optionalText(row.subject_ref),
-    runtime_node_ref: optionalText(row.runtime_node_ref || row.node_name),
-    backend: optionalText(row.backend || row.provider || row.delegate),
-    evidence_class: String(row.evidence_class || "MEASURED_IMPORTED"),
-  })).filter((row) => row.subject_ref);
   const valid = new Set([...graph.operators.map((row) => row.id), ...architecture.nodes.map((row) => row.id)]);
-  if (rows.some((row) => !valid.has(row.subject_ref))) throw new Error("Runtime overlay references an unknown canonical subject.");
-  return rows.length ? [{
-    id: "overlay:runtime:0", kind: "runtime_assignment", evidence_class: "IMPORTED_IDENTITY_BOUND_RUNTIME_EVIDENCE", rows,
-    interpretation_boundary: "Imported rows preserve explicit source identities only. Unmapped fused or generated runtime nodes are not assigned by name similarity.",
-  }] : [];
+  const primaryOperatorByIndex = new Map(graph.operators
+    .filter((row) => row.scope_ref === graph.primary_scope_ref)
+    .map((row) => [row.native_index, row.id]));
+  const declaredRuntimeNodes = list(runtimeEvidence.runtime_nodes);
+  const candidateRows = declaredRuntimeNodes.length
+    ? declaredRuntimeNodes
+    : list(runtimeEvidence.rows || runtimeEvidence.assignments);
+  const inputRows = declaredRuntimeNodes.length
+    ? candidateRows
+    : candidateRows.filter((row) => {
+      const hasRuntimeIdentity = runtimeNodeIdentity(row) != null;
+      const hasCanonicalBinding = runtimeSourceBinding(row, primaryOperatorByIndex).subjectRefs.length > 0;
+      return hasRuntimeIdentity && hasCanonicalBinding;
+    });
+  if (!inputRows.length) return [];
+  const runtimeArtifactSha256 = normalizeSha256(runtimeEvidence.artifact_sha256 || runtimeEvidence.artifact?.sha256);
+  if (!runtimeArtifactSha256 || runtimeArtifactSha256 !== artifactSha256) throw new Error("Runtime overlay is not bound to the active artifact SHA-256.");
+  const groupedRuntimeNodes = new Map();
+  inputRows.forEach((row, index) => {
+    const runtimeNodeRef = runtimeNodeIdentity(row);
+    if (!runtimeNodeRef) throw new Error(`Runtime overlay row ${index} does not declare a runtime node identity.`);
+    const binding = runtimeSourceBinding(row, primaryOperatorByIndex);
+    const sourceSubjectRefs = binding.subjectRefs;
+    if (sourceSubjectRefs.some((subjectRef) => !valid.has(subjectRef))) throw new Error("Runtime overlay references an unknown canonical subject.");
+    const backend = optionalText(row.backend || row.provider || row.delegate);
+    const evidenceClass = String(row.evidence_class || "MEASURED_IMPORTED");
+    const existing = groupedRuntimeNodes.get(runtimeNodeRef);
+    if (existing && existing.backend !== backend) throw new Error(`Runtime overlay node ${runtimeNodeRef} declares conflicting backends.`);
+    if (existing && existing.evidence_class !== evidenceClass) throw new Error(`Runtime overlay node ${runtimeNodeRef} declares conflicting evidence classes.`);
+    const current = existing || {
+      runtime_node_ref: runtimeNodeRef,
+      backend,
+      source_subject_refs: new Set(),
+      mapping_bases: new Set(),
+      runtime_node_kind: optionalText(row.runtime_node_kind || row.kind),
+      evidence_class: evidenceClass,
+    };
+    sourceSubjectRefs.forEach((subjectRef) => current.source_subject_refs.add(subjectRef));
+    if (binding.mappingBasis) current.mapping_bases.add(binding.mappingBasis);
+    groupedRuntimeNodes.set(runtimeNodeRef, current);
+  });
+  const runtimeNodes = [...groupedRuntimeNodes.values()].map((row) => {
+    const sourceSubjectRefs = [...row.source_subject_refs].sort();
+    const mappingBasis = sourceSubjectRefs.length === 0
+      ? "explicit_unmapped_runtime_node"
+      : row.mapping_bases.size === 1
+        ? [...row.mapping_bases][0]
+        : "explicit_subject_ref_and_native_index_import";
+    return {
+      runtime_node_ref: row.runtime_node_ref,
+      backend: row.backend,
+      source_subject_refs: sourceSubjectRefs,
+      mapping_cardinality: sourceSubjectRefs.length > 1 ? "fused_one_to_many" : sourceSubjectRefs.length === 1 ? "one_to_one" : "unmapped",
+      mapping_basis: mappingBasis,
+      runtime_node_kind: row.runtime_node_kind,
+      evidence_class: row.evidence_class,
+    };
+  }).sort((left, right) => left.runtime_node_ref.localeCompare(right.runtime_node_ref));
+  if (!runtimeNodes.length) return [];
+  const rows = runtimeNodes.flatMap((node) => node.source_subject_refs.map((subjectRef) => ({
+    subject_ref: subjectRef,
+    runtime_node_ref: node.runtime_node_ref,
+    backend: node.backend,
+    evidence_class: node.evidence_class,
+    mapping_cardinality: node.mapping_cardinality,
+  })));
+  const mappedSubjects = new Set(rows.map((row) => row.subject_ref));
+  const summary = {
+    runtime_node_count: runtimeNodes.length,
+    mapped_runtime_node_count: runtimeNodes.filter((row) => row.source_subject_refs.length).length,
+    unmapped_runtime_node_count: runtimeNodes.filter((row) => !row.source_subject_refs.length).length,
+    one_to_one_runtime_node_count: runtimeNodes.filter((row) => row.mapping_cardinality === "one_to_one").length,
+    fused_runtime_node_count: runtimeNodes.filter((row) => row.mapping_cardinality === "fused_one_to_many").length,
+    source_subject_reference_count: rows.length,
+    distinct_source_subject_count: mappedSubjects.size,
+    canonical_subject_count: valid.size,
+    canonical_subject_coverage_status: mappedSubjects.size === valid.size ? "complete_explicit_mapping" : mappedSubjects.size ? "partial_explicit_mapping" : "not_mapped",
+    name_similarity_mapping_used: false,
+  };
+  return [{
+    id: "overlay:runtime:0",
+    kind: "runtime_assignment",
+    evidence_class: "IMPORTED_IDENTITY_BOUND_RUNTIME_EVIDENCE",
+    summary,
+    runtime_nodes: runtimeNodes,
+    rows,
+    interpretation_boundary: "Imported runtime nodes preserve artifact-bound explicit source_subject_refs or primary-scope native op indices, including one-to-one and fused one-to-many mappings. Generated or unresolved runtime nodes remain explicitly unmapped; DEEPBOM never reconciles them by name similarity.",
+  }];
+}
+
+function runtimeNodeIdentity(row) {
+  const explicit = optionalText(row.runtime_node_ref || row.node_ref || row.runtime_node_name || row.node_name || row.id);
+  if (explicit) return explicit;
+  const nativeIndex = nonNegativeInteger(row.runtime_node_index);
+  return nativeIndex == null ? null : `runtime-node:${optionalText(row.backend || row.provider || row.delegate) || "unknown"}:${nativeIndex}`;
+}
+
+function runtimeSourceBinding(row, primaryOperatorByIndex) {
+  const explicit = compactStrings(row.source_subject_refs?.length ? row.source_subject_refs : row.subject_ref);
+  const rawIndices = row.source_op_indices?.length ? row.source_op_indices : row.op_indices?.length ? row.op_indices : row.op_index;
+  const indices = integerArray(Array.isArray(rawIndices) ? rawIndices : rawIndices == null ? [] : [rawIndices])
+    .filter((value, position, all) => value >= 0 && all.indexOf(value) === position);
+  const indexed = indices.map((index) => {
+    const subjectRef = primaryOperatorByIndex.get(index);
+    if (!subjectRef) throw new Error(`Runtime overlay references unknown primary-scope operator index ${index}.`);
+    return subjectRef;
+  });
+  const subjectRefs = [...new Set([...explicit, ...indexed])];
+  return {
+    subjectRefs,
+    mappingBasis: explicit.length && indexed.length
+      ? "explicit_subject_ref_and_native_index_import"
+      : explicit.length
+        ? "explicit_subject_ref_import"
+        : indexed.length
+          ? "explicit_primary_scope_native_index_import"
+          : null,
+  };
 }
 
 function validateArtifactIrBody(value) {
@@ -492,33 +630,80 @@ function validateArtifactIrBody(value) {
   }
   if (!SHA256.test(String(value.artifact?.sha256 || "")) || !text(value.artifact?.filename, 1000) || !text(value.artifact?.format, 40)) throw new Error("Artifact IR artifact identity is invalid.");
   const graph = value.graph;
-  if (!graph || !Array.isArray(graph.scopes) || !Array.isArray(graph.operators) || !Array.isArray(graph.values)) throw new Error("Artifact IR graph ledger is invalid.");
+  if (!graph || !Array.isArray(graph.scopes) || !Array.isArray(graph.scope_relationships) || !Array.isArray(graph.operators) || !Array.isArray(graph.values)) throw new Error("Artifact IR graph ledger is invalid.");
   if (graph.status === "not_serialized" && (graph.scopes.length || graph.operators.length || graph.values.length || graph.totals.relationship_count)) {
     throw new Error("Artifact IR fabricated an executable graph for a graphless format.");
   }
-  if (graph.totals.scope_count !== graph.scopes.length || graph.totals.operator_count !== graph.operators.length || graph.totals.value_count !== graph.values.length) throw new Error("Artifact IR graph count conservation failed.");
+  if (graph.totals.scope_count !== graph.scopes.length || graph.totals.materialized_scope_count !== graph.scopes.filter((row) => row.materialization_status === "materialized").length
+    || graph.totals.scope_relationship_count !== graph.scope_relationships.length || graph.totals.operator_count !== graph.operators.length || graph.totals.value_count !== graph.values.length) throw new Error("Artifact IR graph count conservation failed.");
   const scopeIds = uniqueIds(graph.scopes, "graph scope");
   const operatorIds = uniqueIds(graph.operators, "operator");
   const valueIds = uniqueIds(graph.values, "value");
+  const operatorById = new Map(graph.operators.map((row) => [row.id, row]));
+  const valueById = new Map(graph.values.map((row) => [row.id, row]));
+  if (graph.status === "serialized" && !scopeIds.has(graph.primary_scope_ref)) throw new Error("Artifact IR primary graph scope reference is invalid.");
+  for (const scope of graph.scopes) {
+    if (scope.parent_scope_ref != null && (!scopeIds.has(scope.parent_scope_ref) || scope.parent_scope_ref === scope.id)) {
+      throw new Error("Artifact IR graph scope parent reference is invalid.");
+    }
+    if (scope.materialization_status === "materialized") {
+      const scopeOperatorCount = graph.operators.filter((row) => row.scope_ref === scope.id).length;
+      const scopeValueCount = graph.values.filter((row) => row.scope_ref === scope.id).length;
+      if (scope.declared_operator_count != null && scope.declared_operator_count !== scopeOperatorCount) throw new Error("Artifact IR materialized scope operator count is inconsistent.");
+      if (scope.declared_value_count != null && scope.declared_value_count !== scopeValueCount) throw new Error("Artifact IR materialized scope value count is inconsistent.");
+    }
+  }
   for (const operator of graph.operators) {
     if (!scopeIds.has(operator.scope_ref)) throw new Error("Artifact IR operator scope reference is invalid.");
-    for (const port of [...list(operator.inputs), ...list(operator.outputs)]) if (!valueIds.has(port.value_ref)) throw new Error("Artifact IR operator port references an unknown value.");
+    for (const port of [...list(operator.inputs), ...list(operator.outputs)]) {
+      const graphValue = valueById.get(port.value_ref);
+      if (!graphValue) throw new Error("Artifact IR operator port references an unknown value.");
+      if (graphValue.scope_ref !== operator.scope_ref) throw new Error("Artifact IR operator port crosses graph scopes.");
+    }
+  }
+  for (const relationship of graph.scope_relationships) {
+    if (!scopeIds.has(relationship.source_scope_ref) || !scopeIds.has(relationship.target_scope_ref)
+      || (relationship.source_operator_ref && !operatorIds.has(relationship.source_operator_ref))) {
+      throw new Error("Artifact IR scope relationship reference is invalid.");
+    }
+    if (relationship.source_operator_ref && operatorById.get(relationship.source_operator_ref)?.scope_ref !== relationship.source_scope_ref) {
+      throw new Error("Artifact IR scope relationship source operator belongs to a different scope.");
+    }
   }
   let relationshipCount = 0;
   for (const value of graph.values) {
     if (!scopeIds.has(value.scope_ref)) throw new Error("Artifact IR value scope reference is invalid.");
     if (value.producer && !operatorIds.has(value.producer.operator_ref)) throw new Error("Artifact IR value producer reference is invalid.");
     for (const consumer of list(value.consumers)) if (!operatorIds.has(consumer.operator_ref)) throw new Error("Artifact IR value consumer reference is invalid.");
+    if (value.producer && operatorById.get(value.producer.operator_ref)?.scope_ref !== value.scope_ref) throw new Error("Artifact IR value producer crosses graph scopes.");
+    for (const consumer of list(value.consumers)) {
+      if (operatorById.get(consumer.operator_ref)?.scope_ref !== value.scope_ref) throw new Error("Artifact IR value consumer crosses graph scopes.");
+    }
     relationshipCount += list(value.consumers).length;
   }
   if (relationshipCount !== graph.totals.relationship_count) throw new Error("Artifact IR relationship conservation failed.");
-  const assessedMacs = graph.operators.reduce((sum, row) => sum + BigInt(row.metrics?.macs?.decimal || "0"), 0n);
-  if (graph.status === "serialized" && String(graph.totals.assessed_macs?.decimal || "0") !== assessedMacs.toString()) throw new Error("Artifact IR MAC conservation failed.");
+  for (const inputRef of list(graph.inputs)) {
+    const graphValue = valueById.get(inputRef);
+    if (!graphValue || graphValue.scope_ref !== graph.primary_scope_ref || !list(graphValue.roles).includes("graph_input")) throw new Error("Artifact IR graph input reference is invalid.");
+  }
+  for (const outputRef of list(graph.outputs)) {
+    const graphValue = valueById.get(outputRef);
+    if (!graphValue || graphValue.scope_ref !== graph.primary_scope_ref || !list(graphValue.roles).includes("graph_output")) throw new Error("Artifact IR graph output reference is invalid.");
+  }
+  const primaryOperators = graph.operators.filter((row) => row.scope_ref === graph.primary_scope_ref);
+  const assessedMacs = primaryOperators.reduce((sum, row) => sum + BigInt(row.metrics?.macs?.decimal || "0"), 0n);
+  const serializedScopeMacs = graph.operators.reduce((sum, row) => sum + BigInt(row.metrics?.macs?.decimal || "0"), 0n);
+  if (graph.status === "serialized" && (String(graph.totals.assessed_macs?.decimal || "0") !== assessedMacs.toString()
+    || String(graph.totals.serialized_scope_assessed_macs?.decimal || "0") !== serializedScopeMacs.toString())) throw new Error("Artifact IR MAC conservation failed.");
   const storage = value.storage_topology;
   if (!storage || !Array.isArray(storage.objects) || storage.totals.object_count !== storage.objects.length) throw new Error("Artifact IR storage count conservation failed.");
   const storageIds = uniqueIds(storage.objects, "storage object");
   const storageBytes = storage.objects.reduce((sum, row) => sum + BigInt(row.serialized_byte_length?.decimal || "0"), 0n);
   if (String(storage.totals.serialized_object_bytes_sum?.decimal || "0") !== storageBytes.toString()) throw new Error("Artifact IR storage byte conservation failed.");
+  if (storage.totals.exact_range_count !== storage.objects.filter((row) => row.byte_range?.status === "exact").length
+    || storage.totals.payload_digest_count !== storage.objects.filter((row) => SHA256.test(String(row.payload_sha256 || ""))).length) {
+    throw new Error("Artifact IR storage evidence count conservation failed.");
+  }
   for (const graphValue of graph.values) {
     for (const storageRef of list(graphValue.storage_refs)) {
       if (!storageIds.has(storageRef)) throw new Error("Artifact IR value references an unknown storage object.");
@@ -529,44 +714,244 @@ function validateArtifactIrBody(value) {
   const architectureIds = uniqueIds(architecture.nodes, "architecture node");
   if (architecture.totals.node_count !== architecture.nodes.length || architecture.totals.relationship_count !== architecture.relationships.length) throw new Error("Artifact IR architecture count conservation failed.");
   if (graph.status === "not_serialized" && architecture.relationships.length) throw new Error("Artifact IR graphless architecture projection contains fabricated relationships.");
+  for (const node of architecture.nodes) {
+    for (const storageRef of list(node.storage_object_refs)) if (!storageIds.has(storageRef)) throw new Error("Artifact IR architecture node references an unknown storage object.");
+  }
   const quantization = value.quantization_contracts;
+  if (!quantization || !Array.isArray(quantization.records) || !quantization.totals) throw new Error("Artifact IR quantization ledger is invalid.");
   const quantIds = uniqueIds(quantization.records, "quantization record");
   if (quantIds.size !== quantization.totals.record_count) throw new Error("Artifact IR quantization count conservation failed.");
+  if (quantization.totals.affine_record_count !== quantization.records.filter((row) => row.mapping?.family === "affine").length
+    || quantization.totals.block_encoding_record_count !== quantization.records.filter((row) => row.mapping?.family === "format_defined_block_encoding").length
+    || quantization.totals.complete_record_count !== quantization.records.filter((row) => row.completeness === "complete_for_serialized_contract").length
+    || quantization.totals.partial_record_count !== quantization.records.filter((row) => row.completeness !== "complete_for_serialized_contract").length) {
+    throw new Error("Artifact IR quantization classification count conservation failed.");
+  }
   const subjects = new Set([...valueIds, ...storageIds]);
-  for (const row of quantization.records) if (!subjects.has(row.subject_ref)) throw new Error("Artifact IR quantization subject reference is invalid.");
+  for (const row of quantization.records) {
+    if (!subjects.has(row.subject_ref)) throw new Error("Artifact IR quantization subject reference is invalid.");
+    for (const storageRef of list(row.related_storage_refs)) if (!storageIds.has(storageRef)) throw new Error("Artifact IR quantization record references an unknown related storage object.");
+  }
+  if (!value.overlays || !Array.isArray(value.overlays.static) || !Array.isArray(value.overlays.runtime)) throw new Error("Artifact IR overlay ledger is invalid.");
   const overlaySubjects = new Set([...operatorIds, ...architectureIds]);
-  for (const overlay of [...value.overlays.static, ...value.overlays.runtime]) {
-    uniqueIds([overlay], "overlay");
+  const allOverlays = [...value.overlays.static, ...value.overlays.runtime];
+  uniqueIds(allOverlays, "overlay");
+  for (const overlay of allOverlays) {
     for (const row of list(overlay.rows)) if (!overlaySubjects.has(row.subject_ref)) throw new Error("Artifact IR overlay subject reference is invalid.");
+    if (overlay.kind === "runtime_assignment") validateRuntimeReconciliation(overlay, overlaySubjects);
+  }
+  if (value.completeness?.static_overlay_count !== value.overlays.static.length
+    || value.completeness?.runtime_overlay_count !== value.overlays.runtime.length
+    || value.completeness?.unknown_is_zero !== false) {
+    throw new Error("Artifact IR completeness summary is inconsistent.");
   }
   if (!text(value.interpretation_boundary, 2400)) throw new Error("Artifact IR interpretation boundary is missing.");
 }
 
 function primaryScope(analysis, format) {
-  if (format === "tflite") return { id: "scope:tflite:subgraph:0", kind: "tflite_subgraph", native_index: 0, name: "subgraph_0", materialization_status: "materialized" };
-  if (format === "onnx") return { id: "scope:onnx:main_graph", kind: "onnx_graph", native_index: 0, name: String(analysis.graph_name || "main_graph"), materialization_status: "materialized" };
-  if (format === "coreml" || format === "mlmodel") return { id: "scope:coreml:primary", kind: "coreml_serialized_program", native_index: 0, name: String(analysis.coreml?.selected_function || "primary"), materialization_status: "materialized" };
-  return { id: `scope:${format}:primary`, kind: `${format}_serialized_program`, native_index: 0, name: "primary", materialization_status: "materialized" };
+  const base = { native_index: 0, materialization_status: "materialized", parent_scope_ref: null, invocation_semantics: "model_entrypoint" };
+  if (format === "tflite") return { ...base, id: "scope:tflite:subgraph:0", kind: "tflite_subgraph", name: String(analysis?.tflite_subgraph_inventory?.rows?.[0]?.name || "subgraph_0") };
+  if (format === "onnx") return { ...base, id: "scope:onnx:main_graph", kind: "onnx_graph", name: String(analysis.graph_name || "main_graph") };
+  if (format === "coreml" || format === "mlmodel") return { ...base, id: "scope:coreml:primary", kind: "coreml_serialized_program", name: String(analysis.coreml?.selected_function || "primary") };
+  return { ...base, id: `scope:${format}:primary`, kind: `${format}_serialized_program`, name: "primary" };
 }
 
-function additionalScopes(analysis, format, primaryId) {
-  if (format === "tflite") return list(analysis?.tflite_subgraph_inventory?.rows).filter((row) => Number(row.subgraph_index) !== 0).map((row) => ({
-    id: `scope:tflite:subgraph:${row.subgraph_index}`, kind: "tflite_subgraph", native_index: Number(row.subgraph_index), name: String(row.name || `subgraph_${row.subgraph_index}`),
-    materialization_status: "inventory_only", declared_operator_count: nonNegativeInteger(row.operator_count), declared_value_count: nonNegativeInteger(row.tensor_count), parent_scope_ref: primaryId,
-  }));
-  if (format === "onnx") {
-    const scopes = new Map();
-    for (const row of list(analysis?.onnx_domain_analysis?.nodes)) {
-      const scopeName = String(row.scope || "main_graph");
-      if (scopeName === "main_graph") continue;
-      if (!scopes.has(scopeName)) scopes.set(scopeName, { count: 0, scope_class: String(row.scope_class || "nested_graph") });
-      scopes.get(scopeName).count += 1;
+function materializeAdditionalScopes(analysis, format, primaryId) {
+  if (format === "tflite") return materializeTfliteScopes(analysis, primaryId);
+  if (format === "onnx") return materializeOnnxScopes(analysis, primaryId);
+  return { scopes: [], operators: [], values: [], scope_relationships: [] };
+}
+
+function materializeTfliteScopes(analysis, primaryId) {
+  const rows = list(analysis?.tflite_subgraph_inventory?.rows).filter((row) => Number(row.subgraph_index) !== 0);
+  const scopes = [];
+  const operators = [];
+  const values = [];
+  for (const row of rows) {
+    const nativeIndex = nonNegativeInteger(row.subgraph_index);
+    if (nativeIndex == null) continue;
+    const scopeId = `scope:tflite:subgraph:${nativeIndex}`;
+    const tensorRows = list(row.tensor_intrinsics);
+    const operatorRows = list(row.operator_intrinsics);
+    const materialized = tensorRows.length === nonNegativeInteger(row.tensor_count)
+      && operatorRows.length === nonNegativeInteger(row.operator_count);
+    scopes.push({
+      id: scopeId,
+      kind: "tflite_subgraph",
+      native_index: nativeIndex,
+      name: String(row.name || `subgraph_${nativeIndex}`),
+      materialization_status: materialized ? "materialized" : "inventory_only",
+      parent_scope_ref: null,
+      invocation_semantics: String(row.invocation_semantics || "serialized_subgraph_execution_count_not_bound"),
+      declared_operator_count: nonNegativeInteger(row.operator_count),
+      declared_value_count: nonNegativeInteger(row.tensor_count),
+    });
+    if (!materialized) continue;
+    const producer = new Map();
+    const consumers = new Map();
+    for (const [position, operator] of operatorRows.entries()) {
+      const index = nonNegativeInteger(operator.operator_index) ?? position;
+      const operatorRef = operatorId(scopeId, index);
+      const inputPorts = tensorPorts(operator.inputs, scopeId);
+      const outputPorts = tensorPorts(operator.outputs, scopeId);
+      for (const { native_index: tensorIndexValue, port } of outputPorts) {
+        if (!producer.has(tensorIndexValue)) producer.set(tensorIndexValue, { operator_ref: operatorRef, port });
+      }
+      for (const { native_index: tensorIndexValue, port } of inputPorts) {
+        if (!consumers.has(tensorIndexValue)) consumers.set(tensorIndexValue, []);
+        consumers.get(tensorIndexValue).push({ operator_ref: operatorRef, port });
+      }
+      operators.push({
+        id: operatorRef,
+        legacy_graph_node_id: `scope:${nativeIndex}:op:${index}`,
+        scope_ref: scopeId,
+        native_index: index,
+        op_type: String(operator.name || `OP_${index}`),
+        name: optionalText(operator.name),
+        domain: "tflite",
+        version: optionalInteger(operator.version),
+        inputs: inputPorts.map(({ port, value_ref }) => ({ port, value_ref })),
+        outputs: outputPorts.map(({ port, value_ref }) => ({ port, value_ref })),
+        metrics: {
+          macs: exactInteger(operator.nominal_macs_decimal ?? operator.nominal_macs),
+          mac_assessment_status: String(operator.mac_assessment_status || "not_assessed"),
+          logical_io_bytes: exactInteger(operator.logical_io_payload_bytes),
+        },
+        quantization_summary: { state: "not_projected_from_scope_intrinsics", risk: "not_assessed" },
+        topology: { depth: null, role: null, stage: null },
+        native_source: { format: "tflite", path: `SubGraph[${nativeIndex}].operators[${index}]`, byte_range: null },
+        completeness: "serialized_nested_operator_intrinsic_contract",
+      });
     }
-    return [...scopes.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([name, row], index) => ({
-      id: `scope:onnx:nested:${index}`, kind: row.scope_class, native_index: index, name, materialization_status: "inventory_only", declared_operator_count: row.count, declared_value_count: null, parent_scope_ref: primaryId,
-    }));
+    const graphInputs = new Set(integerArray(row.input_tensor_indices).filter((index) => index >= 0));
+    const graphOutputs = new Set(integerArray(row.output_tensor_indices).filter((index) => index >= 0));
+    for (const [position, tensor] of tensorRows.entries()) {
+      const index = nonNegativeInteger(tensor.tensor_index) ?? position;
+      const storageBytes = nonNegativeInteger(tensor.buffer_data_length) || 0;
+      values.push({
+        id: valueId(scopeId, index),
+        scope_ref: scopeId,
+        native_index: index,
+        name: String(tensor.name || `tensor_${index}`),
+        value_kind: "tensor",
+        dtype: String(tensor.dtype || "UNKNOWN").toUpperCase(),
+        shape: dimensions(tensor.shape),
+        shape_signature: Array.isArray(tensor.shape_signature) && tensor.shape_signature.length ? dimensions(tensor.shape_signature) : null,
+        shape_contract_status: String(tensor.payload_status || "serialized_shape"),
+        producer: producer.get(index) || null,
+        consumers: uniqueConsumers(consumers.get(index) || []),
+        roles: [
+          ...(graphInputs.has(index) ? ["graph_input"] : []),
+          ...(graphOutputs.has(index) ? ["graph_output"] : []),
+          ...(tensor.constant_buffer || storageBytes > 0 ? ["serialized_constant_or_storage"] : []),
+        ],
+        storage_refs: storageBytes > 0 ? [scopedStorageId(scopeId, index)] : [],
+        logical_byte_length: exactInteger(tensor.logical_payload_bytes),
+        native_source: { format: "tflite", path: `SubGraph[${nativeIndex}].tensors[${index}]` },
+      });
+    }
   }
-  return [];
+  const scopeIds = new Set(scopes.map((row) => row.id));
+  const scopeRelationships = list(analysis?.tflite_subgraph_inventory?.references).map((row, index) => {
+    const sourceScopeRef = `scope:tflite:subgraph:${row.source_subgraph_index}`;
+    const targetScopeRef = `scope:tflite:subgraph:${row.target_subgraph_index}`;
+    return {
+      id: `scope-relationship:tflite:${index}`,
+      relation: "serialized_subgraph_reference",
+      source_scope_ref: sourceScopeRef,
+      source_operator_ref: operatorId(sourceScopeRef, row.source_op_index),
+      target_scope_ref: targetScopeRef,
+      role: String(row.role || "subgraph_reference"),
+    };
+  }).filter((row) => (row.source_scope_ref === primaryId || scopeIds.has(row.source_scope_ref)) && scopeIds.has(row.target_scope_ref));
+  return { scopes, operators, values, scope_relationships: scopeRelationships };
+}
+
+function materializeOnnxScopes(analysis, primaryId) {
+  const ledger = list(analysis?.onnx_domain_analysis?.scope_ledger);
+  const nested = ledger.filter((row) => String(row.scope || "main_graph") !== "main_graph")
+    .sort((left, right) => String(left.scope).localeCompare(String(right.scope)));
+  const scopeIdByName = new Map([["main_graph", primaryId]]);
+  nested.forEach((row, index) => scopeIdByName.set(String(row.scope), `scope:onnx:nested:${index}`));
+  const scopes = nested.map((row, index) => ({
+    id: scopeIdByName.get(String(row.scope)),
+    kind: String(row.scope_class || "nested_graph"),
+    native_index: index,
+    name: String(row.name || row.scope),
+    materialization_status: Array.isArray(row.nodes) && Array.isArray(row.values) ? "materialized" : "inventory_only",
+    parent_scope_ref: scopeIdByName.get(String(row.parent_scope || "main_graph")) || primaryId,
+    invocation_semantics: String(row.invocation_semantics || (row.scope_class === "local_function_body" ? "model_local_function_definition" : "serialized_nested_graph")),
+    declared_operator_count: nonNegativeInteger(row.node_count),
+    declared_value_count: nonNegativeInteger(row.value_count),
+  }));
+  const operators = [];
+  const values = [];
+  const scopeRelationships = [];
+  for (const [scopePosition, row] of nested.entries()) {
+    const scopeId = scopeIdByName.get(String(row.scope));
+    if (!Array.isArray(row.nodes) || !Array.isArray(row.values)) continue;
+    const producer = new Map();
+    const consumers = new Map();
+    for (const [position, node] of row.nodes.entries()) {
+      const index = nonNegativeInteger(node.node_index) ?? position;
+      const operatorRef = operatorId(scopeId, index);
+      const inputPorts = namedValuePorts(node.inputs, scopeId, row.values);
+      const outputPorts = namedValuePorts(node.outputs, scopeId, row.values);
+      for (const { native_index: valueIndex, port } of outputPorts) if (!producer.has(valueIndex)) producer.set(valueIndex, { operator_ref: operatorRef, port });
+      for (const { native_index: valueIndex, port } of inputPorts) {
+        if (!consumers.has(valueIndex)) consumers.set(valueIndex, []);
+        consumers.get(valueIndex).push({ operator_ref: operatorRef, port });
+      }
+      operators.push({
+        id: operatorRef,
+        legacy_graph_node_id: `scope:${scopePosition + 1}:op:${index}`,
+        scope_ref: scopeId,
+        native_index: index,
+        op_type: String(node.op_name || `OP_${index}`),
+        name: optionalText(node.node_name || node.op_name),
+        domain: String(node.domain || "ai.onnx"),
+        version: optionalInteger(node.imported_opset),
+        inputs: inputPorts.map(({ port, value_ref }) => ({ port, value_ref })),
+        outputs: outputPorts.map(({ port, value_ref }) => ({ port, value_ref })),
+        metrics: { macs: null, mac_assessment_status: "not_assessed_scope_local_cost_not_projected", logical_io_bytes: null },
+        quantization_summary: { state: "not_projected_from_nested_scope", risk: "not_assessed" },
+        topology: { depth: null, role: null, stage: null },
+        native_source: { format: "onnx", path: String(node.native_path || `${row.scope}.node[${index}]`), byte_range: null },
+        completeness: "serialized_nested_operator_and_port_identity",
+      });
+    }
+    for (const [position, value] of row.values.entries()) {
+      const index = nonNegativeInteger(value.value_index) ?? position;
+      values.push({
+        id: valueId(scopeId, index),
+        scope_ref: scopeId,
+        native_index: index,
+        name: String(value.name || `value_${index}`),
+        value_kind: String(value.value_kind || "tensor"),
+        dtype: String(value.dtype || "UNKNOWN").toUpperCase(),
+        shape: dimensions(value.shape),
+        shape_signature: null,
+        shape_contract_status: String(value.contract_status || "serialized_name_only"),
+        producer: producer.get(index) || null,
+        consumers: uniqueConsumers(consumers.get(index) || []),
+        roles: compactStrings(value.roles),
+        storage_refs: [],
+        logical_byte_length: null,
+        native_source: { format: "onnx", path: String(value.native_path || `${row.scope}.value[${JSON.stringify(String(value.name || ""))}]`) },
+      });
+    }
+    const parent = scopeIdByName.get(String(row.parent_scope || "main_graph")) || primaryId;
+    const ownerNodeIndex = nonNegativeInteger(row.owner_node_index);
+    scopeRelationships.push({
+      id: `scope-relationship:onnx:${scopePosition}`,
+      relation: row.scope_class === "local_function_body" ? "serialized_local_function_definition" : "serialized_nested_graph_ownership",
+      source_scope_ref: parent,
+      source_operator_ref: ownerNodeIndex == null ? null : operatorId(parent, ownerNodeIndex),
+      target_scope_ref: scopeId,
+      role: String(row.owner_role || row.scope_class || "nested_scope"),
+    });
+  }
+  return { scopes, operators, values, scope_relationships: scopeRelationships };
 }
 
 function graphMacAssessment(analysis, operators) {
@@ -584,6 +969,36 @@ function graphMacAssessment(analysis, operators) {
   }
   const sum = operators.reduce((total, row) => total + BigInt(row.metrics?.macs?.decimal || "0"), 0n);
   return { total: exact(sum), assessed: exact(sum), assessment: { status: "complete_without_separate_compute_denominator", compute_op_count: null, assessed_compute_op_count: null, unassessed_compute_op_count: null, scope: "sum_of_operator_macs_present_in_artifact_ir" } };
+}
+
+function validateRuntimeReconciliation(overlay, validSubjects) {
+  const runtimeIds = new Set();
+  let flattenedReferenceCount = 0;
+  for (const node of list(overlay.runtime_nodes)) {
+    if (!text(node.runtime_node_ref, 1000) || runtimeIds.has(node.runtime_node_ref)) throw new Error("Artifact IR runtime node identity is invalid or duplicated.");
+    runtimeIds.add(node.runtime_node_ref);
+    const references = compactStrings(node.source_subject_refs);
+    if (references.some((subjectRef) => !validSubjects.has(subjectRef))) throw new Error("Artifact IR runtime node references an unknown canonical subject.");
+    if ((references.length === 0 && node.mapping_cardinality !== "unmapped")
+      || (references.length === 1 && node.mapping_cardinality !== "one_to_one")
+      || (references.length > 1 && node.mapping_cardinality !== "fused_one_to_many")) {
+      throw new Error("Artifact IR runtime mapping cardinality is inconsistent.");
+    }
+    flattenedReferenceCount += references.length;
+  }
+  if (overlay.summary?.runtime_node_count !== runtimeIds.size
+    || overlay.summary?.source_subject_reference_count !== flattenedReferenceCount
+    || overlay.rows.length !== flattenedReferenceCount) {
+    throw new Error("Artifact IR runtime reconciliation count conservation failed.");
+  }
+  const distinctSubjects = new Set(overlay.rows.map((row) => row.subject_ref));
+  if (overlay.summary?.distinct_source_subject_count !== distinctSubjects.size
+    || overlay.summary?.mapped_runtime_node_count !== list(overlay.runtime_nodes).filter((row) => list(row.source_subject_refs).length > 0).length
+    || overlay.summary?.unmapped_runtime_node_count !== list(overlay.runtime_nodes).filter((row) => list(row.source_subject_refs).length === 0).length
+    || overlay.summary?.name_similarity_mapping_used !== false) {
+    throw new Error("Artifact IR runtime reconciliation summary is inconsistent.");
+  }
+  for (const row of overlay.rows) if (!runtimeIds.has(row.runtime_node_ref)) throw new Error("Artifact IR runtime assignment references an unknown runtime node.");
 }
 
 function completeness(graph, storage, architecture, quantization, overlays) {
@@ -748,6 +1163,19 @@ function uniqueConsumers(rows) {
   return [...values.values()].sort((left, right) => left.operator_ref.localeCompare(right.operator_ref) || left.port - right.port);
 }
 
+function tensorPorts(values, scopeId) {
+  return list(values).map((value, port) => ({ native_index: Number(value), port }))
+    .filter((row) => Number.isSafeInteger(row.native_index) && row.native_index >= 0)
+    .map((row) => ({ ...row, value_ref: valueId(scopeId, row.native_index) }));
+}
+
+function namedValuePorts(names, scopeId, values) {
+  const indexByName = new Map(list(values).map((row, index) => [String(row.name || ""), nonNegativeInteger(row.value_index) ?? index]));
+  return list(names).map((name, port) => ({ native_index: indexByName.get(String(name || "")), port }))
+    .filter((row) => row.native_index != null)
+    .map((row) => ({ ...row, value_ref: valueId(scopeId, row.native_index) }));
+}
+
 function uniqueIds(rows, label) {
   const ids = new Set();
   for (const row of list(rows)) {
@@ -765,6 +1193,7 @@ function canonicalOps(value) {
 function operatorId(scopeId, index) { return `operator:${scopeId}:${index}`; }
 function valueId(scopeId, index) { return `value:${scopeId}:${index}`; }
 function storageId(index) { return `storage:tensor:${index}`; }
+function scopedStorageId(scopeId, index) { return `storage:${scopeId}:tensor:${index}`; }
 function architectureLayerId(index) { return `architecture:layer:${index}`; }
 function tensorIndex(tensor, fallback) { return Number.isSafeInteger(Number(tensor?.index)) ? Number(tensor.index) : fallback; }
 function normalizeFormat(value) { return String(value || "unknown").trim().toLowerCase().replace(".mlmodel", "coreml"); }

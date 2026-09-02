@@ -146,6 +146,25 @@ export function createGraphWorkspace(workspace) {
 
 const resourceMapOptions = { metric: "macs", groupBy: "stage", colorBy: "intensity" };
 
+function artifactIrAnalysisView(analysis) {
+  const context = workspace.currentArtifactIrContext;
+  return context && analysis === workspace.current ? context.primary_view : analysis;
+}
+
+function isCurrentAnalysisView(analysis) {
+  return analysis === workspace.current || analysis === workspace.currentArtifactIrContext?.primary_view;
+}
+
+function graphOps(analysis) {
+  const view = artifactIrAnalysisView(analysis);
+  return Array.isArray(view?.ops) ? view.ops : [];
+}
+
+function graphTensors(analysis) {
+  const view = artifactIrAnalysisView(analysis);
+  return Array.isArray(view?.tensors) ? view.tensors : [];
+}
+
 function renderSummary(analysis) {
   const metrics = document.createElement("div");
   metrics.className = "artifact-metric-grid";
@@ -171,7 +190,7 @@ function renderSummary(analysis) {
 function adaptInsightsForUI(analysis) {
   const ins = analysis.insights || {};
   const target = analysis.target_profile || {};
-  const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
+  const ops = graphOps(analysis);
   const l1Bytes = Number(target.l1_data_bytes || 32768);
   const l2Bytes = Number(target.l2_bytes || 0);
 
@@ -254,8 +273,9 @@ function renderInsightDashboard(analysis) {
 
 async function buildVisualPngFiles() {
   if (!workspace.current) return [];
+  const analysisView = artifactIrAnalysisView(workspace.current);
   const specs = visualPngSpecs({
-    analysis: workspace.current,
+    analysis: analysisView,
     filename: workspace.current.filename || workspace.currentFilename,
     targetProfile: workspace.current.target_profile || selectedTargetProfile(),
     targetComparisonRows: performanceVisualController.buildTargetComparisonRows(workspace.current),
@@ -344,32 +364,35 @@ function renderInferencePanel(analysis) {
 }
 
 function renderGraphExplorer(analysis) {
+  const analysisView = artifactIrAnalysisView(analysis);
   const cursor = evidenceCursor?.get?.();
-  const cursorMatches = cursor?.artifact_sha256 && cursor.artifact_sha256 === analysis.model_sha256;
-  workspace.selectedOpIndex = cursorMatches && analysis.ops.some((op) => Number(op.index) === cursor.op_index)
+  const cursorMatches = cursor?.artifact_sha256 && cursor.artifact_sha256 === analysisView.model_sha256;
+  const ops = graphOps(analysisView);
+  const tensors = graphTensors(analysisView);
+  workspace.selectedOpIndex = cursorMatches && ops.some((op) => Number(op.index) === cursor.op_index)
     ? cursor.op_index
-    : analysis.ops[0]?.index ?? null;
-  graphStats.textContent = `${analysis.ops.length} ops / ${analysis.tensors.length} tensors`;
+    : ops[0]?.index ?? null;
+  graphStats.textContent = `${ops.length} ops / ${tensors.length} tensors`;
   updateGraphModeHint(workspace.currentGraphMode);
 
-  const graphEvidence = buildGraphEvidenceMaps(analysis);
+  const graphEvidence = buildGraphEvidenceMaps(analysisView);
   workspace.currentLowNormStatMap = graphEvidence.lowNormStats;
   workspace.currentTopologyAnnotations = graphEvidence;
 
-  renderOpTimeline(analysis);
-  renderXnnSegmentBar(analysis);
-  renderOpParetoBar(analysis);
-  renderResourceMap(analysis);
-  renderGraphOpRows(analysis);
-  renderOpDetail(analysis, workspace.selectedOpIndex);
-  deferGraphMap(analysis, workspace.selectedOpIndex);
-  renderTensorExplorer(analysis);
-  quantEvidenceController.setAnalysis(analysis);
-  nodeViewController.setAnalysis(analysis);
+  renderOpTimeline(analysisView);
+  renderXnnSegmentBar(analysisView);
+  renderOpParetoBar(analysisView);
+  renderResourceMap(analysisView);
+  renderGraphOpRows(analysisView);
+  renderOpDetail(analysisView, workspace.selectedOpIndex);
+  deferGraphMap(analysisView, workspace.selectedOpIndex);
+  renderTensorExplorer(analysisView);
+  quantEvidenceController.setAnalysis(analysisView);
+  nodeViewController.setAnalysis(analysisView);
   renderCurrentKernelInspector(true);
   layeredViewStale = true;
   if (layeredViewPanel && !layeredViewPanel.hidden) {
-    renderLayeredView(analysis);
+    renderLayeredView(analysisView);
   } else {
     layeredViewPanel?.replaceChildren(); // free any previous model's canvas now
   }
@@ -426,7 +449,7 @@ const profileLaneState = { traffic: true, cache: true, quant: true, intensity: f
 function renderOpTimeline(analysis) {
   if (!opTimeline) return;
   opTimeline.replaceChildren();
-  const ops = analysis?.ops || [];
+  const ops = graphOps(analysis);
   const N = ops.length;
   if (!N) return;
 
@@ -660,7 +683,7 @@ function renderXnnSegmentBar(analysis) {
   xnnSegmentBar.replaceChildren();
   xnnSegmentBar.hidden = String(analysis?.format || "tflite").toLowerCase() === "onnx";
   if (xnnSegmentBar.hidden) return;
-  const ops = analysis?.ops || [];
+  const ops = graphOps(analysis);
   if (!ops.length) return;
 
   const totalMacs = ops.reduce((s, op) => s + (op.macs || 0), 0);
@@ -712,7 +735,7 @@ function renderXnnSegmentBar(analysis) {
 function renderOpParetoBar(analysis) {
   if (!opParetoBar) return;
   opParetoBar.replaceChildren();
-  const ops = (analysis?.ops || []).filter((op) => opSteadyStateUs(op) > 0);
+  const ops = graphOps(analysis).filter((op) => opSteadyStateUs(op) > 0);
   const totalUs = ops.reduce((sum, op) => sum + opSteadyStateUs(op), 0);
   if (!ops.length || totalUs <= 0) return;
 
@@ -745,7 +768,9 @@ function renderOpParetoBar(analysis) {
 
 function renderGraphOpRows(analysis) {
   const term = graphSearch.value.trim().toLowerCase();
-  let matched = analysis.ops.filter((op) => opMatchesSearch(analysis, op, term));
+  const ops = graphOps(analysis);
+  const analysisView = artifactIrAnalysisView(analysis);
+  let matched = ops.filter((op) => opMatchesSearch(analysisView, op, term));
 
   // Apply active filters
   if (workspace.opFilterBound) matched = matched.filter((op) => op.static_bound_guess === workspace.opFilterBound);
@@ -779,7 +804,7 @@ function renderGraphOpRows(analysis) {
     ...rows.map((op) => graphOpRow(op, {
       selected: op.index === workspace.selectedOpIndex,
       onSelect: (item) => selectGraphOp(analysis, item.index),
-      analysis,
+      analysis: analysisView,
       lowNormStat: workspace.currentLowNormStatMap.get(op.index) ?? null,
     })),
   );
@@ -787,10 +812,10 @@ function renderGraphOpRows(analysis) {
   // Update count badge
   if (opFilterCount) {
     const showing = Math.min(total, CAP);
-    const isFiltered = total !== analysis.ops.length;
+    const isFiltered = total !== ops.length;
     const isCapped = showing < total;
     if (isFiltered || isCapped) {
-      opFilterCount.textContent = `${showing}/${analysis.ops.length}${isCapped && !isFiltered ? " (capped)" : " shown"}`;
+      opFilterCount.textContent = `${showing}/${ops.length}${isCapped && !isFiltered ? " (capped)" : " shown"}`;
     } else {
       opFilterCount.textContent = "";
     }
@@ -809,7 +834,7 @@ function renderGraphOpRows(analysis) {
 
 function buildTensorConsumers(analysis) {
   const consumers = new Map();
-  for (const op of analysis?.ops || []) {
+  for (const op of graphOps(analysis)) {
     for (const id of op.inputs || []) {
       if (id < 0) continue;
       if (!consumers.has(id)) consumers.set(id, []);
@@ -821,7 +846,7 @@ function buildTensorConsumers(analysis) {
 
 function buildDuplicateWeightGroups(analysis) {
   const byKey = new Map();
-  for (const t of analysis?.tensors || []) {
+  for (const t of graphTensors(analysis)) {
     if (!t?.constant_buffer || !t.buffer_hash || !(t.buffer_data_length > 0)) continue;
     const key = `${t.buffer_hash}:${t.buffer_data_length}`;
     if (!byKey.has(key)) byKey.set(key, []);
@@ -852,7 +877,7 @@ function renderTensorExplorer(analysis) {
   if (tensorStatsBar) {
     const roleCount = (role) => classifiedRoles.filter((item) => item.role === role).length;
     const highFanOut = [...tensorFanOut.values()].filter(n => n > 1).length;
-    const int8Acts   = analysis.tensors.filter(t => t && !t.constant_buffer && (t.dtype === "INT8" || t.dtype === "UINT8")).length;
+    const int8Acts = graphTensors(analysis).filter(t => t && !t.constant_buffer && (t.dtype === "INT8" || t.dtype === "UINT8")).length;
     let dupWasted = 0;
     for (const [key, list] of dupGroups) {
       const len = Number(key.split(":")[1] || 0);
@@ -887,7 +912,7 @@ function renderTensorExplorer(analysis) {
   const roleFilter = workspace.currentTensorRoleFilter;
 
   const rows = [];
-  for (const t of analysis.tensors) {
+  for (const t of graphTensors(analysis)) {
     if (!t) continue;
     const isConstant = !!t.constant_buffer;
     const fanOut = tensorFanOut.get(t.index) ?? 0;
@@ -1053,7 +1078,7 @@ function renderTensorMemoryTimeline(analysis, consumersMap) {
     return;
   }
   tensorMemoryTimeline.replaceChildren();
-  const ops = analysis?.ops || [];
+  const ops = graphOps(analysis);
   const N = ops.length;
   if (!N) return;
 
@@ -1063,7 +1088,7 @@ function renderTensorMemoryTimeline(analysis, consumersMap) {
 
   let hasDynamicDims = false;
   const spans = [];
-  for (const t of analysis.tensors) {
+  for (const t of graphTensors(analysis)) {
     if (!t || t.constant_buffer) continue;
     const cons = consumersMap.get(t.index) || [];
     const prod = producers.get(t.index);
@@ -1241,7 +1266,7 @@ function layeredBoxSize(shape) {
 function renderLayeredView(analysis) {
   if (!layeredViewPanel) return;
   layeredViewPanel.replaceChildren();
-  const allOps = analysis?.ops || [];
+  const allOps = graphOps(analysis);
   if (!allOps.length) return;
   const ops = allOps.slice(0, LAYERED_OP_CAP);
 
@@ -1487,9 +1512,10 @@ function switchExplorerTab(tab) {
 
 function renderCurrentKernelInspector(placement = false) {
   if (!workspace.current || !kernelInspectorPanel) return;
-  if (placement) renderExecutionPlacementView(explorerExecutionPlacementPanel, workspace.current, workspace.runtimeAssignmentEvidence);
+  const analysisView = artifactIrAnalysisView(workspace.current);
+  if (placement) renderExecutionPlacementView(explorerExecutionPlacementPanel, analysisView, workspace.runtimeAssignmentEvidence);
   renderKernelInspector({
-    analysis: workspace.current,
+    analysis: analysisView,
     body: kernelInspectorBody,
     summary: kernelInspectorSummary,
     comparisonPanel: runtimeAssignmentComparison,
@@ -1498,15 +1524,15 @@ function renderCurrentKernelInspector(placement = false) {
     query: kernelInspectorSearch?.value || "",
     filter: workspace.currentKernelFilter,
     runtimeEvidence: workspace.runtimeAssignmentEvidence,
-    onSelect: (opIndex) => selectGraphOp(workspace.current, opIndex, { scrollTable: true }),
+    onSelect: (opIndex) => selectGraphOp(analysisView, opIndex, { scrollTable: true }),
     onLoadSourceEvidence: loadProtectedSourceAnalysis,
   });
-  renderRuntimeEvidenceClosure(runtimeEvidenceClosure, workspace.current, workspace.runtimeAssignmentEvidence);
+  renderRuntimeEvidenceClosure(runtimeEvidenceClosure, analysisView, workspace.runtimeAssignmentEvidence);
   if (clearRuntimeAssignment) clearRuntimeAssignment.hidden = !workspace.runtimeAssignmentEvidence;
 }
 
 function selectGraphOp(analysis, opIndex, options = {}) {
-  const op = analysis.ops.find((item) => item.index === opIndex);
+  const op = graphOps(analysis).find((item) => item.index === opIndex);
   if (!op) return;
   if (!options.fromEvidenceCursor) {
     evidenceCursor?.select?.({
@@ -1532,8 +1558,9 @@ function selectGraphOp(analysis, opIndex, options = {}) {
 }
 
 function selectTensor(analysis, tensorIndex, { fromEvidenceCursor = false } = {}) {
-  const tensor = analysis?.tensors?.find?.((item) => Number(item?.index) === Number(tensorIndex))
-    || analysis?.tensors?.[Number(tensorIndex)];
+  const tensors = graphTensors(analysis);
+  const tensor = tensors.find((item) => Number(item?.index) === Number(tensorIndex))
+    || tensors[Number(tensorIndex)];
   if (!tensor || Number(tensor.index) !== Number(tensorIndex)) return false;
   if (!fromEvidenceCursor) {
     evidenceCursor?.select?.({
@@ -1554,7 +1581,7 @@ function selectTensor(analysis, tensorIndex, { fromEvidenceCursor = false } = {}
 
 function updateOpNav(analysis) {
   if (!opNavPrev || !opNavNext || !opNavLabel) return;
-  const ops = analysis.ops;
+  const ops = graphOps(analysis);
   const idx = ops.findIndex((op) => op.index === workspace.selectedOpIndex);
   if (idx < 0) { opNavLabel.textContent = "—"; return; }
   opNavLabel.textContent = `${idx + 1} / ${ops.length}`;
@@ -1596,7 +1623,7 @@ function deferGraphMap(analysis, opIndex) {
   graphMapSvg.replaceChildren();
   graphMapStatus.textContent = "Preparing graph map";
   requestAnimationFrame(() => {
-    if (token !== workspace.graphRenderToken || workspace.current !== analysis) return;
+    if (token !== workspace.graphRenderToken || !isCurrentAnalysisView(analysis)) return;
     try {
       renderGraphMap(analysis, opIndex);
     } catch (error) {
@@ -1607,7 +1634,7 @@ function deferGraphMap(analysis, opIndex) {
 }
 
 function renderOpDetail(analysis, opIndex) {
-  const op = analysis.ops.find(o => o.index === opIndex);
+  const op = graphOps(analysis).find(o => o.index === opIndex);
   let weightHistograms = null;
   let influence = null;
   let outputInfluence = null;
@@ -1618,7 +1645,7 @@ function renderOpDetail(analysis, opIndex) {
 
     // Weight histograms computed in the Rust/WASM core.
     const hists = op.inputs
-      .filter(idx => idx >= 0 && analysis.tensors[idx]?.constant_buffer)
+      .filter(idx => idx >= 0 && graphTensors(analysis)[idx]?.constant_buffer)
       .map(idx => {
         try {
           const h = compute_weight_histogram(workspace.currentModelBytes, analysis.filename, idx, selectedTargetId());
@@ -1888,7 +1915,7 @@ function jumpToStage(analysis, stage) {
     }
 
     // Navigate to the first op of this stage
-    const firstOp = analysis.ops.find(op => op.stage_index === stage.index);
+    const firstOp = graphOps(analysis).find(op => op.stage_index === stage.index);
     if (firstOp) {
       selectGraphOp(analysis, firstOp.index, { scrollTable: true });
     } else {

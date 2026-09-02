@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { access, chmod, copyFile, cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
@@ -22,6 +23,16 @@ const wasmSource = withDist
 const gitCommit = runCapture("git", ["rev-parse", "HEAD"]).trim();
 const gitState = runCapture("git", ["status", "--porcelain=v1", "--untracked-files=all", "--", ".", ":!.local-validation", ":!dist", ":!web/lib/build-metadata.js", ...RELEASE_GENERATED_TRACKED_ARTIFACTS.map((file) => `:!${file}`)]).trim() ? "dirty" : "clean";
 const wasmSha256 = createHash("sha256").update(await readFile(wasmSource)).digest("hex");
+const buildMetadataPath = path.join(root, "web", "lib", "build-metadata.js");
+const priorBuildMetadata = existsSync(buildMetadataPath) ? readFileSync(buildMetadataPath) : null;
+let buildMetadataRestored = false;
+const restoreBuildMetadata = () => {
+  if (buildMetadataRestored) return;
+  if (priorBuildMetadata) writeFileSync(buildMetadataPath, priorBuildMetadata);
+  else rmSync(buildMetadataPath, { force: true });
+  buildMetadataRestored = true;
+};
+process.on("exit", restoreBuildMetadata);
 writeBuildMetadata({ publicDistribution: true });
 await assertChannelVersions(versionContract);
 assertLocalOutput(output);
@@ -99,6 +110,7 @@ const engineBuildResult = await build({
   },
 });
 assertPublicBundleInputs(engineBuildResult.metafile, "standalone engine");
+restoreBuildMetadata();
 await copyFile(wasmSource, path.join(engineRoot, "pkg", "tflite_wasm_audit_bg.wasm"));
 
 const executableName = process.platform === "win32" ? "deepbom-core.exe" : "deepbom-core";

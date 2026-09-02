@@ -78,6 +78,7 @@ async function verifyAllowlist(files) {
     "scripts/check-public-package-boundary.mjs",
     "scripts/generate-cli-docs.mjs",
     "src/lib.rs",
+    "web/lib/artifact-ir-context.js",
   ]) assert(files.includes(required), `Public source allowlist is missing required member ${required}.`);
   assert(!files.some((file) => forbiddenPrefixes.some((prefix) => file.startsWith(prefix))), "Protected source prefix entered public allowlist.");
 }

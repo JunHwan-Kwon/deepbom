@@ -215,7 +215,7 @@ import {
   renderGraphMapContent,
   renderOpDetailPanel,
 } from "./lib/graph-ui.js";
-import { buildCanonicalGraphIr } from "./lib/graph-ir.js";
+import { getArtifactIrContext } from "./lib/artifact-ir-context.js";
 import { exportGraphVisualization } from "./lib/graph-export.js";
 import {
   buildModelIdentity,
@@ -788,6 +788,15 @@ const liteRtRuntime = createLiteRtRuntimeLoader({
 const ensureLiteRtRuntime = liteRtRuntime.ensure;
 
 let current = null;
+let currentArtifactIrContext = null;
+
+function currentAnalysisView() {
+  return currentArtifactIrContext?.primary_view || current;
+}
+
+function artifactIrBackedView(analysis) {
+  return analysis === current ? currentAnalysisView() : analysis;
+}
 let selectedAcceleratorProfileId = "";
 let selectedPlacementProfileIds = [];
 let currentDeploymentFrontier = null;
@@ -839,6 +848,21 @@ let runtimeGuardCode = null;
 let currentFilename = "";
 let targetProfiles = [];
 let customTargetSpecs = [];
+
+function rebuildCurrentArtifactIrContext(analysis = current) {
+  if (!analysis) {
+    currentArtifactIrContext = null;
+    return null;
+  }
+  currentArtifactIrContext = getArtifactIrContext(analysis, {
+    filename: analysis.filename || currentFilename || "model",
+    format: analysis.format,
+    sha256: analysis.model_sha256,
+    size: analysis.file_size_bytes ?? analysis.file_size ?? currentModelBytes?.length ?? null,
+    artifact_set_sha256: analysis.artifact_set?.artifact_set_sha256 || null,
+  }, { runtimeEvidence: runtimeAssignmentEvidence });
+  return currentArtifactIrContext;
+}
 let customTargetEditor = null;
 function openCustomTargetEditor(existingId = null) {
   customTargetEditor ||= createCustomTargetEditor({
@@ -933,7 +957,7 @@ const performanceVisualController = createPerformanceVisualController({
     perfTimelineSubtitle,
   },
   getContext: () => ({
-    current,
+    current: currentAnalysisView(),
     currentModelBytes,
     currentFilename,
     targetProfiles,
@@ -955,7 +979,7 @@ const coreIsolationController = createCoreIsolationController({
     body: coreIsolationBody,
     boundary: coreIsolationBoundary,
   },
-  getContext: () => ({ analysis: current, runtimeEvidence: runtimeAssignmentEvidence }),
+  getContext: () => ({ analysis: currentAnalysisView(), runtimeEvidence: runtimeAssignmentEvidence }),
 });
 workflowController = createWorkflowController({
   elements: {
@@ -1054,7 +1078,7 @@ const deploymentFrontierController = createDeploymentFrontierController({
   summary: deploymentFrontierSummary,
   body: deploymentFrontierBody,
   downloadButton: downloadDeploymentFrontier,
-  getContext: () => ({ analysis: current, runtimeEvidence: runtimeAssignmentEvidence }),
+  getContext: () => ({ analysis: currentAnalysisView(), runtimeEvidence: runtimeAssignmentEvidence }),
   jumpToGraphOp,
   onDownload: (frontier, suffix) => downloadText(
     currentArtifactFilename(suffix),
@@ -1083,7 +1107,7 @@ const delegationRepairController = createDelegationRepairController({
   summary: delegationRepairSummary,
   body: delegationRepairBody,
   downloadButton: downloadDelegationRepair,
-  getAnalysis: () => current,
+  getAnalysis: () => currentAnalysisView(),
   jumpToGraphOp,
   onPreviewScenario: previewDelegationScenario,
   onDownload: (result, suffix) => downloadText(
@@ -1110,7 +1134,7 @@ const {
   residualContractDistortionController,
 } = createQuantizationResearchSuite({
   elements: appElements,
-  getContext: () => ({ analysis: current, modelBytes: currentModelBytes }),
+  getContext: () => ({ analysis: currentAnalysisView(), modelBytes: currentModelBytes }),
   jumpToGraphOp,
   onDownload: (result, suffix) => downloadText(
     currentArtifactFilename(suffix),
@@ -1132,24 +1156,24 @@ const quantEvidenceController = createQuantEvidenceController({
   onOpenOp: (opIndex) => {
     if (!current) return;
     switchExplorerTab("ops");
-    selectGraphOp(current, Number(opIndex), { scrollTable: true });
+    selectGraphOp(currentAnalysisView(), Number(opIndex), { scrollTable: true });
   },
   onOpenNode: (opIndex) => {
     if (!current) return;
     switchExplorerTab("node");
-    selectGraphOp(current, Number(opIndex), { scrollTable: false });
+    selectGraphOp(currentAnalysisView(), Number(opIndex), { scrollTable: false });
   },
 });
 const nodeViewController = createNodeViewController({
   root: nodeViewPanel,
   onSelectOp: (opIndex) => {
     if (!current) return;
-    selectGraphOp(current, Number(opIndex), { scrollTable: false, fromNode: true });
+    selectGraphOp(currentAnalysisView(), Number(opIndex), { scrollTable: false, fromNode: true });
   },
   onOpenOps: (opIndex) => {
     if (!current) return;
     switchExplorerTab("ops");
-    selectGraphOp(current, Number(opIndex), { scrollTable: true });
+    selectGraphOp(currentAnalysisView(), Number(opIndex), { scrollTable: true });
   },
   onOpenQuant: (opIndex) => {
     if (!current) return;
@@ -1528,7 +1552,7 @@ registerTextExport(downloadMarkdown, TEXT_EXPORT_ARTIFACTS.engineeringReport, as
       .then(() => renderLocalReports()).catch(() => {});
   }
   const reportContext = currentReportContext();
-  const reportBody = formatter.buildEngineeringReport(current, reportContext);
+  const reportBody = formatter.buildEngineeringReport(currentAnalysisView(), reportContext);
   const reportFingerprint = await sha256Hex(new TextEncoder().encode(reportBody));
   return buildPublicEngineeringReportHtml(reportBody, {
     generatedAt: reportContext.generatedAt,
@@ -1554,7 +1578,7 @@ downloadReviewHtml?.addEventListener("click", async () => {
 registerTextExport(downloadRegulatoryReport, TEXT_EXPORT_ARTIFACTS.regulatoryReport, async () => {
   const formatter = await loadRegulatoryFormatter();
   const reportContext = currentReportContext();
-  const reportBody = formatter.buildRegulatoryReport(current, currentRegulatoryReportContext());
+  const reportBody = formatter.buildRegulatoryReport(currentAnalysisView(), currentRegulatoryReportContext());
   const reportFingerprint = await sha256Hex(new TextEncoder().encode(reportBody));
   return buildPublicEngineeringReportHtml(reportBody, {
     generatedAt: reportContext.generatedAt,
@@ -1568,7 +1592,7 @@ registerTextExport(downloadCsv, TEXT_EXPORT_ARTIFACTS.rooflineCsv, () => current
 registerTextExport(downloadMermaid, TEXT_EXPORT_ARTIFACTS.mermaidStageGraph, () => current.stage_mermaid, textExportOptions);
 const exportContractController = createExportContractController({
   elements: appElements,
-  getContext: () => ({ analysis: current, modelBytes: currentModelBytes, runtimeEvidence: runtimeAssignmentEvidence }),
+  getContext: () => ({ analysis: currentAnalysisView(), modelBytes: currentModelBytes, runtimeEvidence: runtimeAssignmentEvidence }),
   getDocuments: buildCurrentDeploymentContractDocuments,
   getPublicDocuments: buildCurrentPublicCycloneDxDocuments,
   getFilename: currentArtifactFilename,
@@ -1732,6 +1756,7 @@ graphWorkspace = createGraphWorkspace({
   set currentLowNormStatMap(value) { currentLowNormStatMap = value; },
   get currentModelBytes() { return currentModelBytes; },
   get currentModelPayloadLoaded() { return currentModelPayloadLoaded; },
+  get currentArtifactIrContext() { return currentArtifactIrContext; },
   get currentOnnxExternalDataFiles() { return currentExternalDataFiles; },
   get currentTensorFilter() { return currentTensorFilter; },
   get currentTensorRoleFilter() { return currentTensorRoleFilter; },
@@ -1868,7 +1893,7 @@ function updateProductionInterfaceFinding(comparison) {
       actions: ["Block release until every named external parameter and the implementation SHA-256 are bound to the audited artifact."],
     });
   }
-  renderFindings(findingsBody, current);
+  renderFindings(findingsBody, currentArtifactIrContext?.primary_view || current);
 }
 
 downloadVisualPngs.addEventListener("click", async () => {
@@ -2006,7 +2031,7 @@ for (const control of [backendSelect, warmupInput, runsInput]) {
 }
 
 graphSearch.addEventListener("input", () => {
-  if (current) renderGraphOpRows(current);
+  if (current) renderGraphOpRows(currentAnalysisView());
 });
 
 opFilterBar.addEventListener("click", (e) => {
@@ -2020,7 +2045,7 @@ opFilterBar.addEventListener("click", (e) => {
   for (const c of opFilterBar.querySelectorAll(`[data-filter-group="${group}"]`)) {
     c.classList.toggle("active", c.dataset.filterValue === value);
   }
-  if (current) renderGraphOpRows(current);
+  if (current) renderGraphOpRows(currentAnalysisView());
 });
 
 graphOpHead.addEventListener("click", (e) => {
@@ -2033,11 +2058,11 @@ graphOpHead.addEventListener("click", (e) => {
     opTableSortKey = key;
     opTableSortDir = key === "index" ? 1 : -1;
   }
-  if (current) renderGraphOpRows(current);
+  if (current) renderGraphOpRows(currentAnalysisView());
 });
 
 graphDepth.addEventListener("change", () => {
-  if (current) renderGraphMap(current, selectedOpIndex);
+  if (current) renderGraphMap(currentAnalysisView(), selectedOpIndex);
 });
 
 document.addEventListener("click", (e) => {
@@ -2078,11 +2103,12 @@ installRuntimeEvidenceController({
   ensureArtifactHash: ensureModelHash,
   artifactFilename: currentArtifactFilename,
   onChanged: () => {
+    rebuildCurrentArtifactIrContext();
     renderCurrentKernelInspector(true);
-    renderTensorExplorer(current);
-    deploymentFrontierController.render(current);
-    renderFormatCapabilityMatrix(formatCapabilityPanel, current?.format, { analysis: current, runtimeEvidence: runtimeAssignmentEvidence });
-    renderRuntimeEvidenceClosure(runtimeEvidenceClosure, current, runtimeAssignmentEvidence);
+    renderTensorExplorer(currentAnalysisView());
+    deploymentFrontierController.render(currentAnalysisView());
+    renderFormatCapabilityMatrix(formatCapabilityPanel, current?.format, { analysis: currentAnalysisView(), runtimeEvidence: runtimeAssignmentEvidence });
+    renderRuntimeEvidenceClosure(runtimeEvidenceClosure, currentAnalysisView(), runtimeAssignmentEvidence);
     coreIsolationController.render();
     renderAuditClaimBoundary(current?.format, current);
     renderReportPanel();
@@ -2120,7 +2146,7 @@ nodeEvidenceOverlayInput?.addEventListener("change", async () => {
       nodeEvidenceOverlayStatus.textContent = `${nodeEdgeEvidenceOverlay.nodes.length} node rows and ${nodeEdgeEvidenceOverlay.edges.length} edge rows imported from ${nodeEdgeEvidenceOverlay.source.label}.`;
     }
     if (clearNodeEvidenceOverlay) clearNodeEvidenceOverlay.hidden = false;
-    renderGraphExplorer(current);
+    renderGraphExplorer(currentAnalysisView());
     renderReportPanel();
     setStatus("Hash-bound node/edge evidence overlay imported.", "ok");
   } catch (error) {
@@ -2132,7 +2158,7 @@ downloadNodeEvidenceOverlayTemplate?.addEventListener("click", async () => {
   if (!current) return setStatus("Run a static audit before exporting an overlay template.", "error");
   try {
     await ensureModelHash();
-    const template = buildNodeEdgeEvidenceOverlayTemplate(current);
+    const template = buildNodeEdgeEvidenceOverlayTemplate(currentAnalysisView());
     downloadText(currentArtifactFilename("node_edge_evidence_overlay.template.json"), `${JSON.stringify(template, null, 2)}\n`, "application/json");
   } catch (error) {
     setStatus(error instanceof Error ? error.message : String(error), "error");
@@ -2144,7 +2170,7 @@ clearNodeEvidenceOverlay?.addEventListener("click", () => {
   if (current) delete current.external_node_edge_evidence_overlay;
   if (nodeEvidenceOverlayStatus) nodeEvidenceOverlayStatus.textContent = "No external node/edge evidence overlay imported.";
   clearNodeEvidenceOverlay.hidden = true;
-  if (current) renderGraphExplorer(current);
+  if (current) renderGraphExplorer(currentAnalysisView());
   renderReportPanel();
 });
 
@@ -2160,7 +2186,7 @@ document.addEventListener("click", (e) => {
 if (tensorSearch) {
   tensorSearch.addEventListener("input", () => {
     currentTensorFilter = tensorSearch.value.trim();
-    if (current) renderTensorExplorer(current);
+    if (current) renderTensorExplorer(currentAnalysisView());
   });
 }
 document.addEventListener("click", (e) => {
@@ -2169,7 +2195,7 @@ document.addEventListener("click", (e) => {
   for (const c of document.querySelectorAll("[data-tfilter]")) c.classList.remove("active");
   chip.classList.add("active");
   currentTensorRoleFilter = chip.dataset.tfilter === "all" ? "" : chip.dataset.tfilter;
-  if (current) renderTensorExplorer(current);
+  if (current) renderTensorExplorer(currentAnalysisView());
 });
 
 graphZoomOut.addEventListener("click", () => zoomGraphMap(1.25));
@@ -2309,12 +2335,13 @@ document.addEventListener("keydown", (e) => {
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable) return;
   if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
   e.preventDefault();
-  const ops = current.ops;
+  const analysisView = currentAnalysisView();
+  const ops = analysisView.ops;
   const idx = ops.findIndex((op) => op.index === selectedOpIndex);
   if (idx < 0) return;
   const next = e.key === "ArrowUp" ? idx - 1 : idx + 1;
   if (next >= 0 && next < ops.length) {
-    selectGraphOp(current, ops[next].index, { scrollTable: true });
+    selectGraphOp(analysisView, ops[next].index, { scrollTable: true });
   }
 });
 
@@ -3177,7 +3204,7 @@ copyReportBtn?.addEventListener("click", async () => {
       || !reportBindingMatchesAnalysis(binding, current)) {
       throw new Error("report binding changed while the report was being generated");
     }
-    const text = formatter.buildEngineeringReport(analysis, currentReportContext());
+    const text = formatter.buildEngineeringReport(artifactIrBackedView(analysis), currentReportContext());
     if (!text.startsWith("#")) throw new Error("generated report is not valid markdown");
     await copyTextToClipboard(text);
     const original = copyReportBtn.textContent;
@@ -3208,7 +3235,7 @@ registerVerifyBtn?.addEventListener("click", async () => {
   try {
     const formatter = await loadEngineeringFormatter();
     reportVerification = null;
-    const body = formatter.reportBodyForFingerprint(formatter.buildEngineeringReport(current, currentReportContext()));
+    const body = formatter.reportBodyForFingerprint(formatter.buildEngineeringReport(currentAnalysisView(), currentReportContext()));
     const reportHash = await sha256Hex(new TextEncoder().encode(body));
     const res = await fetch("/api/report/verify/register", {
       method: "POST",
@@ -3322,7 +3349,7 @@ function renderReportPanel() {
             && reportTargetBinding().bindingScope === expectedBindingScope
             && reportTargetBinding().targetId === expectedTargetId
             && reportBindingMatchesAnalysis(binding, analysis)) {
-            reportPreview.textContent = formatter.buildEngineeringReport(analysis, currentReportContext());
+            reportPreview.textContent = formatter.buildEngineeringReport(artifactIrBackedView(analysis), currentReportContext());
           }
         })
         .catch((error) => {
@@ -3353,7 +3380,7 @@ function renderReportPanel() {
       loadRegulatoryFormatter()
         .then((formatter) => {
           if (token === reportRenderToken && current) {
-            regulatoryReportPreview.textContent = formatter.buildRegulatoryReport(current, currentRegulatoryReportContext());
+            regulatoryReportPreview.textContent = formatter.buildRegulatoryReport(currentAnalysisView(), currentRegulatoryReportContext());
           }
         })
         .catch((error) => {
@@ -3709,7 +3736,7 @@ async function analyzeFile(file) {
     analysisEstimate.textContent = formatMeasuredAudit(durationMs);
     analysisEstimateNote.textContent = "Measured from Run Static Audit to rendered completion on this browser; retained locally to calibrate future estimates.";
     pendingModelFile = file;
-    const scope = formatEvidenceScope(current?.format || format, { analysis: current, runtimeEvidence: runtimeAssignmentEvidence });
+    const scope = formatEvidenceScope(current?.format || format, { analysis: currentAnalysisView(), runtimeEvidence: runtimeAssignmentEvidence });
     analysisPlanStatus.textContent = scope.completion;
     renderAuditClaimBoundary(current?.format || format, current);
     syncFormatWorkflowVisibility(current);
@@ -3794,6 +3821,7 @@ async function stageModelFile(file, { bundleFiles = [], bundleName = "", bundleF
   pendingModelInspection = null;
   clearNodeEdgeEvidenceOverlayState();
   current = null;
+  currentArtifactIrContext = null;
   currentDeploymentFrontier = null;
   currentDeploymentDelta = null;
   currentDelegationRepair = null;
@@ -3903,6 +3931,7 @@ async function stageExternalDataSelection(files) {
     reportVerification = null;
     clearNodeEdgeEvidenceOverlayState();
     current = null;
+    currentArtifactIrContext = null;
     currentDeploymentFrontier = null;
     currentDeploymentDelta = null;
     currentDelegationRepair = null;
@@ -4183,7 +4212,7 @@ async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = fal
     .catch((error) => console.warn("Snapshot save skipped", error));
   if (finalize) {
     updateWorkflowState("audited");
-    setStatus(formatEvidenceScope(current?.format, { analysis: current, runtimeEvidence: runtimeAssignmentEvidence }).completion, "ok");
+    setStatus(formatEvidenceScope(current?.format, { analysis: currentAnalysisView(), runtimeEvidence: runtimeAssignmentEvidence }).completion, "ok");
     auditProgressController.set(100, "Complete", "complete", { step: 12 });
   }
   return {
@@ -4272,8 +4301,8 @@ function selectAcceleratorProfile(profileId, { navigate = false } = {}) {
     selectedPlacementProfileIds = [...selectedPlacementProfileIds, profile.profile_id];
   }
   renderAcceleratorSwitcher();
-  renderExecutionPlacementViewBase(document.getElementById("executionPlacementPanel"), current, runtimeAssignmentEvidence, executionPlacementOptions());
-  renderExecutionPlacementViewBase(explorerExecutionPlacementPanel, current, runtimeAssignmentEvidence, executionPlacementOptions());
+  renderExecutionPlacementViewBase(document.getElementById("executionPlacementPanel"), currentAnalysisView(), runtimeAssignmentEvidence, executionPlacementOptions());
+  renderExecutionPlacementViewBase(explorerExecutionPlacementPanel, currentAnalysisView(), runtimeAssignmentEvidence, executionPlacementOptions());
   if (navigate) {
     setActiveAuditTab("accelerator");
     setActiveWorkspace("audit", { force: true });
@@ -4284,13 +4313,13 @@ function selectAcceleratorProfile(profileId, { navigate = false } = {}) {
 
 function selectPlacementProfiles(profileIds) {
   selectedPlacementProfileIds = [...new Set((profileIds || []).map(String))];
-  renderExecutionPlacementViewBase(document.getElementById("executionPlacementPanel"), current, runtimeAssignmentEvidence, executionPlacementOptions());
-  renderExecutionPlacementViewBase(explorerExecutionPlacementPanel, current, runtimeAssignmentEvidence, executionPlacementOptions());
+  renderExecutionPlacementViewBase(document.getElementById("executionPlacementPanel"), currentAnalysisView(), runtimeAssignmentEvidence, executionPlacementOptions());
+  renderExecutionPlacementViewBase(explorerExecutionPlacementPanel, currentAnalysisView(), runtimeAssignmentEvidence, executionPlacementOptions());
 }
 
 function renderAcceleratorSwitcher() {
   selectedAcceleratorProfileId = renderAcceleratorProfileSwitcher(acceleratorSwitcherBar, {
-    analysis: current,
+    analysis: currentAnalysisView(),
     runtimeEvidence: runtimeAssignmentEvidence,
     selectedProfileId: selectedAcceleratorProfileId,
     onSelect: (profileId) => selectAcceleratorProfile(profileId, { navigate: true }),
@@ -4307,15 +4336,17 @@ function handleEvidenceSelection(selection) {
   if (state.op_index != null) {
     setActiveWorkspace("graph", { force: true });
     switchExplorerTab("node");
-    selectGraphOp(current, state.op_index, { scrollTable: false, fromEvidenceCursor: true });
+    selectGraphOp(currentAnalysisView(), state.op_index, { scrollTable: false, fromEvidenceCursor: true });
     nodeViewPanel?.scrollIntoView({ block: "start", behavior: "smooth" });
   } else if (state.tensor_index != null) {
     setActiveWorkspace("graph", { force: true });
-    graphWorkspace?.selectTensor(current, state.tensor_index, { fromEvidenceCursor: true });
+    graphWorkspace?.selectTensor(currentAnalysisView(), state.tensor_index, { fromEvidenceCursor: true });
   }
 }
 
 async function render(analysis, { keepTab = false, keepModule = false } = {}) {
+  rebuildCurrentArtifactIrContext(analysis);
+  const artifactView = currentArtifactIrContext?.primary_view || analysis;
   const modelFormat = String(analysis?.format || "tflite").toLowerCase();
   if (nodeEdgeEvidenceOverlay?.artifact_sha256 === analysis?.model_sha256) {
     analysis.external_node_edge_evidence_overlay = nodeEdgeEvidenceOverlay;
@@ -4344,7 +4375,7 @@ async function render(analysis, { keepTab = false, keepModule = false } = {}) {
   resetResearchModulePanels();
   renderSummary(analysis);
   renderReportPanel();
-  renderInsightDashboard(analysis);
+  renderInsightDashboard(artifactView);
   if (!graphScenarioMatchesAnalysis(activeGraphScenario, analysis)) activeGraphScenario = null;
   explorerDecisionController.render(analysis, { activeScenario: activeGraphScenario });
   explorerRedesignController.render(analysis);
@@ -4377,21 +4408,21 @@ async function render(analysis, { keepTab = false, keepModule = false } = {}) {
   syncDeploymentDeltaControls();
   auditProgressController.begin(95, "Rendering findings", { ceiling: 97, step: 11 });
   await nextPaint();
-  performanceVisualController.render(analysis);
+  performanceVisualController.render(artifactView);
   coreIsolationController.render();
   renderInferencePanel(analysis);
   resetDeepBomPanel();
-  renderFindings(findingsBody, analysis, {
+  renderFindings(findingsBody, artifactView, {
     onSelectEvidence: handleEvidenceSelection,
     onExplain: (explanation) => evidenceWhyController.open(explanation),
   });
   auditProgressController.begin(98, "Rendering graph explorer", { ceiling: 99, step: 12 });
   await nextPaint();
-  renderGraphExplorer(analysis);
-  renderStages(analysis);
-  renderHistogram(analysis);
-  renderTopMacs(analysis);
-  renderRoofline(analysis);
+  renderGraphExplorer(artifactView);
+  renderStages(artifactView);
+  renderHistogram(artifactView);
+  renderTopMacs(artifactView);
+  renderRoofline(artifactView);
   setActiveWorkspace("audit", { force: true });
 }
 
@@ -4403,7 +4434,7 @@ async function ensureModelHash() {
   if (!current._markdown) {
     current._markdown = current.format === "onnx" && current.markdown
       ? current.markdown
-      : buildStaticAuditMarkdown(current, current.model_sha256);
+      : buildStaticAuditMarkdown(currentAnalysisView(), current.model_sha256);
   }
   renderReportPanel();
   return current.model_sha256;
@@ -4449,10 +4480,11 @@ function syncDeploymentDeltaControls() {
 
 async function buildMlBom(analysis, bytes) {
   const formatter = await loadRawExportFormatter();
+  const analysisView = artifactIrBackedView(analysis);
   const hash = analysis.model_sha256 || await sha256Hex(bytes);
   const target = ["tflite", "onnx"].includes(analysis.format) ? analysis.target_profile || selectedTargetProfile() || {} : {};
   const targetBound = modelSupportsCapability(analysis.format, "target_profiles");
-  return formatter.buildMlBomDocument(analysis, {
+  return formatter.buildMlBomDocument(analysisView, {
     hash,
     fileSizeBytes: analysis.file_size_bytes ?? bytes.length,
     target,
@@ -4462,6 +4494,7 @@ async function buildMlBom(analysis, bytes) {
     timestamp: analysis._reportGeneratedAt || (analysis._reportGeneratedAt = new Date().toISOString()),
     preprocessingConsequenceResult: analysis === current ? preprocessingConsequenceResult : null,
     runtimeAssignmentEvidence: analysis === current ? runtimeAssignmentEvidence : null,
+    artifactIr: analysis === current ? currentArtifactIrContext?.artifact_ir || null : null,
   });
 }
 
@@ -4469,7 +4502,7 @@ async function buildCurrentDeploymentContractDocuments() {
   if (!current) throw new Error("Analyzed model evidence is required for artifact evidence export.");
   const formatter = await loadRawExportFormatter();
   const generatedAt = current._reportGeneratedAt || (current._reportGeneratedAt = new Date().toISOString());
-  return formatter.buildDeploymentContractDocuments(current, {
+  return formatter.buildDeploymentContractDocuments(currentAnalysisView(), {
     hash: current.model_sha256,
     fileSizeBytes: current.file_size_bytes ?? currentModelBytes?.length ?? 0,
     runtimeAssignmentEvidence,
@@ -4477,15 +4510,17 @@ async function buildCurrentDeploymentContractDocuments() {
     declaredFormulation: current.declared_formulation,
     releaseManifest: current.release_manifest,
     generatedAt,
+    artifactIr: currentArtifactIrContext?.artifact_ir || null,
   });
 }
 
 async function buildCurrentPublicCycloneDxDocuments() {
   if (!current) throw new Error("Analyzed model evidence is required for CycloneDX export.");
-  return buildPublicCycloneDxDocuments(current, {
+  return buildPublicCycloneDxDocuments(currentAnalysisView(), {
     hash: current.model_sha256,
     fileSizeBytes: current.file_size_bytes ?? currentModelBytes?.length ?? 0,
     generatedAt: current._reportGeneratedAt || (current._reportGeneratedAt = new Date().toISOString()),
+    artifactIr: currentArtifactIrContext?.artifact_ir || null,
   });
 }
 
@@ -4497,20 +4532,15 @@ function canonicalGraphSvgText() {
   if (!current?.model_sha256) return graphSvgText(graphMapSvg);
   const size = Number(current.file_size_bytes ?? current.file_size ?? currentModelBytes?.length ?? 0);
   if (!Number.isSafeInteger(size) || size < 0) return graphSvgText(graphMapSvg);
-  const graph = buildCanonicalGraphIr(current, {
-    filename: current.filename || currentFilename || "model",
-    format: current.format,
-    sha256: current.model_sha256,
-    size,
-    artifact_set_sha256: current.artifact_set?.artifact_set_sha256 || null,
-  });
+  const graph = currentArtifactIrContext?.graph_ir;
+  if (!graph) return graphSvgText(graphMapSvg);
   const view = currentGraphMode === "deploy" ? "placement" : "structure";
   return exportGraphVisualization(graph, { view, format: "svg" }).text;
 }
 
 function currentReviewState() {
   return buildReviewState({
-    analysis: current,
+    analysis: currentAnalysisView(),
     cursor: evidenceCursor.get(),
     graphView: nodeViewController.reviewState(),
     workspace: getActiveWorkspace(),
@@ -4527,7 +4557,7 @@ function currentReviewState() {
 
 function currentReviewHtml() {
   return buildSelfContainedReviewHtml({
-    analysis: current,
+    analysis: currentAnalysisView(),
     graphSvg: canonicalGraphSvgText(),
     reviewState: currentReviewState(),
     runtimeEvidence: runtimeAssignmentEvidence,
@@ -4536,7 +4566,7 @@ function currentReviewHtml() {
 
 async function buildEngineeringBundleFiles() {
   const formatter = await loadRawExportFormatter();
-  const files = formatter.buildEngineeringBundleArtifactFiles(current, {
+  const files = formatter.buildEngineeringBundleArtifactFiles(currentAnalysisView(), {
     reportContext: currentReportContext(),
     rawEvidenceContext: currentRawEvidenceContext(),
     mlBomDocument: await buildMlBom(current, currentModelBytes),
@@ -4552,7 +4582,7 @@ async function buildEngineeringBundleFiles() {
 
 async function buildRawDataFiles() {
   const formatter = await loadRawExportFormatter();
-  return formatter.buildRawDataArtifactFiles(current, {
+  return formatter.buildRawDataArtifactFiles(currentAnalysisView(), {
     rawEvidenceContext: currentRawEvidenceContext(),
     mlBomDocument: await buildMlBom(current, currentModelBytes),
     graphSvgText: canonicalGraphSvgText(),
@@ -4562,7 +4592,7 @@ async function buildRawDataFiles() {
 
 async function currentMetricCoverageForEvidencePackage() {
   const formatter = await loadRawExportFormatter();
-  const index = formatter.buildEvidenceLevelIndex(current, currentRawEvidenceContext());
+  const index = formatter.buildEvidenceLevelIndex(currentAnalysisView(), currentRawEvidenceContext());
   if (!Array.isArray(index?.metric_coverage?.entries) || !Array.isArray(index?.findings)) {
     throw new Error("Evidence-level index is invalid.");
   }
@@ -4650,18 +4680,18 @@ async function downloadEvidencePackageProfileZip() {
       let reportBody = null;
       if (evidenceLevel.id === "all_available" && profile.id === "engineering") {
         const formatter = await loadEngineeringFormatter();
-        reportBody = formatter.buildEngineeringReport(current, currentReportContext());
+        reportBody = formatter.buildEngineeringReport(currentAnalysisView(), currentReportContext());
       } else if (evidenceLevel.id === "all_available" && profile.id === "regulatory") {
         const formatter = await loadRegulatoryFormatter();
-        reportBody = formatter.buildRegulatoryReport(current, currentRegulatoryReportContext());
+        reportBody = formatter.buildRegulatoryReport(currentAnalysisView(), currentRegulatoryReportContext());
       }
       const evidenceIndex = await currentMetricCoverageForEvidencePackage();
       const files = buildEvidencePackageProfileFiles({
         profileId: profile.id,
         evidenceLevelId: evidenceLevel.id,
-        analysis: current,
+        analysis: currentAnalysisView(),
         context: currentReportContext(),
-        scope: formatEvidenceScope(current.format, { analysis: current, runtimeEvidence: runtimeAssignmentEvidence }),
+        scope: formatEvidenceScope(current.format, { analysis: currentAnalysisView(), runtimeEvidence: runtimeAssignmentEvidence }),
         runtimeEvidence: runtimeAssignmentEvidence,
         metricCoverage: evidenceIndex.metric_coverage,
         findings: evidenceIndex.findings,
@@ -4714,7 +4744,7 @@ async function downloadEvidenceBundleZip() {
       setEvidenceBundleProgress("regulatory_report", "running", "Adding Regulatory Report and evidence-class framing.");
       const regulatoryFormatter = await loadRegulatoryFormatter();
       const rawFormatter = await loadRawExportFormatter();
-      files.push(zipTextFile("reports/regulatory_report.md", regulatoryFormatter.buildRegulatoryReport(current, currentRegulatoryReportContext())));
+      files.push(zipTextFile("reports/regulatory_report.md", regulatoryFormatter.buildRegulatoryReport(currentAnalysisView(), currentRegulatoryReportContext())));
       setEvidenceBundleProgress("regulatory_report", "done", "Regulatory Report is included.");
 
       for (const bundleModule of REGULATORY_BUNDLE_MODULE_SPECS) {
@@ -4765,7 +4795,7 @@ async function downloadEvidenceBundleZip() {
 function currentReportContextSet({ files = [], moduleLog = [], capabilities = currentCapabilities() } = {}) {
   const identity = modelIdentity();
   return buildSessionReportContextSet({
-    analysis: current,
+    analysis: currentAnalysisView(),
     identity,
     user: bundleUserIdentityForUser(currentAuthUser),
     capabilities,
@@ -4926,7 +4956,7 @@ async function persistAuditSnapshot() {
   if (!historySettings.enabled) return;
   if (!current || !current.model_sha256) return;
   try {
-    const snapshot = buildAuditSnapshot(current, {
+    const snapshot = buildAuditSnapshot(currentArtifactIrContext?.primary_view || current, {
       analyzerVersion: ANALYZER_VERSION,
       rulepackVersion: RULEPACK_VERSION,
       runtimeBenchmarkResults: runtimeBenchmarkResults || [],
@@ -6209,7 +6239,7 @@ function resetResearchModulePanels() {
 
 function modelIdentity() {
   return buildModelIdentity({
-    analysis: current,
+    analysis: currentAnalysisView(),
     filename: currentFilename,
     modelBytes: currentModelBytes,
     selectedTargetProfile: selectedTargetProfile(),

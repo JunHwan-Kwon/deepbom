@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { Builder } from "flatbuffers";
 
 import { analyze_tflite_for_target, initSync } from "../pkg/tflite_wasm_audit.js";
+import { buildArtifactEvidenceIr } from "../web/lib/artifact-ir.js";
 import { buildEngineeringBundleArtifactFiles, buildMlBomDocument } from "../web/lib/report.js";
 
 const expect = (condition, message) => { if (!condition) throw new Error(message); };
@@ -274,7 +275,8 @@ function expectRejected(bytes, fragment, label) {
 }
 
 initSync({ module: readFileSync("pkg/tflite_wasm_audit_bg.wasm") });
-const result = analyze_tflite_for_target(makeIfFixture(), "if-subgraphs.tflite", "android_mid_a55");
+const ifFixture = makeIfFixture();
+const result = analyze_tflite_for_target(ifFixture, "if-subgraphs.tflite", "android_mid_a55");
 result.model_sha256 = "b".repeat(64);
 const inventory = result.tflite_subgraph_inventory;
 expectEqual(inventory.schema, "deepbom.tflite_subgraph_inventory.v1.3", "Subgraph schema");
@@ -301,6 +303,15 @@ expectEqual(inventory.nominal_mac_sources.length, 4, "Pinned nominal-MAC source 
 expect(inventory.nominal_mac_sources.some((row) => row.role === "conv_3d_dhwio_ndhwc_contract"
   && row.sha256 === "7dfd75d047b7d22f76c365d48ecb1facad4656897ed3d58a661afcb0ad503b36"), "Pinned Conv3D DHWIO contract source");
 expectEqual(result.operator_count, 1, "Primary execution operator total must remain separate");
+const ifArtifactIr = buildArtifactEvidenceIr(result, { filename: result.filename, format: "tflite", sha256: result.model_sha256, size: ifFixture.length });
+expectEqual(ifArtifactIr.graph.totals.scope_count, 3, "Artifact IR serialized IF scope count");
+expectEqual(ifArtifactIr.graph.totals.materialized_scope_count, 3, "Artifact IR materialized IF scope count");
+expectEqual(ifArtifactIr.graph.totals.scope_relationship_count, 2, "Artifact IR IF scope-reference count");
+expectEqual(ifArtifactIr.graph.totals.operator_count, 1, "Artifact IR simple IF all-scope operator count");
+expectEqual(ifArtifactIr.graph.totals.value_count, 5, "Artifact IR simple IF all-scope value count");
+expectEqual(ifArtifactIr.graph.completeness, "all_serialized_scopes_materialized", "Artifact IR IF scope completeness");
+expectEqual(ifArtifactIr.overlays.static.flatMap((overlay) => overlay.rows).length, 1, "Static placement must remain primary-scope only");
+expect(ifArtifactIr.overlays.static.flatMap((overlay) => overlay.rows).every((row) => row.subject_ref.includes("scope:tflite:subgraph:0")), "Static placement must not be copied onto nested subgraphs");
 const deep = result.tflite_subgraph_deep_analysis;
 expectEqual(deep.schema, "deepbom.tflite_subgraph_deep_analysis.v1", "Deep-scope schema");
 expectEqual(deep.status, "assessed_all_serialized_subgraphs", "Deep-scope status");
@@ -331,13 +342,19 @@ expect(report.includes("## TFLite Per-subgraph Deep Analysis"), "Engineering Rep
 expect(report.includes("no cross-control-flow execution total") || report.includes("Rows are never summed"), "Engineering Report deep-scope aggregation boundary");
 expectEqual(evidence.evidence?.conformance_report?.status, "pass", "Subgraph bundle conformance");
 
-const computeResult = analyze_tflite_for_target(makeIfComputeFixture(), "if-compute-subgraphs.tflite", "android_mid_a55");
+const computeFixture = makeIfComputeFixture();
+const computeResult = analyze_tflite_for_target(computeFixture, "if-compute-subgraphs.tflite", "android_mid_a55");
 computeResult.model_sha256 = "c".repeat(64);
 const computeInventory = computeResult.tflite_subgraph_inventory;
 const computeDeep = computeResult.tflite_subgraph_deep_analysis;
 expectEqual(computeResult.operator_count, 1, "Primary operator count must exclude branch operators");
 expectEqual(computeInventory.serialized_operator_count, 3, "All serialized compute/control operators");
 expectEqual(computeInventory.nested_operator_count, 2, "Nested branch operator count");
+const computeArtifactIr = buildArtifactEvidenceIr(computeResult, { filename: computeResult.filename, format: "tflite", sha256: computeResult.model_sha256, size: computeFixture.length });
+expectEqual(computeArtifactIr.graph.totals.operator_count, 3, "Artifact IR all serialized branch operators");
+expectEqual(computeArtifactIr.graph.totals.assessed_macs.decimal, "0", "Artifact IR primary entrypoint MAC subtotal");
+expectEqual(computeArtifactIr.graph.totals.serialized_scope_assessed_macs.decimal, "8", "Artifact IR independent serialized-scope nominal subtotal");
+expectEqual(computeArtifactIr.overlays.static.flatMap((overlay) => overlay.rows).length, 1, "Nested branch operators must not inherit primary static placement");
 expectEqual(computeInventory.rows[0].intrinsic_cost.status, "assessed_no_mac_compute", "Primary IF intrinsic status");
 expect(computeInventory.rows[0].intrinsic_cost.complete_nominal_macs == null, "Control-flow op has no MAC total");
 for (const [rowIndex, role] of [[1, "then"], [2, "else"]]) {

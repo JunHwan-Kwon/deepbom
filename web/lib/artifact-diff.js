@@ -2,8 +2,8 @@ export const GRAPH_DIFF_SNAPSHOT_SCHEMA = "deepbom.graph_diff_snapshot.v1";
 export const GRAPH_DIFF_SCHEMA = "deepbom.artifact_graph_diff.v1";
 
 export function buildGraphDiffSnapshot(analysis) {
-  const ops = Array.isArray(analysis?.ops) ? analysis.ops : [];
-  const tensors = Array.isArray(analysis?.tensors) ? analysis.tensors : [];
+  const graphRows = snapshotGraphRows(analysis);
+  const { ops, tensors } = graphRows;
   const tensorByIndex = new Map(tensors.map((tensor) => [Number(tensor?.index), tensor]));
   const producer = new Map();
   const consumers = new Map();
@@ -32,14 +32,14 @@ export function buildGraphDiffSnapshot(analysis) {
     const node = {
       index,
       name: String(op.name || `OP_${index}`),
-      domain: String(op.domain || analysis.format || ""),
+      domain: String(op.domain || graphRows.format || ""),
       source_identity: clean(op.graph_node_name || op.coreml_layer_name || op.source_layer_name),
       stage: clean(op.stage_key ?? op.stage_index),
       inputs: integers(op.inputs).map((tensorIndex) => tensorContract(tensorByIndex.get(tensorIndex))),
       outputs: integers(op.outputs).map((tensorIndex) => tensorContract(tensorByIndex.get(tensorIndex))),
       quantization: String(op.quantization_state || (op.quantized_compute_path ? "8bit_compute" : "none")),
       quant_risk: String(op.quant_risk || "none"),
-      placement: placementContract(op, analysis.format),
+      placement: placementContract(op, graphRows.format),
       macs: exactText(op.macs_decimal ?? op.macs),
     };
     node.contract_signature = contractSignature(node);
@@ -50,14 +50,62 @@ export function buildGraphDiffSnapshot(analysis) {
   });
   return {
     schema: GRAPH_DIFF_SNAPSHOT_SCHEMA,
-    artifact_sha256: analysis.model_sha256 || "",
-    format: String(analysis.format || "").toLowerCase(),
+    artifact_sha256: graphRows.artifactSha256,
+    format: graphRows.format,
     node_count: nodes.length,
     edge_count: edges.length,
     nodes,
     edges,
     interpretation_boundary: "This compact snapshot stores operator and tensor contracts for local topology comparison. It contains no model payload bytes or tensor values.",
   };
+}
+
+function snapshotGraphRows(analysis) {
+  const artifactIr = analysis?.artifact_ir;
+  const format = String(artifactIr?.artifact?.format || analysis?.format || "").toLowerCase();
+  const artifactSha256 = String(artifactIr?.artifact?.sha256 || analysis?.model_sha256 || "");
+  if (artifactIr?.graph?.status !== "serialized") {
+    return {
+      ops: Array.isArray(analysis?.ops) ? analysis.ops : [],
+      tensors: Array.isArray(analysis?.tensors) ? analysis.tensors : [],
+      artifactSha256,
+      format,
+    };
+  }
+  const primaryScopeRef = artifactIr.graph.primary_scope_ref;
+  const canonicalValues = artifactIr.graph.values.filter((row) => row.scope_ref === primaryScopeRef);
+  const valueByRef = new Map(canonicalValues.map((row) => [row.id, row]));
+  const nativeOps = indexedRows(analysis?.ops);
+  const nativeTensors = indexedRows(analysis?.tensors);
+  const tensors = canonicalValues.map((value) => ({
+    ...(nativeTensors.get(value.native_index) || {}),
+    index: value.native_index,
+    name: value.name,
+    dtype: value.dtype,
+    shape: value.shape,
+    artifact_ir_contract: value,
+  }));
+  const ops = artifactIr.graph.operators.filter((row) => row.scope_ref === primaryScopeRef).map((operator) => ({
+    ...(nativeOps.get(operator.native_index) || {}),
+    index: operator.native_index,
+    name: operator.op_type,
+    domain: operator.domain,
+    inputs: operator.inputs.map((port) => valueByRef.get(port.value_ref)?.native_index).filter(Number.isSafeInteger),
+    outputs: operator.outputs.map((port) => valueByRef.get(port.value_ref)?.native_index).filter(Number.isSafeInteger),
+    macs: operator.metrics?.macs?.number,
+    macs_decimal: operator.metrics?.macs?.decimal,
+    quantization_state: operator.quantization_summary?.state,
+    quant_risk: operator.quantization_summary?.risk,
+    artifact_ir_contract: operator,
+  }));
+  return { ops, tensors, artifactSha256, format };
+}
+
+function indexedRows(rows) {
+  return new Map((Array.isArray(rows) ? rows : []).map((row, position) => {
+    const index = Number(row?.index);
+    return [Number.isSafeInteger(index) && index >= 0 ? index : position, row];
+  }));
 }
 
 export function compareGraphDiffSnapshots(left, right) {
@@ -138,10 +186,12 @@ function topologySignature(node, predecessors, successors) {
 function contractSignature(node) { return `${node.domain}:${node.name}|in:${node.inputs.join(";")}|out:${node.outputs.join(";")}`; }
 function tensorContract(tensor) {
   if (!tensor) return "missing";
-  const shape = Array.isArray(tensor.shape) ? tensor.shape.map((value) => String(value)).join("x") : "?";
+  const canonical = tensor.artifact_ir_contract;
+  const shapeSource = canonical?.shape ?? tensor.shape;
+  const shape = Array.isArray(shapeSource) ? shapeSource.map((value) => String(value)).join("x") : "?";
   const scaleCount = quantizationCardinality(tensor.scales, tensor.scale_count, tensor.quantization_scale_count);
   const zeroCount = quantizationCardinality(tensor.zero_points, tensor.zero_point_count, tensor.quantization_zero_point_count);
-  return `${String(tensor.dtype || "UNKNOWN")}[${shape}]|q:${scaleCount}:${zeroCount}`;
+  return `${String(canonical?.dtype || tensor.dtype || "UNKNOWN")}[${shape}]|q:${scaleCount}:${zeroCount}`;
 }
 function quantizationCardinality(values, ...candidates) {
   if (Array.isArray(values)) return values.length;

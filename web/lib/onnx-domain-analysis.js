@@ -5,6 +5,7 @@ const STANDARD_DOMAINS = new Set(["ai.onnx", "ai.onnx.ml"]);
 
 export function buildOnnxDomainAnalysis(model) {
   const modelImports = importsMap(model?.opsets);
+  const scopeLedger = buildOnnxSerializedScopeLedger(model, modelImports);
   const functions = (model?.functions || []).map((fn, index) => normalizeFunction(fn, index));
   const functionById = new Map();
   const duplicateFunctionIds = [];
@@ -36,6 +37,7 @@ export function buildOnnxDomainAnalysis(model) {
     imported_domains: [...modelImports].map(([domain, version]) => ({ domain, version })),
     domains,
     nodes: nodeRows,
+    scope_ledger: scopeLedger,
     functions: functions.map(({ nodes: _nodes, ...fn }) => fn),
     duplicate_function_ids: [...new Set(duplicateFunctionIds)].sort(),
     recursive_function_cycles: cycles,
@@ -45,6 +47,170 @@ export function buildOnnxDomainAnalysis(model) {
     model_local_function_call_count: localRows.length,
     standard_node_count: nodeRows.filter((row) => row.resolution_class.startsWith("onnx_standard")).length,
     interpretation_boundary: "Model-local functions are artifact-defined compositions, ai.onnx.ml is a standard ONNX domain, com.microsoft is an ORT contrib domain, and only unresolved remaining domains require an external custom-op registry. Schema/kernel support and actual EP assignment are assessed separately.",
+  };
+}
+
+function buildOnnxSerializedScopeLedger(model, modelImports) {
+  const rows = [];
+  collectGraphScope(model?.graph, {
+    scope: "main_graph",
+    scopeClass: "main_graph",
+    parentScope: null,
+    nativePath: "ModelProto.graph",
+    ownerRole: "model_entrypoint",
+    ownerNodeIndex: null,
+    imports: modelImports,
+  }, rows);
+  for (const [functionIndex, fn] of (model?.functions || []).entries()) {
+    const domain = normalizeDomain(fn.domain);
+    const id = idFor(domain, fn.name, fn.overload);
+    const imports = (fn.opsets || []).length ? importsMap(fn.opsets) : modelImports;
+    collectFunctionScope(fn, {
+      scope: `function:${id}`,
+      scopeClass: "local_function_body",
+      parentScope: "main_graph",
+      nativePath: `ModelProto.functions[${functionIndex}]`,
+      ownerRole: "model_local_function_definition",
+      ownerNodeIndex: null,
+      imports,
+    }, rows);
+    for (const [attributeIndex, attribute] of (fn.attributeProtos || []).entries()) {
+      const name = attribute.name || `attribute_${attributeIndex}`;
+      const graphs = [attribute.graph, ...(attribute.graphs || [])].filter(Boolean);
+      for (const [graphIndex, graph] of graphs.entries()) {
+        const suffix = graphs.length === 1 ? name : `${name}[${graphIndex}]`;
+        collectGraphScope(graph, {
+          scope: `function:${id}/default_attribute:${suffix}`,
+          scopeClass: "function_default_graph",
+          parentScope: `function:${id}`,
+          nativePath: `ModelProto.functions[${functionIndex}].attribute_proto[${attributeIndex}].${graphs.length === 1 ? "g" : `graphs[${graphIndex}]`}`,
+          ownerRole: "function_attribute_default_graph_definition",
+          ownerNodeIndex: null,
+          imports,
+        }, rows);
+      }
+    }
+  }
+  return rows;
+}
+
+function collectGraphScope(graph, descriptor, output) {
+  if (!graph) return;
+  const row = serializedScopeRow(graph, descriptor);
+  output.push(row);
+  for (const [nodeIndex, node] of (graph.nodes || []).entries()) {
+    for (const [attributeName, attribute] of node.attributes || []) {
+      const graphs = [attribute.graph, ...(attribute.graphs || [])].filter(Boolean);
+      for (const [graphIndex, nested] of graphs.entries()) {
+        const suffix = graphs.length === 1 ? attributeName : `${attributeName}[${graphIndex}]`;
+        collectGraphScope(nested, {
+          ...descriptor,
+          scope: `${descriptor.scope}/node:${nodeIndex}/attribute:${suffix}`,
+          scopeClass: "nested_graph",
+          parentScope: descriptor.scope,
+          nativePath: `${descriptor.nativePath}.node[${nodeIndex}].attribute[${JSON.stringify(attributeName)}].${graphs.length === 1 ? "g" : `graphs[${graphIndex}]`}`,
+          ownerRole: `node_attribute:${attributeName}`,
+          ownerNodeIndex: nodeIndex,
+        }, output);
+      }
+    }
+  }
+}
+
+function collectFunctionScope(fn, descriptor, output) {
+  const graphLike = {
+    name: fn.name || descriptor.scope,
+    nodes: fn.nodes || [],
+    inputs: (fn.inputs || []).map((name) => ({ name })),
+    outputs: (fn.outputs || []).map((name) => ({ name })),
+    valueInfo: fn.valueInfo || [],
+    initializers: [],
+    sparseInitializers: [],
+  };
+  const row = serializedScopeRow(graphLike, descriptor);
+  output.push(row);
+  for (const [nodeIndex, node] of (fn.nodes || []).entries()) {
+    for (const [attributeName, attribute] of node.attributes || []) {
+      const graphs = [attribute.graph, ...(attribute.graphs || [])].filter(Boolean);
+      for (const [graphIndex, nested] of graphs.entries()) {
+        const suffix = graphs.length === 1 ? attributeName : `${attributeName}[${graphIndex}]`;
+        collectGraphScope(nested, {
+          ...descriptor,
+          scope: `${descriptor.scope}/node:${nodeIndex}/attribute:${suffix}`,
+          scopeClass: "nested_graph",
+          parentScope: descriptor.scope,
+          nativePath: `${descriptor.nativePath}.node[${nodeIndex}].attribute[${JSON.stringify(attributeName)}].${graphs.length === 1 ? "g" : `graphs[${graphIndex}]`}`,
+          ownerRole: `node_attribute:${attributeName}`,
+          ownerNodeIndex: nodeIndex,
+        }, output);
+      }
+    }
+  }
+}
+
+function serializedScopeRow(graph, descriptor) {
+  const values = [];
+  const byName = new Map();
+  const append = (source, roles, nativePath) => {
+    const name = String(source?.name || "");
+    if (!name) return;
+    let row = byName.get(name);
+    if (!row) {
+      row = {
+        value_index: values.length,
+        name,
+        value_kind: String(source?.valueKind || "tensor"),
+        dtype: String(source?.dtype || "UNKNOWN"),
+        shape: Array.isArray(source?.shape) ? [...source.shape] : [],
+        contract_status: source?.shapeDeclared === true || (source?.dtype && source.dtype !== "UNKNOWN") ? "serialized_declared_contract" : "serialized_name_only",
+        roles: [],
+        native_path: nativePath,
+      };
+      values.push(row);
+      byName.set(name, row);
+    } else if (row.contract_status === "serialized_name_only" && (source?.shapeDeclared === true || (source?.dtype && source.dtype !== "UNKNOWN"))) {
+      row.value_kind = String(source?.valueKind || row.value_kind);
+      row.dtype = String(source?.dtype || row.dtype);
+      row.shape = Array.isArray(source?.shape) ? [...source.shape] : row.shape;
+      row.contract_status = "serialized_declared_contract";
+      row.native_path = nativePath;
+    }
+    for (const role of roles) if (!row.roles.includes(role)) row.roles.push(role);
+  };
+  (graph.inputs || []).forEach((value, index) => append(value, ["graph_input"], `${descriptor.nativePath}.input[${index}]`));
+  (graph.outputs || []).forEach((value, index) => append(value, ["graph_output"], `${descriptor.nativePath}.output[${index}]`));
+  (graph.valueInfo || []).forEach((value, index) => append(value, [], `${descriptor.nativePath}.value_info[${index}]`));
+  (graph.initializers || []).forEach((value, index) => append(value, ["serialized_constant_or_storage"], `${descriptor.nativePath}.initializer[${index}]`));
+  (graph.sparseInitializers || []).forEach((value, index) => append(value?.values || {}, ["serialized_constant_or_storage", "sparse_initializer"], `${descriptor.nativePath}.sparse_initializer[${index}]`));
+  const nodes = (graph.nodes || []).map((node, nodeIndex) => {
+    (node.inputs || []).forEach((name) => append({ name }, ["operator_input_or_outer_capture"], `${descriptor.nativePath}.node[${nodeIndex}].input`));
+    (node.outputs || []).forEach((name) => append({ name }, ["operator_output"], `${descriptor.nativePath}.node[${nodeIndex}].output`));
+    const identity = nodeIdentity(node, descriptor.imports, new Map());
+    return {
+      node_index: nodeIndex,
+      node_name: String(node.name || ""),
+      op_name: String(node.opType || ""),
+      inputs: [...(node.inputs || [])],
+      outputs: [...(node.outputs || [])],
+      native_path: `${descriptor.nativePath}.node[${nodeIndex}]`,
+      ...identity,
+    };
+  });
+  return {
+    scope: descriptor.scope,
+    scope_class: descriptor.scopeClass,
+    parent_scope: descriptor.parentScope,
+    owner_role: descriptor.ownerRole,
+    owner_node_index: Number.isSafeInteger(descriptor.ownerNodeIndex) && descriptor.ownerNodeIndex >= 0
+      ? descriptor.ownerNodeIndex
+      : null,
+    invocation_semantics: descriptor.scopeClass === "main_graph" ? "model_entrypoint" : descriptor.ownerRole,
+    name: String(graph.name || descriptor.scope),
+    native_path: descriptor.nativePath,
+    node_count: nodes.length,
+    value_count: values.length,
+    nodes,
+    values,
   };
 }
 

@@ -29,10 +29,13 @@ export function validateCanonicalGraphIr(document) {
 
 function projectSerializedGraph(artifactIr) {
   const graph = artifactIr.graph;
-  const valueById = new Map(graph.values.map((value) => [value.id, value]));
+  const primaryScopeRef = graph.primary_scope_ref;
+  const primaryOperators = graph.operators.filter((operator) => operator.scope_ref === primaryScopeRef);
+  const primaryValues = graph.values.filter((value) => value.scope_ref === primaryScopeRef);
+  const valueById = new Map(primaryValues.map((value) => [value.id, value]));
   const staticOverlay = artifactIr.overlays.static.find((row) => row.kind === "static_placement") || null;
   const placementBySubject = new Map((staticOverlay?.rows || []).map((row) => [row.subject_ref, legacyPlacement(row)]));
-  const nodes = graph.operators.map((operator) => ({
+  const nodes = primaryOperators.map((operator) => ({
     id: operator.legacy_graph_node_id,
     index: operator.native_index,
     kind: "operator",
@@ -50,10 +53,10 @@ function projectSerializedGraph(artifactIr) {
     placement: placementBySubject.get(operator.id) || notAssessablePlacement(),
     artifact_ir_subject_ref: operator.id,
   }));
-  const legacyNodeId = new Map(graph.operators.map((operator) => [operator.id, operator.legacy_graph_node_id]));
+  const legacyNodeId = new Map(primaryOperators.map((operator) => [operator.id, operator.legacy_graph_node_id]));
   const graphOutputIds = new Set(graph.outputs);
   const edges = [];
-  for (const value of graph.values) {
+  for (const value of primaryValues) {
     const from = value.producer ? legacyNodeId.get(value.producer.operator_ref) || null : null;
     if (!value.consumers.length) {
       if (from && graphOutputIds.has(value.id)) edges.push(legacyEdge(value, from, null, "model_output"));
@@ -75,11 +78,14 @@ function projectSerializedGraph(artifactIr) {
       kind: "serialized_executable_graph",
       executable_dag_claim: true,
       source: "deepbom.artifact_ir.v2.graph",
+      compatibility_status: "primary_scope_projection_only",
+      source_scope_ref: primaryScopeRef,
+      omitted_materialized_scope_count: graph.scopes.filter((scope) => scope.id !== primaryScopeRef && scope.materialization_status === "materialized").length,
       placement_evidence: clone(staticOverlay?.summary || null),
     },
     totals: {
       node_count: nodes.length,
-      tensor_count: graph.values.length,
+      tensor_count: primaryValues.length,
       edge_count: edges.length,
       macs: clone(graph.totals.macs),
       assessed_macs: clone(graph.totals.assessed_macs),
@@ -89,7 +95,7 @@ function projectSerializedGraph(artifactIr) {
     outputs: graph.outputs.map((id) => valueById.get(id)?.native_index).filter(Number.isSafeInteger),
     nodes,
     edges,
-    interpretation_boundary: "Compatibility projection from deepbom.artifact_ir.v2. Operator nodes and tensor relationships retain serialized artifact identity. Placement remains a separate overlay and does not imply observed accelerator assignment unless its evidence class explicitly says so.",
+    interpretation_boundary: "Deprecated compatibility projection from deepbom.artifact_ir.v2. graph_ir.v1 projects only the primary serialized scope so nested or conditional scopes are never flattened into a false execution DAG. New consumers must use artifact_ir.v2 for complete scoped evidence. Placement remains a separate overlay and does not imply observed accelerator assignment unless its evidence class explicitly says so.",
   };
 }
 

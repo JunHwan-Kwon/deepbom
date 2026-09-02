@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.artifact_ir.v2",
-  "method_version": "2.0.0",
+  "method_version": "2.1.0",
   "hash_contract": {
     "algorithm": "SHA-256",
     "canonicalization": "RFC8785-JCS",
@@ -31,13 +31,16 @@
     "primary_scope_ref": "scope:tflite:subgraph:0",
     "scopes": [
       {
+        "native_index": 0,
+        "materialization_status": "materialized",
+        "parent_scope_ref": null,
+        "invocation_semantics": "model_entrypoint",
         "id": "scope:tflite:subgraph:0",
         "kind": "tflite_subgraph",
-        "native_index": 0,
-        "name": "subgraph_0",
-        "materialization_status": "materialized"
+        "name": "subgraph_0"
       }
     ],
+    "scope_relationships": [],
     "operators": [
       {
         "id": "operator:scope:tflite:subgraph:0:0",
@@ -9846,6 +9849,7 @@
     "totals": {
       "scope_count": 1,
       "materialized_scope_count": 1,
+      "scope_relationship_count": 0,
       "operator_count": 65,
       "value_count": 173,
       "relationship_count": 182,
@@ -9854,6 +9858,10 @@
         "number": 300775552
       },
       "assessed_macs": {
+        "decimal": "300775552",
+        "number": 300775552
+      },
+      "serialized_scope_assessed_macs": {
         "decimal": "300775552",
         "number": 300775552
       },
@@ -9866,7 +9874,7 @@
       }
     },
     "completeness": "serialized_scope_materialized",
-    "interpretation_boundary": "Operators, values, ports, and producer-consumer relationships come from the serialized artifact. Nested scopes are materialized only when their operator/value ledgers are present; an inventory-only nested scope is not flattened into the primary graph."
+    "interpretation_boundary": "Operators, values, ports, and producer-consumer relationships come from the serialized artifact. Primary-scope assessed_macs is the model-entry nominal total. serialized_scope_assessed_macs is only the sum of independently serialized scope rows and is not an execution total for conditional, repeated, or function scopes."
   },
   "storage_topology": {
     "status": "assessed_serialized_objects",
@@ -22406,5 +22414,5 @@
     "unknown_is_zero": false
   },
   "interpretation_boundary": "The canonical graph, storage, architecture, and quantization ledgers preserve distinct evidence scopes. Static backend eligibility and imported runtime observations are overlays and never rewrite serialized artifact facts. A missing executable graph is represented as not_serialized; no execution edge is synthesized from tensor names or architecture order.",
-  "artifact_ir_sha256": "24cbf23569cd15337a35c363fc869742a99e84c2dc89662595fbddd7eadb34a5"
+  "artifact_ir_sha256": "aebc2c7a01e063ecb9dcef899dde35832f6801789eaf4921d2d6adb9e63a70bb"
 }

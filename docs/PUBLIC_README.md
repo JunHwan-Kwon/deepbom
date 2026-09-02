@@ -52,7 +52,12 @@ The graph JSON output includes the evidence-preserving
 `deepbom.artifact_ir.v2` ledger and a deterministic `deepbom.graph_ir.v1`
 visualization compatibility projection. Serialized graph, storage topology,
 architecture grouping, scoped quantization, static placement, and imported
-runtime evidence remain separate. The v2 JSON Schema is published at
+runtime evidence remain separate. Method `2.1.0` materializes exactly decoded
+TFLite subgraphs, ONNX nested graphs/local functions, and ExecuTorch primary
+plans without flattening conditional scopes. Runtime-node fusion is reconciled
+only from artifact-bound subject references or primary native op indices;
+names are never guessed. `graph_ir.v1` remains primary-scope-only for legacy
+consumers. The v2 JSON Schema is published at
 [`docs/schemas/deepbom-artifact-ir-v2.schema.json`](docs/schemas/deepbom-artifact-ir-v2.schema.json)
 and at `https://deepbom.org/schemas/deepbom-artifact-ir-v2.schema.json`.
 

@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "6d6bbd6a202a7e198a0a3b04d2239ded32692f7a",
+  "source_commit": "94da77e4b3ce3d18018155cce17f32d9a0f6eb91",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 923,
+  "file_count": 924,
   "files": [
     {
       "path": ".gitattributes",
@@ -37,8 +37,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 14631,
-      "sha256": "c47db1de9a192d04650f40227826edbb3988e3017b36fdd346ace8e61cb62756"
+      "byte_length": 15911,
+      "sha256": "78c3b3fb7695982e6842b1b7d59e3c0301a220d7a8020e542aeb8c4e0c933627"
     },
     {
       "path": "CITATION.cff",
@@ -67,8 +67,8 @@
     },
     {
       "path": "README.md",
-      "byte_length": 6677,
-      "sha256": "86709465a251981eaedcce1770c7e4d242f092b632eefd0bc33713ac5af24d83"
+      "byte_length": 7039,
+      "sha256": "ed38c6fed17e3655c759169b8cb62e3641f3a4f49213a686ee1903003076d204"
     },
     {
       "path": "SECURITY.md",
@@ -92,8 +92,8 @@
     },
     {
       "path": "bin/deepbom.mjs",
-      "byte_length": 87153,
-      "sha256": "e62355ba06fcf7cff245ba1a32cb6e2eda02e9a17b7f90a019244d92b37ddff7"
+      "byte_length": 87858,
+      "sha256": "808269d809d37e8cb78ab996a640efb06727ccf24552a14bfbd9f5f3e6ea2a32"
     },
     {
       "path": "bin/graph-png-export.mjs",
@@ -207,8 +207,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 33980,
-      "sha256": "e1bf792949665a3635d3491cfa0424bbe3fee9b82fba59eb6a16a3ab574b021b"
+      "byte_length": 34011,
+      "sha256": "5bb12f3d4cfa975e9a7efced11abffa1fb2f0e15bfe5217244cdfb94f9d9af62"
     },
     {
       "path": "corpus/README.md",
@@ -522,8 +522,8 @@
     },
     {
       "path": "docs/PUBLIC_README.md",
-      "byte_length": 6677,
-      "sha256": "86709465a251981eaedcce1770c7e4d242f092b632eefd0bc33713ac5af24d83"
+      "byte_length": 7039,
+      "sha256": "ed38c6fed17e3655c759169b8cb62e3641f3a4f49213a686ee1903003076d204"
     },
     {
       "path": "docs/REPRESENTATIVE_DATASET_CAPTURE.md",
@@ -562,8 +562,8 @@
     },
     {
       "path": "docs/schemas/deepbom-artifact-ir-v2.schema.json",
-      "byte_length": 8630,
-      "sha256": "48e3566ada8b31dbf6e9b695bcd1e440bb1d0370be4490462e667b40b3049360"
+      "byte_length": 27788,
+      "sha256": "1d34912cb47e8220431b7dedd8e889b89db55e9ccdfad548db9e5741a1d07c46"
     },
     {
       "path": "docs/zenodo-validation-metadata.json",
@@ -742,8 +742,8 @@
     },
     {
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_artifact_ir.json",
-      "byte_length": 661577,
-      "sha256": "0c9f76c47693a2bdc1870a62329a10821ea08a1d87e0fefca877622fafd55881"
+      "byte_length": 661912,
+      "sha256": "f3c3817cd84954ddf4840435df9c1defd7ca4116d589f6be0962d29bcefc2c21"
     },
     {
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_2_0_parameter_contract.preview.cdx.json",
@@ -753,7 +753,7 @@
     {
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_evidence.cdx.json",
       "byte_length": 57676,
-      "sha256": "58f135829588aa59fdafb115e9ce872409663f13a807a268b8d0ccaf5acfd51c"
+      "sha256": "f2f6cf7a1ab93e715c7eb9d6bd93337487dc7aa5d311ddfc7128e2023387fb8d"
     },
     {
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_interface_contracts.json",
@@ -768,7 +768,7 @@
     {
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_observed_formulation.cdx.json",
       "byte_length": 21993,
-      "sha256": "9d3b3244a6c04bb51fd330d2209e7e7b13d64d4b2f8b113f065c0c83364b46f2"
+      "sha256": "644624ca05818a2083164765308ab6531844d94d41a63c293ccc8b7036a3314f"
     },
     {
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_runtime_requirements.json",
@@ -897,8 +897,8 @@
     },
     {
       "path": "scripts/build-channel-artifacts.mjs",
-      "byte_length": 16974,
-      "sha256": "4fa99dcc359a0bdcc3752ff2fb9801334c2635f7d58be031f36edef0cfe1ec30"
+      "byte_length": 17567,
+      "sha256": "759a0b65b749116edf80239f1b5de924b36c9778271e77e88b205b6289e94052"
     },
     {
       "path": "scripts/build-coreml-legacy-quantization-corpus.mjs",
@@ -937,8 +937,8 @@
     },
     {
       "path": "scripts/build-public-source-export.mjs",
-      "byte_length": 9016,
-      "sha256": "87a64d2f421828c9f59e4cea3cb9dd297fdaf665f8e81b381809752a3aa7faa0"
+      "byte_length": 9054,
+      "sha256": "5344edb2955963faba40fe1771e89c29896f3197cffc9b6ffa21394126dc32bb"
     },
     {
       "path": "scripts/build-release.mjs",
@@ -1062,8 +1062,8 @@
     },
     {
       "path": "scripts/check-artifact-ir.mjs",
-      "byte_length": 7397,
-      "sha256": "e78e467158b9719d8bd038c0fe8984f6aac51ef54ca12d613c7f3d724323618c"
+      "byte_length": 16074,
+      "sha256": "e919ebd0ba5fe61939f732ed944bca28c08feaba56a356250821aff84c1e9602"
     },
     {
       "path": "scripts/check-assert.mjs",
@@ -1102,8 +1102,8 @@
     },
     {
       "path": "scripts/check-channel-equivalence.mjs",
-      "byte_length": 12779,
-      "sha256": "e10f30c498a75b70777f70e29bb4d8debe0c66a24511ec6b7f27059612f300be"
+      "byte_length": 13678,
+      "sha256": "8a3cd7ac0fd1d0dd466704c441a23ca8a8243613261e525b03f13c28875fd928"
     },
     {
       "path": "scripts/check-channel-vitality-viewer.mjs",
@@ -1933,7 +1933,7 @@
     {
       "path": "scripts/check-source-budget.mjs",
       "byte_length": 10690,
-      "sha256": "44ef07c1e000a77ed9e50209003849c281da7485107e534f5a63de3bbcc253c8"
+      "sha256": "fed01bcfe155048cd186c1bb9052634bac74b0e88d3374fcbe50c4feb19891cc"
     },
     {
       "path": "scripts/check-standardization-evidence.mjs",
@@ -2012,8 +2012,8 @@
     },
     {
       "path": "scripts/check-tflite-subgraph-inventory.mjs",
-      "byte_length": 24164,
-      "sha256": "6af21d15cd047bc1691c8664ad01ebccc1593e4668f3b21c4bc0d415d019ad22"
+      "byte_length": 26172,
+      "sha256": "215e467718acb52d8ac4ade6c5e181067e4d771e033f861e93193865e6bf6d00"
     },
     {
       "path": "scripts/check-tier.mjs",
@@ -2037,8 +2037,8 @@
     },
     {
       "path": "scripts/check-workflow-contract.mjs",
-      "byte_length": 21462,
-      "sha256": "d687fe425bee3f4e823091013f3819ae271dc45a64c708182fa950a7d3bdbe17"
+      "byte_length": 21525,
+      "sha256": "3c29d4bff363679f79f6752e8989b6a51ca6acc76635b6f0a44816efd757a33b"
     },
     {
       "path": "scripts/check-xnnpack-delegate-rulepack.mjs",
@@ -2832,8 +2832,8 @@
     },
     {
       "path": "web/app.js",
-      "byte_length": 303183,
-      "sha256": "f858fa5d8b983e941223099c6a01e2fc3542f32b90ff461f69db94f4dbfa96a2"
+      "byte_length": 305384,
+      "sha256": "6ec71ed59798bf205ba1b8308bb136e57cc3eb1e9ad32fc18e589e9a04f6046e"
     },
     {
       "path": "web/auth-complete.html",
@@ -2957,8 +2957,8 @@
     },
     {
       "path": "web/lib/app-graph-workspace.js",
-      "byte_length": 81191,
-      "sha256": "a404e2d2335d33c19f0a44b08a5bace35601b72468a83241f374a21305d4e51f"
+      "byte_length": 82181,
+      "sha256": "340d8ca77c1b9a3dfe0c075d80f46353935e43196bc9cec6b7a6074bfc34b58b"
     },
     {
       "path": "web/lib/app-surface.js",
@@ -2982,8 +2982,8 @@
     },
     {
       "path": "web/lib/artifact-diff.js",
-      "byte_length": 9315,
-      "sha256": "8e730140f4e0ddc0dabeb0e2fda5fed7d95646852df5a7a912b502cf2c3ca830"
+      "byte_length": 11499,
+      "sha256": "9c813bf98b1c3904ccc6b713cc314335bb259f3fcff16a9343317b5b9cabbca7"
     },
     {
       "path": "web/lib/artifact-evidence-envelope.js",
@@ -2991,9 +2991,14 @@
       "sha256": "bdcebf5642e5d766508e9d168601df1ab01388577eea9fcee6a29edd96d6e198"
     },
     {
+      "path": "web/lib/artifact-ir-context.js",
+      "byte_length": 5554,
+      "sha256": "bac1da17d66d5be07124e2c802f9f8c93f13d227fe4b2093834213b1091bcac9"
+    },
+    {
       "path": "web/lib/artifact-ir.js",
-      "byte_length": 48167,
-      "sha256": "c2059a48365a39866af56a5344a770e47ee92a622b0b63bd2452a4590e23578e"
+      "byte_length": 74902,
+      "sha256": "1e69daf25623a3bf2143860891d9264b092d451df4c047f9f58c9ad1488b90e9"
     },
     {
       "path": "web/lib/artifact-overview.js",
@@ -3037,8 +3042,8 @@
     },
     {
       "path": "web/lib/build-metadata.js",
-      "byte_length": 76334,
-      "sha256": "6ad94b04d7320b5f5c2f00809e00e82d87ef65c2ecd382d21f15dc114b64d10c"
+      "byte_length": 76500,
+      "sha256": "de229c3ce4a5491a74e1f233d65a5ee89cf256d0e34bcdf8bad56838eb9da856"
     },
     {
       "path": "web/lib/bundle.js",
@@ -3367,13 +3372,13 @@
     },
     {
       "path": "web/lib/graph-ir.js",
-      "byte_length": 11087,
-      "sha256": "4e2150dc00394d16b9355c70f1890246f7e8bc284e879c5b3324a836ef73a8d0"
+      "byte_length": 11740,
+      "sha256": "c7e7393e95bc143a70e323ab5a76cea773547b15086608b6c5b7d0ba576153e2"
     },
     {
       "path": "web/lib/graph-layout.js",
-      "byte_length": 8905,
-      "sha256": "ecfe7124a0e3285beed2b6005da1c8f257cf2cc001102dc4efecde5cad3e8078"
+      "byte_length": 9505,
+      "sha256": "067b89dbcb23d11963e607a252a7a616c8eda1ca79c3e174979d26d0e05aa3c9"
     },
     {
       "path": "web/lib/graph-topology.js",
@@ -3572,8 +3577,8 @@
     },
     {
       "path": "web/lib/onnx-domain-analysis.js",
-      "byte_length": 8442,
-      "sha256": "8cdff66d6a99b7ce75b48b2b8b0d3b6c31d41376d22772f933cfb630862f2a5a"
+      "byte_length": 16108,
+      "sha256": "df74f73719a872372582bc401c34fb987bacc32c844e4c7588de3850702240b9"
     },
     {
       "path": "web/lib/onnx-domain-viewer.js",
@@ -4592,8 +4597,8 @@
     },
     {
       "path": "web/sw.js",
-      "byte_length": 15036,
-      "sha256": "8f2cf0ee267de4a7fd57c25842378c7fd957a3f1c94020232bc90a7730c0dcaf"
+      "byte_length": 15070,
+      "sha256": "4294e7e7ac101d71b5b53665f182472111a04c1fae729449ce41a38278946130"
     },
     {
       "path": "web/test.html",

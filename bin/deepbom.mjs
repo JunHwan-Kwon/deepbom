@@ -26,8 +26,7 @@ import { collectNvidiaAcceleratorProfile } from "./nvidia-accelerator-collector.
 import { resolveArtifactSource } from "./remote-artifact-resolver.mjs";
 import { resolveHuggingFaceOnnxExternalDataClosure, resolveHuggingFaceSafeTensorsClosure } from "./remote-artifact-closure.mjs";
 import { finalizeArtifactSet } from "../web/lib/artifact-set.js";
-import { buildArtifactEvidenceIr } from "../web/lib/artifact-ir.js";
-import { projectArtifactIrToCanonicalGraph } from "../web/lib/graph-ir.js";
+import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
 import { exportGraphVisualization } from "../web/lib/graph-export.js";
 import { exportGraphPng } from "./graph-png-export.mjs";
 import { buildNvidiaAcceleratorProfileBinding } from "../web/lib/accelerator-profile-binding.js";
@@ -308,16 +307,24 @@ async function main(argv) {
       mode: reviewPolicy.mode,
     };
   }
+  const artifactIrContext = requiresArtifactIrContext(parsed)
+    ? getArtifactIrContext(analysis, {
+        ...artifact,
+        artifact_set_sha256: analysis.artifact_set?.artifact_set_sha256 || null,
+      })
+    : null;
+  if (requiresArtifactIrContext(parsed) && !artifactIrContext) throw new Error("Canonical Artifact Evidence IR could not be constructed for the analyzed artifact.");
+  const analysisView = artifactIrContext?.primary_view || analysis;
 
-  if (parsed.command === "graph") return runGraphCommand(parsed, analysis, artifact);
-  if (parsed.command === "placement") return runPlacementCommand(parsed, analysis, artifact);
+  if (parsed.command === "graph") return runGraphCommand(parsed, artifactIrContext);
+  if (parsed.command === "placement") return runPlacementCommand(parsed, analysisView, artifact);
 
-  if (parsed.command === "verify") return runVerifyCommand(parsed, analysis, artifact);
+  if (parsed.command === "verify") return runVerifyCommand(parsed, analysisView, artifact);
   if (parsed.command === "explore") return runExploreCommand(parsed, analysis, artifact, input, targetBinding.value);
 
   const generatedAt = resolveGenerationTimestamp(parsed.timestamp);
   const envelope = parsed.outputFormat === "envelope" || parsed.outputFormat === "sarif" || parsed.failOn !== "none" || reviewPolicy
-    ? buildArtifactEvidenceEnvelope(analysis, {
+    ? buildArtifactEvidenceEnvelope(analysisView, {
         hash: artifactSha256,
         fileSizeBytes: artifact.size,
         filename: artifact.filename,
@@ -343,7 +350,7 @@ async function main(argv) {
       })
     : envelope ? evaluateFindingPolicy(envelope, parsed.failOn) : null;
   const document = parsed.outputFormat === "cyclonedx"
-    ? buildMlBomDocument(analysis, {
+    ? buildMlBomDocument(analysisView, {
         hash: artifactSha256,
         fileSizeBytes: artifact.size,
         timestamp: generatedAt || new Date().toISOString(),
@@ -351,13 +358,14 @@ async function main(argv) {
           target: analysis.target_profile,
           targetId: analysis.target_profile.id,
         } : {}),
+        artifactIr: artifactIrContext.artifact_ir,
       })
     : parsed.outputFormat === "envelope"
       ? envelope
       : parsed.outputFormat === "sarif"
         ? buildSarifDocument(envelope, { version: VERSION, policyResult })
         : analysis;
-  await emitDocument(parsed, document, () => buildHumanSummary(analysis, artifact));
+  await emitDocument(parsed, document, () => buildHumanSummary(analysisView, artifact));
   if (parsed.policyOutput) {
     await writeOutputAtomically(parsed.policyOutput, `${JSON.stringify(policyResult, null, parsed.compact ? 0 : 2)}\n`, { noClobber: parsed.noClobber });
   }
@@ -391,6 +399,15 @@ async function resolveTargetBinding(parsed) {
       duplicate_key_validation: "complete",
     },
   };
+}
+
+function requiresArtifactIrContext(parsed) {
+  const humanAnalysisOutput = parsed.outputFormat === "analysis" && !parsed.json && !parsed.compact && !parsed.output;
+  return ["graph", "placement"].includes(parsed.command)
+    || parsed.outputFormat !== "analysis"
+    || parsed.failOn !== "none"
+    || Boolean(parsed.reviewPolicy)
+    || humanAnalysisOutput;
 }
 
 function resolveCliArtifactSource(spec, parsed) {
@@ -642,9 +659,9 @@ async function runExploreCommand(parsed, analysis, artifact, input, target) {
   return emitDocument(parsed, pareto, () => buildExploreSummary(pareto));
 }
 
-async function runGraphCommand(parsed, analysis, artifact) {
-  const artifactIr = buildArtifactEvidenceIr(analysis, { ...artifact, artifact_set_sha256: analysis.artifact_set?.artifact_set_sha256 || null });
-  const graph = projectArtifactIrToCanonicalGraph(artifactIr);
+async function runGraphCommand(parsed, artifactIrContext) {
+  const artifactIr = artifactIrContext.artifact_ir;
+  const graph = artifactIrContext.graph_ir;
   if (parsed.outputFormat === "png") {
     const exported = exportGraphPng(graph, { view: parsed.view });
     if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, exported.bytes, { noClobber: parsed.noClobber });
