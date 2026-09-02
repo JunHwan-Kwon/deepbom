@@ -191,8 +191,8 @@ try {
   await page.waitForFunction(() => !document.querySelector("#runAudit")?.disabled, null, { timeout: 30_000 });
   await page.locator("#runAudit").click();
   await page.waitForFunction(() => document.querySelector("#status")?.textContent?.includes("audit run complete"), null, { timeout: 60_000 });
-  const researchGroup = page.locator("#workflowResearchGroup");
-  if (!await researchGroup.getAttribute("open")) await researchGroup.locator("summary").click();
+  const analysisPalette = page.locator("#analysisPalette");
+  if (!await analysisPalette.isVisible()) throw new Error("Analysis palette is not visible after audit completion.");
   const deepBomStep = page.locator('[data-workflow-step="deepbom"]');
   await deepBomStep.evaluate((step) => step.scrollIntoView({ block: "nearest", inline: "center" }));
   await deepBomStep.click();

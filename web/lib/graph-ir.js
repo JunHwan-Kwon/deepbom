@@ -1,13 +1,9 @@
-import { buildArtifactEvidenceIr, validateArtifactEvidenceIr } from "./artifact-ir.js";
+import { validateArtifactEvidenceIr } from "./artifact-ir.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 
 export const GRAPH_IR_SCHEMA = "deepbom.graph_ir.v1";
 const SHA256 = /^[a-f0-9]{64}$/;
-
-export function buildCanonicalGraphIr(analysis, artifact) {
-  return projectArtifactIrToCanonicalGraph(buildArtifactEvidenceIr(analysis, artifact));
-}
 
 export function projectArtifactIrToCanonicalGraph(artifactIrDocument) {
   const artifactIr = validateArtifactEvidenceIr(artifactIrDocument);
@@ -59,12 +55,12 @@ function projectSerializedGraph(artifactIr) {
   for (const value of primaryValues) {
     const from = value.producer ? legacyNodeId.get(value.producer.operator_ref) || null : null;
     if (!value.consumers.length) {
-      if (from && graphOutputIds.has(value.id)) edges.push(legacyEdge(value, from, null, "model_output"));
+      if (from && graphOutputIds.has(value.id)) edges.push(legacyEdge(value, from, null, "model_output", value.producer?.port, null));
       continue;
     }
     for (const consumer of value.consumers) {
       const to = legacyNodeId.get(consumer.operator_ref) || null;
-      if (to) edges.push(legacyEdge(value, from, to, from ? "operator_tensor" : "model_input_or_constant"));
+      if (to) edges.push(legacyEdge(value, from, to, from ? "operator_tensor" : "model_input_or_constant", value.producer?.port, consumer.port));
     }
   }
   return {
@@ -144,12 +140,16 @@ function projectContainerEvidence(artifactIr) {
   };
 }
 
-function legacyEdge(value, from, to, relation) {
+function legacyEdge(value, from, to, relation, sourcePort, targetPort) {
+  const normalizedSourcePort = Number.isSafeInteger(Number(sourcePort)) ? Number(sourcePort) : null;
+  const normalizedTargetPort = Number.isSafeInteger(Number(targetPort)) ? Number(targetPort) : null;
   return {
-    id: `tensor:${value.native_index}:${from || "external"}:${to || "external"}`,
+    id: `tensor:${value.native_index}:${from || "external"}:p${normalizedSourcePort ?? "external"}:${to || "external"}:p${normalizedTargetPort ?? "external"}`,
     tensor_index: value.native_index,
     tensor_name: value.name,
     from, to, relation,
+    source_port: normalizedSourcePort,
+    target_port: normalizedTargetPort,
     dtype: value.dtype,
     shape: clone(value.shape),
     byte_length: clone(value.logical_byte_length),

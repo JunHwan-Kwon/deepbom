@@ -7,9 +7,15 @@ import path from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
 
 import { analyzeExecuTorchModel } from "../web/executorch.js";
+import { analyzeOnnxModel } from "../web/onnx.js";
 import { buildGraphDiffSnapshot } from "../web/lib/artifact-diff.js";
-import { buildArtifactEvidenceIr, validateArtifactEvidenceIr } from "../web/lib/artifact-ir.js";
+import { validateArtifactEvidenceIr } from "../web/lib/artifact-ir.js";
 import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
+import { buildEngineeringEvidenceDocument, buildRawDataArtifactFiles } from "../web/lib/report-evidence.js";
+import { buildDeploymentContractDocuments } from "../web/lib/report-export-contracts.js";
+import { buildMlBomDocument } from "../web/lib/report-mlbom.js";
+import { buildPublicCycloneDxDocuments } from "../web/lib/public-cyclonedx-export.js";
+import { buildReviewState } from "../web/lib/review-export.js";
 import { decodeFixtureBase64, EXECUTORCH_ADD_PTE_BASE64 } from "./fixtures/executorch-fixtures.mjs";
 
 const root = path.resolve(".");
@@ -101,7 +107,7 @@ assert.equal(recursiveOnnx.graph_ir.projection.omitted_materialized_scope_count,
 const executorchBytes = decodeFixtureBase64(EXECUTORCH_ADD_PTE_BASE64);
 const executorchAnalysis = analyzeExecuTorchModel(executorchBytes, "add.pte");
 const executorchSha256 = createHash("sha256").update(executorchBytes).digest("hex");
-const executorch = buildArtifactEvidenceIr(executorchAnalysis, { filename: "add.pte", format: "executorch", sha256: executorchSha256, size: executorchBytes.length });
+const executorch = buildIr(executorchAnalysis, { filename: "add.pte", format: "executorch", sha256: executorchSha256, size: executorchBytes.length });
 assert.equal(validateSchema(executorch), true, `ExecuTorch JSON Schema validation: ${formatAjvErrors(validateSchema.errors)}`);
 assert.deepEqual(validateArtifactEvidenceIr(executorch), executorch, "ExecuTorch semantic validation");
 assert.equal(executorch.graph.totals.scope_count, 1, "ExecuTorch scope count");
@@ -127,7 +133,20 @@ const runtimeAnalysis = {
   input_tensor_indices: [0, 1],
   output_tensor_indices: [3],
 };
-const runtimeBound = buildArtifactEvidenceIr(runtimeAnalysis, { filename: runtimeAnalysis.filename, format: "onnx", sha256: "e".repeat(64), size: 16 }, { runtimeEvidence });
+const repeatedInputAnalysis = structuredClone(runtimeAnalysis);
+repeatedInputAnalysis.filename = "repeated-input-port.onnx";
+repeatedInputAnalysis.ops[0].inputs = [0, 0];
+const repeatedInputContext = getArtifactIrContext(repeatedInputAnalysis, {
+  filename: repeatedInputAnalysis.filename,
+  format: "onnx",
+  sha256: "d".repeat(64),
+  size: 16,
+});
+assert.equal(new Set(repeatedInputContext.graph_ir.edges.map((row) => row.id)).size, repeatedInputContext.graph_ir.edges.length,
+  "Graph IR compatibility edges must retain consumer-port identity when one value feeds multiple ports of the same operator");
+assert.deepEqual(repeatedInputContext.graph_ir.edges.filter((row) => row.tensor_index === 0).map((row) => row.target_port), [0, 1],
+  "Graph IR compatibility edges must preserve repeated input port indices");
+const runtimeBound = buildIr(runtimeAnalysis, { filename: runtimeAnalysis.filename, format: "onnx", sha256: "e".repeat(64), size: 16 }, { runtimeEvidence });
 const runtimeOverlay = runtimeBound.overlays.runtime[0];
 assert.equal(validateSchema(runtimeBound), true, `runtime reconciliation JSON Schema validation: ${formatAjvErrors(validateSchema.errors)}`);
 assert.equal(runtimeOverlay.summary.runtime_node_count, 2, "runtime reconciliation node count");
@@ -136,18 +155,18 @@ assert.equal(runtimeOverlay.summary.unmapped_runtime_node_count, 1, "runtime rec
 assert.equal(runtimeOverlay.summary.source_subject_reference_count, 2, "runtime reconciliation source-reference count");
 assert.equal(runtimeOverlay.summary.name_similarity_mapping_used, false, "runtime reconciliation must not name-match");
 assert.equal(runtimeOverlay.rows.length, 2, "runtime reconciliation flattened assignment conservation");
-assert.throws(() => buildArtifactEvidenceIr(
+assert.throws(() => buildIr(
   runtimeAnalysis,
   { filename: runtimeAnalysis.filename, format: "onnx", sha256: "e".repeat(64), size: 16 },
   { runtimeEvidence: { ...runtimeEvidence, artifact_sha256: "f".repeat(64) } },
 ), /not bound to the active artifact SHA-256/, "runtime evidence from another artifact must fail closed");
 
-const legacyUnboundRuntime = buildArtifactEvidenceIr(runtimeAnalysis, { filename: runtimeAnalysis.filename, format: "onnx", sha256: "e".repeat(64), size: 16 }, {
+const legacyUnboundRuntime = buildIr(runtimeAnalysis, { filename: runtimeAnalysis.filename, format: "onnx", sha256: "e".repeat(64), size: 16 }, {
   runtimeEvidence: { artifact_sha256: "e".repeat(64), rows: [{ node_name: "Add_0", provider: "example_ep" }] },
 });
 assert.equal(legacyUnboundRuntime.overlays.runtime.length, 0, "runtime rows without canonical subject refs must remain unreconciled");
 
-const indexedFusion = buildArtifactEvidenceIr(runtimeAnalysis, { filename: runtimeAnalysis.filename, format: "onnx", sha256: "e".repeat(64), size: 16 }, {
+const indexedFusion = buildIr(runtimeAnalysis, { filename: runtimeAnalysis.filename, format: "onnx", sha256: "e".repeat(64), size: 16 }, {
   runtimeEvidence: {
     artifact_sha256: "e".repeat(64),
     assignments: [
@@ -168,6 +187,69 @@ const runtimeContext = getArtifactIrContext(runtimeAnalysis, { filename: runtime
 });
 assert.equal(runtimeContext.primary_view.artifact_ir, runtimeContext.artifact_ir, "shared consumer view must retain its canonical Artifact IR binding");
 assert.equal(runtimeContext.primary_view.ops[0].artifact_ir_subject_ref, "operator:scope:onnx:main_graph:0", "shared consumer op identity");
+const crossOutputBytes = await readFile(path.join(root, "web/samples/sample_cnn_float.onnx"));
+const crossOutputSha = createHash("sha256").update(crossOutputBytes).digest("hex");
+const crossOutputAnalysis = analyzeOnnxModel(new Uint8Array(crossOutputBytes), "sample_cnn_float.onnx");
+crossOutputAnalysis.model_sha256 = crossOutputSha;
+crossOutputAnalysis.file_size_bytes = crossOutputBytes.length;
+const crossOutputRuntimeEvidence = {
+  artifact_sha256: crossOutputSha,
+  runtime_nodes: [{
+    runtime_node_ref: "fused:cross-output:0",
+    backend: "fixture_ep",
+    source_subject_refs: ["operator:scope:onnx:main_graph:0", "operator:scope:onnx:main_graph:1"],
+  }],
+};
+const crossOutputContext = getArtifactIrContext(crossOutputAnalysis, {
+  filename: crossOutputAnalysis.filename,
+  format: "onnx",
+  sha256: crossOutputSha,
+  size: crossOutputBytes.length,
+}, { runtimeEvidence: crossOutputRuntimeEvidence });
+const runtimeIdentity = { filename: crossOutputAnalysis.filename, format: "onnx", sha256: crossOutputSha, byte_length: crossOutputBytes.length };
+const reportRuntimeEvidence = {};
+const reportContext = { identity: runtimeIdentity, runtimeEvidence: reportRuntimeEvidence, artifactIrContext: crossOutputContext };
+const rawEvidenceContext = { ...reportContext };
+const crossOutputMlBom = buildMlBomDocument(crossOutputContext.primary_view, {
+  hash: crossOutputSha,
+  fileSizeBytes: crossOutputBytes.length,
+  artifactIr: crossOutputContext.artifact_ir,
+  timestamp: "2026-09-02T00:00:00.000Z",
+});
+const engineeringEvidence = buildEngineeringEvidenceDocument(crossOutputContext.primary_view, {
+  reportContext,
+  rawEvidenceContext,
+  mlBomDocument: crossOutputMlBom,
+});
+const rawFiles = buildRawDataArtifactFiles(crossOutputContext.primary_view, { rawEvidenceContext });
+const rawArtifactIr = JSON.parse(rawFiles.find((row) => row.name === "static/artifact_ir.json").data);
+const deploymentContracts = buildDeploymentContractDocuments(crossOutputContext.primary_view, {
+  hash: crossOutputSha, fileSizeBytes: crossOutputBytes.length, generatedAt: "2026-09-02T00:00:00.000Z", artifactIrContext: crossOutputContext,
+});
+const publicCycloneDx = buildPublicCycloneDxDocuments(crossOutputContext.primary_view, {
+  hash: crossOutputSha, fileSizeBytes: crossOutputBytes.length, generatedAt: "2026-09-02T00:00:00.000Z", artifactIr: crossOutputContext.artifact_ir,
+}).documents.cyclonedx_evidence;
+const reviewState = buildReviewState({ analysis: crossOutputContext.primary_view, runtimeEvidence: reportRuntimeEvidence });
+const expectedIrSha = crossOutputContext.artifact_ir.artifact_ir_sha256;
+const outputIrShas = {
+  ui: crossOutputContext.artifact_ir.artifact_ir_sha256,
+  engineering_report: engineeringEvidence.evidence.artifact_ir.artifact_ir_sha256,
+  raw_zip: rawArtifactIr.artifact_ir_sha256,
+  deployment_pack: deploymentContracts.documents.artifact_ir.artifact_ir_sha256,
+  public_cyclonedx: propertyValue(publicCycloneDx.properties, "deepbom:artifactIrSha256"),
+  review: reviewState.artifact_ir_identity.sha256,
+};
+assert.deepEqual(new Set(Object.values(outputIrShas)), new Set([expectedIrSha]), `cross-output Artifact IR identity: ${JSON.stringify(outputIrShas)}`);
+for (const [surface, artifactIr] of [
+  ["ui", crossOutputContext.artifact_ir],
+  ["engineering report", engineeringEvidence.evidence.artifact_ir],
+  ["raw ZIP", rawArtifactIr],
+  ["deployment pack", deploymentContracts.documents.artifact_ir],
+]) {
+  assert(artifactIr.overlays.runtime.length > 0, `${surface} must preserve the runtime overlay rather than reproducing an empty IR`);
+  assert.equal(artifactIr.overlays.runtime[0].rows.length, 2, `${surface} runtime subject-reference conservation`);
+}
+assert.equal(reviewState.artifact_ir_identity.runtime_overlay_count, 1, "review state runtime-overlay conservation");
 runtimeAnalysis.findings = [{ id: "EA-TEST-0001" }];
 assert.equal(runtimeContext.primary_view.findings[0].id, "EA-TEST-0001", "shared consumer view must expose post-build finding updates without rebuilding the IR");
 const tamperedView = structuredClone(runtimeContext.primary_view);
@@ -178,6 +260,13 @@ assert.equal(canonicalDiffSnapshot.nodes[0].name, "Add", "Artifact diff must pre
 const tamperedCount = structuredClone(onnxFirst.artifact_ir);
 tamperedCount.graph.totals.operator_count += 1;
 assert.throws(() => validateArtifactEvidenceIr(tamperedCount), /count conservation/, "tampered graph count must fail closed");
+
+const fabricatedGraphlessTotals = structuredClone(outputs.get("gguf").artifact_ir);
+fabricatedGraphlessTotals.graph.totals.operator_count = 1;
+assert.equal(validateSchema(fabricatedGraphlessTotals), false, "public schema must reject non-zero graph totals for graphless containers");
+const fabricatedGraphlessScope = structuredClone(outputs.get("safetensors").artifact_ir);
+fabricatedGraphlessScope.graph.primary_scope_ref = "scope:invented";
+assert.equal(validateSchema(fabricatedGraphlessScope), false, "public schema must reject a primary executable scope for graphless containers");
 
 const tamperedStorageReference = structuredClone(onnxFirst.artifact_ir);
 tamperedStorageReference.graph.values[0].storage_refs = ["storage:missing"];
@@ -210,6 +299,16 @@ function runGraph(file) {
   return JSON.parse(result.stdout);
 }
 
+function buildIr(analysis, artifact, options = {}) {
+  const context = getArtifactIrContext(analysis, artifact, options);
+  assert(context, "Artifact IR context must be constructible for the fixture");
+  return context.artifact_ir;
+}
+
 function formatAjvErrors(errors) {
   return (errors || []).map((row) => `${row.instancePath || "/"} ${row.message}`).join("; ");
+}
+
+function propertyValue(properties, name) {
+  return (properties || []).find((row) => row.name === name)?.value || null;
 }

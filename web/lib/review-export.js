@@ -17,11 +17,19 @@ export function buildReviewState({ analysis, cursor, graphView, workspace, audit
     bundle_sha256: String(analysis?.analyzer_bundle_sha256 || analysis?.build_metadata?.bundle_sha256 || "") || null,
   };
   const rulepackIdentities = reviewRulepackIdentities(analysis);
+  const artifactIr = analysis?.artifact_ir || null;
   return {
     schema: REVIEW_STATE_SCHEMA,
     artifact_identity: artifactIdentity,
     analyzer_identity: analyzerIdentity,
     rulepack_identities: rulepackIdentities,
+    artifact_ir_identity: artifactIr ? {
+      schema: artifactIr.schema,
+      sha256: artifactIr.artifact_ir_sha256,
+      primary_scope_ref: artifactIr.graph?.primary_scope_ref || null,
+      nested_scope_count: Math.max(0, Number(artifactIr.graph?.totals?.scope_count || 0) - 1),
+      runtime_overlay_count: artifactIr.overlays?.runtime?.length || 0,
+    } : null,
     artifact_sha256: artifactIdentity.sha256 || "",
     format: artifactIdentity.format || "",
     analyzer_version: analyzerIdentity.version || "",

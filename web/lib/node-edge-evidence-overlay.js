@@ -1,6 +1,6 @@
-export const NODE_EDGE_EVIDENCE_OVERLAY_SCHEMA = "deepbom.node_edge_evidence_overlay.v1";
+import { isCanonicalEvidenceClass } from "./evidence-class.js";
 
-const EVIDENCE_CLASSES = new Set(["OBSERVED", "DERIVED", "PREDICTED", "ESTIMATED", "MEASURED", "NOT_ASSESSABLE"]);
+export const NODE_EDGE_EVIDENCE_OVERLAY_SCHEMA = "deepbom.node_edge_evidence_overlay.v1";
 const MAX_ROWS = 100000;
 const MAX_METRICS = 64;
 
@@ -90,7 +90,7 @@ function metrics(value, pointer) {
     if (keys.has(key)) throw new Error(`${pointer}[${index}] duplicates metric key ${key}.`);
     keys.add(key);
     const evidenceClass = boundedText(metric.evidence_class, `${pointer}[${index}].evidence_class`, 16).toUpperCase();
-    if (!EVIDENCE_CLASSES.has(evidenceClass)) throw new Error(`${pointer}[${index}].evidence_class is invalid.`);
+    if (!isCanonicalEvidenceClass(evidenceClass)) throw new Error(`${pointer}[${index}].evidence_class is invalid.`);
     const numeric = typeof metric.value === "number";
     if (numeric && !Number.isFinite(metric.value)) throw new Error(`${pointer}[${index}].value must be finite.`);
     if (!numeric && metric.value !== null && typeof metric.value !== "string" && typeof metric.value !== "boolean") {

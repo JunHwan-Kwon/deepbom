@@ -153,10 +153,14 @@ Repeat-review policy:
   --policy-output <path> Write the deterministic policy decision JSON
   --review-policy and --fail-on are mutually exclusive policy sources.
 
+Output format selection:
+  --output-format <kind>  Preferred unambiguous spelling for --format
+  --format <kind>         Backward-compatible alias; retained for existing automation
+
 Deterministic graph export:
-  deepbom graph <artifact> --view structure --format svg -o graph.svg
+  deepbom graph <artifact> --view structure --output-format svg -o graph.svg
   --view <kind>           structure, placement, quantization, or architecture
-  --format <kind>         svg, png, html, mermaid, dot, or json for graph
+  --output-format <kind>  svg, png, html, mermaid, dot, or json for graph
 
 TensorRT optimized-engine option:
   --tensorrt-engine-inspector <json>

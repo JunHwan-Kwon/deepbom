@@ -6,6 +6,7 @@ export const RULEPACK_VERSION = "deepbom.rulepack.2026-07-24.63";
 export const DEEPBOM_CITATION = "Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts (Version 1.94.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.21834509";
 
 export const WORKFLOW_ORDER = ["input", "audit", "findings", "graph", "redesign", "runtime", "deepbom", "runtime_basin", "offline_test", "deployment_sensitivity", "output"];
+export const PRIMARY_WORKFLOW_ORDER = Object.freeze(["input", "audit", "findings", "output"]);
 
 export const MODULE_WORKSPACES = new Set(["deepbom", "runtime_basin", "offline_test", "deployment_sensitivity"]);
 

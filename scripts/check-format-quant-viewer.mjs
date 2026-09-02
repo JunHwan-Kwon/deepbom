@@ -120,6 +120,10 @@ try {
       holes: `${root.querySelector("#quantHoleCount")?.textContent || ""} ${root.querySelector("#quantHoleList")?.textContent || ""}`,
       hiddenTabs: [...document.querySelectorAll("[data-audit-tab][hidden]")].map((tab) => tab.dataset.auditTab),
       hiddenWorkflow: [...document.querySelectorAll("[data-workflow-step][hidden]")].map((step) => step.dataset.workflowStep),
+      notApplicableTabs: [...document.querySelectorAll("[data-audit-tab][data-applicability-status='not_applicable']")].map((tab) => tab.dataset.auditTab),
+      notApplicableWorkflow: [...document.querySelectorAll("[data-workflow-step][data-applicability-status='not_applicable']")].map((step) => step.dataset.workflowStep),
+      applicabilityReasonsMissing: [...document.querySelectorAll("[data-applicability-status='not_applicable']")]
+        .filter((node) => !node.dataset.applicabilityReason).length,
       claimBoundary: document.querySelector("#auditClaimBoundary")?.textContent || "",
       nextProof: document.querySelector("#auditClaimNextProof")?.textContent || "",
       evidenceSpine: document.querySelector("#evidenceSpine")?.textContent || "",
@@ -254,6 +258,9 @@ try {
 
 function validate(format, state) {
   if (state.overflow > 1) throw new Error(`${format} quant viewer overflows: ${JSON.stringify(state)}`);
+  if (state.hiddenTabs.length || state.hiddenWorkflow.some((step) => step !== "offline_test") || state.applicabilityReasonsMissing) {
+    throw new Error(`${format} applicability is hidden or lacks an explicit reason: ${JSON.stringify(state)}`);
+  }
   if (!state.exposure.includes("Quantization Exposure Map") || !state.exposure.includes("Conservationexact")
     || state.exposureTiles < 1 || state.exposureMobileDisplay !== "none") {
     throw new Error(`${format} quantization exposure map is missing, empty, or non-conserving: ${JSON.stringify(state)}`);
@@ -272,16 +279,16 @@ function validate(format, state) {
       || state.exposureTiles !== 53 || !state.exposure.includes("300,775,552 MACs") || !state.exposure.includes("Exact zero12")
       || !state.placement.includes("TFLite Execution Placement") || !state.placement.includes("Conditional XNNPACK partition flow")
       || !state.claimBoundary.includes("Deep graph and deployment-model audit")
-      || state.hiddenWorkflow.includes("runtime") || state.hiddenWorkflow.includes("graph")) throw new Error(`TFLite quant baseline changed: ${JSON.stringify(state)}`);
+      || state.notApplicableWorkflow.includes("runtime") || state.notApplicableWorkflow.includes("graph")) throw new Error(`TFLite quant baseline changed: ${JSON.stringify(state)}`);
   } else if (format === "gguf") {
     if (state.title !== "GGUF Tensor Encoding" || state.heading !== "GGUF Tensor Encoding & Storage Map" || state.tileCount !== 39
       || state.exposureTiles !== 39 || !state.exposure.includes("Serialized payload")
       || !state.states.includes("30/39 tensors") || !state.states.includes("9/39 tensors")
       || !state.risks.includes("general.quantization_version = 2") || !state.scales.includes("GGUF block encodings")
-      || !state.holes.includes("does not serialize an operator graph") || !state.hiddenTabs.includes("quant-labs")
+      || !state.holes.includes("does not serialize an operator graph") || !state.notApplicableTabs.includes("quant-labs")
       || !state.claimBoundary.includes("Container and tensor-payload audit") || !state.evidenceRuntimeDisabled
       || !state.placement.includes("GGUF Execution Placement") || !state.placement.includes("EXECUTION GRAPH EXTERNAL")
-      || !["graph", "redesign", "runtime", "deepbom", "runtime_basin", "deployment_sensitivity"].every((step) => state.hiddenWorkflow.includes(step))) {
+      || !["graph", "redesign", "runtime", "deepbom", "runtime_basin", "deployment_sensitivity"].every((step) => state.notApplicableWorkflow.includes(step))) {
       throw new Error(`GGUF encoding evidence is incomplete: ${JSON.stringify(state)}`);
     }
   } else if (format === "safetensors") {
@@ -289,21 +296,21 @@ function validate(format, state) {
       || state.exposureTiles !== 38 || !state.exposure.includes("2.63 MiB")
       || !state.states.includes("F16 storage") || !state.states.includes("2,754,816/2,754,816 B")
       || !state.risks.includes("complete_without_gaps_or_overlaps") || !state.scales.includes("no standardized affine scale")
-      || !state.holes.includes("does not serialize an operator graph") || !state.hiddenTabs.includes("quant-labs")
+      || !state.holes.includes("does not serialize an operator graph") || !state.notApplicableTabs.includes("quant-labs")
       || !state.claimBoundary.includes("Checkpoint and shard-integrity audit") || !state.evidenceRuntimeDisabled
       || !state.placement.includes("NOT ASSESSABLE FROM CONTAINER") || !state.placement.includes("delegation map would be fabricated evidence")
-      || !["graph", "redesign", "runtime", "deepbom", "runtime_basin", "deployment_sensitivity"].every((step) => state.hiddenWorkflow.includes(step))) {
+      || !["graph", "redesign", "runtime", "deepbom", "runtime_basin", "deployment_sensitivity"].every((step) => state.notApplicableWorkflow.includes(step))) {
       throw new Error(`SafeTensors storage evidence is incomplete: ${JSON.stringify(state)}`);
     }
   } else if (format === "coreml") {
     if (state.title !== "Core ML Numerical Contract" || state.count !== "14 graph ops" || state.tileCount !== 0
       || !state.states.includes("0/10 decoded WeightParams") || !state.states.includes("14/14 layer WeightParams field scans complete")
       || !state.risks.includes("0/10 decoded WeightParams") || !state.scales.includes("0/10 decoded Core ML WeightParams")
-      || !state.holes.includes("WeightParams rather than explicit graph Q/DQ") || !state.hiddenTabs.includes("quant-labs") || state.hiddenTabs.includes("stage")
+      || !state.holes.includes("WeightParams rather than explicit graph Q/DQ") || !state.notApplicableTabs.includes("quant-labs") || state.notApplicableTabs.includes("stage")
       || !state.claimBoundary.includes("Model/package contract and serialized-program audit") || !state.evidenceRuntimeDisabled
       || !state.placement.includes("Core ML Execution Placement") || !state.placement.includes("RUNTIME PLAN REQUIRED")
-      || !["redesign", "runtime", "deepbom", "runtime_basin", "deployment_sensitivity"].every((step) => state.hiddenWorkflow.includes(step))
-      || state.hiddenWorkflow.includes("graph")) {
+      || !["redesign", "runtime", "deepbom", "runtime_basin", "deployment_sensitivity"].every((step) => state.notApplicableWorkflow.includes(step))
+      || state.notApplicableWorkflow.includes("graph")) {
       throw new Error(`Core ML numerical evidence is incomplete: ${JSON.stringify(state)}`);
     }
   }

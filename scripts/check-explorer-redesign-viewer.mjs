@@ -348,8 +348,8 @@ try {
   }
   await page.locator('[data-workflow-step="redesign"]').click();
   await page.waitForTimeout(50);
-  const mobileWorkflowTab = await page.locator(".workflow-rail").evaluate((rail) => {
-    const active = rail.querySelector(".workflow-step.active");
+  const mobileWorkflowTab = await page.locator(".analysis-tool-rail").evaluate((rail) => {
+    const active = rail.querySelector(".analysis-tool.active");
     const railRect = rail.getBoundingClientRect();
     const activeRect = active?.getBoundingClientRect();
     return {
@@ -357,8 +357,8 @@ try {
       visible: Boolean(activeRect && activeRect.left >= railRect.left - 1 && activeRect.right <= railRect.right + 1),
     };
   });
-  if (mobileWorkflowTab.scrollLeft <= 0 || !mobileWorkflowTab.visible) {
-    throw new Error(`Mobile workflow navigation did not reveal the active workspace: ${JSON.stringify(mobileWorkflowTab)}`);
+  if (!mobileWorkflowTab.visible) {
+    throw new Error(`Mobile analysis palette did not reveal the active tool: ${JSON.stringify(mobileWorkflowTab)}`);
   }
   await page.locator('[data-workflow-step="output"]').click();
   const mobileReportTarget = await page.locator('[data-module-panel="engineering_report"]').evaluate((panel) => {
@@ -1479,8 +1479,11 @@ try {
   const onnxRedesign = await page.locator('[data-workflow-step="redesign"]').evaluate((step) => ({
     hidden: step.hidden,
     applicable: step.dataset.formatApplicable,
+    status: step.dataset.applicabilityStatus,
+    reason: step.dataset.applicabilityReason,
   }));
-  if (!onnxRedesign.hidden || onnxRedesign.applicable !== "false") {
+  if (onnxRedesign.hidden || onnxRedesign.applicable !== "false"
+    || onnxRedesign.status !== "not_applicable" || !onnxRedesign.reason) {
     throw new Error(`ONNX Redesign applicability is not isolated: ${JSON.stringify(onnxRedesign)}`);
   }
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);

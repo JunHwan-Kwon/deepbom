@@ -8,7 +8,7 @@ import { finalizeNvidiaAcceleratorProfile } from "../web/lib/nvidia-accelerator-
 import { canonicalJson } from "../web/lib/report-utils.js";
 import { sha256TextHex } from "../web/lib/sha256-sync.js";
 import { createTensorRtBuildProfile, TENSORRT_PARSER_OBSERVATION_SCHEMA } from "../web/lib/tensorrt-static-preflight.js";
-import { buildCanonicalGraphIr } from "../web/lib/graph-ir.js";
+import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
 import { exportGraphPng } from "../bin/graph-png-export.mjs";
 
 const root = path.resolve(".");
@@ -16,7 +16,7 @@ const output = path.join(root, ".local-validation", "cli-graph-export");
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 
-const onnxJson = run(["graph", "web/samples/sample_cnn_float.onnx", "--format", "json", "--compact"]);
+const onnxJson = run(["graph", "web/samples/sample_cnn_float.onnx", "--output-format", "json", "--compact"]);
 const graph = JSON.parse(onnxJson);
 assert.equal(graph.graph_ir.schema, "deepbom.graph_ir.v1");
 assert.equal(graph.graph_ir.totals.node_count, 9);
@@ -75,7 +75,7 @@ assert.equal(observedPlacement.graph_ir.projection.placement_evidence.parser_obs
 assert.equal(observedPlacement.graph_ir.nodes.every((node) => node.placement.status === "CONDITIONALLY_ELIGIBLE"), true);
 assert.equal(observedPlacement.graph_ir.nodes.every((node) => node.placement.evidence_state === "ARTIFACT_ELIGIBLE"), true);
 
-const partialMacGraph = buildCanonicalGraphIr({
+const partialMacAnalysis = {
   format: "onnx",
   input_tensor_indices: [0, 1],
   output_tensor_indices: [2],
@@ -90,7 +90,8 @@ const partialMacGraph = buildCanonicalGraphIr({
     compute_ops: 1, assessed_compute_ops: 0, not_assessed_compute_ops: 1,
     metric_scope: "nominal tensor-contraction MACs",
   },
-}, { filename: "dynamic.onnx", format: "onnx", sha256: "a".repeat(64), size: 128 });
+};
+const partialMacGraph = getArtifactIrContext(partialMacAnalysis, { filename: "dynamic.onnx", format: "onnx", sha256: "a".repeat(64), size: 128 }).graph_ir;
 assert.equal(partialMacGraph.totals.macs, null, "unassessed compute must not be reported as zero total MACs");
 assert.equal(partialMacGraph.totals.assessed_macs.decimal, "0");
 assert.equal(partialMacGraph.totals.mac_assessment.unassessed_compute_op_count, 1);
@@ -118,7 +119,7 @@ const posterAnalysis = {
   tensors: Array.from({ length: 231 }, (_, index) => ({ index, name: `tensor_${index}`, dtype: "FLOAT32", shape: [1, 8] })),
   mac_assessment: { status: "assessed", total_assessed_macs: 0, total_assessed_macs_decimal: "0", compute_ops: 0, assessed_compute_ops: 0, not_assessed_compute_ops: 0 },
 };
-const posterGraph = buildCanonicalGraphIr(posterAnalysis, { filename: "large.onnx", format: "onnx", sha256: "d".repeat(64), size: 4096 });
+const posterGraph = getArtifactIrContext(posterAnalysis, { filename: "large.onnx", format: "onnx", sha256: "d".repeat(64), size: 4096 }).graph_ir;
 const poster = exportGraphPng(posterGraph, { view: "placement" });
 assert.equal(poster.manifest.raster_layout, "readable_row_major_poster");
 assert.equal(poster.manifest.raster_scale, 1);

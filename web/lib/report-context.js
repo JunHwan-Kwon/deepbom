@@ -22,6 +22,7 @@ export function buildReportContext({
   deployCurvatureResult = null,
   findingsContext = {},
   generatedAt = new Date().toISOString(),
+  artifactIrContext = null,
 } = {}) {
   return {
     identity,
@@ -33,6 +34,8 @@ export function buildReportContext({
     deployCurvatureResult,
     findingsContext,
     generatedAt,
+    artifactIrContext,
+    artifactIr: artifactIrContext?.artifact_ir || null,
   };
 }
 
@@ -96,6 +99,7 @@ export function buildRawEvidenceContext({
   weightIndicatorEvidence = {},
   securityPosture = null,
   findingsContext = {},
+  artifactIrContext = null,
 } = {}) {
   return {
     identity,
@@ -103,6 +107,8 @@ export function buildRawEvidenceContext({
     weightIndicatorEvidence,
     securityPosture,
     findingsContext,
+    artifactIrContext,
+    artifactIr: artifactIrContext?.artifact_ir || null,
   };
 }
 
@@ -123,6 +129,7 @@ export function buildReportContextSet({
   fileSizeBytes = 0,
   securityPosture = null,
   generatedAt = new Date().toISOString(),
+  artifactIrContext = null,
 } = {}) {
   const findingsContext = buildFindingContext({
     runtimeEvidence,
@@ -140,6 +147,7 @@ export function buildReportContextSet({
     deployCurvatureResult,
     findingsContext,
     generatedAt,
+    artifactIrContext,
   });
   return {
     findingsContext,
@@ -173,6 +181,7 @@ export function buildReportContextSet({
       weightIndicatorEvidence,
       securityPosture,
       findingsContext,
+      artifactIrContext,
     }),
   };
 }

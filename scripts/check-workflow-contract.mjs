@@ -4,6 +4,7 @@ import {
   MODULE_WORKSPACES,
   REPORT_WORKSPACES,
   resolveReportTargetBinding,
+  PRIMARY_WORKFLOW_ORDER,
   WORKFLOW_ORDER,
 } from "../web/lib/app-config.js";
 import { REGULATORY_BUNDLE_MODULE_SPECS } from "../web/lib/bundle.js";
@@ -65,7 +66,10 @@ function checkDefaultPage() {
   const moduleResultPanels = attrValues(html, "data-module-panel");
   const outputWorkspaces = [...moduleWorkspaces, ...reportWorkspaces];
 
-  expectExactOrder(`${label} workflow rail`, workflowSteps, WORKFLOW_ORDER);
+  const primaryWorkflowSteps = [...html.matchAll(/<button[^>]*data-workflow-step="([^"]+)"[^>]*data-navigation-role="workflow"[^>]*>/g)].map((match) => match[1]);
+  const analysisTools = [...html.matchAll(/<button[^>]*data-workflow-step="([^"]+)"[^>]*data-navigation-role="tool"[^>]*>/g)].map((match) => match[1]);
+  expectExactOrder(`${label} primary workflow rail`, primaryWorkflowSteps, PRIMARY_WORKFLOW_ORDER);
+  expectExactOrder(`${label} complete navigation inventory`, [...primaryWorkflowSteps.slice(0, 3), ...analysisTools, primaryWorkflowSteps[3]], WORKFLOW_ORDER);
   expectExactSet(`${label} workflow module markers`, workflowModules, moduleWorkspaces);
   expectContainsAll(`${label} workflow rail`, workflowSteps, moduleWorkspaces);
   expectExactSet(`${label} output module tabs`, moduleTabs, outputWorkspaces);

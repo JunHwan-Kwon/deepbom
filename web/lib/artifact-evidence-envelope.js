@@ -7,20 +7,10 @@ import { validateNvidiaAcceleratorProfileBinding } from "./accelerator-profile-b
 import { collectAcceleratorBindings, validateAcceleratorBinding } from "./accelerator-binding.js";
 import { validateCpuCostTargetBinding } from "./cpu-target-binding.js";
 import { deriveMacCoverage } from "./mac-coverage.js";
+import { EVIDENCE_CLASSES, normalizeEvidenceClass } from "./evidence-class.js";
 
 export const ARTIFACT_EVIDENCE_SCHEMA = "deepbom.artifact_evidence_envelope.v1";
-export const EVIDENCE_CLASSES = Object.freeze([
-  "OBSERVED",
-  "SOURCE_BACKED",
-  "DERIVED",
-  "DERIVED_WITH_HEURISTIC_THRESHOLD",
-  "PREDICTED",
-  "ESTIMATED",
-  "DECLARED_UNVERIFIED",
-  "MEASURED",
-  "NOT_ASSESSABLE",
-  "NOT_APPLICABLE",
-]);
+export { EVIDENCE_CLASSES } from "./evidence-class.js";
 
 const SHA256 = /^[a-f0-9]{64}$/i;
 const FORMAT_CAPABILITIES = Object.freeze({
@@ -69,19 +59,7 @@ function unique(values) {
 }
 
 function evidenceClass(value, fallback = "NOT_ASSESSABLE") {
-  const normalized = text(value).toUpperCase();
-  if (EVIDENCE_CLASSES.includes(normalized)) return normalized;
-  if (normalized.includes("NOT_ASSESSABLE")) return "NOT_ASSESSABLE";
-  if (normalized.includes("NOT_APPLICABLE")) return "NOT_APPLICABLE";
-  if (normalized.includes("MEASURED")) return "MEASURED";
-  if (normalized.includes("PREDICTED")) return "PREDICTED";
-  if (normalized.includes("ESTIMATED")) return "ESTIMATED";
-  if (normalized.includes("SOURCE_BACKED") || normalized.includes("SOURCE-BASED") || normalized.includes("SOURCE_PINNED")) return "SOURCE_BACKED";
-  if (normalized.includes("DECLARED")) return "DECLARED_UNVERIFIED";
-  if (normalized.includes("HEURISTIC")) return "DERIVED_WITH_HEURISTIC_THRESHOLD";
-  if (normalized.includes("DERIVED")) return "DERIVED";
-  if (normalized.includes("OBSERVED")) return "OBSERVED";
-  return fallback;
+  return normalizeEvidenceClass(value, fallback);
 }
 
 function observedMetadata(analysis) {

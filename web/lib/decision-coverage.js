@@ -1,6 +1,6 @@
 import { markdownTable } from "./report-utils.js";
 
-export const DECISION_COVERAGE_SCHEMA = "deepbom.decision_coverage.v1.10";
+export const DECISION_COVERAGE_SCHEMA = "deepbom.decision_coverage.v1.11";
 
 const METRIC_STATUSES = Object.freeze(["assessed", "partial", "not_assessed", "not_applicable", "suppressed"]);
 
@@ -9,7 +9,7 @@ const DECISION_DOMAINS = Object.freeze([
     domain_id: "artifact_contract",
     label: "Artifact, graph, and interface contract",
     metric_ids: Object.freeze([
-      "artifact.identity", "artifact.metadata", "artifact.size", "artifact.byte_integrity", "graph.inventory", "architecture.blocks", "contract.io", "tflite.sparse_storage", "tflite.subgraph_inventory", "tflite.subgraph_deep_analysis",
+      "artifact.identity", "artifact.metadata", "artifact.size", "artifact.byte_integrity", "artifact.canonical_ir", "graph.inventory", "architecture.blocks", "contract.io", "tflite.sparse_storage", "tflite.subgraph_inventory", "tflite.subgraph_deep_analysis",
       "serialized.container_contract", "coreml.serialized_contract", "executorch.serialized_contract", "llm.on_device_contract",
       "runtime.artifact_requirements", "weights.integrity", "onnx.domains", "onnx.external_data",
       "onnx.shape_inference", "onnx.tensor_data_types", "onnx.type_proto_contract", "onnx.sparse_tensor_contract",
@@ -54,7 +54,7 @@ const DECISION_DOMAINS = Object.freeze([
   Object.freeze({
     domain_id: "evidence_delivery",
     label: "Findings, exports, and format isolation",
-    metric_ids: Object.freeze(["findings.action_register", "exports.deterministic_derivatives", "performance.audit_timing", "tflite.ort_non_applicability", "onnx.tflite_non_applicability"]),
+    metric_ids: Object.freeze(["findings.action_register", "exports.deterministic_derivatives", "evidence.external_overlay", "performance.audit_timing", "tflite.ort_non_applicability", "onnx.tflite_non_applicability"]),
     interpretation_boundary: "Proves that calculated evidence is routed, scoped, and not cross-applied between formats, and preserves measured analyzer-workflow timing separately from inference timing. It is a delivery/conservation control, not independent proof that an upstream calculation is complete.",
   }),
 ]);

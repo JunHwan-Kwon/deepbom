@@ -28,7 +28,7 @@ import { buildRuntimeDataMovementEvidence } from "./runtime-data-movement-eviden
 import { buildRuntimeEvidenceSidecar } from "./runtime-evidence-sidecar.js";
 import { buildOnnxRuntimeShapeBinding } from "./onnx-runtime-shape-binding.js";
 import { buildSecurityPostureEvidence, collectRuntimeWarnings } from "./report-security-posture.js";
-import { buildArtifactEvidenceIr } from "./artifact-ir.js";
+import { resolveArtifactIrContext } from "./artifact-ir-context.js";
 
 export function buildStaticAnalysisExport(analysis) {
   const { _markdown, roofline_csv, core_isolation_csv, stage_mermaid, findings: _nativeFindings, recommendations: _nativeRecommendations, ...rest } = analysis || {};
@@ -1061,7 +1061,11 @@ export function buildEngineeringEvidenceDocument(analysis, {
     runtimeEvidence: rawEvidenceContext.runtimeEvidence || reportContext.runtimeEvidence || null,
   };
   const staticAnalysis = buildStaticAnalysisExport(analysis);
-  const artifactIr = buildReportArtifactIr(analysis, identity);
+  const artifactIr = resolveReportArtifactIr(analysis, identity, {
+    artifactIrContext: rawEvidenceContext.artifactIrContext || reportContext.artifactIrContext || null,
+    artifactIr: rawEvidenceContext.artifactIr || reportContext.artifactIr || null,
+    runtimeEvidence: rawEvidenceContext.runtimeEvidence || reportContext.runtimeEvidence || null,
+  });
   const modelStructure = buildModelStructureEvidence(analysis, identity);
   const quantization = buildQuantizationEvidence(analysis, identity);
   const runtimeResults = buildRuntimeEvidence({ analysis, ...runtimeEvidence });
@@ -1216,7 +1220,7 @@ export function buildRawDataArtifactFiles(analysis, {
   graphSvgText = "",
   visualPngFiles = [],
 } = {}) {
-  const artifactIr = buildReportArtifactIr(analysis, rawEvidenceContext.identity || {});
+  const artifactIr = resolveReportArtifactIr(analysis, rawEvidenceContext.identity || {}, rawEvidenceContext);
   const files = [
     zipTextFile("static/raw_static_audit.md", analysis?._markdown || buildStaticAuditMarkdown(analysis, analysis?.model_sha256 || "") || ""),
     zipTextFile("static/roofline.csv", analysis?.roofline_csv || ""),
@@ -1250,16 +1254,24 @@ export function buildRawDataArtifactFiles(analysis, {
   return files;
 }
 
-function buildReportArtifactIr(analysis, identity = {}) {
+function resolveReportArtifactIr(analysis, identity = {}, evidenceContext = {}) {
   const size = Number(identity.byte_length?.number ?? identity.byte_length ?? identity.file_size_bytes
     ?? analysis?.file_size_bytes ?? analysis?.file_size ?? 0);
   const sha256 = String(identity.sha256 || identity.hash || analysis?.model_sha256 || analysis?.artifact_sha256 || "").trim().toLowerCase();
   if (!/^[a-f0-9]{64}$/.test(sha256)) return null;
-  return buildArtifactEvidenceIr(analysis, {
+  const runtimeEvidence = evidenceContext?.runtimeEvidence?.runtimeAssignmentEvidence
+    || evidenceContext?.runtimeEvidence?.runtime_assignment
+    || evidenceContext?.runtimeEvidence
+    || null;
+  return resolveArtifactIrContext(analysis, {
     filename: identity.filename || identity.name || analysis?.filename || "model",
     format: analysis?.format,
     sha256,
     size: Number.isSafeInteger(size) && size >= 0 ? size : 0,
     artifact_set_sha256: analysis?.artifact_set?.artifact_set_sha256 || null,
-  });
+  }, {
+    artifactIrContext: evidenceContext.artifactIrContext || null,
+    artifactIr: evidenceContext.artifactIr || null,
+    runtimeEvidence,
+  })?.artifact_ir || null;
 }

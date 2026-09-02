@@ -1,3 +1,5 @@
+import { decorateEvidenceElement } from "./evidence-visual-contract.js";
+
 const DTYPE_COLORS = Object.freeze({
   FLOAT32: "#38bdf8",
   FLOAT16: "#22c55e",
@@ -27,6 +29,22 @@ function finiteNumber(value) {
 function opEnd(allocation, opCount) {
   const last = allocation.last_node == null ? opCount - 1 : Number(allocation.last_node);
   return Math.max(Number(allocation.first_node || 0), Math.min(opCount - 1, last));
+}
+
+function peakRootOccupancy(allocations, opCount, arenaBytes) {
+  let peakBytes = 0;
+  let peakOp = 0;
+  for (let op = 0; op < opCount; op += 1) {
+    const liveBytes = allocations.reduce((sum, allocation) => {
+      const first = Math.max(0, Number(allocation.first_node || 0));
+      return op >= first && op <= opEnd(allocation, opCount) ? sum + Number(allocation.size_bytes || 0) : sum;
+    }, 0);
+    if (liveBytes > peakBytes) {
+      peakBytes = liveBytes;
+      peakOp = op;
+    }
+  }
+  return { peak_bytes: peakBytes, peak_op: peakOp, ratio: arenaBytes > 0 ? peakBytes / arenaBytes : null };
 }
 
 function metric(label, value, title = "") {
@@ -135,6 +153,11 @@ function renderArenaCanvas(container, analysis, plan, formatBytes, onSelectOp) {
   canvas.setAttribute("aria-label", "TFLite ArenaPlanner declared-shape allocation map");
   const context = canvas.getContext("2d");
   context.scale(dpr, dpr);
+  const theme = getComputedStyle(document.documentElement);
+  const canvasColor = theme.getPropertyValue("--viz-canvas").trim() || "#0b1220";
+  const gridColor = theme.getPropertyValue("--viz-grid").trim() || "rgba(148, 163, 184, 0.18)";
+  const metaColor = theme.getPropertyValue("--viz-meta").trim() || "#94a3b8";
+  const peakColor = theme.getPropertyValue("--risk").trim() || "#dc2626";
 
   // Reserve enough room for MiB labels; a narrow margin clipped the leading
   // digit and made otherwise monotonic ticks appear to decrease.
@@ -147,19 +170,19 @@ function renderArenaCanvas(container, analysis, plan, formatBytes, onSelectOp) {
   const xFor = (op) => left + (Math.max(0, Math.min(opCount - 1, op)) / Math.max(1, opCount - 1)) * plotWidth;
   const yFor = (offset) => top + (Math.max(0, Math.min(arenaBytes, offset)) / arenaBytes) * plotHeight;
 
-  context.fillStyle = "#0b1220";
+  context.fillStyle = canvasColor;
   context.fillRect(0, 0, cssWidth, cssHeight);
   context.font = "10px ui-monospace, SFMono-Regular, Consolas, monospace";
   context.lineWidth = 1;
   for (let tick = 0; tick <= 4; tick += 1) {
     const bytes = (arenaBytes * tick) / 4;
     const y = yFor(bytes);
-    context.strokeStyle = "rgba(148, 163, 184, 0.18)";
+    context.strokeStyle = gridColor;
     context.beginPath();
     context.moveTo(left, y);
     context.lineTo(cssWidth - right, y);
     context.stroke();
-    context.fillStyle = "#94a3b8";
+    context.fillStyle = metaColor;
     context.textAlign = "right";
     context.fillText(formatBytes(bytes), left - 6, y + 3);
   }
@@ -184,7 +207,22 @@ function renderArenaCanvas(container, analysis, plan, formatBytes, onSelectOp) {
     hitRegions.push({ allocation, x, y, width: Math.min(width, cssWidth - right - x), height: Math.min(height, top + plotHeight - y) });
   }
 
-  context.fillStyle = "#94a3b8";
+  const occupancy = peakRootOccupancy(allocations, opCount, arenaBytes);
+  const peakX = xFor(occupancy.peak_op);
+  context.save();
+  context.strokeStyle = peakColor;
+  context.setLineDash([4, 3]);
+  context.beginPath();
+  context.moveTo(peakX, top);
+  context.lineTo(peakX, top + plotHeight);
+  context.stroke();
+  context.setLineDash([]);
+  context.fillStyle = peakColor;
+  context.textAlign = peakX > cssWidth - 90 ? "right" : "left";
+  context.fillText(`peak #${occupancy.peak_op}`, peakX + (peakX > cssWidth - 90 ? -4 : 4), top + 10);
+  context.restore();
+
+  context.fillStyle = metaColor;
   context.textAlign = "left";
   context.fillText("op 0", left, cssHeight - 6);
   context.textAlign = "right";
@@ -221,7 +259,26 @@ function renderArenaCanvas(container, analysis, plan, formatBytes, onSelectOp) {
     const region = regionAt(event);
     if (region) onSelectOp?.(Number(region.allocation.first_node || 0));
   });
-  container.append(canvas, tooltip);
+  const toolbar = element("div", "arena-map-toolbar");
+  const zoomOut = element("button", "icon-action", "-");
+  const fit = element("button", "secondary-action", "Fit");
+  const zoomIn = element("button", "icon-action", "+");
+  for (const [button, label] of [[zoomOut, "Zoom out arena map"], [fit, "Fit arena map to width"], [zoomIn, "Zoom in arena map"]]) {
+    button.type = "button";
+    button.setAttribute("aria-label", label);
+    button.title = label;
+  }
+  const scroll = element("div", "arena-map-scroll");
+  scroll.tabIndex = 0;
+  scroll.setAttribute("aria-label", "Scrollable ArenaPlanner allocation map");
+  let zoom = 1;
+  const applyZoom = () => { canvas.style.width = `${Math.round(cssWidth * zoom)}px`; };
+  zoomOut.addEventListener("click", () => { zoom = Math.max(1, zoom - 0.25); applyZoom(); });
+  fit.addEventListener("click", () => { zoom = 1; applyZoom(); scroll.scrollLeft = 0; });
+  zoomIn.addEventListener("click", () => { zoom = Math.min(3, zoom + 0.25); applyZoom(); });
+  toolbar.append(fit, zoomOut, zoomIn);
+  scroll.append(canvas);
+  container.append(toolbar, scroll, tooltip);
 }
 
 export function renderTensorArenaViewer(container, analysis, {
@@ -236,9 +293,11 @@ export function renderTensorArenaViewer(container, analysis, {
   if (!plan && liveness.peak_bytes == null) return;
 
   const heading = element("div", "arena-viewer-heading");
+  const status = element("span", `arena-status arena-status-${plan?.status || liveness.status || "not_assessed"}`, String(plan?.evidence_class || (liveness.assessed ? "DERIVED" : "NOT_ASSESSABLE")));
+  decorateEvidenceElement(status, plan?.evidence_class || (liveness.assessed ? "DERIVED" : "NOT_ASSESSABLE"), { label: false });
   heading.append(
     element("strong", "arena-viewer-title", plan ? "TFLite ArenaPlanner declared-shape projection" : "Live activation payload"),
-    element("span", `arena-status arena-status-${plan?.status || liveness.status || "not_assessed"}`, String(plan?.evidence_class || (liveness.assessed ? "DERIVED" : "NOT_ASSESSED"))),
+    status,
   );
   container.append(heading);
 
@@ -250,6 +309,9 @@ export function renderTensorArenaViewer(container, analysis, {
     const deploymentFootprint = artifactBytes == null || combinedArenaBytes == null
       ? null
       : artifactBytes + combinedArenaBytes;
+    const rootAllocations = (plan.allocations || []).filter((allocation) => allocation?.arena === "kTfLiteArenaRw"
+      && allocation?.allocation_status === "allocated" && finiteNumber(allocation?.size_bytes) != null);
+    const occupancy = peakRootOccupancy(rootAllocations, Math.max(1, (analysis?.ops || []).length), Number(plan.non_persistent_arena_bytes || 0));
     metrics.append(
       metric("Arena RW", plan.non_persistent_arena_bytes == null ? "Not assessed" : formatBytes(plan.non_persistent_arena_bytes)),
       metric("Persistent", plan.persistent_arena_bytes == null ? "Not assessed" : formatBytes(plan.persistent_arena_bytes)),
@@ -263,6 +325,7 @@ export function renderTensorArenaViewer(container, analysis, {
       metric("Alignment", `${plan.tensor_alignment_bytes || 0} B`),
       metric("Dynamic signatures", String(plan.dynamic_shape_signature_tensor_count || 0)),
       metric("Sort ties", String(plan.source_comparator_tie_group_count || 0), plan.deterministic_tie_break || ""),
+      metric("Peak root occupancy", occupancy.ratio == null ? "Not assessed" : `${(occupancy.ratio * 100).toFixed(1)}% at op #${occupancy.peak_op}`, "Sum of serialized root allocation sizes alive at the peak execution position divided by the projected non-persistent arena. Aliases are not counted as independent roots."),
     );
   }
   container.append(metrics);
@@ -283,9 +346,11 @@ export function renderTensorArenaViewer(container, analysis, {
   const reconciliation = runtimeEvidence?.arena_reconciliation || null;
   if (runtimeMemory && reconciliation) {
     const runtimeHeading = element("div", "arena-viewer-heading arena-runtime-heading");
+    const runtimeStatus = element("span", "arena-status arena-status-assessed", runtimeMemory.evidence_class || "MEASURED");
+    decorateEvidenceElement(runtimeStatus, runtimeMemory.evidence_class || "MEASURED", { label: false });
     runtimeHeading.append(
       element("strong", "arena-viewer-title", "Observed TFLite arena allocation"),
-      element("span", "arena-status arena-status-assessed", runtimeMemory.evidence_class || "OBSERVED_RUNTIME"),
+      runtimeStatus,
     );
     const runtimeMetrics = element("div", "arena-metric-strip arena-runtime-metrics");
     const delta = reconciliation.peak_delta_bytes;

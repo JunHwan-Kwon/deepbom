@@ -1413,7 +1413,7 @@ function parseArguments(argv) {
     }
     else if (token === "--device") parsed.deviceIndex = parseNonNegativeInteger(requiredValue(values, token), token);
     else if (token === "--include-device-identifiers") parsed.includeDeviceIdentifiers = true;
-    else if (token === "--format") {
+    else if (token === "--format" || token === "--output-format") {
       parsed.outputFormat = requiredValue(values, token).toLowerCase();
       parsed.formatExplicit = true;
     }
@@ -1535,7 +1535,8 @@ function printHelp() {
   process.stdout.write("\nRemote immutable artifact input:\n  hf://owner/repo@<40-hex-commit>/path\n  gs://bucket/object#generation=<generation>\n  https://host/path#sha256=<64-hex>\n  --expected-sha256 <hex> Add an independent content digest requirement\n  --cache-dir <directory> Use a content-addressed cache directory\n  --offline               Refuse network access and require a verified cache receipt\n  --max-download-gib <n>  Bound one remote download (default: 50, maximum: 1024)\n");
   process.stdout.write("\nBounded scan policy:\n  --scan <mode>           auto, structure, integrity, or full\n  GGUF/SafeTensors use range reads; auto selects structure above 10 GiB and streamed integrity above 2 GiB.\n  Monolithic TFLite/ONNX/ExecuTorch files above 1 GiB fail before full-file allocation.\n");
   process.stdout.write("\nRepeat-review policy:\n  --review-policy <json> Bind required analysis coverage, finding threshold, and identity-scoped expiring exceptions\n  --policy-output <path> Write the deterministic policy decision JSON\n  --review-policy and --fail-on are mutually exclusive policy sources.\n");
-  process.stdout.write("\nDeterministic graph export:\n  deepbom graph <artifact> --view structure --format svg -o graph.svg\n  --view <kind>           structure, placement, quantization, or architecture\n  --format <kind>         svg, png, html, mermaid, dot, or json for graph\n");
+  process.stdout.write("\nOutput format selection:\n  --output-format <kind>  Preferred unambiguous spelling for --format\n  --format <kind>         Backward-compatible alias; retained for existing automation\n");
+  process.stdout.write("\nDeterministic graph export:\n  deepbom graph <artifact> --view structure --output-format svg -o graph.svg\n  --view <kind>           structure, placement, quantization, or architecture\n  --output-format <kind>  svg, png, html, mermaid, dot, or json for graph\n");
   process.stdout.write("\nTensorRT optimized-engine option:\n  --tensorrt-engine-inspector <json>\n                          Import identity-bound TensorRT optimized-engine inspector evidence\n");
   process.stdout.write("\nExecuTorch selected-build option:\n  --executorch-build <json>\n                          Bind backend/operator inventories and runtime binary digests to a PTE audit\n");
 }

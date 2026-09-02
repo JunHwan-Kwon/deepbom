@@ -26,6 +26,7 @@ import {
   interfaceCorpusValidationProperties,
 } from "./corpus-validation-provenance.js";
 import { tensorRtCycloneDxPropertyEntries } from "./tensorrt-cyclonedx-properties.js";
+import { validateArtifactEvidenceIr } from "./artifact-ir.js";
 
 const CYCLONEDX_17_SCHEMA = "http://cyclonedx.org/schema/bom-1.7.schema.json";
 const AUTHOR = Object.freeze({
@@ -58,6 +59,10 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
   const generatedAt = options.generatedAt || new Date().toISOString();
   const ledger = options.interfaceLedger || buildInterfaceQuantizationContractLedger(analysis);
   const sha256 = normalizeSha256(options.hash || analysis.model_sha256);
+  const artifactIr = options.artifactIr ? validateArtifactEvidenceIr(options.artifactIr) : null;
+  if (artifactIr && sha256 && artifactIr.artifact.sha256 !== sha256) {
+    throw new Error("Public CycloneDX Artifact IR is not bound to the exported artifact SHA-256.");
+  }
   const name = cleanText(analysis.filename) || "model";
   const bomRef = artifactBomRef(sha256, name);
   const contentVersion = artifactContentVersion(
@@ -226,6 +231,8 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
       ["deepbom:model:fileSizeBytes", nonNegativeNumber(options.fileSizeBytes ?? analysis.file_size_bytes)],
       ["deepbom:model:hashBasis", cleanText(analysis.artifact_bundle?.hash_basis) || "artifact_file_bytes_sha256"],
       ["deepbom:model:graphTotals", JSON.stringify(graphTotals)],
+      ["deepbom:model:artifactIrSchema", artifactIr?.schema],
+      ["deepbom:model:artifactIrSha256", artifactIr?.artifact_ir_sha256],
       ...quantizationProperties,
       ...safeTensorsQuantizationPropertyEntries(analysis),
       ["deepbom:model:tensorDtypeInventory", JSON.stringify(dtypeInventory)],
@@ -283,6 +290,7 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
     properties: compactProperties([
       ["deepbom:profile", "public-standalone-artifact-contract"],
       ["deepbom:documentAuthor:orcid", `https://orcid.org/${AUTHOR.orcid}`],
+      ["deepbom:artifactIrSha256", artifactIr?.artifact_ir_sha256],
       ["deepbom:privacy", "Generated locally in the browser; artifact bytes are not uploaded for this export."],
     ]),
   };

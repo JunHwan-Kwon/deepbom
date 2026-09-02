@@ -561,6 +561,11 @@ const {
   auditTabs,
   auditFocusTitle,
   auditFocusCopy,
+  auditApplicabilityBoundary,
+  auditApplicabilityStatus,
+  auditApplicabilityTitle,
+  auditApplicabilityReason,
+  auditApplicabilityRequired,
   summary,
   agreementBackdrop,
   privacyAgree,
@@ -991,6 +996,11 @@ workflowController = createWorkflowController({
     auditTabs,
     auditFocusTitle,
     auditFocusCopy,
+    auditApplicabilityBoundary,
+    auditApplicabilityStatus,
+    auditApplicabilityTitle,
+    auditApplicabilityReason,
+    auditApplicabilityRequired,
     dropzone,
     modelPlan,
     workflowConsole,
@@ -4817,6 +4827,7 @@ function currentReportContextSet({ files = [], moduleLog = [], capabilities = cu
     },
     fileSizeBytes: current?.file_size || currentModelBytes?.length || 0,
     generatedAt: new Date().toISOString(),
+    artifactIrContext: currentArtifactIrContext,
   });
 }
 

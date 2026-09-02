@@ -1,16 +1,21 @@
-export const EVIDENCE_EXPLANATION_SCHEMA = "deepbom.evidence_explanation.v1";
+import { normalizeEvidenceClass } from "./evidence-class.js";
 
-const EVIDENCE_CLASSES = new Set(["OBSERVED", "DERIVED", "PREDICTED", "ESTIMATED", "MEASURED", "NOT_ASSESSABLE"]);
+export const EVIDENCE_EXPLANATION_SCHEMA = "deepbom.evidence_explanation.v1";
 
 export function createEvidenceWhyDrawer({ root, closeButton, copyButton, body, title, subtitle } = {}) {
   let current = null;
+  let returnFocus = null;
   const close = () => {
     if (!root) return;
     root.hidden = true;
     root.setAttribute("aria-hidden", "true");
+    const target = returnFocus;
+    returnFocus = null;
+    if (target?.isConnected && typeof target.focus === "function") target.focus({ preventScroll: true });
   };
   const open = (value) => {
     if (!root || !body) return;
+    returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     current = normalizeEvidenceExplanation(value);
     if (title) title.textContent = current.title;
     if (subtitle) subtitle.textContent = `${current.evidence_class} | ${current.value ?? "value not supplied"}`;
@@ -43,12 +48,7 @@ export function createEvidenceWhyDrawer({ root, closeButton, copyButton, body, t
 
 export function normalizeEvidenceExplanation(value) {
   const source = value && typeof value === "object" ? value : {};
-  let evidenceClass = String(source.evidence_class || "NOT_ASSESSABLE").toUpperCase().replaceAll("+", "_");
-  if (!EVIDENCE_CLASSES.has(evidenceClass)) {
-    evidenceClass = [...EVIDENCE_CLASSES].find((candidate) => evidenceClass.startsWith(candidate))
-      || (evidenceClass.includes("DEVICE") || evidenceClass.includes("RUNTIME") ? "MEASURED"
-        : evidenceClass.includes("STATIC") ? "DERIVED" : "NOT_ASSESSABLE");
-  }
+  const evidenceClass = normalizeEvidenceClass(source.evidence_class);
   return {
     schema: EVIDENCE_EXPLANATION_SCHEMA,
     title: text(source.title || "Evidence explanation", 240),

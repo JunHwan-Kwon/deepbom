@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v541";
+const CACHE_NAME = "tflite-wasm-static-audit-v542";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -37,11 +37,15 @@ const APP_ASSETS = [
   "./lib/app-graph-workspace.js",
   "./lib/artifact-ir.js",
   "./lib/artifact-ir-context.js",
+  "./lib/artifact-ir-runtime.js",
   "./lib/graph-ir.js",
   "./lib/graph-export.js",
   "./lib/graph-hierarchy.js",
   "./lib/evidence-treemap.js",
   "./lib/evidence-cursor.js",
+  "./lib/evidence-applicability.js",
+  "./lib/evidence-class.js",
+  "./lib/evidence-visual-contract.js",
   "./lib/evidence-why-drawer.js",
   "./lib/artifact-diff.js",
   "./lib/artifact-diff-view.js",

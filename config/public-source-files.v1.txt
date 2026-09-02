@@ -208,6 +208,7 @@ scripts/check-affine-interface-mismatch.py
 scripts/check-all.mjs
 scripts/check-analysis-invariants.mjs
 scripts/check-artifact-bundle.mjs
+scripts/check-artifact-ir-import-boundary.mjs
 scripts/check-artifact-ir.mjs
 scripts/check-assert.mjs
 scripts/check-backend-placement-projection.mjs
@@ -256,6 +257,7 @@ scripts/check-dynamic-shape-cost.mjs
 scripts/check-evidence-package-profile-ui.mjs
 scripts/check-evidence-package-profiles.mjs
 scripts/check-evidence-treemap.mjs
+scripts/check-evidence-ui-contract.mjs
 scripts/check-evidence-workbench.mjs
 scripts/check-execution-placement-evidence.mjs
 scripts/check-execution-placement-viewer.mjs
@@ -595,6 +597,7 @@ web/lib/artifact-diff-view.js
 web/lib/artifact-diff.js
 web/lib/artifact-evidence-envelope.js
 web/lib/artifact-ir-context.js
+web/lib/artifact-ir-runtime.js
 web/lib/artifact-ir.js
 web/lib/artifact-overview.js
 web/lib/artifact-set.js
@@ -639,11 +642,14 @@ web/lib/dynamic-shape-cost-conformance.js
 web/lib/dynamic-shape-cost.js
 web/lib/edgetpu-compiler-evidence.js
 web/lib/elements.js
+web/lib/evidence-applicability.js
+web/lib/evidence-class.js
 web/lib/evidence-cursor.js
 web/lib/evidence-level-report.js
 web/lib/evidence-package-profiles.js
 web/lib/evidence-package-rights.js
 web/lib/evidence-treemap.js
+web/lib/evidence-visual-contract.js
 web/lib/evidence-why-drawer.js
 web/lib/exact-rational.js
 web/lib/execution-placement-evidence.js

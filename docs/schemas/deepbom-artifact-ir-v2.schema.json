@@ -85,7 +85,7 @@
     },
     "graph": {
       "type": "object",
-      "required": ["status", "executable_graph_status", "scopes", "scope_relationships", "operators", "values", "inputs", "outputs", "totals", "completeness", "interpretation_boundary"],
+      "required": ["status", "executable_graph_status", "primary_scope_ref", "scopes", "scope_relationships", "operators", "values", "inputs", "outputs", "totals", "completeness", "interpretation_boundary"],
       "properties": {
         "status": { "enum": ["serialized", "not_serialized"] },
         "executable_graph_status": { "type": "string" },
@@ -104,12 +104,22 @@
         "if": { "properties": { "status": { "const": "not_serialized" } }, "required": ["status"] },
         "then": {
           "properties": {
+            "executable_graph_status": { "const": "not_serialized_by_format" },
+            "primary_scope_ref": { "type": "null" },
             "scopes": { "type": "array", "maxItems": 0 },
             "scope_relationships": { "type": "array", "maxItems": 0 },
             "operators": { "type": "array", "maxItems": 0 },
             "values": { "type": "array", "maxItems": 0 },
             "inputs": { "type": "array", "maxItems": 0 },
-            "outputs": { "type": "array", "maxItems": 0 }
+            "outputs": { "type": "array", "maxItems": 0 },
+            "totals": { "$ref": "#/$defs/graphlessTotals" },
+            "completeness": { "const": "complete_not_applicable" }
+          }
+        },
+        "else": {
+          "properties": {
+            "executable_graph_status": { "const": "serialized_artifact_graph" },
+            "primary_scope_ref": { "type": "string", "minLength": 1 }
           }
         }
       }],
@@ -477,6 +487,23 @@
         "assessed_macs": { "anyOf": [{ "$ref": "#/$defs/exactInteger" }, { "type": "null" }] },
         "serialized_scope_assessed_macs": { "anyOf": [{ "$ref": "#/$defs/exactInteger" }, { "type": "null" }] },
         "mac_assessment": { "type": ["object", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "graphlessTotals": {
+      "type": "object",
+      "required": ["scope_count", "materialized_scope_count", "scope_relationship_count", "operator_count", "value_count", "relationship_count", "macs", "assessed_macs", "serialized_scope_assessed_macs", "mac_assessment"],
+      "properties": {
+        "scope_count": { "const": 0 },
+        "materialized_scope_count": { "const": 0 },
+        "scope_relationship_count": { "const": 0 },
+        "operator_count": { "const": 0 },
+        "value_count": { "const": 0 },
+        "relationship_count": { "const": 0 },
+        "macs": { "type": "null" },
+        "assessed_macs": { "type": "null" },
+        "serialized_scope_assessed_macs": { "type": "null" },
+        "mac_assessment": { "type": "null" }
       },
       "additionalProperties": false
     },

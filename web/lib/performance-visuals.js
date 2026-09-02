@@ -441,6 +441,7 @@ export function createPerformanceVisualController({
       elements.macTopList.replaceChildren(visualListItem("MAC coverage", coverageComplete ? "Complete" : `${assessedComputeOps ?? 0}/${computeOps ?? "?"} assessed`, coverageComplete ? "good" : "warn"));
       return;
     }
+    const fullDistribution = macDistributionData(analysis, { limit: Number.MAX_SAFE_INTEGER }).top;
     const segments = top.map((op) => ({
       label: `#${padOp(op.index)}`,
       detail: `${op.name} / ${formatPercent(Number(op.macs || 0) / totalMacs)} ${coverageComplete ? "MACs" : "of assessed MAC subtotal"}`,
@@ -457,6 +458,7 @@ export function createPerformanceVisualController({
       });
     }
     renderFlameStrip(elements.macFlame, segments, totalMacs);
+    renderMacCumulativeCurve(elements.macFlame, fullDistribution, totalMacs, coverageComplete);
     elements.macTopList.replaceChildren(
       ...(!coverageComplete ? [visualListItem("MAC coverage", `${assessedComputeOps ?? 0}/${computeOps ?? "?"} compute ops`, "warn")] : []),
       ...top.slice(0, 5).map((op) =>
@@ -467,6 +469,43 @@ export function createPerformanceVisualController({
         ),
       ),
     );
+  }
+
+  function renderMacCumulativeCurve(container, rows, totalMacs, coverageComplete) {
+    if (!container || !rows.length || !(totalMacs > 0)) return;
+    const namespace = "http://www.w3.org/2000/svg";
+    const width = 640;
+    const height = 92;
+    const pad = { left: 34, right: 8, top: 8, bottom: 20 };
+    const svg = document.createElementNS(namespace, "svg");
+    svg.classList.add("mac-cumulative-curve");
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", `${coverageComplete ? "Complete" : "Assessed-subtotal"} cumulative MAC distribution across ${rows.length} operators`);
+    const title = document.createElementNS(namespace, "title");
+    title.textContent = "Cumulative MAC share by ranked operator";
+    const description = document.createElementNS(namespace, "desc");
+    description.textContent = `All ${rows.length} assessed MAC-bearing operators, sorted by MAC count. The vertical axis is cumulative share of ${coverageComplete ? "total MACs" : "the assessed MAC subtotal"}.`;
+    svg.append(title, description);
+    const grid = document.createElementNS(namespace, "path");
+    grid.setAttribute("class", "mac-cumulative-grid");
+    grid.setAttribute("d", `M${pad.left} ${pad.top}V${height - pad.bottom}H${width - pad.right} M${pad.left} ${(pad.top + height - pad.bottom) / 2}H${width - pad.right}`);
+    let cumulative = 0;
+    const points = rows.map((row, index) => {
+      cumulative += Number(row.macs || 0);
+      const x = pad.left + ((index + 1) / rows.length) * (width - pad.left - pad.right);
+      const y = height - pad.bottom - Math.min(1, cumulative / totalMacs) * (height - pad.top - pad.bottom);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    }).join(" ");
+    const curve = document.createElementNS(namespace, "polyline");
+    curve.setAttribute("class", "mac-cumulative-line");
+    curve.setAttribute("points", `${pad.left},${height - pad.bottom} ${points}`);
+    const axis = document.createElementNS(namespace, "text");
+    axis.setAttribute("x", String(pad.left));
+    axis.setAttribute("y", String(height - 5));
+    axis.textContent = `all ${rows.length} assessed MAC-bearing ops -> 100%`;
+    svg.append(grid, curve, axis);
+    container.append(svg);
   }
 
   function renderBottleneckContribution(analysis) {

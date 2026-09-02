@@ -689,70 +689,72 @@
           </div>
           <div class="target-stale-notice" id="targetStaleNotice" role="status" aria-live="polite" hidden></div>
           <nav class="workflow-navigation" aria-label="Audit workflow">
-          <div class="workflow-rail" id="workflowRail" role="tablist" aria-label="Workflow stages">
-            <button class="workflow-step active" type="button" data-workflow-step="input">
+          <div class="workflow-rail" id="workflowRail" role="tablist" aria-label="Review workflow">
+            <button class="workflow-step active" type="button" data-workflow-step="input" data-navigation-role="workflow">
               <span>Input</span>
               <strong>Artifact</strong>
               <p>Select artifact; context follows</p>
             </button>
-            <button class="workflow-step" type="button" data-workflow-step="audit">
+            <button class="workflow-step" type="button" data-workflow-step="audit" data-navigation-role="workflow">
               <span>Audit</span>
               <strong>Overview</strong>
               <p>Static signals and risks</p>
             </button>
-            <button class="workflow-step" type="button" data-workflow-step="findings">
+            <button class="workflow-step" type="button" data-workflow-step="findings" data-navigation-role="workflow">
               <span>Results</span>
               <strong>Findings</strong>
               <p>Ranked actionable findings</p>
             </button>
-            <button class="workflow-step" type="button" data-workflow-step="graph" data-analysis-depth="deep">
+            <button class="workflow-step" type="button" data-workflow-step="output" data-navigation-role="workflow">
+              <span>Output</span>
+              <strong>Report</strong>
+              <p>Review and preserve evidence</p>
+            </button>
+          </div>
+          <section class="analysis-palette" id="analysisPalette" aria-labelledby="analysisPaletteTitle">
+            <header>
+              <span>Optional tools</span>
+              <strong id="analysisPaletteTitle">Analysis palette</strong>
+              <p>Open only the investigation needed for this review.</p>
+            </header>
+            <div class="analysis-tool-rail" role="toolbar" aria-label="Analysis tools">
+            <button class="workflow-step analysis-tool" type="button" data-workflow-step="graph" data-navigation-role="tool" data-analysis-depth="deep">
               <span>Graph</span>
               <strong>Explorer</strong>
               <p>Ops, tensors, links</p>
             </button>
-            <button class="workflow-step" type="button" data-workflow-step="redesign" data-analysis-depth="deep">
+            <button class="workflow-step analysis-tool" type="button" data-workflow-step="redesign" data-navigation-role="tool" data-analysis-depth="deep">
               <span>Design</span>
               <strong>Redesign</strong>
               <p>Edit blocks, compare impact</p>
             </button>
-            <button class="workflow-step" type="button" data-workflow-step="runtime">
+            <button class="workflow-step analysis-tool" type="button" data-workflow-step="runtime" data-navigation-role="tool">
               <span>Runtime</span>
               <strong>Benchmark</strong>
               <p>Preprocess and timing</p>
             </button>
-            <details class="workflow-research-group" id="workflowResearchGroup" data-analysis-depth="deep">
-              <summary>
-                <span>Optional</span>
-                <strong>Research</strong>
-                <p>Open research modules</p>
-              </summary>
-              <button class="workflow-step" type="button" data-workflow-step="deepbom" data-workflow-module="deepbom" data-analysis-depth="deep">
+              <button class="workflow-step analysis-tool" type="button" data-workflow-step="deepbom" data-navigation-role="tool" data-workflow-module="deepbom" data-analysis-depth="deep">
                 <span>Artifact</span>
-                <strong>Artifact Descriptors</strong>
+                <strong>Artifact Geometry</strong>
                 <p>Weight/topology descriptors</p>
               </button>
-              <button class="workflow-step" type="button" data-workflow-step="runtime_basin" data-workflow-module="runtime_basin" data-analysis-depth="deep">
+              <button class="workflow-step analysis-tool" type="button" data-workflow-step="runtime_basin" data-navigation-role="tool" data-workflow-module="runtime_basin" data-analysis-depth="deep">
                 <span>Perturbation</span>
-                <strong>Drift Analysis</strong>
+                <strong>Drift</strong>
                 <p>Output drift &amp; stability</p>
               </button>
-              <button class="workflow-step" type="button" data-workflow-step="offline_test" data-workflow-module="offline_test" data-analysis-depth="deep" hidden>
+              <button class="workflow-step analysis-tool" type="button" data-workflow-step="offline_test" data-navigation-role="tool" data-workflow-module="offline_test" data-analysis-depth="deep" hidden>
                 <span>On-device</span>
                 <strong>Synthetic Device</strong>
                 <p>Structural timing on registered hardware</p>
               </button>
-              <button class="workflow-step" type="button" data-workflow-step="deployment_sensitivity" data-workflow-module="deployment_sensitivity" data-analysis-depth="deep">
-                <span>Finite difference</span>
-                <strong>Deployment Sensitivity</strong>
+              <button class="workflow-step analysis-tool" type="button" data-workflow-step="deployment_sensitivity" data-navigation-role="tool" data-workflow-module="deployment_sensitivity" data-analysis-depth="deep">
+                <span>Deployment</span>
+                <strong>Sensitivity</strong>
                 <p>Synthetic local observations</p>
               </button>
-            </details>
-            <button class="workflow-step" type="button" data-workflow-step="output">
-              <span>Output</span>
-              <strong>Reports</strong>
-              <p>Evidence reports</p>
-            </button>
-          </div>
+            </div>
+          </section>
           </nav>
           <section class="audit-workbench" id="auditWorkbench" hidden aria-label="Audit detail selector">
             <div class="module-head audit-selector-head">
@@ -763,61 +765,67 @@
               </div>
               <strong>Open static audit</strong>
             </div>
-            <div class="audit-tabs" role="tablist" aria-label="Audit details">
-              <button class="audit-tab active" type="button" data-audit-tab="overview" aria-label="Overview, static evidence triage">
+            <div class="audit-tabs audit-domain-tabs" role="tablist" aria-label="Evidence domains">
+              <button class="audit-tab active" type="button" data-audit-tab="overview" data-audit-domain="overview" data-audit-primary="true" aria-label="Overview, static evidence triage">
                 <span>Summary</span>
                 <strong>Overview</strong>
                 <em>Triage</em>
               </button>
-              <button class="audit-tab" type="button" data-audit-tab="xnnpack" data-format-scope="tflite" aria-label="TFLite XNNPACK conditional eligibility and predicted partition segments">
-                <span>Delegate</span>
-                <strong>XNNPACK</strong>
-                <em>Segments</em>
+              <button class="audit-tab" type="button" data-audit-tab="quant" data-audit-domain="numerical" data-audit-primary="true" aria-label="Numerical contracts and quantization evidence">
+                <span>Numerical</span>
+                <strong>Numerical Contracts</strong>
+                <em>Quantization</em>
               </button>
-              <button class="audit-tab" type="button" data-audit-tab="accelerator" aria-label="Source-backed accelerator eligibility, partitions, boundaries, and unresolved runtime conditions">
+              <button class="audit-tab" type="button" data-audit-tab="accelerator" data-audit-domain="placement" data-audit-primary="true" aria-label="Source-backed accelerator eligibility, partitions, boundaries, and unresolved runtime conditions">
                 <span>Placement</span>
-                <strong>Accelerator</strong>
+                <strong>Execution Placement</strong>
                 <em>Eligibility</em>
               </button>
-              <button class="audit-tab" type="button" data-audit-tab="quant" aria-label="Quantization summary, numerical state and risk">
-                <span>Quantization</span>
-                <strong>Quant</strong>
-                <em>Summary</em>
+              <button class="audit-tab" type="button" data-audit-tab="roofline" data-audit-domain="memory" data-audit-primary="true" aria-label="Memory feasibility and static cost posture">
+                <span>Resources</span>
+                <strong>Memory &amp; Cost</strong>
+                <em>Boundaries</em>
               </button>
-              <button class="audit-tab" type="button" data-audit-tab="quant-labs" data-analysis-depth="deep" aria-label="Quantization labs, Q/DQ and arithmetic contracts">
-                <span>Arithmetic</span>
-                <strong>Quant Labs</strong>
-                <em>Q/DQ</em>
+              <button class="audit-tab" type="button" data-audit-tab="stage" data-audit-domain="architecture" data-audit-primary="true" data-analysis-depth="deep" aria-label="Architecture, graph scopes, stages and blocks">
+                <span>Structure</span>
+                <strong>Architecture</strong>
+                <em>Scopes</em>
               </button>
-              <button class="audit-tab" type="button" data-audit-tab="llm" data-format-scope="tflite onnx gguf safetensors" aria-label="On-device LLM serialized graph or architecture, state, tokenizer, runtime, and medical evidence boundary">
-                <span>On-device</span>
-                <strong>LLM</strong>
-                <em>Contract</em>
+            </div>
+            <div class="audit-tabs audit-lens-tabs" role="toolbar" aria-label="Specialized evidence lenses">
+              <button class="audit-tab" type="button" data-audit-tab="xnnpack" data-audit-domain="placement" data-audit-lens="true" data-format-scope="tflite" aria-label="TFLite XNNPACK conditional eligibility and predicted partition segments">
+                <span>Delegate lens</span><strong>XNNPACK</strong><em>Segments</em>
               </button>
-              <button class="audit-tab" type="button" data-audit-tab="roofline" aria-label="Static roofline, target bound posture">
-                <span>Target</span>
-                <strong>Roofline</strong>
-                <em>Bound</em>
+              <button class="audit-tab" type="button" data-audit-tab="quant-labs" data-audit-domain="numerical" data-audit-lens="true" data-analysis-depth="deep" aria-label="Quantization labs, Q/DQ and arithmetic contracts">
+                <span>Arithmetic lens</span><strong>Quant Labs</strong><em>Q/DQ</em>
               </button>
-              <button class="audit-tab" type="button" data-audit-tab="stage" data-analysis-depth="deep" aria-label="Stage topology and blocks">
-                <span>Topology</span>
-                <strong>Stage</strong>
-                <em>Blocks</em>
+              <button class="audit-tab" type="button" data-audit-tab="llm" data-audit-domain="architecture" data-audit-lens="true" data-format-scope="tflite onnx gguf safetensors" aria-label="On-device LLM serialized graph or architecture, state, tokenizer, runtime, and medical evidence boundary">
+                <span>Architecture lens</span><strong>On-device LLM</strong><em>Contract</em>
               </button>
             </div>
             <label class="mobile-audit-view" for="mobileAuditView">
               <span>Static analysis view</span>
               <select id="mobileAuditView">
-                <option value="overview">Summary</option>
-                <option value="xnnpack">Deployment / XNNPACK</option>
-                <option value="accelerator">Accelerator eligibility and boundaries</option>
-                <option value="quant">Quantization summary</option>
-                <option value="quant-labs" data-analysis-depth="deep">Quantization arithmetic and Q/DQ</option>
-                <option value="llm">On-device LLM contract</option>
-                <option value="roofline">Performance / Roofline</option>
-                <option value="stage" data-analysis-depth="deep">Architecture / Stages</option>
+                <optgroup label="Evidence domains">
+                  <option value="overview">Overview</option>
+                  <option value="quant">Numerical Contracts</option>
+                  <option value="accelerator">Execution Placement</option>
+                  <option value="roofline">Memory &amp; Cost</option>
+                  <option value="stage" data-analysis-depth="deep">Architecture</option>
+                </optgroup>
+                <optgroup label="Specialized lenses">
+                  <option value="xnnpack">XNNPACK segments</option>
+                  <option value="quant-labs" data-analysis-depth="deep">Quantization arithmetic and Q/DQ</option>
+                  <option value="llm">On-device LLM contract</option>
+                </optgroup>
               </select>
             </label>
+            <section class="audit-applicability-boundary" id="auditApplicabilityBoundary" role="status" aria-live="polite" hidden>
+              <span id="auditApplicabilityStatus">Not applicable</span>
+              <h3 id="auditApplicabilityTitle">Evidence domain unavailable</h3>
+              <p id="auditApplicabilityReason"></p>
+              <p id="auditApplicabilityRequired"></p>
+            </section>
             <div class="audit-focus-note">
               <strong id="auditFocusTitle">Overview</strong>
             <p id="auditFocusCopy">Review target-independent artifact identity first, then the separately labeled selected-target engineering dashboard.</p>
@@ -1337,7 +1345,7 @@
               <span>Signals</span>
             </div>
             <div>
-              <span class="score-card-caption">Static Triage Signals <em class="maturity-badge maturity-beta">HEURISTIC</em></span>
+              <span class="score-card-caption">Static Triage Signals <em class="maturity-badge maturity-beta" data-evidence-class="DERIVED_WITH_HEURISTIC_THRESHOLD" aria-label="Evidence class: derived with heuristic threshold">HEURISTIC</em></span>
               <strong id="readinessLabel">Waiting for artifact</strong>
               <p id="readinessRationale">Load a supported artifact or package to resolve its format-specific evidence depth.</p>
               <details class="triage-index-details">

@@ -1,4 +1,4 @@
-import { buildArtifactEvidenceIr } from "./artifact-ir.js";
+import { buildArtifactEvidenceIrUnchecked, validateArtifactEvidenceIr } from "./artifact-ir.js";
 import { projectArtifactIrToCanonicalGraph } from "./graph-ir.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
@@ -21,10 +21,39 @@ export function getArtifactIrContext(analysis, artifact = {}, { runtimeEvidence 
   const cached = CACHE.get(analysis);
   if (cached?.cache_key === cacheKey) return cached.context;
 
-  const artifactIr = buildArtifactEvidenceIr(analysis, normalizedArtifact, { runtimeEvidence });
+  const artifactIr = buildArtifactEvidenceIrUnchecked(analysis, normalizedArtifact, { runtimeEvidence });
+  const context = contextFromArtifactIr(analysis, artifactIr);
+  CACHE.set(analysis, { cache_key: cacheKey, context });
+  return context;
+}
+
+export function resolveArtifactIrContext(analysis, artifact = {}, {
+  artifactIrContext = null,
+  artifactIr = null,
+  runtimeEvidence = null,
+} = {}) {
+  if (!analysis || typeof analysis !== "object") return null;
+  if (artifactIrContext) {
+    const validated = validateArtifactEvidenceIr(artifactIrContext.artifact_ir);
+    requireArtifactIdentity(validated, analysis, artifact);
+    if (validated.artifact_ir_sha256 !== artifactIrContext.graph_ir?.artifact_ir_sha256) {
+      throw new Error("Artifact IR context graph binding is inconsistent.");
+    }
+    return artifactIrContext;
+  }
+  const supplied = artifactIr || analysis.artifact_ir || null;
+  if (supplied) {
+    const validated = validateArtifactEvidenceIr(supplied);
+    requireArtifactIdentity(validated, analysis, artifact);
+    return contextFromArtifactIr(analysis, validated);
+  }
+  return getArtifactIrContext(analysis, artifact, { runtimeEvidence });
+}
+
+function contextFromArtifactIr(analysis, artifactIr) {
   const graphIr = projectArtifactIrToCanonicalGraph(artifactIr);
   const primaryView = buildPrimaryScopeAnalysisView(analysis, artifactIr);
-  const context = Object.freeze({
+  return Object.freeze({
     artifact_ir: artifactIr,
     graph_ir: graphIr,
     primary_view: primaryView,
@@ -32,8 +61,13 @@ export function getArtifactIrContext(analysis, artifact = {}, { runtimeEvidence 
     value_by_subject_ref: new Map(artifactIr.graph.values.map((row) => [row.id, row])),
     scope_by_ref: new Map(artifactIr.graph.scopes.map((row) => [row.id, row])),
   });
-  CACHE.set(analysis, { cache_key: cacheKey, context });
-  return context;
+}
+
+function requireArtifactIdentity(artifactIr, analysis, artifact) {
+  const expected = String(artifact.sha256 || analysis.model_sha256 || analysis.artifact_sha256 || "").toLowerCase();
+  if (/^[a-f0-9]{64}$/.test(expected) && artifactIr.artifact.sha256 !== expected) {
+    throw new Error("Artifact IR is not bound to the active artifact SHA-256.");
+  }
 }
 
 export function buildPrimaryScopeAnalysisView(analysis, artifactIr) {
@@ -61,12 +95,14 @@ export function buildPrimaryScopeAnalysisView(analysis, artifactIr) {
     ...Object.keys(analysis),
     "_markdown",
     "_reportGeneratedAt",
-    "deployment_delta",
-    "deployment_delta_error",
     "external_node_edge_evidence_overlay",
     "findings",
     "on_device_llm",
   ]);
+  if (String(analysis.format || "").toLowerCase() === "tflite") {
+    passthroughKeys.add("deployment_delta");
+    passthroughKeys.add("deployment_delta_error");
+  }
   for (const key of passthroughKeys) {
     if (canonicalKeys.has(key)) continue;
     Object.defineProperty(view, key, {

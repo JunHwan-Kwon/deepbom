@@ -4,7 +4,7 @@ import { buildQuantResearchCoverage } from "./quant-research-applicability.js";
 
 export { buildDecisionCoverageLedger, decisionCoverageMarkdown } from "./decision-coverage.js";
 
-const SCHEMA = "deepbom.metric_coverage_manifest.v1.53";
+const SCHEMA = "deepbom.metric_coverage_manifest.v1.54";
 const MAX_FIELD_DISCOVERY_VISITS = 2_000_000;
 const SPECIAL_FIELD_EXPORT_ROUTES = new Map([
   ["roofline_csv", "supplemental_sources.roofline_csv"],
@@ -1509,6 +1509,19 @@ function spec(id, label, {
 }
 
 const SPECS = [
+  spec("artifact.canonical_ir", "Canonical Artifact Evidence IR", {
+    formats: ["tflite", "onnx", "coreml", "mlmodel", "gguf", "safetensors", "executorch", "pte", "ptd"],
+    keys: ["artifact_ir", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"],
+    status: (analysis) => analysis?.artifact_ir?.schema === "deepbom.artifact_ir.v2"
+      && /^[a-f0-9]{64}$/.test(String(analysis.artifact_ir?.artifact_ir_sha256 || ""))
+      ? "assessed" : "not_assessed",
+    evidenceClass: "OBSERVED/DERIVED",
+    pointers: ["/evidence/artifact_ir"],
+    report: "## Artifact And Target",
+    viewer: ["Overview", "Explorer", "Reports"],
+    exports: ["engineering_evidence.json", "static/artifact_ir.json", "static/static_analysis.json"],
+    method: "Validate one hash-bound deepbom.artifact_ir.v2 document and reuse its graph, storage, architecture, quantization, static-projection, and imported-runtime overlay identities across viewer and export surfaces without reconstructing it from a compatibility view.",
+  }),
   spec("executorch.serialized_contract", "ExecuTorch ET12/FT01 serialized contract", {
     formats: ["executorch"],
     keys: [
@@ -1622,7 +1635,7 @@ const SPECS = [
     report: "## Core ML Serialized Graph And Numerical Evidence", viewer: ["Overview", "Reports"],
     method: "Map the serialized specificationVersion through the exact pinned Model.proto OS-availability table and independently derive a necessary observed-feature version from representation, external dtype/flexibility, multi-function/state declarations, updatability, and MIL opset identity; reject declared versions below the observed-feature floor." }),
   spec("artifact.identity", "Artifact identity and byte size", {
-    keys: ["schema", "format", "filename", "file_size", "model_sha256", "version", "target_profile", "cpu_cost_target_binding"],
+    keys: ["schema", "format", "filename", "file_size", "file_size_bytes", "model_sha256", "version", "target_profile", "cpu_cost_target_binding"],
     status: (a) => hasOwn(a, "file_size") ? "assessed" : "not_assessed",
     evidenceClass: "OBSERVED", pointers: ["/evidence/static_analysis/file_size", "/evidence/static_analysis/model_sha256"],
     report: "## Artifact And Target", viewer: ["Overview", "Reports"], method: "Read format, byte length, and digest from the locally selected artifact." }),
@@ -1630,6 +1643,16 @@ const SPECS = [
     keys: ["metadata_presence"], status: (a) => objectStatus(a?.metadata_presence), evidenceClass: "OBSERVED",
     pointers: ["/evidence/static_analysis/metadata_presence"], report: "## Artifact Metadata & Signatures", viewer: ["Overview", "Reports"],
     method: "Inventory only metadata and signature structures actually embedded in the selected artifact format." }),
+  spec("evidence.external_overlay", "Hash-bound external node and edge evidence overlay", {
+    formats: ["tflite", "onnx", "coreml", "mlmodel", "gguf", "safetensors", "executorch", "pte", "ptd"],
+    keys: ["external_node_edge_evidence_overlay"],
+    status: (analysis) => analysis?.external_node_edge_evidence_overlay ? "assessed" : "not_assessed",
+    evidenceClass: "DECLARED_UNVERIFIED/MEASURED",
+    pointers: ["/evidence/static_analysis/external_node_edge_evidence_overlay"],
+    report: "## External Node And Edge Evidence Overlay",
+    viewer: ["Explorer", "Reports"],
+    method: "Preserve only explicitly imported, artifact-bound node and edge evidence; never execute importer-provided code or infer runtime identity from names.",
+  }),
   spec("graph.inventory", "Graph, tensor, stage, and pattern inventory", {
     keys: ["subgraphs", "graph_name", "producer", "onnx_ir_version", "opsets", "operator_codes", "operator_count", "tensor_count", "ops", "tensors", "histogram", "stages", "patterns", "tensor_types", "graph_topology"],
     status: (a) => Array.isArray(a?.ops) && Array.isArray(a?.tensors) ? "assessed" : "not_assessed",

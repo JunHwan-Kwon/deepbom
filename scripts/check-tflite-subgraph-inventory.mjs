@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { Builder } from "flatbuffers";
 
 import { analyze_tflite_for_target, initSync } from "../pkg/tflite_wasm_audit.js";
-import { buildArtifactEvidenceIr } from "../web/lib/artifact-ir.js";
+import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
 import { buildEngineeringBundleArtifactFiles, buildMlBomDocument } from "../web/lib/report.js";
 
 const expect = (condition, message) => { if (!condition) throw new Error(message); };
@@ -303,7 +303,7 @@ expectEqual(inventory.nominal_mac_sources.length, 4, "Pinned nominal-MAC source 
 expect(inventory.nominal_mac_sources.some((row) => row.role === "conv_3d_dhwio_ndhwc_contract"
   && row.sha256 === "7dfd75d047b7d22f76c365d48ecb1facad4656897ed3d58a661afcb0ad503b36"), "Pinned Conv3D DHWIO contract source");
 expectEqual(result.operator_count, 1, "Primary execution operator total must remain separate");
-const ifArtifactIr = buildArtifactEvidenceIr(result, { filename: result.filename, format: "tflite", sha256: result.model_sha256, size: ifFixture.length });
+const ifArtifactIr = getArtifactIrContext(result, { filename: result.filename, format: "tflite", sha256: result.model_sha256, size: ifFixture.length }).artifact_ir;
 expectEqual(ifArtifactIr.graph.totals.scope_count, 3, "Artifact IR serialized IF scope count");
 expectEqual(ifArtifactIr.graph.totals.materialized_scope_count, 3, "Artifact IR materialized IF scope count");
 expectEqual(ifArtifactIr.graph.totals.scope_relationship_count, 2, "Artifact IR IF scope-reference count");
@@ -350,7 +350,7 @@ const computeDeep = computeResult.tflite_subgraph_deep_analysis;
 expectEqual(computeResult.operator_count, 1, "Primary operator count must exclude branch operators");
 expectEqual(computeInventory.serialized_operator_count, 3, "All serialized compute/control operators");
 expectEqual(computeInventory.nested_operator_count, 2, "Nested branch operator count");
-const computeArtifactIr = buildArtifactEvidenceIr(computeResult, { filename: computeResult.filename, format: "tflite", sha256: computeResult.model_sha256, size: computeFixture.length });
+const computeArtifactIr = getArtifactIrContext(computeResult, { filename: computeResult.filename, format: "tflite", sha256: computeResult.model_sha256, size: computeFixture.length }).artifact_ir;
 expectEqual(computeArtifactIr.graph.totals.operator_count, 3, "Artifact IR all serialized branch operators");
 expectEqual(computeArtifactIr.graph.totals.assessed_macs.decimal, "0", "Artifact IR primary entrypoint MAC subtotal");
 expectEqual(computeArtifactIr.graph.totals.serialized_scope_assessed_macs.decimal, "8", "Artifact IR independent serialized-scope nominal subtotal");

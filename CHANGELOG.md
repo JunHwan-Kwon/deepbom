@@ -4,6 +4,26 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Made `--output-format` the unambiguous CLI spelling while retaining
+  `--format` as a backward-compatible alias; existing raw analysis output and
+  automation contracts remain unchanged for the 1.96 stabilization cycle.
+- Made the cached Artifact IR context the only public construction path and
+  added a source-boundary gate that rejects direct unchecked-builder imports.
+  UI, reports, deployment packs, CycloneDX, `review.html`, raw ZIP evidence,
+  and CLI graph output now retain one IR identity, nested-scope count, and
+  runtime subject mapping.
+- Replaced format-driven tab disappearance with five fixed evidence domains
+  and explicit applicability records. Four primary workflow stages remain
+  separate from optional analysis tools, and graphless containers expose why
+  graph arithmetic or placement is not applicable instead of rendering an
+  unexplained empty surface.
+- Added a canonical ten-class evidence visual contract with text, border,
+  pattern, tooltip, and ARIA encodings; improved arena peak occupancy and
+  pan/zoom controls, and added a complete assessed-MAC cumulative view.
+- Raised the handwritten runtime ceiling by 32 KiB and verification ceiling by
+  16 KiB for the separately modularized evidence-class, applicability,
+  runtime-reconciliation, and cross-output conservation contracts; generated
+  rulepack, corpus, per-file, and application-entry budgets are unchanged.
 - Added the evidence-preserving `deepbom.artifact_ir.v2` ledger with separate
   serialized graph, storage topology, architecture projection, scoped
   quantization, static placement, and imported runtime layers. Existing

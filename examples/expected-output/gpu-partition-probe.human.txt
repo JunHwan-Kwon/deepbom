@@ -6,4 +6,4 @@ Graph: 5 operators | 9 tensors | 6,912 MACs
 Quantization: Not quantized | 0/9 tensors quantized | 0% MAC-bearing compute coverage
 Findings: none emitted by the applicable static checks
 Evidence boundary: static compatibility and cost results do not establish observed runtime assignment, latency, task quality, clinical validity, or release readiness.
-Machine output: rerun with --json, --compact, --format cyclonedx, or --output <path>.
+Machine output: rerun with --json, --compact, --output-format cyclonedx, or --output <path> (`--format` remains compatible).

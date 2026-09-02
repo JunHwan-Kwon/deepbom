@@ -16,6 +16,7 @@ import {
 } from "./quantization-contract-summary.js";
 import { classifyTensorRoles } from "./tensor-inventory.js";
 import { safeTensorsQuantizationPanel } from "./safetensors-quantization-view.js";
+import { decorateEvidenceElement } from "./evidence-visual-contract.js";
 
 const MAX_HISTOGRAM_ROWS = 8;
 const MAX_INTERFACE_ROWS = 8;
@@ -42,6 +43,7 @@ function panel(title, caption, id, wide = false) {
 
 function panelStatus(node, value, evidenceClass = "DERIVED") {
   const status = element("span", "artifact-panel-status", `${evidenceClass} / ${value}`);
+  decorateEvidenceElement(status, evidenceClass, { label: false });
   node.querySelector(".artifact-panel-head")?.append(status);
 }
 
@@ -656,12 +658,18 @@ export function artifactOverviewHeader(analysis) {
   const binding = element("div", "artifact-identity-binding");
   const hash = String(analysis?.model_sha256 || "");
   const hashValue = hash ? `${hash.slice(0, 16)}...${hash.slice(-8)}` : "not bound";
+  const nestedScopeCount = Number(analysis?.artifact_ir_nested_scope_count
+    ?? analysis?.artifact_ir?.graph?.scopes?.filter((scope) => scope.id !== analysis?.artifact_ir?.graph?.primary_scope_ref).length
+    ?? 0);
   const code = element("code", "", hashValue);
   code.title = hash || "Artifact SHA-256 not bound";
   binding.append(
     element("span", "", "Artifact binding"),
     code,
     element("strong", "", formatBytes(analysis?.file_size ?? analysis?.file_size_bytes ?? 0)),
+    element("small", "", graphFormat
+      ? `${formatNumber(nestedScopeCount)} nested graph scope${nestedScopeCount === 1 ? "" : "s"} preserved in Artifact IR`
+      : "Executable graph not serialized; storage and architecture evidence remain separate"),
   );
   head.append(copy, binding);
   return head;

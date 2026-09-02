@@ -63,8 +63,15 @@ for (const required of [
   ".github/workflows/release-channels.yml",
   "docs/CLI_REFERENCE.md",
   "docs/PUBLIC_PRIVATE_BOUNDARY.md",
+  "scripts/check-artifact-ir-import-boundary.mjs",
+  "scripts/check-evidence-ui-contract.mjs",
   "scripts/check-public-package-boundary.mjs",
   "scripts/generate-cli-docs.mjs",
+  "web/lib/artifact-ir-context.js",
+  "web/lib/artifact-ir-runtime.js",
+  "web/lib/evidence-applicability.js",
+  "web/lib/evidence-class.js",
+  "web/lib/evidence-visual-contract.js",
 ]) assert(actualPaths.includes(required), `Required public source member is missing: ${required}`);
 assert(packageDocument.scripts?.["generate:cli-docs"] === "node scripts/generate-cli-docs.mjs",
   "Public source CLI documentation generator script drifted.");

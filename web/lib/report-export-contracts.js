@@ -29,7 +29,7 @@ import {
   bindTfliteDelegateRequirement,
 } from "./tflite-build-configuration-binding.js";
 import { tensorRtCycloneDxPropertyEntries } from "./tensorrt-cyclonedx-properties.js";
-import { buildArtifactEvidenceIr, validateArtifactEvidenceIr } from "./artifact-ir.js";
+import { resolveArtifactIrContext } from "./artifact-ir-context.js";
 
 const CYCLONEDX_SCHEMA = "http://cyclonedx.org/schema/bom-1.7.schema.json";
 const LITERT_INT8_SPEC = "https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec";
@@ -943,13 +943,17 @@ function cycloneDxEnvelope(subject, generatedAt, options = {}, formulation = nul
 export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
   const generatedAt = options.generatedAt || new Date().toISOString();
   const irIdentity = artifactIdentity(analysis, options);
-  const artifactIr = options.artifactIr ? validateArtifactEvidenceIr(options.artifactIr) : (SHA256_PATTERN.test(irIdentity.sha256) ? buildArtifactEvidenceIr(analysis, {
+  const artifactIr = SHA256_PATTERN.test(irIdentity.sha256) ? resolveArtifactIrContext(analysis, {
     filename: irIdentity.name,
     format: irIdentity.format,
     sha256: irIdentity.sha256,
     size: irIdentity.byte_length ?? 0,
     artifact_set_sha256: analysis?.artifact_set?.artifact_set_sha256 || null,
-  }) : null);
+  }, {
+    artifactIrContext: options.artifactIrContext || null,
+    artifactIr: options.artifactIr || null,
+    runtimeEvidence: options.runtimeEvidence || options.runtimeAssignmentEvidence || null,
+  })?.artifact_ir || null : null;
   const artifactEnvelope = options.artifactEvidenceEnvelope || buildArtifactEvidenceEnvelope(analysis, {
     ...options,
     generatedAt,
@@ -962,11 +966,12 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
   const missingHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.missingFields);
   const formulationHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.formulation);
   const cycloneDx20PreviewHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.cyclonedx20Preview);
+  const artifactIrMemberAvailable = Boolean(options.artifactIr && artifactIrHash);
   const references = [
     ...optionalExternalReference(options, "engineeringEvidence", "evidence", "engineering_evidence.json", "External Engineering Bundle evidence ledger."),
     ...optionalExternalReference(options, "engineeringReport", "quality-metrics", "engineering_report.md", "External human-readable Engineering Report."),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.artifactEnvelope, bundleReferenceComment("Canonical artifact evidence envelope.", Boolean(envelopeHash)), envelopeHash),
-    ...(options.artifactIr ? [externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.artifactIr, bundleReferenceComment("Canonical Artifact Evidence IR with graph, storage, architecture, quantization, and overlay separation.", Boolean(artifactIrHash)), artifactIrHash)] : []),
+    ...(artifactIrMemberAvailable ? [externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.artifactIr, bundleReferenceComment("Canonical Artifact Evidence IR with graph, storage, architecture, quantization, and overlay separation.", true), artifactIrHash)] : []),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.interfaceContracts, bundleReferenceComment("Canonical external tensor numerical-contract ledger.", Boolean(interfaceHash)), interfaceHash),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.cyclonedx20Preview, bundleReferenceComment("Commit-pinned CycloneDX 2.0 non-conformant proposal fixture; the pinned draft schema closure is unavailable and this is not a 2.0 conformance claim.", Boolean(cycloneDx20PreviewHash)), cycloneDx20PreviewHash),
     externalReference("formulation", DEPLOYMENT_CONTRACT_FILES.formulation, bundleReferenceComment("Artifact-observed formulation and declaration comparison.", Boolean(formulationHash)), formulationHash),
@@ -977,7 +982,7 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
     ...options,
     artifactEvidenceEnvelope: artifactEnvelope,
     artifactIr,
-    artifactIrLocation: options.artifactIr ? DEPLOYMENT_CONTRACT_FILES.artifactIr : null,
+    artifactIrLocation: artifactIrMemberAvailable ? DEPLOYMENT_CONTRACT_FILES.artifactIr : null,
   }, references);
   const components = supportingComponents(artifactEnvelope);
   return cycloneDxEnvelope(subject.component, generatedAt, options, null, properties([
@@ -2173,13 +2178,19 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
     provenance: analyzerProvenance(shared),
   });
   const irIdentity = artifactIdentity(analysis, shared);
-  const artifactIr = buildArtifactEvidenceIr(analysis, {
+  const artifactIrContext = resolveArtifactIrContext(analysis, {
     filename: irIdentity.name,
     format: irIdentity.format,
     sha256: irIdentity.sha256,
     size: irIdentity.byte_length ?? 0,
     artifact_set_sha256: analysis?.artifact_set?.artifact_set_sha256 || null,
+  }, {
+    artifactIrContext: options.artifactIrContext || null,
+    artifactIr: options.artifactIr || null,
+    runtimeEvidence: options.runtimeEvidence || options.runtimeAssignmentEvidence || null,
   });
+  if (!artifactIrContext) throw new Error("Canonical Artifact Evidence IR could not be resolved for the deployment contract.");
+  const artifactIr = artifactIrContext.artifact_ir;
   const canonicalInterfaceLedger = artifactEnvelope.interfaces || buildInterfaceQuantizationContractLedger(analysis);
   const contractShared = { ...shared, interfaceLedger: canonicalInterfaceLedger };
   const interfaceContracts = buildInterfaceContractLedgerDocument(analysis, contractShared);

@@ -30,6 +30,8 @@ const CHECKS = [
   "scripts/check-nvidia-accelerator-profile.mjs",
   "scripts/check-remote-artifact-resolver.mjs",
   "scripts/check-artifact-ir.mjs",
+  "scripts/check-artifact-ir-import-boundary.mjs",
+  "scripts/check-evidence-ui-contract.mjs",
   "scripts/check-cli-graph-export.mjs",
   "scripts/check-regulatory-bundle-contract.mjs",
   "scripts/check-export-artifact-contract.mjs",

@@ -1,4 +1,5 @@
 import { formatEvidenceScope, formatWorkflowApplicability } from "./format-evidence-scope.js";
+import { decorateEvidenceElement } from "./evidence-visual-contract.js";
 import { formatNumber } from "./format.js";
 import {
   insightDashboardCards,
@@ -214,6 +215,16 @@ function renderEvidenceSpine(boundary, scope, analyzed) {
       navigation.setAttribute("aria-label", `${stage}: ${label}. ${navigation.disabled ? "Unavailable until the required evidence is present." : "Open the corresponding evidence workspace."}`);
     }
     item.dataset.status = tone;
+    const evidenceClass = item.dataset.evidenceStage === "artifact"
+      ? analyzed ? "OBSERVED" : "DECLARED_UNVERIFIED"
+      : item.dataset.evidenceStage === "derivation"
+        ? analyzed ? "DERIVED" : "NOT_ASSESSABLE"
+        : item.dataset.evidenceStage === "deployment"
+          ? analyzed ? scope.id === "tflite" ? "PREDICTED" : "SOURCE_BACKED" : "NOT_ASSESSABLE"
+          : item.dataset.evidenceStage === "runtime"
+            ? runtimeBound ? "MEASURED" : "NOT_ASSESSABLE"
+            : "NOT_ASSESSABLE";
+    decorateEvidenceElement(item, evidenceClass, { label: false });
   }
 }
 
@@ -245,19 +256,25 @@ export function syncFormatWorkflowVisibilityView({
   for (const step of workflowSteps) {
     const applicable = visibleSteps[step.dataset.workflowStep] !== false;
     step.dataset.formatApplicable = String(applicable);
-    step.hidden = !applicable;
+    const adminOnly = step.dataset.workflowStep === "offline_test" && currentUser?.role !== "admin";
+    step.hidden = adminOnly;
+    step.dataset.applicabilityStatus = applicable ? "applicable" : "not_applicable";
+    const reason = workflowApplicabilityReason(step.dataset.workflowStep, format);
+    step.dataset.applicabilityReason = applicable ? "" : reason;
+    if (!applicable) step.title = reason;
+    step.setAttribute("aria-disabled", String(!applicable));
   }
   for (const tab of moduleTabs) {
     const module = tab.dataset.moduleTab;
     const research = ["deepbom", "runtime_basin", "offline_test", "deployment_sensitivity"].includes(module);
     const applicable = !research || (module === "deepbom" ? applicability.protectedSourceAnalysis : applicability.tfliteResearch);
     tab.dataset.formatApplicable = String(applicable);
-    tab.hidden = !applicable || tab.dataset.moduleTab === "offline_test" && currentUser?.role !== "admin";
-  }
-  const researchGroup = doc?.getElementById("workflowResearchGroup");
-  if (researchGroup) {
-    researchGroup.hidden = !applicability.protectedSourceAnalysis;
-    if (!applicability.protectedSourceAnalysis) researchGroup.open = false;
+    const adminOnly = tab.dataset.moduleTab === "offline_test" && currentUser?.role !== "admin";
+    tab.hidden = adminOnly;
+    tab.dataset.applicabilityStatus = applicable ? "applicable" : "not_applicable";
+    tab.dataset.applicabilityReason = applicable ? "" : workflowApplicabilityReason(module, format);
+    tab.setAttribute("aria-disabled", String(!applicable));
+    if (!applicable) tab.title = workflowApplicabilityReason(module, format);
   }
   const activeTab = [...moduleTabs].find((tab) => tab.dataset.moduleTab === activeModule);
   if (activeTab?.hidden) setActiveModule("engineering_report");
@@ -274,7 +291,7 @@ export function syncFormatWorkflowVisibilityView({
   if (kernelTab) kernelTab.textContent = "Execution Placement";
   if (deepStep) {
     deepStep.querySelector("span").textContent = onnx ? "Deployment" : "Artifact";
-    deepStep.querySelector("strong").textContent = onnx ? "ORT EP Compatibility" : "Artifact Descriptors";
+    deepStep.querySelector("strong").textContent = onnx ? "ORT EP Compatibility" : "Artifact Geometry";
     deepStep.querySelector("p").textContent = onnx ? "Pinned source candidates" : "Weight/topology descriptors";
   }
   if (deepTab) {
@@ -287,4 +304,16 @@ export function syncFormatWorkflowVisibilityView({
       : "Artifact Geometry: deploy-artifact weight and topology descriptors.";
     deepPanel.querySelector("#runDeepBom").textContent = onnx ? "Load ORT EP Compatibility" : "Run Artifact Geometry";
   }
+}
+
+function workflowApplicabilityReason(workspace, format) {
+  const id = String(format || "artifact").toUpperCase();
+  if (workspace === "graph") return `${id} does not expose a serialized executable graph for this explorer.`;
+  if (workspace === "redesign") return "Redesign scenarios currently require the TFLite graph and target-cost contract.";
+  if (workspace === "runtime") return `${id} runtime execution is not available in the browser benchmark adapter; imported evidence remains available.`;
+  if (workspace === "deepbom") return `${id} does not have a source-bound protected analysis adapter in this build.`;
+  if (["runtime_basin", "offline_test", "deployment_sensitivity"].includes(workspace)) {
+    return "This experimental deployment-function analysis is defined for the deployed TFLite execution path.";
+  }
+  return "This analysis tool is not applicable to the selected artifact class.";
 }

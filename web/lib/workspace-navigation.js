@@ -30,10 +30,21 @@ export function installWorkspaceNavigation({
       ? onLockedModule(tab.dataset.featureId || "advanced")
       : onModule(tab.dataset.moduleTab));
   }
-  installRovingTablist(workflowSteps, (tab) => onWorkspace(tab.dataset.workflowStep));
-  installRovingTablist(auditTabs, (tab) => onAudit(tab.dataset.auditTab));
+  installRovingTablist(workflowSteps.filter((tab) => tab.dataset.navigationRole === "workflow"), (tab) => onWorkspace(tab.dataset.workflowStep));
+  for (const group of groupedTablists(auditTabs)) installRovingTablist(group, (tab) => onAudit(tab.dataset.auditTab));
   installRovingTablist(moduleTabs, (tab) => tab.click());
   installRovingTablist(explorerTabs, (tab) => onExplorer(tab.dataset.explorerTab));
+}
+
+function groupedTablists(tabs) {
+  const groups = new Map();
+  for (const tab of tabs) {
+    const owner = tab.closest('[role="tablist"]');
+    if (!owner) continue;
+    if (!groups.has(owner)) groups.set(owner, []);
+    groups.get(owner).push(tab);
+  }
+  return [...groups.values()];
 }
 
 function installRovingTablist(tabs, activate) {
