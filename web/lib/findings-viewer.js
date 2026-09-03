@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 const EVIDENCE_PREVIEW_LIMIT = 420;
 const EVIDENCE_SEGMENT_LIMIT = 3;
 
@@ -203,8 +204,8 @@ export function renderFindings(findingsBody, analysis, { onSelectEvidence = null
 }
 
 export function findingReferences(finding, analysis) {
-  const validOps = new Set((analysis?.ops || []).map((op) => Number(op.index)));
-  const validTensors = new Set((analysis?.tensors || []).map((tensor) => Number(tensor?.index)).filter(Number.isSafeInteger));
+  const validOps = new Set((artifactIrOperators(analysis) || []).map((op) => Number(op.index)));
+  const validTensors = new Set((artifactIrValues(analysis) || []).map((tensor) => Number(tensor?.index)).filter(Number.isSafeInteger));
   const opIndices = new Set();
   const tensorIndices = new Set();
   const addIndex = (target, valid, value) => {

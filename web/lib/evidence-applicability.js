@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 export const APPLICABILITY_SCHEMA = "deepbom.evidence_applicability.v1";
 
 export const APPLICABILITY_STATUS = Object.freeze({
@@ -47,7 +48,7 @@ function notAssessedYet(requiredEvidence = "Run the static artifact audit.") {
 export function auditTabApplicability(format, analysis = null) {
   const id = String(format || analysis?.format || "").toLowerCase();
   if (!analysis || typeof analysis !== "object") return Object.freeze(Object.fromEntries(Object.keys(TAB_LABELS).map((tab) => [tab, notAssessedYet()])));
-  const graphRows = Array.isArray(analysis?.ops) ? analysis.ops.length : 0;
+  const graphRows = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis).length : 0;
   const serializedLlm = analysis?.on_device_llm?.serialized_graph;
   const hasSerializedLlmEvidence = ["tflite", "onnx"].includes(id) && Boolean(serializedLlm) && (
     Number(serializedLlm.explicit_operator_count || 0) > 0

@@ -1,3 +1,4 @@
+import { artifactIrValues } from "./artifact-ir-selectors.js";
 import { formatBytes, formatNumber, formatPercent, padOp } from "./format.js";
 import { code, markdownTable } from "./report-utils.js";
 
@@ -8,6 +9,10 @@ export function onnxShapeInferenceMarkdown(analysis) {
   if (!isOnnxAnalysis(analysis)) return "";
   const shape = analysis?.onnx_shape_inference;
   if (!shape) return "## ONNX Shape Inference Coverage (NOT_ASSESSED)\nNo shape-inference ledger was emitted.";
+  const capsule = analysis?.onnx_contract_conflict || null;
+  const capsuleSummary = capsule?.summary || {};
+  const capsuleHistogram = (capsuleSummary.blocked_mac_op_histogram || [])
+    .map((row) => `${row.name}:${formatNumber(row.count)}`).join(" / ") || "none";
   const unsupported = (shape.rule_unsupported_op_histogram || [])
     .map((item) => `${item.name}:${formatNumber(item.count)}`).join(" / ") || "none";
   const unresolvedRows = (shape.rule_unresolved_nodes || []).slice(0, 48).map((row) => [
@@ -45,13 +50,13 @@ export function onnxShapeInferenceMarkdown(analysis) {
   const container = shape.container_value_inference || {};
   const tfidf = shape.tfidf_vectorizer_inference || {};
   const mlValue = shape.ml_value_inference || {};
-  const staticSignedZeroTensors = (analysis?.tensors || []).filter((tensor) => Number(tensor.static_values_negative_zero_count || 0) > 0);
+  const staticSignedZeroTensors = (artifactIrValues(analysis) || []).filter((tensor) => Number(tensor.static_values_negative_zero_count || 0) > 0);
   const staticSignedZeroValues = staticSignedZeroTensors.reduce((sum, tensor) => sum + Number(tensor.static_values_negative_zero_count || 0), 0);
   const staticSignedZeroDetails = staticSignedZeroTensors.slice(0, 16).map((tensor) => {
     const indices = tensor.static_values_negative_zero_indices || [];
     return `${code(tensor.name || `#${tensor.index}`)} [${indices.slice(0, 16).map((index) => formatNumber(index)).join(", ")}${indices.length > 16 ? ", ..." : ""}]`;
   }).join(" / ") || "none";
-  const staticCanonicalTextTensors = (analysis?.tensors || []).filter((tensor) => tensor.static_values_canonical_text_complete === true);
+  const staticCanonicalTextTensors = (artifactIrValues(analysis) || []).filter((tensor) => tensor.static_values_canonical_text_complete === true);
   const staticCanonicalTextValues = staticCanonicalTextTensors.reduce((sum, tensor) => sum + (tensor.static_values_canonical_texts || []).length, 0);
   const staticCanonicalTextDetails = staticCanonicalTextTensors.slice(0, 16).map((tensor) => {
     const values = tensor.static_values_canonical_texts || [];
@@ -385,6 +390,19 @@ export function onnxShapeInferenceMarkdown(analysis) {
   return [
     `## ONNX Shape Inference Coverage (${shape.evidence_class || "DERIVED"}${shape.status === "assessed" ? "" : ` / ${String(shape.status || "partial").toUpperCase()}`})`,
     `Schema ${code(shape.schema || "not embedded")}.`,
+    capsule ? [
+      `### Serialized Contract Validity (${capsule.evidence_class || "OBSERVED_DERIVED"} / ${capsule.status})`,
+      markdownTable(["Capsule field", "Value"], [
+        ["Capsule SHA-256", code(capsule.capsule_sha256 || "not bound")],
+        ["Unconditional root conflicts", `${formatNumber(capsuleSummary.unconditional_root_conflict_count || 0)} = ${formatNumber(capsuleSummary.declaration_root_conflict_count || 0)} declaration/inference + ${formatNumber(capsuleSummary.semantic_root_conflict_count || 0)} operator semantic`],
+        ["Condition-bound invalid variants", formatNumber(capsuleSummary.condition_bound_invalid_variant_count || 0)],
+        ["Affected node outputs", `${formatNumber(capsuleSummary.invalid_node_output_count || 0)} unconditional + ${formatNumber(capsuleSummary.conditionally_invalid_node_output_count || 0)} conditional`],
+        ["Downstream blocked nodes", formatNumber(capsuleSummary.downstream_blocked_node_count || 0)],
+        ["Blocked MAC rows", `${formatNumber(capsuleSummary.blocked_mac_row_count || 0)}; ${capsuleHistogram}`],
+        ["Unresolved root references", formatNumber(capsuleSummary.unresolved_root_reference_count || 0)],
+      ]),
+      `> ${capsule.interpretation_boundary || "Invalid contracts remain excluded from exact shape and MAC claims."}`,
+    ].join("\n\n") : "",
     markdownTable(["Coverage field", "Value"], [
       ["Inference engine", shape.engine || "not emitted"],
       ["Pinned ONNX release / commit", `${shape.source_release || "not emitted"} / ${code(shape.source_commit || "not emitted")}`],

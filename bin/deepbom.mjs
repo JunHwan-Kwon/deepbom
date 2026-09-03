@@ -7,6 +7,7 @@ import process from "node:process";
 
 import { detectModelFormat } from "../web/lib/model-file.js";
 import { analyzeOnnxModel, MAX_ONNX_DECODED_ELEMENTS } from "../web/onnx.js";
+import { attachOnnxContractConflictCapsule } from "../web/lib/onnx-contract-conflict.js";
 import { analyzeExecuTorchModel } from "../web/executorch.js";
 import { EXECUTORCH_SELECTED_BUILD_INPUT_SCHEMA } from "../web/lib/executorch-build-binding.js";
 import { parseStrictJson, readMetadataModelFile } from "../web/lib/metadata-model-adapters.js";
@@ -76,7 +77,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.1";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.2";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 
 async function main(argv) {
@@ -205,6 +206,7 @@ async function main(argv) {
   enforceArtifactIdentity(analysis, artifact);
   analysis.cli_scan_policy = scanPolicy;
   analysis.artifact_set = buildCliArtifactSet(artifact, resolvedSource.acquisition, analysis, resolvedSource.closure);
+  if (format === "onnx") attachOnnxContractConflictCapsule(analysis);
   analysis.accelerator_bindings = [];
   if (format === "tflite") {
     analysis.cpu_cost_target_binding = buildCpuCostTargetBinding(analysis.target_profile, {

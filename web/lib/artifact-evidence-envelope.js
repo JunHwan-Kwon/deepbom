@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import { buildFindingsRegister } from "./report-findings.js";
 import { buildInterfaceQuantizationContractLedger } from "./quantization-contract-summary.js";
 import { canonicalJson, normalizeJsonContractValue } from "./report-utils.js";
@@ -158,18 +159,18 @@ function capabilityManifest(analysis, format) {
     states.set(id, assessmentState(status, value));
   };
   check("artifact_identity", analysis);
-  check("graph", analysis?.ops && analysis?.tensors);
+  check("graph", artifactIrOperators(analysis) && artifactIrValues(analysis));
   check("interfaces", analysis?.inputs && analysis?.outputs);
   if (format === "onnx") {
     const weights = analysis?.weight_integrity;
     check("tensor_payloads", weights || analysis?.onnx_external_data_structure_binding,
       weights?.status === "assessed" && weights?.coverage_status === "complete");
   } else {
-    check("tensor_payloads", analysis?.weight_integrity || analysis?.tensor_numerical_integrity || analysis?.tensors,
+    check("tensor_payloads", analysis?.weight_integrity || analysis?.tensor_numerical_integrity || artifactIrValues(analysis),
       analysis?.tensor_numerical_integrity ? analysis.tensor_numerical_integrity.status === "assessed"
         : format === "coreml" ? analysis?.weight_integrity?.status === "assessed" : true);
   }
-  check("affine_quantization", analysis?.tensors);
+  check("affine_quantization", artifactIrValues(analysis));
   check("metadata", analysis?.metadata_presence);
   if (format === "onnx" && Number(analysis?.onnx_external_data?.tensor_count || 0) === 0) {
     check("external_data", analysis?.onnx_external_data, true);
@@ -181,7 +182,7 @@ function capabilityManifest(analysis, format) {
   check("associated_files", analysis?.metadata_presence, analysis?.metadata_presence?.associated_file_archive_status !== "partial");
   checkStatus("runtime_floor", analysis?.runtime_compat || analysis?.ort_compatibility_evidence,
     analysis?.runtime_compat?.status || analysis?.runtime_compat?.assessment_status || analysis?.ort_compatibility_evidence?.status);
-  check("static_cost", analysis?.mac_assessment || (format === "tflite" && finite(analysis?.total_macs) != null ? analysis.ops : null),
+  check("static_cost", analysis?.mac_assessment || (format === "tflite" && finite(analysis?.total_macs) != null ? artifactIrOperators(analysis) : null),
     format === "coreml" ? analysis?.mac_assessment?.status === "assessed_all_decoded_compute_ops" && finite(analysis?.total_macs) != null : true);
   checkStatus("tflite_arena", analysis?.tensor_arena_plan, analysis?.tensor_arena_plan?.status);
   checkStatus("xnnpack_contracts", analysis?.xnnpack_selector_assessment_status, analysis?.xnnpack_selector_assessment_status);
@@ -192,7 +193,7 @@ function capabilityManifest(analysis, format) {
   checkStatus("recursive_types", analysis?.onnx_type_proto_contract, analysis?.onnx_type_proto_contract?.status);
   checkStatus("control_flow", analysis?.onnx_shape_inference, analysis?.onnx_shape_inference?.status);
   checkStatus("onnx_runtime_contracts", analysis?.ort_compatibility_evidence, analysis?.ort_compatibility_evidence?.status);
-  check("tensor_inventory", analysis?.tensors || analysis?.tensor_inventory);
+  check("tensor_inventory", artifactIrValues(analysis) || analysis?.tensor_inventory);
   checkStatus("block_quantization", analysis?.gguf?.quantization || analysis?.quantization_status,
     analysis?.gguf?.quantization?.status || analysis?.quantization_status?.status);
   check("metadata", analysis?.metadata_presence || analysis?.metadata);
@@ -285,6 +286,7 @@ function formatExtensionSummary(analysis, format) {
     producer: analysis?.producer || analysis?.metadata_presence?.producer_name || null,
     domain_contract_schema: analysis?.onnx_domain_analysis?.schema || null,
     shape_contract_schema: analysis?.onnx_shape_inference?.schema || null,
+    contract_conflict_capsule: analysis?.onnx_contract_conflict || null,
     quantization_binding_schema: analysis?.onnx_quantization_binding?.schema || null,
     external_data_structure_binding: analysis?.onnx_external_data_structure_binding || null,
     on_device_llm: analysis?.on_device_llm || null,
@@ -348,8 +350,8 @@ export function buildArtifactEvidenceEnvelope(analysis = {}, options = {}) {
     capabilities: capabilityManifest(analysis, format),
     interfaces,
     graph: {
-      operator_count: ["gguf", "safetensors"].includes(format) ? null : finite(analysis.operator_count ?? analysis.ops?.length),
-      tensor_count: finite(analysis.tensor_count ?? analysis.tensors?.length),
+      operator_count: ["gguf", "safetensors"].includes(format) ? null : finite(analysis.operator_count ?? artifactIrOperators(analysis)?.length),
+      tensor_count: finite(analysis.tensor_count ?? artifactIrValues(analysis)?.length),
       total_macs: finite(analysis.total_macs),
       mac_assessment_status: macCoverage.status,
       mac_coverage: macCoverage,

@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import {
   contractDynamicDimSummary,
   modelQuantizationStatus,
@@ -99,7 +100,7 @@ export function buildRegulatoryReport(analysis, {
     ["XNNPACK partition boundaries", "PREDICTED", `${formatNumber(analysis.xnnpack_chain_breaks || 0)} total = ${formatNumber(analysis.xnnpack_effective_chain_breaks || 0)} non-structural + ${formatNumber(analysis.xnnpack_structural_chain_breaks || 0)} structural; ${formatNumber(analysis.xnnpack_zero_mac_chain_breaks || 0)} zero-MAC non-structural is a subset of non-structural`],
     ["Conditionally delegatable MACs", "PREDICTED", formatPercent(analysis.delegated_mac_percent || 0)],
     ["Fallback families", "PREDICTED", (analysis.fallback_traffic_by_op_family || []).slice(0, 6).map((item) => `${item.name}:${formatBytes(item.estimated_bytes)}`).join(" / ") || "none"],
-    ["Fusion review", "PREDICTED", `${formatNumber((analysis.ops || []).filter((op) => String(op.fusion_status || "").includes("review")).length)} op(s)`],
+    ["Fusion review", "PREDICTED", `${formatNumber((artifactIrOperators(analysis) || []).filter((op) => String(op.fusion_status || "").includes("review")).length)} op(s)`],
     ["Prediction status", "PREDICTED", `Based on ${ANALYZER_METADATA.rulepackVersion} and local runtime support profile; not a confirmed delegate log.`],
   ];
   return [
@@ -181,7 +182,7 @@ export function buildRegulatoryReport(analysis, {
       ["Quantized tensors", "OBSERVED", `${formatNumber(analysis.quantized_tensors || 0)} / ${formatNumber(analysis.tensor_count || 0)}`],
       ["Per-channel/per-axis metadata", "OBSERVED", formatNumber(analysis.per_channel_tensors || 0)],
       ["Quantized compute MACs", "DERIVED", assessedPercent(quant.quantized_compute_mac_percent)],
-      ["Zero-point/scale risk", "DERIVED", `${formatNumber((analysis.ops || []).filter((op) => op.quant_risk === "risk" || op.quant_risk === "warn").length)} op(s) flagged`],
+      ["Zero-point/scale risk", "DERIVED", `${formatNumber((artifactIrOperators(analysis) || []).filter((op) => op.quant_risk === "risk" || op.quant_risk === "warn").length)} op(s) flagged`],
       ["Interpretation", "PROXY", "Quantization metadata can trigger review but cannot prove accuracy degradation without representative data."],
     ]),
     "",

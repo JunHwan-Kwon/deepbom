@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import { alignmentLabel, bottleneckDistributionData, predictedPartitionBoundaryInventory } from "./analysis.js";
 import { formatBytes, formatNumber, formatPercent, formatPercentRange, formatScientific, formatUs, maxBy, padOp } from "./format.js";
 import { deriveTfliteBatchOneProjection } from "./dynamic-shape-cost.js";
@@ -272,7 +273,7 @@ export function buildFindingsRegister(analysis, {
 } = {}) {
   const metadata = analyzerMetadata && typeof analyzerMetadata === "object" ? analyzerMetadata : ANALYZER_METADATA;
   const findings = [];
-  const ops = analysis?.ops || [];
+  const ops = artifactIrOperators(analysis) || [];
   const isOnnx = (analysis?.format || "tflite") === "onnx";
   const coreMlIntegrity = analysis?.format === "coreml" ? analysis?.weight_integrity : null;
   if (String(coreMlIntegrity?.schema || "").startsWith("deepbom.coreml.")) {
@@ -509,7 +510,7 @@ export function buildFindingsRegister(analysis, {
     const sparseTensorContract = analysis?.onnx_sparse_tensor_contract || {};
     const shapeConflicts = shapeInference.declaration_conflicts || [];
     const semanticShapeConflicts = shapeInference.semantic_contract_conflicts || [];
-    const conditionalInvalidTensors = (analysis?.tensors || []).filter((tensor) => (
+    const conditionalInvalidTensors = (artifactIrValues(analysis) || []).filter((tensor) => (
       (tensor.conditional_shape_contract?.variant_failures || []).some((row) => row?.status === "invalid")
     ));
     const invalidSchemaForms = (shapeInference.schema_form_rows || []).filter((row) => row.status === "fail");
@@ -2113,7 +2114,7 @@ export function buildFindingsRegister(analysis, {
     const coordinateText = (channels) => channels.length
       ? channels.map((channel) => `ch ${channel.channel_index}: post-bias ${channel.post_bias_minimum_decimal}..${channel.post_bias_maximum_decimal}, default preclamp ${channel.default_minimum_preclamp_code}..${channel.default_maximum_preclamp_code} -> output ${channel.default_minimum_output_code}..${channel.default_maximum_output_code} (${channel.default_constant_reason}), single preclamp ${channel.single_minimum_preclamp_code}..${channel.single_maximum_preclamp_code} -> output ${channel.single_minimum_output_code}..${channel.single_maximum_output_code} (${channel.single_constant_reason})`).join(" / ")
       : "coordinates retained in the structured vitality ledger";
-    const graphOp = (analysis?.ops || []).find((op) => Number(op.index) === Number(vitalityTop.op_index));
+    const graphOp = (artifactIrOperators(analysis) || []).find((op) => Number(op.index) === Number(vitalityTop.op_index));
     const constantRows = (vitality.ops || []).filter((row) => Number(row.dual_mode_constant_output_channel_count || 0) > 0);
     const constantCoordinates = constantRows.map((row) => {
       const single = new Set(row.single_constant_channel_indices || []);
@@ -2122,7 +2123,7 @@ export function buildFindingsRegister(analysis, {
     });
     const affectedOps = constantRows.map((row) => `#${padOp(row.op_index)} ${row.op_name}`).join(", ");
     const affectedTensors = constantRows.map((row) => {
-      const op = (analysis?.ops || []).find((candidate) => Number(candidate.index) === Number(row.op_index));
+      const op = (artifactIrOperators(analysis) || []).find((candidate) => Number(candidate.index) === Number(row.op_index));
       return Number.isInteger(Number(op?.outputs?.[0])) ? `T${Number(op.outputs[0])}` : null;
     }).filter(Boolean).join(", ");
     findings.push(finding({
@@ -2146,7 +2147,7 @@ export function buildFindingsRegister(analysis, {
     .find((row) => Number(row?.divergent_channel_count || 0) > 0);
   const equivalenceChannel = equivalenceTop?.top_channels?.find((channel) => BigInt(channel.divergent_state_count_decimal || "0") > 0n);
   if (Number(roundingEquivalence?.divergent_channel_count || 0) > 0 && equivalenceTop && equivalenceChannel) {
-    const graphOp = (analysis?.ops || []).find((op) => Number(op.index) === Number(equivalenceTop.op_index));
+    const graphOp = (artifactIrOperators(analysis) || []).find((op) => Number(op.index) === Number(equivalenceTop.op_index));
     findings.push(finding({
       id: "EA-QNT-0113",
       category: "quantization_design_review",
@@ -2168,7 +2169,7 @@ export function buildFindingsRegister(analysis, {
     .find((row) => BigInt(row?.exact_reachable_divergent_state_count_decimal || "0") > 0n);
   const reachabilityChannel = reachabilityTop?.top_channels?.find((channel) => BigInt(channel.exact_reachable_divergent_state_count_decimal || "0") > 0n);
   if (BigInt(accumulatorReachability?.exact_reachable_divergent_state_count_decimal || "0") > 0n && reachabilityTop && reachabilityChannel) {
-    const graphOp = (analysis?.ops || []).find((op) => Number(op.index) === Number(reachabilityTop.op_index));
+    const graphOp = (artifactIrOperators(analysis) || []).find((op) => Number(op.index) === Number(reachabilityTop.op_index));
     findings.push(finding({
       id: "EA-QNT-0115",
       category: "quantization_design_review",
@@ -2266,7 +2267,7 @@ export function buildFindingsRegister(analysis, {
     const example = `${top.tensor_name || `T${top.tensor_index}`} ${top.dtype} zero-point(s) ${top.zero_points.join(", ") || "not emitted"}`;
     const tocoDescription = /toco/i.test(String(analysis?.metadata_presence?.description || ""));
     const conversionMetadataMissing = Number(analysis?.metadata_presence?.conversion_metadata_entry_count || 0) === 0;
-    const perTensorDepthwiseCount = (analysis?.ops || []).filter((op) => (
+    const perTensorDepthwiseCount = (artifactIrOperators(analysis) || []).filter((op) => (
       op.name === "DEPTHWISE_CONV_2D" && String(op.quant_scale_mode || "").toLowerCase().includes("per-tensor")
     )).length;
     const lineageSynthesis = tocoDescription
@@ -2611,7 +2612,7 @@ export function buildFindingsRegister(analysis, {
 }
 
 function tensorByIndex(analysis, index) {
-  return Number.isInteger(index) && index >= 0 ? (analysis?.tensors || [])[index] : null;
+  return Number.isInteger(index) && index >= 0 ? (artifactIrValues(analysis) || [])[index] : null;
 }
 
 function isQuantizedTensor(tensor) {
@@ -2620,7 +2621,7 @@ function isQuantizedTensor(tensor) {
 
 function depthwisePerTensorQuantOps(analysis) {
   if ((analysis?.format || "tflite") !== "tflite") return [];
-  return (analysis?.ops || [])
+  return (artifactIrOperators(analysis) || [])
     .filter((op) => String(op.name || "").toUpperCase() === "DEPTHWISE_CONV_2D")
     .map((op) => ({ op, weight: tensorByIndex(analysis, Number(op.inputs?.[1])) }))
     .filter((item) => isQuantizedTensor(item.weight) && Number(item.weight?.quant_scales || 0) <= 1);
@@ -2664,7 +2665,7 @@ function outputSemanticObservation(analysis, output) {
     : "";
   const outputIndex = Number.isInteger(output?.index) ? output.index : Number(output?.tensor_index);
   const producer = Number.isFinite(outputIndex)
-    ? (analysis?.ops || []).find((op) => (op.outputs || []).includes(outputIndex))
+    ? (artifactIrOperators(analysis) || []).find((op) => (op.outputs || []).includes(outputIndex))
     : null;
   if (producer) {
     const name = String(producer.name || "producer").toUpperCase();

@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 const EVIDENCE_LABELS = Object.freeze({
   operatorCount: "Graph operators",
   tensorCount: "Serialized tensors",
@@ -45,8 +46,8 @@ export function collectPublicSampleObservedEvidence(format, analysis = {}) {
     arenaBytes: numeric(analysis.tensor_arena_plan?.combined_arena_bytes),
     quantizeOps: numeric(analysis.quantization_status?.quantize_ops),
     dequantizeOps: numeric(analysis.quantization_status?.dequantize_ops),
-    xnnpackSourceSupportedOps: (analysis.ops || []).filter((op) => op.xnnpack_supported).length,
-    predictedBreakOps: (analysis.ops || []).filter((op) => op.xnnpack_chain_break).length,
+    xnnpackSourceSupportedOps: (artifactIrOperators(analysis) || []).filter((op) => op.xnnpack_supported).length,
+    predictedBreakOps: (artifactIrOperators(analysis) || []).filter((op) => op.xnnpack_chain_break).length,
     storedScalarElements: numeric(analysis.size_breakdown?.stored_scalar_elements),
     peakLiveAtOp: numeric(analysis.tensor_liveness?.peak_at_op),
     payloadBytes: numeric(analysis.gguf?.payload_byte_length ?? analysis.safetensors?.payload_byte_length),

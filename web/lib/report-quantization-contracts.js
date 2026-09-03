@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import { ANALYZER_METADATA } from "./report-metadata.js";
 import {
   buildBiasScaleCheck,
@@ -208,7 +209,7 @@ function buildOnnxParameterIntegrityCheck(analysis) {
 function buildOnnxBiasScaleCheck(analysis) {
   const details = [];
   let checkedChannels = 0;
-  for (const op of analysis?.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     if (op.name !== "QLinearConv" || Number(op.inputs?.[8]) < 0) continue;
     const input = tensorAt(analysis, op.inputs[0]);
     const weight = tensorAt(analysis, op.inputs[3]);
@@ -285,7 +286,7 @@ function buildOnnxWeightZeroPointCheck(analysis) {
 
 function buildOnnxAccumulatorBoundCheck(analysis) {
   const details = [];
-  for (const op of analysis?.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     if (!["QLinearConv", "QLinearMatMul", "ConvInteger", "MatMulInteger"].includes(op.name)) continue;
     const input = tensorAt(analysis, op.inputs?.[0]);
     const weight = tensorAt(analysis, op.inputs?.[["QLinearConv", "QLinearMatMul"].includes(op.name) ? 3 : 1]);
@@ -352,8 +353,8 @@ function buildOnnxKernelQuantizationCheck(analysis) {
 function onnxQuantizedKernelTensors(analysis) {
   const indices = new Set();
   const producerByTensor = new Map();
-  for (const candidate of analysis?.ops || []) for (const output of candidate.outputs || []) if (Number(output) >= 0) producerByTensor.set(Number(output), candidate);
-  for (const op of analysis?.ops || []) {
+  for (const candidate of artifactIrOperators(analysis) || []) for (const output of candidate.outputs || []) if (Number(output) >= 0) producerByTensor.set(Number(output), candidate);
+  for (const op of artifactIrOperators(analysis) || []) {
     if (["QLinearConv", "QLinearMatMul"].includes(op.name) && Number(op.inputs?.[3]) >= 0) indices.add(Number(op.inputs[3]));
     if (!["Conv", "Gemm", "MatMul"].includes(op.name)) continue;
     const candidate = producerByTensor.get(Number(op.inputs?.[1]));
@@ -398,7 +399,7 @@ function buildResidualAddCheck(analysis) {
   const details = [];
   const latticeRows = analysis?.quantization_lattice?.residual_adds || [];
   const latticeByOp = new Map(latticeRows.map((row, index) => [Number(row.op_index), { row, index }]));
-  for (const op of analysis?.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     if (opName(op) !== "ADD") continue;
     const input0 = tensorAt(analysis, op.inputs?.[0]);
     const input1 = tensorAt(analysis, op.inputs?.[1]);
@@ -579,7 +580,7 @@ function buildResidualContractDistortionCheck(analysis) {
 function buildWeightZeroPointCheck(analysis) {
   const details = [];
   const seen = new Set();
-  for (const op of analysis?.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     if (!CONV_LIKE.has(opName(op))) continue;
     const weight = tensorAt(analysis, op.inputs?.[1]);
     const index = tensorIndex(weight);
@@ -669,7 +670,7 @@ function buildAccumulatorBoundCheck(analysis) {
     };
   }
   const details = [];
-  for (const op of analysis?.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     if (!CONV_LIKE.has(opName(op))) continue;
     const input = tensorAt(analysis, op.inputs?.[0]);
     const weight = tensorAt(analysis, op.inputs?.[1]);
@@ -1129,7 +1130,7 @@ function buildMissingMetadataCheck(analysis) {
   const quantizedArtifact = Number(analysis?.quantized_tensors || 0) > 0;
   const details = [];
   if (quantizedArtifact) {
-    for (const tensor of analysis?.tensors || []) {
+    for (const tensor of artifactIrValues(analysis) || []) {
       if (Number(tensor?.quant_scales || 0) > 0) continue;
       const classification = missingMetadataRole(analysis, tensor);
       details.push({
@@ -1155,7 +1156,7 @@ function buildMissingMetadataCheck(analysis) {
 }
 
 function buildQdqBoundaryCheck(analysis) {
-  const details = (analysis?.ops || []).filter((op) => ["QUANTIZE", "DEQUANTIZE"].includes(opName(op))).map((op) => ({
+  const details = (artifactIrOperators(analysis) || []).filter((op) => ["QUANTIZE", "DEQUANTIZE"].includes(opName(op))).map((op) => ({
     op_index: op.index,
     op_name: op.name,
     input_tensor_indices: (op.inputs || []).map(Number),
@@ -1174,7 +1175,7 @@ function buildQdqBoundaryCheck(analysis) {
 
 function buildKernelQuantizationCheck(analysis) {
   const kernels = new Map();
-  for (const op of analysis?.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     if (!CONV_LIKE.has(opName(op))) continue;
     const weight = tensorAt(analysis, op.inputs?.[1]);
     const index = tensorIndex(weight);
@@ -1197,7 +1198,7 @@ function buildKernelQuantizationCheck(analysis) {
 }
 
 function missingMetadataRole(analysis, tensor) {
-  const consumers = (analysis?.ops || []).filter((op) => (op.inputs || []).includes(Number(tensor?.index)));
+  const consumers = (artifactIrOperators(analysis) || []).filter((op) => (op.inputs || []).includes(Number(tensor?.index)));
   const names = consumers.map(opName);
   const dtype = String(tensor?.dtype || "").toUpperCase();
   if (["RESHAPE", "SHAPE", "STRIDED_SLICE", "PACK", "CONCATENATION"].some((name) => names.includes(name))) return "shape_or_configuration";
@@ -1221,7 +1222,7 @@ function kernelAccumulationTerms(op, weight) {
 
 function tensorAt(analysis, index) {
   const numeric = Number(index);
-  return Number.isInteger(numeric) && numeric >= 0 ? (analysis?.tensors || [])[numeric] : null;
+  return Number.isInteger(numeric) && numeric >= 0 ? (artifactIrValues(analysis) || [])[numeric] : null;
 }
 
 function tensorIndex(tensor) {

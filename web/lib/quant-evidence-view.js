@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import {
   buildBiasScaleCheck,
   buildRepresentableKernelChannelCheck,
@@ -40,7 +41,7 @@ function tensorIndex(tensor, fallback = null) {
 }
 
 function consumersFor(analysis, tensorId) {
-  return (analysis?.ops || []).filter((op) => (op.inputs || []).includes(tensorId));
+  return (artifactIrOperators(analysis) || []).filter((op) => (op.inputs || []).includes(tensorId));
 }
 
 function lowNormForConsumers(consumers) {
@@ -308,7 +309,7 @@ export function createQuantEvidenceController({
   }
 
   function selectOp(opIndex) {
-    const op = state.analysis?.ops?.find((item) => item.index === Number(opIndex));
+    const op = artifactIrOperators(state.analysis).find((item) => item.index === Number(opIndex));
     if (!op) return false;
     const candidateIndices = new Set(kernelCandidates(state.analysis).map((row) => Number(row.tensor_index)));
     const kernelIndex = (op.inputs || []).map(Number).find((index) => candidateIndices.has(index));
@@ -318,7 +319,7 @@ export function createQuantEvidenceController({
   }
 
   function hasEvidenceForOp(opIndex) {
-    const op = state.analysis?.ops?.find((item) => item.index === Number(opIndex));
+    const op = artifactIrOperators(state.analysis).find((item) => item.index === Number(opIndex));
     if (!op) return false;
     const candidateIndices = new Set(kernelCandidates(state.analysis).map((row) => Number(row.tensor_index)));
     return (op.inputs || []).map(Number).some((index) => candidateIndices.has(index));
@@ -347,7 +348,7 @@ export function createQuantEvidenceController({
     }
     const selectedDetail = candidates.find((row) => row.tensor_index === state.selectedTensorIndex) || candidates[0];
     state.selectedTensorIndex = selectedDetail.tensor_index;
-    const tensor = (analysis.tensors || []).find((item, index) => tensorIndex(item, index) === selectedDetail.tensor_index);
+    const tensor = (artifactIrValues(analysis) || []).find((item, index) => tensorIndex(item, index) === selectedDetail.tensor_index);
     const consumers = consumersFor(analysis, selectedDetail.tensor_index);
     const lowNorm = lowNormForConsumers(consumers);
     const rows = scaleRows(tensor, {

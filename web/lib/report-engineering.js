@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import { modelQuantizationStatus, predictedPartitionBoundaryInventory, quantizationScopeSummary, quantStateLabel, xnnpackLabel } from "./analysis.js";
 import { formatBytes, formatDrift, formatExactInteger, formatNumber, formatPercent, formatPercentRange, formatUs, padOp, score100, sumNumbers } from "./format.js";
 import { FINDING_PRIORITIES, sortFindingsByPriority } from "./finding-contract.js";
@@ -63,7 +64,7 @@ function packingSetupUs(targetProfile = {}) {
 
 function delegatedOpRatioText(analysis) {
   if (isOnnxAnalysis(analysis)) return "not applicable for ONNX; ORT execution-provider assignment is not modeled";
-  const ops = analysis?.ops || [];
+  const ops = artifactIrOperators(analysis) || [];
   if (!ops.length) return "not emitted";
   const delegated = ops.filter((op) => Number(op.xnnpack_chain_id) >= 0).length;
   return `${formatNumber(delegated)} / ${formatNumber(ops.length)} (${formatPercent(delegated / ops.length)})`;
@@ -117,7 +118,7 @@ function structuralViewOpNames(analysis) {
 
 function structuralViewOps(analysis) {
   const names = structuralViewOpNames(analysis);
-  return (analysis?.ops || []).filter((op) => names.has(String(op.name || "")));
+  return (artifactIrOperators(analysis) || []).filter((op) => names.has(String(op.name || "")));
 }
 
 function opNameList(ops = [], limit = 4) {
@@ -128,16 +129,16 @@ function opNameList(ops = [], limit = 4) {
 
 function predictedNonDelegatedOps(analysis) {
   if (isOnnxAnalysis(analysis)) return [];
-  return (analysis?.ops || []).filter((op) => Number(op.xnnpack_chain_id) < 0);
+  return (artifactIrOperators(analysis) || []).filter((op) => Number(op.xnnpack_chain_id) < 0);
 }
 
 function l1WatchCount(analysis) {
   if (analysis?.insights?.l1_watch_count != null) return Number(analysis.insights.l1_watch_count || 0);
-  return (analysis?.ops || []).filter((op) => Number(op.row_working_set_ratio || 0) >= 0.9).length;
+  return (artifactIrOperators(analysis) || []).filter((op) => Number(op.row_working_set_ratio || 0) >= 0.9).length;
 }
 
 function maxRowWorkingSetRatio(analysis) {
-  return (analysis?.ops || []).reduce((max, op) => Math.max(max, Number(op.row_working_set_ratio || 0)), 0);
+  return (artifactIrOperators(analysis) || []).reduce((max, op) => Math.max(max, Number(op.row_working_set_ratio || 0)), 0);
 }
 
 function cacheRatioText(rowBytes, cacheBytes) {
@@ -718,7 +719,7 @@ function onnxWeightIntegrityCompletenessRows(weightIntegrity = {}) {
 }
 
 function tensorAt(analysis, id) {
-  return Number.isInteger(id) && id >= 0 ? (analysis?.tensors || [])[id] : null;
+  return Number.isInteger(id) && id >= 0 ? (artifactIrValues(analysis) || [])[id] : null;
 }
 
 function tensorScale0(tensor) {
@@ -755,7 +756,7 @@ function tensorQuantizationText(tensor) {
 function outputProducerSummary(analysis, output) {
   const outputIndex = Number.isInteger(output?.index) ? output.index : Number(output?.tensor_index);
   const producer = Number.isFinite(outputIndex)
-    ? (analysis?.ops || []).find((op) => (op.outputs || []).includes(outputIndex))
+    ? (artifactIrOperators(analysis) || []).find((op) => (op.outputs || []).includes(outputIndex))
     : null;
   if (!producer) return "producer not found; probability semantics NOT_ASSESSABLE";
   const name = String(producer.name || "").toUpperCase();
@@ -764,9 +765,9 @@ function outputProducerSummary(analysis, output) {
 
 function missingQuantMetadataSummary(analysis) {
   const mostlyQuantized = Number(analysis?.quantized_tensors || 0) > 0
-    && Number(analysis?.quantized_tensors || 0) < Number(analysis?.tensor_count || (analysis?.tensors || []).length);
+    && Number(analysis?.quantized_tensors || 0) < Number(analysis?.tensor_count || (artifactIrValues(analysis) || []).length);
   if (!mostlyQuantized) return "none";
-  const rows = (analysis?.tensors || [])
+  const rows = (artifactIrValues(analysis) || [])
     .filter((tensor) => Number(tensor.quant_scales || 0) <= 0)
     .slice(0, 8)
     .map((tensor) => {
@@ -777,7 +778,7 @@ function missingQuantMetadataSummary(analysis) {
 }
 
 function quantizationMissingRole(analysis, tensor) {
-  const consumers = (analysis?.ops || []).filter((op) => (op.inputs || []).includes(Number(tensor?.index)));
+  const consumers = (artifactIrOperators(analysis) || []).filter((op) => (op.inputs || []).includes(Number(tensor?.index)));
   const names = consumers.map((op) => String(op.name || "").toUpperCase());
   const dtype = String(tensor?.dtype || "").toUpperCase();
   if (["RESHAPE", "SHAPE", "STRIDED_SLICE", "PACK", "CONCATENATION"].some((name) => names.includes(name))) {
@@ -1237,7 +1238,7 @@ function delegationPredictionMarkdown(analysis, delegationSegments) {
       "> Operator presence is OBSERVED. Review classification is HEURISTIC and does not assert execution-provider assignment, fallback, materialization, or measured cost.",
     ].join("\n");
   }
-  const opsAll = analysis.ops || [];
+  const opsAll = artifactIrOperators(analysis) || [];
   const isDefaultReject = (r) => r === "XNNP:F:REJECT" || r === "XNNP:Q:REJECT";
   const matched = opsAll.filter((op) => op.xnnpack_supported).length;
   const listedUnsupported = opsAll.filter((op) => !op.xnnpack_supported && String(op.xnnpack_reason || "").startsWith("XNNP:F:REJECT:")).length;
@@ -1434,7 +1435,7 @@ function stageAndPatternMarkdown(analysis) {
     : [];
   if (semanticStages.length) {
     const blocksById = new Map((analysis.block_inventory.blocks || []).map((block) => [block.block_id, block]));
-    const opByIndex = new Map((analysis.ops || []).map((op) => [op.index, op]));
+    const opByIndex = new Map((artifactIrOperators(analysis) || []).map((op) => [op.index, op]));
     const semanticRows = semanticStages.slice(0, 16).map((stage) => {
       const stageOps = (stage.op_indices || []).map((index) => opByIndex.get(index)).filter(Boolean);
       const delegated = stageOps.filter((op) => Number(op.xnnpack_chain_id) >= 0);
@@ -1529,9 +1530,9 @@ function movementAndPackingMarkdown(analysis) {
   const nonDelegated = predictedNonDelegatedOps(analysis);
   const boundaryInventory = predictedPartitionBoundaryInventory(analysis);
   const boundaryPayload = Number(boundaryInventory?.summed_edge_payload_bytes ?? boundaryInventory?.assessed_edge_payload_bytes ?? 0);
-  const totalLogicalBytes = (analysis?.ops || []).reduce((sum, op) => sum + Number(op.estimated_bytes || 0), 0);
+  const totalLogicalBytes = (artifactIrOperators(analysis) || []).reduce((sum, op) => sum + Number(op.estimated_bytes || 0), 0);
   const boundaryPayloadRatio = totalLogicalBytes > 0 ? boundaryPayload / totalLogicalBytes : 0;
-  const packingOps = [...(analysis?.ops || [])]
+  const packingOps = [...(artifactIrOperators(analysis) || [])]
     .filter((op) => op.weight_packing_risk === "warn")
     .sort((a, b) => Number(b.weight_packing_overhead_us || 0) - Number(a.weight_packing_overhead_us || 0))
     .slice(0, 8);
@@ -1723,7 +1724,7 @@ function apportionedPercentages(values) {
 }
 
 function misalignedChannelOpSummary(analysis) {
-  const ops = (analysis?.ops || [])
+  const ops = (artifactIrOperators(analysis) || [])
     .filter((op) => op.channel_alignment_status === "misaligned")
     .sort((a, b) => Number(b.channel_tail_overhead_percent || 0) - Number(a.channel_tail_overhead_percent || 0) || Number(a.index || 0) - Number(b.index || 0));
   if (!ops.length) return "0";
@@ -1770,7 +1771,7 @@ function staticAuditTimingSummary(analysis) {
 }
 
 function computedAnalysisCoverageMarkdown(analysis) {
-  const ops = analysis?.ops || [];
+  const ops = artifactIrOperators(analysis) || [];
   const onnx = isOnnxAnalysis(analysis);
   const quantResearchCoverage = onnx
     ? null
@@ -2039,7 +2040,7 @@ function serializedArtifactEngineeringReportArtifacts(sourceAnalysis, {
   const findingRows = findings.findings || [];
   const inputs = Array.isArray(analysis.inputs) ? analysis.inputs : [];
   const outputs = Array.isArray(analysis.outputs) ? analysis.outputs : [];
-  const tensors = Array.isArray(analysis.tensors) ? analysis.tensors : [];
+  const tensors = Array.isArray(artifactIrValues(analysis)) ? artifactIrValues(analysis) : [];
   const tensorLimit = 200;
   const tensorRows = tensors.slice(0, tensorLimit).map((tensor) => [
     tensor.index ?? "-",
@@ -2066,7 +2067,7 @@ function serializedArtifactEngineeringReportArtifacts(sourceAnalysis, {
     ? `${formatNumber(execuTorchMac.source_bound_kernel_instruction_count || 0)}/${formatNumber(execuTorchMac.kernel_instruction_count || 0)} KernelCall signatures source-bound; ${formatNumber(execuTorchMac.mac_assessed_kernel_instruction_count || 0)} MAC-assessed; ${formatNumber(execuTorchMac.mac_unassessed_kernel_instruction_count || 0)} kernel and ${formatNumber(execuTorchMac.delegate_instruction_count || 0)} delegate call(s) unassessed`
     : "";
   const graphBoundary = format === "coreml"
-    ? `${formatNumber(analysis.operator_count ?? (analysis.ops || []).length)} serialized ${coreMlGraphUnit} decoded; ${coreMlMacDetail}. Runtime placement, fusion, and latency require separate execution evidence.`
+    ? `${formatNumber(analysis.operator_count ?? (artifactIrOperators(analysis) || []).length)} serialized ${coreMlGraphUnit} decoded; ${coreMlMacDetail}. Runtime placement, fusion, and latency require separate execution evidence.`
     : execuTorchProgram
       ? `${formatNumber(analysis.subgraphs || 0)} ET12 execution plan(s) and ${formatNumber(analysis.operator_count || 0)} ordered instruction(s) decoded. ${execuTorchMacDetail}. Matching portable KernelCall direction is source-bound; delegate internals and runtime execution remain external.`
     : `${label} does not serialize an execution-operator DAG. Operator count, MACs, activation liveness, Q/DQ placement, delegation, and runtime latency are not numeric-zero results; they are outside this artifact contract.`;
@@ -2090,7 +2091,7 @@ function serializedArtifactEngineeringReportArtifacts(sourceAnalysis, {
       ["SHA-256", code(analysis.model_sha256 || identity.sha256 || "not computed")],
       ["Report binding", "artifact-only; no CPU, GPU, NPU, execution provider, or target profile selected or inferred"],
       ["Serialized tensors", formatNumber(analysis.tensor_count ?? tensors.length)],
-      ["Serialized graph operations", format === "coreml" || execuTorchProgram ? formatNumber(analysis.operator_count ?? (analysis.ops || []).length) : "not serialized by this format"],
+      ["Serialized graph operations", format === "coreml" || execuTorchProgram ? formatNumber(analysis.operator_count ?? (artifactIrOperators(analysis) || []).length) : "not serialized by this format"],
       ["Compute MACs", format === "coreml"
         ? analysis.total_macs == null ? `partial; ${analysis.mac_assessment?.status || "reason not emitted"}; ${coreMlMacDetail}` : `${formatNumber(analysis.total_macs)}; ${analysis.mac_assessment?.status || "assessed"}`
         : execuTorchProgram ? analysis.total_macs == null
@@ -2136,7 +2137,7 @@ function serializedArtifactEngineeringReportArtifacts(sourceAnalysis, {
     markdownTable(["Question", "Status", "Reason"], [
       ["Tensor storage layout", "ASSESSED", "Serialized dtype/encoding, shape, and bounded byte ranges are decoded where the format provides them."],
       ["Affine scale / zero-point", format === "coreml" ? analysis.coreml?.classical_model ? "NOT APPLICABLE" : "PARTIAL" : "NOT SERIALIZED", format === "coreml" ? analysis.coreml?.classical_model ? "Classical GLM/SVM/Tree parameters are serialized FLOAT64 numerical arrays, not affine-quantized tensors." : "Decoded WeightParams encoding and packed-code contracts are reported; activation execution precision and runtime conversions are not inferred." : `${label} does not provide a general executable affine tensor contract.`],
-      ["Execution graph", format === "coreml" && (analysis.ops || []).length ? (analysis.total_macs != null ? "ASSESSED_SERIALIZED_SCOPE" : "PARTIAL") : execuTorchProgram ? "ASSESSED_INSTRUCTION_SCOPE" : "NOT SERIALIZED", graphBoundary],
+      ["Execution graph", format === "coreml" && (artifactIrOperators(analysis) || []).length ? (analysis.total_macs != null ? "ASSESSED_SERIALIZED_SCOPE" : "PARTIAL") : execuTorchProgram ? "ASSESSED_INSTRUCTION_SCOPE" : "NOT SERIALIZED", graphBoundary],
       ["MACs", format === "coreml" ? (analysis.total_macs == null ? "PARTIAL" : "ASSESSED_SERIALIZED_SCOPE") : execuTorchProgram ? (analysis.total_macs == null ? "PARTIAL_SOURCE_BOUND" : "ASSESSED_SOURCE_BOUND") : "NOT SERIALIZED", format === "coreml" ? `${coreMlMacDetail}; ${analysis.mac_assessment?.status || "status not emitted"}.` : execuTorchProgram ? `${execuTorchMacDetail}. The metric is nominal tensor-contraction MACs; no complete total is emitted while any kernel/delegate row is unassessed.` : "No execution graph is serialized by this format."],
       ["Peak live logical activation payload", format === "coreml" ? (analysis.tensor_liveness?.status === "assessed" ? "ASSESSED_SERIALIZED_SCOPE" : String(analysis.tensor_liveness?.status || "NOT ASSESSED").toUpperCase()) : execuTorchProgram ? "NOT ASSESSED / AOT PLAN OBSERVED" : "NOT ASSESSED", format === "coreml" ? analysis.tensor_liveness?.method || "Liveness method was not emitted; no numeric zero is substituted." : execuTorchProgram ? `${analysis.tensor_liveness?.planned_non_const_memory_decimal || "0"} B of serialized planned non-constant buffers is observed. KernelCall direction is bound where signatures match, but alias-aware control-flow liveness is not reconstructed.` : "Requires runtime allocation/liveness semantics; no numeric zero is substituted."],
       ["Runtime placement / latency", coreMlComputePlan ? "ANTICIPATED PLAN / EXECUTION NOT OBSERVED" : "NOT ASSESSED", coreMlComputePlan ? "An identity-bound MLComputePlan supplies preferred/supported devices and relative-cost estimates for the compiled model; executed placement and latency remain unobserved." : "Requires a bound runtime build, device, execution trace, and workload."],
@@ -2219,14 +2220,14 @@ export function buildEngineeringReportArtifacts(analysis, {
     ...findingsContext,
   });
   const artifactIntegrity = collectArtifactIntegrity(analysis, identity, analysis.file_size || 0);
-  const topOps = [...(analysis.ops || [])].sort((a, b) => Number(b.macs || 0) - Number(a.macs || 0)).slice(0, 10);
-  const cacheOps = (analysis.ops || [])
+  const topOps = [...(artifactIrOperators(analysis) || [])].sort((a, b) => Number(b.macs || 0) - Number(a.macs || 0)).slice(0, 10);
+  const cacheOps = (artifactIrOperators(analysis) || [])
     .filter((op) => op.cache_payload?.status === "assessed")
     .sort((a, b) => Number(b.cache_payload?.logical_row_payload_bytes || 0) - Number(a.cache_payload?.logical_row_payload_bytes || 0))
     .slice(0, 10);
   const delegationSegments = (() => {
     const rows = [];
-    const opsSeq = analysis.ops || [];
+    const opsSeq = artifactIrOperators(analysis) || [];
     const totalMacs = Math.max(1, Number(analysis.total_macs || 0));
     let seg = null;
     const flush = () => { if (seg) { rows.push(seg); seg = null; } };
@@ -2366,7 +2367,7 @@ export function buildEngineeringReportArtifacts(analysis, {
       ["Artifact bytes", hasOwn(analysis, "file_size") ? `${formatBytes(analysis.file_size)} (${formatNumber(analysis.file_size)} B)` : "not emitted"],
       ["SHA-256", code(analysis.model_sha256 || identity.sha256 || "pending-browser-export")],
       ["Target", identity.target_label],
-      ["Operators / tensors", `${formatNumber(analysis.operator_count ?? identity.operator_count ?? (analysis.ops || []).length)} / ${formatNumber(analysis.tensor_count ?? identity.tensor_count ?? (analysis.tensors || []).length)}`],
+      ["Operators / tensors", `${formatNumber(analysis.operator_count ?? identity.operator_count ?? (artifactIrOperators(analysis) || []).length)} / ${formatNumber(analysis.tensor_count ?? identity.tensor_count ?? (artifactIrValues(analysis) || []).length)}`],
       [onnx ? "Assessed MAC total" : "MACs", onnx
         ? `${analysis.mac_assessment?.total_assessed_macs_decimal ?? formatNumber(analysis.mac_assessment?.total_assessed_macs ?? analysis.total_macs ?? identity.total_macs ?? 0)}; numeric mirror ${analysis.mac_assessment?.total_assessed_macs == null ? "withheld outside safe integer range" : formatNumber(analysis.mac_assessment.total_assessed_macs)}; coverage ${analysis.mac_assessment?.assessed_compute_ops ?? 0}/${analysis.mac_assessment?.compute_ops ?? 0} compute op(s); status ${analysis.mac_assessment?.status || "not_assessed"}`
         : batchOneProjection.status === "assumption_bound_batch_one"
@@ -2457,7 +2458,7 @@ export function buildEngineeringReportArtifacts(analysis, {
       ["Delegation rule basis", delegationRuleBasisText(analysis)],
       ["XNNPACK delegate README SHA-256", ANALYZER_METADATA.rulepackProvenance.xnnpackReadmeSha256],
       ["XNNPACK semantic rule manifest", `${ANALYZER_METADATA.rulepackProvenance.xnnpackDelegateRuleManifestSchema}; SHA-256 ${ANALYZER_METADATA.rulepackProvenance.xnnpackDelegateRuleManifestSha256}`],
-      ["XNNPACK documentary constraint coverage", `${ANALYZER_METADATA.rulepackProvenance.xnnpackDelegateImplementedConstraintCount}/${ANALYZER_METADATA.rulepackProvenance.xnnpackDelegateDocumentedConstraintCount} artifact-visible constraints mapped; ${ANALYZER_METADATA.rulepackProvenance.xnnpackDelegateUnmappedConstraintCount} unmapped; ${ANALYZER_METADATA.rulepackProvenance.xnnpackDelegateRuntimeOnlyRequirementCount} rulepack runtime-only requirement(s), ${new Set((analysis.ops || []).filter((op) => op.xnnpack_supported).map((op) => op.xnnpack_build_requirement).filter(Boolean)).size} artifact-applicable`],
+      ["XNNPACK documentary constraint coverage", `${ANALYZER_METADATA.rulepackProvenance.xnnpackDelegateImplementedConstraintCount}/${ANALYZER_METADATA.rulepackProvenance.xnnpackDelegateDocumentedConstraintCount} artifact-visible constraints mapped; ${ANALYZER_METADATA.rulepackProvenance.xnnpackDelegateUnmappedConstraintCount} unmapped; ${ANALYZER_METADATA.rulepackProvenance.xnnpackDelegateRuntimeOnlyRequirementCount} rulepack runtime-only requirement(s), ${new Set((artifactIrOperators(analysis) || []).filter((op) => op.xnnpack_supported).map((op) => op.xnnpack_build_requirement).filter(Boolean)).size} artifact-applicable`],
       ["XNNPACK source conformance", ANALYZER_METADATA.rulepackProvenance.xnnpackDelegateSourceConformanceStatus],
       ["Report schema", ANALYZER_METADATA.schemas.engineeringReport],
       ["Generated", generatedAt],
@@ -2492,7 +2493,7 @@ export function buildEngineeringReportArtifacts(analysis, {
       ["Graph input tensor indices", (analysis.input_tensor_indices || []).map((index) => formatNumber(index)).join(", ") || "none parsed"],
       ["Graph output tensor indices", (analysis.output_tensor_indices || []).map((index) => formatNumber(index)).join(", ") || "none parsed"],
       ["Subgraphs", `${analysis.subgraphs || 1}`],
-      ["Stateful (variable) tensors", `${(analysis.tensors || []).filter((t) => t.is_variable).length}`],
+      ["Stateful (variable) tensors", `${(artifactIrValues(analysis) || []).filter((t) => t.is_variable).length}`],
       ["Input layout determination", inputLayoutDetermination(analysis)],
       ["Input tensor numerical contract", inputNumericalContractSummary(analysis)],
       ["Source-data-to-tensor preprocessing", sourcePreprocessingContractSummary(analysis)],
@@ -2518,7 +2519,7 @@ export function buildEngineeringReportArtifacts(analysis, {
     "## Analysis Completeness",
     (() => {
       const customCount = artifactIntegrity.custom_like_ops.reduce((n, item) => n + Number(item.count || 0), 0);
-      const parsedOps = (analysis.ops || []).length;
+      const parsedOps = (artifactIrOperators(analysis) || []).length;
       const subgraphInventory = analysis.tflite_subgraph_inventory || {};
       const deepSubgraphs = analysis.tflite_subgraph_deep_analysis || {};
       const allSubgraphsParsed = Number(subgraphInventory.parsed_subgraph_count || 0) === Number(analysis.subgraphs || 1);
@@ -2542,7 +2543,7 @@ export function buildEngineeringReportArtifacts(analysis, {
             : `${formatNumber(analysis.size_breakdown?.constant_tensor_count || 0)} declaration(s); ${formatNumber(analysis.size_breakdown?.embedded_constant_tensor_count || 0)} embedded, ${formatNumber(external.verified_payload_count || 0)}/${formatNumber(external.tensor_count || 0)} external payload range(s) path/range/cardinality/hash verified; ${external.status || "external-data status not emitted"}`],
           ...onnxWeightIntegrityCompletenessRows(analysis.weight_integrity),
           ["Execution-provider assignment", runtimeAssignment
-            ? `${runtimeAssignment.assignment_evidence_class || "OBSERVED_RUNTIME"}; ${formatNumber(runtimeAssignment.mapped_op_count || 0)}/${formatNumber((analysis.ops || []).length)} original op(s) mapped; ${formatNumber(runtimeAssignment.unresolved_op_count || 0)} unresolved`
+            ? `${runtimeAssignment.assignment_evidence_class || "OBSERVED_RUNTIME"}; ${formatNumber(runtimeAssignment.mapped_op_count || 0)}/${formatNumber((artifactIrOperators(analysis) || []).length)} original op(s) mapped; ${formatNumber(runtimeAssignment.unresolved_op_count || 0)} unresolved`
             : "NOT_ASSESSABLE; no artifact-bound ORT runtime profile was imported"],
           ["ORT source compatibility", ortCompatibility
             ? `${analysis.ort_compatibility_assessment_status || "complete"}; runtime floor ${ortCompatibility.runtime_floor?.status || "not assessed"}; artifact-visible definite exclusions narrow source candidates but remaining candidates do not prove GetCapability eligibility or placement`

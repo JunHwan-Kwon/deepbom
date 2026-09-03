@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { runtimeCapturePlanAvailability } from "./runtime-evidence-closure.js";
 
 const COLUMNS = Object.freeze([
@@ -90,7 +91,7 @@ const CURRENT_CELL = Object.freeze({
   plan_bound: ["Plan bound", "partial"],
   build_bound: ["Build bound", "partial"],
   serialized: ["Serialized", "partial"],
-  invalid: ["Invalid", "missing"],
+  invalid: ["Invalid contract", "missing"],
   na: ["Not applicable", "na"],
 });
 
@@ -136,7 +137,7 @@ function coverageFraction(assessed, total, noun) {
 export function deriveCurrentArtifactCapabilityRow(format, analysis, runtimeEvidence = null) {
   const id = MATRIX[String(format || analysis?.format || "").toLowerCase()] ? String(format || analysis?.format).toLowerCase() : "";
   if (!id || !analysis) return null;
-  const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
+  const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
   const observed = runtimeObserved(id, runtimeEvidence);
   let artifact = cell("assessed", "The selected artifact identity and serialized container contract were decoded and validated.");
   let graph = cell("decoded", "The serialized operator graph was decoded from this artifact.");
@@ -169,9 +170,14 @@ export function deriveCurrentArtifactCapabilityRow(format, analysis, runtimeEvid
   } else if (id === "onnx") {
     const shape = analysis.onnx_shape_inference || {};
     const macs = analysis.mac_assessment || {};
-    const shapeStatus = coverageState(analysis.onnx_shape_inference?.status, { full: "decoded", absent: "partial" });
+    const conflict = analysis.onnx_contract_conflict || null;
+    const shapeStatus = conflict?.status === "INVALID_CONTRACT"
+      ? "invalid"
+      : coverageState(analysis.onnx_shape_inference?.status, { full: "decoded", absent: "partial" });
     graph = cell(shapeStatus, shapeStatus === "decoded"
       ? `The ModelProto graph and bounded shape/type contracts were decoded. ${coverageFraction(shape.rule_supported_nodes, shape.attempted_nodes, "shape-rule nodes") || "Shape-rule denominator is retained in structured evidence"}; ${coverageFraction(macs.assessed_compute_ops, macs.compute_ops, "MAC-bearing ops") || "MAC denominator is retained in structured evidence"}.`
+      : shapeStatus === "invalid"
+        ? `The serialized ONNX contract is invalid: ${conflict.summary.unconditional_root_conflict_count} unconditional root conflict(s) and ${conflict.summary.condition_bound_invalid_variant_count} condition-bound invalid variant(s) affect ${conflict.summary.invalid_node_output_count} unconditional and ${conflict.summary.conditionally_invalid_node_output_count} conditional output contract(s). ${conflict.summary.blocked_mac_row_count} MAC-bearing row(s) remain deliberately uncomputed.`
       : `The graph was decoded, but one or more shape/type contracts remain partial. ${coverageFraction(shape.rule_supported_nodes, shape.attempted_nodes, "shape-rule nodes") || "Inspect the unresolved-node ledger"}; ${coverageFraction(macs.assessed_compute_ops, macs.compute_ops, "MAC-bearing ops") || "MAC coverage is not closed"}.`);
     const weightState = coverageState(analysis.weight_integrity?.status, { absent: "partial" });
     numeric = cell(weightState === "assessed" ? "assessed" : weightState, `Q/DQ, dtype, dense/sparse initializer, and numerical-integrity coverage follows the emitted per-artifact status: ${analysis.weight_integrity?.weight_tensors_scanned ?? "unresolved"}/${analysis.weight_integrity?.initializer_tensors_present ?? "unresolved"} initializer tensors assessed; ${analysis.weight_integrity?.initializer_tensors_unassessed ?? "unresolved"} residual.`);
@@ -312,41 +318,71 @@ export function renderFormatCapabilityMatrix(root, format, { analysis = null, ru
   detail.textContent = selected
     ? `${selected.summary}${runtimeObserved(id, runtimeEvidence) ? " Bound runtime execution evidence is present and shown separately from static results." : " Missing execution evidence remains explicit rather than being inferred."}`
     : "The same evidence spine is used across formats, while non-serialized evidence is marked not applicable or external.";
-  head.replaceChildren(header("Format"), ...COLUMNS.map(([, label]) => header(label)));
-  body.replaceChildren(...Object.entries(MATRIX).map(([formatId, row]) => {
+  ensureCapabilityHeader(head, "Format");
+  for (const row of ensureScopeCapabilityRows(body)) {
+    if (row.dataset.capabilityFormat === id) row.dataset.selected = "true";
+    else delete row.dataset.selected;
+  }
+  currentTitle.hidden = !current;
+  currentWrap.hidden = !current;
+  const currentHead = currentTable.querySelector("thead tr");
+  const currentBody = currentTable.querySelector("tbody");
+  ensureCapabilityHeader(currentHead, "Artifact");
+  updateCurrentCapabilityRow(ensureCurrentCapabilityRow(currentBody), current, analysis?.filename);
+  renderFormatRuntimeBinding(runtimeBinding, id, analysis, runtimeEvidence);
+}
+
+function ensureCapabilityHeader(row, leadingLabel) {
+  const expected = [leadingLabel, ...COLUMNS.map(([, label]) => label)];
+  const existing = [...row.children];
+  if (existing.length === expected.length && existing.every((cell, index) => cell.textContent === expected[index])) return;
+  row.replaceChildren(...expected.map((label) => header(label)));
+}
+
+function ensureScopeCapabilityRows(body) {
+  const entries = Object.entries(MATRIX);
+  const existing = [...body.children];
+  if (existing.length === entries.length
+    && existing.every((row, index) => row.dataset.capabilityFormat === entries[index][0])) return existing;
+  const rows = entries.map(([formatId, row]) => {
     const tr = document.createElement("tr");
-    if (formatId === id) tr.dataset.selected = "true";
+    tr.dataset.capabilityFormat = formatId;
     const name = document.createElement("th");
     name.scope = "row";
     name.dataset.column = "Format";
     name.textContent = row.label;
     tr.append(name, ...row.cells.map((cellId, index) => capabilityCell(cellId, COLUMNS[index][1], false)));
     return tr;
-  }));
-  currentTitle.hidden = !current;
-  currentWrap.hidden = !current;
-  if (current) {
-    const currentHead = currentTable.querySelector("thead tr");
-    const currentBody = currentTable.querySelector("tbody");
-    currentHead.replaceChildren(header("Artifact"), ...COLUMNS.map(([, label]) => header(label)));
-    const tr = document.createElement("tr");
-    const name = document.createElement("th");
-    name.scope = "row";
-    name.dataset.column = "Artifact";
-    name.textContent = analysis.filename || current.label;
-    tr.append(name, ...current.cells.map((entry, index) => currentCapabilityCell(entry, COLUMNS[index][1])));
-    currentBody.replaceChildren(tr);
-  } else {
-    currentTable.querySelector("thead tr").replaceChildren();
-    currentTable.querySelector("tbody").replaceChildren();
+  });
+  body.replaceChildren(...rows);
+  return rows;
+}
+
+function ensureCurrentCapabilityRow(body) {
+  const existing = body.querySelector(":scope > tr[data-current-capability-row]");
+  if (existing) return existing;
+  const row = document.createElement("tr");
+  row.dataset.currentCapabilityRow = "true";
+  const name = document.createElement("th");
+  name.scope = "row";
+  name.dataset.column = "Artifact";
+  row.append(name, ...COLUMNS.map(([, label]) => currentCapabilityCell(null, label)));
+  body.append(row);
+  return row;
+}
+
+function updateCurrentCapabilityRow(row, current, filename) {
+  const cells = [...row.children];
+  cells[0].textContent = current ? filename || current.label : "";
+  for (let index = 0; index < COLUMNS.length; index += 1) {
+    updateCurrentCapabilityCell(cells[index + 1], current?.cells?.[index] || null, COLUMNS[index][1]);
   }
-  renderFormatRuntimeBinding(runtimeBinding, id, analysis, runtimeEvidence);
 }
 
 function renderFormatRuntimeBinding(root, format, analysis, runtimeEvidence) {
   if (!root) return;
   const coreMlComputePlanCapable = format === "coreml"
-    && Array.isArray(analysis?.ops) && analysis.ops.length > 0
+    && Array.isArray(artifactIrOperators(analysis)) && artifactIrOperators(analysis).length > 0
     && Boolean(analysis.coreml?.neural_network || analysis.coreml?.model_type === "mlProgram");
   const applicable = format === "gguf" || coreMlComputePlanCapable;
   const importButton = root.querySelector("#importFormatRuntimeEvidence");
@@ -412,16 +448,25 @@ function currentCapabilityCell(entry, column) {
   td.className = "capability-value-cell";
   td.dataset.column = column;
   const badge = document.createElement("span");
-  badge.className = `capability-state ${entry.tone}`;
-  badge.textContent = entry.label;
-  badge.title = `${column}: ${entry.title}`;
-  badge.tabIndex = 0;
-  badge.setAttribute("aria-label", `${column}: ${entry.label}. ${entry.title}`);
+  badge.className = "capability-state";
   const detail = document.createElement("small");
   detail.className = "capability-cell-detail";
-  detail.textContent = entry.title;
   td.append(badge, detail);
+  updateCurrentCapabilityCell(td, entry, column);
   return td;
+}
+
+function updateCurrentCapabilityCell(td, entry, column) {
+  const badge = td.querySelector(".capability-state");
+  const detail = td.querySelector(".capability-cell-detail");
+  td.dataset.column = column;
+  badge.className = `capability-state${entry ? ` ${entry.tone}` : ""}`;
+  badge.textContent = entry?.label || "";
+  badge.title = entry ? `${column}: ${entry.title}` : "";
+  badge.tabIndex = entry ? 0 : -1;
+  if (entry) badge.setAttribute("aria-label", `${column}: ${entry.label}. ${entry.title}`);
+  else badge.removeAttribute("aria-label");
+  detail.textContent = entry?.title || "";
 }
 
 export { MATRIX as FORMAT_CAPABILITY_MATRIX };

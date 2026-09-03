@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 export const TENSOR_ROLE_ORDER = ["kernel", "bias", "activation", "container_tensor", "metadata"];
 export const TENSOR_ROLE_MAP_VERSION = "deepbom.tensor_role_map.2026-08-04.1";
 
@@ -53,8 +54,8 @@ export function tensorQuantizationMode(tensor) {
 }
 
 export function classifyTensorRoles(analysis = {}) {
-  const tensors = Array.isArray(analysis.tensors) ? analysis.tensors : [];
-  const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
+  const tensors = Array.isArray(artifactIrValues(analysis)) ? artifactIrValues(analysis) : [];
+  const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
   const format = String(analysis.format || "tflite").toLowerCase();
   const onnx = format === "onnx";
   if (["gguf", "safetensors"].includes(format)) {
@@ -98,7 +99,7 @@ export function classifyTensorRoles(analysis = {}) {
 }
 
 export function buildTensorInventory(analysis = {}) {
-  const tensors = Array.isArray(analysis.tensors) ? analysis.tensors : [];
+  const tensors = Array.isArray(artifactIrValues(analysis)) ? artifactIrValues(analysis) : [];
   const classified = classifyTensorRoles(analysis);
   const grouped = new Map();
   for (const { tensor, role } of classified) {

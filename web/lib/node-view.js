@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import {
   buildGraphIndex,
   opDetailRows,
@@ -82,7 +83,7 @@ function dtypeSummary(analysis, op, direction) {
   const ids = direction === "input" ? op?.inputs : op?.outputs;
   const values = Array.isArray(direct) && direct.length
     ? direct
-    : (ids || []).filter((id) => Number(id) >= 0).map((id) => analysis?.tensors?.[id]?.dtype);
+    : (ids || []).filter((id) => Number(id) >= 0).map((id) => artifactIrValues(analysis)?.[id]?.dtype);
   const normalized = [...new Set(values.map((value) => String(value || "").trim()).filter(Boolean))];
   return normalized.length ? normalized.join(" / ") : "Not assessed";
 }
@@ -228,7 +229,7 @@ function nodeTone(analysis, op, overlay, projection, projectionIndex) {
     return /int8|uint8/i.test(quantLabel(op)) ? "nv-node-quant" : "nv-node-muted";
   }
   if (overlay === "latency") {
-    const values = (analysis?.ops || []).map(opSteadyStateUs);
+    const values = (artifactIrOperators(analysis) || []).map(opSteadyStateUs);
     const maximum = Math.max(0, ...values);
     const ratio = maximum > 0 ? opSteadyStateUs(op) / maximum : 0;
     return ratio >= 0.5 ? "nv-node-risk" : ratio >= 0.2 ? "nv-node-warn" : "nv-node-cool";
@@ -421,7 +422,7 @@ function projectionContractSummary(analysis, projection, projectionIndex) {
     unassessed: 0,
     satisfied: 0,
   };
-  for (const op of analysis?.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     const state = projectionContractState(analysis, projection, op, projectionIndex);
     counts[state.id] = Number(counts[state.id] || 0) + 1;
   }
@@ -429,7 +430,7 @@ function projectionContractSummary(analysis, projection, projectionIndex) {
 }
 
 export function getRedesignContractState(analysis, projection, opIndex) {
-  const op = (analysis?.ops || []).find((item) => Number(item.index) === Number(opIndex));
+  const op = (artifactIrOperators(analysis) || []).find((item) => Number(item.index) === Number(opIndex));
   if (!op) return null;
   const index = indexProjection(projection);
   return projectionContractState(analysis, projection, op, index);
@@ -446,7 +447,7 @@ function edgeTone(analysis, edge, overlay, projection, projectionIndex) {
     if (row?.changed) return "nv-edge-redesign-propagated";
     return "nv-edge";
   }
-  const target = (analysis?.ops || []).find((op) => op.index === edge.to);
+  const target = (artifactIrOperators(analysis) || []).find((op) => op.index === edge.to);
   if (overlay === "external") {
     const key = `${Number(edge.from)}:${Number(edge.to)}:${Number(edge.tensorId)}`;
     return externalOverlayIndex(analysis).edges.has(key) ? "nv-edge-external" : "nv-edge";
@@ -468,7 +469,7 @@ function relatedOps(graph, selectedIndex) {
 
 function renderDetail(root, analysis, graph, selectedIndex, actions, projection, projectionIndex, mode) {
   root.replaceChildren();
-  const op = (analysis?.ops || []).find((item) => item.index === selectedIndex);
+  const op = (artifactIrOperators(analysis) || []).find((item) => item.index === selectedIndex);
   if (!op) {
     root.append(element("p", "nv-empty", "Select a node to inspect its deployment evidence."));
     return;
@@ -555,7 +556,7 @@ function renderDetail(root, analysis, graph, selectedIndex, actions, projection,
     if (!indices.size) row.append(element("em", "", emptyLabel));
     const ordered = [...indices].sort((a, b) => a - b);
     for (const index of ordered.slice(0, 12)) {
-      const linked = (analysis.ops || []).find((item) => item.index === index);
+      const linked = (artifactIrOperators(analysis) || []).find((item) => item.index === index);
       const chip = button(`#${padOp(index)} ${linked?.name || "UNKNOWN"}`, "nv-link-chip");
       chip.addEventListener("click", () => actions.select(index));
       row.append(chip);
@@ -586,7 +587,7 @@ function renderDetail(root, analysis, graph, selectedIndex, actions, projection,
     const row = element("div");
     row.append(element("strong", "", label));
     for (const id of ids.filter((value) => value >= 0)) {
-      const tensor = analysis.tensors?.[id];
+      const tensor = artifactIrValues(analysis)?.[id];
       row.append(element(
         "span",
         "",
@@ -732,7 +733,7 @@ function renderSvg(root, analysis, graph, layout, state, actions) {
   const interfaceLayer = svgElement("g", { class: "nv-interface-layer" });
   const producerByTensor = new Map();
   const consumersByTensor = new Map();
-  for (const op of analysis.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     for (const tensorId of op.outputs || []) producerByTensor.set(Number(tensorId), op.index);
     for (const tensorId of op.inputs || []) {
       const id = Number(tensorId);
@@ -743,8 +744,8 @@ function renderSvg(root, analysis, graph, layout, state, actions) {
   }
   const inputIds = (analysis.input_tensor_indices || []).map(Number).filter((id) => id >= 0);
   const outputIds = (analysis.output_tensor_indices || []).map(Number).filter((id) => id >= 0);
-  const inputPortsByOp = new Map((analysis.ops || []).map((op) => [Number(op.index), new Set()]));
-  const outputPortsByOp = new Map((analysis.ops || []).map((op) => [Number(op.index), new Set()]));
+  const inputPortsByOp = new Map((artifactIrOperators(analysis) || []).map((op) => [Number(op.index), new Set()]));
+  const outputPortsByOp = new Map((artifactIrOperators(analysis) || []).map((op) => [Number(op.index), new Set()]));
   for (const edge of graph.edges) {
     inputPortsByOp.get(Number(edge.to))?.add(Number(edge.tensorId));
     outputPortsByOp.get(Number(edge.from))?.add(Number(edge.tensorId));
@@ -760,7 +761,7 @@ function renderSvg(root, analysis, graph, layout, state, actions) {
     ...((direction === "input" ? inputPortsByOp : outputPortsByOp).get(Number(opIndex)) || []),
   ].sort((a, b) => a - b);
   const appendInterface = (tensorId, ordinal, total, kind) => {
-    const tensor = analysis.tensors?.[tensorId];
+    const tensor = artifactIrValues(analysis)?.[tensorId];
     const x = layout.bounds.x + layout.bounds.width * (ordinal + 1) / (total + 1) - INTERFACE_WIDTH / 2;
     const y = kind === "input" ? 18 : layout.bounds.height - INTERFACE_HEIGHT - 18;
     const centerX = x + INTERFACE_WIDTH / 2;
@@ -821,7 +822,7 @@ function renderSvg(root, analysis, graph, layout, state, actions) {
       "data-tensor-index": edge.tensorId,
     });
     const title = svgElement("title");
-    const tensor = analysis.tensors?.[edge.tensorId];
+    const tensor = artifactIrValues(analysis)?.[edge.tensorId];
     title.textContent = `T${edge.tensorId} ${tensor?.name || ""} / ${(tensor?.shape || []).join("x") || "shape unavailable"} / ${edge.dtype || "dtype unavailable"} / ${formatBytes(edge.bytes || 0)}`;
     path.append(title);
     edgeLayer.append(path);
@@ -1017,9 +1018,9 @@ function renderSvg(root, analysis, graph, layout, state, actions) {
 }
 
 function buildNodeHierarchy(analysis, graph) {
-  const tensorByIndex = new Map((analysis.tensors || []).map((tensor) => [Number(tensor.index), tensor]));
+  const tensorByIndex = new Map((artifactIrValues(analysis) || []).map((tensor) => [Number(tensor.index), tensor]));
   const input = {
-    nodes: (analysis.ops || []).map((op) => ({
+    nodes: (artifactIrOperators(analysis) || []).map((op) => ({
       id: `op:${op.index}`,
       index: Number(op.index),
       label: String(op.name || `OP_${op.index}`),
@@ -1355,7 +1356,7 @@ export function createNodeViewController({
       .filter((row) => row.change_class && row.change_class !== "unchanged")
       .map((row) => Number(row.op_index));
     if (changed.length) return new Set(changed);
-    const flagged = (state.analysis?.ops || [])
+    const flagged = artifactIrOperators(state.analysis)
       .filter((op) => {
         const contract = projectionContractState(
           state.analysis,
@@ -1415,7 +1416,7 @@ export function createNodeViewController({
 
   function revealOp(index) {
     const numeric = Number(index);
-    if (!state.analysis?.ops?.some((op) => op.index === numeric)) return false;
+    if (!artifactIrOperators(state.analysis).some((op) => op.index === numeric)) return false;
     state.selectedOpIndex = numeric;
     if (window.matchMedia?.("(max-width: 680px)").matches) state.inspectorOpen = true;
     if (state.hierarchy) {
@@ -1430,7 +1431,7 @@ export function createNodeViewController({
 
   function selectOp(index, { notify = false, openInspector = false } = {}) {
     const numeric = Number(index);
-    if (!state.analysis?.ops?.some((op) => op.index === numeric)) return;
+    if (!artifactIrOperators(state.analysis).some((op) => op.index === numeric)) return;
     state.selectedOpIndex = numeric;
     if (state.viewScope === "selection") applyViewScope("selection");
     else if (notify) ensureSelectedVisible();
@@ -1448,10 +1449,10 @@ export function createNodeViewController({
     const graphIndex = buildGraphIndex(analysis);
     state.graph = collectFullGraph(analysis, graphIndex);
     state.layout = layoutFullGraph(state.graph.nodes, state.graph.edges, { minimumColumns: interfaceColumnCount(analysis) });
-    state.hierarchy = analysis?.ops?.length > HIERARCHY_LOD_THRESHOLD ? buildNodeHierarchy(analysis, state.graph) : null;
+    state.hierarchy = artifactIrOperators(analysis)?.length > HIERARCHY_LOD_THRESHOLD ? buildNodeHierarchy(analysis, state.graph) : null;
     state.lod = state.hierarchy ? "hierarchy" : "operators";
-    if (!analysis?.ops?.some((op) => op.index === state.selectedOpIndex)) {
-      state.selectedOpIndex = analysis?.ops?.[0]?.index ?? 0;
+    if (!artifactIrOperators(analysis)?.some((op) => op.index === state.selectedOpIndex)) {
+      state.selectedOpIndex = artifactIrOperators(analysis)?.[0]?.index ?? 0;
     }
     if (state.hierarchy) fit();
     else applyViewScope();
@@ -1517,7 +1518,7 @@ export function createNodeViewController({
       const graphIndex = buildGraphIndex(analysis);
       state.graph = collectFullGraph(analysis, graphIndex);
       state.layout = layoutFullGraph(state.graph.nodes, state.graph.edges, { minimumColumns: interfaceColumnCount(analysis) });
-      state.hierarchy = analysis?.ops?.length > HIERARCHY_LOD_THRESHOLD ? buildNodeHierarchy(analysis, state.graph) : null;
+      state.hierarchy = artifactIrOperators(analysis)?.length > HIERARCHY_LOD_THRESHOLD ? buildNodeHierarchy(analysis, state.graph) : null;
       state.lod = state.hierarchy ? "hierarchy" : "operators";
       graphChanged = true;
     }
@@ -1526,10 +1527,10 @@ export function createNodeViewController({
     if (mode === "redesign") state.overlay = "redesign";
     const numeric = Number(selectedOpIndex);
     const selectionChanged = Number.isFinite(numeric) && numeric !== state.selectedOpIndex;
-    if (Number.isFinite(numeric) && analysis?.ops?.some((op) => op.index === numeric)) {
+    if (Number.isFinite(numeric) && artifactIrOperators(analysis)?.some((op) => op.index === numeric)) {
       state.selectedOpIndex = numeric;
-    } else if (!analysis?.ops?.some((op) => op.index === state.selectedOpIndex)) {
-      state.selectedOpIndex = analysis?.ops?.[0]?.index ?? 0;
+    } else if (!artifactIrOperators(analysis)?.some((op) => op.index === state.selectedOpIndex)) {
+      state.selectedOpIndex = artifactIrOperators(analysis)?.[0]?.index ?? 0;
     }
     if (graphChanged || (mode === "redesign" && state.viewScope !== "full")) {
       if (state.hierarchy && mode !== "redesign") fit();
@@ -1556,7 +1557,7 @@ export function createNodeViewController({
     search.addEventListener("keydown", (event) => {
       if (event.key !== "Enter" || !search.value.trim()) return;
       const term = search.value.trim().toLowerCase();
-      const match = (state.analysis?.ops || []).find((op) => {
+      const match = artifactIrOperators(state.analysis).find((op) => {
         const row = projectionRow(state.projection, op.index, state.projectionIndex);
         return `#${op.index} ${op.name || ""} ${outputShape(op)} ${row ? contractShape(row.projected_outputs) : ""} ${providerLabel(state.analysis, op)}`
           .toLowerCase()
@@ -1689,7 +1690,7 @@ export function createNodeViewController({
 
     const flagControls = element("div", "nv-flag-controls");
     if (mode === "redesign") {
-      const flagged = (state.analysis?.ops || []).filter((op) => {
+      const flagged = artifactIrOperators(state.analysis).filter((op) => {
         const contract = projectionContractState(
           state.analysis,
           state.projection,
@@ -1737,7 +1738,7 @@ export function createNodeViewController({
     const conditionSummary = contractSummary
       ? `${formatNumber(contractSummary.issue + contractSummary.blocked)} issue / ${formatNumber(contractSummary.watch)} watch / ${formatNumber(contractSummary.satisfied)} satisfied`
       : "";
-    const selectedSummary = state.analysis?.ops?.find((op) => op.index === state.selectedOpIndex);
+    const selectedSummary = artifactIrOperators(state.analysis).find((op) => op.index === state.selectedOpIndex);
     const count = element(
       "span",
       "nv-count",

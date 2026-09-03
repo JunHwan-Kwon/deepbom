@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import {
   assessedOpLogicalBytes,
   estimateOpBottleneck,
@@ -52,7 +53,7 @@ function perTensorKernelFamilySummary(analysis) {
   if (!kernels.length) return "";
   const families = new Map();
   for (const { index } of kernels) {
-    const family = (analysis?.ops || []).find((op) => Number(op?.inputs?.[1]) === Number(index))?.name
+    const family = (artifactIrOperators(analysis) || []).find((op) => Number(op?.inputs?.[1]) === Number(index))?.name
       || "unresolved consumer";
     families.set(family, (families.get(family) || 0) + 1);
   }
@@ -177,7 +178,7 @@ function formatVersionEvidence(analysis, format) {
 }
 
 function int8SpeedupCard(analysis) {
-  const computeOps = (analysis?.ops || []).filter((op) =>
+  const computeOps = (artifactIrOperators(analysis) || []).filter((op) =>
     ["CONV_2D", "DEPTHWISE_CONV_2D", "FULLY_CONNECTED"].includes(op.name),
   );
   const computeMacs = computeOps.reduce((sum, op) => sum + Number(op.macs || 0), 0);
@@ -326,7 +327,7 @@ export function summaryMetricCards(analysis) {
       "metric-wide",
     ], [
       "Explicit quant/compression transforms",
-      `${formatNumber((analysis.ops || []).filter((op) => op.quantization_state === "serialized_quantization_transform").length)}/${formatNumber((analysis.ops || []).length)}`,
+      `${formatNumber((artifactIrOperators(analysis) || []).filter((op) => op.quantization_state === "serialized_quantization_transform").length)}/${formatNumber((artifactIrOperators(analysis) || []).length)}`,
       analysis.coreml?.mil_compression_contract
         ? `${formatNumber(analysis.coreml.mil_compression_contract.exact_contract_count)}/${formatNumber(analysis.coreml.mil_compression_contract.transform_count)} exact source-backed serialized contracts; ${formatNumber(analysis.coreml.mil_compression_contract.partial_contract_count)} explicit residual; runtime fusion and backend precision remain unobserved`
         : `${coreMlNumerics.assessment_status || "not assessed"}; serialized MIL transforms only, with runtime fusion and backend precision kept unobserved`,
@@ -413,8 +414,8 @@ export function targetConditionCards(analysis) {
   if (!["tflite", "onnx"].includes(format)) {
     const scope = formatEvidenceScope(format, { analysis });
     const graphState = format === "coreml"
-      ? (analysis?.ops || []).length
-        ? `${formatNumber(analysis.ops.length)} serialized ops decoded`
+      ? (artifactIrOperators(analysis) || []).length
+        ? `${formatNumber(artifactIrOperators(analysis).length)} serialized ops decoded`
         : "Not decoded for this model type"
       : "Not applicable to this container";
     const payload = analysis?.tensor_numerical_integrity || analysis?.weight_integrity || {};
@@ -522,7 +523,7 @@ export function insightDashboardCards(analysis, insights) {
     const macs = analysis?.mac_assessment || {};
     const compression = coreml.mil_compression_contract || null;
     return prioritizeInsightCards([
-      insightCard("Core ML Model Type", coreml.model_type || "Not decoded", `${formatNumber((analysis?.ops || []).length)} serialized op(s); native compute-unit placement is not observed`, "neutral", "stage", null, "OBSERVED SERIALIZED ARTIFACT"),
+      insightCard("Core ML Model Type", coreml.model_type || "Not decoded", `${formatNumber((artifactIrOperators(analysis) || []).length)} serialized op(s); native compute-unit placement is not observed`, "neutral", "stage", null, "OBSERVED SERIALIZED ARTIFACT"),
       insightCard("MAC Coverage", macs.compute_ops == null ? "Not assessed" : `${formatNumber(macs.assessed_compute_ops || 0)}/${formatNumber(macs.compute_ops)}`, analysis?.total_macs == null ? "No numeric MAC total is claimed" : `${formatNumber(analysis.total_macs)} MACs across assessed serialized compute ops`, macs.compute_ops && macs.assessed_compute_ops !== macs.compute_ops ? "warn" : "good", "stage", null, "DERIVED; EXPLICIT DENOMINATOR"),
       insightCard("Weight Payload", integrity.parameter_count == null ? "Not assessed" : `${formatNumber(integrity.assessed_parameter_count || 0)}/${formatNumber(integrity.parameter_count)}`, `${formatNumber(integrity.nonfinite_value_count || 0)} non-finite value(s); ${integrity.byte_conservation_status || "byte conservation not assessed"}`, integrity.nonfinite_value_count ? "risk" : "good", "quant", null, "OBSERVED / DERIVED"),
       ...(compression?.transform_count ? [insightCard("Serialized Compression", `${formatNumber(compression.exact_contract_count)}/${formatNumber(compression.transform_count)} exact`, `${formatNumber(compression.partial_contract_count)} explicit residual; runtime materialization and device placement remain external`, compression.partial_contract_count ? "warn" : "good", "quant", null, "SOURCE-PINNED / DERIVED")] : []),
@@ -724,7 +725,7 @@ function recommendationMetadata(analysis, item) {
     .filter((block) => block.block_type === "squeeze_excitation")
     .flatMap((block) => block.op_indices || [])
     .map(Number));
-  const meanBreaks = (analysis?.ops || []).filter((op) => op.xnnpack_chain_break && op.name === "MEAN");
+  const meanBreaks = (artifactIrOperators(analysis) || []).filter((op) => op.xnnpack_chain_break && op.name === "MEAN");
   const allMeanBreaksMapToSe = meanBreaks.length > 0
     && meanBreaks.every((op) => squeezeExcitationOps.has(Number(op.index)));
   const effort = interventionId === "packing_removed"
@@ -782,7 +783,7 @@ function recommendationMetadata(analysis, item) {
       };
     }
     if (interventionId === "predicted_boundaries_removed") {
-      const breakOps = (analysis?.ops || []).filter((op) => op.xnnpack_chain_break);
+      const breakOps = (artifactIrOperators(analysis) || []).filter((op) => op.xnnpack_chain_break);
       const lowUs = breakOps.reduce((sum, op) => sum + Number(op.chain_break_overhead_us_low || 0), 0);
       const highUs = breakOps.reduce((sum, op) => sum + Number(op.chain_break_overhead_us_high || 0), 0);
       return {
@@ -816,7 +817,7 @@ function recommendationMetadata(analysis, item) {
   }
 
   const op = Number(item.op_index) >= 0
-    ? (analysis?.ops || []).find((candidate) => Number(candidate.index) === Number(item.op_index))
+    ? (artifactIrOperators(analysis) || []).find((candidate) => Number(candidate.index) === Number(item.op_index))
     : null;
   if (op && String(analysis?.format || "tflite").toLowerCase() === "tflite") {
     const estimate = estimateOpBottleneck(op, analysis.target_profile || {});

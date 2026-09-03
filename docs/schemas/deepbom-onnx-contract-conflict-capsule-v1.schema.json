@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-onnx-contract-conflict-capsule-v1.schema.json",
+  "title": "DEEPBOM ONNX Contract Conflict Capsule v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "status", "evidence_class", "artifact", "analyzer_contracts", "summary", "root_conflicts", "condition_bound_conflicts", "affected_values", "downstream_blocked_nodes", "blocked_mac_rows", "method", "interpretation_boundary", "capsule_sha256"],
+  "properties": {
+    "schema": { "const": "deepbom.onnx_contract_conflict_capsule.v1" },
+    "status": { "enum": ["INVALID_CONTRACT", "ASSESSED_NO_CONFLICT", "NOT_ASSESSED"] },
+    "evidence_class": { "enum": ["OBSERVED_DERIVED", "NOT_ASSESSABLE"] },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "filename", "byte_length", "artifact_set_sha256", "source_locator", "source_revision"],
+      "properties": {
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "filename": { "type": "string", "minLength": 1 },
+        "byte_length": { "type": ["number", "null"], "minimum": 0 },
+        "artifact_set_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+        "source_locator": { "type": ["string", "null"] },
+        "source_revision": { "type": ["string", "null"] }
+      }
+    },
+    "analyzer_contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["onnx_shape_inference", "dynamic_shape_cost"],
+      "properties": {
+        "onnx_shape_inference": { "type": ["string", "null"] },
+        "dynamic_shape_cost": { "type": ["string", "null"] }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unconditional_root_conflict_count", "declaration_root_conflict_count", "semantic_root_conflict_count", "condition_bound_invalid_variant_count", "invalid_node_output_count", "conditionally_invalid_node_output_count", "downstream_blocked_node_count", "blocked_mac_row_count", "blocked_mac_op_histogram", "unresolved_root_reference_count"],
+      "properties": {
+        "unconditional_root_conflict_count": { "$ref": "#/$defs/count" },
+        "declaration_root_conflict_count": { "$ref": "#/$defs/count" },
+        "semantic_root_conflict_count": { "$ref": "#/$defs/count" },
+        "condition_bound_invalid_variant_count": { "$ref": "#/$defs/count" },
+        "invalid_node_output_count": { "$ref": "#/$defs/count" },
+        "conditionally_invalid_node_output_count": { "$ref": "#/$defs/count" },
+        "downstream_blocked_node_count": { "$ref": "#/$defs/count" },
+        "blocked_mac_row_count": { "$ref": "#/$defs/count" },
+        "blocked_mac_op_histogram": { "type": "array", "items": { "$ref": "#/$defs/histogramRow" } },
+        "unresolved_root_reference_count": { "$ref": "#/$defs/count" }
+      }
+    },
+    "root_conflicts": { "type": "array", "items": { "$ref": "#/$defs/rootConflict" } },
+    "condition_bound_conflicts": { "type": "array", "items": { "$ref": "#/$defs/conditionalConflict" } },
+    "affected_values": { "type": "array", "items": { "$ref": "#/$defs/affectedValue" } },
+    "downstream_blocked_nodes": { "type": "array", "items": { "$ref": "#/$defs/blockedNode" } },
+    "blocked_mac_rows": { "type": "array", "items": { "$ref": "#/$defs/blockedMac" } },
+    "method": { "type": "string", "minLength": 1 },
+    "interpretation_boundary": { "type": "string", "minLength": 1 },
+    "capsule_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "count": { "type": "integer", "minimum": 0 },
+    "nullableIndex": { "type": ["integer", "null"], "minimum": 0 },
+    "nullableString": { "type": ["string", "null"] },
+    "referenceArray": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "histogramRow": {
+      "type": "object", "additionalProperties": false, "required": ["name", "count"],
+      "properties": { "name": { "type": "string", "minLength": 1 }, "count": { "$ref": "#/$defs/count" } }
+    },
+    "rootConflict": {
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["conflict_ref", "kind", "subject_ref", "node_index", "op_name", "tensor_name", "field", "declared", "inferred"],
+          "properties": {
+            "conflict_ref": { "type": "string" }, "kind": { "const": "declared_inferred_conflict" },
+            "subject_ref": { "$ref": "#/$defs/nullableString" }, "node_index": { "$ref": "#/$defs/nullableIndex" },
+            "op_name": { "type": "string" }, "tensor_name": { "type": "string" }, "field": { "type": "string" },
+            "declared": {}, "inferred": {}
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["conflict_ref", "kind", "subject_ref", "node_index", "op_name", "output_names", "reason", "details"],
+          "properties": {
+            "conflict_ref": { "type": "string" }, "kind": { "const": "operator_semantic_conflict" },
+            "subject_ref": { "$ref": "#/$defs/nullableString" }, "node_index": { "$ref": "#/$defs/nullableIndex" },
+            "op_name": { "type": "string" }, "output_names": { "type": "array", "items": { "type": "string" } },
+            "reason": { "type": "string" }, "details": {}
+          }
+        }
+      ]
+    },
+    "conditionalConflict": {
+      "type": "object", "additionalProperties": false,
+      "required": ["conflict_ref", "kind", "subject_ref", "tensor_index", "tensor_name", "variant_index", "reason", "conditions", "details"],
+      "properties": {
+        "conflict_ref": { "type": "string" }, "kind": { "const": "condition_bound_invalid_variant" },
+        "subject_ref": { "$ref": "#/$defs/nullableString" }, "tensor_index": { "$ref": "#/$defs/count" },
+        "tensor_name": { "type": "string" }, "variant_index": { "$ref": "#/$defs/count" }, "reason": { "type": "string" },
+        "conditions": { "type": "array", "items": { "type": "object" } }, "details": {}
+      }
+    },
+    "affectedValue": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subject_ref", "tensor_index", "tensor_name", "reason", "root_conflict_refs"],
+      "properties": {
+        "subject_ref": { "$ref": "#/$defs/nullableString" }, "tensor_index": { "$ref": "#/$defs/count" },
+        "tensor_name": { "type": "string" }, "reason": { "type": "string" }, "root_conflict_refs": { "$ref": "#/$defs/referenceArray" }
+      }
+    },
+    "blockedNode": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subject_ref", "node_index", "op_name", "reason", "blocking_tensor_name", "root_conflict_refs"],
+      "properties": {
+        "subject_ref": { "$ref": "#/$defs/nullableString" }, "node_index": { "$ref": "#/$defs/nullableIndex" },
+        "op_name": { "type": "string" }, "reason": { "type": "string" }, "blocking_tensor_name": { "type": "string" },
+        "root_conflict_refs": { "$ref": "#/$defs/referenceArray" }
+      }
+    },
+    "blockingValue": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subject_ref", "tensor_index", "tensor_name", "role"],
+      "properties": {
+        "subject_ref": { "$ref": "#/$defs/nullableString" }, "tensor_index": { "$ref": "#/$defs/nullableIndex" },
+        "tensor_name": { "type": "string" }, "role": { "type": "string" }
+      }
+    },
+    "blockedMac": {
+      "type": "object", "additionalProperties": false,
+      "required": ["subject_ref", "op_index", "op_name", "reason", "blocking_values", "root_conflict_refs"],
+      "properties": {
+        "subject_ref": { "$ref": "#/$defs/nullableString" }, "op_index": { "$ref": "#/$defs/nullableIndex" },
+        "op_name": { "type": "string" }, "reason": { "type": "string" },
+        "blocking_values": { "type": "array", "items": { "$ref": "#/$defs/blockingValue" } },
+        "root_conflict_refs": { "$ref": "#/$defs/referenceArray" }
+      }
+    }
+  }
+}

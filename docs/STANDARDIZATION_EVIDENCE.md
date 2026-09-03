@@ -49,6 +49,16 @@ population now covers all 48 unique-byte ONNX artifacts from 40 revision-pinned
 repositories in the public multiformat corpus. It is a purposeful
 residual-ranking population, not a random or ecosystem-prevalence sample.
 
+Nine artifacts in that ONNX population contain serialized dtype, rank, or
+dimension contradictions. The hash-bound
+`corpus/onnx-contract-conflict-corpus.v1.json.gz` preserves six unconditional
+roots, 543 condition-bound invalid variants, 1,901 downstream blocked nodes,
+and 213 MAC-bearing rows that are deliberately withheld. These are artifact
+validity observations, not analyzer residuals. They demonstrate why a portable
+evidence vocabulary must distinguish `INVALID_CONTRACT` from an unavailable or
+runtime-bound value; they do not establish prevalence outside the named
+population.
+
 The separate public cross-format population contains 113 unique primary
 artifacts: 48 ONNX, 20 GGUF, 18 SafeTensors, and 27 Core ML. It binds 145 source
 files and 2,926,971,262 downloaded bytes; 14 ONNX records include a matching,
@@ -73,6 +83,13 @@ index as a separate conformance class. They test selected positive and negative
 contracts and are not relabeled as measured public-artifact evidence. Keeping
 the two classes separate prevents generated fixtures from inflating public-file
 denominators.
+
+The residual ledger applies the same separation to Core ML. Its 27 public Apple
+catalog artifacts, five generated MLProgram contracts, and zero compiled-plan
+captures are three independent evidence classes. Serialized graph and
+compression evidence cannot establish MLComputePlan device usage, and an
+MLComputePlan record would still not establish executed placement without a
+runtime observation.
 
 ## Taxonomy Readiness, Not Just Format Count
 

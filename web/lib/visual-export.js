@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import {
   bottleneckDistributionData,
   boundTone,
@@ -770,10 +771,10 @@ function renderResidualContractDistortionCanvas(analysis, filename) {
 }
 
 function exportDistortionContract(analysis, row, scenario) {
-  const op = (analysis.ops || []).find((item) => item.index === row.op_index && item.name === "ADD");
+  const op = (artifactIrOperators(analysis) || []).find((item) => item.index === row.op_index && item.name === "ADD");
   if (!op) throw new Error(`ADD #${row.op_index} is unavailable for distortion export.`);
   const tensorContract = (index) => {
-    const tensor = (analysis.tensors || []).find((item) => item.index === index);
+    const tensor = (artifactIrValues(analysis) || []).find((item) => item.index === index);
     if (!tensor) throw new Error(`Tensor T${index} is unavailable for distortion export.`);
     return {
       qmin: tensor.dtype === "INT8" ? -128 : 0,
@@ -807,9 +808,9 @@ function exportMixRgb(from, to, ratio) {
 }
 
 function exportInfluenceClasses(analysis, row, contract) {
-  const op = (analysis.ops || []).find((item) => item.index === row.op_index && item.name === "ADD");
+  const op = (artifactIrOperators(analysis) || []).find((item) => item.index === row.op_index && item.name === "ADD");
   const tensorContract = (index) => {
-    const tensor = (analysis.tensors || []).find((item) => item.index === index);
+    const tensor = (artifactIrValues(analysis) || []).find((item) => item.index === index);
     const qmin = tensor?.dtype === "INT8" ? -128 : 0;
     const qmax = tensor?.dtype === "INT8" ? 127 : 255;
     return { qmin, qmax, scale: Number(tensor?.scale_sample?.[0]), zeroPoint: Number(tensor?.zero_point_sample?.[0]) };
@@ -1294,7 +1295,7 @@ function renderChainFlowCanvas(analysis, filename) {
     1180,
     height,
   );
-  const ops = analysis.ops || [];
+  const ops = artifactIrOperators(analysis) || [];
   const breaks = ops.filter((op) => op.xnnpack_chain_break);
   if (!chains.length) {
     drawEmptyState(ctx, "No conditionally delegatable XNNPACK segment was predicted for this target.", 48, y);
@@ -1315,7 +1316,7 @@ function renderChainFlowCanvas(analysis, filename) {
 }
 
 function renderQuantHeatmapCanvas(analysis, filename) {
-  const source = analysis.ops || [];
+  const source = artifactIrOperators(analysis) || [];
   const evidence = quantSummaryEvidence(analysis);
   const columns = 34;
   const tile = 24;
@@ -1367,7 +1368,7 @@ function renderStageMemoryMixCanvas(analysis, filename) {
     1180,
     height,
   );
-  const ops = analysis.ops || [];
+  const ops = artifactIrOperators(analysis) || [];
   stages.forEach((stage, index) => {
     const opIndices = Array.isArray(stage.op_indices) ? new Set(stage.op_indices) : null;
     const stageOps = opIndices

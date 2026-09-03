@@ -1,10 +1,11 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { markdownTable } from "./report-utils.js";
 import { buildDecisionCoverageLedger, decisionCoverageMarkdown } from "./decision-coverage.js";
 import { buildQuantResearchCoverage } from "./quant-research-applicability.js";
 
 export { buildDecisionCoverageLedger, decisionCoverageMarkdown } from "./decision-coverage.js";
 
-const SCHEMA = "deepbom.metric_coverage_manifest.v1.54";
+const SCHEMA = "deepbom.metric_coverage_manifest.v1.55";
 const MAX_FIELD_DISCOVERY_VISITS = 2_000_000;
 const SPECIAL_FIELD_EXPORT_ROUTES = new Map([
   ["roofline_csv", "supplemental_sources.roofline_csv"],
@@ -469,6 +470,21 @@ const REQUIRED_REPORT_FIELD_PATTERNS = new Map([
     "/onnx_domain_analysis/schema", "/onnx_domain_analysis/status",
     "/onnx_domain_analysis/standard_node_count", "/onnx_domain_analysis/external_custom_node_count",
     "/onnx_domain_analysis/ort_contrib_node_count", "/onnx_domain_analysis/scope",
+  ]],
+  ["onnx.contract_conflict", [
+    "/onnx_contract_conflict/status", "/onnx_contract_conflict/evidence_class",
+    "/onnx_contract_conflict/summary/unconditional_root_conflict_count",
+    "/onnx_contract_conflict/summary/declaration_root_conflict_count",
+    "/onnx_contract_conflict/summary/semantic_root_conflict_count",
+    "/onnx_contract_conflict/summary/condition_bound_invalid_variant_count",
+    "/onnx_contract_conflict/summary/invalid_node_output_count",
+    "/onnx_contract_conflict/summary/conditionally_invalid_node_output_count",
+    "/onnx_contract_conflict/summary/downstream_blocked_node_count",
+    "/onnx_contract_conflict/summary/blocked_mac_row_count",
+    "/onnx_contract_conflict/summary/blocked_mac_op_histogram/[]/name",
+    "/onnx_contract_conflict/summary/blocked_mac_op_histogram/[]/count",
+    "/onnx_contract_conflict/summary/unresolved_root_reference_count",
+    "/onnx_contract_conflict/interpretation_boundary", "/onnx_contract_conflict/capsule_sha256",
   ]],
   ["onnx.shape_inference", [
     "/onnx_shape_inference/schema", "/onnx_shape_inference/status", "/onnx_shape_inference/evidence_class",
@@ -1463,7 +1479,7 @@ const COMPUTATION_OBJECT_KEYS = new Set([
   "numerical_abi_propagation", "input_counterexample", "preprocessing_realizability",
   "contract_migration", "residual_step_response", "residual_contract_distortion",
   "quant_research_coverage",
-  "onnx_domain_analysis", "onnx_quantization_binding", "ort_compatibility_evidence",
+  "onnx_domain_analysis", "onnx_contract_conflict", "onnx_quantization_binding", "ort_compatibility_evidence",
   "ort_ep_portability_frontier", "onnx_shape_inference", "onnx_tensor_data_type_contract",
   "onnx_type_proto_contract", "onnx_sparse_tensor_contract", "tensorrt_static_preflight", "coreml_blob_integrity",
   "flexible_input_scenarios",
@@ -1699,6 +1715,13 @@ const SPECS = [
     pointers: ["/evidence/static_analysis/dynamic_shape_cost_contract"],
     report: "## Dynamic Shape Cost Contract", viewer: ["Overview", "Explorer"],
     method: "Replace every artifact-unknown dimension with an explicit symbol; derive exact integer tensor-payload, supported compute-MAC, and live-set polynomials without inventing numeric bounds." }),
+  spec("onnx.contract_conflict", "ONNX serialized-contract conflict capsule", {
+    formats: ["onnx"], keys: ["onnx_contract_conflict"],
+    status: (a) => a?.onnx_contract_conflict?.status === "NOT_ASSESSED" ? "not_assessed" : objectStatus(a?.onnx_contract_conflict),
+    evidenceClass: "OBSERVED/DERIVED",
+    pointers: ["/evidence/static_analysis/onnx_contract_conflict"],
+    report: "### Serialized Contract Validity", viewer: ["Overview", "Evidence capability", "Reports"],
+    method: "Normalize source-pinned ONNX declaration, semantic, condition-bound, downstream, and MAC-blocker ledgers into one artifact-bound capsule; preserve exact root references and reject stale or untraceable rows without repairing the model." }),
   spec("performance.static_posture", "Static target posture, timing estimate, and triage", {
     formats: ["tflite"], keys: ["insights", "estimated_int8_speedup", "estimated_int8_speedup_detail"],
     status: (a) => emitted(a?.insights) || hasOwn(a, "estimated_int8_speedup") ? "assessed" : "not_assessed", evidenceClass: "HEURISTIC/ESTIMATED",
@@ -2120,7 +2143,7 @@ function requiredReportFieldApplies(metricId, path, analysis) {
     }
   }
   if (metricId === "memory.cache_payload") {
-    return (analysis?.ops || []).some((op) => op?.cache_payload?.status === "assessed");
+    return (artifactIrOperators(analysis) || []).some((op) => op?.cache_payload?.status === "assessed");
   }
   if (metricId === "artifact.size" && path === "/size_breakdown/zero_constant_byte_ratio") {
     return analysis?.size_breakdown?.metrics?.zero_constant_byte_ratio?.status === "assessed";

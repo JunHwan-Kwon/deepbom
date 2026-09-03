@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 function tensorMeta(analysis, tensorId, tensors = tensorByIndex(analysis)) {
   const t = tensors.get(Number(tensorId));
   if (!t) return { bytes: 0, dtype: null };
@@ -18,7 +19,7 @@ function tensorMeta(analysis, tensorId, tensors = tensorByIndex(analysis)) {
 }
 
 export function collectFullGraph(analysis, graphIndex) {
-  const ops = Array.isArray(analysis?.ops) ? analysis.ops : [];
+  const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
   const tensors = tensorByIndex(analysis);
   const nodeSet = new Set(ops.map((op) => op.index));
   const nodes = ops.map((op) => ({
@@ -40,7 +41,7 @@ export function collectFullGraph(analysis, graphIndex) {
 }
 
 export function collectNeighborhood(analysis, graphIndex, centerIndex, depth) { // analysis used for tensor bytes
-  const opByIndex = new Map((Array.isArray(analysis?.ops) ? analysis.ops : []).map((op) => [Number(op.index), op]));
+  const opByIndex = new Map((Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : []).map((op) => [Number(op.index), op]));
   const tensors = tensorByIndex(analysis);
   const nodes = new Map();
   const queue = [{ index: centerIndex, column: 0, distance: 0 }];
@@ -87,7 +88,7 @@ export function collectNeighborhood(analysis, graphIndex, centerIndex, depth) { 
 }
 
 function tensorByIndex(analysis) {
-  return new Map((Array.isArray(analysis?.tensors) ? analysis.tensors : []).map((tensor, position) => {
+  return new Map((Array.isArray(artifactIrValues(analysis)) ? artifactIrValues(analysis) : []).map((tensor, position) => {
     const candidate = Number(tensor?.index);
     return [Number.isSafeInteger(candidate) && candidate >= 0 ? candidate : position, tensor];
   }));

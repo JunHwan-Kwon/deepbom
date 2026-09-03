@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import {
   formatBytes,
   formatNumber,
@@ -301,8 +302,34 @@ function dynamicShapePanel(analysis) {
   return node;
 }
 
+function onnxContractConflictPanel(analysis) {
+  const capsule = analysis?.onnx_contract_conflict;
+  if (!capsule || capsule.status === "ASSESSED_NO_CONFLICT") return null;
+  const node = panel(
+    capsule.status === "INVALID_CONTRACT" ? "Invalid Serialized Contract" : "Contract Validity Not Assessed",
+    capsule.status === "INVALID_CONTRACT"
+      ? "Root conflicts and their downstream effects are preserved without inventing shape or MAC values."
+      : "The required ONNX shape and dynamic-cost ledgers were not both available.",
+    "onnx-contract-conflict",
+    true,
+  );
+  panelStatus(node, capsule.status, capsule.status === "INVALID_CONTRACT" ? "OBSERVED" : "NOT_ASSESSABLE");
+  const summary = capsule.summary || {};
+  const body = element("div", "artifact-bar-list compact-bars");
+  const rows = [
+    ["Unconditional roots", summary.unconditional_root_conflict_count || 0, "serialized declaration/inference or operator-semantic conflicts"],
+    ["Condition-bound invalid variants", summary.condition_bound_invalid_variant_count || 0, "invalid only under the preserved shape predicate"],
+    ["Downstream blocked nodes", summary.downstream_blocked_node_count || 0, "effects kept separate from root causes"],
+    ["Blocked MAC rows", summary.blocked_mac_row_count || 0, "excluded from exact total-MAC claims"],
+  ];
+  const maximum = Math.max(1, ...rows.map((row) => Number(row[1] || 0)));
+  for (const [label, value, detail] of rows) body.append(barRow(label, formatNumber(value), Number(value) / maximum, detail));
+  node.append(body, element("p", "artifact-panel-footnote", `Capsule ${String(capsule.capsule_sha256 || "not bound").slice(0, 16)}...; complete root, affected-value, and blocked-op rows remain in exported evidence.`));
+  return node;
+}
+
 function kernelConsumerText(analysis, tensorIndex) {
-  const consumers = (analysis?.ops || [])
+  const consumers = (artifactIrOperators(analysis) || [])
     .filter((op) => (op.inputs || []).map(Number).includes(Number(tensorIndex)))
     .slice(0, 3)
     .map((op) => `#${String(op.index).padStart(3, "0")} ${op.name}`);
@@ -320,7 +347,7 @@ function largestKernelPanel(analysis) {
     "largest-kernels",
   );
   const rows = (weightContainer
-    ? (analysis?.tensors || []).map((tensor, index) => ({ index: Number(tensor?.index ?? index), tensor }))
+    ? (artifactIrValues(analysis) || []).map((tensor, index) => ({ index: Number(tensor?.index ?? index), tensor }))
     : classifyTensorRoles(analysis).filter(({ role }) => role === "kernel"))
     .filter(({ tensor }) => Number(weightContainer ? tensor?.byte_length : tensor?.buffer_data_length) > 0)
     .map(({ index, tensor }) => ({ index, tensor, bytes: Number(weightContainer ? tensor.byte_length : tensor.buffer_data_length) }))
@@ -433,7 +460,7 @@ function topologyPanel(analysis) {
     "Topological operator depth and tensor-consumer branch structure.",
     "graph-topology",
   );
-  const ops = Array.isArray(analysis?.ops) ? analysis.ops : [];
+  const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
   const annotated = ops.filter((op) => op?.topo_role || Number.isFinite(Number(op?.topo_depth)));
   if (!annotated.length) {
     panelStatus(node, "not emitted", "NOT_ASSESSABLE");
@@ -449,7 +476,7 @@ function topologyPanel(analysis) {
     maxDepth = Math.max(maxDepth, Number(op.topo_depth || 0));
     maxFanOut = Math.max(maxFanOut, Number(op.topo_fan_out_max || 0));
   }
-  const tensors = new Map((analysis?.tensors || []).map((tensor, index) => [
+  const tensors = new Map((artifactIrValues(analysis) || []).map((tensor, index) => [
     Number.isInteger(Number(tensor?.index)) ? Number(tensor.index) : index,
     tensor,
   ]));
@@ -679,6 +706,7 @@ export function artifactOverviewPanels(analysis, options = {}) {
   return [
     operationCompositionPanel(analysis),
     interfacePanel(analysis),
+    onnxContractConflictPanel(analysis),
     dynamicShapePanel(analysis),
     largestKernelPanel(analysis),
     scaleSpreadPanel(analysis, options),

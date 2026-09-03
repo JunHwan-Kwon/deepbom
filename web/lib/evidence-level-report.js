@@ -1,3 +1,4 @@
+import { artifactIrValues } from "./artifact-ir-selectors.js";
 export const EVIDENCE_LEVEL_PROFILE_SCHEMA = "deepbom.evidence_level_profile.v1";
 
 export const EVIDENCE_LEVEL_PROFILES = Object.freeze([
@@ -243,7 +244,7 @@ function buildScopedFacts(analysis, runtimeEvidence) {
   addFact(facts, "Format", analysis.format, "OBSERVED");
   addFact(facts, "Serialized bytes", finiteInteger(analysis.file_size_bytes ?? analysis.file_size), "OBSERVED");
   addFact(facts, "Operators", finiteInteger(analysis.operator_count ?? analysis.total_ops), "OBSERVED");
-  addFact(facts, "Tensors", finiteInteger(analysis.tensor_count ?? analysis.tensors?.length), "OBSERVED");
+  addFact(facts, "Tensors", finiteInteger(analysis.tensor_count ?? artifactIrValues(analysis)?.length), "OBSERVED");
   addFact(facts, "Inputs / outputs", Array.isArray(analysis.inputs) && Array.isArray(analysis.outputs)
     ? `${analysis.inputs.length} / ${analysis.outputs.length}` : null, "OBSERVED");
   addFact(facts, "Assessed MACs", finiteInteger(analysis.total_macs), "DERIVED");

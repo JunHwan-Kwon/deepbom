@@ -72,6 +72,7 @@ corpus/huggingface-community-corpus.v1.summary.json
 corpus/measurements/README.md
 corpus/measurements/public-model-corpus-v1-final/corpus-sweep.json.gz
 corpus/measurements/quantization-interface-public-50-repeat2/quant-policy-boundary-sweep.json.gz
+corpus/onnx-contract-conflict-corpus.v1.json.gz
 corpus/onnx-extension-contract-corpus.v1.json
 corpus/onnx-extension-contract-corpus/README.md
 corpus/onnx-extension-contract-corpus/deepbom-static-per-axis-qdq.onnx
@@ -99,6 +100,7 @@ docs/CYCLONEDX_20_QUANTIZATION_CONTRIBUTION.md
 docs/DELIVERY_OPERATIONS.md
 docs/KNOWN_ISSUES.md
 docs/MODEL_FREE_BUG_REPORTING.md
+docs/ONNX_CONTRACT_CONFLICT_CAPSULE.md
 docs/PROJECT_STATUS.md
 docs/PUBLIC_MULTIFORMAT_CORPUS.md
 docs/PUBLIC_PRIVATE_BOUNDARY.md
@@ -111,6 +113,7 @@ docs/SUPPORT_MATRIX.md
 docs/ZENODO_RELEASE.md
 docs/native-runtime-capture.md
 docs/schemas/deepbom-artifact-ir-v2.schema.json
+docs/schemas/deepbom-onnx-contract-conflict-capsule-v1.schema.json
 docs/zenodo-validation-metadata.json
 examples/expected-output/README.md
 examples/expected-output/gpu-partition-probe.expected.json
@@ -174,6 +177,7 @@ reference/xnnpack-readme/README-v2.21.0.md
 reference/xnnpack-readme/rule-manifest-v2.21.0.json
 reference/xnnpack-readme/version-diff.json
 release/version.json
+requirements-onnx-corpus.txt
 scripts/bootstrap-instrumented-runtime.mjs
 scripts/browser-launch.mjs
 scripts/build-cargo-engine-release.mjs
@@ -181,6 +185,7 @@ scripts/build-channel-artifacts.mjs
 scripts/build-coreml-legacy-quantization-corpus.mjs
 scripts/build-cyclonedx-20-quantization-evidence.mjs
 scripts/build-cyclonedx-generalization-evidence.mjs
+scripts/build-onnx-contract-conflict-corpus.mjs
 scripts/build-onnx-extension-contract-corpus.mjs
 scripts/build-pages.mjs
 scripts/build-public-multiformat-corpus-manifest.mjs
@@ -215,6 +220,7 @@ scripts/check-artifact-ir-import-boundary.mjs
 scripts/check-artifact-ir.mjs
 scripts/check-assert.mjs
 scripts/check-backend-placement-projection.mjs
+scripts/check-bootstrap-retry.mjs
 scripts/check-browser-import-contract.mjs
 scripts/check-build-metadata.mjs
 scripts/check-calibration-validation-ledger.mjs
@@ -312,6 +318,8 @@ scripts/check-offline-device-controller.mjs
 scripts/check-on-device-llm-v2.mjs
 scripts/check-on-device-llm-viewer.mjs
 scripts/check-onnx-container-inference.mjs
+scripts/check-onnx-contract-conflict-corpus.mjs
+scripts/check-onnx-contract-conflict.mjs
 scripts/check-onnx-domain-analysis.mjs
 scripts/check-onnx-domain-viewer.mjs
 scripts/check-onnx-extended-shape-inference.mjs
@@ -462,6 +470,7 @@ scripts/prepare-instrumented-runtime.mjs
 scripts/prepare-pinned-llama-runtime.mjs
 scripts/prepare-pinned-ort-node-runtime.mjs
 scripts/private-wasm-modules.mjs
+scripts/probe-onnx-contract-reference.py
 scripts/public-model-corpus-lib.mjs
 scripts/public-multiformat-corpus-lib.mjs
 scripts/public-multiformat-corpus-worker.mjs
@@ -603,6 +612,7 @@ web/lib/artifact-diff.js
 web/lib/artifact-evidence-envelope.js
 web/lib/artifact-ir-context.js
 web/lib/artifact-ir-runtime.js
+web/lib/artifact-ir-selectors.js
 web/lib/artifact-ir.js
 web/lib/artifact-ir/internal/architecture.js
 web/lib/artifact-ir/internal/constants.js
@@ -729,6 +739,7 @@ web/lib/on-device-llm-runtime-manifest.js
 web/lib/on-device-llm-view.js
 web/lib/onnx-benchmark.js
 web/lib/onnx-container-inference.js
+web/lib/onnx-contract-conflict.js
 web/lib/onnx-dimension-expression.js
 web/lib/onnx-domain-analysis.js
 web/lib/onnx-domain-viewer.js

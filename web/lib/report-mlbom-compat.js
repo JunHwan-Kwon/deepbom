@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import {
   contractDynamicDimSummary,
   contractHasDynamicDims,
@@ -32,7 +33,7 @@ function compact(rows) {
 function predictedNonDelegatedOpCounts(analysis) {
   if (String(analysis?.format || "tflite").toLowerCase() !== "tflite") return null;
   const counts = {};
-  for (const op of analysis?.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     if (Number(op.xnnpack_chain_id) >= 0) continue;
     const name = text(op.name) || "UNKNOWN";
     counts[name] = (counts[name] || 0) + 1;
@@ -86,6 +87,11 @@ export function buildMlBomCompatibilityProjection(analysis, {
     property("mlbom:model:macAssessmentReason", macCoverage.reason),
     property("mlbom:model:macAssessedComputeOps", finite(macCoverage.assessed_compute_ops)),
     property("mlbom:model:macComputeOps", finite(macCoverage.compute_ops)),
+    property("deepbom:model:serializedContractStatus", analysis?.onnx_contract_conflict?.status),
+    property("deepbom:model:contractConflictCapsuleSha256", analysis?.onnx_contract_conflict?.capsule_sha256),
+    property("deepbom:model:contractConflictRootCount", finite(analysis?.onnx_contract_conflict?.summary?.unconditional_root_conflict_count)),
+    property("deepbom:model:contractConflictConditionalVariantCount", finite(analysis?.onnx_contract_conflict?.summary?.condition_bound_invalid_variant_count)),
+    property("deepbom:model:contractConflictBlockedMacRows", finite(analysis?.onnx_contract_conflict?.summary?.blocked_mac_row_count)),
     property("mlbom:model:quantizationClassification", quant.classification),
     property("mlbom:model:fullIntegerQuantized", typeof quant.full_integer === "boolean" ? quant.full_integer : null),
     property("mlbom:model:quantizedComputeMacRatio", quantizedRatio),

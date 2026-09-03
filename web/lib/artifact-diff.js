@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 export const GRAPH_DIFF_SNAPSHOT_SCHEMA = "deepbom.graph_diff_snapshot.v1";
 export const GRAPH_DIFF_SCHEMA = "deepbom.artifact_graph_diff.v1";
 
@@ -66,8 +67,8 @@ function snapshotGraphRows(analysis) {
   const artifactSha256 = String(artifactIr?.artifact?.sha256 || analysis?.model_sha256 || "");
   if (artifactIr?.graph?.status !== "serialized") {
     return {
-      ops: Array.isArray(analysis?.ops) ? analysis.ops : [],
-      tensors: Array.isArray(analysis?.tensors) ? analysis.tensors : [],
+      ops: Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [],
+      tensors: Array.isArray(artifactIrValues(analysis)) ? artifactIrValues(analysis) : [],
       artifactSha256,
       format,
     };
@@ -75,8 +76,8 @@ function snapshotGraphRows(analysis) {
   const primaryScopeRef = artifactIr.graph.primary_scope_ref;
   const canonicalValues = artifactIr.graph.values.filter((row) => row.scope_ref === primaryScopeRef);
   const valueByRef = new Map(canonicalValues.map((row) => [row.id, row]));
-  const nativeOps = indexedRows(analysis?.ops);
-  const nativeTensors = indexedRows(analysis?.tensors);
+  const nativeOps = indexedRows(artifactIrOperators(analysis));
+  const nativeTensors = indexedRows(artifactIrValues(analysis));
   const tensors = canonicalValues.map((value) => ({
     ...(nativeTensors.get(value.native_index) || {}),
     index: value.native_index,

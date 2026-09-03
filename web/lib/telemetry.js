@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import { sha256Hex } from "./hash.js";
 import { stableStringify, tensorShapeText } from "./format.js";
 
@@ -16,14 +17,14 @@ export function buildStructureTelemetryDraft(analysis, {
     xnnpack_chain_breaks: stage.xnnpack_chain_breaks || 0,
     patterns: stage.patterns || [],
   }));
-  const boundMix = (analysis?.ops || []).reduce((acc, op) => {
+  const boundMix = (artifactIrOperators(analysis) || []).reduce((acc, op) => {
     const key = op.static_bound_guess || "unknown";
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
   const patterns = (analysis?.patterns || []).map((pattern) => pattern.name || "").filter(Boolean);
-  const tensorsById = Object.fromEntries((analysis?.tensors || []).map((t) => [t.index, t]));
-  const opSequence = (analysis?.ops || []).slice(0, 1200).map((op) => {
+  const tensorsById = Object.fromEntries((artifactIrValues(analysis) || []).map((t) => [t.index, t]));
+  const opSequence = (artifactIrOperators(analysis) || []).slice(0, 1200).map((op) => {
     const inTensors = (op.inputs || []).map((idx) => tensorsById[idx]).filter(Boolean);
     const outTensors = (op.outputs || []).map((idx) => tensorsById[idx]).filter(Boolean);
     return {
@@ -54,8 +55,8 @@ export function buildStructureTelemetryDraft(analysis, {
     effective_chain_breaks: Number(analysis?.xnnpack_effective_chain_breaks || 0),
     structural_chain_breaks: Number(analysis?.xnnpack_structural_chain_breaks || 0),
     total_macs: analysis?.total_macs == null ? null : Number(analysis.total_macs),
-    op_count: (analysis?.ops || []).length,
-    tensor_count: Number(analysis?.tensor_count || (analysis?.tensors || []).length || 0),
+    op_count: (artifactIrOperators(analysis) || []).length,
+    tensor_count: Number(analysis?.tensor_count || (artifactIrValues(analysis) || []).length || 0),
     input_contract: (analysis?.inputs || []).map((tensor) => `${tensor.dtype}${tensorShapeText(tensor)}`),
     output_contract: (analysis?.outputs || []).map((tensor) => `${tensor.dtype}${tensorShapeText(tensor)}`),
     bound_mix: boundMix,

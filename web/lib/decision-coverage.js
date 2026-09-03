@@ -12,7 +12,7 @@ const DECISION_DOMAINS = Object.freeze([
       "artifact.identity", "artifact.metadata", "artifact.size", "artifact.byte_integrity", "artifact.canonical_ir", "graph.inventory", "architecture.blocks", "contract.io", "tflite.sparse_storage", "tflite.subgraph_inventory", "tflite.subgraph_deep_analysis",
       "serialized.container_contract", "coreml.serialized_contract", "executorch.serialized_contract", "llm.on_device_contract",
       "runtime.artifact_requirements", "weights.integrity", "onnx.domains", "onnx.external_data",
-      "onnx.shape_inference", "onnx.tensor_data_types", "onnx.type_proto_contract", "onnx.sparse_tensor_contract",
+      "onnx.shape_inference", "onnx.tensor_data_types", "onnx.type_proto_contract", "onnx.sparse_tensor_contract", "onnx.contract_conflict",
     ]),
     interpretation_boundary: "Closes artifact-visible identity, structure, ABI, payload, and bounded source-pinned shape/type contracts. Missing sidecars, dynamic values, unsupported schemas, and release lineage remain explicit residuals.",
   }),

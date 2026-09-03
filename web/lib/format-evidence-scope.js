@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { buildExecutionPlacementEvidence } from "./execution-placement-evidence.js";
 
 const FORMAT_SCOPES = Object.freeze({
@@ -95,7 +96,7 @@ export function formatEvidenceScope(format, { analysis = null, runtimeEvidence =
   const configurationLevel = placement?.levels?.find((level) => level.id === "configuration_bound");
   const runtimeConfigurationBound = Boolean(configurationLevel && !["UNBOUND", "EXTERNAL"].includes(configurationLevel.state));
   const placementEstimateBound = placement?.flow?.evidence_basis === "ANTICIPATED_MLCOMPUTEPLAN";
-  const graphDecoded = Array.isArray(analysis?.ops) && analysis.ops.length > 0;
+  const graphDecoded = Array.isArray(artifactIrOperators(analysis)) && artifactIrOperators(analysis).length > 0;
   const depth = id === "coreml" && analysis && !graphDecoded
     ? "Model/package contract audit; serialized graph not decoded for this model type"
     : scope.depth;
@@ -149,7 +150,7 @@ export function renderStagedArtifactContext(doc, format) {
 
 export function formatWorkflowApplicability(format, analysis = null) {
   const id = normalizedFormat(format || analysis?.format);
-  const graph = id === "tflite" || id === "onnx" || id === "executorch" && (analysis?.ops || []).length > 0 || id === "coreml" && (analysis?.ops || []).length > 0;
+  const graph = id === "tflite" || id === "onnx" || id === "executorch" && (artifactIrOperators(analysis) || []).length > 0 || id === "coreml" && (artifactIrOperators(analysis) || []).length > 0;
   const runtime = id === "tflite" || id === "onnx";
   const tfliteResearch = id === "tflite";
   return {

@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { formatBytes, formatPercent } from "./format.js";
 
 export const EXPLORER_QUESTION_SCHEMA = "deepbom.explorer_question_entry.v1";
@@ -97,7 +98,7 @@ function fallbackQuestion(analysis, glance) {
       auditTab: "accelerator",
     };
   }
-  const breaks = (analysis?.ops || []).filter((op) => op?.xnnpack_chain_break);
+  const breaks = (artifactIrOperators(analysis) || []).filter((op) => op?.xnnpack_chain_break);
   const reasonCounts = [...breaks.reduce((counts, op) => {
     const reason = String(op.xnnpack_break_class || op.xnnpack_reason || op.name || "unclassified");
     counts.set(reason, (counts.get(reason) || 0) + 1);
@@ -158,7 +159,7 @@ function runtimeQuestion(analysis, runtimeEvidence) {
     auditTab: String(analysis?.format || "").toLowerCase() === "tflite" ? "xnnpack" : "accelerator",
   };
   const mapped = finiteNonNegative(assignment.mapped_op_count ?? assignment.assignment_count);
-  const total = finiteNonNegative(analysis?.operator_count ?? analysis?.ops?.length);
+  const total = finiteNonNegative(analysis?.operator_count ?? artifactIrOperators(analysis)?.length);
   return {
     id: "runtime",
     question: "Which runtime evidence is still missing?",

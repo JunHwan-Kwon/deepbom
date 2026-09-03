@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import { formatBytes, formatDrift, formatPercent, formatPercentRange, formatUs, padOp } from "./format.js";
 import { opPrecisionLabel, predictedPartitionBoundaryInventory, predictedPartitionBoundaryPayloadForOp } from "./analysis.js";
 import { decodeXnnpReason } from "./reason-codes.js";
@@ -75,7 +76,7 @@ export function parseRuntimeAssignmentDocument(text, analysis, { fileSha256 = nu
     throw new Error("Runtime assignment JSON must contain assignments, unless a verified native ORT runtime graph explicitly leaves original-graph mapping unresolved.");
   }
   if (source.assignments.length > 100000) throw new Error("Runtime assignment contains too many rows.");
-  const opByIndex = new Map((analysis?.ops || []).map((op) => [op.index, op]));
+  const opByIndex = new Map((artifactIrOperators(analysis) || []).map((op) => [op.index, op]));
   const seen = new Set();
   const assignments = source.assignments.map((item) => {
     const opIndex = Number(item?.op_index);
@@ -185,8 +186,8 @@ export function parseRuntimeAssignmentDocument(text, analysis, { fileSha256 = nu
     runtime_memory: null,
     arena_reconciliation: null,
     assignment_count: assignments.length,
-    graph_op_count: (analysis?.ops || []).length,
-    coverage_ratio: assignments.length / Math.max(1, (analysis?.ops || []).length),
+    graph_op_count: (artifactIrOperators(analysis) || []).length,
+    coverage_ratio: assignments.length / Math.max(1, (artifactIrOperators(analysis) || []).length),
     assignments,
     interpretation_boundary: nativeRuntimeGraphOnly
       ? "Observed native runtime-graph execution is bound to the artifact and selected runtime binary, but fused or renamed runtime nodes are not assigned to original graph ops. Provider-level runtime-node evidence does not establish original-op placement, microkernel identity, or physical transfer bytes."
@@ -342,7 +343,7 @@ export function buildRuntimeAssignmentTemplate(analysis) {
       closure_rule: "runtime_architecture_identity + compile_configuration + lowering_shape + runtime_dispatch must be present in one artifact/build/invocation-bound capture",
       attestation_boundary: "v1 requires attestation_status=not_attested; a browser-verifiable signature profile is not yet defined",
     },
-    graph_ops: (analysis?.ops || []).map((op) => ({
+    graph_ops: (artifactIrOperators(analysis) || []).map((op) => ({
       op_index: Number(op.index),
       op_name: op.name || "",
       input_tensor_ids: (op.inputs || []).map(Number),
@@ -886,7 +887,7 @@ function validateOrtRuntimeAdapter(adapter, normalized, analysis) {
   };
   const methods = {};
   for (const assignment of normalized.assignments) {
-    const op = (analysis?.ops || []).find((candidate) => Number(candidate.index) === assignment.op_index);
+    const op = (artifactIrOperators(analysis) || []).find((candidate) => Number(candidate.index) === assignment.op_index);
     if (!assignment.mapping_method || assignment.runtime_node_index == null || !assignment.runtime_node_name || assignment.sample_count == null || assignment.duration_sum_us == null) {
       throw new Error(`Runtime assignment adapted op #${assignment.op_index} is missing mapping or duration aggregation evidence.`);
     }
@@ -1653,7 +1654,7 @@ function validatedTimestamp(value, required) {
 }
 
 export function deriveRuntimeAssignmentComparison(analysis, runtimeEvidence) {
-  const ops = analysis?.ops || [];
+  const ops = artifactIrOperators(analysis) || [];
   const predictionApplicable = String(analysis?.format || "tflite").toLowerCase() === "tflite";
   const runtimeByOp = new Map((runtimeEvidence?.assignments || []).map((item) => [Number(item.op_index), item]));
   const opComparisons = ops.map((op) => compareOpAssignment(op, runtimeByOp.get(Number(op.index)), predictionApplicable));
@@ -1795,11 +1796,11 @@ function compareOpAssignment(op, runtime, predictionApplicable) {
 }
 
 function deriveRuntimeBoundaryComparisons(analysis, runtimeByOp, predictionApplicable) {
-  const tensors = new Map((analysis?.tensors || []).map((tensor) => [Number(tensor.index), tensor]));
+  const tensors = new Map((artifactIrValues(analysis) || []).map((tensor) => [Number(tensor.index), tensor]));
   const producers = new Map();
-  for (const op of analysis?.ops || []) for (const index of op.outputs || []) if (Number(index) >= 0) producers.set(Number(index), op);
+  for (const op of artifactIrOperators(analysis) || []) for (const index of op.outputs || []) if (Number(index) >= 0) producers.set(Number(index), op);
   const edges = [];
-  for (const consumer of analysis?.ops || []) {
+  for (const consumer of artifactIrOperators(analysis) || []) {
     for (const tensorIndex of new Set((consumer.inputs || []).map(Number).filter((index) => index >= 0))) {
       const producer = producers.get(tensorIndex);
       const tensor = tensors.get(tensorIndex);
@@ -2147,7 +2148,7 @@ export function renderKernelInspector({
     button.hidden = !predictionApplicable;
   }
   const normalizedQuery = String(query || "").trim().toLowerCase();
-  const allOps = analysis?.ops || [];
+  const allOps = artifactIrOperators(analysis) || [];
   const ortProviders = analysis?.ort_compatibility_evidence?.execution_providers || [];
   const selectorAssessment = String(analysis?.xnnpack_selector_assessment_status || "not_reported");
   const rows = allOps.filter((op) => {
@@ -2264,7 +2265,7 @@ function renderSelectorDecisionLedger(container, summaryText, analysis, predicti
   }
   const hotspots = document.createElement("div");
   hotspots.className = "kernel-selector-hotspots";
-  const rows = (analysis.ops || [])
+  const rows = (artifactIrOperators(analysis) || [])
     .filter((op) => String(op.xnnpack_kernel_evidence_class || "").startsWith("SOURCE_ENUMERATED"))
     .sort((left, right) => Number(right.channel_tail_overhead_percent_max || 0) - Number(left.channel_tail_overhead_percent_max || 0)
       || (right.xnnpack_kernel_candidates || []).length - (left.xnnpack_kernel_candidates || []).length
@@ -2395,7 +2396,7 @@ function renderOrtSourceLedger(container, context, analysis, onSelect, onLoadSou
   }
   const hotspots = document.createElement("div");
   hotspots.className = "kernel-selector-hotspots";
-  const rows = (analysis.ops || []).map((op) => ({ op, epRows: ortEpRowsForOp(analysis, op.index) }))
+  const rows = (artifactIrOperators(analysis) || []).map((op) => ({ op, epRows: ortEpRowsForOp(analysis, op.index) }))
     .filter(({ epRows }) => epRows.some((row) => !row.source_candidate_after_artifact_precheck || row.artifact_precheck_status === "ARTIFACT_PRECHECK_UNRESOLVED"))
     .sort((left, right) => Number(right.epRows.some((row) => row.definite_source_exclusion)) - Number(left.epRows.some((row) => row.definite_source_exclusion)) || left.op.index - right.op.index)
     .slice(0, 8);

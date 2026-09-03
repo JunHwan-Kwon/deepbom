@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import {
   modelQuantizationStatus,
   quantizationScopeExplanation,
@@ -390,7 +391,7 @@ function quantizationSummary(analysis) {
   const declaredTensorTypes = Array.isArray(analysis?.tensor_types) ? analysis.tensor_types : [];
   const tensorTypeCounts = declaredTensorTypes.length
     ? declaredTensorTypes
-    : Object.entries((analysis?.tensors || []).reduce((counts, tensor) => {
+    : Object.entries((artifactIrValues(analysis) || []).reduce((counts, tensor) => {
       const dtype = text(tensor?.dtype || "UNKNOWN").toUpperCase();
       counts[dtype] = Number(counts[dtype] || 0) + 1;
       return counts;
@@ -534,8 +535,8 @@ function findingsSummary(analysis, options = {}) {
 }
 
 function kernelBindings(analysis) {
-  const tensorByIndex = new Map((analysis?.tensors || []).map((tensor) => [Number(tensor.index), tensor]));
-  return (analysis?.ops || []).flatMap((op) => {
+  const tensorByIndex = new Map((artifactIrValues(analysis) || []).map((tensor) => [Number(tensor.index), tensor]));
+  return (artifactIrOperators(analysis) || []).flatMap((op) => {
     const name = text(op?.name).toUpperCase();
     if (!TFLITE_KERNEL_OPS.has(name)) return [];
     const weightIndex = integer(op?.inputs?.[1]);
@@ -991,6 +992,11 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
     ["deepbom:artifactEvidenceEnvelopeSha256", artifactEnvelope.envelope_sha256],
     ["deepbom:artifactIrSchema", artifactIr?.schema],
     ["deepbom:artifactIrSha256", artifactIr?.artifact_ir_sha256],
+    ["deepbom:model:serializedContractStatus", analysis?.onnx_contract_conflict?.status],
+    ["deepbom:model:contractConflictCapsuleSha256", analysis?.onnx_contract_conflict?.capsule_sha256],
+    ["deepbom:model:contractConflictRootCount", analysis?.onnx_contract_conflict?.summary?.unconditional_root_conflict_count],
+    ["deepbom:model:contractConflictConditionalVariantCount", analysis?.onnx_contract_conflict?.summary?.condition_bound_invalid_variant_count],
+    ["deepbom:model:contractConflictBlockedMacRows", analysis?.onnx_contract_conflict?.summary?.blocked_mac_row_count],
     ["deepbom:model:cpuCostTargetBindingSource", artifactEnvelope.cpu_cost_target_binding?.binding_source],
     ["deepbom:model:cpuCostTargetHostObserved", artifactEnvelope.cpu_cost_target_binding?.host_observed],
     ["deepbom:model:cpuCostTargetProfileId", artifactEnvelope.cpu_cost_target_binding?.profile_id],
@@ -1263,7 +1269,7 @@ function runtimeBuildRequirements(analysis, runtimeEvidence) {
       interpretation_boundary: risk.interpretation_boundary || null,
     })) : (() => {
       const requirements = new Map();
-      for (const op of analysis?.ops || []) {
+      for (const op of artifactIrOperators(analysis) || []) {
         const requirement = text(op?.xnnpack_build_requirement);
         if (!requirement || Number(op?.xnnpack_chain_id) < 0) continue;
         if (!requirements.has(requirement)) requirements.set(requirement, []);

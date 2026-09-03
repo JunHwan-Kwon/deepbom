@@ -1,3 +1,4 @@
+import { artifactIrValues } from "./artifact-ir-selectors.js";
 const INTEGER_DTYPES = /^(?:U|I)\d+$/;
 const FLOAT_DTYPES = /^(?:F|BF)\d+/;
 
@@ -69,7 +70,7 @@ function safeTensorsTile(tensor) {
 export function serializedTensorPresentation(analysis = {}) {
   const format = String(analysis.format || "").toLowerCase();
   if (!["gguf", "safetensors"].includes(format)) return null;
-  const source = Array.isArray(analysis.tensors) ? analysis.tensors : [];
+  const source = Array.isArray(artifactIrValues(analysis)) ? artifactIrValues(analysis) : [];
   const tiles = source.map(format === "gguf" ? ggufTile : safeTensorsTile);
   const assessedBytes = tiles.reduce((sum, tensor) =>
     sum + (Number.isSafeInteger(tensor.byte_length) && tensor.byte_length >= 0 ? tensor.byte_length : 0), 0);

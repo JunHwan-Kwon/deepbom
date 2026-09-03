@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { decodeXnnpReason, decodeRoofReason } from "./reason-codes.js";
 export { markdownWithModelSha256 } from "./report-utils.js";
 
@@ -39,7 +40,7 @@ export function buildStaticAuditMarkdown(analysis, modelSha256 = "") {
   lines.push("## Summary");
   if (modelSha256) lines.push(`- Model SHA-256: \`${modelSha256}\``);
   lines.push(`- Target: **${tp.label || tp.id || "unknown"}**`);
-  const summaryOps = analysis.ops || [];
+  const summaryOps = artifactIrOperators(analysis) || [];
   const totalOpCount = analysis.operator_count ?? summaryOps.length;
   const delegatedOps = summaryOps.filter((op) => Number(op.xnnpack_chain_id) >= 0).length;
   const nonDelegatedOps = totalOpCount - delegatedOps;
@@ -106,7 +107,7 @@ export function buildStaticAuditMarkdown(analysis, modelSha256 = "") {
   const poolingReductionBoundaryCount = boundaryOps.filter((op) => poolingReductionBoundaryNames.has(op.name)).length;
   const otherNonStructuralBoundaryCount = boundaryOps.length - structuralBoundaryCount - poolingReductionBoundaryCount;
   lines.push(`- Boundary operator categories: pooling/reduction ${poolingReductionBoundaryCount} · structural/view ${structuralBoundaryCount} · other non-structural ${otherNonStructuralBoundaryCount}.`);
-  const fallback = (analysis.ops || []).filter(op => !op.xnnpack_supported);
+  const fallback = (artifactIrOperators(analysis) || []).filter(op => !op.xnnpack_supported);
   if (fallback.length > 0) {
     lines.push("- Predicted fallback ops:");
     for (const op of fallback.slice(0, 20)) {
@@ -123,7 +124,7 @@ export function buildStaticAuditMarkdown(analysis, modelSha256 = "") {
   lines.push("");
   lines.push("| Op | MACs | Bytes | Intensity | Posture (heuristic band) | Reason |");
   lines.push("|---|---|---|---|---|---|");
-  const roofOps = (analysis.ops || [])
+  const roofOps = (artifactIrOperators(analysis) || [])
     .filter(op => (op.estimated_ops ?? 0) > 0 || (op.estimated_bytes ?? 0) > 0)
     .slice(0, 30);
   for (const op of roofOps) {
@@ -150,7 +151,7 @@ export function buildStaticAuditMarkdown(analysis, modelSha256 = "") {
   lines.push("");
 
   lines.push("## Top MAC Consumers");
-  const topMac = (analysis.ops || [])
+  const topMac = (artifactIrOperators(analysis) || [])
     .filter(op => (op.macs ?? 0) > 0)
     .sort((a, b) => (b.macs ?? 0) - (a.macs ?? 0))
     .slice(0, 10);
@@ -161,7 +162,7 @@ export function buildStaticAuditMarkdown(analysis, modelSha256 = "") {
 
   if (analysis.quant_hole_count > 0) {
     lines.push("## Activation Precision Boundaries");
-    const holes = (analysis.ops || []).filter(op => op.quant_hole);
+    const holes = (artifactIrOperators(analysis) || []).filter(op => op.quant_hole);
     for (const op of holes.slice(0, 20)) {
       lines.push(`- ${op.name} [${op.index}]: ${op.quantization_detail || ""}`);
     }

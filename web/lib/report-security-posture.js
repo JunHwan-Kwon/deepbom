@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { formatBytes, formatNumber, maxBy, padOp } from "./format.js";
 import { buildAnalyzerMetadata, ANALYZER_METADATA } from "./report-metadata.js";
 import { collectArtifactIntegrity } from "./report-integrity.js";
@@ -17,8 +18,8 @@ export function buildSecurityPostureEvidence({
   const dynamicInputs = (analysis?.inputs || []).filter((tensor) =>
     [tensor.shape, tensor.shape_signature].some((shape) => Array.isArray(shape) && shape.some((dim) => dim < 0)),
   );
-  const topBytes = maxBy((analysis?.ops || []).filter((op) => op.estimated_bytes != null), (op) => Number(op.estimated_bytes));
-  const topMac = maxBy((analysis?.ops || []).filter((op) => op.macs_status !== "not_assessed"), (op) => Number(op.macs || 0));
+  const topBytes = maxBy((artifactIrOperators(analysis) || []).filter((op) => op.estimated_bytes != null), (op) => Number(op.estimated_bytes));
+  const topMac = maxBy((artifactIrOperators(analysis) || []).filter((op) => op.macs_status !== "not_assessed"), (op) => Number(op.macs || 0));
   const benchmarkSucceeded = (runtimeBenchmarkResults || []).some((item) => item?.ok === true);
   const benchmarkAttempted = (runtimeBenchmarkResults || []).length > 0;
   const runtimeExecuted = Boolean(runtimeBasinResult) || Boolean(preprocessingConsequenceResult) || benchmarkSucceeded;

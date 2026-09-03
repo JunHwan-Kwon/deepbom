@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { buildGraphDiffSnapshot } from "./artifact-diff.js";
 
 // Local report history + model-version comparison, entirely in-browser.
@@ -67,7 +68,7 @@ function tx(db, mode, run) {
 
 export function buildAuditSnapshot(analysis, { analyzerVersion = "", rulepackVersion = "", runtimeBenchmarkResults = [], sha256 = "", reportMarkdown = "" } = {}) {
   if (!analysis) return null;
-  const ops = analysis.ops || [];
+  const ops = artifactIrOperators(analysis) || [];
   const costsAssessed = ops.length > 0 && ops.every((op) => (
     op.bottleneck_assessment_status !== "not_assessed"
     && [op.bottleneck_total_us, op.bottleneck_packing_us, op.bottleneck_break_us]

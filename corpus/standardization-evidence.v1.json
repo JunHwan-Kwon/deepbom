@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.standardization_evidence.v1",
-  "snapshot_id": "standardization-568d44b030aa84ae",
+  "snapshot_id": "standardization-7bb6f4b24cc187f7",
   "hash_contract": {
     "algorithm": "SHA-256",
     "canonicalization": "RFC8785-JCS",
@@ -1229,8 +1229,8 @@
     {
       "id": "residual",
       "path": "corpus/residual-coverage-priorities.v1.json",
-      "sha256": "f010160ade6a6e6267197257c9f205e10d7b87cdfa8388d8e3adb7c139792c4c",
-      "byte_length": 90713
+      "sha256": "a0caec0ea71e5b114afaa33f400246aa97e0a1afc4bad1c0b4ed2e6d4472d6ab",
+      "byte_length": 93905
     },
     {
       "id": "safetensors",
@@ -1311,5 +1311,5 @@
       "byte_length": 1306401
     }
   ],
-  "ledger_sha256": "1a2123a940ab5501f25204831b9fef7499dd2e538d4b750c124de127b5331448"
+  "ledger_sha256": "dfd386490b541e177417a158616efeeee51292e2ab706acc3a2e42a5eebb72c0"
 }

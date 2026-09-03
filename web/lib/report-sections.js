@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { formatBytes, formatDrift, formatNumber, formatPercent, maxBy, padOp, score100 } from "./format.js";
 import { RUNTIME_COMPATIBILITY_EVIDENCE_LABEL } from "./report-metadata.js";
 import { code, markdownTable } from "./report-utils.js";
@@ -13,7 +14,7 @@ function formatSignedBytes(value, notAssessed = "NOT_ASSESSED") {
 }
 
 export function rooflineMixSummary(analysis) {
-  const ops = analysis?.ops || [];
+  const ops = artifactIrOperators(analysis) || [];
   const assessed = ops.filter((op) => op.intensity_status == null || op.intensity_status === "assessed");
   const total = Math.max(assessed.length, 1);
   const compute = assessed.filter((op) => op.static_bound_guess === "compute-bound").length;
@@ -23,7 +24,7 @@ export function rooflineMixSummary(analysis) {
 }
 
 export function l1PressureSummary(analysis) {
-  const top = maxBy(analysis?.ops || [], (op) => Number(op.row_working_set_ratio || 0));
+  const top = maxBy(artifactIrOperators(analysis) || [], (op) => Number(op.row_working_set_ratio || 0));
   if (!top || !Number(top.row_working_set_ratio || 0)) return "No row working-set signal available.";
   return `max #${padOp(top.index)} ${top.name}: ${formatBytes(top.row_working_set_bytes || 0)} / ${Number(top.row_working_set_ratio || 0).toFixed(2)}x L1`;
 }

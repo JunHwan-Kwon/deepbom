@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import {
   contractDynamicDimSummary,
   modelQuantizationStatus,
@@ -528,7 +529,7 @@ export function buildFindingsEvidence(analysis, findingsContext = {}) {
 
 export function buildMemoryCacheCsv(analysis) {
   const rows = [["op_index", "op_name", "macs", "macs_decimal", "macs_status", "macs_reason", "mac_percent", "estimated_bytes", "estimated_bytes_status", "row_working_set_bytes", "row_working_set_status", "row_working_set_ratio", "row_working_set_ratio_status", "static_bound", "xnnpack", "packing_us", "channel_tail_overhead_percent"]];
-  for (const op of analysis.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     rows.push([
       op.index,
       op.name,
@@ -752,8 +753,8 @@ export function buildModelStructureEvidence(analysis, model = {}) {
     dynamic_inputs: contractDynamicDimSummary(analysis.inputs),
     serialized_shape_projection: deriveTfliteBatchOneProjection(analysis),
     graph_counts: {
-      operators: analysis.operator_count || (analysis.ops || []).length,
-      tensors: analysis.tensor_count || (analysis.tensors || []).length,
+      operators: analysis.operator_count || (artifactIrOperators(analysis) || []).length,
+      tensors: analysis.tensor_count || (artifactIrValues(analysis) || []).length,
       subgraphs: analysis.subgraph_count || 1,
     },
   };
@@ -792,7 +793,7 @@ export function buildQuantizationEvidence(analysis, model = {}) {
     residual_contract_migration: tflite ? researchEvidence("contract_migration", normalizeContractMigration) : null,
     residual_step_response: tflite ? researchEvidence("residual_step_response", normalizeResidualStepResponse) : null,
     residual_contract_distortion: tflite ? researchEvidence("residual_contract_distortion", normalizeResidualContractDistortion) : null,
-    op_watchlist: (analysis.ops || [])
+    op_watchlist: (artifactIrOperators(analysis) || [])
       .filter((op) => op.quant_risk === "risk" || op.quant_risk === "warn")
       .slice(0, 80)
       .map((op) => ({

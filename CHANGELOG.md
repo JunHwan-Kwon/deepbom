@@ -4,6 +4,32 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.2 - 2026-09-03
+
+- Added a self-hashed ONNX serialized-contract conflict capsule that preserves
+  declaration/semantic roots, condition-bound variants, downstream impact,
+  blocked MAC rows, and canonical Artifact IR subjects without repairing or
+  computing through contradictory tensor declarations.
+- Published a reproducible nine-artifact ONNX conflict corpus with six
+  unconditional roots, 543 condition-bound invalid variants, 1,901 downstream
+  blocked nodes, and 213 withheld MAC rows. Official ONNX checker and strict
+  shape-inference runs are isolated and retained as comparative outcomes rather
+  than treated as an oracle.
+- Separated 27 hash-identified public Core ML artifacts, five generated
+  MLProgram conformance fixtures, and the still-unobserved compiled-plan
+  population in the residual evidence ledger. Their denominators are no longer
+  interchangeable and no ecosystem-prevalence or device-placement claim is
+  inferred.
+- Migrated 49 report/export, viewer, and session/diff modules away from direct
+  native `analysis.ops/tensors` reads into one compatibility selector facade.
+  An AST-based policy now permits zero direct surface readers and rejects any
+  regression. Repeated capability rendering also retains live rows without
+  detached nodes while filters and formats change.
+- Added the conflict capsule and Artifact IR selector facade to offline cache
+  coverage, and made application startup recover from bounded transient module
+  fetch failures without masking code errors. The service-worker cache advances
+  from v544 to v546.
+
 ## 1.96.1 - 2026-09-03
 
 - Closed the remaining Artifact IR round-trip gaps with a nested-scope runtime

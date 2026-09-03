@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 export const REPORT_VERIFICATION_SENTINEL = "<!-- deepbom-verification -->";
 
 export function reportBodyForFingerprint(text) {
@@ -12,7 +13,7 @@ export function collectArtifactIntegrity(analysis = {}, identity = {}, fileSizeB
   const domainAnalysis = analysis.onnx_domain_analysis || null;
   const externalDomains = domainAnalysis
     ? [...(domainAnalysis.external_custom_domains || [])]
-    : [...new Set((analysis.ops || [])
+    : [...new Set((artifactIrOperators(analysis) || [])
       .map((op) => String(op.domain || "").trim())
       .filter((domain) => domain && !["ai.onnx", "ai.onnx.ml"].includes(domain)))].sort();
   const externalDataTensorCount = Number(analysis.onnx_external_data_tensor_count || 0);
@@ -93,7 +94,7 @@ function collectTfliteTensorBufferPosture(analysis = {}, fileSizeBytes = 0, form
   };
   if (format !== "tflite") return notApplicable;
 
-  const constantTensors = (analysis.tensors || []).filter((tensor) => Number(tensor.buffer_data_length || 0) > 0);
+  const constantTensors = (artifactIrValues(analysis) || []).filter((tensor) => Number(tensor.buffer_data_length || 0) > 0);
   const regionCounts = new Map();
   let outOfBounds = 0;
   for (const tensor of constantTensors) {

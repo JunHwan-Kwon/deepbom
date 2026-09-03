@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { formatNumber, formatPercent, padOp } from "./format.js";
 import { markdownTable } from "./report-utils.js";
 
@@ -14,7 +15,7 @@ export function kernelSourceCandidatesMarkdown(analysis) {
   }
   const groups = new Map();
   const decisionRows = [];
-  for (const op of analysis?.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     const facts = op.selector_artifact_facts || {};
     const factsText = [
       `dtype ${facts.activation_dtype || "unavailable"}`,
@@ -49,7 +50,7 @@ export function kernelSourceCandidatesMarkdown(analysis) {
       unresolved,
     ]);
   }
-  const noMatch = (analysis?.ops || []).filter((op) => op.xnnpack_kernel_evidence_class === "SOURCE_ENUMERATED_NO_MATCH");
+  const noMatch = (artifactIrOperators(analysis) || []).filter((op) => op.xnnpack_kernel_evidence_class === "SOURCE_ENUMERATED_NO_MATCH");
   if (!groups.size && !noMatch.length) return `Assessment: ${assessment}; schema ${selectorSchema}; access ${selectorAccess}. No per-op kernel selector was source-enumerated for this planning profile; profile-level kernel hints remain HEURISTIC.`;
   const provenance = analysis?.xnnpack_selector_evidence_provenance || {};
   const worstOps = (provenance.worst_case_tail_op_indices || []).map((index) => `#${padOp(index)}`).join(", ") || "none";

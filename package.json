@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "1.96.1",
+  "version": "1.96.2",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
   "homepage": "https://deepbom.org",
   "repository": {
@@ -109,6 +109,7 @@
     "check:nvidia-accelerator": "node scripts/check-nvidia-accelerator-profile.mjs",
     "check:remote-artifact-resolver": "node scripts/check-remote-artifact-resolver.mjs",
     "check:artifact-ir": "node scripts/check-artifact-ir.mjs",
+    "check:bootstrap-retry": "node scripts/check-bootstrap-retry.mjs",
     "check:artifact-ir-boundary": "node scripts/check-artifact-ir-import-boundary.mjs",
     "check:artifact-ir-consumers": "node scripts/check-artifact-ir-consumers.mjs",
     "check:evidence-ui-contract": "node scripts/check-evidence-ui-contract.mjs",
@@ -160,6 +161,9 @@
     "check:quant-policy-corpus": "node scripts/check-quant-policy-corpus.mjs",
     "check:hf-corpus": "node scripts/check-huggingface-community-corpus.mjs",
     "check:residual-coverage": "node scripts/check-residual-coverage-ledger.mjs",
+    "check:onnx-contract-conflict": "node scripts/check-onnx-contract-conflict.mjs",
+    "build:onnx-contract-conflict-corpus": "node scripts/build-onnx-contract-conflict-corpus.mjs",
+    "check:onnx-contract-conflict-corpus": "node scripts/check-onnx-contract-conflict-corpus.mjs",
     "check:on-device-llm-v2": "node scripts/check-on-device-llm-v2.mjs",
     "check:safetensors-architecture-corpus": "node scripts/check-safetensors-architecture-corpus.mjs",
     "check:gguf-architecture-encoding-corpus": "node scripts/check-gguf-architecture-encoding-corpus.mjs",
@@ -279,6 +283,7 @@
     "onnxruntime-web": "^1.26.0"
   },
   "devDependencies": {
+    "acorn": "^8.15.0",
     "adm-zip": "0.6.0",
     "ajv": "8.20.0",
     "ajv-draft-04": "1.0.0",

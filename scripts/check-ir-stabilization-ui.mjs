@@ -159,7 +159,7 @@ async function runVerifiedExample(page) {
   await page.locator("#trySampleModel").click();
   await page.waitForFunction(() => /audit run complete|Audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 120_000 });
   const status = await page.locator("#status").textContent();
-  if (!status.includes("audit run complete")) throw new Error(`Verified TFLite example failed: ${status}`);
+  if (!status.includes("audit run complete")) throw new Error(`Verified TFLite example failed: ${status}${diagnostics.length ? `\n${diagnostics.join("\n")}` : ""}`);
 }
 
 async function runAudit(page, modelPath, name, suppliedBuffer = null) {
@@ -169,7 +169,7 @@ async function runAudit(page, modelPath, name, suppliedBuffer = null) {
   await page.locator("#runAudit").click();
   await page.waitForFunction(() => /audit run complete|Audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 120_000 });
   const status = await page.locator("#status").textContent();
-  if (!status.includes("audit run complete")) throw new Error(`${name}: ${status}`);
+  if (!status.includes("audit run complete")) throw new Error(`${name}: ${status}${diagnostics.length ? `\n${diagnostics.join("\n")}` : ""}`);
 }
 
 async function verifyFormatNavigation(page, format, viewport) {
@@ -273,15 +273,29 @@ async function detachedDomNodes(page) {
     await session.send("HeapProfiler.enable");
     await session.send("HeapProfiler.collectGarbage");
     const result = await session.send("DOM.getDetachedDomNodes");
-    return {
-      count: result.detachedNodes?.length || 0,
-      rows: (result.detachedNodes || []).map((row) => ({
+    const rows = [];
+    for (const row of result.detachedNodes || []) {
+      const backendNodeId = row.treeNode?.backendNodeId || null;
+      let outerHtml = null;
+      if (backendNodeId) {
+        try {
+          outerHtml = (await session.send("DOM.getOuterHTML", { backendNodeId })).outerHTML?.slice(0, 800) || null;
+        } catch {
+          // A node can disappear between the detached-node query and diagnostics.
+        }
+      }
+      rows.push({
         node_name: row.treeNode?.nodeName || null,
         local_name: row.treeNode?.localName || null,
         child_node_count: row.treeNode?.childNodeCount || 0,
         attributes: row.treeNode?.attributes || [],
         retained_node_count: row.retainedNodeIds?.length || 0,
-      })),
+        outer_html: outerHtml,
+      });
+    }
+    return {
+      count: result.detachedNodes?.length || 0,
+      rows,
     };
   } finally {
     await session.detach();
@@ -293,7 +307,8 @@ async function verifyWebCliSemanticDigest(page, artifactPath) {
   await page.waitForFunction(() => !document.querySelector("#downloadReviewHtml")?.disabled, null, { timeout: 30_000 });
   await page.evaluate(() => {
     const original = URL.createObjectURL.bind(URL);
-    globalThis.__deepbomCapturedReviewDownload = { original, text: null, type: null };
+    const originalAnchorClick = HTMLAnchorElement.prototype.click;
+    globalThis.__deepbomCapturedReviewDownload = { original, originalAnchorClick, text: null, type: null };
     URL.createObjectURL = (blob) => {
       Promise.resolve(blob.text()).then((text) => {
         globalThis.__deepbomCapturedReviewDownload.text = text;
@@ -301,12 +316,14 @@ async function verifyWebCliSemanticDigest(page, artifactPath) {
       });
       return original(blob);
     };
+    HTMLAnchorElement.prototype.click = () => {};
   });
   await page.evaluate(() => document.querySelector("#downloadReviewHtml")?.click());
   await page.waitForFunction(() => Boolean(globalThis.__deepbomCapturedReviewDownload?.text), null, { timeout: 30_000 });
   const reviewHtml = await page.evaluate(() => {
     const captured = globalThis.__deepbomCapturedReviewDownload;
     URL.createObjectURL = captured.original;
+    HTMLAnchorElement.prototype.click = captured.originalAnchorClick;
     delete globalThis.__deepbomCapturedReviewDownload;
     return captured.text;
   });

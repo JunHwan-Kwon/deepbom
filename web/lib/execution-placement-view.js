@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { buildExecutionPlacementEvidence } from "./execution-placement-evidence.js";
 import { formatBytes, formatNumber } from "./format.js";
 import { placementProfileClass } from "./placement-comparison.js";
@@ -176,7 +177,7 @@ function runtimeSourceReconciliation(doc, analysis, runtimeEvidence) {
   const tbody = doc.createElement("tbody");
   for (const assignment of assignments) {
     const opIndex = Number(assignment.op_index);
-    const source = analysis?.ops?.find((op) => Number(op.index) === opIndex);
+    const source = artifactIrOperators(analysis)?.find((op) => Number(op.index) === opIndex);
     const runtimeIdentity = [
       assignment.runtime_node_name,
       assignment.runtime_node_index == null ? null : `runtime #${assignment.runtime_node_index}`,

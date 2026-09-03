@@ -12,7 +12,7 @@ const priorities = ledger.ranked_priorities || [];
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const histogramTotal = (rows) => (rows || []).reduce((total, row) => total + Number(row.count || 0), 0);
 
-check.expectEqual(ledger.schema, "deepbom.residual_coverage_priorities.v1.5", "ledger schema");
+check.expectEqual(ledger.schema, "deepbom.residual_coverage_priorities.v1.6", "ledger schema");
 check.expectEqual(onnx.analyzer_contracts?.onnx_shape_inference, ONNX_SHAPE_INFERENCE_SCHEMA, "ONNX residual shape-engine freshness");
 check.expectEqual(onnx.analyzer_contracts?.dynamic_shape_cost, DYNAMIC_SHAPE_COST_SCHEMA, "ONNX residual cost-engine freshness");
 check.expectEqual(onnx.artifact_count, onnx.artifacts?.length, "ONNX artifact denominator");
@@ -53,11 +53,27 @@ check.expect((onnx.artifacts || []).every((row) => /^[a-f0-9]{64}$/.test(row.art
 check.expect((onnx.source_sweeps || []).every((row) => /^[a-f0-9]{64}$/.test(row.sha256)), "Every measured sweep should carry a SHA-256.");
 
 const coreMlManifest = readFileSync("corpus/coreml-mlprogram-contract-corpus.v1.json");
+const coreMlPublicEvidence = readFileSync("corpus/cyclonedx-generalization-evidence.v1.json");
 const coreMl = ledger.populations.coreml;
 check.expectEqual(coreMl.manifest_sha256, sha256(coreMlManifest), "Core ML contract-corpus manifest SHA-256");
 check.expectEqual(coreMl.artifact_count, 5, "Core ML MLProgram contract denominator");
 check.expectEqual(coreMl.contract_classes.join(","), "blockwise_affine_compression,bounded_shape_range,enumerated_shape,lut_palettization_compression,static_external_blob", "Core ML contract strata");
 check.expectEqual(coreMl.ecosystem_prevalence_claim, false, "Core ML generated fixtures must not claim ecosystem prevalence");
+check.expectEqual(coreMl.public_population?.source_sha256, sha256(coreMlPublicEvidence), "Core ML public-population source SHA-256");
+check.expectEqual(coreMl.public_population?.artifact_count, 27, "Core ML public-artifact denominator");
+check.expectEqual(coreMl.public_population?.path_record_count, 27, "Core ML public path denominator");
+check.expectEqual(coreMl.public_population?.catalog_source_count, 1, "Core ML public catalog-source denominator");
+check.expectEqual(coreMl.public_population?.serialized_graph_present_count, 22, "Core ML decoded serialized-graph count");
+check.expectEqual(coreMl.public_population?.serialized_graph_payload_not_decoded_count, 5, "Core ML unread serialized-payload boundary");
+check.expectEqual(Object.values(coreMl.public_population?.architecture_strata || {}).reduce((sum, count) => sum + count, 0), 27, "Core ML architecture strata conservation");
+check.expectEqual(Object.values(coreMl.public_population?.task_strata || {}).reduce((sum, count) => sum + count, 0), 27, "Core ML task strata conservation");
+check.expectEqual(Object.values(coreMl.public_population?.precision_strata || {}).reduce((sum, count) => sum + count, 0), 27, "Core ML precision strata conservation");
+check.expectEqual(Object.values(coreMl.public_population?.quantization_classification || {}).reduce((sum, count) => sum + count, 0), 27, "Core ML quantization-state conservation");
+check.expectEqual(Object.values(coreMl.public_population?.serialized_contract_status || {}).reduce((sum, count) => sum + count, 0), 27, "Core ML serialized-contract conservation");
+check.expectEqual(coreMl.public_population?.ecosystem_prevalence_claim, false, "Core ML public cohort must not claim ecosystem prevalence");
+check.expectEqual(coreMl.public_population?.device_placement_claim, false, "Core ML public cohort must not claim device placement");
+check.expectEqual(coreMl.compiled_plan_population?.artifact_count, 0, "Core ML compiled-plan evidence boundary");
+check.expectEqual(coreMl.compiled_plan_population?.status, "runtime_evidence_required", "Core ML compiled-plan status");
 const ggufManifest = readFileSync("corpus/gguf-architecture-encoding-corpus.v1.json");
 const gguf = ledger.populations.gguf;
 check.expectEqual(gguf.manifest_sha256, sha256(ggufManifest), "GGUF corpus manifest SHA-256");
@@ -80,4 +96,4 @@ check.expect(priorities.every((row) => row.evidence && row.next_action && row.st
 check.expect(ledger.method?.population_boundary?.includes("not ecosystem prevalence") || ledger.method?.non_claim?.includes("not generalized"), "Single-anchor formats should carry an explicit non-generalization boundary.");
 check.expect(ledger.method?.reason_histogram_projection?.includes("compressed sweep") && ledger.method.reason_histogram_projection.includes("exact counts"), "Reason-class aggregation must disclose where detailed identifiers remain and preserve count semantics.");
 
-check.done(`${onnx.artifact_count} measured ONNX artifacts, three SafeTensors family anchors, eight GGUF strata, and five Core ML MLProgram contracts conserve the residual roadmap.`);
+check.done(`${onnx.artifact_count} measured ONNX artifacts, three SafeTensors family anchors, eight GGUF strata, 27 public Core ML artifacts, and five generated Core ML contracts conserve the residual roadmap without merging evidence classes.`);

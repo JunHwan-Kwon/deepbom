@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import {
   ANALYZER_SEMANTIC_VERSION,
   ANALYZER_VERSION,
@@ -70,8 +71,8 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
     analysis?.metadata_presence?.metadata_model_version || analysis?.metadata_presence?.model_version,
   );
   const graphTotals = {
-    operator_count: nonNegativeInteger(analysis.operator_count ?? analysis.ops?.length),
-    tensor_count: nonNegativeInteger(analysis.tensor_count ?? analysis.tensors?.length),
+    operator_count: nonNegativeInteger(analysis.operator_count ?? artifactIrOperators(analysis)?.length),
+    tensor_count: nonNegativeInteger(analysis.tensor_count ?? artifactIrValues(analysis)?.length),
     mac_count: nonNegativeNumber(analysis.total_macs),
   };
   const quantization = analysis.quantization_status || {};
@@ -233,6 +234,11 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
       ["deepbom:model:graphTotals", JSON.stringify(graphTotals)],
       ["deepbom:model:artifactIrSchema", artifactIr?.schema],
       ["deepbom:model:artifactIrSha256", artifactIr?.artifact_ir_sha256],
+      ["deepbom:model:serializedContractStatus", analysis?.onnx_contract_conflict?.status],
+      ["deepbom:model:contractConflictCapsuleSha256", analysis?.onnx_contract_conflict?.capsule_sha256],
+      ["deepbom:model:contractConflictRootCount", analysis?.onnx_contract_conflict?.summary?.unconditional_root_conflict_count],
+      ["deepbom:model:contractConflictConditionalVariantCount", analysis?.onnx_contract_conflict?.summary?.condition_bound_invalid_variant_count],
+      ["deepbom:model:contractConflictBlockedMacRows", analysis?.onnx_contract_conflict?.summary?.blocked_mac_row_count],
       ...quantizationProperties,
       ...safeTensorsQuantizationPropertyEntries(analysis),
       ["deepbom:model:tensorDtypeInventory", JSON.stringify(dtypeInventory)],
@@ -309,7 +315,7 @@ function tensorDtypeInventory(analysis) {
   const declared = Array.isArray(analysis?.tensor_types) ? analysis.tensor_types : [];
   if (declared.length) return Object.fromEntries(declared.map((row) => [String(row.name || "UNKNOWN"), nonNegativeInteger(row.count) ?? 0]));
   const counts = {};
-  for (const tensor of analysis?.tensors || []) {
+  for (const tensor of artifactIrValues(analysis) || []) {
     const dtype = cleanText(tensor?.dtype).toUpperCase() || "UNKNOWN";
     counts[dtype] = (counts[dtype] || 0) + 1;
   }

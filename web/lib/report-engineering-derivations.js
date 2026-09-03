@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { formatBytes, formatNumber } from "./format.js";
 import { ANALYZER_METADATA } from "./report-metadata.js";
 import { code } from "./report-utils.js";
@@ -11,7 +12,7 @@ export function intensityPosture(bound) {
 export function simdAssumptionsForAnalysis(analysis = {}) {
   const targetProfile = analysis?.target_profile || {};
   const hardwareSpec = targetProfile.hardware_spec || null;
-  const sourceCandidateOps = (analysis?.ops || []).filter((op) => String(op.xnnpack_kernel_evidence_class || "").startsWith("SOURCE_ENUMERATED_CANDIDATE"));
+  const sourceCandidateOps = (artifactIrOperators(analysis) || []).filter((op) => String(op.xnnpack_kernel_evidence_class || "").startsWith("SOURCE_ENUMERATED_CANDIDATE"));
   const sourceCandidates = sourceCandidateOps.flatMap((op) => op.xnnpack_kernel_candidates || []);
   if (sourceCandidates.length) {
     const tiles = [...new Set(sourceCandidates.map((candidate) => {
@@ -43,7 +44,7 @@ export function formatRidge(value) {
 }
 
 export function xnnpackBuildRequirementsSummary(analysis) {
-  const values = [...new Set((analysis?.ops || [])
+  const values = [...new Set((artifactIrOperators(analysis) || [])
     .filter((op) => op.xnnpack_supported)
     .map((op) => op.xnnpack_build_requirement)
     .filter(Boolean))];
@@ -90,7 +91,7 @@ export function peakArenaReconciliation(analysis, live) {
 export function staticL2RatioForTarget(analysis, target) {
   const l2Bytes = Number(target?.l2_bytes || 0);
   if (!(l2Bytes > 0)) return "N/A";
-  const maxBytes = Math.max(0, ...(analysis?.ops || []).map((op) => Number(op?.cache_payload?.logical_row_payload_bytes || 0)));
+  const maxBytes = Math.max(0, ...(artifactIrOperators(analysis) || []).map((op) => Number(op?.cache_payload?.logical_row_payload_bytes || 0)));
   return `${(maxBytes / l2Bytes).toFixed(2)}x`;
 }
 

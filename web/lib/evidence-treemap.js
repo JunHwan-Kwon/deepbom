@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 const MAP_WIDTH = 1000;
 const MAP_HEIGHT = 560;
 
@@ -91,7 +92,7 @@ function buildStageLookup(analysis) {
     const indices = explicit.length
       ? explicit
       : Number.isSafeInteger(first) && Number.isSafeInteger(last) && last >= first
-        ? (analysis?.ops || []).map((op) => Number(op.index)).filter((index) => index >= first && index <= last)
+        ? (artifactIrOperators(analysis) || []).map((op) => Number(op.index)).filter((index) => index >= first && index <= last)
         : [];
     for (const opIndex of indices) {
       lookup.set(Number(opIndex), {
@@ -231,8 +232,8 @@ function finalizePresentation(base, rawItems, metric) {
 }
 
 export function buildResourceMapPresentation(analysis = {}, options = {}) {
-  const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
-  const tensors = Array.isArray(analysis.tensors) ? analysis.tensors : [];
+  const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
+  const tensors = Array.isArray(artifactIrValues(analysis)) ? artifactIrValues(analysis) : [];
   const scope = ops.length ? "operators" : "tensors";
   const metricSet = scope === "operators" ? OP_METRICS : TENSOR_METRICS;
   const metricId = metricSet[options.metric] ? options.metric : Object.keys(metricSet)[0];
@@ -321,7 +322,7 @@ export function buildQuantizationExposurePresentation(analysis = {}, options = {
     }, items, metric);
   }
 
-  const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
+  const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
   const metricId = ["macs", "traffic"].includes(options.metric) ? options.metric : "macs";
   const metric = OP_METRICS[metricId];
   const hasBlocks = Array.isArray(analysis?.block_inventory?.blocks) && analysis.block_inventory.blocks.length > 0;

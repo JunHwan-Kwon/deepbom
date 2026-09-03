@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { GGUF_BACKEND_SOURCE } from "./gguf-backend-contract.generated.js";
@@ -11,7 +12,7 @@ export function buildRuntimeCapturePlan(analysis) {
   if (!analysis || !["tflite", "onnx", "gguf", "coreml"].includes(analysis.format)) {
     throw new Error("Runtime capture plans require a completed TFLite, ONNX, GGUF, or decoded Core ML graph audit.");
   }
-  if (analysis.format === "coreml" && (!(analysis.ops || []).length
+  if (analysis.format === "coreml" && (!(artifactIrOperators(analysis) || []).length
     || !(analysis.coreml?.neural_network || analysis.coreml?.model_type === "mlProgram"))) {
     throw new Error("Core ML compute-plan capture requires a decoded NeuralNetwork or ML Program graph; classical and pipeline structures are outside the operation-level MLComputePlan API.");
   }
@@ -133,9 +134,9 @@ export function renderRuntimeEvidenceClosure(root, analysis, runtimeEvidence) {
   const comparison = runtimeEvidence?.comparison || null;
   const assignments = runtimeEvidence?.assignments || [];
   const observed = Number(comparison?.observed_assignment_count ?? comparison?.observed_op_count ?? assignments.length) || 0;
-  const graphOps = Number(analysis?.operator_count ?? analysis?.ops?.length) || 0;
+  const graphOps = Number(analysis?.operator_count ?? artifactIrOperators(analysis)?.length) || 0;
   const predicted = analysis.format === "tflite"
-    ? (analysis.ops || []).filter((op) => Number(op.xnnpack_chain_id) >= 0).length
+    ? (artifactIrOperators(analysis) || []).filter((op) => Number(op.xnnpack_chain_id) >= 0).length
     : null;
   const collector = runtimeEvidence?.source?.collector || null;
   const runtimeHash = runtimeEvidence?.runtime?.binary_sha256 || collector?.binary_sha256 || null;
@@ -173,7 +174,7 @@ export function runtimeEvidenceSidecarForDownload(analysis, runtimeEvidence) {
 function renderCoreMlComputePlanClosure(root, runtimeEvidence, analysis) {
   const bound = runtimeEvidence?.schema === COREML_COMPUTE_PLAN_SCHEMA;
   const rows = runtimeEvidence?.structure?.rows || [];
-  const graphOps = Number(analysis?.ops?.length || 0);
+  const graphOps = Number(artifactIrOperators(analysis)?.length || 0);
   setText(root, "[data-runtime-closure-status]", bound
     ? `${rows.length}/${graphOps} decoded operations are bound to one MLComputePlan estimate. This is not an execution trace.`
     : "Serialized Core ML graph evidence is available; no compiled-model MLComputePlan is bound.");

@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v544";
+const CACHE_NAME = "tflite-wasm-static-audit-v547";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -47,6 +47,7 @@ const APP_ASSETS = [
   "./lib/artifact-ir/internal/storage.js",
   "./lib/artifact-ir/internal/validation.js",
   "./lib/artifact-ir-context.js",
+  "./lib/artifact-ir-selectors.js",
   "./lib/artifact-ir-runtime.js",
   "./lib/graph-ir.js",
   "./lib/graph-export.js",
@@ -226,6 +227,7 @@ const APP_ASSETS = [
   "./lib/onnx-schema-legality.js",
   "./lib/onnx-einsum-contract.js",
   "./lib/onnx-shape-inference.js",
+  "./lib/onnx-contract-conflict.js",
   "./lib/onnx-runtime-shape-binding.js",
   "./lib/onnx-shape-ops.js",
   "./lib/onnx-shape-schema-generated.js",

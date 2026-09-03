@@ -1,10 +1,11 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import { ANALYZER_METADATA } from "./report-metadata.js";
 import { benchmarkNoise, latencyStats } from "./format.js";
 import { BROWSER_BENCHMARK_NOISE_METHOD, BROWSER_BENCHMARK_STATISTICS_METHOD } from "./runtime.js";
 import { sha256TextHex } from "./sha256-sync.js";
 export function deriveRuntimeOpComparisons(analysis, runtimeAssignment, predictionApplicable) {
   const runtimeByOp = new Map((runtimeAssignment?.assignments || []).map((item) => [Number(item.op_index), item]));
-  return (analysis?.ops || []).map((op) => {
+  return (artifactIrOperators(analysis) || []).map((op) => {
     const runtime = runtimeByOp.get(Number(op.index));
     const predicted = predictionApplicable ? Number(op.xnnpack_chain_id) >= 0 : null;
     const observed = typeof runtime?.delegated === "boolean" ? runtime.delegated : null;
@@ -47,11 +48,11 @@ export function summarizeRuntimePlacement(rows, graphOpCount) {
 
 export function deriveRuntimeBoundaryComparisonEdges(analysis, runtimeAssignment, predictionApplicable) {
   const runtimeByOp = new Map((runtimeAssignment?.assignments || []).map((item) => [Number(item.op_index), item]));
-  const tensors = new Map((analysis?.tensors || []).map((tensor) => [Number(tensor.index), tensor]));
+  const tensors = new Map((artifactIrValues(analysis) || []).map((tensor) => [Number(tensor.index), tensor]));
   const producers = new Map();
-  for (const op of analysis?.ops || []) for (const tensorIndex of op.outputs || []) if (Number(tensorIndex) >= 0) producers.set(Number(tensorIndex), op);
+  for (const op of artifactIrOperators(analysis) || []) for (const tensorIndex of op.outputs || []) if (Number(tensorIndex) >= 0) producers.set(Number(tensorIndex), op);
   const edges = [];
-  for (const consumer of analysis?.ops || []) {
+  for (const consumer of artifactIrOperators(analysis) || []) {
     for (const tensorIndex of new Set((consumer.inputs || []).map(Number).filter((index) => index >= 0))) {
       const producer = producers.get(tensorIndex);
       const tensor = tensors.get(tensorIndex);
@@ -145,7 +146,7 @@ export function sameRuntimeBoundarySet(actual, expected) {
 
 export function deriveRuntimePartitionSummary(analysis, runtimeAssignment, allowImplicit) {
   const assignments = new Map((runtimeAssignment?.assignments || []).map((item) => [Number(item.op_index), item]));
-  const ops = [...(analysis?.ops || [])].sort((left, right) => Number(left.index) - Number(right.index));
+  const ops = [...(artifactIrOperators(analysis) || [])].sort((left, right) => Number(left.index) - Number(right.index));
   const segments = [];
   let active = null;
   const flush = () => { if (active) segments.push(active); active = null; };
@@ -328,13 +329,13 @@ export function tensorElementCount(shape) {
 }
 
 export function derivePredictedBoundaryEdges(analysis) {
-  const tensors = new Map((analysis?.tensors || []).map((tensor) => [Number(tensor.index), tensor]));
+  const tensors = new Map((artifactIrValues(analysis) || []).map((tensor) => [Number(tensor.index), tensor]));
   const producers = new Map();
-  for (const op of analysis?.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     for (const tensorIndex of op.outputs || []) if (Number(tensorIndex) >= 0) producers.set(Number(tensorIndex), op);
   }
   const edges = [];
-  for (const consumer of analysis?.ops || []) {
+  for (const consumer of artifactIrOperators(analysis) || []) {
     for (const tensorIndex of new Set((consumer.inputs || []).map(Number).filter((index) => index >= 0))) {
       const producer = producers.get(tensorIndex);
       const tensor = tensors.get(tensorIndex);
@@ -407,8 +408,8 @@ export function deterministicTensorPayloadAssessment(tensor) {
 }
 
 export function deriveDelegationRepairGraph(analysis) {
-  const ops = analysis?.ops || [];
-  const tensors = new Map((analysis?.tensors || []).map((tensor) => [Number(tensor.index), tensor]));
+  const ops = artifactIrOperators(analysis) || [];
+  const tensors = new Map((artifactIrValues(analysis) || []).map((tensor) => [Number(tensor.index), tensor]));
   const producers = new Map();
   ops.forEach((op, position) => {
     for (const tensorIndex of op.outputs || []) if (Number(tensorIndex) >= 0) producers.set(Number(tensorIndex), position);
@@ -547,8 +548,8 @@ const MOVEMENT_OPERATOR_NAMES = new Set([
 ]);
 
 export function deriveDeclaredLiveness(analysis) {
-  const tensors = new Map((analysis?.tensors || []).map((tensor) => [Number(tensor.index), tensor]));
-  const ops = analysis?.ops || [];
+  const tensors = new Map((artifactIrValues(analysis) || []).map((tensor) => [Number(tensor.index), tensor]));
+  const ops = artifactIrOperators(analysis) || [];
   const inputs = (analysis?.input_tensor_indices || []).map(Number).filter((index) => index >= 0);
   const outputs = new Set((analysis?.output_tensor_indices || []).map(Number).filter((index) => index >= 0));
   const relevant = new Set(inputs);
@@ -603,8 +604,8 @@ export function deriveDeclaredLiveness(analysis) {
 }
 
 export function deriveMovementPayload(analysis) {
-  const tensors = new Map((analysis?.tensors || []).map((tensor) => [Number(tensor.index), tensor]));
-  const ops = analysis?.ops || [];
+  const tensors = new Map((artifactIrValues(analysis) || []).map((tensor) => [Number(tensor.index), tensor]));
+  const ops = artifactIrOperators(analysis) || [];
   let assessedBytes = 0;
   let assessedBreakBytes = 0;
   let issueCount = 0;
@@ -651,8 +652,8 @@ export function declaredArenaPayloadBytes(tensor) {
 }
 
 export function deriveArenaProjection(analysis) {
-  const tensors = new Map((analysis?.tensors || []).map((tensor) => [Number(tensor.index), tensor]));
-  const ops = analysis?.ops || [];
+  const tensors = new Map((artifactIrValues(analysis) || []).map((tensor) => [Number(tensor.index), tensor]));
+  const ops = artifactIrOperators(analysis) || [];
   const inputs = new Set((analysis?.input_tensor_indices || []).map(Number).filter((index) => index >= 0));
   const outputs = new Set((analysis?.output_tensor_indices || []).map(Number).filter((index) => index >= 0));
   const variables = new Set([...tensors.values()].filter((tensor) => tensor.is_variable).map((tensor) => Number(tensor.index)));

@@ -93,6 +93,7 @@ try {
               disabled: button.disabled,
             })),
             detailsClipped: details.some((detail) => detail.scrollWidth - detail.clientWidth > 1 || detail.scrollHeight - detail.clientHeight > 1),
+            currentLabels: [...node.querySelectorAll("[data-current-capability-wrap] .capability-state")].filter(visible).map((badge) => badge.textContent.trim()),
           };
         });
         const mobile = width <= 840;
@@ -103,6 +104,9 @@ try {
           || state.buttonContracts.some((item) => item.clipped || item.width <= 0 || (mobile && item.height < 43.5))
           || state.detailsClipped) {
           throw new Error(`Capability geometry failed for ${format}/${width}/${theme}: ${JSON.stringify(state)}`);
+        }
+        if (format === "onnx" && !state.currentLabels.includes("Invalid contract")) {
+          throw new Error(`ONNX contract-conflict state is not visible for ${width}/${theme}: ${JSON.stringify(state.currentLabels)}`);
         }
 
         const firstBadge = panel.locator(".capability-state").first();
@@ -214,7 +218,7 @@ function fixtureScript() {
     const sha = "a".repeat(64);
     const analyses = {
       tflite: { format: "tflite", filename: "mobilenet.tflite", model_sha256: sha, ops: [], inputs: [], target_profile: null },
-      onnx: { format: "onnx", filename: "model.onnx", model_sha256: sha, ops: [], onnx_shape_inference: {}, mac_assessment: {}, weight_integrity: {} },
+      onnx: { format: "onnx", filename: "model.onnx", model_sha256: sha, ops: [], onnx_shape_inference: {}, mac_assessment: {}, weight_integrity: {}, onnx_contract_conflict: { status: "INVALID_CONTRACT", summary: { unconditional_root_conflict_count: 1, condition_bound_invalid_variant_count: 0, invalid_node_output_count: 1, conditionally_invalid_node_output_count: 0, blocked_mac_row_count: 1 } } },
       gguf: { format: "gguf", filename: "model.gguf", model_sha256: sha, ops: [], tensor_inventory: { status: "assessed" }, tensor_numerical_integrity: { status: "assessed", assessed_tensor_count: 1, tensor_count: 1, assessed_tensor_bytes: 16, declared_tensor_bytes: 16, nonfinite_value_count: 0, exact_zero_value_count: 0, byte_conservation_status: "exact" }, gguf: { backend_compatibility: { status: "source_candidate" } } },
       safetensors: { format: "safetensors", filename: "model.safetensors", model_sha256: sha, ops: [], tensor_inventory: { status: "assessed" }, tensor_numerical_integrity: { status: "assessed", assessed_tensor_count: 1, tensor_count: 1, assessed_tensor_bytes: 16, declared_tensor_bytes: 16, nonfinite_value_count: 0, exact_zero_value_count: 0, byte_conservation_status: "exact" }, safetensors: {} },
       coreml: { format: "coreml", filename: "model.mlmodel", model_sha256: sha, ops: [{ index: 0, name: "convolution" }], mac_assessment: { assessed_compute_ops: 1, compute_ops: 1 }, tensor_liveness: { status: "assessed" }, weight_integrity: { status: "assessed", assessed_parameter_count: 1, parameter_count: 1, assessed_payload_bytes: 16, payload_bytes: 16, nonfinite_value_count: 0 }, coreml: { model_type: "mlProgram", deployment_floor: { status: "assessed" } } },

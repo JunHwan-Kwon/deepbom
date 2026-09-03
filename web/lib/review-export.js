@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { normalizeEvidenceExplanation } from "./evidence-why-drawer.js";
 import { buildFindingsRegister } from "./report-findings.js";
 import { collectAcceleratorBindings } from "./accelerator-binding.js";
@@ -186,7 +187,7 @@ function artifactIrRuntimeSubjectRefs(artifactIr) {
 function runtimeReconciliationRows(analysis, value) {
   const runtime = value?.runtimeAssignmentEvidence || value?.runtime_assignment || value;
   const assignments = Array.isArray(runtime?.assignments) ? runtime.assignments : [];
-  const byIndex = new Map((analysis?.ops || []).map((op) => [Number(op.index), op]));
+  const byIndex = new Map((artifactIrOperators(analysis) || []).map((op) => [Number(op.index), op]));
   return assignments.map((row) => {
     const opIndex = Number(row.op_index);
     const source = Number.isSafeInteger(opIndex) && byIndex.has(opIndex) ? `#${opIndex} ${byIndex.get(opIndex).name}` : "Unmapped";

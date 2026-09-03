@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import {
   modelQuantizationStatus,
   quantizationScopeExplanation,
@@ -15,8 +16,8 @@ export function buildBundleModelSummaryLines(analysis, identity = {}, { includeS
   const quant = modelQuantizationStatus(analysis);
   const format = String(identity.format || analysis?.format || "tflite").toLowerCase();
   const weightContainer = ["gguf", "safetensors"].includes(format);
-  const operatorCount = identity.operator_count ?? analysis?.operator_count ?? (weightContainer ? null : analysis?.ops?.length);
-  const tensorCount = identity.tensor_count ?? analysis?.tensor_count ?? analysis?.tensors?.length;
+  const operatorCount = identity.operator_count ?? analysis?.operator_count ?? (weightContainer ? null : artifactIrOperators(analysis)?.length);
+  const tensorCount = identity.tensor_count ?? analysis?.tensor_count ?? artifactIrValues(analysis)?.length;
   const totalMacs = identity.total_macs ?? analysis?.total_macs;
   const unavailable = weightContainer ? "not serialized by this format" : "not assessed";
   const lines = [

@@ -173,7 +173,7 @@ export const ANALYZER_METADATA = Object.freeze({
     securityPosture: "deepbom.security_posture.v1.3",
     findingsRegister: "deepbom.findings_register.v1.51",
     findingEvidencePointerValidation: FINDING_EVIDENCE_POINTER_VALIDATION_SCHEMA,
-    metricCoverageManifest: "deepbom.metric_coverage_manifest.v1.54",
+    metricCoverageManifest: "deepbom.metric_coverage_manifest.v1.55",
     decisionCoverage: "deepbom.decision_coverage.v1.11",
     engineeringEvidence: "deepbom.engineering_evidence.v1.80",
     conformanceReport: "deepbom.conformance_report.v1.77",

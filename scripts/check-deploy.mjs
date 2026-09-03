@@ -57,6 +57,8 @@ const CHECKS = [
   "scripts/check-onnx-extended-shape-inference.mjs",
   "scripts/check-onnx-shape-scope.mjs",
   "scripts/check-onnx-domain-analysis.mjs",
+  "scripts/check-onnx-contract-conflict.mjs",
+  "scripts/check-onnx-contract-conflict-corpus.mjs",
   "scripts/check-kernel-inspector-contract.mjs",
   "scripts/check-runtime-arena-memory.mjs",
   "scripts/check-runtime-profile-adapter.mjs",

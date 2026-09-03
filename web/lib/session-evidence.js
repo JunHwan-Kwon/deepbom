@@ -1,3 +1,4 @@
+import { artifactIrValues } from "./artifact-ir-selectors.js";
 import { buildReportContextSet } from "./report-context.js";
 
 function escapeHtml(value) {
@@ -154,7 +155,7 @@ export function buildPublicAuditSummaryText(analysis, {
     "",
     "STRUCTURAL INVENTORY",
     `Operators: ${["gguf", "safetensors"].includes(String(analysis.format).toLowerCase()) ? "Not applicable from a tensor container" : publicInteger(analysis.operator_count ?? analysis.total_ops)}`,
-    `Tensors: ${publicInteger(analysis.tensor_count ?? analysis.tensors?.length)}`,
+    `Tensors: ${publicInteger(analysis.tensor_count ?? artifactIrValues(analysis)?.length)}`,
     `MAC assessment: ${macLine}`,
     "",
     "INTERFACE CONTRACT",

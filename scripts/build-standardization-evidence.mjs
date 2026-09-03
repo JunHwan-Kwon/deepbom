@@ -655,7 +655,7 @@ function validateSourceContracts() {
   assert(values.quantManifest.schema === "deepbom.quant_policy_boundary_corpus.v1", "Quant policy manifest schema changed.");
   assert(values.publicSweep.schema === "deepbom.public_model_corpus_sweep.v1", "Public sweep schema changed.");
   assert(values.hfSummary.schema === "deepbom.huggingface_community_corpus_summary.v1", "Hugging Face summary schema changed.");
-  assert(values.residual.schema === "deepbom.residual_coverage_priorities.v1.5", "Residual coverage schema changed.");
+  assert(values.residual.schema === "deepbom.residual_coverage_priorities.v1.6", "Residual coverage schema changed.");
   const onnxResidual = values.residual.populations?.onnx;
   assert(onnxResidual
     && onnxResidual.shape_contract_known_node_output_count + onnxResidual.shape_contract_unknown_node_output_count === onnxResidual.node_output_count

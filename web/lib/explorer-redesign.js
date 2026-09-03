@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { downloadBlob, downloadText } from "./download.js";
 import { formatBytes, formatNumber, padOp } from "./format.js";
 import { opSteadyStateUs } from "./analysis.js";
@@ -82,7 +83,7 @@ function cacheRows(analysis, state) {
       });
     }
   }
-  return (analysis?.ops || [])
+  return (artifactIrOperators(analysis) || [])
     .filter((op) => op.cache_payload?.status === "assessed")
     .map((op) => {
       const payload = op.cache_payload;
@@ -278,7 +279,7 @@ function blockHasWarning(block, analysis) {
   if (Number(block.aggregates?.l1_max_ratio || 0) >= CACHE_WATCH_RATIO) return true;
   if (Number(block.aggregates?.predicted_break_count || 0) > 0) return true;
   const ops = new Set(block.op_indices || []);
-  return (analysis.ops || []).some((op) => ops.has(op.index) && !["none", "low"].includes(String(op.quant_risk || "none").toLowerCase()));
+  return (artifactIrOperators(analysis) || []).some((op) => ops.has(op.index) && !["none", "low"].includes(String(op.quant_risk || "none").toLowerCase()));
 }
 
 function renderBlockDetail(root, block, analysis, actions) {
@@ -317,7 +318,7 @@ function renderBlockDetail(root, block, analysis, actions) {
   );
   const ops = element("div", "xr-op-chip-list");
   for (const opIndex of block.op_indices || []) {
-    const op = (analysis.ops || []).find((item) => item.index === opIndex);
+    const op = (artifactIrOperators(analysis) || []).find((item) => item.index === opIndex);
     const row = button("", "xr-op-ledger");
     row.title = "Open this operator in the Ops view";
     row.append(
@@ -889,7 +890,7 @@ function renderRedesign(root, analysis, state, actions) {
   const nodeHost = element("div", "xr-redesign-node-host");
   nodeStage.append(nodeLegend, nodeHost);
 
-  const selectedOp = analysis.ops?.find((op) => op.index === state.selectedRedesignOpIndex);
+  const selectedOp = artifactIrOperators(analysis)?.find((op) => op.index === state.selectedRedesignOpIndex);
   const selectedContract = selectedOp
     ? getRedesignContractState(analysis, state.projection, selectedOp.index)
     : null;
@@ -1537,7 +1538,7 @@ function ensureRedesignState(analysis, state) {
     };
     state.selectedRedesignBlockId = analysis.block_inventory.blocks[0]?.block_id || "";
     state.selectedRedesignOpIndex = analysis.block_inventory.blocks[0]?.op_indices?.[0]
-      ?? analysis.ops?.[0]?.index
+      ?? artifactIrOperators(analysis)?.[0]?.index
       ?? 0;
     state.projection = null;
     state.dirty = false;

@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import {
   modelQuantizationStatus,
   opLogicalRowPayloadBytes,
@@ -29,7 +30,7 @@ export function cachePressureForAnalysis(analysis, {
   l2Bytes = analysis?.target_profile?.l2_bytes,
   l2CapacityScope = analysis?.target_profile?.l2_capacity_scope,
 } = {}) {
-  const rows = (analysis?.ops || [])
+  const rows = (artifactIrOperators(analysis) || [])
     .filter((op) => opLogicalRowPayloadBytes(op) > 0
       && (!op.row_working_set_ratio_status || op.row_working_set_ratio_status === "assessed"))
     .map((op) => ({
@@ -78,7 +79,7 @@ export function cachePressureForAnalysis(analysis, {
 
 export function opLatencyComponentLedger(analysis) {
   const rows = [];
-  for (const op of analysis?.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     const computeUs = finiteNonNegative(op.bottleneck_compute_us);
     const memoryUs = finiteNonNegative(op.bottleneck_memory_us);
     const packingUs = finiteNonNegative(op.bottleneck_packing_us);
@@ -176,7 +177,7 @@ function scorePenalties(analysis) {
 }
 
 function delegationMotifAttribution(analysis) {
-  const ops = analysis?.ops || [];
+  const ops = artifactIrOperators(analysis) || [];
   const breaks = ops.filter((op) => op.xnnpack_chain_break);
   const squeezeExcitationBlocks = (analysis?.block_inventory?.blocks || [])
     .filter((block) => block.block_type === "squeeze_excitation");
@@ -240,7 +241,7 @@ function padFusionDirectConsumerInventory(ops) {
 
 export function buildModelAtGlance(analysis, cacheOptions = {}) {
   const onnx = String(analysis?.format || "").toLowerCase() === "onnx";
-  const ops = analysis?.ops || [];
+  const ops = artifactIrOperators(analysis) || [];
   const batchOneProjection = onnx ? null : deriveTfliteBatchOneProjection(analysis);
   const batchOneBound = batchOneProjection?.status === "assumption_bound_batch_one";
   const shapeBindingRequired = batchOneProjection?.status === "requires_explicit_shape_binding"

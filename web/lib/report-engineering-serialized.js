@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import { formatBytes, formatExactInteger, formatNumber } from "./format.js";
 import { code, markdownTable } from "./report-utils.js";
 import { coreMlFloorLabel } from "./coreml-deployment-contract.js";
@@ -8,7 +9,7 @@ export function onDeviceLlmEvidenceMarkdown(analysis) {
   if (llm.schema !== "deepbom.on_device_llm_contract.v2") return "";
   if (!hasReportableOnDeviceLlmEvidence(analysis, llm)) {
     const format = String(analysis?.format || "artifact").toUpperCase();
-    const assessedOps = Number(llm.serialized_graph?.assessed_operator_count ?? analysis?.ops?.length ?? 0);
+    const assessedOps = Number(llm.serialized_graph?.assessed_operator_count ?? artifactIrOperators(analysis)?.length ?? 0);
     return [
       "## On-device LLM Evidence Contract",
       `Applicability scan complete for ${format}: ${formatNumber(assessedOps)} serialized operator(s) assessed; no explicit Attention-family operator, bounded transformer motif, external state-name candidate, or bound architecture contract was detected.`,
@@ -225,7 +226,7 @@ export function serializedFormatEvidenceMarkdown(analysis) {
     const flatTensor = analysis.executorch_flat_tensor || null;
     const pte = analysis.executorch_container === "pte";
     const segments = pte ? program?.segments || [] : flatTensor?.segments || [];
-    const tensors = Array.isArray(analysis.tensors) ? analysis.tensors : [];
+    const tensors = Array.isArray(artifactIrValues(analysis)) ? artifactIrValues(analysis) : [];
     const external = program?.external_tensor_data || {};
     const buildBinding = program?.selected_build_binding || {};
     const payloads = Array.isArray(program?.processed_backend_payloads) ? program.processed_backend_payloads : [];
@@ -375,7 +376,7 @@ export function serializedFormatEvidenceMarkdown(analysis) {
   const status = analysis.quantization_status || {};
   const source = coreml.source_basis || {};
   const deploymentFloor = coreml.deployment_floor || {};
-  const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
+  const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
   const integrity = analysis.weight_integrity || {};
   const macs = analysis.mac_assessment || {};
   const size = analysis.size_breakdown || {};

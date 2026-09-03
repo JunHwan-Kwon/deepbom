@@ -142,6 +142,7 @@ import { applyProtectedXnnpackSelectorEvidence } from "./lib/xnnpack-selector-ev
 import { applyProtectedOrtCompatibilityEvidence } from "./lib/ort-compatibility-evidence.js";
 import { applyProtectedTfliteDelegateCompatibilityEvidence } from "./lib/tflite-delegate-compatibility.js";
 import { buildTensorRtStaticPreflight } from "./lib/tensorrt-static-preflight.js";
+import { attachOnnxContractConflictCapsule } from "./lib/onnx-contract-conflict.js";
 import { buildOnDeviceLlmContract } from "./lib/on-device-llm-contract.js";
 import {
   clampInt,
@@ -4139,6 +4140,7 @@ async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = fal
   if (["onnx", "executorch"].includes(format)) syncExternalDataControl(format);
   auditProgressController.begin(32, "Binding artifact SHA-256", { ceiling: 41, step: 4 });
   await ensureModelHash();
+  if (format === "onnx") attachOnnxContractConflictCapsule(current);
   if (targetProfileApplicable && current?.target_profile) {
     const bindingSource = targetBindingSource
       || (targetOverride || readSavedTarget() ? "explicit_id" : "default_assumption");

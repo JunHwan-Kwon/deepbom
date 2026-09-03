@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import {
   alignmentLabel,
   buildGraphIndex,
@@ -31,7 +32,7 @@ export function buildGraphEvidenceMaps(analysis) {
   const tensorFanOut = new Map();
   const lowNormStats = new Map();
   const consumers = new Map();
-  for (const op of analysis?.ops || []) {
+  for (const op of artifactIrOperators(analysis) || []) {
     opAnnotations.set(op.index, {
       role: op.topo_role || "through",
       fanOutMax: op.topo_fan_out_max || 0,
@@ -145,7 +146,7 @@ function buildOpInsights(op, b, analysis) {
 }
 
 export function renderOpDetailPanel(container, analysis, opIndex, { weightHistograms = null, influence = null, outputInfluence = null, runtimeAssignment = null } = {}) {
-  const op = analysis.ops.find((item) => item.index === opIndex);
+  const op = artifactIrOperators(analysis).find((item) => item.index === opIndex);
   container.replaceChildren();
   if (!op) {
     const title = document.createElement("h3");

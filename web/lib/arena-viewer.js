@@ -1,3 +1,4 @@
+import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { decorateEvidenceElement } from "./evidence-visual-contract.js";
 
 const DTYPE_COLORS = Object.freeze({
@@ -140,7 +141,7 @@ function renderAliases(container, plan, onSelectOp) {
 }
 
 function renderArenaCanvas(container, analysis, plan, formatBytes, onSelectOp) {
-  const opCount = Math.max(1, (analysis?.ops || []).length);
+  const opCount = Math.max(1, (artifactIrOperators(analysis) || []).length);
   const arenaBytes = finiteNumber(plan?.non_persistent_arena_bytes);
   const allocations = (plan?.allocations || []).filter((allocation) =>
     allocation?.arena === "kTfLiteArenaRw"
@@ -329,7 +330,7 @@ export function renderTensorArenaViewer(container, analysis, {
       : artifactBytes + combinedArenaBytes;
     const rootAllocations = (plan.allocations || []).filter((allocation) => allocation?.arena === "kTfLiteArenaRw"
       && allocation?.allocation_status === "allocated" && finiteNumber(allocation?.size_bytes) != null);
-    const occupancy = peakRootOccupancy(rootAllocations, Math.max(1, (analysis?.ops || []).length), Number(plan.non_persistent_arena_bytes || 0));
+    const occupancy = peakRootOccupancy(rootAllocations, Math.max(1, (artifactIrOperators(analysis) || []).length), Number(plan.non_persistent_arena_bytes || 0));
     metrics.append(
       metric("Arena RW", plan.non_persistent_arena_bytes == null ? "Not assessed" : formatBytes(plan.non_persistent_arena_bytes)),
       metric("Persistent", plan.persistent_arena_bytes == null ? "Not assessed" : formatBytes(plan.persistent_arena_bytes)),

@@ -1,3 +1,4 @@
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import { deploymentFrontierTargetIds } from "./app-config.js";
 import {
   assessedOpLogicalBytes,
@@ -96,8 +97,8 @@ function attachTip(node, lines) {
 }
 
 export function quantSummaryEvidence(analysis) {
-  const ops = Array.isArray(analysis?.ops) ? analysis.ops : [];
-  const tensors = Array.isArray(analysis?.tensors) ? analysis.tensors : [];
+  const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
+  const tensors = Array.isArray(artifactIrValues(analysis)) ? artifactIrValues(analysis) : [];
   const tensorByIndex = new Map(tensors.map((tensor) => [Number(tensor.index), tensor]));
   const opSignals = new Map();
   const addSignal = (index, label, tone = "warn") => {
@@ -663,7 +664,7 @@ export function createPerformanceVisualController({
 
   function renderXnnpackChainFlow(analysis) {
     const chains = Array.isArray(analysis.xnnpack_chains) ? analysis.xnnpack_chains : [];
-    const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
+    const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
     const breaks = ops.filter((op) => op.xnnpack_chain_break);
     if (!chains.length) {
       elements.chainFlow.replaceChildren(targetCompareMessage("No conditionally delegatable XNNPACK segment was predicted for this target."));
@@ -795,7 +796,7 @@ export function createPerformanceVisualController({
   }
 
   function renderXnnpackFallbackMap(analysis) {
-    const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
+    const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
     const buildRisks = analysis.delegation_repair?.runtime_build_risks || [];
     if (!ops.length) {
       if (elements.xnnpackFallbackMap) elements.xnnpackFallbackMap.replaceChildren(targetCompareMessage("No operators available."));
@@ -851,7 +852,7 @@ export function createPerformanceVisualController({
 
   // ── XNNPACK: Break Cost Table ──────────────────────────────────────────────
   function renderXnnpackBreakTable(analysis) {
-    const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
+    const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
     const boundaryEdges = analysis.predicted_partition_boundaries?.edges || [];
     const incidentEvidence = (op) => {
       const edges = boundaryEdges.filter((edge) => Number(edge.producer_op_index) === Number(op.index) || Number(edge.consumer_op_index) === Number(op.index));
@@ -919,11 +920,11 @@ export function createPerformanceVisualController({
     }
     if (format === "coreml") {
       if (analysis.coreml?.model_type === "mlProgram") {
-        const transforms = (analysis.ops || []).filter((op) => op.quantization_state === "serialized_quantization_transform");
+        const transforms = (artifactIrOperators(analysis) || []).filter((op) => op.quantization_state === "serialized_quantization_transform");
         const perAxis = [];
         for (const op of transforms) {
           const scaleBinding = op.mil_input_bindings?.scale?.find((item) => Number.isSafeInteger(item.tensor_index));
-          const tensor = scaleBinding ? analysis.tensors?.[scaleBinding.tensor_index] : null;
+          const tensor = scaleBinding ? artifactIrValues(analysis)?.[scaleBinding.tensor_index] : null;
           const integrity = tensor?.numerical_integrity || {};
           const count = Number(integrity.decoded_value_count || 0);
           const minimum = Number(integrity.finite_min);
@@ -936,7 +937,7 @@ export function createPerformanceVisualController({
           elements.quantScaleScatter?.replaceChildren(targetCompareMessage("Not applicable: the decoded MIL SSA graph contains no explicit quantize, dequantize, or constexpr compression transform."));
         } else if (!perAxis.length) {
           const unbound = transforms.filter((op) => op.mil_input_bindings?.scale?.some((item) => Number.isSafeInteger(item.tensor_index)
-            && !analysis.tensors?.[item.tensor_index]?.numerical_integrity?.status?.startsWith("assessed"))).length;
+            && !artifactIrValues(analysis)?.[item.tensor_index]?.numerical_integrity?.status?.startsWith("assessed"))).length;
           elements.quantScaleScatter?.replaceChildren(targetCompareMessage(
             `No assessed multi-value scale vector is serialized for ${transforms.length} explicit MIL quantization/compression transform(s). ${unbound ? `${unbound} transform scale payload(s) remain package-unbound or unsupported.` : "Scalar scales and transforms without affine scale inputs do not define per-axis spread."}`,
           ));
@@ -1002,7 +1003,7 @@ export function createPerformanceVisualController({
       }
       return;
     }
-    const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
+    const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
     const evidence = quantSummaryEvidence(analysis);
     const contractSummary = perAxisScaleContractSummary(evidence.perAxisConstants);
     const meaningful = ops
@@ -1033,7 +1034,7 @@ export function createPerformanceVisualController({
 
     for (const op of meaningful) {
       const ratio = Number(op.quant_scale_ratio || 1);
-      const weight = analysis.tensors?.[Number(op.inputs?.[1])];
+      const weight = artifactIrValues(analysis)?.[Number(op.inputs?.[1])];
       const axis = Number(weight?.quantized_dimension);
       const axisDimension = Number.isSafeInteger(axis) && axis >= 0 && axis < (weight?.shape?.length || 0)
         ? Number(weight.shape[axis]) : null;
@@ -1146,8 +1147,8 @@ export function createPerformanceVisualController({
     }
     if (format === "coreml") {
       if (analysis.coreml?.model_type === "mlProgram") {
-        const boundaries = (analysis.ops || []).filter((op) => ["quantize", "dequantize"].includes(String(op.mil_operation_type || "").toLowerCase()));
-        const constantTransforms = (analysis.ops || []).filter((op) => String(op.mil_operation_type || "").toLowerCase().startsWith("constexpr_")
+        const boundaries = (artifactIrOperators(analysis) || []).filter((op) => ["quantize", "dequantize"].includes(String(op.mil_operation_type || "").toLowerCase()));
+        const constantTransforms = (artifactIrOperators(analysis) || []).filter((op) => String(op.mil_operation_type || "").toLowerCase().startsWith("constexpr_")
           && op.quantization_state === "serialized_quantization_transform");
         if (elements.quantHoleCount) {
           elements.quantHoleCount.textContent = `${boundaries.length} serialized Q/DQ ${boundaries.length === 1 ? "boundary" : "boundaries"}`;
@@ -1163,8 +1164,8 @@ export function createPerformanceVisualController({
           const row = document.createElement("button");
           row.type = "button";
           row.className = `quant-hole-row hole-${String(op.mil_operation_type).toLowerCase() === "dequantize" ? "dequant" : "requant"}`;
-          const input = analysis.tensors?.[op.inputs?.[0]];
-          const output = analysis.tensors?.[op.outputs?.[0]];
+          const input = artifactIrValues(analysis)?.[op.inputs?.[0]];
+          const output = artifactIrValues(analysis)?.[op.outputs?.[0]];
           const index = document.createElement("span");
           index.className = "hole-index";
           index.textContent = `#${String(op.index).padStart(3, "0")}`;
@@ -1400,7 +1401,7 @@ export function createPerformanceVisualController({
       ["signal-risk", "border: risk signal"],
       ["neutral", "state: unquantized"],
     ]);
-    const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
+    const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
     const quantOps = ops.filter((op) => op.quantization_state && op.quantization_state !== "none");
     if (!quantOps.length) {
       if (elements.quantHeatmapCount) elements.quantHeatmapCount.textContent = `${ops.length} graph op${ops.length === 1 ? "" : "s"}`;
@@ -1495,7 +1496,7 @@ export function createPerformanceVisualController({
   // ── Roofline Scatter Chart ────────────────────────────────────────────────
   function renderRooflineChart(analysis) {
     if (!elements.rooflineChart) return;
-    const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
+    const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
     const target = analysis.target_profile || {};
     const peakGops = Number(target.effective_peak_gops || 0);
     const bwGbps = Number(target.effective_memory_bandwidth_gbps || 0);
@@ -1642,7 +1643,7 @@ export function createPerformanceVisualController({
   }
 
   function renderStageMemoryMix(analysis) {
-    const ops = Array.isArray(analysis.ops) ? analysis.ops : [];
+    const ops = Array.isArray(artifactIrOperators(analysis)) ? artifactIrOperators(analysis) : [];
     const blockStages = analysis?.block_inventory?.status === "assessed"
       ? analysis.block_inventory.stages || []
       : [];
@@ -1883,7 +1884,7 @@ export function createPerformanceVisualController({
     container.replaceChildren();
 
     const target = analysis.target_profile || {};
-    const allOps = analysis.ops || [];
+    const allOps = artifactIrOperators(analysis) || [];
 
     // Estimate time per op; keep zero-time ops for structure but mark them
     const allOpData = allOps.map((op) => {

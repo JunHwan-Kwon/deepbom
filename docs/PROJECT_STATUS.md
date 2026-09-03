@@ -1364,6 +1364,15 @@ Priority 3: local advanced evidence.
 
 Priority 4: backend evidence closure.
 
+- ONNX serialized-contract conflicts now have a dedicated, self-hashed
+  `deepbom.onnx_contract_conflict_capsule.v1` rather than being represented only
+  as aggregate unknown-shape counts. The nine hash-pinned affected artifacts
+  conserve six unconditional roots, 543 condition-bound invalid variants,
+  1,901 downstream blocked nodes, and 213 withheld MAC rows. Web, CLI,
+  engineering reports, evidence envelopes, CycloneDX properties, and the public
+  JSON Schema retain the same status and capsule digest. No path repairs an
+  invalid declaration or substitutes stale shape data.
+
 - ONNX symbolic rank and dimension propagation plus explicit runtime I/O symbol
   binding are implemented. Across 48 unique-byte artifacts from 40 pinned
   repositories, all 41,462 observed nodes now have a source-bound local
@@ -1416,6 +1425,13 @@ Priority 4: backend evidence closure.
   without claiming runtime behavior.
 
 Priority 5: model-family coverage expansion.
+
+- Core ML evidence is now explicitly partitioned into 27 hash-identified public
+  Apple catalog artifacts, five generated MLProgram conformance fixtures, and
+  an unobserved compiled-plan/runtime population. The first two establish only
+  their bounded parser and contract behavior. Expected compute-unit use still
+  requires a hash-bound MLComputePlan, and executed placement requires runtime
+  evidence.
 
 - The validation corpus now includes hash-bound SafeTensors dense-decoder,
   sparse-MoE, and recurrent-SSM packages; eight GGUF architecture/encoding
