@@ -4,6 +4,18 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.3 - 2026-09-03
+
+- Fixed the Cargo launcher's verified runtime-asset installation contract by
+  separating the versioned GitHub Release filename from the canonical local
+  wasm-pack filename consumed by the analysis engine.
+- Extended the post-publication Cargo smoke test to execute the hash-pinned
+  MobileNet V2 TFLite artifact and assert its operator, tensor, and MAC totals,
+  in addition to the existing ONNX execution check. This prevents a successful
+  engine-only smoke from masking a missing TFLite WASM runtime asset.
+- Advanced the service-worker cache generation to v548 for the 1.96.3 release
+  identity so clients cannot retain the preceding application configuration.
+
 ## 1.96.2 - 2026-09-03
 
 - Added a self-hashed ONNX serialized-contract conflict capsule that preserves
@@ -28,7 +40,7 @@ All notable archival releases of DEEPBOM are documented here.
 - Added the conflict capsule and Artifact IR selector facade to offline cache
   coverage, and made application startup recover from bounded transient module
   fetch failures without masking code errors. The service-worker cache advances
-  from v544 to v546.
+  from v544 to v547.
 
 ## 1.96.1 - 2026-09-03
 

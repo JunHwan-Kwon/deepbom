@@ -1,6 +1,6 @@
 [package]
 name = "deepbom"
-version = "1.96.2"
+version = "1.96.3"
 edition = "2021"
 rust-version = "1.85"
 description = "Verified native launcher for DEEPBOM deployment-artifact analysis"

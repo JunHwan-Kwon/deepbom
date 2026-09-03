@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "031cd6490164715afb4ea88a4e777efa79c018b3",
+  "source_commit": "a5aaf86900182e3e58adbdacec3769b494faa441",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 955,
@@ -22,8 +22,8 @@
     },
     {
       "path": ".github/workflows/release-channels.yml",
-      "byte_length": 11596,
-      "sha256": "5f7f5cfd151de6308d5f2a58ce72a87f58f62fd44295e5e5d284c5852fd90812"
+      "byte_length": 12189,
+      "sha256": "b60195b64146ed3856f465be8c591b514d418e23bf7306145a050867e556f34b"
     },
     {
       "path": ".gitignore",
@@ -37,8 +37,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 21956,
-      "sha256": "d0d3b522475d67d573ff3166cc2f776db8c75025960e5cfd006e4523fc62fedc"
+      "byte_length": 22648,
+      "sha256": "c6c6c12b3f6b123ff9be864b90e6cefbe01e7953af010251645eeca22db8bd5c"
     },
     {
       "path": "CITATION.cff",
@@ -53,12 +53,12 @@
     {
       "path": "Cargo.lock",
       "byte_length": 8652,
-      "sha256": "3edc7c7d889ba1a51296dd7f44fbf2a5b03ec421b29860ab8ab74ff26c39dd2d"
+      "sha256": "d4d1b094fddce7a7a2880dd3315915d0215ac4f0a32854b24c87022965718112"
     },
     {
       "path": "Cargo.toml",
       "byte_length": 983,
-      "sha256": "95db8c4e8fdf54d0aed89b7931fa8f92724d70b678d49b1ed1ef9455a99edb57"
+      "sha256": "c96367e9d0ba765bdfaaa5724f9b2d395dde8efd0eef358da84866593324a6cd"
     },
     {
       "path": "LICENSE",
@@ -93,7 +93,7 @@
     {
       "path": "bin/deepbom.mjs",
       "byte_length": 88525,
-      "sha256": "4f0bf7f612d50a167f377f4d6a504e5a7544a329b2990737c9d1a3cf126c803f"
+      "sha256": "c3cf561bb374ccd70700e0aeffdb9e1c1983b46fb70b304b40f8cc73e386e4da"
     },
     {
       "path": "bin/graph-png-export.mjs",
@@ -133,12 +133,12 @@
     {
       "path": "channels/cargo/Cargo.lock",
       "byte_length": 12291,
-      "sha256": "4b3545d05cb9483ae46b93c1f68702fd5322cbf1e2584537ebbbabcac1e2a0ef"
+      "sha256": "3a3fcf720ff85af7cec3c0db24bf6424fb876843b0f2f3b12091b295a9690474"
     },
     {
       "path": "channels/cargo/Cargo.toml",
       "byte_length": 751,
-      "sha256": "73e1859469d8042222ebfd9191fa7388dcb0ecdfb938fb184ebac5553f9adeda"
+      "sha256": "f1ce49f24047e011b9f5c207ec1f8355b595ee41d233c8ae85b3b8cb2b2fc880"
     },
     {
       "path": "channels/cargo/README.md",
@@ -147,8 +147,8 @@
     },
     {
       "path": "channels/cargo/src/main.rs",
-      "byte_length": 21361,
-      "sha256": "b1c580bb7cda640cadcfae08d83aa7fb0d4ee6566099e334e6f6916266fdc399"
+      "byte_length": 21801,
+      "sha256": "10f01863918a8d0fedff978d822b2c50244d8e0f12a8b06261baf10cf7dc11f6"
     },
     {
       "path": "channels/huggingface/Dockerfile",
@@ -178,7 +178,7 @@
     {
       "path": "channels/python/pyproject.toml",
       "byte_length": 901,
-      "sha256": "77e7a25dc2bbad187584b8a922a5405a8415917bb092b6393b08ea225db82878"
+      "sha256": "cd5b054e227a9fed8753a7dd3b7138c6426f51f20a73004aa3e12afa9f3fef5a"
     },
     {
       "path": "channels/python/requirements-build.txt",
@@ -193,7 +193,7 @@
     {
       "path": "channels/python/src/deepbom/__init__.py",
       "byte_length": 94,
-      "sha256": "e78bdef9d491fd47fef22912e047768420b18f444bd2d76994fcfb16b0616ca9"
+      "sha256": "a44489ef22fa94a09dd100ef89502aa225fdd2068aa69255a335bcd7fe101f58"
     },
     {
       "path": "channels/python/src/deepbom/__main__.py",
@@ -212,8 +212,8 @@
     },
     {
       "path": "config/delivery-operations.v1.json",
-      "byte_length": 22234,
-      "sha256": "6ec56d5f23beb1e4be4bd919345820e63ddabd243f38bd5dba537ce8adeda76b"
+      "byte_length": 25892,
+      "sha256": "5b6df59bb6db67fe72ffc88ba361d38b8bf180855a22b27786eecd0a2afa8050"
     },
     {
       "path": "config/public-source-files.v1.txt",
@@ -498,7 +498,7 @@
     {
       "path": "docs/CLI_REFERENCE.md",
       "byte_length": 8956,
-      "sha256": "ff7f232e1a72952f164435bb84086dfe5714176348ef1b44a7a63909d3db0335"
+      "sha256": "3d06a356a64580e1e6cc0c09e74c6a7d97a057098a56f30e6af98ea85f4825a0"
     },
     {
       "path": "docs/CYCLONEDX_20_QUANTIZATION_CONTRIBUTION.md",
@@ -507,8 +507,8 @@
     },
     {
       "path": "docs/DELIVERY_OPERATIONS.md",
-      "byte_length": 10605,
-      "sha256": "328641e59a2950959ce5a9c79d86366ccf1e5a0eeca46aa90361a8134fd3f985"
+      "byte_length": 11889,
+      "sha256": "8e4671e3d147e5cc59ceda72c2cbf8dd5f7dd8a0192c1120ce28189e6254ddc2"
     },
     {
       "path": "docs/KNOWN_ISSUES.md",
@@ -603,12 +603,12 @@
     {
       "path": "examples/expected-output/gpu-partition-probe.expected.json",
       "byte_length": 1012,
-      "sha256": "cf5afea0b20bbd0c00d66197ee774284c1513a043937fc183c83514dee3d406e"
+      "sha256": "1f18cdb6a5c69d7d632e04a8f1907f53315ac1312539cccec0050283b685f78d"
     },
     {
       "path": "examples/expected-output/gpu-partition-probe.human.txt",
       "byte_length": 665,
-      "sha256": "a55f916641d525a6180eb8f3fb0dac25ab545af79c537ebc8e23a15fc40ce432"
+      "sha256": "14490309d5cdaebbdd912bfd948ce121447505fd1fc7427379f9323624fa149b"
     },
     {
       "path": "native/capture-run.schema.json",
@@ -698,12 +698,12 @@
     {
       "path": "package-lock.json",
       "byte_length": 41287,
-      "sha256": "b2e3bc0d314a6021d9671375f944628e6c70e52079ae063912548d928b97f50a"
+      "sha256": "0241f0ff09cef876f0019235f5e5c0556bd74e2487a7af02b900488c7d7eaa0f"
     },
     {
       "path": "package.json",
       "byte_length": 22039,
-      "sha256": "010deb03d3da00747fa3a522c4b30703be663092d8b581253217b99eb5406413"
+      "sha256": "262f301d24a926e826cf5a3474b22a4bfa2b57afb53ccd38b619932f1e5d1a58"
     },
     {
       "path": "pkg/LICENSE",
@@ -713,7 +713,7 @@
     {
       "path": "pkg/package.json",
       "byte_length": 496,
-      "sha256": "d9b8e4c24e626c5d7c5cd3343b099f7482861816dabd94537b79407aa0b3bf77"
+      "sha256": "9dbef2079bf37c9ef9fc1057f4a4c5c5d1ac96c9cb42b5336c3ce1810ed401c3"
     },
     {
       "path": "pkg/tflite_wasm_audit.d.ts",
@@ -903,7 +903,7 @@
     {
       "path": "release/version.json",
       "byte_length": 97,
-      "sha256": "f53dc6ab3ee68eae3dabf4189a5b1d2fd5f213d50efcfa7b440695e22cf14e48"
+      "sha256": "e2abc7dedc33228ad833fa0a540b0948e6a0422b6905e4ac18d24a7d2832fe2b"
     },
     {
       "path": "requirements-onnx-corpus.txt",
@@ -1167,8 +1167,8 @@
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
-      "byte_length": 32507,
-      "sha256": "ba1a8ef80f1595c6bd1f9d1c62fe647dd50963f8512fbf255df102537eed76f2"
+      "byte_length": 32612,
+      "sha256": "0e4e13bb5ac79e7ca1b6019a52a951d2a8d56abb217e23c37a56983ea0e2e726"
     },
     {
       "path": "scripts/check-cli-automation.mjs",
@@ -2963,7 +2963,7 @@
     {
       "path": "web/index.html",
       "byte_length": 139693,
-      "sha256": "437e5189dbfeee36392b0d1ce812bb1734b861bea19565307d963397644b40a1"
+      "sha256": "6b9e59014881c661d345f132921233edaa966dcee9d951cd01ccbcd123813c35"
     },
     {
       "path": "web/lib/accelerator-binding.js",
@@ -3028,7 +3028,7 @@
     {
       "path": "web/lib/app-config.js",
       "byte_length": 4766,
-      "sha256": "d9284ba7db6a1eec984e8a641c5b62a350d9e41a1437ebdd2be7a36552eeaab8"
+      "sha256": "55fe8428b9a2de08bcd74bf711ffe11158ab13b7dfbeda60bd3245af49a2ce2e"
     },
     {
       "path": "web/lib/app-deepbom-workspace.js",
@@ -3178,7 +3178,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 79065,
-      "sha256": "59682f90227c4a570824db5d78081b12e071a8c1da7b17d2ea5e715dbdd0bdfa"
+      "sha256": "fed72e4551354deb75e9b9294c22b0b7bff9bce71eba16fbfc9a6a5e313cf161"
     },
     {
       "path": "web/lib/bundle.js",
@@ -4753,7 +4753,7 @@
     {
       "path": "web/sw.js",
       "byte_length": 15710,
-      "sha256": "f06325c4a90ab855eccf427d21605166551b3a02ff1adf43af089028235a110f"
+      "sha256": "ebf06975decd853f6b39c43f64e7dce37e89c398a83622c3081707e64ca32c3a"
     },
     {
       "path": "web/test.html",

@@ -194,6 +194,8 @@ for (const snippet of [
   "npm publish ./dist/deepbom-${{ inputs.expected_version }}.tgz --access public",
   "node scripts/build-cargo-engine-release.mjs",
   "cargo +1.85.0 package --locked --manifest-path channels/cargo/Cargo.toml",
+  "web/samples/mobilenet_v2_1.0_224_quant.tflite",
+  "Remote engine TFLite evidence contract diverged.",
   "cargo publish --locked --manifest-path channels/cargo/Cargo.toml",
   "environment: crates-io",
   "gh release create",

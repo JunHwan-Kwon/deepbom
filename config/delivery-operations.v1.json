@@ -582,6 +582,92 @@
         "packaged_wasm_tamper_rejection"
       ],
       "qualification": "The increased wall time reflects the 1.96.2 ONNX conflict capsule and expanded cross-surface equivalence contracts. This remains a manual release-only gate."
+    },
+    {
+      "kind": "registry_installation_defect",
+      "version": "1.96.2",
+      "platform": "windows-x64",
+      "command": "cargo install --root <isolated-root> --version 1.96.2 --locked deepbom; deepbom audit <hash-pinned-tflite>",
+      "elapsed_seconds": 39.4,
+      "conclusion": "failure",
+      "conditions": [
+        "fresh_crates_io_install",
+        "verified_remote_engine_download",
+        "verified_versioned_wasm_download",
+        "real_tflite_audit"
+      ],
+      "failure_class": "runtime_asset_local_name_mismatch",
+      "qualification": "The Cargo launcher verified and cached the versioned release WASM, but the engine requires the canonical wasm-pack filename inside DEEPBOM_RUNTIME_ASSET_DIR. The prior post-publication smoke executed ONNX only and therefore did not exercise this runtime-asset path. npm and PyPI 1.96.2 are unaffected."
+    },
+    {
+      "kind": "private_web_preflight",
+      "version": "1.96.3",
+      "platform": "windows-x64",
+      "command": "npm run check:deploy",
+      "elapsed_seconds": 153.327,
+      "check_count": 75,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "isolated_parser_robustness_and_format_routing",
+        "export_cyclonedx_accelerator_and_review_policy_contracts",
+        "artifact_ir_schema_identity_conservation_and_tamper_contracts",
+        "artifact_ir_import_graph_and_consumer_boundaries",
+        "onnx_contract_conflict_capsule_and_hash_bound_corpus",
+        "evidence_applicability_ui_contract",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy",
+        "single_source_release_identity_alignment",
+        "no_full_corpus_or_browser_matrix"
+      ],
+      "qualification": "The first 72 bounded checks completed before the delivery-operations self-check. This measured current-version observation enables the self-check and the two terminal privacy and worker checks to close the full 75-check gate."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.96.3",
+      "platform": "windows-x64",
+      "command": "npm run build:channels",
+      "elapsed_seconds": 268.264,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball",
+        "single_executable_engine",
+        "python_wheel",
+        "cargo_launcher_source",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.96.3",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 221.351,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.96.3",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 653.126,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "capability_envelope_sarif_policy_and_review_contract_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_wasm_tamper_rejection"
+      ],
+      "qualification": "The complete release-only equivalence contract remained within its dedicated budget after the Cargo runtime-asset installation fix."
     }
   ],
   "budgets": {

@@ -16,6 +16,7 @@ const MAX_MATRIX_BYTES: u64 = 1024 * 1024;
 const MAX_ENGINE_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_WASM_BYTES: u64 = 64 * 1024 * 1024;
 const DOWNLOAD_CHUNK_BYTES: usize = 64 * 1024;
+const RUNTIME_WASM_FILENAME: &str = "tflite_wasm_audit_bg.wasm";
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -156,7 +157,9 @@ fn install_or_verify_cached_engine(
     let root = cache_root()?.join("engines").join(VERSION).join(&target_id);
     let executable = root.join(executable_filename(&target_id));
     let asset_root = root.join("pkg");
-    let wasm = asset_root.join(wasm_filename());
+    // The immutable release asset is versioned, while the engine's runtime
+    // contract resolves the canonical wasm-pack filename inside this directory.
+    let wasm = asset_root.join(runtime_wasm_filename());
     let matrix_path = root.join("engine-matrix.v1.json");
 
     if !force_remote_manifest && verify_cached(&matrix_path, &executable, &wasm, &target_id).is_ok()
@@ -500,6 +503,10 @@ fn wasm_filename() -> String {
     format!("tflite_wasm_audit_bg-{VERSION}.wasm")
 }
 
+fn runtime_wasm_filename() -> &'static str {
+    RUNTIME_WASM_FILENAME
+}
+
 fn asset_url(filename: &str) -> String {
     format!("{RELEASE_REPOSITORY}/releases/download/channels-v{VERSION}/{filename}")
 }
@@ -612,6 +619,8 @@ mod tests {
             wasm_filename(),
             format!("tflite_wasm_audit_bg-{VERSION}.wasm")
         );
+        assert_eq!(runtime_wasm_filename(), "tflite_wasm_audit_bg.wasm");
+        assert_ne!(wasm_filename(), runtime_wasm_filename());
     }
 
     #[test]

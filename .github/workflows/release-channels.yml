@@ -236,9 +236,15 @@ jobs:
           }
           cargo +1.85.0 run --quiet --locked --manifest-path channels/cargo/Cargo.toml -- engine verify
           if ($LASTEXITCODE -ne 0) { throw "Remote engine verification failed." }
-          $output = cargo +1.85.0 run --quiet --locked --manifest-path channels/cargo/Cargo.toml -- audit corpus/onnx-extension-contract-corpus/deepbom-static-per-axis-qdq.onnx --compact
-          if ($LASTEXITCODE -ne 0) { throw "Remote engine execution failed." }
-          ($output -join "`n") | ConvertFrom-Json | Out-Null
+          $tfliteOutput = cargo +1.85.0 run --quiet --locked --manifest-path channels/cargo/Cargo.toml -- audit web/samples/mobilenet_v2_1.0_224_quant.tflite --target android_mid_a55 --compact
+          if ($LASTEXITCODE -ne 0) { throw "Remote engine TFLite/WASM execution failed." }
+          $tflite = ($tfliteOutput -join "`n") | ConvertFrom-Json
+          if ($tflite.format -ne "tflite" -or $tflite.operator_count -ne 65 -or $tflite.tensor_count -ne 173 -or $tflite.total_macs -ne 300775552) {
+            throw "Remote engine TFLite evidence contract diverged."
+          }
+          $onnxOutput = cargo +1.85.0 run --quiet --locked --manifest-path channels/cargo/Cargo.toml -- audit corpus/onnx-extension-contract-corpus/deepbom-static-per-axis-qdq.onnx --compact
+          if ($LASTEXITCODE -ne 0) { throw "Remote engine ONNX execution failed." }
+          ($onnxOutput -join "`n") | ConvertFrom-Json | Out-Null
 
   publish-cargo:
     name: Publish Cargo bootstrap release

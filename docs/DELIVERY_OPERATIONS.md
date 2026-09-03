@@ -42,10 +42,23 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 | Local Windows 1.96.2 channel build | release-version npm, executable, Python wheel, and Cargo launcher | 288.582 s |
 | Local Windows 1.96.2 platform smoke | installed Python and standalone TFLite/WASM plus ONNX execution parity | 234.030 s |
 | Local Windows 1.96.2 release-contract equivalence | npm full-format/package and command parity, native/Python execution, Cargo binding, and packaged-WASM tamper rejection | 652.106 s |
+| Fresh crates.io 1.96.2 TFLite audit | failed after verified engine/WASM download because the versioned release filename did not satisfy the engine's canonical local WASM filename | 39.4 s |
+| Private web 1.96.3 preflight | 75 bounded checks including the Cargo release workflow contract and service-worker v548 identity | 153.327 s |
+| Local Windows 1.96.3 channel build | release-version npm, executable, Python wheel, and corrected Cargo launcher | 268.264 s |
+| Local Windows 1.96.3 platform smoke | installed Python and standalone TFLite/WASM plus ONNX execution parity | 221.351 s |
+| Local Windows 1.96.3 release-contract equivalence | npm full-format/package and command parity, native/Python execution, Cargo binding, and packaged-WASM tamper rejection | 653.126 s |
 
 The 1.94.4 run is retained as timing and incident evidence. It is not a known-good
 quality baseline. A registry success is never treated as sufficient without a
 fresh installation and real artifact execution.
+
+The 1.96.2 Cargo package is retained as an immutable incident record but is not
+the recommended Cargo version. Its launcher stored the verified, versioned
+release WASM under that remote filename while the engine resolves the canonical
+`tflite_wasm_audit_bg.wasm` name. Version 1.96.3 separates remote and local
+filenames and requires a real TFLite audit in the post-publication Cargo smoke.
+The npm and PyPI 1.96.2 packages embed the canonical runtime asset and are not
+affected by this Cargo-only defect.
 
 The first local channel rebuild exceeded 604 seconds because a recursive source
 copy included 3,989 generated Cargo files (1,380 MiB) from
