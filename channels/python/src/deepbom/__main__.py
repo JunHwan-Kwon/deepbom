@@ -84,14 +84,24 @@ def _verified_engine() -> tuple[Path, Optional[Path]]:
         )
     executable = manifest.get("executable")
     wasm = manifest.get("tflite_wasm")
-    if not isinstance(executable, dict) or not isinstance(wasm, dict):
+    self_test = manifest.get("self_test")
+    if not isinstance(executable, dict) or not isinstance(wasm, dict) or not isinstance(self_test, dict):
         raise RuntimeError("The packaged DEEPBOM engine manifest is missing artifact records.")
     filename = "deepbom-core.exe" if os.name == "nt" else "deepbom-core"
     if executable.get("filename") != filename or executable.get("path") != filename:
         raise RuntimeError("The packaged DEEPBOM executable identity is invalid.")
+    if wasm.get("path") != "pkg/tflite_wasm_audit_bg.wasm":
+        raise RuntimeError("The packaged DEEPBOM TFLite WASM identity is invalid.")
+    if self_test.get("path") != "deepbom-self-test.onnx":
+        raise RuntimeError("The packaged DEEPBOM self-test identity is invalid.")
     candidate = engine_root / filename
     wasm_path = engine_root / "pkg" / "tflite_wasm_audit_bg.wasm"
-    for label, artifact, record in (("engine", candidate, executable), ("TFLite WASM", wasm_path, wasm)):
+    self_test_path = engine_root / "deepbom-self-test.onnx"
+    for label, artifact, record in (
+        ("engine", candidate, executable),
+        ("TFLite WASM", wasm_path, wasm),
+        ("self-test probe", self_test_path, self_test),
+    ):
         if not artifact.is_file() or artifact.stat().st_size != record.get("byte_length"):
             raise RuntimeError(f"The packaged DEEPBOM {label} size does not match its manifest.")
         if _sha256(artifact) != record.get("sha256"):

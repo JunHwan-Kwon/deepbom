@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-04T15:43:30.000Z",
+  "recorded_at": "2026-09-04T19:54:41.501Z",
   "scope": "Public installation channels and private web delivery",
   "observations": [
     {
@@ -994,6 +994,92 @@
         "public_private_and_worker_boundaries"
       ],
       "qualification": "The exhaustive local release-candidate gate passed after the expected evidence-envelope digest was independently reproduced twice and rebound to the 1.96.7 analyzer identity."
+    },
+    {
+      "kind": "private_web_preflight",
+      "version": "1.96.8",
+      "platform": "windows-x64",
+      "command": "npm run check:deploy",
+      "elapsed_seconds": 154,
+      "check_count": 84,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "interaction_loaded_browser_delivery_boundary",
+        "artifact_ir_and_stable_cyclonedx_1_7_contracts",
+        "route_bound_cloudflare_deployment_contract",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy",
+        "no_full_corpus_or_browser_matrix"
+      ],
+      "qualification": "The first 81 non-self-referential checks completed in 152.279 seconds. This current-version observation enables the delivery-operations check and the two terminal privacy and Worker configuration checks."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.96.8",
+      "platform": "windows-x64",
+      "command": "npm run build:channels",
+      "elapsed_seconds": 221.2,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball",
+        "single_executable_engine",
+        "python_wheel",
+        "cargo_launcher_source",
+        "manifest_bound_self_test_probe",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.96.8",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 269.711,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "manifest_bound_self_test_execution",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.96.8",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 494.9,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "capability_envelope_sarif_policy_and_review_contract_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_self_test_and_wasm_tamper_rejection"
+      ],
+      "qualification": "The release-only equivalence contract executed the packaged probe through npm, Python, standalone, and Cargo paths and rejected modified npm and Python probe bytes."
+    },
+    {
+      "kind": "local_full_quality",
+      "version": "1.96.8",
+      "platform": "windows-x64",
+      "command": "npm run check",
+      "elapsed_seconds": 1767.757,
+      "check_count": 205,
+      "conclusion": "success",
+      "conditions": [
+        "complete_parser_and_format_contract_matrix",
+        "artifact_ir_and_export_conservation",
+        "browser_viewer_and_accessibility_regressions",
+        "isolated_parser_robustness",
+        "installed_channel_probe_and_tamper_contracts",
+        "public_private_and_worker_boundaries"
+      ],
+      "qualification": "The exhaustive release-candidate gate passed after independently reproducing the version-bound envelope digest and extending the loaded-suite capability-viewer readiness bound to 60 seconds."
     }
   ],
   "budgets": {

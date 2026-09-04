@@ -15,8 +15,10 @@ const RELEASE_REPOSITORY: &str = "https://github.com/JunHwan-Kwon/deepbom";
 const MAX_MATRIX_BYTES: u64 = 1024 * 1024;
 const MAX_ENGINE_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_WASM_BYTES: u64 = 64 * 1024 * 1024;
+const MAX_SELF_TEST_BYTES: u64 = 16 * 1024 * 1024;
 const DOWNLOAD_CHUNK_BYTES: usize = 64 * 1024;
 const RUNTIME_WASM_FILENAME: &str = "tflite_wasm_audit_bg.wasm";
+const RUNTIME_SELF_TEST_FILENAME: &str = "deepbom-self-test.onnx";
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -25,6 +27,7 @@ struct EngineMatrix {
     version: String,
     source: SourceIdentity,
     wasm: Artifact,
+    self_test: Artifact,
     targets: Vec<Target>,
 }
 
@@ -160,9 +163,11 @@ fn install_or_verify_cached_engine(
     // The immutable release asset is versioned, while the engine's runtime
     // contract resolves the canonical wasm-pack filename inside this directory.
     let wasm = asset_root.join(runtime_wasm_filename());
+    let self_test = root.join(runtime_self_test_filename());
     let matrix_path = root.join("engine-matrix.v1.json");
 
-    if !force_remote_manifest && verify_cached(&matrix_path, &executable, &wasm, &target_id).is_ok()
+    if !force_remote_manifest
+        && verify_cached(&matrix_path, &executable, &wasm, &self_test, &target_id).is_ok()
     {
         return Ok(EngineInstallation {
             executable,
@@ -172,7 +177,8 @@ fn install_or_verify_cached_engine(
 
     fs::create_dir_all(&root).map_err(io_error("create engine cache"))?;
     let _lock = acquire_lock(&root.join(".install.lock"))?;
-    if !force_remote_manifest && verify_cached(&matrix_path, &executable, &wasm, &target_id).is_ok()
+    if !force_remote_manifest
+        && verify_cached(&matrix_path, &executable, &wasm, &self_test, &target_id).is_ok()
     {
         return Ok(EngineInstallation {
             executable,
@@ -201,9 +207,15 @@ fn install_or_verify_cached_engine(
         &matrix.wasm,
         MAX_WASM_BYTES,
     )?;
+    download_verified(
+        &asset_url(&matrix.self_test.filename),
+        &self_test,
+        &matrix.self_test,
+        MAX_SELF_TEST_BYTES,
+    )?;
     write_atomic(&matrix_path, &matrix_bytes)?;
     set_executable(&executable)?;
-    verify_cached(&matrix_path, &executable, &wasm, &target_id)?;
+    verify_cached(&matrix_path, &executable, &wasm, &self_test, &target_id)?;
     Ok(EngineInstallation {
         executable,
         asset_root: Some(asset_root),
@@ -242,6 +254,11 @@ fn parse_matrix(bytes: &[u8], target_id: &str) -> Result<EngineMatrix, String> {
         return Err("engine matrix contains duplicate target ids".to_string());
     }
     validate_artifact(&matrix.wasm, &wasm_filename(), MAX_WASM_BYTES)?;
+    validate_artifact(
+        &matrix.self_test,
+        &self_test_filename(),
+        MAX_SELF_TEST_BYTES,
+    )?;
     for target in &matrix.targets {
         let expected = executable_filename(&target.id);
         validate_artifact(&target.executable, &expected, MAX_ENGINE_BYTES)?;
@@ -288,6 +305,7 @@ fn verify_cached(
     matrix_path: &Path,
     executable: &Path,
     wasm: &Path,
+    self_test: &Path,
     target_id: &str,
 ) -> Result<(), String> {
     let bytes = fs::read(matrix_path).map_err(io_error("read cached engine matrix"))?;
@@ -311,6 +329,12 @@ fn verify_cached(
         Some(matrix.wasm.byte_length),
         &matrix.wasm.sha256,
         "TFLite WASM",
+    )?;
+    verify_file(
+        self_test,
+        Some(matrix.self_test.byte_length),
+        &matrix.self_test.sha256,
+        "self-test probe",
     )
 }
 
@@ -503,8 +527,16 @@ fn wasm_filename() -> String {
     format!("tflite_wasm_audit_bg-{VERSION}.wasm")
 }
 
+fn self_test_filename() -> String {
+    format!("deepbom-self-test-{VERSION}.onnx")
+}
+
 fn runtime_wasm_filename() -> &'static str {
     RUNTIME_WASM_FILENAME
+}
+
+fn runtime_self_test_filename() -> &'static str {
+    RUNTIME_SELF_TEST_FILENAME
 }
 
 fn asset_url(filename: &str) -> String {
@@ -600,6 +632,11 @@ mod tests {
                 "byte_length": 1,
                 "sha256": "a".repeat(64)
             },
+            "self_test": {
+                "filename": self_test_filename(),
+                "byte_length": 1,
+                "sha256": "a".repeat(64)
+            },
             "targets": targets
         }))
         .unwrap()
@@ -620,7 +657,13 @@ mod tests {
             format!("tflite_wasm_audit_bg-{VERSION}.wasm")
         );
         assert_eq!(runtime_wasm_filename(), "tflite_wasm_audit_bg.wasm");
+        assert_eq!(
+            self_test_filename(),
+            format!("deepbom-self-test-{VERSION}.onnx")
+        );
+        assert_eq!(runtime_self_test_filename(), "deepbom-self-test.onnx");
         assert_ne!(wasm_filename(), runtime_wasm_filename());
+        assert_ne!(self_test_filename(), runtime_self_test_filename());
     }
 
     #[test]

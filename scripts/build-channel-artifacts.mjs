@@ -58,6 +58,7 @@ const npmBuildResult = await build({
   define: {
     __DEEPBOM_RELEASE_VERSION__: JSON.stringify(packageDocument.version),
     __DEEPBOM_TFLITE_WASM_SHA256__: JSON.stringify(wasmSha256),
+    __DEEPBOM_SELF_TEST_SHA256__: JSON.stringify(selfTestSha256),
   },
 });
 assertPublicBundleInputs(npmBuildResult.metafile, "npm");
@@ -114,13 +115,15 @@ const engineBuildResult = await build({
   define: {
     __DEEPBOM_RELEASE_VERSION__: JSON.stringify(packageDocument.version),
     __DEEPBOM_TFLITE_WASM_SHA256__: JSON.stringify(wasmSha256),
+    __DEEPBOM_SELF_TEST_SHA256__: JSON.stringify(selfTestSha256),
     "import.meta.url": JSON.stringify("file:///deepbom-cli-cjs-placeholder.mjs"),
   },
 });
 assertPublicBundleInputs(engineBuildResult.metafile, "standalone engine");
 restoreBuildMetadata();
 await copyFile(wasmSource, path.join(engineRoot, "pkg", "tflite_wasm_audit_bg.wasm"));
-await copyFile(selfTestSource, path.join(engineRoot, "deepbom-self-test.onnx"));
+const engineSelfTestPath = path.join(engineRoot, "deepbom-self-test.onnx");
+await copyFile(selfTestSource, engineSelfTestPath);
 
 const executableName = process.platform === "win32" ? "deepbom-core.exe" : "deepbom-core";
 const executable = path.join(engineRoot, executableName);
@@ -167,6 +170,7 @@ const engineManifest = {
   arch: process.arch,
   executable: { filename: executableName, ...(await fileRecord(engineRoot, executable)) },
   tflite_wasm: await fileRecord(engineRoot, path.join(engineRoot, "pkg", "tflite_wasm_audit_bg.wasm")),
+  self_test: await fileRecord(engineRoot, engineSelfTestPath),
   source: { git_commit: gitCommit, git_state: gitState },
 };
 await writeFile(path.join(engineRoot, "manifest.json"), `${JSON.stringify(engineManifest, null, 2)}\n`);
@@ -182,6 +186,7 @@ await mkdir(path.join(pythonEngineRoot, "pkg"), { recursive: true });
 await copyFile(executable, path.join(pythonEngineRoot, executableName));
 if (process.platform !== "win32") await chmod(path.join(pythonEngineRoot, executableName), 0o755);
 await copyFile(path.join(engineRoot, "pkg", "tflite_wasm_audit_bg.wasm"), path.join(pythonEngineRoot, "pkg", "tflite_wasm_audit_bg.wasm"));
+await copyFile(engineSelfTestPath, path.join(pythonEngineRoot, "deepbom-self-test.onnx"));
 await copyFile(path.join(engineRoot, "manifest.json"), path.join(pythonEngineRoot, "manifest.json"));
 const pythonDist = path.join(output, "python-dist");
 await mkdir(pythonDist, { recursive: true });

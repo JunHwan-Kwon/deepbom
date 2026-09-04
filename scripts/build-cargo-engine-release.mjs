@@ -20,6 +20,8 @@ const targets = [];
 let sourceIdentity = null;
 let wasmRecord = null;
 let wasmSource = null;
+let selfTestRecord = null;
+let selfTestSource = null;
 for (const manifestPath of manifests) {
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
   assert.equal(manifest.schema, "deepbom.packaged_engine.v1");
@@ -33,8 +35,10 @@ for (const manifestPath of manifests) {
   const directory = path.dirname(manifestPath);
   const executableSource = path.join(directory, manifest.executable?.path || "");
   const currentWasmSource = path.join(directory, manifest.tflite_wasm?.path || "");
+  const currentSelfTestSource = path.join(directory, manifest.self_test?.path || "");
   await verifyRecord(executableSource, manifest.executable);
   await verifyRecord(currentWasmSource, manifest.tflite_wasm);
+  await verifyRecord(currentSelfTestSource, manifest.self_test);
 
   const executableName = `deepbom-core-${identity}${identity.startsWith("windows-") ? ".exe" : ""}`;
   await copyFile(executableSource, path.join(output, executableName));
@@ -52,17 +56,27 @@ for (const manifestPath of manifests) {
     assert.equal(manifest.tflite_wasm.sha256, wasmRecord.sha256, `${identity}: TFLite WASM digest drift`);
     assert.equal(manifest.tflite_wasm.byte_length, wasmRecord.byte_length, `${identity}: TFLite WASM size drift`);
   }
+  if (!selfTestRecord) {
+    selfTestRecord = manifest.self_test;
+    selfTestSource = currentSelfTestSource;
+  } else {
+    assert.equal(manifest.self_test.sha256, selfTestRecord.sha256, `${identity}: self-test probe digest drift`);
+    assert.equal(manifest.self_test.byte_length, selfTestRecord.byte_length, `${identity}: self-test probe size drift`);
+  }
 }
 
 targets.sort((left, right) => left.id.localeCompare(right.id));
 assert.deepEqual(targets.map((target) => target.id).sort(), [...expectedTargets].sort(), "Engine target matrix is incomplete.");
 const wasmName = `tflite_wasm_audit_bg-${expectedVersion}.wasm`;
 await copyFile(wasmSource, path.join(output, wasmName));
+const selfTestName = `deepbom-self-test-${expectedVersion}.onnx`;
+await copyFile(selfTestSource, path.join(output, selfTestName));
 const matrix = {
   schema: "deepbom.engine_matrix.v1",
   version: expectedVersion,
   source: { git_commit: sourceIdentity.git_commit, git_state: sourceIdentity.git_state, tag: expectedTag },
   wasm: await fileRecord(path.join(output, wasmName), wasmName),
+  self_test: await fileRecord(path.join(output, selfTestName), selfTestName),
   targets,
 };
 await writeFile(path.join(output, "engine-matrix.v1.json"), `${JSON.stringify(matrix, null, 2)}\n`);
@@ -76,7 +90,7 @@ for (const name of assetNames) {
 await writeFile(path.join(output, "SHA256SUMS"), `${checksums.join("\n")}\n`);
 
 const finalNames = (await readdir(output)).sort();
-assert.equal(finalNames.length, 9, "Cargo engine release must contain six engines, one WASM, one matrix, and SHA256SUMS.");
+assert.equal(finalNames.length, 10, "Cargo engine release must contain six engines, one WASM, one self-test probe, one matrix, and SHA256SUMS.");
 console.log(`Built ${expectedVersion} Cargo engine release (${targets.length} targets) at ${output}`);
 
 function argument(name) {

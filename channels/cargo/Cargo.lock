@@ -60,7 +60,7 @@ dependencies = [
 
 [[package]]
 name = "deepbom"
-version = "1.96.7"
+version = "1.96.8"
 dependencies = [
  "serde",
  "serde_json",

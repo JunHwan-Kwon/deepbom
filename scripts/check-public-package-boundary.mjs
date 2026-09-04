@@ -57,6 +57,8 @@ assert(sha256(selfTest) === releaseManifest.runtime.self_test.sha256, "Packaged 
 assert(sha256(selfTest) === sha256(selfTestSource), "Packaged self-test differs from the hash-pinned public source fixture.");
 
 const bundle = await readFile(path.join(packageRoot, "bin", "deepbom.mjs"), "utf8");
+assert(bundle.includes(releaseManifest.runtime.tflite_wasm_sha256), "Packaged CLI does not bind the declared WASM digest.");
+assert(bundle.includes(releaseManifest.runtime.self_test.sha256), "Packaged CLI does not bind the declared self-test digest.");
 const forbiddenText = [
   [/(?:^|[^A-Za-z])(?:[A-Za-z]:\\\\(?:Users|consistency|workspace)|\/home\/runner\/work\/)/, "absolute build path"],
   [/(?:sourceMappingURL|sourcesContent)/, "source-map marker"],

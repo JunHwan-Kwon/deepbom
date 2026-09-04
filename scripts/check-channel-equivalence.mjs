@@ -64,6 +64,10 @@ if (platformSmoke || releaseContract) {
     "standalone engine capability discovery diverged from canonical CLI");
   assert.deepEqual(json(run(python, ["-m", "deepbom", ...capabilityArgs]).stdout), canonicalCapabilities,
     "installed Python capability discovery diverged from canonical CLI");
+  assert.equal(json(run(engine, ["self-test", "--compact"]).stdout).status, "pass",
+    "standalone engine self-test failed");
+  assert.equal(json(run(python, ["-m", "deepbom", "self-test", "--compact"]).stdout).status, "pass",
+    "installed Python wheel self-test failed");
 }
 
 for (const [caseIndex, item] of cases.entries()) {
@@ -138,6 +142,12 @@ if (platformSmoke) {
       DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
     });
     assert.deepEqual(json(cargoCapabilities.stdout), canonicalCapabilities, "Cargo capability discovery diverged");
+    const cargoSelfTest = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "self-test", "--compact"], {
+      DEEPBOM_ENGINE: engine,
+      DEEPBOM_ENGINE_SHA256: createHash("sha256").update(await readFile(engine)).digest("hex"),
+      DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
+    });
+    assert.equal(json(cargoSelfTest.stdout).status, "pass", "Cargo launcher self-test failed");
     const unboundCargo = run(
       "cargo",
       ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"],
@@ -148,6 +158,14 @@ if (platformSmoke) {
     assert.match(unboundCargo.stderr, /DEEPBOM_ENGINE_SHA256/);
   }
 
+  const npmSelfTest = path.join(path.dirname(npmCli), "deepbom-self-test.onnx");
+  const originalNpmSelfTest = await readFile(npmSelfTest);
+  await corruptLastByte(npmSelfTest);
+  const corruptNpmSelfTest = runNpmExecutable(npmCli, ["self-test", "--compact"], false);
+  assert.notEqual(corruptNpmSelfTest.status, 0);
+  assert.match(corruptNpmSelfTest.stderr, /self-test probe failed its release SHA-256 check/);
+  await writeFile(npmSelfTest, originalNpmSelfTest);
+
   const npmWasm = path.join(path.dirname(npmCli), "..", "pkg", "tflite_wasm_audit_bg.wasm");
   await corruptLastByte(npmWasm);
   const corruptNpm = run(process.execPath, [npmCli, "audit", cases[0].path, "--compact"], {}, false);
@@ -156,16 +174,23 @@ if (platformSmoke) {
 
   if (python) {
     const installedRoot = run(python, ["-c", "import pathlib,deepbom;print(pathlib.Path(deepbom.__file__).parent)"]).stdout.trim();
-    await corruptLastByte(path.join(installedRoot, "_engine", "pkg", "tflite_wasm_audit_bg.wasm"));
+    const installedWasm = path.join(installedRoot, "_engine", "pkg", "tflite_wasm_audit_bg.wasm");
+    const originalWasm = await readFile(installedWasm);
+    await corruptLastByte(installedWasm);
     const corruptPip = run(python, ["-m", "deepbom", "--version"], {}, false);
     assert.notEqual(corruptPip.status, 0);
     assert.match(corruptPip.stderr, /failed its SHA-256 check/);
+    await writeFile(installedWasm, originalWasm);
+    await corruptLastByte(path.join(installedRoot, "_engine", "deepbom-self-test.onnx"));
+    const corruptPipSelfTest = run(python, ["-m", "deepbom", "--version"], {}, false);
+    assert.notEqual(corruptPipSelfTest.status, 0);
+    assert.match(corruptPipSelfTest.stderr, /failed its SHA-256 check/);
   }
 
   assert.equal(manifest.channels.cargo.status, "launcher_ready_for_immutable_engine_matrix");
   const cargoStatus = releaseContract ? "Cargo execution and unbound-engine rejection" : "Cargo execution reserved for --release-contract";
   const nativeStatus = releaseContract ? "standalone/Python TFLite and ONNX execution parity" : "native/Python execution reserved for platform release smoke";
-  console.log(`Channel equivalence passed (installed npm tarball across five formats and two package forms; ${nativeStatus}; capability/envelope/SARIF/policy and verify/diff/explore npm parity; ${cargoStatus}; packaged-WASM tamper rejection).`);
+  console.log(`Channel equivalence passed (installed npm tarball across five formats and two package forms; ${nativeStatus}; capability/envelope/SARIF/policy and verify/diff/explore npm parity; ${cargoStatus}; packaged self-test/WASM tamper rejection).`);
 }
 
 async function installNpmPackage(release) {

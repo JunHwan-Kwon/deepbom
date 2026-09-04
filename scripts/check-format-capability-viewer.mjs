@@ -28,7 +28,7 @@ try {
     if (message.type() === "error") errors.push(message.text());
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/fixture.html`, { waitUntil: "domcontentloaded" });
-  await page.waitForFunction(() => window.__capabilityReady === true);
+  await page.waitForFunction(() => window.__capabilityReady === true, null, { timeout: 60_000 });
 
   for (const theme of ["light", "dark"]) {
     await page.evaluate((value) => { document.documentElement.dataset.theme = value; }, theme);

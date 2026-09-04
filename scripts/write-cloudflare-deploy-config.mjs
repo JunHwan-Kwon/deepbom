@@ -10,11 +10,20 @@ export function createRoutePreservingDeployConfig(config) {
   if (!Array.isArray(config.routes) || config.routes.length === 0) {
     throw new Error("Wrangler source config must declare the existing production routes.");
   }
+  for (const route of config.routes) {
+    if (!route || typeof route !== "object" || Array.isArray(route)
+      || typeof route.pattern !== "string" || !route.pattern
+      || typeof route.zone_name !== "string" || !route.zone_name) {
+      throw new Error("Every Wrangler production route must bind a non-empty pattern and zone_name.");
+    }
+  }
   if (config.workers_dev !== false) {
     throw new Error("Wrangler source config must explicitly disable workers_dev.");
   }
-  const { routes: _existingRoutes, ...deployConfig } = config;
-  return deployConfig;
+  return {
+    ...config,
+    routes: config.routes.map((route) => ({ ...route })),
+  };
 }
 
 export function writeRoutePreservingDeployConfig(sourcePath, outputPath) {

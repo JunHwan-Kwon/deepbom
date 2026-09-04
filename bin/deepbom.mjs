@@ -86,8 +86,9 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.7";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.8";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
+const EXPECTED_SELF_TEST_SHA256 = typeof __DEEPBOM_SELF_TEST_SHA256__ === "string" ? __DEEPBOM_SELF_TEST_SHA256__ : "";
 
 async function main(argv) {
   const parsed = parseArguments(argv);
@@ -615,6 +616,9 @@ async function runSelfTest(parsed) {
   const probePath = await resolveSelfTestProbePath();
   const probeBytes = await readFile(probePath);
   const probeSha256 = createHash("sha256").update(probeBytes).digest("hex");
+  if (EXPECTED_SELF_TEST_SHA256 && probeSha256 !== EXPECTED_SELF_TEST_SHA256) {
+    throw new Error("The packaged self-test probe failed its release SHA-256 check.");
+  }
   const analysis = analyzeOnnxModel(probeBytes, "deepbom-self-test.onnx");
   enforceArtifactIdentity(analysis, {
     filename: "deepbom-self-test.onnx",

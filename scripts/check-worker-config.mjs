@@ -43,7 +43,19 @@ expect(anonymousRawFormatter.status === 200, "Anonymous users must receive the l
 
 expect(config.name, "wrangler.jsonc must define a Worker name.");
 expect(config.workers_dev === false, "wrangler.jsonc must explicitly disable the workers.dev route.");
-expect(!Object.hasOwn(deployConfig, "routes"), "CI deploy config must preserve existing routes by omitting route reconciliation.");
+expect(
+  JSON.stringify(deployConfig.routes) === JSON.stringify(config.routes),
+  "CI deploy config must retain the validated production routes so Wrangler activates the uploaded version.",
+);
+for (const invalidRoute of [null, {}, { pattern: "", zone_name: "deepbom.org" }, { pattern: "deepbom.org/*", zone_name: "" }]) {
+  let rejected = false;
+  try {
+    createRoutePreservingDeployConfig({ ...config, routes: [invalidRoute] });
+  } catch {
+    rejected = true;
+  }
+  expect(rejected, "CI deploy config must reject incomplete production route bindings.");
+}
 expect(deployConfig.name === config.name && deployConfig.main === config.main, "CI deploy config must preserve the Worker identity and entrypoint.");
 expect(JSON.stringify(deployConfig.assets) === JSON.stringify(config.assets), "CI deploy config must preserve the static asset binding.");
 expect(JSON.stringify(deployConfig.d1_databases) === JSON.stringify(config.d1_databases), "CI deploy config must preserve D1 bindings.");

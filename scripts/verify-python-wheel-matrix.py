@@ -56,6 +56,7 @@ def main() -> None:
             validate_platform_tag(wheel.name, identity)
             validate_artifact(archive, manifest["executable"], "deepbom/_engine/")
             validate_artifact(archive, manifest["tflite_wasm"], "deepbom/_engine/")
+            validate_artifact(archive, manifest["self_test"], "deepbom/_engine/")
             validate_record(archive, wheel.name)
             observed[identity] = wheel.name
 

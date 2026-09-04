@@ -1,4 +1,4 @@
-DEEPBOM 1.96.7 deployment-artifact audit
+DEEPBOM 1.96.8 deployment-artifact audit
 Artifact: gpu_partition_probe.onnx
 Identity: sha256:82a2feef00eb6ab03d82f2b30cd17f4d826e2d8307cb059eccd6a0f3120059b2
 Format: ONNX | Size: 1.32 KiB

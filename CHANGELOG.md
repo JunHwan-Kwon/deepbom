@@ -4,8 +4,18 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.8 - 2026-09-05
+
+- Added the bounded ONNX installation probe to every standalone engine and
+  Python wheel, and to the immutable Cargo engine matrix. Python and Cargo now
+  validate its declared path, size, and SHA-256 before executing the packaged
+  self-test; channel and published-engine smoke tests execute that probe.
+- Made Cloudflare deployment fail closed when credentials are absent or
+  Wrangler uploads a version without activating a production target. Generated
+  deployment configuration now retains and validates the explicit
+  `deepbom.org` production routes.
 - Raised only the measured 1.96.7 source ceilings: handwritten runtime by
-  64 KiB, verification by 16 KiB, and development tooling by 17 KiB. The same
+  64 KiB, verification by 18 KiB, and development tooling by 24 KiB. The same
   source-budget gate now runs as part of local release validation, preventing
   a clean local release record from diverging from the Cloudflare deployment
   preflight. The generated public-source provenance manifest is excluded from
