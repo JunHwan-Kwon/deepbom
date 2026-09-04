@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "bae7697f54cf9509a7492bca14a6d50db8df0bd6",
+  "source_commit": "db4570cb121ecdcbb5d2a2290b7e49a2090fd915",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 984,
@@ -37,8 +37,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 28119,
-      "sha256": "8f881d20f767394946ce64f333f69f28404212133278e25fe422715abffb568e"
+      "byte_length": 28291,
+      "sha256": "c8c524af239aab050cc251b36483bcd16c9cd52016b43b39445be3b5cb6c43d2"
     },
     {
       "path": "CITATION.cff",
@@ -1182,8 +1182,8 @@
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
-      "byte_length": 32948,
-      "sha256": "7b17ebf6925d5ca4f9d1b3d5574953c846723b675e4d8717b7274ffe6e3d63d2"
+      "byte_length": 32937,
+      "sha256": "8016c5d4bffa4f8c12f0073d60dc4b1637272c3f0622e1b78b236833e29caa08"
     },
     {
       "path": "scripts/check-cli-automation.mjs",
@@ -2048,7 +2048,7 @@
     {
       "path": "scripts/check-source-budget.mjs",
       "byte_length": 10690,
-      "sha256": "af5ae1c7209a95837340b6eaed44ebe3bae179ca0758aed3cf8827376c4d5608"
+      "sha256": "dc876bc47f8762c2b4f7628f6444d2086ce1a55d9d0de74ad1afe418e4c97292"
     },
     {
       "path": "scripts/check-standardization-evidence.mjs",
@@ -3268,7 +3268,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 81908,
-      "sha256": "8b45df1e1f708ae992eb8acfa8620e5ee8fb38928eccc6052a518b23e9dc2d28"
+      "sha256": "06ef6445e4c0083ad9ae51b4bc08a9b81e7aede7d3dfeb7d6d6495fc0981de20"
     },
     {
       "path": "web/lib/bundle.js",

@@ -376,7 +376,7 @@ for (const moduleCase of privateModuleCases) {
 for (const stepName of [
   "Prepare Rust WASM target",
   "Install pinned wasm-pack binary",
-]) expectStepIf(stepName, "steps.deployable.outputs.private_wasm_check == 'true'");
+]) expectStepIf(stepName, "steps.deployable.outputs.changed == 'true'");
 expectStepIf("Run private WASM build/load smoke", "steps.deployable.outputs.private_wasm_check == 'true'");
 for (const stepName of [
   "Set rolling build expiry",
