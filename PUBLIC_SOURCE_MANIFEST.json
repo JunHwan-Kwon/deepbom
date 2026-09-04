@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "cb1bfa0026353a1e9716d5f0361384a76ea73430",
+  "source_commit": "29edd2a7da58f2252d321c466c6b2f32a49375fd",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 972,
@@ -1542,8 +1542,8 @@
     },
     {
       "path": "scripts/check-ir-stabilization-ui.mjs",
-      "byte_length": 26178,
-      "sha256": "53b97719f142ac83dba12f01ba7f7f83c72c221efa889fed194845da9a58fc04"
+      "byte_length": 26186,
+      "sha256": "4a4ceb05ce3f23f931e437e88856b0c861f95a5b49ef9da40414eb14de2dcffb"
     },
     {
       "path": "scripts/check-js.mjs",
@@ -2957,8 +2957,8 @@
     },
     {
       "path": "web/app.js",
-      "byte_length": 312924,
-      "sha256": "74f347ebfcd0871ae594f4aa7496e4c8eae6ae2e05693c6b7a9c9da685d877ed"
+      "byte_length": 313323,
+      "sha256": "5a701bd2d8cff04438636d8e87b422faa3418605a0385c6b65dd4e53066baa24"
     },
     {
       "path": "web/auth-complete.html",
@@ -3223,7 +3223,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 80417,
-      "sha256": "07437b62c548d02cc5dce0669f0cfa00e8456dd2c2a56841864729934268d487"
+      "sha256": "bc7796036ba9b47ae3a1227b4ac4b4b911c6b91ecdd7a7b682b20391d6ba2a8f"
     },
     {
       "path": "web/lib/bundle.js",
@@ -4828,7 +4828,7 @@
     {
       "path": "web/sw.js",
       "byte_length": 16018,
-      "sha256": "97118c07c47340c7eb63b126b3a39a1cbcd29145d0c1db4f26fbc013e3899d6f"
+      "sha256": "07013f61390233bd7616f9ec9586bfc5721b1959879ba70a55afa41bfa28d385"
     },
     {
       "path": "web/test.html",

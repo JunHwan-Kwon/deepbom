@@ -2358,9 +2358,16 @@ function navigateToWorkspace(workspace = "input") {
     offline_test: moduleRunConsole,
     deployment_sensitivity: moduleRunConsole,
   }[workspace];
-  requestAnimationFrame(() => {
-    if (target && !target.hidden) target.scrollIntoView({ behavior: "auto", block: "start", inline: "nearest" });
-  });
+  const reveal = () => {
+    if (!target || target.hidden || getActiveWorkspace() !== workspace) return;
+    const cover = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sticky-cover-height")) || 0;
+    const top = Math.max(0, window.scrollY + target.getBoundingClientRect().top - cover - 24);
+    window.scrollTo({ top, behavior: "auto" });
+  };
+  const observer = new ResizeObserver(reveal);
+  observer.observe(document.body);
+  window.setTimeout(reveal, 0);
+  window.setTimeout(() => observer.disconnect(), 1500);
   return true;
 }
 

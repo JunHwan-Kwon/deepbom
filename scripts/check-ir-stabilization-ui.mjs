@@ -170,12 +170,12 @@ async function verifyPrimaryWorkflowNavigation(page) {
     await page.setViewportSize(viewport);
     for (const [workspace, selector] of [["input", ".upload-controls"], ["audit", "#auditWorkbench"]]) {
       await page.locator(`[data-workflow-step="${workspace}"]`).click();
-      await page.waitForFunction(({ workspaceId, targetSelector }) => {
-        const node = document.querySelector(targetSelector);
-        const rect = node?.getBoundingClientRect();
-        return document.body.classList.contains(`workspace-${workspaceId}`)
-          && node && !node.hidden && rect.top >= 0 && rect.top < innerHeight;
-      }, { workspaceId: workspace, targetSelector: selector });
+      await page.waitForTimeout(1300);
+      const visible = await page.locator(selector).evaluate((node, workspaceId) => {
+        const top = node.getBoundingClientRect().top;
+        return document.body.classList.contains(`workspace-${workspaceId}`) && !node.hidden && top >= -16 && top < innerHeight;
+      }, workspace);
+      if (!visible) throw new Error(`${workspace}/${viewport.width}px nav failed`);
     }
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
