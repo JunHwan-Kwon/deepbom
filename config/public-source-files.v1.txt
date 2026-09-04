@@ -618,6 +618,7 @@ web/lib/arena-viewer.js
 web/lib/artifact-bundle.js
 web/lib/artifact-diff-view.js
 web/lib/artifact-diff.js
+web/lib/artifact-dossier-view.js
 web/lib/artifact-evidence-envelope.js
 web/lib/artifact-ir-context.js
 web/lib/artifact-ir-runtime.js

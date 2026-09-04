@@ -203,6 +203,7 @@ import {
   renderOpDetailPanel,
 } from "./lib/graph-ui.js";
 import { getArtifactIrContext, invalidateArtifactIrContext } from "./lib/artifact-ir-context.js";
+import { renderArtifactDossier } from "./lib/artifact-dossier-view.js";
 import { buildSingleFileArtifactSet } from "./lib/artifact-set.js";
 import { exportGraphVisualization } from "./lib/graph-export.js";
 import {
@@ -502,6 +503,7 @@ const {
   modelPlan,
   formatCapabilityPanel,
   workflowConsole,
+  artifactDossier,
   targetStaleNotice,
   selectedModelName,
   selectedModelMeta,
@@ -868,6 +870,7 @@ function rebuildCurrentArtifactIrContext(analysis = current, { invalidate = fals
     size: analysis.file_size_bytes ?? analysis.file_size ?? currentModelBytes?.length ?? null,
     artifact_set_sha256: analysis.artifact_set?.artifact_set_sha256 || null,
   }, { runtimeEvidence: runtimeAssignmentEvidence });
+  renderArtifactDossier(artifactDossier, currentArtifactIrContext, analysis);
   return currentArtifactIrContext;
 }
 let customTargetEditor = null;
@@ -1005,6 +1008,7 @@ workflowController = createWorkflowController({
     dropzone,
     modelPlan,
     workflowConsole,
+    artifactDossier,
     auditWorkbench,
     summary,
     insightDashboard,
@@ -2346,7 +2350,7 @@ function setActiveWorkspace(workspace = "input", options = {}) {
 function navigateToWorkspace(workspace = "input") {
   if (!setActiveWorkspace(workspace)) return false;
   const target = {
-    input: dropzone?.querySelector(".upload-controls"),
+    input: current ? artifactDossier : dropzone?.querySelector(".upload-controls"),
     audit: auditWorkbench,
     findings: findingsPanel,
     output: outputModuleSelector,

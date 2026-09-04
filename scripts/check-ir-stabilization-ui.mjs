@@ -50,7 +50,7 @@ try {
   const pendingNavigation = await navigationState(page);
   if (pendingNavigation.statuses.some((row) => row.status !== "not_assessed_yet") || pendingNavigation.hiddenTabs.length
     || pendingNavigation.hiddenOptions.length || pendingNavigation.disabledOptions.length) {
-    throw new Error(`Pre-audit applicability state is not explicit: ${JSON.stringify(pendingNavigation)}`);
+    throw new Error(`Pre-audit applicability drift: ${JSON.stringify(pendingNavigation)}`);
   }
   await runVerifiedExample(page);
   await verifyPrimaryWorkflowNavigation(page);
@@ -90,7 +90,7 @@ try {
       });
       if (state.audit_tab_count !== 8 || state.hidden_audit_tabs.length || state.primary_domain_count !== 5 || state.specialized_lens_count !== 3
         || state.document_overflow_px > 1 || state.workbench_overflow_px > 1 || (viewport.id === "mobile" && state.undersized_audit_controls.length)) {
-        throw new Error(`${theme}/${viewport.id} audit geometry failed: ${JSON.stringify(state)}`);
+        throw new Error(`${theme}/${viewport.id} geometry failed: ${JSON.stringify(state)}`);
       }
       const screenshot = path.join(OUTPUT, `tflite-${theme}-${viewport.id}.png`);
       await page.locator("#auditWorkbench").screenshot({ path: screenshot });
@@ -126,7 +126,7 @@ try {
   await page.requestGC().catch(() => {});
   const heapAfter = await usedHeap(page);
   if (heapBefore != null && heapAfter != null && heapAfter - heapBefore > 64 * 1024 * 1024) {
-    throw new Error(`Repeated audit-tab navigation retained ${(heapAfter - heapBefore) / (1024 * 1024)} MiB.`);
+    throw new Error(`Tab cycle retained ${(heapAfter - heapBefore) / (1024 * 1024)} MiB.`);
   }
   const ggufState = await page.evaluate(() => ({
     hidden_audit_tabs: [...document.querySelectorAll("[data-audit-tab][hidden]")].map((tab) => tab.dataset.auditTab),
@@ -139,9 +139,9 @@ try {
   ggufState.heap_after = heapAfter;
   ggufState.detached_dom = await detachedDomNodes(page);
   if (ggufState.hidden_audit_tabs.length || ggufState.document_overflow_px > 1) throw new Error(`GGUF lens regression: ${JSON.stringify(ggufState)}`);
-  if (ggufState.detached_dom.count !== 0) throw new Error(`Detached DOM nodes remained after repeated tab navigation: ${JSON.stringify(ggufState.detached_dom)}`);
+  if (ggufState.detached_dom.count !== 0) throw new Error(`Detached DOM after tab cycle: ${JSON.stringify(ggufState.detached_dom)}`);
   rows.push({ artifact_format: "gguf", theme: "dark", viewport: "desktop", ...ggufState });
-  if (diagnostics.length) throw new Error(`Browser diagnostics:\n${diagnostics.join("\n")}`);
+  if (diagnostics.length) throw new Error(`Errors:\n${diagnostics.join("\n")}`);
 
   const manifest = {
     schema: "deepbom.ir_stabilization_ui_baseline.v1",
@@ -162,18 +162,19 @@ async function runVerifiedExample(page) {
   await page.locator("#trySampleModel").click();
   await page.waitForFunction(() => /audit run complete|Audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 120_000 });
   const status = await page.locator("#status").textContent();
-  if (!status.includes("audit run complete")) throw new Error(`Verified TFLite example failed: ${status}${diagnostics.length ? `\n${diagnostics.join("\n")}` : ""}`);
+  if (!status.includes("audit run complete")) throw new Error(`Sample failed: ${status}${diagnostics.length ? `\n${diagnostics.join("\n")}` : ""}`);
 }
 
 async function verifyPrimaryWorkflowNavigation(page) {
   for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport);
-    for (const [workspace, selector] of [["input", ".upload-controls"], ["audit", "#auditWorkbench"]]) {
+    for (const [workspace, selector] of [["input", "#artifactDossier"], ["audit", "#auditWorkbench"]]) {
       await page.locator(`[data-workflow-step="${workspace}"]`).click();
       await page.waitForTimeout(1300);
       const visible = await page.locator(selector).evaluate((node, workspaceId) => {
         const top = node.getBoundingClientRect().top;
-        return document.body.classList.contains(`workspace-${workspaceId}`) && !node.hidden && top >= -16 && top < innerHeight;
+        const bound = workspaceId !== "input" || /^[a-f\d]{64}$/.test(node.querySelector("code")?.textContent || "") && /operator|Not serialized/.test(node.textContent);
+        return bound && document.body.classList.contains(`workspace-${workspaceId}`) && !node.hidden && top >= -16 && top < innerHeight;
       }, workspace);
       if (!visible) throw new Error(`${workspace}/${viewport.width}px nav failed`);
     }
@@ -197,7 +198,7 @@ async function verifyFormatNavigation(page, format, viewport) {
   const actual = Object.fromEntries(before.statuses.map((row) => [row.tab, row.status]));
   if (JSON.stringify(actual) !== JSON.stringify(expected) || before.hiddenTabs.length || before.hiddenOptions.length
     || before.disabledOptions.length || before.documentOverflowPx > 1) {
-    throw new Error(`${format}/${viewport} fixed navigation failed: ${JSON.stringify({ expected, ...before })}`);
+    throw new Error(`${format}/${viewport} navigation failed: ${JSON.stringify({ expected, ...before })}`);
   }
   for (const tab of AUDIT_TABS) {
     if (viewport === "mobile") await page.locator("#mobileAuditView").selectOption(tab);
@@ -219,13 +220,13 @@ async function verifyFormatNavigation(page, format, viewport) {
     if (selected.status === "applicable") {
       if (!selected.boundaryHidden) throw new Error(`${format}/${viewport}/${tab} exposed a stale applicability boundary.`);
     } else if (selected.boundaryHidden || !selected.reasonCode || !selected.reason || !selected.boundaryText.includes(selected.reason)) {
-      throw new Error(`${format}/${viewport}/${tab} did not expose its current applicability reason: ${JSON.stringify(selected)}`);
+      throw new Error(`${format}/${viewport}/${tab} missing applicability reason: ${JSON.stringify(selected)}`);
     }
   }
   const after = await navigationState(page);
   if (viewport === "mobile") {
     const undersized = await mobileTouchTargetFailures(page);
-    if (undersized.length) throw new Error(`${format}/${viewport} contains undersized effective touch targets: ${JSON.stringify(undersized)}`);
+    if (undersized.length) throw new Error(`${format}/${viewport} undersized touch targets: ${JSON.stringify(undersized)}`);
   }
   return { artifact_format: format, theme: "current", viewport, navigation_status: "pass", ...after };
 }
@@ -348,7 +349,7 @@ async function verifyWebCliSemanticDigest(page, artifactPath) {
   });
   const embedded = JSON.parse(reviewHtml.match(/<script id="deepbom-review-state" type="application\/json">([^<]+)<\/script>/)?.[1] || "null");
   const webSha = embedded?.artifact_ir_identity?.sha256 || null;
-  if (!/^[a-f0-9]{64}$/.test(webSha || "")) throw new Error(`Browser review.html did not preserve an Artifact IR SHA-256: ${JSON.stringify(embedded?.artifact_ir_identity || null)}`);
+  if (!/^[a-f0-9]{64}$/.test(webSha || "")) throw new Error(`review.html IR SHA missing: ${JSON.stringify(embedded?.artifact_ir_identity || null)}`);
   const cliArguments = [
     path.join(ROOT, "bin", "deepbom.mjs"),
     "graph",

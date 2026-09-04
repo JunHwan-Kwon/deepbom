@@ -698,9 +698,9 @@
           <nav class="workflow-navigation" aria-label="Audit workflow">
           <div class="workflow-rail" id="workflowRail" role="tablist" aria-label="Review workflow">
             <button class="workflow-step active" type="button" data-workflow-step="input" data-navigation-role="workflow">
-              <span>Input</span>
+              <span>Evidence subject</span>
               <strong>Artifact</strong>
-              <p>Select artifact; context follows</p>
+              <p>Identity, files, and scope</p>
             </button>
             <button class="workflow-step" type="button" data-workflow-step="audit" data-navigation-role="workflow">
               <span>Review</span>
@@ -763,6 +763,51 @@
             </div>
           </section>
           </nav>
+          <section class="artifact-dossier" id="artifactDossier" aria-labelledby="artifactDossierTitle" hidden>
+            <header class="artifact-dossier-head">
+              <div>
+                <span>Current artifact</span>
+                <h2 id="artifactDossierTitle" data-artifact-field="name">Analyzed artifact</h2>
+                <p>The exact byte-identified subject of this audit. Static derivations and target assumptions remain separate from this record.</p>
+              </div>
+              <strong class="artifact-dossier-evidence">OBSERVED ARTIFACT + DERIVED IR</strong>
+            </header>
+            <dl class="artifact-identity-grid">
+              <div><dt>Format</dt><dd data-artifact-field="format">Not assessed</dd></div>
+              <div><dt>Byte size</dt><dd data-artifact-field="size">Not assessed</dd></div>
+              <div><dt>File set</dt><dd data-artifact-field="files">Not assessed</dd></div>
+              <div><dt>Evidence IR</dt><dd data-artifact-field="ir-schema">Not materialized</dd></div>
+            </dl>
+            <div class="artifact-scope-grid" aria-label="Evidence available from the current artifact">
+              <section>
+                <span>Executable graph</span>
+                <strong data-artifact-field="graph-value">Not assessed</strong>
+                <p data-artifact-field="graph-note"></p>
+              </section>
+              <section>
+                <span>Serialized storage</span>
+                <strong data-artifact-field="storage-value">Not assessed</strong>
+                <p data-artifact-field="storage-note"></p>
+              </section>
+              <section>
+                <span>Quantization contracts</span>
+                <strong data-artifact-field="quantization-value">Not assessed</strong>
+                <p data-artifact-field="quantization-note"></p>
+              </section>
+              <section>
+                <span>Runtime overlay</span>
+                <strong data-artifact-field="runtime-value">Not imported</strong>
+                <p data-artifact-field="runtime-note"></p>
+              </section>
+            </div>
+            <div class="artifact-digest-ledger">
+              <div><span>Artifact SHA-256</span><code data-artifact-field="sha256"></code></div>
+              <div><span>Artifact-set SHA-256</span><code data-artifact-field="artifact-set-sha256"></code></div>
+              <div><span>Artifact IR SHA-256</span><code data-artifact-field="ir-sha256"></code></div>
+            </div>
+            <p class="artifact-dossier-boundary">This record establishes artifact identity and available static evidence. It does not by itself establish runtime assignment, task performance, clinical validity, or release readiness.</p>
+            <a class="secondary-action artifact-replace-link" href="#dropzone">Replace artifact or package</a>
+          </section>
           <section class="audit-workbench" id="auditWorkbench" hidden aria-label="Audit detail selector">
             <div class="module-head audit-selector-head">
               <div>

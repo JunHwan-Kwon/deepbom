@@ -103,6 +103,7 @@ export function bindAppElements(doc = document) {
     modelPlan: doc.getElementById("modelPlan"),
     formatCapabilityPanel: doc.getElementById("formatCapabilityPanel"),
     workflowConsole: doc.getElementById("workflowConsole"),
+    artifactDossier: doc.getElementById("artifactDossier"),
     targetStaleNotice: doc.getElementById("targetStaleNotice"),
     selectedModelName: doc.getElementById("selectedModelName"),
     selectedModelMeta: doc.getElementById("selectedModelMeta"),

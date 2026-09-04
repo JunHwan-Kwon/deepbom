@@ -36,6 +36,7 @@ export function createWorkflowController({
     dropzone,
     modelPlan,
     workflowConsole,
+    artifactDossier,
     auditWorkbench,
     summary,
     insightDashboard,
@@ -170,6 +171,7 @@ export function createWorkflowController({
     dropzone.hidden = false;
     modelPlan.hidden = false;
     workflowConsole.hidden = state === "idle";
+    if (artifactDossier) artifactDossier.hidden = !(hasAnalysis && activeWorkspace === "input");
     auditWorkbench.hidden = !(hasAnalysis && activeWorkspace === "audit");
     const activeTab = auditTabs.find((tab) => tab.dataset.auditTab === activeAuditTab);
     const applicable = activeTab?.dataset.applicabilityStatus === "applicable";

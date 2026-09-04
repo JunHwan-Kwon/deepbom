@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "29edd2a7da58f2252d321c466c6b2f32a49375fd",
+  "source_commit": "32fd20bc5372f80258ade91eb83662e6523e9b91",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 972,
+  "file_count": 973,
   "files": [
     {
       "path": ".gitattributes",
@@ -217,8 +217,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 35910,
-      "sha256": "7179e9f82fa38da69d7caa718d3cbfbc339bb7660afd45f75d098426c5008d30"
+      "byte_length": 35943,
+      "sha256": "9531345ba50ee1ec4851f43ae41bb1cd635cf5eafba8f8ea936ba2f089717c5a"
     },
     {
       "path": "corpus/README.md",
@@ -1542,8 +1542,8 @@
     },
     {
       "path": "scripts/check-ir-stabilization-ui.mjs",
-      "byte_length": 26186,
-      "sha256": "4a4ceb05ce3f23f931e437e88856b0c861f95a5b49ef9da40414eb14de2dcffb"
+      "byte_length": 26187,
+      "sha256": "377dcd27f400b13a93b36fb5be2c6607cbd58b20d619d8698d6f852fbde04c44"
     },
     {
       "path": "scripts/check-js.mjs",
@@ -2957,8 +2957,8 @@
     },
     {
       "path": "web/app.js",
-      "byte_length": 313323,
-      "sha256": "5a701bd2d8cff04438636d8e87b422faa3418605a0385c6b65dd4e53066baa24"
+      "byte_length": 313541,
+      "sha256": "ffdc818fcdddf6a8816bdc16e0a0dd800f4ee950d3f7ada2ff154a3f46423dad"
     },
     {
       "path": "web/auth-complete.html",
@@ -3007,8 +3007,8 @@
     },
     {
       "path": "web/index.html",
-      "byte_length": 142080,
-      "sha256": "117a4855e78ab60c33060b3abcf569b09407b61b493b0c84819182c3e964b182"
+      "byte_length": 144972,
+      "sha256": "a7613475d539a5e5709fd32ac85940cfb2a6db35f0d79027a979ac87864849c6"
     },
     {
       "path": "web/lib/accelerator-binding.js",
@@ -3109,6 +3109,11 @@
       "path": "web/lib/artifact-diff.js",
       "byte_length": 11660,
       "sha256": "a6a2a22314ec2ed152584823edda06efdff6e13e583979b6cdb0dafe1893c413"
+    },
+    {
+      "path": "web/lib/artifact-dossier-view.js",
+      "byte_length": 3792,
+      "sha256": "890377e4f6afe2d17e7436e4e114e8618f6baa7ca158a21f5dc3fc2d196dbef1"
     },
     {
       "path": "web/lib/artifact-evidence-envelope.js",
@@ -3222,8 +3227,8 @@
     },
     {
       "path": "web/lib/build-metadata.js",
-      "byte_length": 80417,
-      "sha256": "bc7796036ba9b47ae3a1227b4ac4b4b911c6b91ecdd7a7b682b20391d6ba2a8f"
+      "byte_length": 80583,
+      "sha256": "5e37c8a299f1aa2483fcf31422b21264fb79ce506a3e3ace1b2efcede0aec604"
     },
     {
       "path": "web/lib/bundle.js",
@@ -3417,8 +3422,8 @@
     },
     {
       "path": "web/lib/elements.js",
-      "byte_length": 31379,
-      "sha256": "2c41a9da55abe0795d59321cade59310352135588ac96f06ed6fb82ade3f3f2a"
+      "byte_length": 31439,
+      "sha256": "fa99756c6ef56cdd18b41306b906cc0d32c55de0f19e1728cc99ecffab2cbb6f"
     },
     {
       "path": "web/lib/evidence-applicability.js",
@@ -4672,8 +4677,8 @@
     },
     {
       "path": "web/lib/workflow-controller.js",
-      "byte_length": 11639,
-      "sha256": "fd5d5a05ca2f5b03eaad86ceac29016395c1a742df563511833cfb9f38f28841"
+      "byte_length": 11757,
+      "sha256": "3ab56c31fa384ac7a00325a8f47bab0f8974295e438739f9f3f09c578affab3e"
     },
     {
       "path": "web/lib/workflow-copy.js",
@@ -4822,13 +4827,13 @@
     },
     {
       "path": "web/styles.css",
-      "byte_length": 261356,
-      "sha256": "f558a68eaa8efd941398002b8d557d09c6767e2aa614ff547bfa474d9c6210bf"
+      "byte_length": 264644,
+      "sha256": "3a90d72941943d00985aad1da7707ab79d08916769e3cb5c775452c39af75b24"
     },
     {
       "path": "web/sw.js",
-      "byte_length": 16018,
-      "sha256": "07013f61390233bd7616f9ec9586bfc5721b1959879ba70a55afa41bfa28d385"
+      "byte_length": 16054,
+      "sha256": "98c7d6b77b235b1a39a076b044938e9d0a8b0e10b9032766b0a9621dc7ad2d3b"
     },
     {
       "path": "web/test.html",
