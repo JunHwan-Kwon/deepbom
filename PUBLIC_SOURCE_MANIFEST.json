@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "7fcbba2c23ec85fe9358c816ce81f54039c40e19",
+  "source_commit": "ccf360266b05ce324663c6350f09582b9528a1c0",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 972,
@@ -1542,8 +1542,8 @@
     },
     {
       "path": "scripts/check-ir-stabilization-ui.mjs",
-      "byte_length": 25352,
-      "sha256": "b6a1c96d08290cdb8af4dfcd302ee1cb393f0d33ef8ea53f76535e6809099b45"
+      "byte_length": 26148,
+      "sha256": "76f05913975405eb8286c32b5e677c6566f1169b946457c1a83a84599c4d1669"
     },
     {
       "path": "scripts/check-js.mjs",
@@ -2957,8 +2957,8 @@
     },
     {
       "path": "web/app.js",
-      "byte_length": 312234,
-      "sha256": "5bf3631bf63b89e16c9e39f78c6269a2af592c141e8e155fb8a751d52a7ec47e"
+      "byte_length": 312889,
+      "sha256": "3b50bfcf0743b5a8bdfe7930056f42e5b29a75da19d17f6deaa9c9fdf49d2641"
     },
     {
       "path": "web/auth-complete.html",
@@ -3007,8 +3007,8 @@
     },
     {
       "path": "web/index.html",
-      "byte_length": 142082,
-      "sha256": "db6e6ac25e8ee6df640ec95e61296a1b8bf19df9541db227c17ddce2edf13ea3"
+      "byte_length": 142080,
+      "sha256": "117a4855e78ab60c33060b3abcf569b09407b61b493b0c84819182c3e964b182"
     },
     {
       "path": "web/lib/accelerator-binding.js",
@@ -3223,7 +3223,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 80417,
-      "sha256": "4e2d77169a9a59128578d579174a3f1564001ecdbf14a82094a6e4b649e0441f"
+      "sha256": "12ae3b910361858e659e90b675091ac4e72ec7b9f8c260aa46b89fe8790ac818"
     },
     {
       "path": "web/lib/bundle.js",
@@ -4828,7 +4828,7 @@
     {
       "path": "web/sw.js",
       "byte_length": 16018,
-      "sha256": "07a045cf456e1ff41f5603f341d64b58246abc9ce41917390a3c17d046170193"
+      "sha256": "d0c0d3ef0993db5a8dee6c8f42bb244a7525ba9e49e2dc53faa5a1b81d90ed6b"
     },
     {
       "path": "web/test.html",

@@ -1523,7 +1523,7 @@ installWorkspaceNavigation({
   auditTabs,
   moduleTabs,
   explorerTabs,
-  onWorkspace: setActiveWorkspace,
+  onWorkspace: navigateToWorkspace,
   onAudit: setActiveAuditTab,
   onModule: setActiveModule,
   onLockedModule: openAccountPanelForCapability,
@@ -2341,6 +2341,27 @@ function updateWorkflowState(state, detail = {}) {
 
 function setActiveWorkspace(workspace = "input", options = {}) {
   return workflowController.setWorkspace(workspace, options);
+}
+
+function navigateToWorkspace(workspace = "input") {
+  if (!setActiveWorkspace(workspace)) return false;
+  const target = {
+    input: dropzone,
+    audit: auditWorkbench,
+    findings: findingsPanel,
+    output: outputModuleSelector,
+    graph: graphExplorer,
+    redesign: redesignPanel,
+    runtime: inferencePanel,
+    deepbom: moduleRunConsole,
+    runtime_basin: moduleRunConsole,
+    offline_test: moduleRunConsole,
+    deployment_sensitivity: moduleRunConsole,
+  }[workspace];
+  requestAnimationFrame(() => {
+    if (target && !target.hidden) target.scrollIntoView({ behavior: "auto", block: "start", inline: "nearest" });
+  });
+  return true;
 }
 
 function getActiveWorkspace() {

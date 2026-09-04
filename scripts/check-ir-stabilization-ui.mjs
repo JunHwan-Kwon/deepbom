@@ -53,7 +53,7 @@ try {
     throw new Error(`Pre-audit applicability state is not explicit: ${JSON.stringify(pendingNavigation)}`);
   }
   await runVerifiedExample(page);
-  await page.locator('[data-workflow-step="audit"]').click();
+  await verifyPrimaryWorkflowNavigation(page);
   const tfliteNavigation = await verifyFormatNavigation(page, "tflite", "desktop");
   tfliteNavigation.web_cli_semantic_digest = await verifyWebCliSemanticDigest(
     page,
@@ -163,6 +163,22 @@ async function runVerifiedExample(page) {
   await page.waitForFunction(() => /audit run complete|Audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 120_000 });
   const status = await page.locator("#status").textContent();
   if (!status.includes("audit run complete")) throw new Error(`Verified TFLite example failed: ${status}${diagnostics.length ? `\n${diagnostics.join("\n")}` : ""}`);
+}
+
+async function verifyPrimaryWorkflowNavigation(page) {
+  for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    for (const [workspace, targetId] of [["input", "dropzone"], ["audit", "auditWorkbench"]]) {
+      await page.locator(`[data-workflow-step="${workspace}"]`).click();
+      await page.waitForFunction(({ workspaceId, target }) => {
+        const node = document.getElementById(target);
+        const rect = node?.getBoundingClientRect();
+        return document.body.classList.contains(`workspace-${workspaceId}`)
+          && node && !node.hidden && rect.bottom > 0 && rect.top < innerHeight;
+      }, { workspaceId: workspace, target: targetId });
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
 }
 
 async function runAudit(page, modelPath, name, suppliedBuffer = null) {
