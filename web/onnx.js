@@ -1974,9 +1974,13 @@ function analyzeOnnxInitializers(graph, tensorMap, sparseTensorContract) {
   let embeddedDuplicateBytes = 0;
   let sparseDuplicateAnalysisComplete = true;
   let decodedElements = 0;
-  let storedWeightValuesDecoded = 0;
-  let implicitZeroElements = 0;
+  let learnedElements = 0;
+  let storedConstantValuesDecoded = 0;
+  let constantImplicitZeroElements = 0;
+  let learnedStoredValuesDecoded = 0;
+  let learnedImplicitZeroElements = 0;
   let assessedTensors = 0;
+  let learnedParameterTensors = 0;
   let unassessedTensors = 0;
   let nanTensors = 0;
   let infTensors = 0;
@@ -1993,6 +1997,8 @@ function analyzeOnnxInitializers(graph, tensorMap, sparseTensorContract) {
   const zeroKernelSliceDetails = [];
   const logicalInitializers = buildOnnxLogicalInitializerIndex(graph);
   const kernelTrackerIndex = buildOnnxKernelTrackerIndex(graph.nodes, logicalInitializers, tensorMap);
+  const roleByInitializer = classifyOnnxInitializerRoles(graph.nodes, logicalInitializers);
+  const roleCounts = { learned_parameter: 0, quantization_parameter: 0, control_constant: 0, unknown_or_mixed: 0 };
 
   const accumulate = (result) => {
     tensorResults.push(result);
@@ -2001,17 +2007,24 @@ function analyzeOnnxInitializers(graph, tensorMap, sparseTensorContract) {
       return;
     }
     assessedTensors += 1;
+    roleCounts[result.constant_role] += 1;
     decodedElements += result.elements_scanned;
-    storedWeightValuesDecoded += result.stored_weight_values_decoded ?? result.elements_scanned;
-    implicitZeroElements += result.implicit_zero_elements || 0;
-    nearZeroElements += result.near_zero_elements;
-    finiteElements += result.finite_elements;
-    maxAbs = Math.max(maxAbs, result.max_abs_value);
+    storedConstantValuesDecoded += result.stored_weight_values_decoded ?? result.elements_scanned;
+    constantImplicitZeroElements += result.implicit_zero_elements || 0;
     if (result.nan_count > 0) nanTensors += 1;
     if (result.inf_count > 0) infTensors += 1;
     if (result.all_zero) allZeroTensors += 1;
-    if (result.max_abs_value > 1e4) largeMagnitudeTensors += 1;
-    if (result.sparsity > 0.5) highSparsityTensors += 1;
+    if (result.constant_role === "learned_parameter") {
+      learnedParameterTensors += 1;
+      learnedElements += result.elements_scanned;
+      learnedStoredValuesDecoded += result.stored_weight_values_decoded ?? result.elements_scanned;
+      learnedImplicitZeroElements += result.implicit_zero_elements || 0;
+      nearZeroElements += result.near_zero_elements;
+      finiteElements += result.finite_elements;
+      maxAbs = Math.max(maxAbs, result.max_abs_value);
+      if (result.max_abs_value > 1e4) largeMagnitudeTensors += 1;
+      if (result.sparsity > 0.5) highSparsityTensors += 1;
+    }
     if (result.output_channels_evaluated > 0) eligibleKernelTensors += 1;
     outputChannelsEvaluated += result.output_channels_evaluated;
     if (result.zero_kernel_slice_count > 0) {
@@ -2022,7 +2035,7 @@ function analyzeOnnxInitializers(graph, tensorMap, sparseTensorContract) {
   };
 
   for (const tensor of graph.initializers) {
-    const result = scanOnnxInitializer(tensor, kernelTrackerIndex.get(tensor.name) || []);
+    const result = scanOnnxInitializer(tensor, kernelTrackerIndex.get(tensor.name) || [], roleByInitializer.get(tensor.name));
     accumulate(result);
 
     if (result.status !== "assessed") continue;
@@ -2051,7 +2064,7 @@ function analyzeOnnxInitializers(graph, tensorMap, sparseTensorContract) {
   for (const sparse of graph.sparseInitializers || []) {
     const name = sparse.values?.name || "";
     const contractRow = sparseRows.get(name);
-    accumulate(scanOnnxSparseInitializer(sparse, contractRow, kernelTrackerIndex.get(name) || []));
+    accumulate(scanOnnxSparseInitializer(sparse, contractRow, kernelTrackerIndex.get(name) || [], roleByInitializer.get(name)));
     const components = [sparse.values, sparse.indices].filter(Boolean);
     const payloadAvailable = components.length === 2 && components.every((tensor) => !isExternalInitializer(tensor) || tensor.externalPayloadVerified === true);
     const canonical = contractRow?.status === "pass" && payloadAvailable ? canonicalSparseInitializer(sparse) : null;
@@ -2077,20 +2090,27 @@ function analyzeOnnxInitializers(graph, tensorMap, sparseTensorContract) {
     status: assessedTensors > 0 ? "assessed" : "not_assessed",
     coverage_status: unassessedTensors > 0 ? "partial" : "complete",
     assessed_tensors: assessedTensors,
+    constant_tensors_scanned: assessedTensors,
+    weight_tensors_scanned: learnedParameterTensors,
+    constant_role_counts: roleCounts,
     unassessed_tensors: unassessedTensors,
     elements_scanned: decodedElements,
+    constant_elements_scanned: decodedElements,
+    learned_parameter_elements_scanned: learnedElements,
     logical_elements_assessed: decodedElements,
-    stored_weight_values_decoded: storedWeightValuesDecoded,
-    implicit_zero_elements: implicitZeroElements,
+    stored_weight_values_decoded: storedConstantValuesDecoded,
+    implicit_zero_elements: constantImplicitZeroElements,
+    learned_parameter_values_decoded: learnedStoredValuesDecoded,
+    learned_parameter_implicit_zero_elements: learnedImplicitZeroElements,
     dense_initializer_tensors: graph.initializers.length,
     sparse_initializer_tensors: graph.sparseInitializers.length,
     nan_tensors: assessedTensors ? nanTensors : null,
     inf_tensors: assessedTensors ? infTensors : null,
     all_zero_tensors: assessedTensors ? allZeroTensors : null,
-    max_abs_weight: assessedTensors ? maxAbs : null,
-    large_magnitude_tensors: assessedTensors ? largeMagnitudeTensors : null,
-    mean_sparsity: finiteElements ? nearZeroElements / finiteElements : assessedTensors ? 0 : null,
-    high_sparsity_tensors: assessedTensors ? highSparsityTensors : null,
+    max_abs_weight: learnedParameterTensors ? maxAbs : null,
+    large_magnitude_tensors: learnedParameterTensors ? largeMagnitudeTensors : null,
+    mean_sparsity: finiteElements ? nearZeroElements / finiteElements : learnedParameterTensors ? 0 : null,
+    high_sparsity_tensors: learnedParameterTensors ? highSparsityTensors : null,
     eligible_kernel_tensors_scanned: assessedTensors ? eligibleKernelTensors : null,
     output_channels_evaluated: assessedTensors ? outputChannelsEvaluated : null,
     zero_kernel_slice_tensors: assessedTensors ? zeroKernelSliceTensors : null,
@@ -2105,9 +2125,9 @@ function analyzeOnnxInitializers(graph, tensorMap, sparseTensorContract) {
   };
 }
 
-function scanOnnxInitializer(tensor, kernelTrackers) {
+function scanOnnxInitializer(tensor, kernelTrackers, constantRole = "unknown_or_mixed") {
   if (isExternalInitializer(tensor) && tensor.externalPayloadVerified !== true) {
-    return { tensor_name: tensor.name, status: "not_assessed", reason: `Initializer external_data payload status is ${tensor.externalPayloadStatus || "not_supplied"}; no values were decoded.` };
+    return { tensor_name: tensor.name, constant_role: constantRole, status: "not_assessed", reason: `Initializer external_data payload status is ${tensor.externalPayloadStatus || "not_supplied"}; no values were decoded.` };
   }
   if (tensor.dtype === "STRING") {
     return { tensor_name: tensor.name, status: "not_assessed", reason: "String initializer numerical integrity metrics are not applicable." };
@@ -2166,6 +2186,7 @@ function scanOnnxInitializer(tensor, kernelTrackers) {
   const zeroKernelSliceDetails = buildOnnxZeroKernelSliceDetails(tensor, kernelTrackers);
   return {
     tensor_name: tensor.name,
+    constant_role: constantRole,
     dtype: tensor.dtype,
     shape: tensor.shape,
     status: "assessed",
@@ -2213,7 +2234,7 @@ function buildOnnxZeroKernelSliceDetails(tensor, kernelTrackers) {
   });
 }
 
-function scanOnnxSparseInitializer(sparse, contractRow, kernelTrackers) {
+function scanOnnxSparseInitializer(sparse, contractRow, kernelTrackers, constantRole = "unknown_or_mixed") {
   const values = sparse?.values;
   const name = values?.name || "";
   if (!values) return { tensor_name: name, storage_kind: "sparse_tensor_proto", status: "not_assessed", reason: "SparseTensorProto values TensorProto is missing." };
@@ -2294,6 +2315,7 @@ function scanOnnxSparseInitializer(sparse, contractRow, kernelTrackers) {
   const zeroKernelSliceDetails = buildOnnxZeroKernelSliceDetails(logical, kernelTrackers);
   return {
     tensor_name: name,
+    constant_role: constantRole,
     dtype: values.dtype,
     shape: [...(sparse.dims || [])],
     status: "assessed",
@@ -2410,6 +2432,45 @@ function buildOnnxLogicalInitializerIndex(graph) {
     if (name) byName.set(name, { kind: "sparse", name, dtype: sparse.values?.dtype || "UNKNOWN", shape: sparse.dims || [], tensor: sparse.values, sparse });
   }
   return byName;
+}
+
+function classifyOnnxInitializerRoles(nodes, initializerByName) {
+  const roles = new Map([...initializerByName.keys()].map((name) => [name, new Set()]));
+  for (const node of nodes || []) {
+    for (const [inputIndex, name] of (node.inputs || []).entries()) {
+      if (!roles.has(name)) continue;
+      roles.get(name).add(onnxInitializerInputRole(node, inputIndex));
+    }
+  }
+  return new Map([...roles].map(([name, observed]) => {
+    observed.delete(null);
+    return [name, observed.size === 1 ? [...observed][0] : "unknown_or_mixed"];
+  }));
+}
+
+function onnxInitializerInputRole(node, inputIndex) {
+  if (!isStandardOnnxNode(node)) return "unknown_or_mixed";
+  const op = node.opType;
+  const learnedSlots = {
+    Conv: [1, 2], ConvInteger: [1], QLinearConv: [3, 8], Gemm: [1, 2], MatMul: [1],
+    MatMulInteger: [1], QLinearMatMul: [3], BatchNormalization: [1, 2, 3, 4],
+    InstanceNormalization: [1, 2], LayerNormalization: [1, 2], GroupNormalization: [1, 2],
+    PRelu: [1], LSTM: [1, 2, 3, 4, 5, 6, 7], GRU: [1, 2, 3, 4, 5, 6], RNN: [1, 2, 3, 4, 5, 6],
+  };
+  if (learnedSlots[op]?.includes(inputIndex)) return "learned_parameter";
+  const quantizationSlots = {
+    QuantizeLinear: [1, 2], DequantizeLinear: [1, 2], QLinearConv: [1, 2, 4, 5, 6, 7],
+    QLinearMatMul: [1, 2, 4, 5, 6, 7], ConvInteger: [2, 3], MatMulInteger: [2, 3],
+  };
+  if (quantizationSlots[op]?.includes(inputIndex)) return "quantization_parameter";
+  const controlSlots = {
+    Reshape: [1], Slice: [1, 2, 3, 4], Squeeze: [1], Unsqueeze: [1], Expand: [1],
+    Tile: [1], Pad: [1, 3], Resize: [1, 2, 3], TopK: [1], OneHot: [1, 2],
+    ConstantOfShape: [0], Split: [1], Trilu: [1], CumSum: [1], Gather: [1],
+    GatherElements: [1], GatherND: [1], Scatter: [1], ScatterElements: [1], ScatterND: [1],
+  };
+  if (controlSlots[op]?.includes(inputIndex)) return "control_constant";
+  return "unknown_or_mixed";
 }
 
 function buildOnnxKernelTrackerIndex(nodes, initializerByName, tensorMap) {
@@ -3340,16 +3401,25 @@ function buildOnnxWeightIntegrity(graph, tensors, ops, initializerAnalysis) {
   const assessedMetric = (value, reason) => assessed
     ? { status: "assessed", value, reason }
     : { status: "not_assessed", value: null, reason };
+  const learnedMetric = (value, reason) => Number(initializerAnalysis.weight_tensors_scanned || 0) > 0
+    ? { status: "assessed", value, reason }
+    : { status: "not_applicable", value: null, reason: "No initializer was exclusively bound to a confirmed learned-parameter input slot." };
   return {
     status: initializerAnalysis.status,
     coverage_status: initializerAnalysis.coverage_status,
     evidence_class: assessed ? "OBSERVED" : "NOT_ASSESSABLE",
-    weight_tensors_scanned: assessed ? initializerAnalysis.assessed_tensors : null,
+    constant_tensors_scanned: assessed ? initializerAnalysis.constant_tensors_scanned : null,
+    weight_tensors_scanned: assessed ? initializerAnalysis.weight_tensors_scanned : null,
+    constant_role_counts: initializerAnalysis.constant_role_counts,
     quantized_constant_tensors_scanned: quantGrid.assessed_tensors,
     elements_scanned: assessed ? initializerAnalysis.elements_scanned : null,
+    constant_elements_scanned: assessed ? initializerAnalysis.constant_elements_scanned : null,
+    learned_parameter_elements_scanned: assessed ? initializerAnalysis.learned_parameter_elements_scanned : null,
     logical_elements_assessed: assessed ? initializerAnalysis.logical_elements_assessed : null,
     stored_weight_values_decoded: assessed ? initializerAnalysis.stored_weight_values_decoded : null,
     implicit_zero_elements: assessed ? initializerAnalysis.implicit_zero_elements : null,
+    learned_parameter_values_decoded: assessed ? initializerAnalysis.learned_parameter_values_decoded : null,
+    learned_parameter_implicit_zero_elements: assessed ? initializerAnalysis.learned_parameter_implicit_zero_elements : null,
     dense_initializer_tensors: initializerAnalysis.dense_initializer_tensors,
     sparse_initializer_tensors: initializerAnalysis.sparse_initializer_tensors,
     eligible_kernel_tensors_scanned: initializerAnalysis.eligible_kernel_tensors_scanned,
@@ -3380,8 +3450,8 @@ function buildOnnxWeightIntegrity(graph, tensors, ops, initializerAnalysis) {
       zero_kernel_slice_count: initializerAnalysis.eligible_kernel_tensors_scanned > 0
         ? assessedMetric(initializerAnalysis.zero_kernel_slice_count, "Count of output-axis kernel slices whose decoded values are all below |x| < 1e-8.")
         : { status: "not_applicable", value: null, reason: "No supported embedded Conv/Gemm/MatMul kernel layout was available." },
-      max_abs_weight: assessedMetric(initializerAnalysis.max_abs_weight, "Maximum finite absolute decoded initializer scalar."),
-      mean_sparsity: assessedMetric(initializerAnalysis.mean_sparsity, "Near-zero logical scalar count divided by finite logical scalar count; near-zero means |x| < 1e-8 and validated SparseTensorProto absent elements are exact zeros."),
+      max_abs_weight: learnedMetric(initializerAnalysis.max_abs_weight, "Maximum finite absolute decoded scalar among initializers exclusively bound to confirmed learned-parameter input slots."),
+      mean_sparsity: learnedMetric(initializerAnalysis.mean_sparsity, "Near-zero learned-parameter scalar count divided by finite learned-parameter scalar count; control and quantization constants are excluded."),
       min_grid_utilization: quantGrid.assessed_tensors
         ? { status: "assessed", value: quantGrid.minimum_grid_utilization, reason: "Unique logical integer levels divided by the legal 8-bit dtype level count for quantized kernel initializers with bound scale/zero-point parameters; validated sparse absent entries contribute integer code 0." }
         : { status: "not_applicable", value: null, reason: "No available 8-bit kernel initializer had a valid Q/DQ or QLinear parameter binding." },
@@ -3395,7 +3465,7 @@ function buildOnnxWeightIntegrity(graph, tensors, ops, initializerAnalysis) {
     initializer_value_decoding: assessed ? "implemented for dense TensorProto plus validated SparseTensorProto logical tensors using embedded and verified external raw_data or typed numeric fields" : "no supported complete numeric initializer payload was available",
     tensor_results: initializerAnalysis.tensor_results,
     detail: assessed
-      ? `${initializerAnalysis.assessed_tensors} available ONNX initializer tensor(s) were assessed across ${initializerAnalysis.logical_elements_assessed} logical scalar element(s): ${initializerAnalysis.stored_weight_values_decoded} stored value(s) decoded and ${initializerAnalysis.implicit_zero_elements} validated SparseTensorProto implicit zero(s) reconstructed without densification. ${initializerAnalysis.unassessed_tensors} incomplete-external, invalid-sparse, or unsupported tensor(s) remain not assessed.`
+      ? `${initializerAnalysis.assessed_tensors} available ONNX initializer tensor(s) were checked for numerical integrity across ${initializerAnalysis.logical_elements_assessed} logical scalar element(s): ${initializerAnalysis.stored_weight_values_decoded} stored value(s) decoded and ${initializerAnalysis.implicit_zero_elements} sparse implicit zero(s) reconstructed without densification. Weight magnitude and sparsity cover only ${initializerAnalysis.weight_tensors_scanned} confirmed learned-parameter tensor(s); control, quantization, and mixed-role constants are excluded. ${initializerAnalysis.unassessed_tensors} incomplete-external, invalid-sparse, or unsupported tensor(s) remain not assessed.`
       : `${graph.initializers.length + graph.sparseInitializers.length} logical initializer tensor(s) were inventoried, but no supported complete numeric payload was available for value integrity checks.`,
   };
 }

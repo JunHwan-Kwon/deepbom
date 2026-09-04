@@ -36,6 +36,7 @@ export function createWorkflowController({
     dropzone,
     modelPlan,
     workflowConsole,
+    reviewSummaryPanel,
     artifactDossier,
     auditWorkbench,
     summary,
@@ -169,8 +170,9 @@ export function createWorkflowController({
     const hasAnalysis = Boolean(getAnalysis());
     const moduleWorkspace = moduleWorkspaceId(activeWorkspace);
     dropzone.hidden = false;
-    modelPlan.hidden = false;
+    modelPlan.hidden = state === "idle";
     workflowConsole.hidden = state === "idle";
+    if (reviewSummaryPanel) reviewSummaryPanel.hidden = !hasAnalysis;
     if (artifactDossier) artifactDossier.hidden = !(hasAnalysis && activeWorkspace === "input");
     auditWorkbench.hidden = !(hasAnalysis && activeWorkspace === "audit");
     const activeTab = auditTabs.find((tab) => tab.dataset.auditTab === activeAuditTab);
@@ -243,6 +245,7 @@ export function createWorkflowController({
 
   function updateState(nextState, detail = {}) {
     state = nextState;
+    body.dataset.workflowState = nextState;
     const config = configFor(nextState, detail);
     workflowMode.textContent = config.mode;
     workflowNextAction.textContent = config.action;

@@ -1,6 +1,7 @@
 import { STATIC_AUDIT_OPERATION } from "./static-audit-worker-protocol.js";
+import { browserAssetUrl } from "./browser-asset-url.js";
 
-const WORKER_URL = new URL("../workers/static-audit-worker.js", import.meta.url);
+const WORKER_URL = browserAssetUrl("./workers/static-audit-worker.js", "../workers/static-audit-worker.js", import.meta.url);
 
 export function createStaticAuditWorkerClient({ createWorker = null, inactivityTimeoutMs = 300_000 } = {}) {
   if (!Number.isSafeInteger(inactivityTimeoutMs) || inactivityTimeoutMs <= 0) {

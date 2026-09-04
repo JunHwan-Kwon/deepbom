@@ -1,4 +1,5 @@
 import { formatNumber, padOp } from "./format.js";
+import { browserAssetUrl } from "./browser-asset-url.js";
 import { sha256Hex } from "./hash.js";
 import { roundTiesAway } from "./quantization-math.js";
 
@@ -153,7 +154,7 @@ function validateResidualContractDistortionEnvelope(result, analysis) {
 
 async function runIndependentVerification(result, analysis, onWorker) {
   if (typeof Worker === "function") {
-    const worker = new Worker(new URL("./residual-contract-distortion-worker.js", import.meta.url), { type: "module" });
+    const worker = new Worker(browserAssetUrl("./lib/residual-contract-distortion-worker.js", "./residual-contract-distortion-worker.js", import.meta.url), { type: "module" });
     onWorker?.(worker);
     return new Promise((resolve, reject) => {
       worker.onmessage = (event) => {

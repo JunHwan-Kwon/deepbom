@@ -33,7 +33,6 @@ const PACKAGE_MEMBERS = Object.freeze([
   ["public_static_evidence_summary.html", "Watermarked presentation copy of the exact summary body."],
   ["public_report_verification_manifest.json", "Artifact, report, analyzer, rulepack, target, and runtime identity hashes."],
   ["cyclonedx_1_7_artifact_evidence.cdx.json", "Standalone CycloneDX 1.7 artifact-evidence document."],
-  ["proposal/cyclonedx_2_0_draft_compatibility.json", "Commit-pinned CycloneDX 2.0 draft integration status; not a BOM or conformance claim."],
   ["package_scope.json", "Machine-readable package scope and claim boundary."],
 ]);
 
@@ -86,7 +85,7 @@ export function buildPublicEvidencePackageFiles({
       "model artifact bytes and weights",
       "raw tensor values",
       "editable Engineering Report",
-      "account-bound raw evidence ledger, CSV, graph, and visual exports",
+      "advanced exports that are not members of this public package",
     ],
     detached_signature: {
       member: "deepbom_public_key_signature.json",
@@ -107,7 +106,6 @@ export function buildPublicEvidencePackageFiles({
     zipTextFile("public_static_evidence_summary.html", reportHtml),
     zipTextFile("public_report_verification_manifest.json", jsonForDownload(verificationManifest)),
     zipTextFile("cyclonedx_1_7_artifact_evidence.cdx.json", jsonForDownload(cycloneDx.documents.cyclonedx_evidence)),
-    zipTextFile("proposal/cyclonedx_2_0_draft_compatibility.json", jsonForDownload(cycloneDx.documents.cyclonedx_2_0_draft_compatibility)),
     zipTextFile("package_scope.json", jsonForDownload(packageScope)),
   ];
   if (!validatePublicEvidencePackageFiles(files, packageScope)) {
@@ -155,7 +153,7 @@ function packageReadme(scope) {
     "LICENSE AND REUSE",
     "Copyright (C) 2026 Jun-Hwan Kwon. All rights reserved.",
     "This package is provided for review, verification, and citation of this audit result. No source-code, executable, model-weight, redistribution, modification, or implementation license is granted.",
-    "Citation: https://doi.org/10.5281/zenodo.21834509",
+    "Citation: https://doi.org/10.5281/zenodo.21834508",
     "",
   ].join("\n");
 }

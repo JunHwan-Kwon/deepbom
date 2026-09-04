@@ -3,6 +3,7 @@ let appLoaded = false;
 let appLoadAttempt = 0;
 let replayingFileChange = false;
 let replayingInteraction = false;
+let replayingDrop = false;
 
 const MAX_APP_LOAD_ATTEMPTS = 3;
 const APP_LOAD_RETRY_DELAYS_MS = [0, 150, 600];
@@ -63,6 +64,28 @@ function clearReloadMarker() {
   }
 }
 
+function hasPendingReloadRecovery() {
+  try {
+    const previous = Number(window.sessionStorage.getItem(APP_RELOAD_SESSION_KEY));
+    return Number.isFinite(previous) && Date.now() - previous < APP_RELOAD_COOLDOWN_MS;
+  } catch {
+    return false;
+  }
+}
+
+function reportAppFailure(error) {
+  const status = document.querySelector("#status");
+  if (status) {
+    status.textContent = "Application failed to initialize";
+    status.dataset.state = "error";
+  }
+  console.error("[bootstrap] Application failed to initialize.", error);
+}
+
+function requestApplication() {
+  return loadApp().catch(reportAppFailure);
+}
+
 function requestsApplication(target) {
   return target instanceof Element && Boolean(target.closest(
     "#fileInput, #artifactBundleInput, #runAudit, #trySampleModel, #dropzone, [data-sample-id], [data-target-id], [data-module]",
@@ -70,7 +93,7 @@ function requestsApplication(target) {
 }
 
 function startForInteraction(event) {
-  if (requestsApplication(event.target)) loadApp().catch(() => {});
+  if (requestsApplication(event.target)) requestApplication();
 }
 
 async function replayFileChange(event) {
@@ -95,17 +118,26 @@ async function replayCommand(event) {
   replayingInteraction = false;
 }
 
+async function replayArtifactDrop(event) {
+  if (replayingDrop || appLoaded || !(event.target instanceof Element) || !event.target.closest("#dropzone")) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const target = event.target.closest("#dropzone");
+  const dataTransfer = event.dataTransfer;
+  await loadApp();
+  replayingDrop = true;
+  target.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer }));
+  replayingDrop = false;
+}
+
 document.addEventListener("pointerdown", startForInteraction, { capture: true, passive: true });
 document.addEventListener("focusin", startForInteraction, { capture: true, passive: true });
 document.addEventListener("change", replayFileChange, { capture: true });
 document.addEventListener("click", replayCommand, { capture: true });
+document.addEventListener("drop", replayArtifactDrop, { capture: true });
 
-const schedule = window.requestIdleCallback
-  ? (callback) => window.requestIdleCallback(callback, { timeout: 1_500 })
-  : (callback) => window.setTimeout(callback, 250);
+document.addEventListener("dragenter", requestApplication, { capture: true, passive: true });
 
-schedule(() => loadApp().catch((error) => {
-  console.error("[bootstrap]", error);
-  const status = document.getElementById("status");
-  if (status) status.textContent = "Application failed to initialize";
-}));
+// A bounded document reload resets a failed browser module map. Resume only
+// that explicit recovery attempt; ordinary visits remain interaction-loaded.
+if (hasPendingReloadRecovery()) requestApplication();

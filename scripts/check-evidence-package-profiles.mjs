@@ -94,9 +94,9 @@ for (const profile of EVIDENCE_PACKAGE_PROFILES) {
     assert(levelManifest.included_findings.every((row) => classifyEvidenceClass(row.evidence_class).rank <= level.rank), `${label} finding ceiling`);
     assert(levelManifest.excluded_findings.some((row) => row.finding_id === "F-MISSING"
       && row.exclusion_reason === "unclassified_evidence_class_fail_closed"), `${label} missing finding class fails closed`);
-    const standardsEvidence = files.filter((file) => file.name.endsWith(".cdx.json")
-      || file.name.endsWith("cyclonedx_2_0_draft_compatibility.json"));
-    assert.equal(standardsEvidence.length, level.id === "all_available" ? 2 : 0, `${label} CycloneDX scope`);
+    const standardsEvidence = files.filter((file) => file.name.endsWith(".cdx.json"));
+    assert.equal(standardsEvidence.length, level.id === "all_available" ? 1 : 0, `${label} CycloneDX scope`);
+    assert(files.every((file) => !file.name.includes("cyclonedx_2_0")), `${label} excludes draft-status artifacts`);
     if (level.id !== "all_available") assert.match(byName.get(bodyName), /^# DEEPBOM Scoped Evidence Report/m, `${label} scoped body`);
     assert.equal(packageScope.login_required, false, `${label} login-free contract`);
     assert.equal(packageScope.rights.profile, profile.id, `${label} rights profile binding`);

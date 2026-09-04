@@ -1,6 +1,6 @@
 [package]
 name = "tflite_wasm_audit"
-version = "1.96.5"
+version = "1.96.6"
 edition = "2021"
 description = "Browser-side TFLite static audit WebAssembly module."
 repository = "https://github.com/JunHwan-Kwon/deepbom"

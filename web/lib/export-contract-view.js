@@ -8,14 +8,12 @@ import { signPackageDigest, verifyPackageSignature } from "./public-key-signatur
 
 const EXPORTS = [
   ["downloadCycloneDxEvidence", "cyclonedxEvidence", "cyclonedx_evidence"],
-  ["downloadCycloneDx20DraftStatus", "cyclonedx20DraftStatus", "cyclonedx_2_0_draft_compatibility"],
   ["downloadObservedFormulation", "observedFormulation", "observed_formulation"],
   ["downloadRuntimeRequirements", "runtimeRequirementManifest", "runtime_requirement_manifest"],
   ["downloadMissingProvenance", "missingProvenanceFields", "missing_provenance_field_specification"],
 ];
 const PUBLIC_EXPORT_BUTTONS = new Set([
   "downloadCycloneDxEvidence",
-  "downloadCycloneDx20DraftStatus",
 ]);
 
 export function createExportContractController({
@@ -98,8 +96,8 @@ export function createExportContractController({
       const exportSet = await getDocuments();
       const files = [
         zipTextFile(exportSet.files.cyclonedx, jsonForDownload(exportSet.documents.cyclonedx_evidence)),
-        zipTextFile(exportSet.files.cyclonedx20DraftStatus, jsonForDownload(exportSet.documents.cyclonedx_2_0_draft_compatibility)),
         zipTextFile(exportSet.files.artifactEnvelope, jsonForDownload(exportSet.documents.artifact_evidence_envelope)),
+        zipTextFile(exportSet.files.artifactIr, jsonForDownload(exportSet.documents.artifact_ir)),
         zipTextFile(exportSet.files.interfaceContracts, jsonForDownload(exportSet.documents.interface_contract_ledger)),
         zipTextFile(exportSet.files.formulation, jsonForDownload(exportSet.documents.observed_formulation)),
         zipTextFile(exportSet.files.runtime, jsonForDownload(exportSet.documents.runtime_requirement_manifest)),
@@ -107,7 +105,7 @@ export function createExportContractController({
       ];
       const packageDigest = await buildCanonicalPackageDigest(files);
       files.push(zipTextFile("deepbom_contract_pack_manifest.json", jsonForDownload({
-        schema: "deepbom.deployment_contract_pack_manifest.v1.4",
+        schema: "deepbom.deployment_contract_pack_manifest.v1.5",
         generated_at: exportSet.generated_at,
         subject: exportSet.subject,
         contract_set_schema: exportSet.schema,
@@ -159,9 +157,7 @@ export function createExportContractController({
     if (elements?.exportContractStatus) {
       elements.exportContractStatus.textContent = !available
         ? "No analyzed artifact"
-        : allowed
-          ? "Stable CycloneDX 1.7, the 2.0 draft compatibility record, five companion contracts, and one closed package are ready"
-          : "Stable CycloneDX 1.7 and the 2.0 draft compatibility record are ready; companion contracts require account authorization";
+        : "CycloneDX 1.7 and six companion contracts are ready";
       elements.exportContractStatus.classList.toggle("ready", available);
     }
     for (const [buttonName] of EXPORTS) {
@@ -282,7 +278,7 @@ export function createExportContractController({
       ? "Run a static audit first."
       : allowed
         ? pack
-          ? "Download all seven contract documents with a member-digest manifest and independently verifiable ES256 signature."
+          ? "Download six contract documents with a member-digest manifest and independently verifiable ES256 signature."
           : publicExport
             ? "Download this standalone CycloneDX document without signing in."
             : "Download this machine-readable model contract."

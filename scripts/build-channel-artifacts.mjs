@@ -60,6 +60,7 @@ const npmBuildResult = await build({
 });
 assertPublicBundleInputs(npmBuildResult.metafile, "npm");
 await copyFile(wasmSource, path.join(npmRoot, "pkg", "tflite_wasm_audit_bg.wasm"));
+await copyFile(path.join(root, "web", "samples", "gpu_partition_probe.onnx"), path.join(npmRoot, "bin", "deepbom-self-test.onnx"));
 await copyFile(path.join(root, "channels", "npm", "README.md"), path.join(npmRoot, "README.md"));
 await copyFile(publicLicense, path.join(npmRoot, "LICENSE"));
 await writeFile(path.join(npmRoot, "package.json"), `${JSON.stringify({
@@ -107,11 +108,13 @@ const engineBuildResult = await build({
   define: {
     __DEEPBOM_RELEASE_VERSION__: JSON.stringify(packageDocument.version),
     __DEEPBOM_TFLITE_WASM_SHA256__: JSON.stringify(wasmSha256),
+    "import.meta.url": JSON.stringify("file:///deepbom-cli-cjs-placeholder.mjs"),
   },
 });
 assertPublicBundleInputs(engineBuildResult.metafile, "standalone engine");
 restoreBuildMetadata();
 await copyFile(wasmSource, path.join(engineRoot, "pkg", "tflite_wasm_audit_bg.wasm"));
+await copyFile(path.join(root, "web", "samples", "gpu_partition_probe.onnx"), path.join(engineRoot, "deepbom-self-test.onnx"));
 
 const executableName = process.platform === "win32" ? "deepbom-core.exe" : "deepbom-core";
 const executable = path.join(engineRoot, executableName);

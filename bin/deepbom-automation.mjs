@@ -5,6 +5,7 @@ import path from "node:path";
 export const CLI_CAPABILITIES_SCHEMA = "deepbom.cli_capabilities.v1";
 export const CLI_ERROR_SCHEMA = "deepbom.cli_error.v1";
 export const CLI_POLICY_RESULT_SCHEMA = "deepbom.cli_finding_policy_result.v1";
+export const CLI_DEFECT_GATE_RESULT_SCHEMA = "deepbom.cli_defect_gate_result.v1";
 export const SARIF_VERSION = "2.1.0";
 
 const FINDING_LEVELS = Object.freeze(["informational", "low", "medium", "high"]);
@@ -23,8 +24,9 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       { name: "explore", input_count: 1, outputs: ["deepbom.redesign_pareto.v1"] },
         { name: "graph", input_count: 1, outputs: ["svg", "png", "html", "mermaid", "dot", "deepbom.artifact_ir.v2", "deepbom.graph_ir.v1", "deepbom.visualization_manifest.v1"] },
         { name: "placement", input_count: 1, outputs: ["deepbom.placement_comparison.v1"] },
-        { name: "perspective", input_count: 1, outputs: ["deepbom.cyclonedx_perspective_audit.v1", "html"] },
       { name: "accelerator collect nvidia", input_count: 0, outputs: ["deepbom.accelerator_profile.v1"] },
+      { name: "explain-rule", input_count: 0, optional_identifier_count: 1, outputs: ["deepbom.rule_explanation.v1", "deepbom.rule_explanation_index.v1"] },
+      { name: "self-test", input_count: 0, outputs: ["deepbom.cli_self_test.v1"] },
       { name: "capabilities", input_count: 0, outputs: [CLI_CAPABILITIES_SCHEMA] },
     ],
     inputs: {
@@ -80,6 +82,8 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
     },
     automation: {
       finding_gate_levels: FINDING_LEVELS,
+      finding_kinds: ["artifact_defect", "caution", "evidence_gap"],
+      default_gate: "artifact_defect_only",
       review_policy_schema: "deepbom.review_policy.v1",
       review_policy_states: ["execution_status", "coverage_status", "finding_policy_status"],
       identity_scoped_expiring_exceptions: true,
@@ -128,6 +132,7 @@ export function buildSarifDocument(envelope, { version, policyResult = null } = 
       category: finding.rule_id || null,
       deepbomEvidenceClass: finding.evidence_class || null,
       deepbomSeverity: normalizeFindingLevel(finding.severity),
+      deepbomFindingKind: finding.finding_kind || "caution",
     },
   }));
   const artifactUri = artifactUriFor(envelope.identity?.filename || "model");
@@ -157,6 +162,7 @@ export function buildSarifDocument(envelope, { version, policyResult = null } = 
     properties: {
       deepbomEvidenceClass: finding.evidence_class || null,
       deepbomSeverity: normalizeFindingLevel(finding.severity),
+      deepbomFindingKind: finding.finding_kind || "caution",
       deepbomStatus: finding.status || null,
       deepbomInterpretation: finding.interpretation || null,
       deepbomRecommendation: finding.recommendation || null,
@@ -209,6 +215,23 @@ export function evaluateFindingPolicy(envelope, failOn = "none") {
     fail_on: threshold,
     finding_count: findings.length,
     severity_counts: counts,
+    blocking_finding_count: blocking.length,
+    blocking_finding_ids: blocking.map((finding) => finding.id),
+    evidence_envelope_sha256: envelope?.envelope_sha256 || null,
+  };
+}
+
+export function evaluateDefectGate(envelope) {
+  const findings = Array.isArray(envelope?.findings) ? envelope.findings : [];
+  const counts = { artifact_defect: 0, caution: 0, evidence_gap: 0 };
+  for (const finding of findings) counts[finding.finding_kind] = (counts[finding.finding_kind] || 0) + 1;
+  const blocking = findings.filter((finding) => finding.finding_kind === "artifact_defect");
+  return {
+    schema: CLI_DEFECT_GATE_RESULT_SCHEMA,
+    status: blocking.length ? "block" : "pass",
+    gate: "defects",
+    finding_count: findings.length,
+    finding_kind_counts: counts,
     blocking_finding_count: blocking.length,
     blocking_finding_ids: blocking.map((finding) => finding.id),
     evidence_envelope_sha256: envelope?.envelope_sha256 || null,

@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v556";
+const CACHE_NAME = "tflite-wasm-static-audit-v557";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -26,6 +26,7 @@ const APP_ASSETS = [
   "./app.js",
   "./lib/analysis-depth-mode.js",
   "./lib/accelerator-binding.js",
+  "./lib/accelerator-profile-binding.js",
   "./lib/accelerator-profile-switcher.js",
   "./lib/edgetpu-compiler-evidence.js",
   "./lib/litert-qualcomm-evidence.js",
@@ -36,6 +37,7 @@ const APP_ASSETS = [
   "./lib/app-deepbom-workspace.js",
   "./lib/app-graph-workspace.js",
   "./lib/artifact-set.js",
+  "./lib/artifact-evidence-envelope.js",
   "./lib/artifact-ir.js",
   "./lib/artifact-ir/internal/architecture.js",
   "./lib/artifact-ir/internal/constants.js",
@@ -68,6 +70,8 @@ const APP_ASSETS = [
   "./executorch.js",
   "./lib/admin-elements.js",
   "./lib/app-config.js",
+  "./lib/browser-asset-url.js",
+  "./lib/target-profiles.generated.js",
   "./lib/citation-ui.js",
   "./lib/clipboard.js",
   "./lib/app-surface.js",
@@ -107,6 +111,7 @@ const APP_ASSETS = [
   "./lib/core-isolation-view.js",
   "./lib/deployment-delta.js",
   "./lib/dynamic-shape-cost.js",
+  "./lib/mac-coverage.js",
   "./lib/guarded-integer-expression.js",
   "./lib/flatbuffer-reader.js",
   "./lib/onnx-dimension-expression.js",
@@ -126,6 +131,7 @@ const APP_ASSETS = [
   "./lib/llm-layer-storage.js",
   "./lib/llm-static-memory-placement.js",
   "./lib/llm-memory-feasibility.js",
+  "./lib/nvidia-accelerator-profile.js",
   "./lib/llm-token-budget-scenario.js",
   "./lib/tensorrt-llm-source-metadata.js",
   "./lib/tensorrt-llm-contract.js",
@@ -168,6 +174,8 @@ const APP_ASSETS = [
   "./lib/evidence-package-profiles.js",
   "./lib/evidence-level-report.js",
   "./lib/evidence-package-rights.js",
+  "./lib/review-summary.js",
+  "./lib/review-summary-view.js",
   "./lib/cyclonedx-20-preview.js",
   "./lib/cyclonedx-draft-profiles.js",
   "./lib/cyclonedx-perspective-audit.js",
@@ -271,7 +279,6 @@ const APP_ASSETS = [
   "./lib/execution-placement-evidence.js",
   "./lib/executorch-build-binding.js",
   "./lib/format-workflow-ui.js",
-  "./lib/privacy-ui.js",
   "./lib/modal-accessibility.js",
   "./lib/research.js",
   "./lib/report-context.js",
@@ -354,10 +361,8 @@ const APP_SHELL_ASSETS = [
   "./research-theme.css",
   "./lib/theme-ui.js",
   "./NOTICE.txt",
-  "./app.js",
+  "./bootstrap.js",
   "./manifest.webmanifest",
-  "../pkg/tflite_wasm_audit.js",
-  "../pkg/tflite_wasm_audit_bg.wasm",
 ];
 
 const RUNTIME_CACHEABLE_SUFFIXES = [
@@ -378,22 +383,7 @@ const AUTHENTICATED_ASSET_PREFIXES = [
   "/web/protected/",
 ];
 
-const AUTHENTICATED_ASSET_PATHS = new Set([
-  "/web/lib/report-raw-entry.js",
-  "/web/lib/report-bundle.js",
-  "/web/lib/report-evidence.js",
-  "/web/lib/report-export-contracts.js",
-  "/web/lib/report-mlbom.js",
-  "/web/lib/report-mlbom-compat.js",
-  "/web/lib/report.js",
-  "/web/lib/report-conformance.js",
-  "/web/lib/report-conformance-runtime-helpers.js",
-  "/web/lib/report-conformance-onnx.js",
-  "/web/lib/report-conformance-serialized-containers.js",
-  "/web/lib/report-conformance-ort-runtime.js",
-  "/web/lib/report-conformance-onnx-tfidf.js",
-  "/web/lib/report-conformance-onnx-tree.js",
-]);
+const AUTHENTICATED_ASSET_PATHS = new Set([]);
 
 const CACHEABLE_SUFFIXES = [
   ...APP_ASSETS.map(assetToPathSuffix),

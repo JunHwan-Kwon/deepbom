@@ -490,6 +490,7 @@ async function validateBrowserSelection(items) {
       }
     });
     await page.goto(`http://127.0.0.1:${server.address().port}/web/`, { waitUntil: "domcontentloaded" });
+    await page.locator("#fileInput").focus();
     await page.waitForFunction(() => document.querySelector("#status")?.textContent?.includes("Ready"), null, { timeout: 180_000 });
     if (await page.locator("#agreementBackdrop").isVisible()) {
       await page.locator("#privacyAgree").check();

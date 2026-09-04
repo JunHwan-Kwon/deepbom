@@ -183,7 +183,7 @@ export function buildPublicEngineeringReportHtml(reportText, {
   modelName = "model",
   origin = "",
   reportFingerprint,
-  citationDoi = "10.5281/zenodo.21834509",
+  citationDoi = "10.5281/zenodo.21834508",
   profile = "public",
 } = {}) {
   if (!generatedAt) throw new Error("Public report HTML requires a frozen generatedAt timestamp.");

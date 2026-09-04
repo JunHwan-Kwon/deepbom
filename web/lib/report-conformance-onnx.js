@@ -2373,30 +2373,35 @@ export function registerOnnxConformance({
     const assessedWeights = weightIntegrity.status === "assessed";
     const initializerResults = weightIntegrity.tensor_results || [];
     const assessedInitializerResults = initializerResults.filter((row) => row.status === "assessed");
+    const assessedLearnedParameterResults = assessedInitializerResults.filter((row) => row.constant_role === "learned_parameter");
     const resultLogicalElements = assessedInitializerResults.reduce((sum, row) => sum + Number(row.elements_scanned || 0), 0);
     const resultStoredValues = assessedInitializerResults.reduce((sum, row) => sum + Number(row.stored_weight_values_decoded || 0), 0);
     const resultImplicitZeros = assessedInitializerResults.reduce((sum, row) => sum + Number(row.implicit_zero_elements || 0), 0);
-    const resultFiniteElements = assessedInitializerResults.reduce((sum, row) => sum + Number(row.finite_elements || 0), 0);
-    const resultNearZeroElements = assessedInitializerResults.reduce((sum, row) => sum + Number(row.near_zero_elements || 0), 0);
+    const resultFiniteElements = assessedLearnedParameterResults.reduce((sum, row) => sum + Number(row.finite_elements || 0), 0);
+    const resultNearZeroElements = assessedLearnedParameterResults.reduce((sum, row) => sum + Number(row.near_zero_elements || 0), 0);
+    const learnedElements = assessedLearnedParameterResults.reduce((sum, row) => sum + Number(row.elements_scanned || 0), 0);
     const logicalInitializerInventory = (staticAnalysis?.tensors || []).filter((tensor) => tensor.role === "initializer" || tensor.constant_buffer);
     check("CF-WGT-000", initializerResults.length === Number(weightIntegrity.initializer_tensors_present || 0)
       && initializerResults.length === logicalInitializerInventory.length
-      && assessedInitializerResults.length === Number(weightIntegrity.weight_tensors_scanned || 0)
+      && assessedInitializerResults.length === Number(weightIntegrity.constant_tensors_scanned || 0)
+      && assessedLearnedParameterResults.length === Number(weightIntegrity.weight_tensors_scanned || 0)
       && initializerResults.filter((row) => row.status !== "assessed").length === Number(weightIntegrity.initializer_tensors_unassessed || 0)
       && resultLogicalElements === Number(weightIntegrity.logical_elements_assessed || 0)
       && resultLogicalElements === Number(weightIntegrity.elements_scanned || 0)
+      && learnedElements === Number(weightIntegrity.learned_parameter_elements_scanned || 0)
       && resultStoredValues === Number(weightIntegrity.stored_weight_values_decoded || 0)
       && resultImplicitZeros === Number(weightIntegrity.implicit_zero_elements || 0)
       && resultStoredValues + resultImplicitZeros === resultLogicalElements
       && Number(weightIntegrity.dense_initializer_tensors || 0) + Number(weightIntegrity.sparse_initializer_tensors || 0) === initializerResults.length
       && Number(weightIntegrity.initializer_elements_present || 0) === logicalInitializerInventory.reduce((sum, tensor) => sum + Number(tensor.initializer_elements || 0), 0)
-      && nullableClose(weightIntegrity.mean_sparsity, resultFiniteElements > 0 ? resultNearZeroElements / resultFiniteElements : assessedInitializerResults.length ? 0 : null),
+      && Object.values(weightIntegrity.constant_role_counts || {}).reduce((sum, value) => sum + Number(value || 0), 0) === assessedInitializerResults.length
+      && nullableClose(weightIntegrity.mean_sparsity, resultFiniteElements > 0 ? resultNearZeroElements / resultFiniteElements : assessedLearnedParameterResults.length ? 0 : null),
     "ONNX dense+sparse initializer integrity inventory, decoded-storage count, implicit-zero count, or logical sparsity does not conserve.", ["/evidence/static_analysis/weight_integrity", "/evidence/static_analysis/tensors"]);
     check("CF-WGT-001", assessedWeights
       ? reportText.includes("Initializer-value integrity assessed") && !reportText.includes("Initializer-value integrity was not assessed")
       : reportText.includes("Initializer-value integrity was not assessable"), "Static audit conclusion does not match structured ONNX initializer-integrity status.", ["/evidence/static_analysis/weight_integrity/status", "/engineering_report.md"]);
     check("CF-WGT-002", assessedWeights
-      ? reportText.includes("Initializer value decoding | Implemented for") && reportText.includes("Weight integrity | Assessed over logical initializer values")
+      ? reportText.includes("Initializer value decoding | Implemented for") && reportText.includes("Weight statistics | Assessed only for confirmed learned parameters")
       : reportText.includes("Initializer value decoding | Not assessable"), "Analysis Completeness does not match structured ONNX initializer-decoder coverage.", ["/evidence/static_analysis/weight_integrity", "/engineering_report.md"]);
     check("CF-WGT-002A", !assessedWeights || (reportText.includes(`${weightIntegrity.stored_weight_values_decoded} stored value(s) decoded`)
       && reportText.includes(`${weightIntegrity.implicit_zero_elements} sparse implicit zero(s)`)), "Engineering report does not expose ONNX stored-value versus sparse implicit-zero integrity coverage.", ["/evidence/static_analysis/weight_integrity", "/engineering_report.md"]);

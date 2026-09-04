@@ -1,4 +1,5 @@
 import { validateAccumulatorAtlas } from "./accumulator-atlas.js";
+import { browserAssetUrl } from "./browser-asset-url.js";
 import { sha256Hex } from "./hash.js";
 import {
   multiplyByQuantizedMultiplierDefault,
@@ -75,7 +76,7 @@ export function createKernelWitnessController({
         status.dataset.tone = evidence.build_mode_divergent_endpoint_count ? "watch" : evidence.assessed_op_count ? "ok" : "muted";
       }
       if (evidence.assessed_op_count && typeof Worker === "function") {
-        worker = new Worker(new URL("./kernel-witness-worker.js", import.meta.url), { type: "module" });
+        worker = new Worker(browserAssetUrl("./lib/kernel-witness-worker.js", "./kernel-witness-worker.js", import.meta.url), { type: "module" });
         worker.onmessage = (event) => {
           if (token !== renderToken || !status) return;
           if (event.data?.ok) {

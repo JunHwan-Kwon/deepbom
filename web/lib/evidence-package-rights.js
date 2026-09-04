@@ -1,6 +1,6 @@
 export const EVIDENCE_PACKAGE_RIGHTS_SCHEMA = "deepbom.evidence_package_rights.v1";
 
-export const DEEPBOM_CITATION_DOI = "https://doi.org/10.5281/zenodo.21834509";
+export const DEEPBOM_CITATION_DOI = "https://doi.org/10.5281/zenodo.21834508";
 
 const RIGHTS_HOLDER = Object.freeze({
   name: "Jun-Hwan Kwon",

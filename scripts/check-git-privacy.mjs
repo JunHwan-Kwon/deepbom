@@ -130,7 +130,7 @@ function assertPrivateBuildContract() {
 }
 
 function assertPublicSurfaceHasNoPrivateRoadmapTerms() {
-  const publicFiles = checked.filter(isPublicSurfaceFile);
+  const publicFiles = checked.filter((file) => isPublicSurfaceFile(file) && existsSync(file));
   const leaked = [];
   for (const file of publicFiles) {
     const text = readFileSync(file, "utf8");

@@ -100,14 +100,14 @@ export function capabilitiesForUser(user, accessGrantState = null) {
   return {
     signedIn,
     admin,
-    report: Boolean(signedIn && (admin || allowed.report === true || allowed.export === true)),
-    export: Boolean(signedIn && (admin || allowed.export === true || allowed.report === true)),
-    raw_export: Boolean(signedIn && (admin || allowed.raw_export === true)),
+    report: true,
+    export: true,
+    raw_export: true,
     deepbom: Boolean(signedIn && (admin || allowed.deepbom === true)),
     perturbation: Boolean(signedIn && (admin || allowed.perturbation === true)),
     runtime_basin: Boolean(signedIn && (admin || allowed.runtime_basin === true)),
     deployment_sensitivity: Boolean(signedIn && (admin || allowed.deployment_sensitivity === true)),
-    regulatory_report: Boolean(signedIn && (admin || allowed.regulatory_report === true)),
+    regulatory_report: true,
   };
 }
 

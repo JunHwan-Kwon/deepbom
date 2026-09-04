@@ -36,11 +36,14 @@ expectEqual(valid.size_breakdown.theoretical_fp16_constant_bytes, 20, "Sparse FL
 expectEqual(valid.size_breakdown.theoretical_int8_constant_bytes, 18, "Sparse INT8 value projection should change only NNZ values while preserving INT64 indices.");
 expectEqual(valid.ops[0].estimated_bytes, 96, "Operator traffic should use the sparse initializer's 32-byte logical dense tensor payload, not 24-byte storage encoding.");
 expectEqual(valid.weight_integrity.initializer_tensors_present, 1, "Sparse initializer declarations must enter the weight-integrity inventory.");
-expectEqual(valid.weight_integrity.weight_tensors_scanned, 1, "A structurally valid complete sparse initializer should be value-assessed.");
+expectEqual(valid.weight_integrity.constant_tensors_scanned, 1, "A structurally valid complete sparse initializer should be value-assessed.");
+expectEqual(valid.weight_integrity.weight_tensors_scanned, 0, "An Add operand must not be promoted to a learned parameter without a learned-weight slot contract.");
+expectEqual(valid.weight_integrity.constant_role_counts.unknown_or_mixed, 1, "An Add constant should retain its unresolved semantic role.");
 expectEqual(valid.weight_integrity.logical_elements_assessed, 8, "Sparse integrity coverage should use the logical dense cardinality.");
 expectEqual(valid.weight_integrity.stored_weight_values_decoded, 2, "Sparse integrity coverage should expose only the physically stored values as decoded.");
 expectEqual(valid.weight_integrity.implicit_zero_elements, 6, "Every absent sparse logical element should be counted as an exact implicit zero.");
-expectEqual(valid.weight_integrity.mean_sparsity, 0.75, "Logical sparse-tensor sparsity should include specification-defined implicit zeros.");
+expectEqual(valid.weight_integrity.tensor_results.find((row) => row.tensor_name === "w")?.sparsity, 0.75, "Logical sparse-tensor sparsity should include specification-defined implicit zeros.");
+expectEqual(valid.weight_integrity.mean_sparsity, null, "Learned-weight sparsity must remain unassessed when the only constant has an unresolved semantic role.");
 expect(!buildFindingsRegister(valid).some((finding) => ["EA-ONX-0010", "EA-ONX-0011"].includes(finding.finding_id)), "Valid type and sparse contracts should not emit integrity findings.");
 const validBundle = bundle(valid);
 expectEqual(validBundle.evidence.evidence?.conformance_report?.status, "pass", "Valid type/sparse evidence should pass report, finding, and ML-BOM conformance.");

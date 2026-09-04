@@ -24,6 +24,7 @@ try {
     if (message.type() === "error" && !/Failed to load resource/i.test(message.text())) browserErrors.push(`console: ${message.text()}`);
   });
   await page.goto(pageUrl, { waitUntil: "domcontentloaded" });
+  await page.locator("#fileInput").focus();
   await page.waitForFunction(() => document.querySelector("#status")?.textContent?.includes("Ready"), null, { timeout: 60_000 });
   if (await page.locator("#agreementBackdrop").isVisible()) {
     await page.locator("#privacyAgree").check();

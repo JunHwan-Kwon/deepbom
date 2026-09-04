@@ -1,4 +1,5 @@
 import { sha256Hex } from "./hash.js";
+import { browserAssetUrl } from "./browser-asset-url.js";
 import {
   reconstructKernelChannel,
   reconstructKernelWitnessAnalysis,
@@ -72,7 +73,7 @@ export function createRoundingEquivalenceController({
       renderBody();
       setStatus(status, evidence.assessed_op_count ? "source arithmetic / verification pending" : humanize(evidence.status), evidence.divergent_channel_count ? "watch" : "ok");
       if (evidence.assessed_op_count && typeof Worker === "function") {
-        worker = new Worker(new URL("./rounding-equivalence-worker.js", import.meta.url), { type: "module" });
+        worker = new Worker(browserAssetUrl("./lib/rounding-equivalence-worker.js", "./rounding-equivalence-worker.js", import.meta.url), { type: "module" });
         worker.onmessage = (event) => {
           if (token !== renderToken) return;
           setStatus(status, event.data?.ok ? "independently verified" : `integrity error: ${event.data?.error || "verification failed"}`, event.data?.ok ? evidence.divergent_channel_count ? "watch" : "ok" : "risk");

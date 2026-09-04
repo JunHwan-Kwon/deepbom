@@ -40,14 +40,26 @@ for (const file of browserFiles) {
     }
   }
   if (file === "web/workers/static-audit-worker.js") {
+    if (!source.includes('import("../../pkg/tflite_wasm_audit.js")')) {
+      failures.push(`${file}: Worker RPC must load the TFLite WASM module inside the worker`);
+    }
     for (const name of HEAVY_EXPORTS) {
-      if (!imported.has(name)) failures.push(`${file}: Worker RPC does not own heavy WASM export ${name}`);
+      if (!source.includes(`tflite.${name}`)) failures.push(`${file}: Worker RPC does not own heavy WASM export ${name}`);
     }
   }
 }
 
 const appSource = readFileSync("web/app.js", "utf8");
 const workerSource = readFileSync("web/workers/static-audit-worker.js", "utf8");
+if (!appSource.includes('import("../pkg/tflite_wasm_audit.js")')
+  || !appSource.includes("tfliteAnalyzerModule.runtime_guard()")) {
+  failures.push("web/app.js: main-thread TFLite module access must remain limited to lazy initialization and runtime_guard");
+}
+for (const name of HEAVY_EXPORTS) {
+  if (appSource.includes(`tfliteAnalyzerModule.${name}`)) {
+    failures.push(`web/app.js: heavy WASM export ${name} must remain Worker-bound`);
+  }
+}
 for (const operation of Object.keys(STATIC_AUDIT_OPERATION)) {
   if (!workerSource.includes(`STATIC_AUDIT_OPERATION.${operation}`)) {
     failures.push(`web/workers/static-audit-worker.js: protocol operation ${operation} has no handler`);

@@ -85,6 +85,7 @@ const findings = buildFindingsRegister(analysis);
 const finding = findings.find((item) => item.finding_id === "EA-QNT-0117");
 expect(Boolean(finding), "Mixed preprocessing realizability should enter the authoritative action queue.");
 expectEqual(`${finding.evidence_class}:${finding.technical_priority}`, "DERIVED:Medium", "Preprocessing finding should preserve evidence and priority semantics.");
+expectEqual(finding.finding_kind, "caution", "An unbound preprocessing counterfactual must not block the artifact-defect gate.");
 expect(finding.observation.includes("4 contract(s)") && finding.observation.includes("18 element(s)") && finding.observation.includes(evidence.portfolio_ledger_sha256), "Preprocessing finding should preserve exact candidate, minimum mismatch, and digest evidence.");
 expect(finding.observation.includes("range matching and witness realizability answer different questions")
   && finding.observation.includes("(pixel - 128) / 128")

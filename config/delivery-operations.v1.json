@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-03T02:29:42.000Z",
+  "recorded_at": "2026-09-04T13:26:05.000Z",
   "scope": "Public installation channels and private web delivery",
   "observations": [
     {
@@ -740,8 +740,8 @@
       "version": "1.96.5",
       "platform": "windows-x64",
       "command": "npm run check:deploy",
-      "elapsed_seconds": 175.733,
-      "check_count": 80,
+      "elapsed_seconds": 149.603,
+      "check_count": 84,
       "conclusion": "success",
       "conditions": [
         "bounded_non_browser_gate",
@@ -752,7 +752,7 @@
         "public_private_boundary_and_git_privacy",
         "no_full_corpus_or_browser_matrix"
       ],
-      "qualification": "The first 77 bounded checks completed before the delivery-operations self-check. This measured current-version observation enables the self-check and the two terminal privacy and worker checks to close the full 80-check gate."
+      "qualification": "The first 81 bounded checks completed before the delivery-operations self-check. This measured current-version observation and the two terminal privacy and worker checks close the full 84-check gate."
     },
     {
       "kind": "local_channel_build",
@@ -800,6 +800,90 @@
         "packaged_wasm_tamper_rejection"
       ],
       "qualification": "The complete release-only equivalence contract remained within budget after moving all heavy TFLite WASM and metadata range analysis behind Worker RPC boundaries."
+    },
+    {
+      "kind": "private_web_preflight",
+      "version": "1.96.6",
+      "platform": "windows-x64",
+      "command": "npm run check:deploy",
+      "elapsed_seconds": 149.67,
+      "check_count": 84,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "interaction_loaded_browser_delivery_boundary",
+        "artifact_ir_review_summary_and_defect_gate",
+        "stable_cyclonedx_1_7_public_product_boundary",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy",
+        "no_full_corpus_or_browser_matrix"
+      ],
+      "qualification": "All 84 bounded product checks passed directly on the 1.96.6 release-version working tree. Browser and corpus matrices remain owned by the exhaustive quality gate."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.96.6",
+      "platform": "windows-x64",
+      "command": "npm run build:channels:release",
+      "elapsed_seconds": 250.186,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball",
+        "single_executable_engine",
+        "python_wheel",
+        "cargo_launcher_source",
+        "packaged_self_test_probe",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.96.6",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 178.343,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.96.6",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 574.512,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "capability_envelope_sarif_policy_and_review_contract_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_wasm_tamper_rejection"
+      ],
+      "qualification": "The complete release-only equivalence contract remained within its dedicated wall-time budget after the human-summary, defect-gate, self-test, and installed TFLite asset-path changes."
+    },
+    {
+      "kind": "local_full_quality",
+      "version": "1.96.6",
+      "platform": "windows-x64",
+      "command": "npm run check",
+      "elapsed_seconds": 1727.487,
+      "check_count": 205,
+      "conclusion": "success",
+      "conditions": [
+        "complete_parser_and_format_contract_matrix",
+        "artifact_ir_and_export_conservation",
+        "browser_viewer_and_accessibility_regressions",
+        "isolated_parser_robustness",
+        "public_private_and_worker_boundaries"
+      ],
+      "qualification": "This exhaustive local release-candidate gate is intentionally manual. Pull requests use the path-filtered public workflow, and ordinary pushes do not start it."
     }
   ],
   "budgets": {
@@ -813,6 +897,7 @@
     "packaged_public_cli_corpus_sweep_seconds": 600,
     "full_channel_equivalence_seconds": 480,
     "release_contract_channel_equivalence_seconds": 720,
+    "local_full_quality_seconds": 2100,
     "private_web_workflow_minutes": 15,
     "public_pull_request_quality_minutes": 25
   },

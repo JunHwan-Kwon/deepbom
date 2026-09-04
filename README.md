@@ -26,8 +26,12 @@ Verified release channels expose the same analysis implementation:
 
 ```bash
 npx deepbom audit model.onnx --format cyclonedx
-npx deepbom audit model.onnx --format sarif --output deepbom.sarif --fail-on high
+npx deepbom audit model.onnx --format sarif --output deepbom.sarif --gate defects
 deepbom capabilities --compact
+deepbom self-test
+deepbom audit model.onnx --list-sections --compact
+deepbom audit model.onnx --section quantization,memory --compact
+deepbom explain-rule onnx.conv.output-shape
 python -m pip install deepbom
 cargo install deepbom
 deepbom audit model.gguf --compact
@@ -36,7 +40,6 @@ deepbom diff baseline.tflite candidate.tflite
 deepbom explore model.tflite
 deepbom placement model.tflite --profiles xnnpack_cpu,tflite_coreml_delegate,litert_qualcomm_qnn
 deepbom graph model.onnx --format json --output artifact-graph.json
-deepbom perspective bom.json --perspective-source perspective.json --format html --output perspective-review.html
 deepbom audit model.onnx --conversion-receipt conversion-receipt.json --format cyclonedx
 ```
 
@@ -67,12 +70,8 @@ and at `https://deepbom.org/schemas/deepbom-artifact-ir-v2.schema.json`.
 The conversion receipt schema is published at
 [`docs/schemas/deepbom-conversion-receipt-v1.schema.json`](docs/schemas/deepbom-conversion-receipt-v1.schema.json).
 
-CycloneDX 2.0 remains a moving draft. DEEPBOM keeps CycloneDX 1.7 as the stable
-default and exposes a hash-pinned draft compatibility status instead of
-claiming a 2.0 BOM when #990, #175, #1067, and #1075 are unresolved or
-incompatible. The `perspective` command and browser tool evaluate RFC 9535
-JSONPath mappings without inventing required-match cardinality or implicit
-`/definitions` traversal.
+Public product output uses CycloneDX 1.7. Experimental standards work is not
+included in the website, CLI commands, or release artifacts.
 
 `verify` compares the serialized external tensor ABI with a supplied,
 artifact-bound production declaration. `diff` uses the canonical deterministic
@@ -147,5 +146,5 @@ License 2.0. Third-party model artifacts retain their declared licenses.
 Please cite:
 
 > Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural
-> Network Deployment Artifacts (Version 1.94.0) [Computer software]. Zenodo.
-> https://doi.org/10.5281/zenodo.21834509
+> Network Deployment Artifacts [Computer software]. Zenodo.
+> https://doi.org/10.5281/zenodo.21834508

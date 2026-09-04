@@ -703,17 +703,17 @@ function onnxWeightIntegrityConclusion(weightIntegrity = {}) {
   const coverage = weightIntegrity.coverage_status === "complete"
     ? "complete for available numeric initializers"
     : `partial; ${formatNumber(weightIntegrity.initializer_tensors_unassessed)} external or unsupported tensor(s) remain unassessed`;
-  return `Initializer-value integrity assessed for ${formatNumber(weightIntegrity.weight_tensors_scanned)} tensor(s) / ${formatNumber(logicalElementCount)} logical scalar element(s) (${formatNumber(weightIntegrity.stored_weight_values_decoded ?? conservedElementCount)} stored value(s) decoded, ${formatNumber(weightIntegrity.implicit_zero_elements || 0)} sparse implicit zero(s)); coverage ${coverage}. ${anomalies.length ? `Observed ${anomalies.join(", ")}.` : "No implemented numerical-integrity anomaly was observed."}`;
+  return `Initializer-value integrity assessed for ${formatNumber(weightIntegrity.constant_tensors_scanned ?? weightIntegrity.weight_tensors_scanned)} constant tensor(s) / ${formatNumber(logicalElementCount)} logical scalar element(s) (${formatNumber(weightIntegrity.stored_weight_values_decoded ?? conservedElementCount)} stored value(s) decoded, ${formatNumber(weightIntegrity.implicit_zero_elements || 0)} sparse implicit zero(s)); weight magnitude and sparsity cover ${formatNumber(weightIntegrity.weight_tensors_scanned)} confirmed learned-parameter tensor(s); coverage ${coverage}. ${anomalies.length ? `Observed ${anomalies.join(", ")}.` : "No implemented numerical-integrity anomaly was observed."}`;
 }
 
 function onnxWeightIntegrityCompletenessRows(weightIntegrity = {}) {
   const assessed = weightIntegrity.status === "assessed";
   return [
     ["Initializer value decoding", assessed
-      ? `Implemented for ${formatNumber(weightIntegrity.weight_tensors_scanned)} available dense TensorProto or validated SparseTensorProto initializer(s); ${formatNumber(weightIntegrity.stored_weight_values_decoded ?? weightIntegrity.elements_scanned)} stored value(s) decoded plus ${formatNumber(weightIntegrity.implicit_zero_elements || 0)} exact sparse implicit zero(s); ${formatNumber(weightIntegrity.initializer_tensors_unassessed)} incomplete-external/invalid/unsupported tensor(s) not assessed`
+      ? `Implemented for ${formatNumber(weightIntegrity.constant_tensors_scanned ?? weightIntegrity.weight_tensors_scanned)} available dense TensorProto or validated SparseTensorProto initializer(s); ${formatNumber(weightIntegrity.stored_weight_values_decoded ?? weightIntegrity.elements_scanned)} stored value(s) decoded plus ${formatNumber(weightIntegrity.implicit_zero_elements || 0)} exact sparse implicit zero(s); ${formatNumber(weightIntegrity.initializer_tensors_unassessed)} incomplete-external/invalid/unsupported tensor(s) not assessed`
       : "Not assessable; no supported complete embedded or verified-external numeric initializer payload was decoded"],
-    ["Weight integrity", assessed
-      ? `Assessed over logical initializer values: NaN/Inf, all-zero tensors, sparsity, magnitude, and eligible Conv/Gemm/MatMul output-axis kernel slices; coverage ${weightIntegrity.coverage_status || "unknown"}`
+    ["Weight statistics", assessed
+      ? `Assessed only for confirmed learned parameters: sparsity, magnitude, and eligible Conv/Gemm/MatMul output-axis kernel slices. NaN/Inf and all-zero checks remain constant-wide; coverage ${weightIntegrity.coverage_status || "unknown"}`
       : "Not assessable for initializer values"],
   ];
 }
@@ -919,7 +919,7 @@ function weightIntegrityMarkdown(analysis, weightIntegrity = {}) {
           ["Evidence class", weightIntegrity.evidence_class || "OBSERVED/DERIVED"],
           ["Initializer inventory present", `${formatNumber(weightIntegrity.initializer_tensors_present ?? weightIntegrity.weight_tensors_scanned)} tensor(s), ${formatNumber(weightIntegrity.initializer_elements_present ?? weightIntegrity.elements_scanned)} scalar element(s); decoder ${weightIntegrity.initializer_value_decoding || "available numeric TensorProto"}`],
           ["Storage kinds", `${formatNumber(weightIntegrity.dense_initializer_tensors || 0)} dense TensorProto / ${formatNumber(weightIntegrity.sparse_initializer_tensors || 0)} SparseTensorProto initializer(s)`],
-          ["Coverage", `${formatNumber(weightIntegrity.weight_tensors_scanned)} initializer tensor(s), ${formatNumber(weightIntegrity.logical_elements_assessed ?? weightIntegrity.elements_scanned)} logical scalar element(s) assessed; ${formatNumber(weightIntegrity.stored_weight_values_decoded ?? weightIntegrity.elements_scanned)} stored value(s) decoded + ${formatNumber(weightIntegrity.implicit_zero_elements || 0)} exact sparse implicit zero(s); ${formatNumber(weightIntegrity.initializer_tensors_unassessed)} incomplete-external/invalid/unsupported tensor(s) not assessed`],
+          ["Coverage", `${formatNumber(weightIntegrity.constant_tensors_scanned ?? weightIntegrity.weight_tensors_scanned)} initializer tensor(s), ${formatNumber(weightIntegrity.logical_elements_assessed ?? weightIntegrity.elements_scanned)} logical scalar element(s) assessed; ${formatNumber(weightIntegrity.weight_tensors_scanned)} confirmed learned-parameter tensor(s); ${formatNumber(weightIntegrity.stored_weight_values_decoded ?? weightIntegrity.elements_scanned)} stored value(s) decoded + ${formatNumber(weightIntegrity.implicit_zero_elements || 0)} exact sparse implicit zero(s); ${formatNumber(weightIntegrity.initializer_tensors_unassessed)} incomplete-external/invalid/unsupported tensor(s) not assessed`],
           ["NaN / Inf tensors", `${formatNumber(weightIntegrity.nan_tensors)} / ${formatNumber(weightIntegrity.inf_tensors)}`],
           ["All-zero tensors", formatNumber(weightIntegrity.all_zero_tensors)],
           ["Mean near-zero sparsity", formatPercent(weightIntegrity.mean_sparsity)],

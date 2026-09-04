@@ -1,4 +1,5 @@
 import { formatNumber, padOp } from "./format.js";
+import { browserAssetUrl } from "./browser-asset-url.js";
 import {
   reconstructAccumulatorReachabilityChannel,
   validateAccumulatorReachabilityShape,
@@ -73,7 +74,7 @@ export function createAccumulatorReachabilityController({
     const start = () => {
       if (token !== renderToken || worker || typeof Worker !== "function") return;
       setStatus(status, "independent reconstruction running", "watch");
-      worker = new Worker(new URL("./accumulator-reachability-worker.js", import.meta.url), { type: "module" });
+      worker = new Worker(browserAssetUrl("./lib/accumulator-reachability-worker.js", "./accumulator-reachability-worker.js", import.meta.url), { type: "module" });
       worker.onmessage = (event) => {
         if (token !== renderToken) return;
         setStatus(status, event.data?.ok ? "independently verified" : `integrity error: ${event.data?.error || "verification failed"}`, event.data?.ok ? "ok" : "risk");

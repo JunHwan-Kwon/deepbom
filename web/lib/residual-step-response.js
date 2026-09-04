@@ -1,4 +1,5 @@
 import { formatNumber, padOp } from "./format.js";
+import { browserAssetUrl } from "./browser-asset-url.js";
 import { sha256Hex } from "./hash.js";
 import { roundTiesAway } from "./quantization-math.js";
 
@@ -174,7 +175,7 @@ function validateResidualStepResponseEnvelope(result, analysis) {
 
 async function runIndependentVerification(result, analysis, onWorker) {
   if (typeof Worker === "function") {
-    const worker = new Worker(new URL("./residual-step-response-worker.js", import.meta.url), { type: "module" });
+    const worker = new Worker(browserAssetUrl("./lib/residual-step-response-worker.js", "./residual-step-response-worker.js", import.meta.url), { type: "module" });
     onWorker?.(worker);
     return new Promise((resolve, reject) => {
       worker.onmessage = (event) => {

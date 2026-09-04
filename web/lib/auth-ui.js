@@ -14,8 +14,8 @@ export function applyAuthConfigView(elements, config) {
     elements.widget.classList.remove("auth-unavailable");
     elements.openButton.textContent = "Sign in";
     elements.message.textContent = passwordEnabled
-      ? "Analysis is open. Report exports require an account."
-      : "Continue with Google to access account-bound exports.";
+      ? "Analysis and local exports are open. Sign in only for optional research access and saved requests."
+      : "Continue with Google only for optional research access and saved requests.";
   }
   elements.googleButton.textContent = config.google ? "Continue with Google" : "Google OAuth not configured";
 }

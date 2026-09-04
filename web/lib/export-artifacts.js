@@ -32,14 +32,6 @@ export const TEXT_EXPORT_ARTIFACTS = {
     ensureHash: true,
     raw: true,
   },
-  cyclonedx20DraftStatus: {
-    permissionLabel: "CycloneDX 2.0 draft compatibility status",
-    suffix: "cyclonedx_2_0_draft_compatibility.json",
-    type: "application/json",
-    requireModelBytes: true,
-    ensureHash: true,
-    raw: true,
-  },
   observedFormulation: {
     permissionLabel: "Observed formulation BOM",
     suffix: "observed_formulation.cdx.json",

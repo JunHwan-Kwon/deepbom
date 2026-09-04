@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quality Evaluation | DEEPBOM</title>
+  <meta name="description" content="A quality and tool-validation evaluation brief for DEEPBOM." />
+  <link rel="canonical" href="https://deepbom.org/evaluate/quality/" />
+  <link rel="stylesheet" href="../evaluation.css" />
+</head>
+<body>
+  <header class="brief-header">
+    <a class="brand" href="/">DEEPBOM</a>
+    <nav class="brief-nav" aria-label="Evaluation briefs">
+      <a href="../regulatory/">Regulatory</a>
+      <a aria-current="page" href="./">Quality</a>
+      <a href="../engineering/">Engineering</a>
+    </nav>
+  </header>
+  <main class="brief-main">
+    <p class="eyebrow">Quality evaluation brief</p>
+    <h1>Validate the installed tool before relying on its evidence.</h1>
+    <p class="lede">DEEPBOM records artifact, analyzer, rulepack, target, and evidence identities so an organization can reproduce a result and define its own acceptance criteria.</p>
+    <p class="decision-line">A successful self-test establishes installation integrity for the bundled probe. It does not validate every model, target, or intended use.</p>
+
+    <section class="brief-section">
+      <h2>Installation check</h2>
+      <pre><code>npx deepbom self-test
+npx deepbom audit path/to/model.tflite --gate defects</code></pre>
+      <p>The self-test checks the CLI engine, packaged probe, TFLite WASM guard, Artifact Evidence IR envelope, and CycloneDX 1.7 generation.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Evidence controls</h2>
+      <table class="fact-table">
+        <tbody>
+          <tr><th>Determinism</th><td>Outputs bind the exact artifact and analyzer identities; generated evidence exposes the inputs and claim boundary.</td></tr>
+          <tr><th>Evidence classes</th><td>Observed, derived, source-backed, predicted, estimated, unassessed, and non-applicable states remain distinct.</td></tr>
+          <tr><th>Regression fixtures</th><td>Hash-pinned public samples and expected contracts exercise supported formats and export paths.</td></tr>
+          <tr><th>Fail-closed behavior</th><td>Malformed artifacts, stale evidence, missing runtime assets, and contract mismatches are reported rather than silently estimated.</td></tr>
+          <tr><th>Change traceability</th><td>Release validation records source commit, toolchain versions, checks, and package digests.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="brief-section">
+      <h2>Adoption boundary</h2>
+      <ul class="plain-list">
+        <li>Define the models, formats, targets, outputs, and failure modes relevant to the intended use.</li>
+        <li>Run local acceptance cases and retain their artifacts, commands, expected values, and results.</li>
+        <li>Review every upgrade before replacing the validated analyzer and rulepack identities.</li>
+        <li>Keep runtime and task-performance validation separate from static artifact analysis.</li>
+      </ul>
+      <p><a href="/">Run a verified browser sample</a> or <a href="https://github.com/JunHwan-Kwon/deepbom">inspect the public source and checks</a>.</p>
+    </section>
+  </main>
+  <footer class="brief-footer">Quality acceptance remains the responsibility of the organization using the tool.</footer>
+</body>
+</html>

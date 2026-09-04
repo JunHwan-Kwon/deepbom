@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Regulatory Evaluation | DEEPBOM</title>
+  <meta name="description" content="A bounded regulatory evaluation brief for DEEPBOM deployment-artifact evidence." />
+  <link rel="canonical" href="https://deepbom.org/evaluate/regulatory/" />
+  <link rel="stylesheet" href="../evaluation.css" />
+</head>
+<body>
+  <header class="brief-header">
+    <a class="brand" href="/">DEEPBOM</a>
+    <nav class="brief-nav" aria-label="Evaluation briefs">
+      <a aria-current="page" href="./">Regulatory</a>
+      <a href="../quality/">Quality</a>
+      <a href="../engineering/">Engineering</a>
+    </nav>
+  </header>
+  <main class="brief-main">
+    <p class="eyebrow">Regulatory evaluation brief</p>
+    <h1>Technical evidence for the artifact that is actually deployed.</h1>
+    <p class="lede">DEEPBOM identifies a deployment artifact by hash, records its serialized contracts, and separates static derivations from target assumptions and imported runtime observations.</p>
+    <p class="decision-line">Use it as supporting technical evidence in a controlled process, not as a compliance, safety, performance, or approval determination.</p>
+
+    <section class="brief-section">
+      <h2>Records it can produce</h2>
+      <table class="fact-table">
+        <tbody>
+          <tr><th>Review HTML</th><td>A self-contained human review with artifact identity, findings, evidence classes, and interpretation boundaries.</td></tr>
+          <tr><th>Evidence JSON</th><td>The full machine-readable analysis envelope and Artifact Evidence IR identity.</td></tr>
+          <tr><th>Evidence package</th><td>Hash-bound evidence documents, the canonical IR, and verification metadata in one ZIP.</td></tr>
+          <tr><th>Artifact diff</th><td>Technical changes in interfaces, graph structure, parameter payload, metadata, and analysis coverage.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="brief-section">
+      <h2>Where it can help</h2>
+      <ul class="plain-list">
+        <li>Configuration identification for the exact model file or package under review.</li>
+        <li>Design verification records for serialized interfaces, quantization contracts, and graph structure.</li>
+        <li>Change review between a controlled baseline and a candidate deployment artifact.</li>
+        <li>Gap records that state which runtime, lineage, task-performance, or process evidence is still absent.</li>
+      </ul>
+    </section>
+
+    <section class="brief-section">
+      <h2>Standards context</h2>
+      <p>Organizations may assess these records within processes that reference <strong>IEC 62304</strong>, <strong>ISO 13485</strong>, and <strong>ISO 14971</strong>. These identifiers are provided only as evaluation context; DEEPBOM does not reproduce licensed requirements or claim conformity.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Boundary</h2>
+      <p class="boundary">The output does not replace clinical validation, risk management, usability engineering, cybersecurity assessment, manufacturing controls, or validation of DEEPBOM for an organization's intended use.</p>
+      <p>Start with a verified sample in the browser, then preserve the analyzer version, artifact SHA-256, target identity, rulepack identity, and generated evidence package with the controlled review record.</p>
+      <p><a href="/">Open the local artifact workspace</a></p>
+    </section>
+  </main>
+  <footer class="brief-footer">DEEPBOM is independently developed research software. Artifact analysis runs locally in the browser.</footer>
+</body>
+</html>

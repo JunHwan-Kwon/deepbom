@@ -56,6 +56,8 @@ const canonicalCapabilities = json(run(process.execPath, ["bin/deepbom.mjs", ...
 if (npmCli) {
   assert.deepEqual(json(run(process.execPath, [npmCli, ...capabilityArgs]).stdout), canonicalCapabilities,
     "installed npm capability discovery diverged from canonical CLI");
+  const npmSelfTest = json(runNpmExecutable(npmCli, ["self-test", "--compact"]).stdout);
+  assert.equal(npmSelfTest.status, "pass", "installed npm executable self-test failed");
 }
 if (platformSmoke || releaseContract) {
   assert.deepEqual(json(run(engine, capabilityArgs).stdout), canonicalCapabilities,
@@ -73,6 +75,10 @@ for (const [caseIndex, item] of cases.entries()) {
   if (npmCli) {
     const npm = json(run(process.execPath, [npmCli, ...args]).stdout);
     assert.deepEqual(npm, canonical, `${item.path}: installed npm package diverged from canonical CLI`);
+    if (item.format === "tflite") {
+      const installedCommand = json(runNpmExecutable(npmCli, ["audit", path.resolve(item.path), "--compact"]).stdout);
+      assert.deepEqual(installedCommand, canonical, `${item.path}: npm executable shim diverged from canonical CLI`);
+    }
   }
   // The standalone engine and Python adapter both forward to the same immutable
   // engine. Two format-diverse executions prove that boundary without repeating
@@ -231,6 +237,12 @@ function run(command, args, environment = {}, expectSuccess = true, cwd = root) 
   });
   if (expectSuccess && result.status !== 0) throw new Error(`${command} ${args.join(" ")} failed\n${result.stdout}\n${result.stderr}`);
   return result;
+}
+
+function runNpmExecutable(npmCli, args, expectSuccess = true) {
+  const installRoot = path.resolve(path.dirname(npmCli), "..", "..", "..");
+  const invocation = resolveNpmCommand(["exec", "--", "deepbom", ...args]);
+  return run(invocation.command, invocation.args, {}, expectSuccess, installRoot);
 }
 
 function json(source) {

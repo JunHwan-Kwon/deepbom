@@ -52,6 +52,7 @@ try {
     if (!pathname.startsWith("/api/")) errors.push(`HTTP ${response.status()} ${pathname}`);
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/web/index.html`, { waitUntil: "domcontentloaded" });
+  await page.locator("#dropzone").dispatchEvent("pointerdown");
   await page.waitForFunction(() => document.querySelector("#sampleEvidenceGlance")?.childElementCount > 0);
   if (await page.locator("#agreementBackdrop").isVisible()) {
     await page.locator("#privacyAgree").check();
@@ -66,6 +67,16 @@ try {
   await page.locator('[data-workflow-step="output"]').click();
   await page.locator("#downloadPublicBundle:not([disabled])").waitFor({ timeout: 20_000 });
 
+  const [evidenceJsonDownload] = await Promise.all([
+    page.waitForEvent("download", { timeout: 120_000 }),
+    page.locator("#downloadEvidenceJson:not([disabled])").click(),
+  ]);
+  const evidenceJson = JSON.parse(await readFile(await evidenceJsonDownload.path(), "utf8"));
+  assert.equal(evidenceJson.schema, "deepbom.artifact_evidence_envelope.v1");
+  assert.match(evidenceJson.identity?.sha256 || "", /^[a-f0-9]{64}$/i);
+  assert.match(evidenceJson.envelope_sha256 || "", /^[a-f0-9]{64}$/i);
+  assert.equal(await page.locator("#authBackdrop").isVisible(), false, "Evidence JSON must not open authentication");
+
   await page.locator(".report-export-panel > summary").click();
   await page.locator("#downloadMarkdown:not([disabled])").waitFor({ timeout: 20_000 });
   assert.match(await page.locator("#reportPreview").innerText(), /^# DEEPBOM .+ Audit/m);
@@ -79,7 +90,7 @@ try {
   assert.match(engineeringReportHtml, /Report-body SHA-256: [a-f0-9]{64}/i);
   assert.match(engineeringReportHtml, /without an independently trusted key/i);
   assert.equal(await page.locator("#authBackdrop").isVisible(), false, "Engineering Report must not open authentication");
-  assert.equal(await page.locator("#downloadRawData").isDisabled(), true, "Raw evidence must remain separately controlled");
+  assert.equal(await page.locator("#downloadRawData").isDisabled(), false, "Browser-local raw evidence must remain available without authentication");
 
   for (const profile of ["public", "engineering", "regulatory", "machine_readable"]) {
     await page.locator("#evidencePackageProfile").selectOption(profile);
@@ -104,9 +115,9 @@ try {
       assert.equal(scope.profile, profile);
       assert.equal(scope.evidence_level, level);
       assert.equal(levelManifest.requested_level, level);
-      const standardsEvidence = [...members.keys()].filter((name) => name.endsWith(".cdx.json")
-        || name.endsWith("cyclonedx_2_0_draft_compatibility.json"));
-      assert.equal(standardsEvidence.length, level === "all_available" ? 2 : 0);
+      const standardsEvidence = [...members.keys()].filter((name) => name.endsWith(".cdx.json"));
+      assert.equal(standardsEvidence.length, level === "all_available" ? 1 : 0);
+      assert([...members.keys()].every((name) => !name.includes("cyclonedx_2_0")), `${profile}/${level} excludes draft-status artifacts`);
       assert.equal(scope.login_required, false);
       assert.match(scope.integrity_boundary, /changes detectable/i);
       assert.match(scope.integrity_boundary, /do not prevent copying or editing/i);
@@ -132,6 +143,7 @@ try {
   const medicalPage = await browser.newPage({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
   medicalPage.on("pageerror", (error) => errors.push(`medical: ${error.message}`));
   await medicalPage.goto(`http://127.0.0.1:${server.address().port}/web/index.html?surface=medical`, { waitUntil: "domcontentloaded" });
+  await medicalPage.locator("#dropzone").dispatchEvent("pointerdown");
   await medicalPage.waitForFunction(() => document.querySelector("#sampleEvidenceGlance")?.childElementCount > 0);
   if (await medicalPage.locator("#agreementBackdrop").isVisible()) {
     await medicalPage.locator("#privacyAgree").check();
@@ -155,12 +167,12 @@ try {
   assert.match(regulatoryReportHtml, /Report-body SHA-256: [a-f0-9]{64}/i);
   assert.match(regulatoryReportHtml, /not a regulatory submission/i);
   assert.equal(await medicalPage.locator("#authBackdrop").isVisible(), false, "Regulatory Support Report must not open authentication");
-  assert.equal(await medicalPage.locator("#downloadEvidenceBundle").isDisabled(), true, "Full regulatory bundle must remain separately controlled");
+  assert.equal(await medicalPage.locator("#downloadEvidenceBundle").isDisabled(), false, "Browser-local regulatory bundle must remain available without authentication");
   const medicalOverflow = await medicalPage.evaluate(() => Math.max(0, document.documentElement.scrollWidth - innerWidth));
   assert.equal(medicalOverflow, 0, "mobile Regulatory Support Report workspace must not overflow");
   await medicalPage.close();
   assert.deepEqual(errors, [], `Evidence Package browser diagnostics: ${errors.join(" | ")}`);
-  console.log("Evidence Package UI passed (transient formatter recovery, four profiles x four evidence levels, scoped manifests, raw gates, signatures, and mobile geometry)." );
+  console.log("Evidence Package UI passed (transient formatter recovery, public local exports, four profiles x four evidence levels, signatures, and mobile geometry)." );
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.close(resolve));

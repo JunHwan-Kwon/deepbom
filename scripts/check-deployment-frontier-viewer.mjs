@@ -56,6 +56,7 @@ try {
     if (message.type() === "error" && !/Failed to load resource/i.test(message.text())) browserErrors.push(`console: ${message.text()}`);
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/web/`, { waitUntil: "domcontentloaded" });
+  await page.locator("#fileInput").focus();
   await page.waitForFunction(() => document.querySelector("#status")?.textContent?.includes("Ready"), null, { timeout: 60_000 });
   const targetPlacement = await page.evaluate(() => ({
     insideInput: Boolean(document.querySelector("#dropzone > #targetSwitcherBar")),
@@ -168,7 +169,7 @@ try {
   await page.locator("#closeEvidenceWhy").click();
   await page.setViewportSize({ width: 1440, height: 1000 });
   const reviewExport = await page.locator("#downloadReviewHtml").evaluate((button) => ({ text: button.textContent, title: button.title, disabled: button.disabled }));
-  if (reviewExport.text !== "Download review.html" || !reviewExport.title.includes("self-contained") || reviewExport.disabled) {
+  if (reviewExport.text !== "Review HTML" || !reviewExport.title.includes("self-contained") || reviewExport.disabled) {
     throw new Error(`review.html export is not discoverable after audit: ${JSON.stringify(reviewExport)}`);
   }
   for (let round = 0; round < 2; round += 1) {
@@ -935,6 +936,7 @@ try {
     throw new Error(`ONNX frontier mobile layout is invalid: ${JSON.stringify(onnxMobile)}`);
   }
   await page.reload({ waitUntil: "domcontentloaded" });
+  await page.locator("#fileInput").focus();
   await page.waitForFunction(() => document.querySelector("#status")?.textContent?.includes("Ready"), null, { timeout: 60_000 });
   const restoredTarget = await page.evaluate(() => ({
     saved: localStorage.getItem("ondevice-audit-target-v1"),

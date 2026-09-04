@@ -18,7 +18,7 @@ export function buildPublicVerificationManifest({
   scope,
   runtimeEvidence = null,
   origin = "",
-  citationDoi = "10.5281/zenodo.21834509",
+  citationDoi = "10.5281/zenodo.21834508",
   reportBody = null,
   reportKind = "public-static-evidence-summary",
   reportPresentation = "browser-generated watermarked HTML print view",

@@ -10,6 +10,7 @@ import { validateCpuCostTargetBinding } from "./cpu-target-binding.js";
 import { deriveMacCoverage } from "./mac-coverage.js";
 import { EVIDENCE_CLASSES, normalizeEvidenceClass } from "./evidence-class.js";
 import { validateBoundConversionReceipt } from "./conversion-receipt.js";
+import { FINDING_KINDS } from "./finding-contract.js";
 
 export const ARTIFACT_EVIDENCE_SCHEMA = "deepbom.artifact_evidence_envelope.v1";
 export { EVIDENCE_CLASSES } from "./evidence-class.js";
@@ -257,6 +258,7 @@ function findingRows(analysis, options) {
     id: text(finding.finding_id || finding.id || finding.code || `finding-${index + 1}`),
     title: text(finding.title || finding.name || "Static analysis finding"),
     severity: text(finding.technical_priority || finding.severity || "info").toLowerCase(),
+    finding_kind: FINDING_KINDS.includes(finding.finding_kind) ? finding.finding_kind : "caution",
     status: text(finding.status || "open"),
     evidence_class: evidenceClass(finding.evidence_class || finding.evidenceClass, "DERIVED"),
     source_evidence_class: text(finding.evidence_class || finding.evidenceClass) || null,
@@ -419,6 +421,7 @@ export function validateArtifactEvidenceEnvelope(envelope) {
   }
   for (const finding of envelope?.findings || []) {
     if (!EVIDENCE_CLASSES.includes(finding.evidence_class)) errors.push(`invalid_evidence_class:${finding.id}`);
+    if (!FINDING_KINDS.includes(finding.finding_kind)) errors.push(`invalid_finding_kind:${finding.id}`);
   }
   const expected = { ...envelope };
   delete expected.envelope_sha256;

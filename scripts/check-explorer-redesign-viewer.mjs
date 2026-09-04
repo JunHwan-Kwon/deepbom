@@ -43,30 +43,18 @@ try {
     }
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/web/`, { waitUntil: "domcontentloaded" });
+  await page.locator("#dropzone").dispatchEvent("pointerdown");
+  await page.locator("#fileInput").focus();
   await page.waitForFunction(() => document.querySelector("#status")?.textContent?.includes("Ready"), null, { timeout: 180_000 });
   await page.setViewportSize({ width: 320, height: 568 });
-  await page.waitForFunction(() => !document.querySelector("#agreementBackdrop")?.hidden);
-  const compactPrivacy = await page.evaluate(() => {
-    const modal = document.querySelector(".agreement-modal");
-    const scroll = document.querySelector(".agreement-scroll");
-    const button = document.querySelector("#acceptAgreement");
-    const modalRect = modal?.getBoundingClientRect();
-    const buttonRect = button?.getBoundingClientRect();
-    return {
-      modalLeft: modalRect?.left || 0,
-      modalRight: modalRect?.right || 0,
-      modalTop: modalRect?.top || 0,
-      modalBottom: modalRect?.bottom || 0,
-      buttonHeight: buttonRect?.height || 0,
-      buttonBottom: buttonRect?.bottom || 0,
-      scrollable: Number(scroll?.scrollHeight || 0) > Number(scroll?.clientHeight || 0),
-      documentOverflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
-    };
-  });
-  if (compactPrivacy.modalLeft < 7 || compactPrivacy.modalRight > 313 || compactPrivacy.modalTop < 7
-    || compactPrivacy.modalBottom > 561 || compactPrivacy.buttonHeight < 44 || compactPrivacy.buttonBottom > 561
-    || !compactPrivacy.scrollable || compactPrivacy.documentOverflow > 1) {
-    throw new Error(`Compact privacy acknowledgement is not viewport-safe: ${JSON.stringify(compactPrivacy)}`);
+  const compactLanding = await page.evaluate(() => ({
+    blockingPrivacyDialog: Boolean(document.querySelector("#agreementBackdrop")),
+    localOnlyNotice: document.querySelector(".local-analysis-notice")?.textContent || "",
+    documentOverflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
+  }));
+  if (compactLanding.blockingPrivacyDialog || !compactLanding.localOnlyNotice.includes("stays on this device")
+    || compactLanding.documentOverflow > 1) {
+    throw new Error(`Compact first-visit surface is not viewport-safe and non-blocking: ${JSON.stringify(compactLanding)}`);
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
   await acceptAgreement(page);
@@ -121,6 +109,9 @@ try {
       linkedinVisible: Boolean(document.querySelector(".author-social-link")?.getClientRects().length),
       evidenceSummaryVisible: Boolean(evidenceDetails?.querySelector("summary")?.getClientRects().length),
       evidenceLegendVisible: Boolean(evidenceDetails?.querySelector(".evidence-class-strip")?.getClientRects().length),
+      glanceVisible: Boolean(glance?.getClientRects().length),
+      contextVisible: Boolean(context?.getClientRects().length),
+      guideVisible: Boolean(guide?.getClientRects().length),
       guideOpen: Boolean(guide?.open),
       guideSummaryVisible: Boolean(guide?.querySelector(":scope > summary")?.getClientRects().length),
       guideBodyVisible: Number(guide?.querySelector(".pre-audit-reference-body")?.getBoundingClientRect().height || 0) > 1,
@@ -138,47 +129,35 @@ try {
       overflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
     };
   });
-  if (!firstVisit.intro.includes("Inspect the artifact that will actually run")
-    || !firstVisit.intro.includes("what remains unassessed") || firstVisit.introTop >= 844
+  if (!firstVisit.intro.includes("Inspect the AI model artifact that will actually run")
+    || !firstVisit.intro.includes("which claims still need runtime or process evidence") || firstVisit.introTop >= 844
     || !firstVisit.glance.includes("65 ops / 173 tensors / 300,775,552 MACs")
     || !firstVisit.glance.includes("0 / 0") || !firstVisit.glance.includes("Predicted break ops1")
     || !firstVisit.context.includes("Why this matters for medical AI")
     || !firstVisit.context.includes("zero-weight, shape/op/dtype/quantization-equivalent synthetic reconstruction")
     || !firstVisit.build.includes(`Application ${VERSION.displayVersion} · source`)
     || !firstVisit.build.includes("· content")
-    || !firstVisit.buildVisible || firstVisit.authorSummaryPresent || !firstVisit.citationVisible || !firstVisit.doiVisible
-    || !firstVisit.affiliationVisible || !firstVisit.linkedinVisible
-    || !firstVisit.evidenceSummaryVisible
-    || firstVisit.evidenceLegendVisible || firstVisit.guideOpen || !firstVisit.guideSummaryVisible || firstVisit.guideBodyVisible
-    || firstVisit.controlsTop >= firstVisit.guideTop || firstVisit.primaryActionTop >= 844
+    || firstVisit.buildVisible || firstVisit.authorSummaryPresent || firstVisit.citationVisible || firstVisit.doiVisible
+    || firstVisit.affiliationVisible || firstVisit.linkedinVisible
+    || firstVisit.evidenceSummaryVisible || firstVisit.evidenceLegendVisible
+    || firstVisit.glanceVisible || firstVisit.contextVisible || firstVisit.guideVisible
+    || firstVisit.guideOpen || firstVisit.guideSummaryVisible || firstVisit.guideBodyVisible
+    || firstVisit.primaryActionTop >= 844
     || !firstVisit.medicalSummary.includes("Model evidence alone") || firstVisit.medicalDetailVisible
-    || firstVisit.metaHeight > 72 || firstVisit.overflow > 1
-    || Math.max(firstVisit.introRight, firstVisit.controlsRight, firstVisit.guideRight) > 391) {
+    || firstVisit.overflow > 1
+    || Math.max(firstVisit.introRight, firstVisit.controlsRight) > 391) {
     throw new Error(`Mobile first-visit evidence contract failed: ${JSON.stringify(firstVisit)}`);
   }
   await page.screenshot({ path: firstVisitMobileScreenshot });
-  await page.locator("#preAuditReference > summary").click();
-  const expandedGuide = await page.evaluate(() => ({
-    bodyVisible: Number(document.querySelector("#preAuditReference .pre-audit-reference-body")?.getBoundingClientRect().height || 0) > 1,
-    baselineVisible: Number(document.querySelector("#sampleEvidenceGlance")?.getBoundingClientRect().height || 0) > 1,
-    medicalVisible: Number(document.querySelector(".first-visit-context")?.getBoundingClientRect().height || 0) > 1,
-    librarySummaryVisible: Boolean(document.querySelector("#sampleLibrary > summary")?.getClientRects().length),
-    overflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
-  }));
-  if (!expandedGuide.bodyVisible || !expandedGuide.baselineVisible || !expandedGuide.medicalVisible
-    || !expandedGuide.librarySummaryVisible || expandedGuide.overflow > 1) {
-    throw new Error(`Mobile evidence guide did not preserve its complete content: ${JSON.stringify(expandedGuide)}`);
-  }
-  await page.locator("#preAuditReference > summary").click();
-  const visibleProvenance = await page.evaluate(() => ({
+  const compactProvenance = await page.evaluate(() => ({
     buildVisible: Boolean(document.querySelector("#applicationBuild")?.getClientRects().length),
     citationVisible: Boolean(document.querySelector("#copyCitationBtn")?.getClientRects().length),
     doiVisible: Boolean(document.querySelector(".citation-doi")?.getClientRects().length),
     overflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
   }));
-  if (!visibleProvenance.buildVisible || !visibleProvenance.citationVisible || !visibleProvenance.doiVisible
-    || visibleProvenance.overflow > 1) {
-    throw new Error(`Mobile provenance must remain visible and viewport-safe: ${JSON.stringify(visibleProvenance)}`);
+  if (compactProvenance.buildVisible || compactProvenance.citationVisible || compactProvenance.doiVisible
+    || compactProvenance.overflow > 1) {
+    throw new Error(`Mobile header must keep provenance out of the primary task path: ${JSON.stringify(compactProvenance)}`);
   }
   await page.setViewportSize({ width: 320, height: 568 });
   const narrowFirstVisit = await page.evaluate(() => {
@@ -1530,12 +1509,12 @@ async function runAudit(page, modelPath, name) {
   }
   const publicExports = await page.evaluate(() => ({
     cdx17: document.querySelector("#downloadCycloneDxEvidence")?.disabled,
-    cdx20: document.querySelector("#downloadCycloneDx20DraftStatus")?.disabled,
+    cdx20Present: Boolean(document.querySelector("#downloadCycloneDx20DraftStatus")),
     companion: document.querySelector("#downloadRuntimeRequirements")?.disabled,
     pack: document.querySelector("#downloadContractPack")?.disabled,
   }));
-  if (publicExports.cdx17 || publicExports.cdx20 || !publicExports.companion || !publicExports.pack) {
-    throw new Error(`${name}: guest CycloneDX/companion access split is incorrect: ${JSON.stringify(publicExports)}`);
+  if (publicExports.cdx17 || publicExports.cdx20Present || publicExports.companion || publicExports.pack) {
+    throw new Error(`${name}: stable CycloneDX 1.7 and local companion exports are not open: ${JSON.stringify(publicExports)}`);
   }
   await page.evaluate(() => {
     const consoleNode = document.querySelector("#workflowConsole");
@@ -1760,7 +1739,6 @@ async function assertReadableState(page, containerSelector, textSelector, label)
 async function artifactControlGeometry(page) {
   return page.evaluate(() => Object.fromEntries([
     ["artifact", document.querySelector(".upload-controls > .file-button:nth-of-type(1)")],
-    ["package", document.querySelector(".upload-controls > .file-button:nth-of-type(2)")],
     ["run", document.querySelector("#runAudit")],
     ["sample", document.querySelector(".sample-model-control")],
   ].map(([key, node]) => {

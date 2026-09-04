@@ -4,6 +4,33 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.6 - 2026-09-04
+
+- Reworked the website's first-use path around one local artifact or verified
+  example, then presents the shared Artifact Evidence IR as artifact defects,
+  cautions, evidence gaps, coverage, and direct next actions. Browser-local
+  Review HTML, Evidence JSON, and Evidence Package exports no longer require an
+  account.
+- Added concise regulatory, quality, and engineering evaluation briefs while
+  keeping licensed standards text out of the distribution. Public product
+  surfaces and generated BOMs use stable CycloneDX 1.7 only.
+- Added real frontend code splitting and interaction-loaded format analyzers,
+  report code, and TFLite WebAssembly. Corrected bundled Worker URLs so source
+  and deployed builds retain the same isolated analysis paths.
+- Changed the CLI default to a bounded human review summary and added explicit
+  section and JSON Pointer selection, defect-only gating, installation
+  self-test, rule explanations, and categorized deployment-delta impact.
+- Fixed npm and npx TFLite runtime asset discovery by resolving package assets
+  from the installed CLI module rather than the unresolved executable symlink.
+- Separated learned, quantization, control, and unresolved constants so shape,
+  axis, index, and Slice sentinel values cannot contaminate learned-weight
+  magnitude or sparsity statistics. Constant-wide numerical integrity remains
+  independently assessed.
+- Extended browser, installed-channel, public-boundary, mobile, theme, and
+  service-worker contracts for the new onboarding and output semantics. The
+  bounded deployment preflight now executes 84 checks with argument-safe test
+  dispatch.
+
 ## 1.96.5 - 2026-09-04
 
 - Moved every heavyweight TFLite WebAssembly analysis call behind one isolated

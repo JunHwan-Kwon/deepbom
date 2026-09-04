@@ -1,4 +1,5 @@
 import { sha256Hex } from "./hash.js";
+import { browserAssetUrl } from "./browser-asset-url.js";
 import {
   reconstructKernelChannel,
   reconstructKernelWitnessAnalysis,
@@ -92,7 +93,7 @@ export function createChannelVitalityController({
         status.dataset.tone = evidence.nonconstant_accumulator_dual_mode_constant_channel_count ? "risk" : evidence.mode_dependent_constant_output_channel_count ? "watch" : "ok";
       }
       if (evidence.assessed_op_count && typeof Worker === "function") {
-        worker = new Worker(new URL("./channel-vitality-worker.js", import.meta.url), { type: "module" });
+        worker = new Worker(browserAssetUrl("./lib/channel-vitality-worker.js", "./channel-vitality-worker.js", import.meta.url), { type: "module" });
         worker.onmessage = (event) => {
           if (token !== renderToken || !status) return;
           status.textContent = event.data?.ok ? "independently verified" : `integrity error: ${event.data?.error || "verification failed"}`;

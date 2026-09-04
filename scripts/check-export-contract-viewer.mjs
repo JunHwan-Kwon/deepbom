@@ -28,6 +28,7 @@ try {
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/web/`, { waitUntil: "domcontentloaded" });
   try {
+    await page.locator("#fileInput").focus();
     await page.waitForFunction(() => document.querySelector("#status")?.textContent?.includes("Ready"), null, { timeout: 60_000 });
   } catch (error) {
     const status = await page.locator("#status").textContent().catch(() => "missing #status");
@@ -53,7 +54,7 @@ try {
 
   const desktop = await geometry(page);
   assertGeometry(desktop, "desktop");
-  if (desktop.rows !== 5 || desktop.buttons !== 10 || desktop.perspectiveButtons !== 3 || !desktop.panelActive) {
+  if (desktop.rows !== 4 || desktop.buttons !== 6 || desktop.perspectiveButtons !== 0 || !desktop.panelActive) {
     throw new Error(`Export workspace content contract failed: ${JSON.stringify(desktop)}`);
   }
 

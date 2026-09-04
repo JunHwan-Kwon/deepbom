@@ -12,7 +12,6 @@ import { ANALYZER_METADATA } from "../web/lib/report-metadata.js";
 import { buildFindingsRegister } from "../web/lib/report-findings.js";
 import { sha256TextHex } from "../web/lib/sha256-sync.js";
 import { canonicalJson } from "../web/lib/report-utils.js";
-import { ACTIVE_CYCLONEDX_DRAFT_PROFILE_ID } from "../web/lib/cyclonedx-draft-profiles.js";
 import { buildPublicCycloneDxDocuments } from "../web/lib/public-cyclonedx-export.js";
 import { analyzerContentVersion } from "../web/lib/cyclonedx-identity.js";
 import {
@@ -210,10 +209,10 @@ const options = {
 };
 
 const set = buildDeploymentContractDocuments(analysis, options);
-expectEqual(set.schema, "deepbom.deployment_contract_export_set.v1.4", "export-set schema");
+expectEqual(set.schema, "deepbom.deployment_contract_export_set.v1.5", "export-set schema");
 expectEqual(set.generated_at, GENERATED_AT, "stable generation timestamp");
-expectEqual(Object.keys(set.documents).length, 8, "document count");
-expectEqual(new Set(Object.values(set.files)).size, 8, "unique contract filenames");
+expectEqual(Object.keys(set.documents).length, 7, "document count");
+expectEqual(new Set(Object.values(set.files)).size, 7, "unique contract filenames");
 expectEqual(set.files.interfaceContracts, DEPLOYMENT_CONTRACT_FILES.interfaceContracts, "interface contract filename");
 expectEqual(set.files.runtime, DEPLOYMENT_CONTRACT_FILES.runtime, "runtime contract filename");
 expectEqual(JSON.stringify(set), JSON.stringify(buildDeploymentContractDocuments(analysis, options)), "deterministic export document set");
@@ -222,7 +221,6 @@ for (const [filename, digest] of Object.entries(set.integrity.member_sha256)) {
   const documentKey = Object.entries(set.files).find(([, value]) => value === filename)?.[0];
   const mappedKey = {
     cyclonedx: "cyclonedx_evidence",
-    cyclonedx20DraftStatus: "cyclonedx_2_0_draft_compatibility",
     artifactEnvelope: "artifact_evidence_envelope",
     artifactIr: "artifact_ir",
     interfaceContracts: "interface_contract_ledger",
@@ -446,13 +444,6 @@ expectEqual(serializedInput.quantization.axis_applicable, false, "per-tensor axi
 expectEqual(serializedInput.quantization.quantized_dimension, 0, "serialized default quantized dimension remains preserved separately");
 expectEqual(JSON.stringify(serializedInput.quantization.scale_tensor_shape), "[1]", "per-tensor scale value-vector shape");
 expectEqual(JSON.stringify(serializedInput.quantization.zero_point_tensor_shape), "[1]", "per-tensor zero-point value-vector shape");
-const draftStatus = set.documents.cyclonedx_2_0_draft_compatibility;
-expectEqual(draftStatus.profile_id, ACTIVE_CYCLONEDX_DRAFT_PROFILE_ID, "CycloneDX 2.0 draft profile identity");
-expectEqual(draftStatus.integration_status, "UNRESOLVED_INTEGRATION", "CycloneDX 2.0 unresolved integration state");
-expectEqual(draftStatus.export_allowed, false, "CycloneDX 2.0 draft export remains fail-closed");
-expectEqual(draftStatus.decision, "EXPORT_REFUSED", "CycloneDX 2.0 draft decision");
-expectEqual(draftStatus.stable_export.specification_version, "1.7", "CycloneDX stable export version");
-
 const runtime = set.documents.runtime_requirement_manifest;
 expectEqual(runtime.schema, "deepbom.runtime_requirement_manifest.v1.3", "runtime manifest schema");
 expectEqual(runtime.backend_build_requirements.length, 1, "runtime build requirement count");
@@ -707,9 +698,7 @@ expect(!("licenses" in undeclaredLicense.metadata.component), "Undeclared licens
 
 const publicCycloneDx = buildPublicCycloneDxDocuments(analysis, options);
 assertCycloneDx17(publicCycloneDx.documents.cyclonedx_evidence, "public standalone CycloneDX 1.7 builder");
-const publicDraftStatus = publicCycloneDx.documents.cyclonedx_2_0_draft_compatibility;
-expectEqual(publicDraftStatus.profile_id, ACTIVE_CYCLONEDX_DRAFT_PROFILE_ID, "public CycloneDX 2.0 draft profile identity");
-expectEqual(publicDraftStatus.export_allowed, false, "public CycloneDX 2.0 draft export remains fail-closed");
+expectEqual(Object.keys(publicCycloneDx.documents).length, 1, "public product emits only the stable CycloneDX 1.7 document");
 const publicProperties = propertyMap(publicCycloneDx.documents.cyclonedx_evidence.metadata.component.properties);
 const publicLedger = JSON.parse(publicProperties.get("deepbom:model:interfaceContractLedger"));
 expectEqual(publicLedger.ledger_sha256, publicProperties.get("deepbom:model:interfaceContractLedgerSha256"), "public interface ledger binding");
@@ -796,7 +785,6 @@ const updateReferences = process.argv.includes("--update-reference");
 for (const [key, filename] of Object.entries(sampleSet.files)) {
   const documentKey = {
     cyclonedx: "cyclonedx_evidence",
-    cyclonedx20DraftStatus: "cyclonedx_2_0_draft_compatibility",
     artifactEnvelope: "artifact_evidence_envelope",
     artifactIr: "artifact_ir",
     interfaceContracts: "interface_contract_ledger",
@@ -810,10 +798,6 @@ for (const [key, filename] of Object.entries(sampleSet.files)) {
   const storedSubjectHash = stored.metadata?.component?.hashes?.[0]?.content || stored.subject?.sha256 || stored.identity?.sha256 || stored.artifact?.sha256;
   expectEqual(storedSubjectHash, sampleRepair.artifact_sha256, `${filename} public artifact binding`);
   if (filename.endsWith(".cdx.json")) assertCycloneDx17(stored, `${filename} stored public example`);
-  if (key === "cyclonedx20DraftStatus") {
-    expectEqual(stored.profile_id, ACTIVE_CYCLONEDX_DRAFT_PROFILE_ID, `${filename} stored draft profile identity`);
-    expectEqual(stored.export_allowed, false, `${filename} stored draft export state`);
-  }
   if (key === "cyclonedx") {
     expectEqual(JSON.stringify(stored.metadata.component.modelCard), JSON.stringify(sampleSet.documents[documentKey].metadata.component.modelCard), `${filename} model-card contracts`);
   }
@@ -836,7 +820,6 @@ const rawEntry = readFileSync("web/lib/report-raw-entry.js", "utf8");
 const exportView = readFileSync("web/lib/export-contract-view.js", "utf8");
 for (const id of [
   "downloadCycloneDxEvidence",
-  "downloadCycloneDx20DraftStatus",
   "downloadObservedFormulation",
   "downloadRuntimeRequirements",
   "downloadMissingProvenance",
@@ -844,24 +827,30 @@ for (const id of [
 ]) expect(html.includes(`id="${id}"`), `Export tab should include #${id}.`);
 expect(html.includes('data-module-tab="export_contracts"') && html.includes('data-module-panel="export_contracts"'), "Export module tab/panel wiring");
 expect(app.includes("createExportContractController") && app.includes("buildDeploymentContractDocuments"), "app export controller wiring");
-expect(rawEntry.includes('from "./report-export-contracts.js"'), "protected raw entry export");
-expect(worker.includes('"/web/lib/report-export-contracts.js"'), "export document generator must remain behind raw-export authorization");
+expect(rawEntry.includes('from "./report-export-contracts.js"'), "local raw entry export");
+expect(
+  worker.includes("const PROTECTED_RAW_EXPORT_ASSETS = new Set([])")
+    && worker.includes("const PROTECTED_SHARED_REPORT_ASSETS = new Set([])"),
+  "local contract formatters must remain public browser assets",
+);
 expect(
   exportView.includes("PUBLIC_EXPORT_BUTTONS")
     && exportView.includes("getPublicDocuments")
     && exportView.includes("publicExport ? async () => true"),
-  "standalone CycloneDX exports must bypass member authorization without exposing protected companion builders",
+  "standalone CycloneDX exports must remain available without an account",
 );
 expect(
-  exportView.includes("deepbom.deployment_contract_pack_manifest.v1.4")
+  exportView.includes("deepbom.deployment_contract_pack_manifest.v1.5")
     && exportView.includes("exportSet.files.artifactEnvelope")
     && exportView.includes("exportSet.documents.artifact_evidence_envelope")
+    && exportView.includes("exportSet.files.artifactIr")
+    && exportView.includes("exportSet.documents.artifact_ir")
     && exportView.includes("contract_set_integrity")
     && exportView.includes("analyzer_provenance"),
   "contract pack manifest should preserve document-set integrity and analyzer provenance.",
 );
 
-console.log("Export contract documents passed (official CycloneDX 1.7 schema, reproducible public TFLite example, closed companion evidence, protected UI wiring).");
+console.log("Export contract documents passed (official CycloneDX 1.7 schema, reproducible public TFLite example, closed companion evidence, open local export wiring).");
 
 function propertyMap(properties) {
   return new Map((properties || []).map((item) => [item.name, item.value]));

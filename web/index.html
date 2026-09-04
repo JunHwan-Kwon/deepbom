@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" data-analysis-depth="deep">
 <head>
-  <meta name="deepbom-release" content="1.96.5" />
+  <meta name="deepbom-release" content="1.96.6" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta id="themeColor" name="theme-color" content="#fffefa" />
@@ -14,7 +14,7 @@
     <meta name="citation_title" content="DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts" />
     <meta name="citation_author" content="Kwon, Jun-Hwan" />
     <meta name="citation_publication_date" content="2026-08-07" />
-    <meta name="citation_doi" content="10.5281/zenodo.21834509" />
+    <meta name="citation_doi" content="10.5281/zenodo.21834508" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://deepbom.org/" />
 
@@ -50,9 +50,9 @@
           "applicationSubCategory": "Machine Learning Tool",
           "operatingSystem": "Web Browser",
           "url": "https://deepbom.org/",
-          "softwareVersion": "1.96.5",
-          "identifier": "https://doi.org/10.5281/zenodo.21834509",
-          "citation": "Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts (Version 1.94.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.21834509",
+          "softwareVersion": "1.96.6",
+          "identifier": "https://doi.org/10.5281/zenodo.21834508",
+          "citation": "Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts [Computer software]. Zenodo concept DOI. https://doi.org/10.5281/zenodo.21834508",
           "description": "Browser-local deployment artifact evidence for TFLite, ONNX, GGUF, SafeTensors, and Core ML. The analyzer separates serialized facts, deterministic derivations, target-specific models, imported runtime observations, and unassessed claims.",
           "featureList": [
             "TFLite FlatBuffer static analysis",
@@ -215,7 +215,7 @@
             <div class="author-details-body">
               <div class="citation-reference" aria-label="DEEPBOM citation">
                 <span class="citation-label">Citation</span>
-                <a class="citation-doi" href="https://doi.org/10.5281/zenodo.21834509" rel="noopener" target="_blank">doi:10.5281/zenodo.21834509</a>
+                <a class="citation-doi" href="https://doi.org/10.5281/zenodo.21834508" rel="noopener" target="_blank">doi:10.5281/zenodo.21834508</a>
                 <button
                   class="citation-copy-button"
                   id="copyCitationBtn"
@@ -233,6 +233,12 @@
         </address>
       </div>
       <div class="topbar-meta">
+        <nav class="evaluation-nav" aria-label="Evaluation briefs">
+          <span>Evaluate</span>
+          <a href="/evaluate/regulatory/">Regulatory</a>
+          <a href="/evaluate/quality/">Quality</a>
+          <a href="/evaluate/engineering/">Engineering</a>
+        </nav>
         <button class="theme-toggle" id="themeToggle" type="button" aria-label="Use dark theme" title="Use dark theme">
           <span class="theme-toggle-icon" aria-hidden="true"></span>
           <span id="themeToggleLabel">Dark</span>
@@ -255,7 +261,7 @@
             </div>
           </div>
         </div>
-        <div class="status" id="status">Waiting</div>
+        <div class="status" id="status">Select an artifact</div>
       </div>
     </header>
 
@@ -264,7 +270,7 @@
         <button class="modal-close" id="authClose" type="button" aria-label="Close">x</button>
         <p class="eyebrow">Account</p>
         <h2 id="authTitle">Sign in</h2>
-        <p id="authMessage">Static analysis and standalone CycloneDX exports are open. An account preserves access to controlled report and research modules.</p>
+        <p id="authMessage">Static analysis and local exports are open. An account is used only for optional research access and saved requests.</p>
         <div class="auth-tabs" id="authPasswordTabs">
           <button class="active" id="authLoginTab" type="button">Login</button>
           <button id="authSignupTab" type="button">Sign up</button>
@@ -438,73 +444,15 @@
       </section>
     </div>
 
-    <div class="agreement-backdrop" id="agreementBackdrop" role="dialog" aria-modal="true" aria-labelledby="agreementTitle" hidden inert aria-hidden="true">
-      <section class="agreement-modal">
-        <div class="agreement-scroll">
-          <p class="eyebrow">Privacy Agreement</p>
-          <h2 id="agreementTitle">Local-only artifact inspection</h2>
-          <p class="agreement-lead">
-            This workbench runs locally in your browser. Artifact bytes, weight payloads, selected images, generated reports, tensor values, and outputs are not uploaded by this app.
-          </p>
-          <ul class="agreement-summary-list">
-            <li>Original artifacts, weights, inputs, outputs, and reports remain on this device.</li>
-            <li>Optional structural telemetry stays off unless you explicitly enable it.</li>
-            <li>A registered-device benchmark receives a zero-weight synthetic reconstruction, never the original artifact or weights.</li>
-          </ul>
-          <details class="agreement-technical-details">
-            <summary>Exact data-path boundaries</summary>
-            <div class="agreement-points">
-              <div>
-                <strong>Artifact bytes stay local</strong>
-                <span>The selected artifact remains on this device during analysis.</span>
-              </div>
-              <div>
-                <strong>Browser-local execution</strong>
-                <span>Static analysis, preprocessing, report generation, and browser-runtime benchmarks happen in browser memory.</span>
-              </div>
-              <div>
-                <strong>No artifact-content telemetry</strong>
-                <span>Artifact bytes, tensors, images, outputs, filenames, and reports are never sent. Optional structure telemetry is controlled separately below.</span>
-              </div>
-              <div>
-                <strong>Synthetic Device Benchmark is a separate path</strong>
-                <span>An explicit queue action uses consented structure metadata to build a zero-weight synthetic reconstruction for a registered device agent. The agent does not receive the original artifact or weight payload.</span>
-              </div>
-            </div>
-          </details>
-          <label class="agreement-check">
-            <input id="privacyAgree" type="checkbox" />
-            <span>I understand that artifact inspection runs locally and artifact content is not uploaded.</span>
-          </label>
-          <label class="agreement-check agreement-check-optional">
-            <input id="researchConsent" type="checkbox" />
-            <span><strong>Optional research telemetry.</strong> Share de-identified structural telemetry only: op types, shapes, operator sequence, assessed MAC counts, predicted partition-boundary counts, timing, and a structure fingerprint. Model weights, filenames, inputs, outputs, and reports are never sent. Structural patterns may still be distinctive; do not enable this for confidential model architectures unless your policy permits it.</span>
-          </label>
-        </div>
-        <button id="acceptAgreement" type="button" disabled>Continue</button>
-      </section>
-    </div>
-
     <main class="layout" id="mainContent" tabindex="-1">
       <section class="session-anchor" id="sessionAnchor" aria-label="Pinned model session">
         <section class="upload-panel" id="dropzone">
           <div class="artifact-intro">
             <p class="artifact-intro-kicker">Deployment artifact evidence</p>
-            <h2>Inspect the artifact that will actually run.</h2>
-            <p class="artifact-intro-lead">Separate serialized facts, deterministic derivations, target models, and observed runtime evidence before release.</p>
-            <details class="evidence-class-disclosure">
-              <summary>Evidence classes</summary>
-              <p class="artifact-intro-evidence-copy">DEEPBOM separates serialized artifact facts, deterministic derivations, target-specific models, imported runtime observations, and what remains unassessed.</p>
-              <ul class="evidence-class-strip" aria-label="Evidence classes kept separate by DEEPBOM">
-                <li><strong>Artifact fact</strong><span>read from bytes</span></li>
-                <li><strong>Derived</strong><span>reproducible calculation</span></li>
-                <li><strong>Target model</strong><span>declared assumptions</span></li>
-                <li><strong>Runtime import</strong><span>observed elsewhere</span></li>
-                <li><strong>Not assessed</strong><span>no claim made</span></li>
-              </ul>
-            </details>
-            <h3 id="artifactContextTitle">Begin with a hash-identified artifact</h3>
-            <p id="artifactContextCopy">Select a local artifact or package. Format-specific evidence scope is resolved before analysis.</p>
+            <h2>Inspect the AI model artifact that will actually run.</h2>
+            <p class="artifact-intro-lead">Find artifact defects, review cautions, and see which claims still need runtime or process evidence.</p>
+            <h3 id="artifactContextTitle">Choose a local artifact</h3>
+            <p id="artifactContextCopy">Drop a supported file here or choose one below. Analysis runs on this device.</p>
           </div>
           <div class="upload-controls">
             <select id="targetSelect" hidden aria-hidden="true"></select>
@@ -513,29 +461,6 @@
               <span>Select artifact</span>
               <small>(.tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd)</small>
             </label>
-            <label class="file-button file-button-formats package-picker" title="Select a Core ML .mlpackage or a SafeTensors repository directory with optional config, tokenizer, deployment, and DEEPBOM runtime sidecars">
-              <input id="artifactBundleInput" type="file" multiple webkitdirectory directory />
-              <span>Select package</span>
-              <small>(.mlpackage, sharded .safetensors repository + config/sidecars)</small>
-            </label>
-            <div class="onnx-external-control" id="onnxExternalDataControl" hidden>
-              <label class="file-button external-file-button" title="Select ONNX external-data files, ExecuTorch PTD sidecars, or one deepbom.executorch-build.json selected-build attestation">
-                <input id="onnxExternalDataInput" type="file" multiple />
-                Add sidecar files
-              </label>
-              <label class="file-button external-file-button" title="Select a sidecar directory while retaining safe relative paths; ExecuTorch accepts PTD files and one deepbom.executorch-build.json">
-                <input id="onnxExternalDataDirectoryInput" type="file" multiple webkitdirectory directory />
-                Add sidecar folder
-              </label>
-              <output id="onnxExternalDataStatus" class="onnx-external-status">No sidecars selected</output>
-            </div>
-            <div class="conversion-receipt-control">
-              <label class="file-button external-file-button" title="Bind source artifacts, converter invocation, and an environment manifest to this deployment artifact without loading source model code">
-                <input id="conversionReceiptInput" type="file" accept=".json,application/json" />
-                Add conversion receipt
-              </label>
-              <output id="conversionReceiptStatus" class="onnx-external-status" aria-live="polite">No conversion receipt selected</output>
-            </div>
             <button class="run-audit-button" id="runAudit" type="button" disabled>Run Static Audit</button>
             <div class="sample-model-control">
               <label for="sampleModelSelect">Verified example</label>
@@ -552,6 +477,33 @@
               <button class="secondary-action" id="trySampleModel" type="button">Run verified example</button>
               <small id="sampleModelFocus" aria-live="polite"></small>
             </div>
+            <details class="advanced-artifact-inputs">
+              <summary>More input options</summary>
+              <label class="file-button file-button-formats package-picker" title="Select a Core ML .mlpackage or a SafeTensors repository directory with optional config, tokenizer, deployment, and DEEPBOM runtime sidecars">
+                <input id="artifactBundleInput" type="file" multiple webkitdirectory directory />
+                <span>Select package</span>
+                <small>(.mlpackage or a sharded SafeTensors repository)</small>
+              </label>
+              <div class="onnx-external-control" id="onnxExternalDataControl" hidden>
+                <label class="file-button external-file-button" title="Select ONNX external-data files, ExecuTorch PTD sidecars, or one deepbom.executorch-build.json selected-build attestation">
+                  <input id="onnxExternalDataInput" type="file" multiple />
+                  Add sidecar files
+                </label>
+                <label class="file-button external-file-button" title="Select a sidecar directory while retaining safe relative paths; ExecuTorch accepts PTD files and one deepbom.executorch-build.json">
+                  <input id="onnxExternalDataDirectoryInput" type="file" multiple webkitdirectory directory />
+                  Add sidecar folder
+                </label>
+                <output id="onnxExternalDataStatus" class="onnx-external-status">No sidecars selected</output>
+              </div>
+              <div class="conversion-receipt-control">
+                <label class="file-button external-file-button" title="Bind source artifacts, converter invocation, and an environment manifest to this deployment artifact without loading source model code">
+                  <input id="conversionReceiptInput" type="file" accept=".json,application/json" />
+                  Add conversion receipt
+                </label>
+                <output id="conversionReceiptStatus" class="onnx-external-status" aria-live="polite">No conversion receipt selected</output>
+              </div>
+            </details>
+            <p class="local-analysis-notice">Your artifact stays on this device. Optional telemetry remains off unless you enable it.</p>
           </div>
           <details class="pre-audit-reference" id="preAuditReference">
             <summary>
@@ -695,6 +647,7 @@
             </aside>
           </div>
           <div class="target-stale-notice" id="targetStaleNotice" role="status" aria-live="polite" hidden></div>
+          <section class="review-summary-panel" id="reviewSummaryPanel" aria-live="polite" hidden></section>
           <nav class="workflow-navigation" aria-label="Audit workflow">
           <div class="workflow-rail" id="workflowRail" role="tablist" aria-label="Review workflow">
             <button class="workflow-step active" type="button" data-workflow-step="input" data-navigation-role="workflow">
@@ -1181,26 +1134,27 @@
                       <option value="all_available" selected>All available</option>
                     </select>
                   </label>
+                  <button id="downloadReviewHtml" class="secondary-action" type="button" title="Download a self-contained, read-only review" disabled>Review HTML</button>
+                  <button id="downloadEvidenceJson" class="secondary-action" type="button" title="Download the canonical artifact evidence envelope" disabled>Evidence JSON</button>
                   <button id="downloadPublicBundle" class="bundle-action" type="button" disabled title="Download a login-free, hash-bound evidence package">Download Evidence Package</button>
                   <p class="evidence-bundle-note" id="engineeringBundleNote">Run a static audit first. Package profiles exclude model bytes and raw tensor values. Hashes and signatures detect later changes but cannot prevent copying or editing.</p>
                 </div>
               </div>
               <details class="individual-export-menu report-export-panel">
-                <summary>Individual report and derivative downloads</summary>
+                <summary>Advanced exports</summary>
                 <div>
                   <span>Separate files</span>
-                  <p>The watermarked report, public summary, and verification manifest require no login. Raw JSON, CSV, diagrams, images, and the complete raw engineering bundle retain their separate access boundary.</p>
+                  <p>These local derivatives are available without sign-in. They are separate from the three primary review artifacts above.</p>
                 </div>
                 <div class="export-buttons">
                   <button id="downloadMarkdown" type="button" disabled>Engineering Report HTML</button>
-                  <button id="downloadReviewHtml" class="secondary-action" type="button" title="Download a self-contained, read-only review.html" disabled>Download review.html</button>
                   <button id="printPublicReport" class="secondary-action" type="button" disabled>Print Public Summary PDF</button>
                   <button id="downloadPublicVerificationManifest" class="secondary-action" type="button" disabled>Verification Manifest</button>
-                  <button id="downloadRawData" type="button">Raw Evidence Package / Sign in</button>
-                  <button id="downloadCsv" type="button">Roofline CSV / Sign in</button>
-                  <button id="downloadMermaid" type="button">Mermaid Stage Graph / Sign in</button>
-                  <button id="downloadVisualPngs" type="button">Visual PNGs / Sign in</button>
-                  <button id="downloadEngineeringBundle" class="secondary-action" type="button" disabled>Engineering Bundle ZIP / Sign in</button>
+                  <button id="downloadRawData" type="button">Raw Evidence Package</button>
+                  <button id="downloadCsv" type="button">Roofline CSV</button>
+                  <button id="downloadMermaid" type="button">Mermaid Stage Graph</button>
+                  <button id="downloadVisualPngs" type="button">Visual PNGs</button>
+                  <button id="downloadEngineeringBundle" class="secondary-action" type="button" disabled>Engineering Bundle ZIP</button>
                 </div>
               </details>
 
@@ -1290,27 +1244,6 @@
                   </div>
                 </div>
               </section>
-              <section class="perspective-audit-tool" aria-labelledby="perspectiveAuditTitle">
-                <header>
-                  <div>
-                    <span>Independent standards check</span>
-                    <h3 id="perspectiveAuditTitle">CycloneDX Perspective Audit</h3>
-                    <p>Evaluate perspective mappings with RFC 9535 and retain every normalized JSON Pointer. Relevance is never converted into a conformance decision.</p>
-                  </div>
-                  <strong id="perspectiveAuditStatus" data-state="idle" role="status" aria-live="polite">No document selected</strong>
-                </header>
-                <div class="perspective-audit-inputs">
-                  <label>Document<input id="perspectiveBomInput" type="file" accept=".json,.cdx.json,application/json,application/vnd.cyclonedx+json"></label>
-                  <label>Perspective source <small>optional</small><input id="perspectiveSourceInput" type="file" accept=".json,.cdx.json,application/json"></label>
-                  <label>Candidate projection <small>explicit sidecar only</small><input id="perspectiveProjectionInput" type="file" accept=".json,application/json"></label>
-                </div>
-                <div class="perspective-audit-actions">
-                  <button id="runPerspectiveAudit" class="bundle-action" type="button" disabled>Run mapping audit</button>
-                  <button id="downloadPerspectiveJson" type="button" disabled>Download JSON</button>
-                  <button id="downloadPerspectiveHtml" type="button" disabled>Download review HTML</button>
-                  <p id="perspectiveAuditSummary">No document selected.</p>
-                </div>
-              </section>
               <div class="export-contract-list export-contract-primary-list">
                 <article class="export-contract-row export-contract-primary">
                   <div class="export-contract-code">
@@ -1322,17 +1255,6 @@
                     <p>Available without sign-in: exact file identity, format and graph totals, plus the complete external I/O contract ledger.</p>
                   </div>
                   <button id="downloadCycloneDxEvidence" class="bundle-action" type="button" disabled>Download CDX JSON</button>
-                </article>
-                <article class="export-contract-row">
-                  <div class="export-contract-code">
-                    <span>CycloneDX 2.0 draft status</span>
-                    <strong>Compatibility Record</strong>
-                  </div>
-                  <div>
-                    <h3>Pinned draft integration status</h3>
-                    <p>Available without sign-in: exact #990, #175, #1067, and #1075 source commits and content hashes, unresolved integration conditions, and the stable 1.7 fallback. No 2.0 BOM is emitted while those drafts are unresolved.</p>
-                  </div>
-                  <button id="downloadCycloneDx20DraftStatus" type="button" disabled>Download status</button>
                 </article>
               </div>
               <details class="export-contract-companions">
@@ -1376,8 +1298,8 @@
                 <summary><strong>7-document inventory</strong> / exact Contract Pack contents</summary>
                 <ol>
                   <li><strong>CycloneDX artifact evidence</strong><span>Canonical artifact record and evidence references</span></li>
-                  <li><strong>CycloneDX 2.0 draft compatibility</strong><span>Pinned source identities and fail-closed integration status; not a BOM</span></li>
                   <li><strong>Artifact evidence envelope</strong><span>Canonical hash-bound analysis facts</span></li>
+                  <li><strong>Artifact Evidence IR</strong><span>Canonical graph, storage, architecture, quantization, and overlay evidence</span></li>
                   <li><strong>Interface contract ledger</strong><span>Complete external parameter contract</span></li>
                   <li><strong>Observed formulation BOM</strong><span>Observed and declared formulation evidence</span></li>
                   <li><strong>Runtime requirement manifest</strong><span>Runtime floor and deployment requirements</span></li>
@@ -1389,7 +1311,7 @@
                 <div>
                   <span>Consolidated package</span>
                   <h3>Deployment Contract Pack</h3>
-                  <p>CycloneDX record, interface ledger, formulation, runtime, provenance, member digest, and detached ES256 signature.</p>
+                  <p>CycloneDX record, Artifact Evidence IR, interface ledger, formulation, runtime, provenance, member digest, and detached ES256 signature.</p>
                 </div>
                 <button id="downloadContractPack" class="bundle-action" type="button" disabled>Contract Pack ZIP</button>
               </section>
@@ -2225,11 +2147,11 @@
         <li><strong>Engineering report export:</strong> editable HTML engineering report, raw JSON, roofline CSV, and ML-BOM in CycloneDX format.</li>
       </ul>
       <h3>How to cite</h3>
-      <p>Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts (Version 1.94.0) [Computer software]. Zenodo. <a href="https://doi.org/10.5281/zenodo.21834509" rel="noopener" target="_blank">https://doi.org/10.5281/zenodo.21834509</a></p>
+      <p>Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts [Computer software]. Zenodo concept DOI. <a href="https://doi.org/10.5281/zenodo.21834508" rel="noopener" target="_blank">https://doi.org/10.5281/zenodo.21834508</a>. The analyzed release version is recorded separately in every generated evidence document.</p>
       <h3>Privacy and data handling</h3>
       <p>Analysis runs locally in the browser using Rust/WebAssembly and format-specific JavaScript runtimes. Artifact bytes, tensor values, inputs, outputs, and reports are never uploaded. De-identified structural telemetry is sent only after explicit opt-in and can be disabled at any time; structural patterns may still be distinctive. Synthetic Device Benchmark is a separate explicit queue path: a registered device agent receives a zero-weight reconstruction from consented structure metadata, not the original artifact or weights.</p>
       <h3>Technical implementation</h3>
-      <p>The TFLite analysis core is written in Rust and compiled to WebAssembly via wasm-pack. ONNX graph parsing and static shape/MAC assessment are implemented in browser JavaScript, while ONNX inference uses ONNX Runtime Web's WebAssembly backend. Viewer rendering is JavaScript. Account-bound report formatters and controlled WASM assets use server-side authorization checks and are not fetched for unauthorized sessions; any code delivered to an authorized browser remains inspectable and is not cryptographically secret.</p>
+      <p>The TFLite analysis core is written in Rust and compiled to WebAssembly via wasm-pack. ONNX graph parsing and static shape/MAC assessment are implemented in browser JavaScript, while ONNX inference uses ONNX Runtime Web's WebAssembly backend. Viewer rendering and local exports run in the browser. Optional research modules and saved requests use separate access controls; the core audit and local evidence exports do not require an account.</p>
       <h3>Research context</h3>
       <p>DEEPBOM is developed by Jun-Hwan Kwon, Ph.D., Research Assistant Professor at the Anesthesia and Pain Research Institute, Yonsei University College of Medicine, Republic of Korea. It supports structured characterization of deployment-relevant artifact properties, runtime assumptions, and target-specific engineering signals for medical and general on-device AI.</p>
     </footer>

@@ -20,7 +20,6 @@ const styleSource = [
   readFileSync("web/report-workspace.css", "utf8"),
 ].join("\n");
 const medicalSurfaceSource = readFileSync("web/lib/app-surface.js", "utf8");
-const privacySource = readFileSync("web/lib/privacy-ui.js", "utf8");
 const performanceVisualSource = readFileSync("web/lib/performance-visuals.js", "utf8");
 const workspaceNavigationSource = readFileSync("web/lib/workspace-navigation.js", "utf8");
 const offlineDeviceSource = readFileSync("web/lib/offline-device-controller.js", "utf8");
@@ -116,8 +115,8 @@ function checkDefaultPage() {
   if (!/id="applicationBuild"\s+hidden/.test(html)) {
     errors.push(`${label}: build provenance must stay hidden until concrete identity values are hydrated.`);
   }
-  if (!html.includes('class="author-details"') || !html.includes('class="evidence-class-disclosure"')) {
-    errors.push(`${label}: mobile provenance and evidence-class disclosures must preserve their complete content.`);
+  if (!html.includes('class="author-details"') || !html.includes('id="reviewSummaryPanel"')) {
+    errors.push(`${label}: mobile provenance and the post-audit evidence summary must preserve their complete content.`);
   }
   if (!html.includes('class="medical-context-summary"') || !html.includes('class="medical-context-detail"')) {
     errors.push(`${label}: mobile clinical context must keep a compact summary and the complete source text.`);
@@ -145,14 +144,11 @@ function checkDefaultPage() {
 function checkPrivacyAndAccessibilityContract() {
   const html = readFileSync("web/index.html", "utf8");
   for (const [condition, message] of [
-    [html.includes('id="researchConsent" type="checkbox"'), "research telemetry consent must be a visible optional checkbox"],
-    [/id="agreementBackdrop"[^>]*\bhidden\b/.test(html), "privacy acknowledgement must start hidden so accepted sessions do not flash the modal before JavaScript hydration"],
+    [html.includes("Optional telemetry remains off unless you enable it."), "first-visit copy must state that optional telemetry starts disabled"],
+    [!html.includes('id="agreementBackdrop"'), "local static analysis must not be blocked by a privacy acknowledgement modal"],
     [!html.includes('id="consentGate"'), "static analysis must not be gated on optional research telemetry"],
-    [privacySource.includes("readAgreementAccepted()"), "accepted session privacy acknowledgement should suppress repeat modal display"],
-    [privacySource.includes("openModal(agreementBackdrop"), "unaccepted sessions must explicitly reveal the initially hidden privacy acknowledgement through the shared accessible modal controller"],
-    [privacySource.includes("writeResearchConsent(researchConsent.checked)"), "privacy acknowledgement must preserve the user's explicit telemetry choice"],
-    [!privacySource.includes("writeResearchConsent(true)"), "privacy acknowledgement must not force-enable telemetry"],
-    [html.includes("Inspect the artifact that will actually run."), "first-visit surface must state the deployment-artifact problem before controls"],
+    [!appSource.includes("initPrivacyAgreementUi") && !appSource.includes("agreementBackdrop"), "local static analysis must not retain a privacy acknowledgement controller"],
+    [html.includes("Inspect the AI model artifact that will actually run."), "first-visit surface must state the deployment-artifact problem before controls"],
     [html.includes('id="preAuditReference"') && html.includes('id="sampleEvidenceGlance"'), "first-visit evidence guide must preserve the selected hash-pinned baseline without forcing it into the task path"],
     [html.includes("Why this matters for medical AI"), "medical-AI relevance must remain visible without changing the general product scope"],
     [html.includes("zero-weight, shape/op/dtype/quantization-equivalent synthetic reconstruction"), "offline device path must distinguish its synthetic reconstruction from the original artifact"],

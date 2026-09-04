@@ -1,7 +1,9 @@
+import { readFileSync } from "node:fs";
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { transform } from "esbuild";
+import { gzipSync } from "node:zlib";
+import { build, transform } from "esbuild";
 import { readSwRuntimeCacheableSuffixes } from "./sw-utils.mjs";
 import { hardenWasmFile } from "./wasm-binary-hardening.mjs";
 import { writeBuildMetadata } from "./write-build-metadata.mjs";
@@ -38,6 +40,8 @@ await rm(path.join(root, "pkg", ".gitignore"), { force: true });
 await rm(path.join(root, ...protectedDeepBomPackage, ".gitignore"), { force: true });
 
 await copyDir(path.join(root, "web"), path.join(dist, "web"));
+await copyDir(path.join(root, "web", "evaluate"), path.join(dist, "evaluate"));
+await rm(path.join(dist, "web", "evaluate"), { recursive: true, force: true });
 for (const file of deploymentExcludedWebFiles) {
   await rm(path.join(dist, "web", file), { force: true });
 }
@@ -63,6 +67,12 @@ for (const file of [
 ]) {
   await rewriteNodeModulesPath(path.join(dist, file));
 }
+const applicationBundle = await bundleApplicationEntry();
+for (const file of applicationBundle.outputFiles) await rewriteNodeModulesPath(file);
+await appendServiceWorkerAssets(
+  path.join(dist, "web", "sw.js"),
+  applicationBundle.outputFiles.map((file) => `./${path.relative(path.join(dist, "web"), file).replaceAll(path.sep, "/")}`),
+);
 await stampServiceWorkerBuild(path.join(dist, "web", "sw.js"), buildMetadata.bundleContentSha256);
 
 await writeFile(path.join(dist, ".nojekyll"), "");
@@ -111,6 +121,14 @@ await writeFile(path.join(dist, "sitemap.xml"), [
   "    <changefreq>monthly</changefreq>",
   "    <priority>0.6</priority>",
   "  </url>",
+  ...["regulatory", "quality", "engineering"].flatMap((brief) => [
+    "  <url>",
+    `    <loc>https://deepbom.org/evaluate/${brief}/</loc>`,
+    `    <lastmod>${today}</lastmod>`,
+    "    <changefreq>monthly</changefreq>",
+    "    <priority>0.7</priority>",
+    "  </url>",
+  ]),
   "</urlset>",
 ].join("\n") + "\n");
 
@@ -120,9 +138,14 @@ if (customDomain) {
 }
 
 const deploymentHardening = await minifyProjectAssets(dist);
+const frontendDelivery = await measureFrontendDelivery();
 await writeFile(
   path.join(dist, "deployment-hardening.json"),
   `${JSON.stringify(deploymentHardening, null, 2)}\n`,
+);
+await writeFile(
+  path.join(dist, "frontend-delivery.json"),
+  `${JSON.stringify(frontendDelivery, null, 2)}\n`,
 );
 
 // Verify the release manifest while generated WASM bytes still match the
@@ -131,8 +154,84 @@ await import("./check-build-metadata.mjs?build-pages-verification");
 
 console.log(
   `Static deploy artifact ready: ${dist} `
-  + `(${deploymentHardening.javascript_files} project JS and ${deploymentHardening.css_files} CSS files minified; source maps disabled).`,
+  + `(${deploymentHardening.javascript_files} project JS and ${deploymentHardening.css_files} CSS files minified; `
+  + `${frontendDelivery.pre_interaction.javascript_requests} pre-interaction JS requests / ${frontendDelivery.pre_interaction.gzip_bytes} gzip bytes).`,
 );
+
+async function bundleApplicationEntry() {
+  const result = await build({
+    absWorkingDir: root,
+    entryPoints: ["web/app.js"],
+    outdir: path.join(dist, "web"),
+    outbase: "web",
+    entryNames: "[name].bundle",
+    chunkNames: "chunks/[name]-[hash]",
+    assetNames: "chunks/[name]-[hash]",
+    bundle: true,
+    charset: "ascii",
+    external: [
+      "../pkg/*",
+      "@litertjs/*",
+      "onnxruntime-web/*",
+    ],
+    format: "esm",
+    legalComments: "none",
+    metafile: true,
+    minify: true,
+    platform: "browser",
+    sourcemap: false,
+    splitting: true,
+    target: "es2022",
+    write: true,
+  });
+  const outputFiles = Object.keys(result.metafile.outputs)
+    .filter((file) => file.endsWith(".js"))
+    .map((file) => path.resolve(root, file))
+    .sort();
+  const entry = path.join(dist, "web", "app.bundle.js");
+  if (!outputFiles.includes(entry)) throw new Error("esbuild did not emit dist/web/app.bundle.js.");
+  await writeFile(path.join(dist, "web", "app.js"), 'import "./app.bundle.js";\n');
+  return { outputFiles };
+}
+
+async function appendServiceWorkerAssets(file, assets) {
+  const source = await readFile(file, "utf8");
+  const unique = [...new Set(assets)].sort();
+  const marker = "const APP_ASSETS = [";
+  if (!source.includes(marker)) throw new Error("Service worker APP_ASSETS declaration is missing.");
+  const injected = source.replace(marker, `${marker}\n${unique.map((asset) => `  ${JSON.stringify(asset)},`).join("\n")}`);
+  await writeFile(file, injected);
+}
+
+async function measureFrontendDelivery() {
+  const html = await readFile(path.join(dist, "web", "index.html"), "utf8");
+  const scriptPaths = [...html.matchAll(/<script\b[^>]*\bsrc="(\.\/[^\"]+)"[^>]*><\/script>/g)]
+    .map((match) => match[1]);
+  const uniqueScripts = [...new Set(scriptPaths)];
+  const gzipBytes = uniqueScripts.reduce((sum, relative) => {
+    const bytes = readFileSync(path.join(dist, "web", relative.slice(2)));
+    return sum + gzipSync(bytes, { level: 9 }).byteLength;
+  }, 0);
+  const javascriptRequests = uniqueScripts.length;
+  const gzipBudgetBytes = 600 * 1024;
+  const requestBudget = 25;
+  if (gzipBytes > gzipBudgetBytes) throw new Error(`Pre-interaction JS gzip budget exceeded: ${gzipBytes} > ${gzipBudgetBytes}.`);
+  if (javascriptRequests > requestBudget) throw new Error(`Pre-interaction JS request budget exceeded: ${javascriptRequests} > ${requestBudget}.`);
+  return {
+    schema: "deepbom.frontend_delivery.v1",
+    budget_scope: "document scripts before artifact or tool interaction",
+    pre_interaction: {
+      javascript_requests: javascriptRequests,
+      gzip_bytes: gzipBytes,
+      javascript_request_budget: requestBudget,
+      gzip_byte_budget: gzipBudgetBytes,
+      scripts: uniqueScripts,
+    },
+    application_entry: "web/app.js -> web/app.bundle.js",
+    application_load_trigger: "artifact, verified sample, or analysis-tool interaction",
+    tflite_wasm_preloaded: false,
+  };
+}
 
 async function copyDir(source, target) {
   await mkdir(target, { recursive: true });

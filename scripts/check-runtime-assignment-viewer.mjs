@@ -29,6 +29,7 @@ try {
     if (!pathname.startsWith("/api/") && pathname !== "/favicon.ico") browserErrors.push(`http ${response.status()}: ${pathname}`);
   });
   await page.goto(pageUrl, { waitUntil: "domcontentloaded" });
+  await page.locator("#fileInput").focus();
   await page.waitForFunction(() => document.querySelector("#status")?.textContent?.includes("Ready"), null, { timeout: 60_000 });
   if (await page.locator("#agreementBackdrop").isVisible()) {
     await page.locator("#privacyAgree").check();

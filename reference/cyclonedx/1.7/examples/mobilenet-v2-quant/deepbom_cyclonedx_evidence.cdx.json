@@ -463,7 +463,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "00e6544e060ab1e7c4f3f1094963000688dfdecfbcea3e384a040d6b3ef1160b"
+              "content": "601e23946758a303c0361bb8b86fde427efb97920853c4e6cfca21d1dbe224a9"
             }
           ]
         },
@@ -486,17 +486,6 @@
             {
               "alg": "SHA-256",
               "content": "a1540f67d7cc3814e37681a7f3ec78ded0735877b403903bf4538d7bbfa1f59d"
-            }
-          ]
-        },
-        {
-          "type": "evidence",
-          "url": "deepbom_cyclonedx_2_0_draft_compatibility.json",
-          "comment": "Machine-readable status for the pinned CycloneDX 2.0 draft integration. This is not a 2.0 BOM or conformance claim. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
-          "hashes": [
-            {
-              "alg": "SHA-256",
-              "content": "97ac88f50f5f024bd620d2b3d1905b979344ac881b40225c5a40fdb5e5d19adc"
             }
           ]
         },
@@ -803,7 +792,7 @@
     },
     {
       "name": "deepbom:artifactEvidenceEnvelopeSha256",
-      "value": "e8b35ac4711bb99b3aab0a8551bd0a75275d51730543008afaa4f3e4ef4cbea9"
+      "value": "357e8adb0876f192ec955b1f305ce114642e9c705b93707418b6d515a2dcb039"
     },
     {
       "name": "deepbom:artifactIrSchema",

@@ -13,6 +13,10 @@ const CHECKS = [
   "scripts/check-browser-import-contract.mjs",
   "scripts/check-dom-contract.mjs",
   "scripts/check-workflow-contract.mjs",
+  "scripts/check-public-product-boundary.mjs",
+  "scripts/check-evaluation-briefs.mjs",
+  "scripts/generate-browser-target-profiles.mjs --check",
+  "scripts/check-browser-delivery-boundary.mjs",
   "scripts/check-product-guidance-contracts.mjs",
   "scripts/check-access-hierarchy.mjs",
   "scripts/check-external-test-access.mjs",
@@ -85,8 +89,9 @@ const CHECKS = [
   "scripts/check-worker-config.mjs",
 ];
 
-for (const script of CHECKS) {
-  await runNode(script);
+for (const check of CHECKS) {
+  const [script, ...args] = check.split(/\s+/);
+  await runNode(script, args);
 }
 
 console.log(`Deployment gate passed (${CHECKS.length} checks, no browser matrix).`);

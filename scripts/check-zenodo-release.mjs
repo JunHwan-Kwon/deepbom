@@ -26,13 +26,16 @@ const indexHtml = readFileSync("web/index.html", "utf8");
 const entries = collectSoftwareEntries();
 const names = new Set(entries.map((item) => item.path));
 const versionDoi = "10.5281/zenodo.21834509";
+const conceptDoi = "10.5281/zenodo.21834508";
 const recommendedCitation = `Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts (Version ${citationVersion}) [Computer software]. Zenodo. https://doi.org/${versionDoi}`;
+const browserCitation = `Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts [Computer software]. Zenodo concept DOI. https://doi.org/${conceptDoi}`;
 
 expect(citation.includes("0000-0002-6464-3895"), "CITATION.cff must bind the creator ORCID.");
 expect(citation.includes(`doi: "${versionDoi}"`) && citation.includes(recommendedCitation), "CITATION.cff must bind the published version DOI and recommended citation.");
-expect(appConfig.includes(recommendedCitation), "The browser copy source must match the recommended citation.");
-expect(indexHtml.includes(`name="citation_doi" content="${versionDoi}"`) && indexHtml.includes('id="copyCitationBtn"'), "The public entrypoint must expose the DOI and citation copy control.");
-expect(indexHtml.includes(recommendedCitation.replace(`https://doi.org/${versionDoi}`, `<a href="https://doi.org/${versionDoi}" rel="noopener" target="_blank">https://doi.org/${versionDoi}</a>`)), "The public citation section must render the recommended citation.");
+expect(appConfig.includes(browserCitation) && !appConfig.includes(`Version ${citationVersion}`), "The browser copy source must use the release-independent concept DOI without pinning the old citation-record version.");
+expect(indexHtml.includes(`name="citation_doi" content="${conceptDoi}"`) && indexHtml.includes('id="copyCitationBtn"'), "The public entrypoint must expose the concept DOI and citation copy control.");
+expect(indexHtml.includes(browserCitation.replace(`https://doi.org/${conceptDoi}`, `<a href="https://doi.org/${conceptDoi}" rel="noopener" target="_blank">https://doi.org/${conceptDoi}</a>`)), "The public citation section must render the release-independent citation.");
+expect(indexHtml.includes("The analyzed release version is recorded separately"), "The public citation section must explain where the analyzed software version is bound.");
 expect(!indexHtml.includes("an archival DOI is planned"), "The public entrypoint must not claim that the published DOI is still planned.");
 expect(!/^license:/m.test(citation) && !/^repository-code:/m.test(citation), "The citation record must not advertise an open-source license or repository.");
 for (const format of ["TFLite", "ONNX", "GGUF", "SafeTensors", "Core ML"]) {

@@ -45,6 +45,7 @@ const protectedDeploymentMetadata = [
 const deploymentExcludedFloatSample = path.join(distRoot, "web", "samples", "mobilenet_v1_025_224_float.tflite");
 const deploymentExcludedSyntheticOnnx = path.join(distRoot, "web", "samples", "sample_cnn_float.onnx");
 const deploymentHardeningManifest = path.join(distRoot, "deployment-hardening.json");
+const frontendDeliveryManifest = path.join(distRoot, "frontend-delivery.json");
 const publicSampleModelPaths = new Set(PUBLIC_SAMPLE_MODELS
   .map((sample) => sample.path)
   .filter((samplePath) => samplePath.startsWith("samples/"))
@@ -129,6 +130,12 @@ if (existsSync(deploymentExcludedFloatSample)) {
 }
 if (existsSync(deploymentExcludedSyntheticOnnx)) throw new Error("dist must exclude the synthetic ONNX regression fixture.");
 checkDeploymentHardening();
+checkFrontendDelivery();
+for (const brief of ["regulatory", "quality", "engineering"]) {
+  if (!existsSync(path.join(distRoot, "evaluate", brief, "index.html"))) {
+    throw new Error(`dist evaluation route is missing: /evaluate/${brief}/`);
+  }
+}
 
 const medicalShellPath = path.join(distRoot, "medical.html");
 if (!existsSync(medicalShellPath)) {
@@ -230,6 +237,28 @@ function checkDeploymentHardening() {
   const deployedApp = readFileSync(path.join(distRoot, "web", "app.js"), "utf8");
   if (!(deployedApp.length < sourceApp.length * 0.8)) {
     throw new Error(`dist/web/app.js was not materially minified (${deployedApp.length}/${sourceApp.length} bytes).`);
+  }
+}
+
+function checkFrontendDelivery() {
+  if (!existsSync(frontendDeliveryManifest)) throw new Error("dist/frontend-delivery.json is missing.");
+  const manifest = JSON.parse(readFileSync(frontendDeliveryManifest, "utf8"));
+  if (manifest.schema !== "deepbom.frontend_delivery.v1"
+    || manifest.pre_interaction?.javascript_requests > manifest.pre_interaction?.javascript_request_budget
+    || manifest.pre_interaction?.gzip_bytes > manifest.pre_interaction?.gzip_byte_budget
+    || manifest.tflite_wasm_preloaded !== false) {
+    throw new Error(`Frontend delivery manifest is invalid: ${JSON.stringify(manifest)}`);
+  }
+  const appShim = readFileSync(path.join(distRoot, "web", "app.js"), "utf8");
+  if (!/import\s*["']\.\/app\.bundle\.js["']/.test(appShim)) {
+    throw new Error("dist/web/app.js must be the stable shim for the bundled application entry.");
+  }
+  if (!existsSync(path.join(distRoot, "web", "app.bundle.js"))) {
+    throw new Error("dist/web/app.bundle.js is missing.");
+  }
+  const shellAssets = /const APP_SHELL_ASSETS = \[([\s\S]*?)\];/.exec(distSwSource)?.[1] || "";
+  if (/tflite_wasm_audit|app\.bundle|\.\/app\.js/.test(shellAssets)) {
+    throw new Error("Service-worker installation must not preload the analyzer or application bundle.");
   }
 }
 

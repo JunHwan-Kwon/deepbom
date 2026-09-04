@@ -152,7 +152,6 @@ reference/cyclonedx/1.7/cryptography-defs.schema.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/README.md
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_artifact_evidence_envelope.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_artifact_ir.json
-reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_2_0_draft_compatibility.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_evidence.cdx.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_interface_contracts.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_missing_provenance_fields.json
@@ -224,6 +223,7 @@ scripts/check-artifact-ir.mjs
 scripts/check-assert.mjs
 scripts/check-backend-placement-projection.mjs
 scripts/check-bootstrap-retry.mjs
+scripts/check-browser-delivery-boundary.mjs
 scripts/check-browser-import-contract.mjs
 scripts/check-build-metadata.mjs
 scripts/check-calibration-validation-ledger.mjs
@@ -269,6 +269,7 @@ scripts/check-dist-budget.mjs
 scripts/check-dom-contract.mjs
 scripts/check-dynamic-shape-cost-viewer.mjs
 scripts/check-dynamic-shape-cost.mjs
+scripts/check-evaluation-briefs.mjs
 scripts/check-evidence-package-profile-ui.mjs
 scripts/check-evidence-package-profiles.mjs
 scripts/check-evidence-treemap.mjs
@@ -367,6 +368,7 @@ scripts/check-public-key-signature.mjs
 scripts/check-public-model-corpus.mjs
 scripts/check-public-multiformat-corpus.mjs
 scripts/check-public-package-boundary.mjs
+scripts/check-public-product-boundary.mjs
 scripts/check-public-samples.mjs
 scripts/check-quant-evidence-chains-viewer.mjs
 scripts/check-quant-evidence-chains.mjs
@@ -449,6 +451,7 @@ scripts/fixtures/onnx_recursive_scope.onnx
 scripts/fixtures/onnx_zero_dim_identity.onnx
 scripts/fixtures/report-boundary-analysis.v1.json.gz
 scripts/generate-accelerator-llm-samples.py
+scripts/generate-browser-target-profiles.mjs
 scripts/generate-cli-docs.mjs
 scripts/generate-cyclonedx-17-example.mjs
 scripts/generate-executorch-operator-signatures.mjs
@@ -592,6 +595,10 @@ web/auth-complete.html
 web/auth-complete.js
 web/bootstrap.js
 web/device-workspace.css
+web/evaluate/engineering/index.html
+web/evaluate/evaluation.css
+web/evaluate/quality/index.html
+web/evaluate/regulatory/index.html
 web/execution-placement.css
 web/executorch.js
 web/explorer-evidence.css
@@ -641,6 +648,7 @@ web/lib/auth-labels.js
 web/lib/auth-ui.js
 web/lib/backend-placement-projection.js
 web/lib/benchmark-ui.js
+web/lib/browser-asset-url.js
 web/lib/bundle.js
 web/lib/calibration-validation-ledger.js
 web/lib/calibration-validation-view.js
@@ -809,7 +817,6 @@ web/lib/preprocessing-consequence-validator.js
 web/lib/preprocessing-consequence-viewer.js
 web/lib/preprocessing-realizability-viewer.js
 web/lib/preprocessing-realizability.js
-web/lib/privacy-ui.js
 web/lib/protocols.js
 web/lib/public-cyclonedx-export.js
 web/lib/public-evidence-package.js
@@ -879,9 +886,12 @@ web/lib/residual-step-response-worker.js
 web/lib/residual-step-response.js
 web/lib/review-export.js
 web/lib/review-policy.js
+web/lib/review-summary-view.js
+web/lib/review-summary.js
 web/lib/rgb-png.js
 web/lib/rounding-equivalence-worker.js
 web/lib/rounding-equivalence.js
+web/lib/rule-explanations.js
 web/lib/runtime-backend-evidence-ledger.js
 web/lib/runtime-data-movement-evidence.js
 web/lib/runtime-evidence-closure.js
@@ -908,6 +918,7 @@ web/lib/static-audit-worker-protocol.js
 web/lib/status.js
 web/lib/storage.js
 web/lib/strict-json.js
+web/lib/target-profiles.generated.js
 web/lib/telemetry.js
 web/lib/tensor-inventory.js
 web/lib/tensor-numerical-integrity.js

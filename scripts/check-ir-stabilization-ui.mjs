@@ -42,7 +42,9 @@ try {
     if (message.type() === "error" && !/Failed to load resource/i.test(message.text())) diagnostics.push(`console: ${message.text()}`);
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/web/`, { waitUntil: "domcontentloaded" });
-  await page.waitForFunction(() => document.querySelector("#status")?.textContent !== "Waiting", null, { timeout: 30_000 });
+  await page.locator("#dropzone").dispatchEvent("pointerdown");
+  await page.locator("#fileInput").focus();
+  await page.waitForFunction(() => document.querySelector("#status")?.textContent === "Ready", null, { timeout: 30_000 });
   if (await page.locator("#agreementBackdrop").isVisible()) {
     await page.locator("#privacyAgree").check();
     await page.locator("#acceptAgreement").click();

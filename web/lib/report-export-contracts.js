@@ -10,7 +10,6 @@ import { buildInterfaceQuantizationContractLedger } from "./quantization-contrac
 import { sha256TextHex } from "./sha256-sync.js";
 import { buildArtifactEvidenceEnvelope } from "./artifact-evidence-envelope.js";
 import { compareInterfaceContracts } from "./interface-contract.js";
-import { buildCycloneDxDraftCompatibilityRecord } from "./cyclonedx-draft-profiles.js";
 import { coreMlFloorLabel } from "./coreml-deployment-contract.js";
 import {
   analyzerContentVersion,
@@ -46,7 +45,6 @@ const CURRENT_INT8_PROFILE_OPS = new Set(["CONV_2D", "DEPTHWISE_CONV_2D"]);
 
 export const DEPLOYMENT_CONTRACT_FILES = Object.freeze({
   cyclonedx: "deepbom_cyclonedx_evidence.cdx.json",
-  cyclonedx20DraftStatus: "deepbom_cyclonedx_2_0_draft_compatibility.json",
   artifactEnvelope: "deepbom_artifact_evidence_envelope.json",
   artifactIr: "deepbom_artifact_ir.json",
   interfaceContracts: "deepbom_interface_contracts.json",
@@ -966,7 +964,6 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
   const runtimeHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.runtime);
   const missingHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.missingFields);
   const formulationHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.formulation);
-  const cycloneDx20DraftStatusHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.cyclonedx20DraftStatus);
   const artifactIrMemberAvailable = Boolean(options.artifactIr && artifactIrHash);
   const references = [
     ...optionalExternalReference(options, "engineeringEvidence", "evidence", "engineering_evidence.json", "External Engineering Bundle evidence ledger."),
@@ -974,7 +971,6 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.artifactEnvelope, bundleReferenceComment("Canonical artifact evidence envelope.", Boolean(envelopeHash)), envelopeHash),
     ...(artifactIrMemberAvailable ? [externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.artifactIr, bundleReferenceComment("Canonical Artifact Evidence IR with graph, storage, architecture, quantization, and overlay separation.", true), artifactIrHash)] : []),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.interfaceContracts, bundleReferenceComment("Canonical external tensor numerical-contract ledger.", Boolean(interfaceHash)), interfaceHash),
-    externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.cyclonedx20DraftStatus, bundleReferenceComment("Machine-readable status for the pinned CycloneDX 2.0 draft integration. This is not a 2.0 BOM or conformance claim.", Boolean(cycloneDx20DraftStatusHash)), cycloneDx20DraftStatusHash),
     externalReference("formulation", DEPLOYMENT_CONTRACT_FILES.formulation, bundleReferenceComment("Artifact-observed formulation and declaration comparison.", Boolean(formulationHash)), formulationHash),
     externalReference("configuration", DEPLOYMENT_CONTRACT_FILES.runtime, bundleReferenceComment("Machine-readable runtime requirement manifest.", Boolean(runtimeHash)), runtimeHash),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.missingFields, bundleReferenceComment("Machine-readable release-lineage field gap specification.", Boolean(missingHash)), missingHash),
@@ -2200,16 +2196,12 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
   const canonicalInterfaceLedger = artifactEnvelope.interfaces || buildInterfaceQuantizationContractLedger(analysis);
   const contractShared = { ...shared, interfaceLedger: canonicalInterfaceLedger };
   const interfaceContracts = buildInterfaceContractLedgerDocument(analysis, contractShared);
-  const cycloneDx20DraftStatus = buildCycloneDxDraftCompatibilityRecord(analysis, {
-    ...contractShared,
-  });
   const runtime = buildRuntimeRequirementManifest(analysis, contractShared);
   const missing = buildMissingProvenanceFieldSpecification(analysis, shared);
   const firstHashes = {
     [DEPLOYMENT_CONTRACT_FILES.artifactEnvelope]: jsonMemberSha256(artifactEnvelope),
     [DEPLOYMENT_CONTRACT_FILES.artifactIr]: jsonMemberSha256(artifactIr),
     [DEPLOYMENT_CONTRACT_FILES.interfaceContracts]: jsonMemberSha256(interfaceContracts),
-    [DEPLOYMENT_CONTRACT_FILES.cyclonedx20DraftStatus]: jsonMemberSha256(cycloneDx20DraftStatus),
     [DEPLOYMENT_CONTRACT_FILES.runtime]: jsonMemberSha256(runtime),
     [DEPLOYMENT_CONTRACT_FILES.missingFields]: jsonMemberSha256(missing),
   };
@@ -2229,7 +2221,6 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
   });
   const documents = {
     cyclonedx_evidence: evidence,
-    cyclonedx_2_0_draft_compatibility: cycloneDx20DraftStatus,
     artifact_evidence_envelope: artifactEnvelope,
     artifact_ir: artifactIr,
     interface_contract_ledger: interfaceContracts,
@@ -2243,7 +2234,7 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
     ...firstHashes,
   };
   return {
-    schema: "deepbom.deployment_contract_export_set.v1.4",
+    schema: "deepbom.deployment_contract_export_set.v1.5",
     generated_at: generatedAt,
     subject: artifactIdentity(analysis, shared),
     files: { ...DEPLOYMENT_CONTRACT_FILES },

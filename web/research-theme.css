@@ -1764,7 +1764,7 @@ textarea {
   }
 
   .topbar h1 {
-    font-size: 34px;
+    font-size: 28px;
   }
 
   .product-deck {
@@ -1774,8 +1774,7 @@ textarea {
   }
 
   .author-block {
-    margin-top: 9px;
-    line-height: 1.24;
+    display: none;
   }
 
   .author-affiliation-block,
@@ -1803,9 +1802,13 @@ textarea {
   .topbar-meta {
     grid-template-columns: 40px minmax(0, 1fr);
     grid-template-areas:
-      "theme auth"
-      "status status";
+      "theme status";
     gap: 7px 10px;
+  }
+
+  .topbar-meta .evaluation-nav,
+  .topbar-meta .auth-widget {
+    display: none;
   }
 
   .theme-toggle {
@@ -1838,8 +1841,8 @@ textarea {
     grid-area: status;
     max-width: none;
     min-height: 0;
-    padding: 6px 0 0;
-    border-top: 1px solid var(--line);
+    padding: 6px 9px;
+    border-top: 0;
     border-left: 0;
     line-height: 1.25;
   }
@@ -1853,9 +1856,9 @@ textarea {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "artifact"
-      "package"
       "run"
       "sample"
+      "package"
       "external"
       "lineage";
   }

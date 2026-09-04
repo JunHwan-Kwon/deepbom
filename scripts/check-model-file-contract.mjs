@@ -141,6 +141,12 @@ expectEqual(modelFormatGate("executorch").blocked, false, "ExecuTorch ET12/FT01 
 expectEqual(modelFormatGate("unsupported").reason, "unsupported_format", "Unknown formats must fail the production gate explicitly.");
 
 const sampleOnnx = analyzeOnnxModel(new Uint8Array(readFileSync("web/samples/sample_cnn_float.onnx")), "sample_cnn_float.onnx");
+const mnistOnnx = analyzeOnnxModel(new Uint8Array(readFileSync("web/samples/mnist-8.onnx")), "mnist-8.onnx");
+expectEqual(mnistOnnx.weight_integrity.constant_tensors_scanned, 8, "ONNX constant integrity should retain every decoded initializer.");
+expectEqual(mnistOnnx.weight_integrity.weight_tensors_scanned, 2, "ONNX weight statistics should include only confirmed learned parameters.");
+expectEqual(mnistOnnx.weight_integrity.constant_role_counts.control_constant, 2, "ONNX Reshape shape tensors should be classified as control constants.");
+expect(Number(mnistOnnx.weight_integrity.max_abs_weight) < 2, "ONNX max_abs_weight must exclude 256-valued Reshape control tensors.");
+expect(mnistOnnx.weight_integrity.tensor_results.some((row) => row.constant_role === "control_constant" && row.max_abs_value === 256), "ONNX control constants should remain independently inspectable.");
 const scopedOnnxTarget = analyzeOnnxModel(new Uint8Array(readFileSync("web/samples/sample_cnn_float.onnx")), "sample_cnn_float.onnx", {
   id: "android_mid_a55", label: "Android mid", profile_sha256: "a".repeat(64), l1_data_bytes: 65536,
   architecture: "AArch64", effective_peak_gops: 5600, xnnpack_kernel_family: "NEON",
@@ -263,7 +269,8 @@ expectEqual(sampleOnnxInputContract?.expected_range_low, null, "FLOAT32 ONNX inp
 expectEqual(sampleOnnxInputContract?.expected_range_high, null, "FLOAT32 ONNX input must keep the unknown range upper bound null.");
 expect(sampleOnnxReport.includes("### Input Tensor Contract Evidence") && sampleOnnxReport.includes("derived_nchw_from_direct_consumer_semantics"), "ONNX Engineering Report should render the source-derived input layout contract.");
 expectEqual(sampleOnnxMlBom.metadata.component.properties.find((item) => item.name === "deepbom:model:inputLayoutDerivedCount")?.value, "1", "ONNX ML-BOM should retain the derived layout count in the compact component summary.");
-expect(sampleOnnxReport.includes("Initializer-value integrity assessed for 6 tensor(s) / 5,418 logical scalar element(s) (5,418 stored value(s) decoded, 0 sparse implicit zero(s))"), "ONNX static conclusion should render conserved logical and stored initializer evidence.");
+expect(sampleOnnxReport.includes("Initializer-value integrity assessed for 6 constant tensor(s) / 5,418 logical scalar element(s) (5,418 stored value(s) decoded, 0 sparse implicit zero(s))")
+  && sampleOnnxReport.includes("weight magnitude and sparsity cover 6 confirmed learned-parameter tensor(s)"), "ONNX static conclusion should separate constant-wide integrity from learned-parameter statistics.");
 expect(sampleOnnxReport.includes("Initializer value decoding | Implemented for 6 available dense TensorProto or validated SparseTensorProto initializer(s); 5,418 stored value(s) decoded plus 0 exact sparse implicit zero(s); 0 incomplete-external/invalid/unsupported tensor(s) not assessed"), "ONNX completeness table should render dense+sparse initializer decoding and unavailable-payload coverage.");
 expect(!sampleOnnxReport.includes("All-zero quantized kernel slices"), "FLOAT ONNX report must not use quantized-only finding wording.");
 expect(sampleOnnxReport.includes("zero-slice arithmetic proxy 2.3%"), "ONNX finding should disclose the 1/32 arithmetic-waste proxy.");

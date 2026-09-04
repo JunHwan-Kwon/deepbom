@@ -43,7 +43,7 @@ const incompleteMacSummary = run(["audit", "scripts/fixtures/onnx_dynamic_conv.o
 assert.match(incompleteMacSummary, /Graph: 1 operators \| 3 tensors \| MACs not assessable/, "human summary preserves an incomplete ONNX MAC total as not assessable");
 assert.doesNotMatch(incompleteMacSummary, /\| 0 MACs/, "human summary must not coerce an unassessed ONNX MAC total to zero");
 assert.equal(JSON.parse(run(["audit", cases[1][0], "--json"]).stdout).format, "onnx", "--json retains complete formatted machine output");
-assert.match(run(["--help"]).stdout, /--json\s+Emit the complete formatted (?:analysis|evidence) JSON/, "JSON mode is discoverable");
+assert.match(run(["--help"]).stdout, /--json\s+Compatibility alias for --output-format json/, "JSON mode is discoverable");
 assert.match(run(["--help"]).stdout, /deepbom verify <artifact> --contract <json>/, "verify command is discoverable");
 assert.match(run(["--help"]).stdout, /deepbom diff <baseline\.tflite> <candidate\.tflite>/, "diff command is discoverable");
 assert.match(run(["--help"]).stdout, /deepbom explore <artifact\.tflite>/, "explore command is discoverable");

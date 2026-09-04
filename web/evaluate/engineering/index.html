@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Engineering Evaluation | DEEPBOM</title>
+  <meta name="description" content="An engineering adoption brief for DEEPBOM static deployment-artifact analysis." />
+  <link rel="canonical" href="https://deepbom.org/evaluate/engineering/" />
+  <link rel="stylesheet" href="../evaluation.css" />
+</head>
+<body>
+  <header class="brief-header">
+    <a class="brand" href="/">DEEPBOM</a>
+    <nav class="brief-nav" aria-label="Evaluation briefs">
+      <a href="../regulatory/">Regulatory</a>
+      <a href="../quality/">Quality</a>
+      <a aria-current="page" href="./">Engineering</a>
+    </nav>
+  </header>
+  <main class="brief-main">
+    <p class="eyebrow">Engineering evaluation brief</p>
+    <h1>Static deployment evidence with explicit limits.</h1>
+    <p class="lede">DEEPBOM analyzes TFLite, ONNX, Core ML, GGUF, SafeTensors, and ExecuTorch artifacts without executing model code. Web and CLI outputs share the same Artifact Evidence IR.</p>
+    <p class="decision-line">Adopt it where artifact identity, serialized contracts, reproducible derivations, and evidence gaps matter more than speculative performance prediction.</p>
+
+    <section class="brief-section">
+      <h2>Architecture</h2>
+      <table class="fact-table">
+        <tbody>
+          <tr><th>Execution</th><td>Browser-local or CLI-local. Original artifact bytes are not uploaded by the static audit path.</td></tr>
+          <tr><th>TFLite</th><td>Rust analyzer compiled to WebAssembly and executed behind Worker RPC.</td></tr>
+          <tr><th>Other formats</th><td>Bounded JavaScript parsers and range readers executed in an isolated metadata/static-audit Worker where payload work is heavy.</td></tr>
+          <tr><th>Evidence model</th><td>Artifact Evidence IR separates canonical artifact facts, static projections, and imported runtime observations.</td></tr>
+          <tr><th>Distribution</th><td>npm, PyPI, crates.io launcher, and the browser workspace.</td></tr>
+          <tr><th>Maintenance</th><td>Apache-2.0 public core, one primary maintainer, hash-pinned upstream evidence, automated release gates.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="brief-section">
+      <h2>CI entry point</h2>
+      <pre><code>npx deepbom self-test
+npx deepbom audit model.tflite --output-format sarif --gate defects</code></pre>
+      <p>Evidence gaps remain visible but do not fail the defect gate unless the deployment policy explicitly requires them.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>What it will not infer</h2>
+      <ul class="plain-list">
+        <li>Actual accelerator assignment without imported runtime or engine evidence.</li>
+        <li>GPU tactics, latency, energy, accuracy, robustness, or clinical performance from an artifact alone.</li>
+        <li>An executable graph for GGUF or SafeTensors, because those containers do not serialize one.</li>
+        <li>A definite device-memory fit when allocator and runtime reserve contracts are unbound.</li>
+      </ul>
+    </section>
+
+    <section class="brief-section">
+      <h2>Try the exact path</h2>
+      <p>Run <code>npx deepbom self-test</code>, audit one controlled artifact, inspect the top-level defects/cautions/evidence-needed summary, then retain the full JSON or evidence package for review.</p>
+      <p><a href="/">Open the browser workspace</a> or <a href="https://github.com/JunHwan-Kwon/deepbom">review the source and CI configuration</a>.</p>
+    </section>
+  </main>
+  <footer class="brief-footer">Static evidence complements runtime and process validation; it does not replace them.</footer>
+</body>
+</html>

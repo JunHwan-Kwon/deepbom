@@ -18,6 +18,12 @@ const server = createServer(async (request, response) => {
         appFailureBudget -= 1;
         return send(response, 503, "text/plain", "transient module fetch failure");
       }
+      return send(
+        response,
+        200,
+        "text/javascript; charset=utf-8",
+        'document.querySelector("#status").textContent = "Ready"; export const bootstrapFixture = true;',
+      );
     }
     const relative = url.pathname === "/web/" ? "web/index.html" : decodeURIComponent(url.pathname).replace(/^\/+/, "");
     const file = path.resolve(root, relative);
@@ -81,6 +87,7 @@ async function runScenario(runningBrowser, port) {
   });
   try {
     await page.goto(`http://127.0.0.1:${port}/web/`, { waitUntil: "domcontentloaded" });
+    await page.locator("#dropzone").dispatchEvent("pointerdown");
     await page.waitForFunction(() => /Ready|Application failed to initialize/.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 90_000 });
     return { status: await page.locator("#status").textContent(), bootstrapErrors };
   } finally {

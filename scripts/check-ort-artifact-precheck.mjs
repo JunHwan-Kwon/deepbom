@@ -196,7 +196,8 @@ expectEqual(JSON.stringify(uint2Raw?.initializer_integer_values), JSON.stringify
 expectEqual(lowBit.tensors.find((tensorRow) => tensorRow.name === "scalar_f32")?.initializer_elements, 1, "A rank-0 TensorProto initializer must count as one scalar element.");
 expectEqual(lowBit.size_breakdown.constant_bytes, 16, "Mixed packed, FP8, FP4, E8M0, and scalar raw initializer bytes must conserve exactly.");
 expectEqual(lowBit.weight_integrity.nan_tensors, 2, "Pinned FP8 and E8M0 NaN encodings must be decoded into numerical-integrity evidence.");
-expectEqual(lowBit.weight_integrity.max_abs_weight, 448, "FLOAT8E4M3FN code 0x7e must decode to the exact finite maximum 448.");
+expectEqual(lowBit.weight_integrity.tensor_results.find((row) => row.tensor_name === "fp8_raw")?.max_abs_value, 448, "FLOAT8E4M3FN code 0x7e must decode to the exact finite maximum 448.");
+expectEqual(lowBit.weight_integrity.max_abs_weight, null, "Unbound low-bit constants must not be promoted into the learned-weight magnitude aggregate.");
 const lowBitBundle = buildEngineeringBundleArtifactFiles(lowBit, {
   reportContext: { identity: { filename: lowBit.filename, format: "onnx" }, generatedAt: "2026-07-21T00:00:00.000Z" },
   rawEvidenceContext: { identity: { filename: lowBit.filename, format: "onnx" } },

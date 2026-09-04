@@ -39,7 +39,7 @@ const anonymousRawFormatter = await worker.fetch(
   new Request("https://deepbom.test/web/lib/report-raw-entry.js"),
   { ASSETS: { fetch: async () => new Response("fixture", { headers: { "content-type": "text/javascript" } }) } },
 );
-expect(anonymousRawFormatter.status >= 400, "Anonymous requests must not receive the raw export formatter entrypoint.");
+expect(anonymousRawFormatter.status === 200, "Anonymous users must receive the local raw-export formatter entrypoint.");
 
 expect(config.name, "wrangler.jsonc must define a Worker name.");
 expect(config.workers_dev === false, "wrangler.jsonc must explicitly disable the workers.dev route.");
@@ -105,14 +105,9 @@ expect(
   "External testing must verify a 24-hour bearer link while excluding Admin and account-bound operations.",
 );
 expect(
-  workerSource.includes("PROTECTED_RAW_EXPORT_ASSETS") && workerSource.includes("isRawExportFormatterAsset") && workerSource.includes("payload.allowed.raw_export"),
-  "worker/index.js must apply verified-account authorization to raw export formatter access.",
-);
-expect(
-  workerSource.includes("/web/lib/report-raw-entry.js")
-    && !workerSource.includes('"/web/lib/report-engineering-entry.js"')
-    && !workerSource.includes('"/web/lib/report-regulatory-entry.js"'),
-  "Worker authorization must protect raw formatters while leaving integrity-bound report entrypoints public.",
+  workerSource.includes("const PROTECTED_RAW_EXPORT_ASSETS = new Set([])")
+    && workerSource.includes("const PROTECTED_SHARED_REPORT_ASSETS = new Set([])"),
+  "Local report and evidence formatters must remain public static assets.",
 );
 const protectedReportAssets = new Set([
   ...extractStringSet(workerSource, "PROTECTED_RAW_EXPORT_ASSETS"),
@@ -125,11 +120,6 @@ for (const asset of new Set([...protectedReportAssets, ...authenticatedSwAssets]
     `Worker authorization and service-worker no-cache boundaries disagree for ${asset}.`,
   );
 }
-expect(
-  workerSource.includes("/web/lib/report-mlbom.js")
-    && workerSource.includes("/web/lib/report-mlbom-compat.js"),
-  "ML-BOM formatter dependencies must share the raw-export authorization boundary.",
-);
 expect(
   workerSource.includes("withBrowserSecurityHeaders")
     && workerSource.includes("isUtf8TextContentType")

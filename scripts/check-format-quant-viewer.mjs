@@ -25,7 +25,8 @@ try {
     if (message.type() === "error" && !/Failed to load resource/i.test(message.text())) errors.push(message.text());
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/web/`, { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(5_000);
+  await page.locator("#fileInput").focus();
+  await page.waitForFunction(() => document.querySelector("#status")?.textContent?.includes("Ready"), null, { timeout: 60_000 });
   const bootStatus = await page.locator("#status").textContent();
   if (!bootStatus || bootStatus === "Waiting") {
     throw new Error(`Viewer did not initialize: status=${JSON.stringify(bootStatus)} diagnostics=${JSON.stringify(errors)}`);
@@ -36,8 +37,10 @@ try {
     await page.locator("#privacyAgree").check();
     await page.locator("#acceptAgreement").click();
   }
-  const closedAgreement = await page.locator("#agreementBackdrop").evaluate((dialog) => ({ hidden: dialog.hidden, inert: dialog.inert, ariaHidden: dialog.getAttribute("aria-hidden") }));
-  if (!closedAgreement.hidden || !closedAgreement.inert || closedAgreement.ariaHidden !== "true") throw new Error(`Closed privacy dialog remains exposed: ${JSON.stringify(closedAgreement)}`);
+  if (await page.locator("#agreementBackdrop").count()) {
+    const closedAgreement = await page.locator("#agreementBackdrop").evaluate((dialog) => ({ hidden: dialog.hidden, inert: dialog.inert, ariaHidden: dialog.getAttribute("aria-hidden") }));
+    if (!closedAgreement.hidden || !closedAgreement.inert || closedAgreement.ariaHidden !== "true") throw new Error(`Closed privacy dialog remains exposed: ${JSON.stringify(closedAgreement)}`);
+  }
   const initial = await page.evaluate(() => ({
     hiddenPanels: ["auditWorkbench", "summary", "outputModuleSelector", "moduleRunConsole", "insightDashboard", "perfVisuals", "findingsPanel", "graphExplorer", "redesignPanel", "inferencePanel"]
       .filter((id) => document.getElementById(id)?.hidden),

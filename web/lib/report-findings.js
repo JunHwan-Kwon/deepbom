@@ -178,6 +178,7 @@ export function finding({
   recommendation = "",
   relevance = "",
   findingClass = "",
+  findingKind = "",
   origin = "report_synthesis",
   sourceRuleId = "",
   evidenceJsonPointers = null,
@@ -193,6 +194,7 @@ export function finding({
     confidence: confidence || EVIDENCE_CONFIDENCE[evidence] || "not_declared",
     confidence_scope: "Confidence describes the evidence extraction or deterministic method, not the likelihood or severity of a product effect.",
     category,
+    finding_kind: findingKind || inferFindingKind({ category, evidence }),
     finding_class: findingClass || FINDING_CLASSES[category] || "engineering review",
     title,
     evidence_class: evidence,
@@ -206,6 +208,17 @@ export function finding({
     limitations: evidence === "NOT_ASSESSABLE" ? "Model artifact alone is insufficient." : "Confirm with target runtime and/or representative data where applicable.",
     regulatory_relevance: relevance,
   };
+}
+
+function inferFindingKind({ category, evidence }) {
+  const normalizedEvidence = String(evidence || "").toUpperCase();
+  if (["NOT_ASSESSABLE", "DECLARED_UNVERIFIED"].includes(normalizedEvidence)) return "evidence_gap";
+  if (["lineage", "limitation", "evidence_completeness", "evidence_reproducibility"].includes(category)) return "evidence_gap";
+  if (["integrity", "numerical_integrity", "input_contract", "output_contract", "integration_verification"].includes(category)
+    && ["OBSERVED", "DERIVED", "OBSERVED/DERIVED", "SOURCE_PINNED_AND_OBSERVED"].includes(normalizedEvidence)) {
+    return "artifact_defect";
+  }
+  return "caution";
 }
 
 export function normalizeNativeAnalyzerFindings(analysis, normalizedFindings = []) {
@@ -2258,6 +2271,7 @@ export function buildFindingsRegister(analysis, {
     findings.push(finding({
       id: "EA-QNT-0117",
       category: "integration_verification",
+      findingKind: "caution",
       title: "The exact ABI witness depends materially on the source preprocessing contract",
       evidence: "DERIVED",
       priority: "Medium",

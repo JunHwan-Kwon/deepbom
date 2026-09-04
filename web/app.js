@@ -1,8 +1,5 @@
-import init, {
-  runtime_guard,
-  target_profiles,
-} from "../pkg/tflite_wasm_audit.js";
 import { prepareExternalDataFiles } from "./lib/onnx-external-data.js";
+import { BROWSER_TARGET_PROFILES } from "./lib/target-profiles.generated.js";
 import {
   loadCustomTargets,
   resolveTargetSpec,
@@ -44,7 +41,6 @@ import {
 } from "./lib/download.js";
 import { TEXT_EXPORT_ARTIFACTS } from "./lib/export-artifacts.js";
 import { createExportContractController } from "./lib/export-contract-view.js";
-import { createCycloneDxPerspectiveController } from "./lib/cyclonedx-perspective-view.js";
 import { buildPublicCycloneDxDocuments } from "./lib/public-cyclonedx-export.js";
 import { syncPublicEvidencePackageButton } from "./lib/public-evidence-package.js";
 import {
@@ -204,6 +200,9 @@ import {
 } from "./lib/graph-ui.js";
 import { getArtifactIrContext, invalidateArtifactIrContext } from "./lib/artifact-ir-context.js";
 import { renderArtifactDossier } from "./lib/artifact-dossier-view.js";
+import { buildArtifactEvidenceEnvelope } from "./lib/artifact-evidence-envelope.js";
+import { buildReviewSummary } from "./lib/review-summary.js";
+import { bindReviewSummaryActions, renderReviewSummary } from "./lib/review-summary-view.js";
 import { buildSingleFileArtifactSet } from "./lib/artifact-set.js";
 import { exportGraphVisualization } from "./lib/graph-export.js";
 import {
@@ -225,7 +224,6 @@ import { bindConversionReceipt, validateConversionReceipt } from "./lib/conversi
 import { inspectArtifactBundle } from "./lib/artifact-bundle.js";
 import { STATIC_AUDIT_OPERATION } from "./lib/static-audit-worker-protocol.js";
 import { createTfliteWorkerRpc } from "./lib/tflite-worker-rpc.js";
-import { initPrivacyAgreementUi } from "./lib/privacy-ui.js";
 import { closeModal, installModalKeyboard, openModal } from "./lib/modal-accessibility.js";
 import {
   backendCandidates,
@@ -503,6 +501,7 @@ const {
   modelPlan,
   formatCapabilityPanel,
   workflowConsole,
+  reviewSummaryPanel,
   artifactDossier,
   targetStaleNotice,
   selectedModelName,
@@ -561,10 +560,6 @@ const {
   auditApplicabilityReason,
   auditApplicabilityRequired,
   summary,
-  agreementBackdrop,
-  privacyAgree,
-  researchConsent,
-  acceptAgreement,
   offlineTestModels,
   offlineTestStatus,
   calibrationValidationInput,
@@ -717,6 +712,7 @@ const {
   regulatoryReportPreviewStatus,
   downloadMarkdown,
   downloadReviewHtml,
+  downloadEvidenceJson,
   printPublicReport,
   downloadPublicVerificationManifest,
   downloadRegulatoryReport,
@@ -1008,6 +1004,7 @@ workflowController = createWorkflowController({
     dropzone,
     modelPlan,
     workflowConsole,
+    reviewSummaryPanel,
     artifactDossier,
     auditWorkbench,
     summary,
@@ -1247,7 +1244,6 @@ function resetAdvancedResultState({
 
 registerServiceWorker();
 
-initPrivacyAgreement();
 initPinnedSessionOffset();
 updateFormatSpecificAuditLabels({
   modelFormat: "",
@@ -1257,6 +1253,7 @@ updateFormatSpecificAuditLabels({
   selectTab: setActiveAuditTab,
 });
 updateWorkflowState("idle");
+populateTargetProfiles();
 updateModuleAccessState();
 initAuth();
 refreshSessionNonce();
@@ -1265,15 +1262,17 @@ renderLocalReports().catch(() => {});
 setStatus("Ready", "ok");
 
 let wasmReady = null;
+let tfliteAnalyzerModule = null;
 
 function loadTfliteAnalyzer() {
   if (wasmReady) return wasmReady;
   setStatus("Loading TFLite analyzer");
-  wasmReady = init({ module_or_path: new URL("../pkg/tflite_wasm_audit_bg.wasm", import.meta.url) })
-    .then(() => {
+  wasmReady = import("../pkg/tflite_wasm_audit.js")
+    .then(async (module) => {
+      await module.default({ module_or_path: new URL("../pkg/tflite_wasm_audit_bg.wasm", import.meta.url) });
+      tfliteAnalyzerModule = module;
       const code = refreshRuntimeGuard();
       if (code === RUNTIME_OK) {
-        populateTargetProfiles();
         setStatus("Ready", "ok");
       }
     })
@@ -1628,6 +1627,26 @@ downloadReviewHtml?.addEventListener("click", async () => {
     }
   }, updateExportLockState);
 });
+
+downloadEvidenceJson?.addEventListener("click", async () => {
+  if (!current || !reportTargetBinding().canCopy) return;
+  await withBusyButton(downloadEvidenceJson, "Preparing", async () => {
+    try {
+      await ensureModelHash();
+      const envelope = buildArtifactEvidenceEnvelope(currentAnalysisView(), {
+        hash: current.model_sha256,
+        fileSizeBytes: current.file_size_bytes ?? currentModelBytes?.length ?? 0,
+        filename: current.filename || currentFilename || "model",
+        generatedAt: current._reportGeneratedAt || (current._reportGeneratedAt = new Date().toISOString()),
+        runtimeEvidence: runtimeAssignmentEvidence,
+      });
+      downloadText(currentArtifactFilename("evidence.json"), jsonForDownload(envelope), "application/json");
+      setStatus("Evidence JSON downloaded", "ok");
+    } catch (error) {
+      setStatus(`Evidence JSON failed: ${shortError(error)}`, "error");
+    }
+  }, updateExportLockState);
+});
 registerTextExport(downloadRegulatoryReport, TEXT_EXPORT_ARTIFACTS.regulatoryReport, async () => {
   const formatter = await loadRegulatoryFormatter();
   const reportContext = currentReportContext();
@@ -1651,12 +1670,25 @@ const exportContractController = createExportContractController({
   getFilename: currentArtifactFilename,
   ensureAllowed: ensureRawExportAllowed,
   ensureHash: ensureModelHash,
-  getAccess: () => ({ rawExportAllowed: currentCapabilities().raw_export }),
+  getAccess: () => ({ rawExportAllowed: true }),
   onStatus: setStatus,
   onProductionContractChange: (value) => { productionInterfaceContract = value; },
   onProductionComparison: updateProductionInterfaceFinding,
 });
-createCycloneDxPerspectiveController(appElements, { onStatus: setStatus });
+bindReviewSummaryActions(reviewSummaryPanel, {
+  findings: () => navigateToWorkspace("findings"),
+  report: () => navigateToWorkspace("output"),
+  explain: () => evidenceWhyController.open({
+    title: "Static review verdict",
+    value: "Artifact defects, cautions, and external evidence needs",
+    evidence_class: "DERIVED",
+    source_pointers: ["/findings", "/capabilities", "/applicability"],
+    method: "Counts are derived from the canonical artifact evidence envelope. Artifact defects are kept separate from cautions and evidence that a deployment artifact cannot provide.",
+    formula: "Each canonical finding contributes to exactly one finding_kind count.",
+    limitations: ["No zero-defect verdict establishes runtime behavior, task accuracy, clinical performance, or release readiness."],
+    report_pointer: "/review_summary/verdict",
+  }),
+});
 
 graphWorkspace = createGraphWorkspace({
   ...appElements,
@@ -2294,21 +2326,6 @@ for (const eventName of ["pointerup", "pointercancel", "pointerleave"]) {
   });
 }
 
-function initPrivacyAgreement() {
-  initPrivacyAgreementUi({
-    privacyAgree,
-    acceptAgreement,
-    researchConsent,
-    agreementBackdrop,
-    body: document.body,
-    fallbackFocus: fileInput,
-    onAccept: () => {
-      appendConsentLog({ kind: "consent-restored", policyVersion: AGREEMENT_POLICY_VERSION });
-      renderConsentPanel();
-    },
-  });
-}
-
 async function ensureAnalyzerReady() {
   await loadTfliteAnalyzer();
   const code = refreshRuntimeGuard();
@@ -2318,7 +2335,8 @@ async function ensureAnalyzerReady() {
 }
 
 function refreshRuntimeGuard() {
-  runtimeGuardCode = runtime_guard();
+  if (!tfliteAnalyzerModule) throw new Error("TFLite analyzer is not loaded.");
+  runtimeGuardCode = tfliteAnalyzerModule.runtime_guard();
   if (runtimeGuardCode !== RUNTIME_OK) {
     lockRuntime(runtimeGuardCode);
   }
@@ -2465,7 +2483,7 @@ async function initAuth() {
     const verified = new URLSearchParams(location.search).get("verified");
     if (verified === "ok") {
       setStatus("Email verified", "ok");
-      authMessage.textContent = "Email verification complete. Account-bound exports and requests are now available where authorized.";
+      authMessage.textContent = "Email verification complete. Optional research access and saved requests are now available where authorized.";
       await refreshAccessStatus({ force: true });
     }
   } catch (error) {
@@ -2549,7 +2567,7 @@ function syncOfflineTestVisibility(user) {
 function openAuthModal(mode = "login", message = "") {
   setAuthMode(mode);
   authMessage.textContent = message || (authConfigState.enabled
-    ? authConfigState.password ? "Analysis is open. Account-bound report exports require sign-in." : "Continue with Google to access account-bound exports."
+    ? authConfigState.password ? "Analysis and local exports are open. Sign in only for optional research access and saved requests." : "Continue with Google for optional research access and saved requests."
     : "Authentication is not configured yet. Add D1 and Worker secrets to enable signups.");
   openModal(authBackdrop, { focus: authConfigState.password ? authFormEmail : googleLogin });
 }
@@ -2914,10 +2932,7 @@ let reportRenderToken = 0;
 const FORMATTER_LOAD_RETRY_DELAYS_MS = [0, 150, 600];
 
 async function loadEngineeringFormatter() {
-  engineeringFormatterPromise ||= loadLazyFormatter(
-    () => import("./lib/report-engineering-entry.js"),
-    (attempt) => import(`./lib/report-engineering-entry.js?formatter-retry=${attempt}`),
-  ).catch((error) => {
+  engineeringFormatterPromise ||= loadLazyFormatter("./lib/report-engineering-entry.js").catch((error) => {
     engineeringFormatterPromise = null;
     throw error;
   });
@@ -2925,10 +2940,7 @@ async function loadEngineeringFormatter() {
 }
 
 async function loadRawExportFormatter() {
-  rawExportFormatterPromise ||= loadLazyFormatter(
-    () => import("./lib/report-raw-entry.js"),
-    (attempt) => import(`./lib/report-raw-entry.js?formatter-retry=${attempt}`),
-  ).catch((error) => {
+  rawExportFormatterPromise ||= loadLazyFormatter("./lib/report-raw-entry.js").catch((error) => {
     rawExportFormatterPromise = null;
     throw error;
   });
@@ -2936,20 +2948,19 @@ async function loadRawExportFormatter() {
 }
 
 async function loadRegulatoryFormatter() {
-  regulatoryFormatterPromise ||= loadLazyFormatter(
-    () => import("./lib/report-regulatory-entry.js"),
-    (attempt) => import(`./lib/report-regulatory-entry.js?formatter-retry=${attempt}`),
-  ).catch((error) => {
+  regulatoryFormatterPromise ||= loadLazyFormatter("./lib/report-regulatory-entry.js").catch((error) => {
     regulatoryFormatterPromise = null;
     throw error;
   });
   return regulatoryFormatterPromise;
 }
 
-async function loadLazyFormatter(initialImport, retryImport) {
+async function loadLazyFormatter(specifier) {
   for (let attempt = 0; attempt < FORMATTER_LOAD_RETRY_DELAYS_MS.length; attempt += 1) {
     try {
-      return await (attempt === 0 ? initialImport() : retryImport(attempt));
+      const moduleUrl = new URL(specifier, import.meta.url);
+      if (attempt > 0) moduleUrl.searchParams.set("formatter-retry", String(attempt));
+      return await import(moduleUrl.href);
     } catch (error) {
       if (!isTransientFormatterLoadFailure(error) || attempt === FORMATTER_LOAD_RETRY_DELAYS_MS.length - 1) throw error;
       await new Promise((resolve) => window.setTimeout(resolve, FORMATTER_LOAD_RETRY_DELAYS_MS[attempt + 1]));
@@ -2964,59 +2975,13 @@ function isTransientFormatterLoadFailure(error) {
 }
 
 async function ensureRawExportAllowed(label) {
-  if (currentAuthUser?.role === "admin") {
-    setStatus("Admin raw export authorized", "ok");
-    return true;
-  }
-  if (currentAuthUser) {
-    try {
-      const access = await refreshAccessStatus({ check: true, force: true });
-      if (access?.allowed?.raw_export) {
-        setStatus("Account export authorized", "ok");
-        return true;
-      }
-      setStatus("Raw export locked", "error");
-      authMessage.textContent = `${label} requires a verified, authorized account.`;
-      return false;
-    } catch (error) {
-      setStatus("Authorization check failed", "error");
-      authMessage.textContent = `${label} requires a current account authorization check. Model bytes and reports were not uploaded.`;
-      console.warn("Raw export authorization check failed", error);
-      return false;
-    }
-  }
-  openAuthModal("signup", `${label} is available after account registration. Static analysis remains usable without login.`);
-  return false;
+  setStatus(`${label} is ready for local download`, "ok");
+  return true;
 }
 
 async function ensureRegulatoryReportAllowed(label = "Regulatory report") {
-  if (currentAuthUser?.role === "admin") {
-    setStatus("Admin regulatory export authorized", "ok");
-    return true;
-  }
-  if (!currentAuthUser) {
-    const message = `${label} requires a signed-in account authorized for the regulatory workspace. Engineering analysis remains usable without login.`;
-    setStatus("Regulatory report requires sign in", "error");
-    openAuthModal("signup", message);
-    return false;
-  }
-  try {
-    const access = await refreshAccessStatus({ check: true, force: true });
-    const allowed = access?.allowed || {};
-    if (allowed.regulatory_report) {
-      setStatus("Regulatory report authorized", "ok");
-      return true;
-    }
-    setStatus("Regulatory report locked", "error");
-    authMessage.textContent = `${label} requires regulatory workspace authorization. Engineering Report access can remain separately enabled.`;
-    await openAccountPanelForCapability("regulatory_report");
-    return false;
-  } catch (error) {
-    setStatus("Authorization check failed", "error");
-    authMessage.textContent = `${label} requires a current account authorization check. Model bytes and reports were not uploaded.`;
-    console.warn("Regulatory authorization check failed", error);
-    return false;
-  }
+  setStatus(`${label} is ready for local download`, "ok");
+  return true;
 }
 
 async function ensureDeepBomAllowed() {
@@ -3071,8 +3036,8 @@ async function ensureResearchModuleAllowed(feature, label) {
 function updateExportLockState() {
   const capabilities = currentCapabilities();
   const reportTargetReady = reportTargetBinding().canCopy;
-  const rawExportAllowed = capabilities.raw_export;
-  const regulatoryAllowed = capabilities.regulatory_report;
+  const rawExportAllowed = true;
+  const regulatoryAllowed = true;
   const deepBomAllowed = capabilities.deepbom;
   const rawLocked = !rawExportAllowed;
   applyGatedExportLabels(downloadMarkdown, [downloadRawData, downloadCsv, downloadMermaid, downloadVisualPngs, downloadEngineeringBundle], false, rawLocked, currentAuthUser);
@@ -3094,14 +3059,13 @@ function updateExportLockState() {
   );
   downloadMarkdown.disabled = !current || !reportTargetReady;
   if (downloadReviewHtml) downloadReviewHtml.disabled = !current || !reportTargetReady;
+  if (downloadEvidenceJson) downloadEvidenceJson.disabled = !current || !reportTargetReady;
   setAccountLockedButtons(
     [downloadRawData, downloadCsv, downloadMermaid, downloadGraphSvg, downloadVisualPngs, downloadEngineeringBundle],
     rawLocked,
     rawLocked
-      ? currentAuthUser
-        ? "Download Raw Data requires an authorized account."
-        : "Sign in to download raw data."
-      : `Account-bound export enabled for ${currentAuthUser.email || currentAuthUser.name}.`,
+      ? "Local export is unavailable."
+      : "Local export is available without signing in.",
   );
   const rawArtifactDisabled = !current || !rawExportAllowed || !reportTargetReady;
   const exportAvailability = modelExportAvailability(current);
@@ -3112,21 +3076,17 @@ function updateExportLockState() {
   if (downloadMermaid) downloadMermaid.disabled = rawArtifactDisabled || !exportAvailability.performanceDerivatives;
   if (downloadGraphSvg) downloadGraphSvg.disabled = rawArtifactDisabled || !exportAvailability.graph;
   downloadRawData.title = rawExportAllowed
-    ? "Raw audit, ML-BOM, graphs, PNGs, ES256 signature, and server digest attestation."
-    : currentAuthUser
-      ? "Download Raw Data requires an authorized account."
-      : "Sign in to unlock Download Raw Data.";
+    ? "Raw audit, ML-BOM, graphs, PNGs, and package integrity evidence."
+    : "Local raw export is unavailable.";
   downloadEngineeringBundle.title = rawExportAllowed
     ? "Download a compact ZIP with one Engineering Report and one consolidated evidence JSON."
-    : currentAuthUser
-      ? "Engineering bundle requires an authorized account."
-      : "Sign in to unlock the engineering bundle.";
+    : "Local engineering bundle export is unavailable.";
   if (engineeringBundleNote) {
     engineeringBundleNote.textContent = !current
       ? "Run a static audit first. Evidence Package profiles never include original model bytes or raw tensor values."
       : !reportTargetReady
         ? "Analyze or load the selected report target before downloading the selected package profile."
-        : `${selectedEvidencePackageProfile.label}; ${selectedEvidenceLevel.label}: ${selectedEvidenceLevel.detail}. Lower levels omit higher-class findings, metrics, and unscoped CycloneDX documents. No sign-in is required; individual raw exports remain separately controlled.`;
+        : `${selectedEvidencePackageProfile.label}; ${selectedEvidenceLevel.label}: ${selectedEvidenceLevel.detail}. Lower levels omit higher-class findings, metrics, and unscoped CycloneDX documents. No sign-in is required for browser-local exports.`;
   }
   if (medicalReportSurface) {
     setAccountLockedButtons(
@@ -3136,28 +3096,18 @@ function updateExportLockState() {
     );
     setAccountLockedButtons(
       [downloadEvidenceBundle],
-      !regulatoryAllowed,
-      regulatoryAllowed
-        ? `Regulatory evidence bundle enabled for ${currentAuthUser.email || currentAuthUser.name}.`
-        : currentAuthUser
-          ? "The full regulatory evidence bundle requires regulatory workspace authorization."
-          : "Sign in to request access to the full regulatory evidence bundle.",
+      false,
+      "Local regulatory evidence export is available without signing in.",
     );
     if (downloadRegulatoryReport) downloadRegulatoryReport.disabled = !current || !reportTargetReady;
     downloadEvidenceBundle.disabled = !current || !regulatoryAllowed || !reportTargetReady;
     downloadEvidenceBundle.title = regulatoryAllowed
         ? "Download a ZIP with the full Engineering Bundle plus Regulatory Report and enabled Research evidence."
-        : currentAuthUser
-        ? "Regulatory evidence bundle requires regulatory workspace authorization."
-        : "Sign in to unlock the regulatory evidence bundle.";
+        : "Local regulatory evidence export is unavailable.";
     if (evidenceBundleNote) {
       evidenceBundleNote.textContent = !current
         ? "Run a static audit first. The bundle never includes raw model weights."
-        : regulatoryAllowed
-          ? "Includes the full Engineering Bundle, then adds Regulatory Report and enabled Research module JSON. Raw model weights are not included."
-          : currentAuthUser
-            ? "Regulatory workspace authorization is required before the evidence bundle is enabled."
-            : "Sign in to download a regulatory evidence bundle. Static analysis remains usable without login.";
+        : "Includes the full Engineering Bundle, then adds the Regulatory Report and available research evidence. Raw model weights are not included.";
     }
   }
   runDeepBom.classList.toggle("research-locked", !deepBomAllowed);
@@ -3191,8 +3141,8 @@ function updateModuleAccessState() {
   const capabilities = currentCapabilities();
   const admin = capabilities.admin;
   const verified = Boolean(currentAuthUser?.email_verified || currentAuthUser?.role === "admin");
-  const rawExportAllowed = capabilities.raw_export;
-  const regulatoryAllowed = capabilities.regulatory_report;
+  const rawExportAllowed = true;
+  const regulatoryAllowed = true;
   const deepBomAllowed = capabilities.deepbom;
   const perturbationAllowed = capabilities.perturbation;
   const runtimeBasinAllowed = capabilities.runtime_basin;
@@ -3614,12 +3564,7 @@ async function authFetch(path, options = {}) {
 }
 
 function populateTargetProfiles() {
-  let builtIn = [];
-  try {
-    builtIn = target_profiles() || [];
-  } catch (error) {
-    console.warn("Target profile load failed", error);
-  }
+  const builtIn = BROWSER_TARGET_PROFILES;
   // A custom target is stored as a specification, not as a resolved profile; it
   // is listed beside the built-ins and resolved at the analyzer boundary.
   customTargetSpecs = loadCustomTargets();
@@ -4521,6 +4466,7 @@ async function render(analysis, { keepTab = false, keepModule = false } = {}) {
   if (!keepTab) setActiveAuditTab("overview");
   updateExportLockState();
   resetResearchModulePanels();
+  renderCurrentReviewSummary(artifactView);
   renderSummary(artifactView);
   renderReportPanel();
   renderInsightDashboard(artifactView);
@@ -4572,6 +4518,19 @@ async function render(analysis, { keepTab = false, keepModule = false } = {}) {
   renderTopMacs(artifactView);
   renderRoofline(artifactView);
   setActiveWorkspace("audit", { force: true });
+}
+
+function renderCurrentReviewSummary(analysis) {
+  const envelope = buildArtifactEvidenceEnvelope(analysis, {
+    hash: analysis?.model_sha256,
+    fileSizeBytes: analysis?.file_size_bytes ?? analysis?.file_size,
+    runtimeEvidence: runtimeAssignmentEvidence,
+  });
+  renderReviewSummary(reviewSummaryPanel, buildReviewSummary({
+    analysis,
+    envelope,
+    artifactIrContext: currentArtifactIrContext,
+  }));
 }
 
 function applyPendingConversionReceipt(analysis) {
@@ -4767,6 +4726,7 @@ async function currentMetricCoverageForEvidencePackage() {
 
 async function appendPackageAttestation(files, scope, subject = {}) {
   if (!files?.length || !current) return files;
+  if (!currentAuthUser) return files;
   const packageDigest = await buildCanonicalPackageDigest(files);
   const targetBound = modelSupportsCapability(current.format, "target_profiles");
   const signature = await postJson("/api/report/sign", {

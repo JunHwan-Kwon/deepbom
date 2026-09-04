@@ -233,6 +233,8 @@ try {
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(`http://127.0.0.1:${server.address().port}/web/index.html`, { waitUntil: "domcontentloaded" });
+  await page.locator("#fileInput").focus();
+  await page.waitForFunction(() => document.querySelector("#status")?.textContent?.includes("Ready"), null, { timeout: 60_000 });
   await page.waitForFunction(() => document.querySelector("#sampleEvidenceGlance")?.childElementCount > 0);
   if (await page.locator("#agreementBackdrop").isVisible()) {
     await page.locator("#privacyAgree").check();

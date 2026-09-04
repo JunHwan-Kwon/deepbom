@@ -1,6 +1,7 @@
 export const FINDING_EVIDENCE_POINTER_VALIDATION_SCHEMA = "deepbom.finding_evidence_pointer_validation.v1";
 
 export const FINDING_PRIORITIES = Object.freeze(["High", "Medium", "Low", "Informational"]);
+export const FINDING_KINDS = Object.freeze(["artifact_defect", "caution", "evidence_gap"]);
 
 const PRIORITY_RANK = new Map(FINDING_PRIORITIES.map((priority, index) => [priority, index]));
 const CONFIDENCE_LEVELS = new Set(["high", "medium", "low"]);
@@ -22,6 +23,7 @@ export function validateFindingEvidenceBindings(findings = [], evidenceRoot) {
     const pointers = Array.isArray(finding?.evidence_json_pointers) ? finding.evidence_json_pointers : [];
     const valid = id && !ids.has(id)
       && PRIORITY_RANK.has(finding?.technical_priority)
+      && FINDING_KINDS.includes(finding?.finding_kind)
       && CONFIDENCE_LEVELS.has(finding?.confidence)
       && String(finding?.evidence_class || "").trim()
       && String(finding?.source_rule_id || "").trim()

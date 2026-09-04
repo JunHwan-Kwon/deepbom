@@ -9,7 +9,6 @@ import {
   ANALYZER_BUILD_SOURCE_STATE,
   ANALYZER_BUNDLE_CONTENT_SHA256,
 } from "./build-metadata.js";
-import { buildCycloneDxDraftCompatibilityRecord } from "./cyclonedx-draft-profiles.js";
 import { buildInterfaceQuantizationContractLedger } from "./quantization-contract-summary.js";
 import { canonicalJson, normalizeJsonContractValue } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
@@ -46,10 +45,6 @@ export function buildPublicCycloneDxDocuments(analysis, options = {}) {
         ...options,
         generatedAt,
         interfaceLedger,
-      }),
-      cyclonedx_2_0_draft_compatibility: buildCycloneDxDraftCompatibilityRecord(analysis, {
-        ...options,
-        generatedAt,
       }),
     },
   };

@@ -11,6 +11,7 @@ import addFormats from "ajv-formats";
 import {
   buildCliCapabilities,
   buildSarifDocument,
+  evaluateDefectGate,
   evaluateFindingPolicy,
   renderCliError,
   resolveGenerationTimestamp,
@@ -61,6 +62,7 @@ const syntheticEnvelope = {
       severity: "high",
       status: "open",
       evidence_class: "DERIVED",
+      finding_kind: "artifact_defect",
       summary: "A deterministic high-severity fixture.",
       interpretation: "Synthetic test only.",
       recommendation: "Review the fixture.",
@@ -73,6 +75,7 @@ const syntheticEnvelope = {
       severity: "low",
       status: "open",
       evidence_class: "OBSERVED",
+      finding_kind: "evidence_gap",
       summary: "A deterministic low-severity fixture.",
       interpretation: null,
       recommendation: null,
@@ -92,6 +95,9 @@ assert.equal(blockHigh.status, "block");
 assert.deepEqual(blockHigh.blocking_finding_ids, ["EA-TEST-0001"]);
 const blockLow = evaluateFindingPolicy(syntheticEnvelope, "low");
 assert.equal(blockLow.blocking_finding_count, 2);
+const defectGate = evaluateDefectGate(syntheticEnvelope);
+assert.equal(defectGate.status, "block");
+assert.deepEqual(defectGate.blocking_finding_ids, ["EA-TEST-0001"]);
 
 const sarif = buildSarifDocument(syntheticEnvelope, { version, policyResult: blockHigh });
 assert.equal(sarif.version, "2.1.0");
@@ -101,6 +107,7 @@ assert.equal(sarif.runs[0].results[0].level, "error");
 assert.equal(sarif.runs[0].results[1].level, "note");
 assert.equal(sarif.runs[0].artifacts[0].location.uri, "fixture%20model.onnx");
 assert.match(sarif.runs[0].results[0].partialFingerprints["deepbomFinding/v1"], /^[a-f0-9]{64}$/);
+assert.equal(sarif.runs[0].results[1].properties.deepbomFindingKind, "evidence_gap");
 
 const schemaBytes = await readFile(schemaPath);
 assert.equal(createHash("sha256").update(schemaBytes).digest("hex"), expectedSchemaSha256,
@@ -129,6 +136,16 @@ assert.equal(structuredError.code, "input_unavailable");
 
 const capabilityRun = run(["capabilities", "--compact"]);
 assert.equal(JSON.parse(capabilityRun.stdout).schema, "deepbom.cli_capabilities.v1");
+const helpRun = run(["--help"]);
+assert.doesNotMatch(helpRun.stdout, /perspective|CycloneDX 2\.0|#990|#175|#1067|#1075/i);
+
+const selfTest = JSON.parse(run(["self-test", "--compact"]).stdout);
+assert.equal(selfTest.schema, "deepbom.cli_self_test.v1");
+assert.equal(selfTest.status, "pass");
+assert.equal(selfTest.checks.every((row) => row.status === "pass"), true);
+const ruleIndex = JSON.parse(run(["explain-rule", "--list", "--compact"]).stdout);
+assert.equal(ruleIndex.schema, "deepbom.rule_explanation_index.v1");
+assert.equal(ruleIndex.rules.some((row) => row.rule_id === "onnx.conv.output-shape"), true);
 
 const onnxPath = "web/samples/mnist-8.onnx";
 const envelopeRun = run(["audit", onnxPath, "--format", "envelope", "--compact"], {
@@ -138,6 +155,24 @@ const envelope = JSON.parse(envelopeRun.stdout);
 assert.equal(envelope.schema, "deepbom.artifact_evidence_envelope.v1");
 assert.equal(envelope.generated_at, "1970-01-01T00:00:00.000Z");
 assert.match(envelope.envelope_sha256, /^[a-f0-9]{64}$/);
+assert.equal(envelope.findings.every((finding) => ["artifact_defect", "caution", "evidence_gap"].includes(finding.finding_kind)), true);
+
+const sectionIndex = JSON.parse(run(["audit", onnxPath, "--list-sections", "--compact"]).stdout);
+assert.equal(sectionIndex.schema, "deepbom.analysis_sections.v1");
+assert.equal(sectionIndex.sections.includes("summary"), true);
+assert.equal(sectionIndex.sections.includes("findings"), true);
+const summarySelection = JSON.parse(run(["audit", onnxPath, "--section", "summary", "--compact"], {
+  env: { ...process.env, SOURCE_DATE_EPOCH: "0" },
+}).stdout);
+assert.equal(summarySelection.schema, "deepbom.analysis_selection.v1");
+assert.equal(summarySelection.sections.summary.schema, "deepbom.review_summary.v1");
+assert.equal(summarySelection.sections.summary.evidence_envelope_sha256, envelope.envelope_sha256);
+const pointerSelection = JSON.parse(run(["audit", onnxPath, "--pointer", "/format", "--compact"]).stdout);
+assert.equal(pointerSelection.schema, "deepbom.analysis_pointer_result.v1");
+assert.equal(pointerSelection.value, "onnx");
+const stableCycloneDx = JSON.parse(run(["audit", onnxPath, "--output-format", "cyclonedx", "--compact"]).stdout);
+assert.equal(stableCycloneDx.bomFormat, "CycloneDX");
+assert.equal(stableCycloneDx.specVersion, "1.7");
 
 const sarifPath = path.join(scratch, "mnist.sarif");
 const sarifRun = run(["audit", onnxPath, "--format", "sarif", "--output", sarifPath]);
@@ -172,6 +207,22 @@ const policy = JSON.parse(await readFile(policyPath, "utf8"));
 assert.equal(policy.schema, "deepbom.cli_finding_policy_result.v1");
 assert.equal(policy.status, "block");
 assert.equal(policy.blocking_finding_count > 0, true);
+
+const defectPolicyPath = path.join(scratch, "defect-policy.json");
+const defectRun = run(["audit", onnxPath, "--gate", "defects", "--policy-output", defectPolicyPath, "--compact"]);
+assert.doesNotThrow(() => JSON.parse(defectRun.stdout));
+const defectPolicy = JSON.parse(await readFile(defectPolicyPath, "utf8"));
+assert.equal(defectPolicy.schema, "deepbom.cli_defect_gate_result.v1");
+assert.equal(defectPolicy.finding_kind_counts.evidence_gap > 0, true);
+
+const unchangedDelta = JSON.parse(run([
+  "diff",
+  "web/samples/mobilenet_v1_025_224_float.tflite",
+  "web/samples/mobilenet_v1_025_224_float.tflite",
+  "--compact",
+]).stdout);
+assert.equal(unchangedDelta.change_impact.schema, "deepbom.change_impact.v1");
+assert.equal(unchangedDelta.change_impact.highest_action, "no_change_observed");
 
 const missingRun = run(["audit", "missing.onnx", "--error-format", "json"], { expectSuccess: false });
 assert.equal(missingRun.status, 1);

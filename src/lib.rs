@@ -1228,7 +1228,12 @@ struct ZeroKernelSliceDetail {
 
 #[derive(Clone, Serialize, Default)]
 struct WeightIntegrityReport {
+    constant_tensors_scanned: usize,
     weight_tensors_scanned: usize,
+    learned_parameter_tensors: usize,
+    quantization_parameter_tensors: usize,
+    control_constant_tensors: usize,
+    unknown_or_mixed_constant_tensors: usize,
     sparse_constant_tensors_decoded: usize,
     sparse_constant_tensors_not_decoded: usize,
     sparse_logical_elements: usize,
@@ -1236,6 +1241,7 @@ struct WeightIntegrityReport {
     sparse_implicit_zero_elements: usize,
     constant_value_coverage_status: String,
     quantized_constant_tensors_scanned: usize,
+    constant_elements_scanned: usize,
     elements_scanned: usize,
     eligible_kernel_tensors_scanned: usize,
     output_channels_evaluated: usize,
@@ -4173,7 +4179,12 @@ fn compute_weight_integrity(
     total_macs: f64,
 ) -> WeightIntegrityReport {
     let mut r = WeightIntegrityReport {
+        constant_tensors_scanned: 0,
         weight_tensors_scanned: 0,
+        learned_parameter_tensors: 0,
+        quantization_parameter_tensors: 0,
+        control_constant_tensors: 0,
+        unknown_or_mixed_constant_tensors: 0,
         sparse_constant_tensors_decoded: 0,
         sparse_constant_tensors_not_decoded: 0,
         sparse_logical_elements: 0,
@@ -4181,6 +4192,7 @@ fn compute_weight_integrity(
         sparse_implicit_zero_elements: 0,
         constant_value_coverage_status: String::new(),
         quantized_constant_tensors_scanned: 0,
+        constant_elements_scanned: 0,
         elements_scanned: 0,
         eligible_kernel_tensors_scanned: 0,
         output_channels_evaluated: 0,
@@ -4231,7 +4243,20 @@ fn compute_weight_integrity(
         if w.is_empty() {
             continue;
         }
-        r.weight_tensors_scanned += 1;
+        let constant_role = classify_tflite_constant_role(t.index as i32, ops);
+        match constant_role {
+            "learned_parameter" => r.learned_parameter_tensors += 1,
+            "quantization_parameter" => r.quantization_parameter_tensors += 1,
+            "control_constant" => r.control_constant_tensors += 1,
+            _ => r.unknown_or_mixed_constant_tensors += 1,
+        }
+        r.constant_tensors_scanned += 1;
+        r.constant_elements_scanned += w.len();
+        let learned_parameter = constant_role == "learned_parameter";
+        if learned_parameter {
+            r.weight_tensors_scanned += 1;
+            r.elements_scanned += w.len();
+        }
         let quantized_codes = quantized_raw_values(bytes, t);
         if matches!(t.dtype.as_str(), "INT8" | "UINT8") {
             r.quantized_constant_tensors_scanned += 1;
@@ -4279,7 +4304,6 @@ fn compute_weight_integrity(
                 }
             }
         }
-        r.elements_scanned += w.len();
         let mut has_nan = false;
         let mut has_inf = false;
         let mut near_zero = 0usize;
@@ -4311,20 +4335,22 @@ fn compute_weight_integrity(
         if nonzero == 0 && !has_nan && !has_inf {
             r.all_zero_tensors += 1;
         }
-        if tmax > r.max_abs_weight {
-            r.max_abs_weight = tmax;
-        }
-        if tmax > 1e4 {
-            r.large_magnitude_tensors += 1;
-        }
         let sparsity = if !w.is_empty() {
             near_zero as f64 / w.len() as f64
         } else {
             0.0
         };
-        sparsity_acc += sparsity;
-        if sparsity > 0.5 {
-            r.high_sparsity_tensors += 1;
+        if learned_parameter {
+            if tmax > r.max_abs_weight {
+                r.max_abs_weight = tmax;
+            }
+            if tmax > 1e4 {
+                r.large_magnitude_tensors += 1;
+            }
+            sparsity_acc += sparsity;
+            if sparsity > 0.5 {
+                r.high_sparsity_tensors += 1;
+            }
         }
         // All-zero kernel output slices: decode only constants bound to the
         // actual weight slot of a supported compute operator. Shape alone is
@@ -4580,7 +4606,7 @@ fn compute_weight_integrity(
     }
     r.constant_value_coverage_status = if r.sparse_constant_tensors_not_decoded == 0 {
         "complete_for_supported_dense_and_sparse_storage".to_string()
-    } else if r.weight_tensors_scanned == 0 {
+    } else if r.constant_tensors_scanned == 0 {
         "not_assessed_sparse_storage".to_string()
     } else {
         "partial_unassessed_sparse_storage".to_string()
@@ -4610,10 +4636,16 @@ fn compute_weight_integrity(
         r.saturated_quantized_tensors,
     );
     r.detail = format!(
-        "Scanned {} decodable constant tensor(s), including {} quantized tensor(s), {} logical elements. Sparse-storage constants decoded/not decoded: {}/{}; sparse logical/stored/implicit-zero elements: {}/{}/{} (coverage {}). Eligible kernel tensors {}, output channels evaluated {}. INT8/UINT8 constants are dequantized with artifact scale/zero-point metadata before magnitude checks. Near-zero criterion |x| < {:.0e}; high-sparsity criterion >50% near-zero elements; near-zero decoded slice means every decoded element in that output-channel slice is below the criterion; exact-zero stored slice separately requires every centered quantized code (or stored float value) to equal zero. NaN {} / Inf {} / all-near-zero {} tensors; kernel tensors containing near-zero decoded slices {} ({} slices total), including {} tensor(s) / {} slice(s) that are exact-zero in stored centered-code space; max |decoded constant| {:.3e}; {} tensor(s) with |decoded constant|>1e4; mean near-zero sparsity {:.1}% ({} tensor(s) >50%). {}",
-        r.weight_tensors_scanned,
+        "Checked {} decodable constant tensor(s), including {} quantized tensor(s), across {} logical elements. Confirmed learned parameters: {} tensor(s), {} elements; role counts learned/quantization/control/unknown-or-mixed: {}/{}/{}/{}. Sparse-storage constants decoded/not decoded: {}/{}; sparse logical/stored/implicit-zero elements: {}/{}/{} (coverage {}). Eligible kernel tensors {}, output channels evaluated {}. NaN {} / Inf {} / all-near-zero {} constant tensors. Weight magnitude and sparsity exclude control, quantization, and mixed-role constants: max |decoded learned parameter| {:.3e}; {} learned tensor(s) with |value|>1e4; mean near-zero sparsity {:.1}% ({} learned tensor(s) >50%). Kernel tensors containing near-zero decoded slices {} ({} slices total), including {} tensor(s) / {} slice(s) exact-zero in stored centered-code space. {}",
+        r.constant_tensors_scanned,
         r.quantized_constant_tensors_scanned,
+        r.constant_elements_scanned,
+        r.weight_tensors_scanned,
         r.elements_scanned,
+        r.learned_parameter_tensors,
+        r.quantization_parameter_tensors,
+        r.control_constant_tensors,
+        r.unknown_or_mixed_constant_tensors,
         r.sparse_constant_tensors_decoded,
         r.sparse_constant_tensors_not_decoded,
         r.sparse_logical_elements,
@@ -4622,21 +4654,76 @@ fn compute_weight_integrity(
         r.constant_value_coverage_status,
         r.eligible_kernel_tensors_scanned,
         r.output_channels_evaluated,
-        WEIGHT_NEAR_ZERO_EPS,
         r.nan_tensors,
         r.inf_tensors,
         r.all_zero_tensors,
-        r.zero_kernel_slice_tensors,
-        r.zero_kernel_slice_count,
-        r.exact_zero_kernel_slice_tensors,
-        r.exact_zero_kernel_slice_count,
         r.max_abs_weight,
         r.large_magnitude_tensors,
         r.mean_sparsity * 100.0,
         r.high_sparsity_tensors,
+        r.zero_kernel_slice_tensors,
+        r.zero_kernel_slice_count,
+        r.exact_zero_kernel_slice_tensors,
+        r.exact_zero_kernel_slice_count,
         r.quant_grid_detail,
     );
     r
+}
+
+fn classify_tflite_constant_role(tensor_index: i32, ops: &[OpInfo]) -> &'static str {
+    let mut learned = false;
+    let mut quantization = false;
+    let mut control = false;
+    let mut unknown = false;
+    for op in ops {
+        for (slot, input) in op.inputs.iter().enumerate() {
+            if *input != tensor_index {
+                continue;
+            }
+            let role = match op.name.as_str() {
+                "CONV_2D" | "DEPTHWISE_CONV_2D" | "FULLY_CONNECTED"
+                    if slot == 1 || slot == 2 => "learned_parameter",
+                "TRANSPOSE_CONV" if slot == 1 || slot == 3 => "learned_parameter",
+                "EMBEDDING_LOOKUP" if slot == 1 => "learned_parameter",
+                "BATCH_MATMUL" if slot == 1 => "learned_parameter",
+                "RESHAPE" if slot == 1 => "control_constant",
+                "TRANSPOSE" if slot == 1 => "control_constant",
+                "SLICE" if slot == 1 || slot == 2 => "control_constant",
+                "STRIDED_SLICE" if (1..=3).contains(&slot) => "control_constant",
+                "EXPAND_DIMS" if slot == 1 => "control_constant",
+                "RESIZE_BILINEAR" | "RESIZE_NEAREST_NEIGHBOR" if slot == 1 => "control_constant",
+                "TILE" if slot == 1 => "control_constant",
+                "SPLIT" if slot == 0 => "control_constant",
+                "SPLIT_V" if slot == 1 || slot == 2 => "control_constant",
+                "GATHER" if slot == 1 => "control_constant",
+                "MEAN" | "SUM" | "REDUCE_MAX" | "REDUCE_MIN" | "REDUCE_PROD" | "REDUCE_ANY"
+                    if slot == 1 => "control_constant",
+                "QUANTIZE" | "DEQUANTIZE" if slot > 0 => "quantization_parameter",
+                _ => "unknown_or_mixed",
+            };
+            match role {
+                "learned_parameter" => learned = true,
+                "quantization_parameter" => quantization = true,
+                "control_constant" => control = true,
+                _ => unknown = true,
+            }
+        }
+    }
+    let class_count = usize::from(learned)
+        + usize::from(quantization)
+        + usize::from(control)
+        + usize::from(unknown);
+    if class_count != 1 {
+        "unknown_or_mixed"
+    } else if learned {
+        "learned_parameter"
+    } else if quantization {
+        "quantization_parameter"
+    } else if control {
+        "control_constant"
+    } else {
+        "unknown_or_mixed"
+    }
 }
 
 fn quantized_raw_values(bytes: &[u8], tensor: &TensorInfo) -> Option<Vec<i32>> {
@@ -9567,6 +9654,10 @@ mod tests {
         let report =
             compute_weight_integrity(&bytes, &[input, kernel, output, unrelated], &[op], 0.0);
 
+        assert_eq!(report.constant_tensors_scanned, 2);
+        assert_eq!(report.weight_tensors_scanned, 1);
+        assert_eq!(report.learned_parameter_tensors, 1);
+        assert_eq!(report.unknown_or_mixed_constant_tensors, 1);
         assert_eq!(report.eligible_kernel_tensors_scanned, 1);
         assert_eq!(report.output_channels_evaluated, 2);
         assert_eq!(report.zero_kernel_slice_count, 1);

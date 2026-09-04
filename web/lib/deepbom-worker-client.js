@@ -1,4 +1,6 @@
-const WORKER_URL = new URL("../workers/deepbom-analysis-worker.js", import.meta.url);
+import { browserAssetUrl } from "./browser-asset-url.js";
+
+const WORKER_URL = browserAssetUrl("./workers/deepbom-analysis-worker.js", "../workers/deepbom-analysis-worker.js", import.meta.url);
 
 export function analyzeDeepBomInWorker({ manifest, modelBytes, analysis, onStatus = null }) {
   if (typeof Worker !== "function") {
