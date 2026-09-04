@@ -2,7 +2,7 @@
   "name": "tflite_wasm_audit",
   "type": "module",
   "description": "Browser-side TFLite static audit WebAssembly module.",
-  "version": "1.96.6",
+  "version": "1.96.7",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

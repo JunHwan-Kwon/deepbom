@@ -220,6 +220,10 @@ for (const snippet of ["copySourceTree", 'new Set(["target"])', 'new Set(["build
   expect(channelBuildSource.includes(snippet), `Channel source assembly must exclude generated build trees: ${snippet}`);
 }
 expect(!deployGateSource.includes("-viewer.mjs"), "Deployment gate must not restore repeated browser viewer checks.");
+expect(deployGateSource.includes('"scripts/check-conversion-receipt.mjs --no-browser"'),
+  "Deployment gate must retain conversion-receipt semantics without launching a browser.");
+expect(!deployGateSource.includes('"scripts/check-conversion-receipt.mjs",'),
+  "Deployment gate must not invoke the browser conversion-receipt matrix.");
 expect(deployGateSource.includes("check-parser-robustness.mjs"), "Deployment gate must reject parser robustness regressions.");
 expect(deployGateSource.includes("check-format-routing.mjs"), "Deployment gate must exercise the production format gate.");
 expect(deployGateSource.includes("check-onnx-shape-inference.mjs"), "Deployment gate should retain deterministic ONNX inference coverage.");

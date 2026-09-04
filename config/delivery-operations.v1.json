@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-04T13:26:05.000Z",
+  "recorded_at": "2026-09-04T15:43:30.000Z",
   "scope": "Public installation channels and private web delivery",
   "observations": [
     {
@@ -884,6 +884,116 @@
         "public_private_and_worker_boundaries"
       ],
       "qualification": "This exhaustive local release-candidate gate is intentionally manual. Pull requests use the path-filtered public workflow, and ordinary pushes do not start it."
+    },
+    {
+      "kind": "private_web_deployment",
+      "version": "1.96.6",
+      "repository": "JunHwan-Kwon/deepbom-private",
+      "workflow": "pages.yml",
+      "run_id": 33885297675,
+      "run_url": "https://github.com/JunHwan-Kwon/deepbom-private/actions/runs/33885297675",
+      "attempt": 1,
+      "conclusion": "failure_before_build",
+      "failure_class": "browser_binary_missing_from_bounded_preflight",
+      "qualification": "The conversion-receipt check launched Chromium from the browser-free deployment gate. No Cloudflare build or deployment step ran. Full Quality retains the browser binding; deployment now invokes the explicit non-browser contract path."
+    },
+    {
+      "kind": "installation_channel_release",
+      "version": "1.96.6",
+      "repository": "JunHwan-Kwon/deepbom",
+      "workflow": "release-channels.yml",
+      "run_id": 33885221626,
+      "run_url": "https://github.com/JunHwan-Kwon/deepbom/actions/runs/33885221626",
+      "attempt": 1,
+      "conclusion": "package_boundary_failure_before_publication",
+      "failure_class": "self_test_fixture_missing_from_exact_npm_member_allowlist",
+      "qualification": "All six wheel jobs rejected the same newly packaged self-test member before artifact upload. Release assembly and all npm, PyPI, and crates.io publication jobs were skipped; no 1.96.6 registry artifact was published."
+    },
+    {
+      "kind": "private_web_preflight",
+      "version": "1.96.7",
+      "platform": "windows-x64",
+      "command": "npm run check:deploy",
+      "elapsed_seconds": 154.286,
+      "check_count": 84,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "conversion_receipt_static_contract_without_browser_binary",
+        "browser_conversion_receipt_binding_retained_in_full_quality",
+        "interaction_loaded_browser_delivery_boundary",
+        "stable_cyclonedx_1_7_public_product_boundary",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy",
+        "no_full_corpus_or_browser_matrix"
+      ],
+      "qualification": "All 84 bounded checks completed in 154.286 seconds after the current-version observation enabled the self-referential delivery-contract check. The separately measured 83 non-self-referential checks completed in 157.116 seconds."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.96.7",
+      "platform": "windows-x64",
+      "command": "npm run build:channels:release",
+      "elapsed_seconds": 254,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball",
+        "single_executable_engine",
+        "python_wheel",
+        "cargo_launcher_source",
+        "manifest_bound_self_test_probe",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.96.7",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 176.764,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.96.7",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 577.692,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "capability_envelope_sarif_policy_and_review_contract_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_wasm_tamper_rejection"
+      ],
+      "qualification": "The full release-only equivalence contract remained within budget after binding the packaged self-test fixture in the npm release manifest."
+    },
+    {
+      "kind": "local_full_quality",
+      "version": "1.96.7",
+      "platform": "windows-x64",
+      "command": "npm run check",
+      "elapsed_seconds": 1747.073,
+      "check_count": 205,
+      "conclusion": "success",
+      "conditions": [
+        "complete_parser_and_format_contract_matrix",
+        "artifact_ir_and_export_conservation",
+        "browser_conversion_receipt_binding",
+        "browser_viewer_and_accessibility_regressions",
+        "isolated_parser_robustness",
+        "public_private_and_worker_boundaries"
+      ],
+      "qualification": "The exhaustive local release-candidate gate passed after the expected evidence-envelope digest was independently reproduced twice and rebound to the 1.96.7 analyzer identity."
     }
   ],
   "budgets": {

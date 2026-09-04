@@ -4,6 +4,17 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.7 - 2026-09-04
+
+- Kept the Cloudflare deployment preflight browser-free by separating the
+  conversion-receipt module, IR, CLI, and tamper checks from the browser
+  binding exercised by Full Quality. This preserves the bounded deployment
+  gate without downloading Chromium into the release path.
+- Added the packaged CLI self-test fixture to the exact public member
+  allowlist and bound its source bytes, packaged bytes, and release-manifest
+  SHA-256. This closes the six-platform package-boundary failure without
+  weakening the public/private distribution boundary.
+
 ## 1.96.6 - 2026-09-04
 
 - Reworked the website's first-use path around one local artifact or verified

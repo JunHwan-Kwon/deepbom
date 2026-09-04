@@ -7,9 +7,6 @@ import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-import { chromium } from "playwright";
-import { launchChromium } from "./browser-launch.mjs";
-
 import { analyzeOnnxModel } from "../web/onnx.js";
 import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
 import { buildArtifactEvidenceEnvelope, validateArtifactEvidenceEnvelope } from "../web/lib/artifact-evidence-envelope.js";
@@ -22,6 +19,7 @@ import {
 import { buildMlBomDocument } from "../web/lib/report-mlbom.js";
 
 const artifactPath = path.resolve("web/samples/sample_cnn_float.onnx");
+const browserCheckEnabled = parseOptions(process.argv.slice(2));
 const artifactBytes = await readFile(artifactPath);
 const artifactSha256 = sha256(artifactBytes);
 const activeArtifact = {
@@ -130,12 +128,14 @@ try {
   const rejected = spawnSync(process.execPath, ["bin/deepbom.mjs", "audit", artifactPath, "--conversion-receipt", wrongPath, "--compact"], { encoding: "utf8" });
   assert.notEqual(rejected.status, 0, "CLI must reject a receipt for another output artifact");
   assert.match(rejected.stderr, /not bound to the active artifact/, "CLI wrong-output rejection reason");
-  await verifyBrowserReceipt(receiptPath, wrongPath);
+  if (browserCheckEnabled) await verifyBrowserReceipt(receiptPath, wrongPath);
 } finally {
   await rm(temporaryDirectory, { recursive: true, force: true });
 }
 
-console.log("Conversion receipt contract passed (module, IR, envelope, CycloneDX, CLI/browser binding, tamper rejection).");
+console.log(browserCheckEnabled
+  ? "Conversion receipt contract passed (module, IR, envelope, CycloneDX, CLI/browser binding, tamper rejection)."
+  : "Conversion receipt contract passed (module, IR, envelope, CycloneDX, CLI binding, tamper rejection; browser binding deferred to Full Quality).");
 
 function runCli(args) {
   const result = spawnSync(process.execPath, ["bin/deepbom.mjs", ...args], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
@@ -148,6 +148,10 @@ function sha256(value) {
 }
 
 async function verifyBrowserReceipt(receiptPath, wrongPath) {
+  const [{ chromium }, { launchChromium }] = await Promise.all([
+    import("playwright"),
+    import("./browser-launch.mjs"),
+  ]);
   const server = createStaticServer(path.resolve("."));
   const browserErrors = [];
   let browser;
@@ -183,6 +187,13 @@ async function verifyBrowserReceipt(receiptPath, wrongPath) {
     await browser?.close().catch(() => {});
     await new Promise((resolve) => server.close(resolve));
   }
+}
+
+function parseOptions(args) {
+  const supported = new Set(["--no-browser"]);
+  const unknown = args.filter((arg) => !supported.has(arg));
+  if (unknown.length) throw new Error(`Unknown conversion-receipt check option: ${unknown.join(", ")}`);
+  return !args.includes("--no-browser");
 }
 
 function createStaticServer(root) {

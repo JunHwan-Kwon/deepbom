@@ -23,6 +23,8 @@ const wasmSource = withDist
 const gitCommit = runCapture("git", ["rev-parse", "HEAD"]).trim();
 const gitState = runCapture("git", ["status", "--porcelain=v1", "--untracked-files=all", "--", ".", ":!.local-validation", ":!dist", ":!web/lib/build-metadata.js", ...RELEASE_GENERATED_TRACKED_ARTIFACTS.map((file) => `:!${file}`)]).trim() ? "dirty" : "clean";
 const wasmSha256 = createHash("sha256").update(await readFile(wasmSource)).digest("hex");
+const selfTestSource = path.join(root, "web", "samples", "gpu_partition_probe.onnx");
+const selfTestSha256 = createHash("sha256").update(await readFile(selfTestSource)).digest("hex");
 const buildMetadataPath = path.join(root, "web", "lib", "build-metadata.js");
 const priorBuildMetadata = existsSync(buildMetadataPath) ? readFileSync(buildMetadataPath) : null;
 let buildMetadataRestored = false;
@@ -60,7 +62,7 @@ const npmBuildResult = await build({
 });
 assertPublicBundleInputs(npmBuildResult.metafile, "npm");
 await copyFile(wasmSource, path.join(npmRoot, "pkg", "tflite_wasm_audit_bg.wasm"));
-await copyFile(path.join(root, "web", "samples", "gpu_partition_probe.onnx"), path.join(npmRoot, "bin", "deepbom-self-test.onnx"));
+await copyFile(selfTestSource, path.join(npmRoot, "bin", "deepbom-self-test.onnx"));
 await copyFile(path.join(root, "channels", "npm", "README.md"), path.join(npmRoot, "README.md"));
 await copyFile(publicLicense, path.join(npmRoot, "LICENSE"));
 await writeFile(path.join(npmRoot, "package.json"), `${JSON.stringify({
@@ -83,7 +85,11 @@ await writeFile(path.join(npmRoot, "pkg", "release-manifest.json"), `${JSON.stri
   schema: "deepbom.npm_release.v1",
   version: packageDocument.version,
   source: { git_commit: gitCommit, git_state: gitState, distribution: "public_channel" },
-  runtime: { node: ">=20", tflite_wasm_sha256: wasmSha256 },
+  runtime: {
+    node: ">=20",
+    tflite_wasm_sha256: wasmSha256,
+    self_test: { file: "bin/deepbom-self-test.onnx", sha256: selfTestSha256 },
+  },
   license: { spdx: "Apache-2.0", file: "LICENSE" },
   public_bundle_input_count: Object.keys(npmBuildResult.metafile.inputs).length,
   supported_inputs: ["tflite", "onnx", "onnx_external_data", "gguf", "safetensors", "safetensors_sharded_repository", "coreml_mlmodel", "coreml_mlpackage", "executorch_pte", "executorch_ptd", "tensorrt_evidence", "tensorrt_llm_contract"],
@@ -114,7 +120,7 @@ const engineBuildResult = await build({
 assertPublicBundleInputs(engineBuildResult.metafile, "standalone engine");
 restoreBuildMetadata();
 await copyFile(wasmSource, path.join(engineRoot, "pkg", "tflite_wasm_audit_bg.wasm"));
-await copyFile(path.join(root, "web", "samples", "gpu_partition_probe.onnx"), path.join(engineRoot, "deepbom-self-test.onnx"));
+await copyFile(selfTestSource, path.join(engineRoot, "deepbom-self-test.onnx"));
 
 const executableName = process.platform === "win32" ? "deepbom-core.exe" : "deepbom-core";
 const executable = path.join(engineRoot, executableName);

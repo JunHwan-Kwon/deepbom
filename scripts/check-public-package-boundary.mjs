@@ -10,6 +10,7 @@ const packageRoot = path.join(releaseRoot, "npm", "package");
 const expectedMembers = [
   "LICENSE",
   "README.md",
+  "bin/deepbom-self-test.onnx",
   "bin/deepbom.mjs",
   "package.json",
   "pkg/release-manifest.json",
@@ -47,6 +48,13 @@ assert(Number.isInteger(releaseManifest.public_bundle_input_count) && releaseMan
 const wasm = await readFile(path.join(packageRoot, "pkg", "tflite_wasm_audit_bg.wasm"));
 assert(sha256(wasm) === releaseManifest.runtime?.tflite_wasm_sha256, "Packaged WASM digest does not reproduce.");
 assertWasmHasNoDebugCustomSections(wasm);
+
+const selfTestRelativePath = releaseManifest.runtime?.self_test?.file;
+assert(selfTestRelativePath === "bin/deepbom-self-test.onnx", "Release manifest self-test path drifted.");
+const selfTest = await readFile(path.join(packageRoot, selfTestRelativePath));
+const selfTestSource = await readFile(path.join(root, "web", "samples", "gpu_partition_probe.onnx"));
+assert(sha256(selfTest) === releaseManifest.runtime.self_test.sha256, "Packaged self-test digest does not reproduce.");
+assert(sha256(selfTest) === sha256(selfTestSource), "Packaged self-test differs from the hash-pinned public source fixture.");
 
 const bundle = await readFile(path.join(packageRoot, "bin", "deepbom.mjs"), "utf8");
 const forbiddenText = [
