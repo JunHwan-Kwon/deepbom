@@ -1487,6 +1487,26 @@ Priority 5: model-family coverage expansion.
   paging, residency, and backend offload as a separate frame rather than
   forcing them into serialized-container or CNN assumptions.
 
+## Draft Standards And Conversion Lineage
+
+- CycloneDX 2.0 integration is represented by immutable draft profiles that
+  bind PR head commits and source-object SHA-256 values for #990, #175, #1067,
+  and #1075. A profile with unresolved ownership or perspective scope is not an
+  export profile; it produces `UNRESOLVED_INTEGRATION` or
+  `STALE_DRAFT_PROFILE`. CycloneDX 1.7 remains the default BOM contract.
+- The RFC 9535 Perspective evaluator reports raw-document and explicit
+  candidate-projection results separately. It records matched JSON Pointers,
+  zero/empty/multiple/type states, and never interprets `relevance: required`
+  as a pass/fail cardinality rule before the specification defines one.
+- `deepbom.conversion_receipt.v1` binds source artifact digests, converter
+  identity and argv, a hashed environment manifest, supporting inputs, and one
+  deployment output. Only the active output hash/format match is OBSERVED.
+  Source and converter statements remain DECLARED_UNVERIFIED, and unsafe source
+  serialization is not loaded.
+- Apple MLComputePlan runtime captures and ecosystem prevalence denominators
+  remain external evidence-collection work. Windows development fixtures are
+  not promoted to Apple-device observations or public population claims.
+
 ## Public Communication
 
 Publish browser-local static audit, XNNPACK chain prediction, quantization risk,

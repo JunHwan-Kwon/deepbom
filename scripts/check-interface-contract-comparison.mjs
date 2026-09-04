@@ -73,7 +73,13 @@ expectEqual(compareInterfaceContracts(ledger, malformedHash, artifactSha256).sta
 const partial = { parameters: structuredClone(ledger.parameters) };
 expectEqual(compareInterfaceContracts(ledger, partial, artifactSha256).status, "partial_artifact_and_implementation_hash_missing", "both missing release hashes remain explicit");
 
-const preview = buildCycloneDx20ParameterContractPreview(analysis, { hash: artifactSha256, generatedAt: "2026-08-06T00:00:00.000Z", interfaceLedger: ledger });
+const preview = buildCycloneDx20ParameterContractPreview(analysis, {
+  hash: artifactSha256,
+  generatedAt: "2026-08-06T00:00:00.000Z",
+  interfaceLedger: ledger,
+  profileId: "legacy-parameter-contract-2026-08-06",
+  allowHistoricalFixture: true,
+});
 preview.metadata.component.properties.push({ name: "deepbom:production:interfaceImplementationSha256", value: implementationSha256 });
 const previewValidation = validateCycloneDx20ParameterContractPreview(preview);
 expect(previewValidation.valid, `preview validation: ${previewValidation.errors.join("; ")}`);

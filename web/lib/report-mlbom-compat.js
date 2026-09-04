@@ -69,6 +69,7 @@ export function buildMlBomCompatibilityProjection(analysis, {
   const validSerialNumber = /^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(serialNumber);
   const artifactSet = analysis?.artifact_set;
   const accelerator = analysis?.accelerator_profile_binding;
+  const conversion = analysis?.conversion_receipt;
   const macCoverage = deriveMacCoverage(analysis, quant);
   const quantizedAssessment = deriveQuantizedComputeAssessment(analysis, quant, macCoverage);
   const computeOperators = finite(quant.compute_ops ?? macCoverage.compute_ops);
@@ -117,6 +118,15 @@ export function buildMlBomCompatibilityProjection(analysis, {
     property("deepbom:model:artifactSetSha256", artifactSet?.artifact_set_sha256),
     property("deepbom:model:artifactSourceKind", artifactSet?.source?.kind),
     property("deepbom:model:artifactSourceImmutability", artifactSet?.source?.immutability?.kind),
+    property("deepbom:model:conversionReceiptStatus", conversion?.status),
+    property("deepbom:model:conversionReceiptSha256", conversion?.receipt_sha256),
+    property("deepbom:model:conversionReceiptBindingSha256", conversion?.binding_sha256),
+    property("deepbom:model:conversionSourceArtifactCount", conversion?.receipt?.source_artifacts?.length),
+    property("deepbom:model:conversionConverterName", conversion?.receipt?.converter?.name),
+    property("deepbom:model:conversionConverterVersion", conversion?.receipt?.converter?.version),
+    property("deepbom:model:conversionEnvironmentManifestSha256", conversion?.receipt?.converter?.environment?.manifest_sha256),
+    property("deepbom:model:conversionEvidenceClass", conversion?.evidence_class),
+    property("deepbom:model:conversionOutputBindingEvidenceClass", conversion?.output_binding_evidence_class),
     property("deepbom:model:acceleratorProfileBindingSha256", accelerator?.binding_sha256),
     property("deepbom:model:acceleratorProfileSha256", accelerator?.profile_sha256),
     property("deepbom:model:acceleratorDeviceName", accelerator?.selected_device?.name),

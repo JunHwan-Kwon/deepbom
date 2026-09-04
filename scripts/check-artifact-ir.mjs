@@ -37,7 +37,9 @@ for (const entry of cases) {
   outputs.set(entry.format, output);
 
   assert.equal(artifactIr.schema, "deepbom.artifact_ir.v2", `${entry.format} Artifact IR schema`);
-  assert.equal(artifactIr.method_version, "2.1.0", `${entry.format} Artifact IR method version`);
+  assert.equal(artifactIr.method_version, "2.2.0", `${entry.format} Artifact IR method version`);
+  assert.equal(artifactIr.lineage_evidence.status, "not_provided", `${entry.format} absent conversion receipt status`);
+  assert.equal(artifactIr.lineage_evidence.evidence_class, "NOT_ASSESSABLE", `${entry.format} absent conversion receipt evidence class`);
   assert.deepEqual(artifactIr.hash_contract.excluded_pointers, ["/artifact_ir_sha256"], `${entry.format} self-hash exclusion contract`);
   assert.equal(validateSchema(artifactIr), true, `${entry.format} JSON Schema validation: ${formatAjvErrors(validateSchema.errors)}`);
   assert.deepEqual(validateArtifactEvidenceIr(artifactIr), artifactIr, `${entry.format} semantic and digest validation`);

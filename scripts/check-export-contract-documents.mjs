@@ -12,7 +12,7 @@ import { ANALYZER_METADATA } from "../web/lib/report-metadata.js";
 import { buildFindingsRegister } from "../web/lib/report-findings.js";
 import { sha256TextHex } from "../web/lib/sha256-sync.js";
 import { canonicalJson } from "../web/lib/report-utils.js";
-import { validateCycloneDx20ParameterContractPreview } from "../web/lib/cyclonedx-20-preview.js";
+import { ACTIVE_CYCLONEDX_DRAFT_PROFILE_ID } from "../web/lib/cyclonedx-draft-profiles.js";
 import { buildPublicCycloneDxDocuments } from "../web/lib/public-cyclonedx-export.js";
 import { analyzerContentVersion } from "../web/lib/cyclonedx-identity.js";
 import {
@@ -222,7 +222,7 @@ for (const [filename, digest] of Object.entries(set.integrity.member_sha256)) {
   const documentKey = Object.entries(set.files).find(([, value]) => value === filename)?.[0];
   const mappedKey = {
     cyclonedx: "cyclonedx_evidence",
-    cyclonedx20Preview: "cyclonedx_2_0_parameter_contract_preview",
+    cyclonedx20DraftStatus: "cyclonedx_2_0_draft_compatibility",
     artifactEnvelope: "artifact_evidence_envelope",
     artifactIr: "artifact_ir",
     interfaceContracts: "interface_contract_ledger",
@@ -446,13 +446,12 @@ expectEqual(serializedInput.quantization.axis_applicable, false, "per-tensor axi
 expectEqual(serializedInput.quantization.quantized_dimension, 0, "serialized default quantized dimension remains preserved separately");
 expectEqual(JSON.stringify(serializedInput.quantization.scale_tensor_shape), "[1]", "per-tensor scale value-vector shape");
 expectEqual(JSON.stringify(serializedInput.quantization.zero_point_tensor_shape), "[1]", "per-tensor zero-point value-vector shape");
-const previewValidation = validateCycloneDx20ParameterContractPreview(set.documents.cyclonedx_2_0_parameter_contract_preview);
-expect(previewValidation.valid, `CycloneDX 2.0 preview validation: ${previewValidation.errors.join("; ")}`);
-expectEqual(
-  set.documents.cyclonedx_2_0_parameter_contract_preview.metadata.component.modelCard.modelParameters.inputs[0].name,
-  analysis.inputs[0].name,
-  "CycloneDX 2.0 named input binding",
-);
+const draftStatus = set.documents.cyclonedx_2_0_draft_compatibility;
+expectEqual(draftStatus.profile_id, ACTIVE_CYCLONEDX_DRAFT_PROFILE_ID, "CycloneDX 2.0 draft profile identity");
+expectEqual(draftStatus.integration_status, "UNRESOLVED_INTEGRATION", "CycloneDX 2.0 unresolved integration state");
+expectEqual(draftStatus.export_allowed, false, "CycloneDX 2.0 draft export remains fail-closed");
+expectEqual(draftStatus.decision, "EXPORT_REFUSED", "CycloneDX 2.0 draft decision");
+expectEqual(draftStatus.stable_export.specification_version, "1.7", "CycloneDX stable export version");
 
 const runtime = set.documents.runtime_requirement_manifest;
 expectEqual(runtime.schema, "deepbom.runtime_requirement_manifest.v1.3", "runtime manifest schema");
@@ -708,10 +707,9 @@ expect(!("licenses" in undeclaredLicense.metadata.component), "Undeclared licens
 
 const publicCycloneDx = buildPublicCycloneDxDocuments(analysis, options);
 assertCycloneDx17(publicCycloneDx.documents.cyclonedx_evidence, "public standalone CycloneDX 1.7 builder");
-const publicPreviewValidation = validateCycloneDx20ParameterContractPreview(
-  publicCycloneDx.documents.cyclonedx_2_0_parameter_contract_preview,
-);
-expect(publicPreviewValidation.valid, `public CycloneDX 2.0 preview validation: ${publicPreviewValidation.errors.join("; ")}`);
+const publicDraftStatus = publicCycloneDx.documents.cyclonedx_2_0_draft_compatibility;
+expectEqual(publicDraftStatus.profile_id, ACTIVE_CYCLONEDX_DRAFT_PROFILE_ID, "public CycloneDX 2.0 draft profile identity");
+expectEqual(publicDraftStatus.export_allowed, false, "public CycloneDX 2.0 draft export remains fail-closed");
 const publicProperties = propertyMap(publicCycloneDx.documents.cyclonedx_evidence.metadata.component.properties);
 const publicLedger = JSON.parse(publicProperties.get("deepbom:model:interfaceContractLedger"));
 expectEqual(publicLedger.ledger_sha256, publicProperties.get("deepbom:model:interfaceContractLedgerSha256"), "public interface ledger binding");
@@ -798,7 +796,7 @@ const updateReferences = process.argv.includes("--update-reference");
 for (const [key, filename] of Object.entries(sampleSet.files)) {
   const documentKey = {
     cyclonedx: "cyclonedx_evidence",
-    cyclonedx20Preview: "cyclonedx_2_0_parameter_contract_preview",
+    cyclonedx20DraftStatus: "cyclonedx_2_0_draft_compatibility",
     artifactEnvelope: "artifact_evidence_envelope",
     artifactIr: "artifact_ir",
     interfaceContracts: "interface_contract_ledger",
@@ -811,10 +809,10 @@ for (const [key, filename] of Object.entries(sampleSet.files)) {
   storedExamples[filename] = stored;
   const storedSubjectHash = stored.metadata?.component?.hashes?.[0]?.content || stored.subject?.sha256 || stored.identity?.sha256 || stored.artifact?.sha256;
   expectEqual(storedSubjectHash, sampleRepair.artifact_sha256, `${filename} public artifact binding`);
-  if (filename.endsWith(".cdx.json") && key !== "cyclonedx20Preview") assertCycloneDx17(stored, `${filename} stored public example`);
-  if (key === "cyclonedx20Preview") {
-    const validation = validateCycloneDx20ParameterContractPreview(stored);
-    expect(validation.valid, `${filename} stored preview validation: ${validation.errors.join("; ")}`);
+  if (filename.endsWith(".cdx.json")) assertCycloneDx17(stored, `${filename} stored public example`);
+  if (key === "cyclonedx20DraftStatus") {
+    expectEqual(stored.profile_id, ACTIVE_CYCLONEDX_DRAFT_PROFILE_ID, `${filename} stored draft profile identity`);
+    expectEqual(stored.export_allowed, false, `${filename} stored draft export state`);
   }
   if (key === "cyclonedx") {
     expectEqual(JSON.stringify(stored.metadata.component.modelCard), JSON.stringify(sampleSet.documents[documentKey].metadata.component.modelCard), `${filename} model-card contracts`);
@@ -838,7 +836,7 @@ const rawEntry = readFileSync("web/lib/report-raw-entry.js", "utf8");
 const exportView = readFileSync("web/lib/export-contract-view.js", "utf8");
 for (const id of [
   "downloadCycloneDxEvidence",
-  "downloadCycloneDx20Preview",
+  "downloadCycloneDx20DraftStatus",
   "downloadObservedFormulation",
   "downloadRuntimeRequirements",
   "downloadMissingProvenance",

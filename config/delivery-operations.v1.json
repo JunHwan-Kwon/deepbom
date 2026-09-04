@@ -668,6 +668,72 @@
         "packaged_wasm_tamper_rejection"
       ],
       "qualification": "The complete release-only equivalence contract remained within its dedicated budget after the Cargo runtime-asset installation fix."
+    },
+    {
+      "kind": "private_web_preflight",
+      "version": "1.96.4",
+      "platform": "windows-x64",
+      "command": "npm run check:deploy",
+      "elapsed_seconds": 140.89,
+      "check_count": 78,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "cyclonedx_draft_registry_and_perspective_contracts",
+        "conversion_receipt_web_cli_binding_and_tamper_rejection",
+        "artifact_ir_schema_identity_conservation_and_tamper_contracts",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy",
+        "no_full_corpus_or_browser_matrix"
+      ],
+      "qualification": "The first 75 bounded checks completed before the delivery-operations self-check. This measured current-version observation enables the self-check and the two terminal privacy and worker checks to close the full 78-check gate."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.96.4",
+      "platform": "windows-x64",
+      "command": "npm run build:channels",
+      "elapsed_seconds": 225.892,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball",
+        "single_executable_engine",
+        "python_wheel",
+        "cargo_launcher_source",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.96.4",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 183.461,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.96.4",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 548.503,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "capability_envelope_sarif_policy_and_review_contract_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_wasm_tamper_rejection"
+      ],
+      "qualification": "The complete release-only equivalence contract remained within its dedicated budget after adding the CycloneDX draft/perspective and conversion-lineage surfaces."
     }
   ],
   "budgets": {

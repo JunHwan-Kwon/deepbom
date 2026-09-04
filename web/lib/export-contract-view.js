@@ -8,14 +8,14 @@ import { signPackageDigest, verifyPackageSignature } from "./public-key-signatur
 
 const EXPORTS = [
   ["downloadCycloneDxEvidence", "cyclonedxEvidence", "cyclonedx_evidence"],
-  ["downloadCycloneDx20Preview", "cyclonedx20Preview", "cyclonedx_2_0_parameter_contract_preview"],
+  ["downloadCycloneDx20DraftStatus", "cyclonedx20DraftStatus", "cyclonedx_2_0_draft_compatibility"],
   ["downloadObservedFormulation", "observedFormulation", "observed_formulation"],
   ["downloadRuntimeRequirements", "runtimeRequirementManifest", "runtime_requirement_manifest"],
   ["downloadMissingProvenance", "missingProvenanceFields", "missing_provenance_field_specification"],
 ];
 const PUBLIC_EXPORT_BUTTONS = new Set([
   "downloadCycloneDxEvidence",
-  "downloadCycloneDx20Preview",
+  "downloadCycloneDx20DraftStatus",
 ]);
 
 export function createExportContractController({
@@ -98,7 +98,7 @@ export function createExportContractController({
       const exportSet = await getDocuments();
       const files = [
         zipTextFile(exportSet.files.cyclonedx, jsonForDownload(exportSet.documents.cyclonedx_evidence)),
-        zipTextFile(exportSet.files.cyclonedx20Preview, jsonForDownload(exportSet.documents.cyclonedx_2_0_parameter_contract_preview)),
+        zipTextFile(exportSet.files.cyclonedx20DraftStatus, jsonForDownload(exportSet.documents.cyclonedx_2_0_draft_compatibility)),
         zipTextFile(exportSet.files.artifactEnvelope, jsonForDownload(exportSet.documents.artifact_evidence_envelope)),
         zipTextFile(exportSet.files.interfaceContracts, jsonForDownload(exportSet.documents.interface_contract_ledger)),
         zipTextFile(exportSet.files.formulation, jsonForDownload(exportSet.documents.observed_formulation)),
@@ -160,8 +160,8 @@ export function createExportContractController({
       elements.exportContractStatus.textContent = !available
         ? "No analyzed artifact"
         : allowed
-          ? "Two standalone CycloneDX documents, five companion contracts, and one closed package are ready"
-          : "Standalone CycloneDX 1.7 and the pinned 2.0 draft preview are ready; companion contracts require account authorization";
+          ? "Stable CycloneDX 1.7, the 2.0 draft compatibility record, five companion contracts, and one closed package are ready"
+          : "Stable CycloneDX 1.7 and the 2.0 draft compatibility record are ready; companion contracts require account authorization";
       elements.exportContractStatus.classList.toggle("ready", available);
     }
     for (const [buttonName] of EXPORTS) {

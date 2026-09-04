@@ -59,6 +59,7 @@ import {
 } from "./lib/download.js";
 import { TEXT_EXPORT_ARTIFACTS } from "./lib/export-artifacts.js";
 import { createExportContractController } from "./lib/export-contract-view.js";
+import { createCycloneDxPerspectiveController } from "./lib/cyclonedx-perspective-view.js";
 import { buildPublicCycloneDxDocuments } from "./lib/public-cyclonedx-export.js";
 import { syncPublicEvidencePackageButton } from "./lib/public-evidence-package.js";
 import {
@@ -234,6 +235,8 @@ import {
   stagedModelCopy,
 } from "./lib/model-file.js";
 import { readMetadataModelFile } from "./lib/metadata-model-adapters.js";
+import { parseStrictJson } from "./lib/strict-json.js";
+import { bindConversionReceipt, validateConversionReceipt } from "./lib/conversion-receipt.js";
 import { readCoreMlModelFile } from "./lib/coreml-metadata-adapter.js";
 import { inspectArtifactBundle, readArtifactBundle } from "./lib/artifact-bundle.js";
 import { initPrivacyAgreementUi } from "./lib/privacy-ui.js";
@@ -504,6 +507,8 @@ const {
   onnxExternalDataInput,
   onnxExternalDataDirectoryInput,
   onnxExternalDataStatus,
+  conversionReceiptInput,
+  conversionReceiptStatus,
   dropzone,
   targetSelect,
   runAudit,
@@ -788,6 +793,7 @@ const auditProgressController = createAuditProgressController({
   bar: auditProgressBar,
   label: auditProgressLabel,
 });
+const MAX_CONVERSION_RECEIPT_BYTES = 1024 * 1024;
 const staticAuditWorkerClient = createStaticAuditWorkerClient();
 const liteRtRuntime = createLiteRtRuntimeLoader({
   onStatus: (message) => { runtimeStatus.textContent = message; },
@@ -836,6 +842,7 @@ let pendingArtifactBundleName = "";
 let sampleLibraryController = null;
 let currentExternalDataFiles = [];
 let pendingPublicSampleCompanions = null;
+let pendingConversionReceiptInput = null;
 let selectedOpIndex = null;
 let activeTargetId = "";
 let reportTargetRequestedId = "";
@@ -1301,6 +1308,37 @@ fileInput.addEventListener("change", async (event) => {
   }
 });
 
+conversionReceiptInput?.addEventListener("change", async (event) => {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file) return;
+  try {
+    if (file.size > MAX_CONVERSION_RECEIPT_BYTES) throw new Error("Conversion receipt exceeds the 1 MiB input limit.");
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const source = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    const document = validateConversionReceipt(parseStrictJson(source, "conversion receipt"));
+    pendingConversionReceiptInput = {
+      document,
+      filename: file.name,
+      file_sha256: await sha256Hex(bytes),
+    };
+    conversionReceiptStatus.textContent = `Receipt ready: ${file.name} / ${document.receipt_sha256.slice(0, 16)}...`;
+    if (current?.model_sha256) {
+      applyPendingConversionReceipt(current);
+      await render(current, { keepTab: true, keepModule: true });
+      conversionReceiptStatus.textContent = `Output-bound receipt: ${file.name}`;
+    }
+  } catch (error) {
+    pendingConversionReceiptInput = null;
+    if (current) {
+      delete current.conversion_receipt;
+      rebuildCurrentArtifactIrContext(current);
+    }
+    conversionReceiptStatus.textContent = `Receipt rejected: ${error?.message || error}`;
+    setStatus("Conversion receipt rejected", "error");
+  }
+});
+
 artifactBundleInput?.addEventListener("change", async (event) => {
   const files = [...(event.target.files || [])];
   event.target.value = "";
@@ -1622,6 +1660,7 @@ const exportContractController = createExportContractController({
   onProductionContractChange: (value) => { productionInterfaceContract = value; },
   onProductionComparison: updateProductionInterfaceFinding,
 });
+createCycloneDxPerspectiveController(appElements, { onStatus: setStatus });
 
 graphWorkspace = createGraphWorkspace({
   ...appElements,
@@ -2847,20 +2886,56 @@ let engineeringFormatterPromise = null;
 let rawExportFormatterPromise = null;
 let regulatoryFormatterPromise = null;
 let reportRenderToken = 0;
+const FORMATTER_LOAD_RETRY_DELAYS_MS = [0, 150, 600];
 
 async function loadEngineeringFormatter() {
-  engineeringFormatterPromise ||= import("./lib/report-engineering-entry.js");
+  engineeringFormatterPromise ||= loadLazyFormatter(
+    () => import("./lib/report-engineering-entry.js"),
+    (attempt) => import(`./lib/report-engineering-entry.js?formatter-retry=${attempt}`),
+  ).catch((error) => {
+    engineeringFormatterPromise = null;
+    throw error;
+  });
   return engineeringFormatterPromise;
 }
 
 async function loadRawExportFormatter() {
-  rawExportFormatterPromise ||= import("./lib/report-raw-entry.js");
+  rawExportFormatterPromise ||= loadLazyFormatter(
+    () => import("./lib/report-raw-entry.js"),
+    (attempt) => import(`./lib/report-raw-entry.js?formatter-retry=${attempt}`),
+  ).catch((error) => {
+    rawExportFormatterPromise = null;
+    throw error;
+  });
   return rawExportFormatterPromise;
 }
 
 async function loadRegulatoryFormatter() {
-  regulatoryFormatterPromise ||= import("./lib/report-regulatory-entry.js");
+  regulatoryFormatterPromise ||= loadLazyFormatter(
+    () => import("./lib/report-regulatory-entry.js"),
+    (attempt) => import(`./lib/report-regulatory-entry.js?formatter-retry=${attempt}`),
+  ).catch((error) => {
+    regulatoryFormatterPromise = null;
+    throw error;
+  });
   return regulatoryFormatterPromise;
+}
+
+async function loadLazyFormatter(initialImport, retryImport) {
+  for (let attempt = 0; attempt < FORMATTER_LOAD_RETRY_DELAYS_MS.length; attempt += 1) {
+    try {
+      return await (attempt === 0 ? initialImport() : retryImport(attempt));
+    } catch (error) {
+      if (!isTransientFormatterLoadFailure(error) || attempt === FORMATTER_LOAD_RETRY_DELAYS_MS.length - 1) throw error;
+      await new Promise((resolve) => window.setTimeout(resolve, FORMATTER_LOAD_RETRY_DELAYS_MS[attempt + 1]));
+    }
+  }
+  throw new Error("Formatter module retry contract exhausted.");
+}
+
+function isTransientFormatterLoadFailure(error) {
+  return error instanceof TypeError
+    && /failed to fetch dynamically imported module|error loading dynamically imported module|importing a module script failed/i.test(String(error.message || error));
 }
 
 async function ensureRawExportAllowed(label) {
@@ -3835,6 +3910,9 @@ async function stageModelFile(file, { bundleFiles = [], bundleName = "", bundleF
   sampleLibraryController?.setActive(publicSample);
   pendingPublicSampleCompanions = publicSampleCompanions && Object.keys(publicSampleCompanions).length
     ? publicSampleCompanions : null;
+  pendingConversionReceiptInput = null;
+  if (conversionReceiptInput) conversionReceiptInput.value = "";
+  if (conversionReceiptStatus) conversionReceiptStatus.textContent = "No conversion receipt selected";
   currentExternalDataFiles = [];
   syncExternalDataControl(detectModelFormat(file.name));
   pendingModelInspection = null;
@@ -4365,6 +4443,7 @@ function handleEvidenceSelection(selection) {
 }
 
 async function render(analysis, { keepTab = false, keepModule = false } = {}) {
+  if (pendingConversionReceiptInput && analysis?.model_sha256) applyPendingConversionReceipt(analysis);
   rebuildCurrentArtifactIrContext(analysis);
   const artifactView = currentArtifactIrContext?.primary_view || analysis;
   const modelFormat = String(analysis?.format || "tflite").toLowerCase();
@@ -4443,6 +4522,18 @@ async function render(analysis, { keepTab = false, keepModule = false } = {}) {
   renderTopMacs(artifactView);
   renderRoofline(artifactView);
   setActiveWorkspace("audit", { force: true });
+}
+
+function applyPendingConversionReceipt(analysis) {
+  if (!pendingConversionReceiptInput) return null;
+  const bound = bindConversionReceipt(pendingConversionReceiptInput.document, {
+    filename: analysis.filename || currentFilename || pendingModelFile?.name || "model",
+    format: analysis.format,
+    sha256: analysis.model_sha256,
+    byte_length_decimal: String(analysis.file_size_bytes ?? analysis.file_size ?? pendingModelFile?.size ?? 0),
+  }, { receiptFileSha256: pendingConversionReceiptInput.file_sha256 });
+  analysis.conversion_receipt = bound;
+  return bound;
 }
 
 async function ensureModelHash() {

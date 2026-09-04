@@ -127,10 +127,10 @@ export function buildEvidencePackageProfileFiles({
       ? "cyclonedx_1_7_artifact_evidence.cdx.json"
       : "cyclonedx/cyclonedx_1_7_artifact_evidence.cdx.json";
     const cdx20Name = profile.id === "public"
-      ? "proposal/cyclonedx_2_0_parameter_contract.preview.cdx.json"
-      : "cyclonedx/proposal_2_0_parameter_contract.preview.cdx.json";
+      ? "proposal/cyclonedx_2_0_draft_compatibility.json"
+      : "cyclonedx/cyclonedx_2_0_draft_compatibility.json";
     add(files, roles, cdx17Name, jsonForDownload(cycloneDx.documents.cyclonedx_evidence), "Standalone CycloneDX 1.7 artifact-evidence document.");
-    add(files, roles, cdx20Name, jsonForDownload(cycloneDx.documents.cyclonedx_2_0_parameter_contract_preview), "Commit-pinned CycloneDX 2.0 draft preview; not a conformance claim.");
+    add(files, roles, cdx20Name, jsonForDownload(cycloneDx.documents.cyclonedx_2_0_draft_compatibility), "Commit-pinned CycloneDX 2.0 draft integration status; not a BOM or conformance claim.");
   }
   roles["package_scope.json"] = "Machine-readable profile membership, exclusions, and claim boundary.";
   const packageScope = {
@@ -181,7 +181,13 @@ export function validateEvidencePackageProfileFiles(files, { profileId } = {}) {
   const expectedHtml = profile.id !== "machine_readable";
   const htmlCount = names.filter((name) => name.endsWith(".html")).length;
   const scoped = packageScope.evidence_level !== "all_available";
-  const cycloneDxCount = names.filter((name) => name.endsWith(".cdx.json")).length;
+  const cycloneDx17Name = profile.id === "public"
+    ? "cyclonedx_1_7_artifact_evidence.cdx.json"
+    : "cyclonedx/cyclonedx_1_7_artifact_evidence.cdx.json";
+  const cycloneDx20StatusName = profile.id === "public"
+    ? "proposal/cyclonedx_2_0_draft_compatibility.json"
+    : "cyclonedx/cyclonedx_2_0_draft_compatibility.json";
+  const standardsEvidenceCount = [cycloneDx17Name, cycloneDx20StatusName].filter((name) => names.includes(name)).length;
   return validatePublicVerificationManifest(manifest)
     && packageScope.schema === EVIDENCE_PACKAGE_PROFILE_SCHEMA
     && packageScope.profile === profile.id
@@ -191,7 +197,7 @@ export function validateEvidencePackageProfileFiles(files, { profileId } = {}) {
     && validateEvidenceLevelManifest(evidenceLevelManifest)
     && packageScope.report.body_sha256 === manifest.report.body_sha256
     && htmlCount === (expectedHtml ? 1 : 0)
-    && cycloneDxCount === (scoped ? 0 : 2)
+    && standardsEvidenceCount === (scoped ? 0 : 2)
     && names.every((name) => !/\.(tflite|onnx|gguf|safetensors|mlmodel)$/i.test(name));
 }
 

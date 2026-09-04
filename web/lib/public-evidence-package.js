@@ -33,7 +33,7 @@ const PACKAGE_MEMBERS = Object.freeze([
   ["public_static_evidence_summary.html", "Watermarked presentation copy of the exact summary body."],
   ["public_report_verification_manifest.json", "Artifact, report, analyzer, rulepack, target, and runtime identity hashes."],
   ["cyclonedx_1_7_artifact_evidence.cdx.json", "Standalone CycloneDX 1.7 artifact-evidence document."],
-  ["proposal/cyclonedx_2_0_parameter_contract.preview.cdx.json", "Commit-pinned CycloneDX 2.0 draft preview; not a conformance claim."],
+  ["proposal/cyclonedx_2_0_draft_compatibility.json", "Commit-pinned CycloneDX 2.0 draft integration status; not a BOM or conformance claim."],
   ["package_scope.json", "Machine-readable package scope and claim boundary."],
 ]);
 
@@ -107,7 +107,7 @@ export function buildPublicEvidencePackageFiles({
     zipTextFile("public_static_evidence_summary.html", reportHtml),
     zipTextFile("public_report_verification_manifest.json", jsonForDownload(verificationManifest)),
     zipTextFile("cyclonedx_1_7_artifact_evidence.cdx.json", jsonForDownload(cycloneDx.documents.cyclonedx_evidence)),
-    zipTextFile("proposal/cyclonedx_2_0_parameter_contract.preview.cdx.json", jsonForDownload(cycloneDx.documents.cyclonedx_2_0_parameter_contract_preview)),
+    zipTextFile("proposal/cyclonedx_2_0_draft_compatibility.json", jsonForDownload(cycloneDx.documents.cyclonedx_2_0_draft_compatibility)),
     zipTextFile("package_scope.json", jsonForDownload(packageScope)),
   ];
   if (!validatePublicEvidencePackageFiles(files, packageScope)) {

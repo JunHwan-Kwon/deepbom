@@ -132,9 +132,11 @@ async function collectArtifactRecords() {
           throw new Error("UI regression baseline is stale or incomplete for the release source commit.");
         }
         const semanticRows = baseline.rows.filter((row) => row.web_cli_semantic_digest?.status === "equal");
-        if (!semanticRows.some((row) => row.artifact_format === "tflite")
-          || !semanticRows.some((row) => row.artifact_format === "onnx")) {
-          throw new Error("UI regression baseline is missing TFLite or ONNX Web/CLI semantic-digest equality.");
+        const requiredSemanticFormats = ["tflite", "onnx", "coreml", "gguf", "safetensors", "executorch"];
+        const observedSemanticFormats = new Set(semanticRows.map((row) => row.artifact_format));
+        const missingSemanticFormats = requiredSemanticFormats.filter((format) => !observedSemanticFormats.has(format));
+        if (missingSemanticFormats.length) {
+          throw new Error(`UI regression baseline is missing Web/CLI semantic-digest equality for: ${missingSemanticFormats.join(", ")}.`);
         }
         records[name].source_git_commit = baseline.source_commit;
         records[name].row_count = baseline.rows.length;

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" data-analysis-depth="deep">
 <head>
-  <meta name="deepbom-release" content="1.96.3" />
+  <meta name="deepbom-release" content="1.96.4" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta id="themeColor" name="theme-color" content="#fffefa" />
@@ -50,7 +50,7 @@
           "applicationSubCategory": "Machine Learning Tool",
           "operatingSystem": "Web Browser",
           "url": "https://deepbom.org/",
-          "softwareVersion": "1.96.3",
+          "softwareVersion": "1.96.4",
           "identifier": "https://doi.org/10.5281/zenodo.21834509",
           "citation": "Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts (Version 1.94.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.21834509",
           "description": "Browser-local deployment artifact evidence for TFLite, ONNX, GGUF, SafeTensors, and Core ML. The analyzer separates serialized facts, deterministic derivations, target-specific models, imported runtime observations, and unassessed claims.",
@@ -528,6 +528,13 @@
                 Add sidecar folder
               </label>
               <output id="onnxExternalDataStatus" class="onnx-external-status">No sidecars selected</output>
+            </div>
+            <div class="conversion-receipt-control">
+              <label class="file-button external-file-button" title="Bind source artifacts, converter invocation, and an environment manifest to this deployment artifact without loading source model code">
+                <input id="conversionReceiptInput" type="file" accept=".json,application/json" />
+                Add conversion receipt
+              </label>
+              <output id="conversionReceiptStatus" class="onnx-external-status" aria-live="polite">No conversion receipt selected</output>
             </div>
             <button class="run-audit-button" id="runAudit" type="button" disabled>Run Static Audit</button>
             <div class="sample-model-control">
@@ -1238,6 +1245,27 @@
                   </div>
                 </div>
               </section>
+              <section class="perspective-audit-tool" aria-labelledby="perspectiveAuditTitle">
+                <header>
+                  <div>
+                    <span>Independent standards check</span>
+                    <h3 id="perspectiveAuditTitle">CycloneDX Perspective Audit</h3>
+                    <p>Evaluate perspective mappings with RFC 9535 and retain every normalized JSON Pointer. Relevance is never converted into a conformance decision.</p>
+                  </div>
+                  <strong id="perspectiveAuditStatus" data-state="idle" role="status" aria-live="polite">No document selected</strong>
+                </header>
+                <div class="perspective-audit-inputs">
+                  <label>Document<input id="perspectiveBomInput" type="file" accept=".json,.cdx.json,application/json,application/vnd.cyclonedx+json"></label>
+                  <label>Perspective source <small>optional</small><input id="perspectiveSourceInput" type="file" accept=".json,.cdx.json,application/json"></label>
+                  <label>Candidate projection <small>explicit sidecar only</small><input id="perspectiveProjectionInput" type="file" accept=".json,application/json"></label>
+                </div>
+                <div class="perspective-audit-actions">
+                  <button id="runPerspectiveAudit" class="bundle-action" type="button" disabled>Run mapping audit</button>
+                  <button id="downloadPerspectiveJson" type="button" disabled>Download JSON</button>
+                  <button id="downloadPerspectiveHtml" type="button" disabled>Download review HTML</button>
+                  <p id="perspectiveAuditSummary">No document selected.</p>
+                </div>
+              </section>
               <div class="export-contract-list export-contract-primary-list">
                 <article class="export-contract-row export-contract-primary">
                   <div class="export-contract-code">
@@ -1252,14 +1280,14 @@
                 </article>
                 <article class="export-contract-row">
                   <div class="export-contract-code">
-                    <span>CycloneDX 2.0 proposal fixture</span>
-                    <strong>Parameter Contracts</strong>
+                    <span>CycloneDX 2.0 draft status</span>
+                    <strong>Compatibility Record</strong>
                   </div>
                   <div>
-                    <h3>Commit-pinned, non-conformant parameter-binding fixture</h3>
-                    <p>Available without sign-in: named external I/O affine facts projected onto the active 2.0 AI/ML draft without inferring symmetry.</p>
+                    <h3>Pinned draft integration status</h3>
+                    <p>Available without sign-in: exact #990, #175, #1067, and #1075 source commits and content hashes, unresolved integration conditions, and the stable 1.7 fallback. No 2.0 BOM is emitted while those drafts are unresolved.</p>
                   </div>
-                  <button id="downloadCycloneDx20Preview" type="button" disabled>Download fixture</button>
+                  <button id="downloadCycloneDx20DraftStatus" type="button" disabled>Download status</button>
                 </article>
               </div>
               <details class="export-contract-companions">
@@ -1303,7 +1331,7 @@
                 <summary><strong>7-document inventory</strong> / exact Contract Pack contents</summary>
                 <ol>
                   <li><strong>CycloneDX artifact evidence</strong><span>Canonical artifact record and evidence references</span></li>
-                  <li><strong>CycloneDX 2.0 proposal fixture</strong><span>Named external I/O affine contracts; not a conformance claim</span></li>
+                  <li><strong>CycloneDX 2.0 draft compatibility</strong><span>Pinned source identities and fail-closed integration status; not a BOM</span></li>
                   <li><strong>Artifact evidence envelope</strong><span>Canonical hash-bound analysis facts</span></li>
                   <li><strong>Interface contract ledger</strong><span>Complete external parameter contract</span></li>
                   <li><strong>Observed formulation BOM</strong><span>Observed and declared formulation evidence</span></li>

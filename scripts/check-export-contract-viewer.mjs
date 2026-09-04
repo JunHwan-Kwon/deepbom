@@ -53,7 +53,7 @@ try {
 
   const desktop = await geometry(page);
   assertGeometry(desktop, "desktop");
-  if (desktop.rows !== 5 || desktop.buttons !== 7 || !desktop.panelActive) {
+  if (desktop.rows !== 5 || desktop.buttons !== 10 || desktop.perspectiveButtons !== 3 || !desktop.panelActive) {
     throw new Error(`Export workspace content contract failed: ${JSON.stringify(desktop)}`);
   }
 
@@ -145,6 +145,7 @@ async function geometry(page) {
       panelActive: panel.classList.contains("active"),
       rows: rows.length,
       buttons: buttons.length,
+      perspectiveButtons: panel.querySelectorAll(".perspective-audit-actions button").length,
       panelOverflow: Math.max(0, panel.scrollWidth - panel.clientWidth),
       viewportOverflow: Math.max(0, document.documentElement.scrollWidth - innerWidth),
       rowOverflow: Math.max(0, ...rows.map((row) => row.scrollWidth - row.clientWidth)),

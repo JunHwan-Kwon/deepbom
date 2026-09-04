@@ -1,5 +1,6 @@
 import { ARTIFACT_IR_METHOD_VERSION, ARTIFACT_IR_SCHEMA, SHA256 } from "./constants.js";
 import { validateArtifactIrRuntimeReconciliation } from "../../artifact-ir-runtime.js";
+import { validateBoundConversionReceipt } from "../../conversion-receipt.js";
 import { exact, list, text, uniqueIds } from "./shared.js";
 
 export function validateArtifactIrBody(value) {
@@ -113,6 +114,20 @@ export function validateArtifactIrBody(value) {
   for (const row of quantization.records) {
     if (!subjects.has(row.subject_ref)) throw new Error("Artifact IR quantization subject reference is invalid.");
     for (const storageRef of list(row.related_storage_refs)) if (!storageIds.has(storageRef)) throw new Error("Artifact IR quantization record references an unknown related storage object.");
+  }
+  const lineage = value.lineage_evidence;
+  if (!lineage || !["not_provided", "output_bound_source_declared"].includes(lineage.status)
+    || !text(lineage.interpretation_boundary, 2400)) throw new Error("Artifact IR lineage evidence is invalid.");
+  if (lineage.status === "not_provided") {
+    if (lineage.evidence_class !== "NOT_ASSESSABLE" || lineage.conversion !== null) throw new Error("Artifact IR absent lineage classification is invalid.");
+  } else {
+    if (lineage.evidence_class !== "DECLARED_UNVERIFIED" || !lineage.conversion) throw new Error("Artifact IR conversion lineage classification is invalid.");
+    validateBoundConversionReceipt(lineage.conversion, {
+      filename: value.artifact.filename,
+      format: value.artifact.format,
+      sha256: value.artifact.sha256,
+      byte_length_decimal: value.artifact.byte_length?.decimal ?? null,
+    });
   }
   if (!value.overlays || !Array.isArray(value.overlays.static) || !Array.isArray(value.overlays.runtime)) throw new Error("Artifact IR overlay ledger is invalid.");
   const overlaySubjects = new Set([...operatorIds, ...architectureIds]);

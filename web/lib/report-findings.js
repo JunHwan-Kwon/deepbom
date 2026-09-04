@@ -463,7 +463,20 @@ export function buildFindingsRegister(analysis, {
       relevance: "integration contract; result interpretation",
     }));
   }
-  findings.push(finding({
+  const conversionReceipt = analysis?.conversion_receipt;
+  findings.push(finding(conversionReceipt ? {
+    id: "EA-LIN-0001",
+    category: "lineage",
+    title: "Conversion receipt is output-bound; remaining release lineage is not established",
+    evidence: "DECLARED_UNVERIFIED",
+    priority: "Medium",
+    op: "Release manifest",
+    observation: `Receipt ${conversionReceipt.receipt_sha256} declares ${formatNumber(conversionReceipt.receipt?.source_artifacts?.length || 0)} source artifact(s), converter ${conversionReceipt.receipt?.converter?.name || "not declared"} ${conversionReceipt.receipt?.converter?.version || ""}, and environment manifest ${conversionReceipt.receipt?.converter?.environment?.manifest_sha256 || "not declared"}. The output SHA-256 and format exactly match the active deployment artifact. Converter execution, calibration dataset use, build pipeline identity, software release ID, model requirement ID, and previous released artifact remain outside the observed artifact binding unless separately supplied.`,
+    interpretation: "The output identity is observed. Source, converter, invocation, and environment statements are hash-bound declarations and were not re-executed or independently observed by this audit.",
+    recommendation: "Verify the receipt against the controlled build pipeline and bind any applicable calibration dataset, software release, requirement, approval, and prior-artifact identities in the release record.",
+    relevance: "release traceability; configuration management",
+    evidenceJsonPointers: ["/evidence/static_analysis/conversion_receipt"],
+  } : {
     id: "EA-LIN-0001",
     category: "lineage",
     title: "Source checkpoint and conversion lineage were not provided",

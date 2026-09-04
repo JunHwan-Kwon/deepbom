@@ -1,18 +1,28 @@
 import { buildInterfaceQuantizationContractLedger } from "./quantization-contract-summary.js";
 import { artifactBomRef, artifactContentVersion, cycloneDxSerialNumber } from "./cyclonedx-identity.js";
+import { cycloneDxDraftProfile } from "./cyclonedx-draft-profiles.js";
+
+const LEGACY_PROFILE_ID = "legacy-parameter-contract-2026-08-06";
+const LEGACY_PROFILE = cycloneDxDraftProfile(LEGACY_PROFILE_ID);
 
 export const CYCLONEDX_20_AI_ML_DRAFT = Object.freeze({
+  profile_id: LEGACY_PROFILE_ID,
   specification_pr: "https://github.com/CycloneDX/specification/pull/990",
-  specification_commit: "58a7cc2d04105e7525b0ed369ccf0a4325dc34b2",
+  specification_commit: LEGACY_PROFILE.sources[0].commit,
   schema: "https://raw.githubusercontent.com/CycloneDX/specification/58a7cc2d04105e7525b0ed369ccf0a4325dc34b2/schema/2.0/cyclonedx-2.0.schema.json",
   taxonomy_pr: "https://github.com/CycloneDX/cyclonedx-property-taxonomy/pull/175",
-  taxonomy_commit: "1b380dfae8bf4a83646ae59ea3d3b42d466f3858",
+  taxonomy_commit: LEGACY_PROFILE.sources[1].commit,
   conformance_status: "NON_CONFORMANT_PROPOSAL_FIXTURE_SCHEMA_CLOSURE_UNAVAILABLE",
 });
 
 const PREFIX = "cdx:ai-ml:model:parameter:quantization:";
 
 export function buildCycloneDx20ParameterContractPreview(analysis, options = {}) {
+  if (options.allowHistoricalFixture !== true || options.profileId !== LEGACY_PROFILE_ID) {
+    const error = new Error("Historical CycloneDX 2.0 proposal fixture generation requires an explicit legacy profile and allowHistoricalFixture=true. Current draft export is intentionally refused.");
+    error.code = "STALE_DRAFT_PROFILE";
+    throw error;
+  }
   const ledger = options.interfaceLedger || buildInterfaceQuantizationContractLedger(analysis);
   const sha256 = normalizeSha256(options.hash || analysis?.model_sha256);
   const name = String(analysis?.filename || "model");
@@ -46,6 +56,7 @@ export function buildCycloneDx20ParameterContractPreview(analysis, options = {})
           modelParameters: parameters,
           properties: [
             property("deepbom:preview:status", CYCLONEDX_20_AI_ML_DRAFT.conformance_status),
+            property("deepbom:preview:profileId", CYCLONEDX_20_AI_ML_DRAFT.profile_id),
             property("deepbom:preview:specificationCommit", CYCLONEDX_20_AI_ML_DRAFT.specification_commit),
             property("deepbom:preview:taxonomyCommit", CYCLONEDX_20_AI_ML_DRAFT.taxonomy_commit),
             property("deepbom:preview:interpretationBoundary", "Parameter binding follows the pinned CycloneDX 2.0 draft. Generic affine facts are not promoted to symmetric or asymmetric because the artifact does not encode that classification."),
@@ -68,6 +79,8 @@ export function validateCycloneDx20ParameterContractPreview(document) {
   if (document?.$schema !== CYCLONEDX_20_AI_ML_DRAFT.schema) errors.push("Draft schema source pin is missing or changed.");
   const status = document?.metadata?.component?.modelCard?.properties?.find((item) => item?.name === "deepbom:preview:status")?.value;
   if (status !== CYCLONEDX_20_AI_ML_DRAFT.conformance_status) errors.push("The non-conformant proposal-fixture status is required.");
+  const profileId = document?.metadata?.component?.modelCard?.properties?.find((item) => item?.name === "deepbom:preview:profileId")?.value;
+  if (profileId !== LEGACY_PROFILE_ID) errors.push("The explicit historical draft profile identity is required.");
   const component = document?.metadata?.component;
   if (component?.type !== "machine-learning-model") errors.push("metadata.component must be a machine-learning-model.");
   const modelParameters = component?.modelCard?.modelParameters;

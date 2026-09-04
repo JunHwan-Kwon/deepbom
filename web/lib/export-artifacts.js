@@ -32,10 +32,10 @@ export const TEXT_EXPORT_ARTIFACTS = {
     ensureHash: true,
     raw: true,
   },
-  cyclonedx20Preview: {
-    permissionLabel: "CycloneDX 2.0 non-conformant proposal fixture",
-    suffix: "parameter_contract.preview.cdx.json",
-    type: "application/vnd.cyclonedx+json; version=2.0-draft",
+  cyclonedx20DraftStatus: {
+    permissionLabel: "CycloneDX 2.0 draft compatibility status",
+    suffix: "cyclonedx_2_0_draft_compatibility.json",
+    type: "application/json",
     requireModelBytes: true,
     ensureHash: true,
     raw: true,

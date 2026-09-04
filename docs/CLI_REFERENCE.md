@@ -29,6 +29,7 @@ asset verification, and equivalence checks are documented in
 | `explore` | 1 | `deepbom.redesign_pareto.v1` |
 | `graph` | 1 | `svg`<br>`png`<br>`html`<br>`mermaid`<br>`dot`<br>`deepbom.artifact_ir.v2`<br>`deepbom.graph_ir.v1`<br>`deepbom.visualization_manifest.v1` |
 | `placement` | 1 | `deepbom.placement_comparison.v1` |
+| `perspective` | 1 | `deepbom.cyclonedx_perspective_audit.v1`<br>`html` |
 | `accelerator collect nvidia` | none | `deepbom.accelerator_profile.v1` |
 | `capabilities` | none | `deepbom.cli_capabilities.v1` |
 
@@ -51,10 +52,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.96.3`:
+`1.96.4`:
 
 ```console
-DEEPBOM 1.96.3
+DEEPBOM 1.96.4
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -63,6 +64,7 @@ Usage:
   deepbom diff <baseline.tflite> <candidate.tflite> [options]
   deepbom explore <artifact.tflite> [options]
   deepbom graph <artifact> [options]
+  deepbom perspective <bom.json> [options]
   deepbom accelerator collect nvidia [options]
   deepbom capabilities [--json|--compact]
 
@@ -76,6 +78,10 @@ Options:
                           Bind a strict custom TFLite target profile (mutually exclusive with --target)
   --contract <json>      Production external-interface contract for verify
   --request <json>       Bound redesign request for explore
+  --perspective-source <json>
+                          Evaluate mappings from a separate CycloneDX perspective document
+  --perspective-projection <json>
+                          Apply an explicit candidate-only projection before perspective evaluation
   --external-data-dir <directory>
                           Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory
   --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract
@@ -95,7 +101,7 @@ Options:
                           Bind that config to model-source/component digests
   --llm-memory-profile <json>
                           Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools
-  --format <kind>        analysis, envelope, cyclonedx, or sarif (audit/gguf only)
+  --format <kind>        analysis, envelope, cyclonedx, or sarif (audit/gguf); analysis, json, or html (perspective)
   --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored
   --fail-on <severity>   Exit 2 for findings at/above informational, low, medium, or high
   --policy-output <path> Write the deterministic finding-gate decision JSON
@@ -120,6 +126,12 @@ N-way placement comparison:
   deepbom placement <artifact> [--profiles <id,id|all>] [--json|--compact]
   --profiles <ids|all>   Compare selected independent profiles (default: all available profiles)
 
+CycloneDX perspective audit:
+  deepbom perspective <bom.json> [--perspective-source <json>] [--json|--compact]
+  --perspective-projection <json>
+                          Evaluate a separately identified candidate projection; no implicit reference traversal is performed
+  --output-format html   Write a read-only report with the exact match ledger embedded
+
 Compiled accelerator evidence:
   --coreml-compute-plan <json>
                           Import an artifact- and compiled-model-bound MLComputePlan estimate; not executed placement
@@ -127,6 +139,10 @@ Compiled accelerator evidence:
                           Import an artifact/compiler/invocation/compiled-artifact-bound Edge TPU operation ledger
   --litert-qualcomm-evidence <json>
                           Import an artifact/source/compiler/QNN-plan-bound operation ledger
+
+Conversion provenance:
+  --conversion-receipt <json>
+                          Bind a self-hashed source/converter/environment receipt to the observed output artifact. Source .pt/.pth/.h5 files are identified by digest only and are never deserialized.
 
 NVIDIA accelerator observation:
   deepbom accelerator collect nvidia [--device <index>] [--json|--compact]

@@ -24,15 +24,16 @@ mkdirSync(outputDir, { recursive: true });
 for (const [key, filenameOut] of Object.entries(set.files)) {
   const documentKey = {
     cyclonedx: "cyclonedx_evidence",
-    cyclonedx20Preview: "cyclonedx_2_0_parameter_contract_preview",
+    cyclonedx20DraftStatus: "cyclonedx_2_0_draft_compatibility",
     artifactEnvelope: "artifact_evidence_envelope",
+    artifactIr: "artifact_ir",
     interfaceContracts: "interface_contract_ledger",
     formulation: "observed_formulation",
     runtime: "runtime_requirement_manifest",
     missingFields: "missing_provenance_field_specification",
   }[key];
   const document = set.documents[documentKey];
-  if (filenameOut.endsWith(".cdx.json") && key !== "cyclonedx20Preview") assertCycloneDx17(document, filenameOut);
+  if (filenameOut.endsWith(".cdx.json")) assertCycloneDx17(document, filenameOut);
   writeFileSync(path.join(outputDir, filenameOut), `${JSON.stringify(document, null, 2)}\n`);
 }
 console.log(`Wrote reproducible public TFLite contract example to ${outputDir}`);

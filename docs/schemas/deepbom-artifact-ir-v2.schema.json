@@ -14,6 +14,7 @@
     "storage_topology",
     "architecture_projection",
     "quantization_contracts",
+    "lineage_evidence",
     "overlays",
     "completeness",
     "interpretation_boundary",
@@ -21,7 +22,7 @@
   ],
   "properties": {
     "schema": { "const": "deepbom.artifact_ir.v2" },
-    "method_version": { "const": "2.1.0" },
+    "method_version": { "const": "2.2.0" },
     "hash_contract": {
       "type": "object",
       "required": ["algorithm", "canonicalization", "source_encoding", "excluded_pointers"],
@@ -44,6 +45,7 @@
     "storage_topology": { "$ref": "#/$defs/storage" },
     "architecture_projection": { "$ref": "#/$defs/architecture" },
     "quantization_contracts": { "$ref": "#/$defs/quantization" },
+    "lineage_evidence": { "$ref": "#/$defs/lineageEvidence" },
     "overlays": { "$ref": "#/$defs/overlays" },
     "completeness": { "$ref": "#/$defs/completeness" },
     "interpretation_boundary": { "type": "string", "minLength": 1 },
@@ -461,6 +463,132 @@
       "properties": {
         "native_locator": { "$ref": "#/$defs/nativeSource" },
         "evidence_class": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "lineageEvidence": {
+      "type": "object",
+      "required": ["status", "evidence_class", "conversion", "interpretation_boundary"],
+      "properties": {
+        "status": { "enum": ["not_provided", "output_bound_source_declared"] },
+        "evidence_class": { "enum": ["NOT_ASSESSABLE", "DECLARED_UNVERIFIED"] },
+        "conversion": { "anyOf": [{ "$ref": "#/$defs/boundConversionReceipt" }, { "type": "null" }] },
+        "interpretation_boundary": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [{
+        "if": { "properties": { "status": { "const": "not_provided" } }, "required": ["status"] },
+        "then": {
+          "properties": {
+            "evidence_class": { "const": "NOT_ASSESSABLE" },
+            "conversion": { "type": "null" }
+          }
+        },
+        "else": {
+          "properties": {
+            "evidence_class": { "const": "DECLARED_UNVERIFIED" },
+            "conversion": { "$ref": "#/$defs/boundConversionReceipt" }
+          }
+        }
+      }],
+      "additionalProperties": false
+    },
+    "boundConversionReceipt": {
+      "type": "object",
+      "required": ["schema", "receipt_sha256", "receipt_file_sha256", "active_artifact", "status", "evidence_class", "output_binding_evidence_class", "receipt", "interpretation_boundary", "binding_sha256"],
+      "properties": {
+        "schema": { "const": "deepbom.bound_conversion_receipt.v1" },
+        "receipt_sha256": { "$ref": "#/$defs/sha256" },
+        "receipt_file_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+        "active_artifact": { "$ref": "#/$defs/conversionArtifact" },
+        "status": { "const": "exact_output_hash_and_format_match" },
+        "evidence_class": { "const": "DECLARED_UNVERIFIED" },
+        "output_binding_evidence_class": { "const": "OBSERVED" },
+        "receipt": { "$ref": "#/$defs/conversionReceipt" },
+        "interpretation_boundary": { "type": "string", "minLength": 1 },
+        "binding_sha256": { "$ref": "#/$defs/sha256" }
+      },
+      "additionalProperties": false
+    },
+    "conversionReceipt": {
+      "type": "object",
+      "required": ["schema", "hash_contract", "created_at", "source_artifacts", "converter", "supporting_inputs", "output_artifact", "interpretation_boundary", "receipt_sha256"],
+      "properties": {
+        "schema": { "const": "deepbom.conversion_receipt.v1" },
+        "hash_contract": {
+          "type": "object",
+          "required": ["algorithm", "canonicalization", "source_encoding", "excluded_pointers"],
+          "properties": {
+            "algorithm": { "const": "SHA-256" },
+            "canonicalization": { "const": "RFC8785-JCS" },
+            "source_encoding": { "const": "UTF-8" },
+            "excluded_pointers": {
+              "type": "array",
+              "prefixItems": [{ "const": "/receipt_sha256" }],
+              "minItems": 1,
+              "maxItems": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "created_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$" },
+        "source_artifacts": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/conversionArtifact" } },
+        "converter": { "$ref": "#/$defs/converter" },
+        "supporting_inputs": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/conversionSupportingInput" } },
+        "output_artifact": { "$ref": "#/$defs/conversionArtifact" },
+        "interpretation_boundary": { "type": "string", "minLength": 1 },
+        "receipt_sha256": { "$ref": "#/$defs/sha256" }
+      },
+      "additionalProperties": false
+    },
+    "conversionArtifact": {
+      "type": "object",
+      "required": ["filename", "format", "sha256", "byte_length_decimal"],
+      "properties": {
+        "filename": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "format": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_.+-]{0,63}$" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "byte_length_decimal": { "type": ["string", "null"], "pattern": "^(0|[1-9][0-9]*)$" }
+      },
+      "additionalProperties": false
+    },
+    "conversionSupportingInput": {
+      "type": "object",
+      "required": ["role", "filename", "sha256", "byte_length_decimal"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "filename": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "byte_length_decimal": { "type": ["string", "null"], "pattern": "^(0|[1-9][0-9]*)$" }
+      },
+      "additionalProperties": false
+    },
+    "converter": {
+      "type": "object",
+      "required": ["name", "version", "executable_sha256", "invocation", "environment"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "version": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "executable_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+        "invocation": {
+          "type": "object",
+          "required": ["argv"],
+          "properties": {
+            "argv": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "type": "string", "minLength": 1, "maxLength": 4096 } }
+          },
+          "additionalProperties": false
+        },
+        "environment": {
+          "type": "object",
+          "required": ["manifest_sha256", "os", "architecture", "runtime", "container_image_digest"],
+          "properties": {
+            "manifest_sha256": { "$ref": "#/$defs/sha256" },
+            "os": { "type": ["string", "null"], "minLength": 1, "maxLength": 120 },
+            "architecture": { "type": ["string", "null"], "minLength": 1, "maxLength": 120 },
+            "runtime": { "type": ["string", "null"], "minLength": 1, "maxLength": 256 },
+            "container_image_digest": { "type": ["string", "null"], "pattern": "^sha256:[a-f0-9]{64}$" }
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },

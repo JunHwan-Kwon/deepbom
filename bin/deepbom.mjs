@@ -48,6 +48,12 @@ import { buildExecutionPlacementEvidence } from "../web/lib/execution-placement-
 import { buildPlacementComparison } from "../web/lib/placement-comparison.js";
 import { buildCpuCostTargetBinding } from "../web/lib/cpu-target-binding.js";
 import { evaluateReviewPolicy, validateReviewPolicy } from "../web/lib/review-policy.js";
+import { bindConversionReceipt } from "../web/lib/conversion-receipt.js";
+import {
+  auditCycloneDxPerspectives,
+  renderCycloneDxPerspectiveAuditHtml,
+  validateCycloneDxPerspectiveAudit,
+} from "../web/lib/cyclonedx-perspective-audit.js";
 import { buildOnnxExternalDataStructureBinding, onnxExternalInitializerElementCount } from "../web/lib/onnx-external-data-structure-binding.js";
 import {
   buildCanonicalGatedDecoderProjection,
@@ -77,7 +83,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.3";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.4";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 
 async function main(argv) {
@@ -101,6 +107,11 @@ async function main(argv) {
     return emitDocument(parsed, profile, () => buildAcceleratorSummary(profile));
   }
   if (!parsed.input) throw new Error("An artifact path is required.");
+  if (parsed.command === "perspective") {
+    validatePerspectiveInvocation(parsed);
+    await preflightOutputDestinations(parsed);
+    return runPerspectiveCommand(parsed);
+  }
   validateInvocation(parsed);
   await preflightOutputDestinations(parsed);
   const targetBinding = await resolveTargetBinding(parsed);
@@ -137,6 +148,8 @@ async function main(argv) {
     ? await readJsonSidecar(parsed.edgeTpuCompilerEvidence, "edgetpu_compiler_evidence") : null;
   const liteRtQualcommInput = parsed.liteRtQualcommEvidence
     ? await readJsonSidecar(parsed.liteRtQualcommEvidence, "litert_qualcomm_compiler_dispatch_evidence") : null;
+  const conversionReceiptInput = parsed.conversionReceipt
+    ? await readJsonSidecar(parsed.conversionReceipt, "conversion_receipt") : null;
   let preanalyzedOnnx = null;
   if (input.kind === "file" && detectedFormat === "onnx" && resolvedSource.acquisition?.source?.kind === "huggingface" && !parsed.externalDataRoot) {
     const bytes = await readCliFileBytes(input);
@@ -204,6 +217,14 @@ async function main(argv) {
     throw new Error("Analyzed artifact SHA-256 differs from the remote acquisition receipt.");
   }
   enforceArtifactIdentity(analysis, artifact);
+  if (conversionReceiptInput) {
+    analysis.conversion_receipt = bindConversionReceipt(conversionReceiptInput.document, {
+      filename: artifact.filename,
+      format: artifact.format,
+      sha256: artifact.sha256,
+      byte_length_decimal: String(artifact.size),
+    }, { receiptFileSha256: conversionReceiptInput.sha256 });
+  }
   analysis.cli_scan_policy = scanPolicy;
   analysis.artifact_set = buildCliArtifactSet(artifact, resolvedSource.acquisition, analysis, resolvedSource.closure);
   if (format === "onnx") attachOnnxContractConflictCapsule(analysis);
@@ -493,6 +514,52 @@ function validateInvocation(parsed) {
   }
 }
 
+function validatePerspectiveInvocation(parsed) {
+  assertNoOptions(parsed, [
+    "targetProfile", "contract", "request", "context", "images", "tokensPerImage", "batch", "stateBits", "memoryMib",
+    "tensorrtProfile", "tensorrtParserEvidence", "tensorrtEngineInspector", "tensorrtLlmConfig", "tensorrtLlmBinding",
+    "llmMemoryProfile", "conversionReceipt", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence",
+    "externalDataRoot", "executorchBuild", "policyOutput", "reviewPolicy", "cacheDir", "offline",
+  ], "perspective");
+  if (parsed.targetExplicit || parsed.failOn !== "none") throw new Error("The perspective command does not accept target or finding-policy options.");
+  if (parsed.deviceIndex != null || parsed.acceleratorDeviceIndex != null || parsed.includeDeviceIdentifiers) {
+    throw new Error("The perspective command does not accept accelerator collector options.");
+  }
+  if (parsed.scanExplicit || parsed.placementProfilesExplicit || parsed.maxDownloadExplicit) {
+    throw new Error("The perspective command does not accept scan, placement-profile, or remote-download options.");
+  }
+  if (parsed.timestamp) throw new Error("The perspective command is deterministic and does not accept --timestamp.");
+  if (parsed.noClobber && (!parsed.output || parsed.output === "-")) throw new Error("--no-clobber requires a perspective output file path.");
+}
+
+async function runPerspectiveCommand(parsed) {
+  const documentInput = await readJsonSidecar(parsed.input, "cyclonedx_document");
+  if (parsed.expectedSha256 && documentInput.sha256 !== parsed.expectedSha256) {
+    throw new Error(`CycloneDX document SHA-256 mismatch: expected ${parsed.expectedSha256}, observed ${documentInput.sha256}.`);
+  }
+  const perspectiveInput = parsed.perspectiveSource
+    ? await readJsonSidecar(parsed.perspectiveSource, "cyclonedx_perspective_source")
+    : documentInput;
+  const projectionInput = parsed.perspectiveProjection
+    ? await readJsonSidecar(parsed.perspectiveProjection, "cyclonedx_perspective_projection")
+    : null;
+  const audit = auditCycloneDxPerspectives(documentInput.document, {
+    perspectiveDocument: perspectiveInput.document,
+    mode: projectionInput ? "explicit_candidate_projection" : "raw_document",
+    projection: projectionInput?.document || null,
+    expectedTypes: projectionInput?.document?.expected_types || {},
+  });
+  const validation = validateCycloneDxPerspectiveAudit(audit);
+  if (!validation.valid) throw new Error(`CycloneDX perspective audit self-validation failed: ${validation.errors.join("; ")}`);
+  if (parsed.outputFormat === "html") {
+    const html = renderCycloneDxPerspectiveAuditHtml(audit, { title: `CycloneDX Perspective Audit - ${documentInput.path}` });
+    if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, html, { noClobber: parsed.noClobber });
+    else process.stdout.write(html);
+    return;
+  }
+  return emitDocument(parsed, audit, () => buildPerspectiveSummary(audit, documentInput.path));
+}
+
 async function runPlacementCommand(parsed, analysis, artifact) {
   const runtimeEvidence = analysis.coreml_compute_plan || null;
   const execution = buildExecutionPlacementEvidence(analysis, runtimeEvidence);
@@ -515,7 +582,7 @@ function validateCapabilitiesInvocation(parsed) {
   assertNoOptions(parsed, [
     "targetProfile", "contract", "request", "context", "images", "tokensPerImage", "batch", "stateBits", "memoryMib", "tensorrtProfile",
     "tensorrtParserEvidence", "tensorrtEngineInspector", "tensorrtLlmConfig", "tensorrtLlmBinding",
-    "llmMemoryProfile", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
+    "llmMemoryProfile", "conversionReceipt", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
   ], "capabilities");
   if (parsed.targetExplicit || parsed.failOn !== "none") throw new Error("The capabilities command does not accept target or finding-policy options.");
   if (parsed.deviceIndex != null || parsed.includeDeviceIdentifiers) throw new Error("The capabilities command does not accept NVIDIA collector options.");
@@ -537,7 +604,7 @@ function validateAcceleratorInvocation(parsed) {
   assertNoOptions(parsed, [
     "targetProfile", "contract", "request", "context", "images", "tokensPerImage", "batch", "stateBits", "memoryMib", "tensorrtProfile",
     "tensorrtParserEvidence", "tensorrtEngineInspector", "tensorrtLlmConfig", "tensorrtLlmBinding",
-    "llmMemoryProfile", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
+    "llmMemoryProfile", "conversionReceipt", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
   ], "accelerator collect nvidia");
   if (parsed.acceleratorDeviceIndex != null) throw new Error("The collector uses --device, not --accelerator-device.");
   if (parsed.scanExplicit) throw new Error("The accelerator collect nvidia command does not accept --scan.");
@@ -554,7 +621,7 @@ async function runDiffCommand(parsed, targetBinding) {
   assertCommandOutputFormat(parsed, "diff");
   assertNoOptions(parsed, [
     "contract", "request", "context", "images", "tokensPerImage", "batch", "stateBits", "memoryMib", "tensorrtProfile", "tensorrtParserEvidence", "tensorrtEngineInspector",
-    "tensorrtLlmConfig", "tensorrtLlmBinding", "llmMemoryProfile", "externalDataRoot", "executorchBuild",
+    "tensorrtLlmConfig", "tensorrtLlmBinding", "llmMemoryProfile", "conversionReceipt", "externalDataRoot", "executorchBuild",
   ], "diff");
   const baselineSource = await resolveCliArtifactSource(parsed.input, parsed);
   const candidateSource = await resolveArtifactSource(parsed.candidate, {
@@ -1185,6 +1252,22 @@ function buildPlacementSummary(comparison, artifact) {
   return `${lines.join("\n")}\n`;
 }
 
+function buildPerspectiveSummary(audit, filename) {
+  return [
+    `DEEPBOM ${VERSION} CycloneDX perspective audit`,
+    `Document: ${filename}`,
+    `Identity: sha256:${audit.subject.document_sha256}`,
+    `Mode: ${audit.mode}`,
+    `Perspectives: ${audit.perspective_count} | mappings: ${audit.mapping_count}`,
+    `Matches: ${audit.summary.single_match_count} single | ${audit.summary.multiple_match_count} multiple | ${audit.summary.zero_match_count} zero`,
+    `Required mappings with zero matches: ${audit.summary.required_zero_match_count}`,
+    "Decision: NOT_ASSESSABLE; relevance labels are not converted into conformance or release policy.",
+    `Evidence boundary: ${audit.claim_boundary}`,
+    "Machine output: rerun with --json or --compact; use --output-format html for a read-only report.",
+    "",
+  ].join("\n");
+}
+
 function buildCapabilitiesSummary(capabilities) {
   const commands = capabilities.commands.map((row) => row.name).join(", ");
   const formats = capabilities.inputs.standalone_extensions.join(", ");
@@ -1319,7 +1402,7 @@ function parseArguments(argv) {
   const first = values[0] || "";
   if (["-h", "--help", "help"].includes(first)) return { help: true };
   if (["-v", "--version", "version"].includes(first)) return { version: true };
-  const command = ["audit", "gguf", "verify", "diff", "explore", "graph", "placement", "capabilities", "accelerator"].includes(first) ? values.shift() : "audit";
+  const command = ["audit", "gguf", "verify", "diff", "explore", "graph", "placement", "perspective", "capabilities", "accelerator"].includes(first) ? values.shift() : "audit";
   const acceleratorAction = command === "accelerator" ? values.shift() || "" : "";
   const acceleratorProvider = command === "accelerator" ? values.shift() || "" : "";
   const parsed = {
@@ -1333,6 +1416,8 @@ function parseArguments(argv) {
     targetProfile: "",
     contract: "",
     request: "",
+    perspectiveSource: "",
+    perspectiveProjection: "",
     view: command === "graph" ? "structure" : "",
     outputFormat: command === "graph" ? "svg" : "analysis",
     output: "",
@@ -1355,6 +1440,7 @@ function parseArguments(argv) {
     tensorrtLlmConfig: "",
     tensorrtLlmBinding: "",
     llmMemoryProfile: "",
+    conversionReceipt: "",
     scan: "auto",
     scanExplicit: false,
     acceleratorProfile: "",
@@ -1386,6 +1472,8 @@ function parseArguments(argv) {
     else if (token === "--target-profile") parsed.targetProfile = requiredValue(values, token);
     else if (token === "--contract") parsed.contract = requiredValue(values, token);
     else if (token === "--request") parsed.request = requiredValue(values, token);
+    else if (token === "--perspective-source") parsed.perspectiveSource = requiredValue(values, token);
+    else if (token === "--perspective-projection") parsed.perspectiveProjection = requiredValue(values, token);
     else if (token === "--view") parsed.view = requiredValue(values, token).toLowerCase();
     else if (token === "--context") parsed.context = positiveInteger(requiredValue(values, token), token);
     else if (token === "--images") parsed.images = positiveInteger(requiredValue(values, token), token);
@@ -1399,6 +1487,7 @@ function parseArguments(argv) {
     else if (token === "--tensorrt-llm-config") parsed.tensorrtLlmConfig = requiredValue(values, token);
     else if (token === "--tensorrt-llm-binding") parsed.tensorrtLlmBinding = requiredValue(values, token);
     else if (token === "--llm-memory-profile") parsed.llmMemoryProfile = requiredValue(values, token);
+    else if (token === "--conversion-receipt") parsed.conversionReceipt = requiredValue(values, token);
     else if (token === "--scan") {
       parsed.scan = requiredValue(values, token).toLowerCase();
       parsed.scanExplicit = true;
@@ -1452,9 +1541,15 @@ function parseArguments(argv) {
   }
   const outputFormats = parsed.command === "graph"
     ? new Set(["svg", "png", "html", "mermaid", "dot", "json"])
-    : new Set(["analysis", "envelope", "cyclonedx", "sarif"]);
+    : parsed.command === "perspective"
+      ? new Set(["analysis", "json", "html"])
+      : new Set(["analysis", "envelope", "cyclonedx", "sarif"]);
   if (!outputFormats.has(parsed.outputFormat)) {
-    throw new Error(parsed.command === "graph" ? "--format must be svg, png, html, mermaid, dot, or json for graph." : "--format must be analysis, envelope, cyclonedx, or sarif.");
+    throw new Error(parsed.command === "graph"
+      ? "--format must be svg, png, html, mermaid, dot, or json for graph."
+      : parsed.command === "perspective"
+        ? "--format must be analysis, json, or html for perspective."
+        : "--format must be analysis, envelope, cyclonedx, or sarif.");
   }
   if (parsed.command === "graph" && !new Set(["structure", "placement", "quantization", "architecture"]).has(parsed.view)) {
     throw new Error("--view must be structure, placement, quantization, or architecture.");
@@ -1537,10 +1632,12 @@ async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_B
 }
 
 function printHelp() {
-  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis, envelope, cyclonedx, or sarif (audit/gguf only)\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Exit 2 for findings at/above informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Emit the complete formatted evidence JSON\n  --compact              Emit the complete compact evidence JSON\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
+  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom perspective <bom.json> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --perspective-source <json>\n                          Evaluate mappings from a separate CycloneDX perspective document\n  --perspective-projection <json>\n                          Apply an explicit candidate-only projection before perspective evaluation\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --format <kind>        analysis, envelope, cyclonedx, or sarif (audit/gguf); analysis, json, or html (perspective)\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Exit 2 for findings at/above informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Emit the complete formatted evidence JSON\n  --compact              Emit the complete compact evidence JSON\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
   process.stdout.write("\nNVIDIA accelerator binding:\n  --accelerator-profile <json>\n                          Bind an observed NVIDIA host profile without inferring selected-build or runtime assignment\n  --accelerator-device <index>\n                          Select one device when the bound profile contains multiple NVIDIA devices\n");
   process.stdout.write("\nN-way placement comparison:\n  deepbom placement <artifact> [--profiles <id,id|all>] [--json|--compact]\n  --profiles <ids|all>   Compare selected independent profiles (default: all available profiles)\n");
+  process.stdout.write("\nCycloneDX perspective audit:\n  deepbom perspective <bom.json> [--perspective-source <json>] [--json|--compact]\n  --perspective-projection <json>\n                          Evaluate a separately identified candidate projection; no implicit reference traversal is performed\n  --output-format html   Write a read-only report with the exact match ledger embedded\n");
   process.stdout.write("\nCompiled accelerator evidence:\n  --coreml-compute-plan <json>\n                          Import an artifact- and compiled-model-bound MLComputePlan estimate; not executed placement\n  --edgetpu-compiler-evidence <json>\n                          Import an artifact/compiler/invocation/compiled-artifact-bound Edge TPU operation ledger\n  --litert-qualcomm-evidence <json>\n                          Import an artifact/source/compiler/QNN-plan-bound operation ledger\n");
+  process.stdout.write("\nConversion provenance:\n  --conversion-receipt <json>\n                          Bind a self-hashed source/converter/environment receipt to the observed output artifact. Source .pt/.pth/.h5 files are identified by digest only and are never deserialized.\n");
   process.stdout.write("\nNVIDIA accelerator observation:\n  deepbom accelerator collect nvidia [--device <index>] [--json|--compact]\n  --device <index>        Collect one NVIDIA device index (default: all devices)\n  --include-device-identifiers\n                          Include raw GPU UUID and PCI bus ID; hashes are always emitted\n");
   process.stdout.write("\nRemote immutable artifact input:\n  hf://owner/repo@<40-hex-commit>/path\n  gs://bucket/object#generation=<generation>\n  https://host/path#sha256=<64-hex>\n  --expected-sha256 <hex> Add an independent content digest requirement\n  --cache-dir <directory> Use a content-addressed cache directory\n  --offline               Refuse network access and require a verified cache receipt\n  --max-download-gib <n>  Bound one remote download (default: 50, maximum: 1024)\n");
   process.stdout.write("\nBounded scan policy:\n  --scan <mode>           auto, structure, integrity, or full\n  GGUF/SafeTensors use range reads; auto selects structure above 10 GiB and streamed integrity above 2 GiB.\n  Monolithic TFLite/ONNX/ExecuTorch files above 1 GiB fail before full-file allocation.\n");

@@ -47,6 +47,10 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 | Local Windows 1.96.3 channel build | release-version npm, executable, Python wheel, and corrected Cargo launcher | 268.264 s |
 | Local Windows 1.96.3 platform smoke | installed Python and standalone TFLite/WASM plus ONNX execution parity | 221.351 s |
 | Local Windows 1.96.3 release-contract equivalence | npm full-format/package and command parity, native/Python execution, Cargo binding, and packaged-WASM tamper rejection | 653.126 s |
+| Private web 1.96.4 preflight | 78 bounded checks including CycloneDX draft/perspective and conversion-receipt contracts | 140.890 s |
+| Local Windows 1.96.4 channel build | release-version npm, executable, Python wheel, Cargo launcher, and public/private boundary | 225.892 s |
+| Local Windows 1.96.4 platform smoke | installed Python and standalone TFLite/WASM plus ONNX execution parity | 183.461 s |
+| Local Windows 1.96.4 release-contract equivalence | npm full-format/package and command parity, native/Python execution, Cargo binding, and packaged-WASM tamper rejection | 548.503 s |
 
 The 1.94.4 run is retained as timing and incident evidence. It is not a known-good
 quality baseline. A registry success is never treated as sufficient without a

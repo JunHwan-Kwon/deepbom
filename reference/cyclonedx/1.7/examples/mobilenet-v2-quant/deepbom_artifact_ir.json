@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.artifact_ir.v2",
-  "method_version": "2.1.0",
+  "method_version": "2.2.0",
   "hash_contract": {
     "algorithm": "SHA-256",
     "canonicalization": "RFC8785-JCS",
@@ -21541,6 +21541,12 @@
     },
     "interpretation_boundary": "Each record is bound to one canonical value or storage object. Per-tensor, per-axis, and per-block are partition descriptions, not an ordered precision scale. A zero zero-point is preserved as observed data and is not by itself promoted to a symmetric-quantization claim."
   },
+  "lineage_evidence": {
+    "status": "not_provided",
+    "evidence_class": "NOT_ASSESSABLE",
+    "conversion": null,
+    "interpretation_boundary": "No hash-bound conversion receipt was provided. Converter, source checkpoint, command, and environment lineage are not inferred from the deployment artifact."
+  },
   "overlays": {
     "static": [
       {
@@ -22414,5 +22420,5 @@
     "unknown_is_zero": false
   },
   "interpretation_boundary": "The canonical graph, storage, architecture, and quantization ledgers preserve distinct evidence scopes. Static backend eligibility and imported runtime observations are overlays and never rewrite serialized artifact facts. A missing executable graph is represented as not_serialized; no execution edge is synthesized from tensor names or architecture order.",
-  "artifact_ir_sha256": "aebc2c7a01e063ecb9dcef899dde35832f6801789eaf4921d2d6adb9e63a70bb"
+  "artifact_ir_sha256": "da81494f981d6c68e408008eb77f4eb2aada143393eb27c3e8cd37b45ece637d"
 }

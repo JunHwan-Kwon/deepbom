@@ -5,7 +5,7 @@ import {
   PUBLIC_EVIDENCE_PACKAGE_SCHEMA,
   validatePublicEvidencePackageFiles,
 } from "../web/lib/public-evidence-package.js";
-import { validateCycloneDx20ParameterContractPreview } from "../web/lib/cyclonedx-20-preview.js";
+import { ACTIVE_CYCLONEDX_DRAFT_PROFILE_ID } from "../web/lib/cyclonedx-draft-profiles.js";
 import { assertCycloneDx17 } from "./cyclonedx-17-schema.mjs";
 
 const SHA256 = "a".repeat(64);
@@ -75,12 +75,13 @@ assert.equal(validatePublicEvidencePackageFiles(files, packageScope), true);
 
 const cycloneDx17 = JSON.parse(byName.get("cyclonedx_1_7_artifact_evidence.cdx.json"));
 assertCycloneDx17(cycloneDx17, "public evidence package CycloneDX 1.7");
-const preview = JSON.parse(byName.get("proposal/cyclonedx_2_0_parameter_contract.preview.cdx.json"));
-const previewValidation = validateCycloneDx20ParameterContractPreview(preview);
-assert.equal(previewValidation.valid, true, previewValidation.errors.join("; "));
+const draftStatus = JSON.parse(byName.get("proposal/cyclonedx_2_0_draft_compatibility.json"));
+assert.equal(draftStatus.profile_id, ACTIVE_CYCLONEDX_DRAFT_PROFILE_ID);
+assert.equal(draftStatus.integration_status, "UNRESOLVED_INTEGRATION");
+assert.equal(draftStatus.export_allowed, false);
 
 const tamperedScope = structuredClone(packageScope);
 tamperedScope.report_body_sha256 = "0".repeat(64);
 assert.equal(validatePublicEvidencePackageFiles(files, tamperedScope), false);
 
-console.log("Public Evidence Package passed (watermarked summary, manifest, CycloneDX 1.7/2.0 preview, and claim boundary).");
+console.log("Public Evidence Package passed (watermarked summary, manifest, CycloneDX 1.7, pinned 2.0 draft status, and claim boundary).");

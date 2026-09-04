@@ -100,12 +100,15 @@ try {
 
   for (const entry of FORMAT_CASES) {
     await page.setViewportSize({ width: 1440, height: 1000 });
-    await runAudit(page, entry.file ? path.join(ROOT, entry.file) : null, entry.name, entry.buffer || null);
+    const artifactPath = entry.file ? path.join(ROOT, entry.file) : path.join(OUTPUT, "fixtures", entry.name);
+    if (entry.buffer) {
+      await mkdir(path.dirname(artifactPath), { recursive: true });
+      await writeFile(artifactPath, entry.buffer);
+    }
+    await runAudit(page, artifactPath, entry.name, entry.buffer || null);
     await page.locator('[data-workflow-step="audit"]').click();
     const desktopNavigation = await verifyFormatNavigation(page, entry.format, "desktop");
-    if (entry.format === "onnx") {
-      desktopNavigation.web_cli_semantic_digest = await verifyWebCliSemanticDigest(page, path.join(ROOT, entry.file));
-    }
+    desktopNavigation.web_cli_semantic_digest = await verifyWebCliSemanticDigest(page, artifactPath);
     rows.push(desktopNavigation);
     await page.setViewportSize({ width: 390, height: 844 });
     rows.push(await verifyFormatNavigation(page, entry.format, "mobile"));

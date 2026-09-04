@@ -4,6 +4,32 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.4 - 2026-09-04
+
+- Replaced the mutable CycloneDX 2.0 preview pins with a hash-verified draft
+  profile registry spanning specification PRs #990, #1067, #1075 and property
+  taxonomy PR #175. Incompatible or unresolved draft combinations now emit a
+  status record and refuse 2.0 BOM export; stable CycloneDX 1.7 remains the
+  default export.
+- Added an RFC 9535 Perspective evaluator for Web and CLI that records exact
+  match counts and JSON Pointers while distinguishing zero, empty, multiple,
+  and type-mismatched results. Reference projection is explicit and
+  `relevance: required` remains unclassified until its normative cardinality
+  semantics are resolved.
+- Added `deepbom.conversion_receipt.v1` for hash-only source checkpoint,
+  converter invocation, environment manifest, and deployment output lineage.
+  The output hash/format binding is observed while converter and source claims
+  remain `DECLARED_UNVERIFIED`; executable `.pt`, `.pth`, and `.h5` inputs are
+  never deserialized.
+- Advanced Artifact IR method v2 to 2.2.0 so the same conversion lineage is
+  conserved through Web, CLI, evidence envelope, graph export, and CycloneDX.
+  Added tamper, cross-artifact, secret-bearing argument, and cross-surface
+  regression checks.
+- Added bounded recovery for transient Engineering, regulatory, and raw-report
+  formatter module fetches, and corrected Evidence Package membership checks
+  so the non-BOM CycloneDX 2.0 draft-status record is not mistaken for a
+  `.cdx.json` document.
+
 ## 1.96.3 - 2026-09-03
 
 - Fixed the Cargo launcher's verified runtime-asset installation contract by

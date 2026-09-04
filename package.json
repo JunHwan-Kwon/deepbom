@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "1.96.3",
+  "version": "1.96.4",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
   "homepage": "https://deepbom.org",
   "repository": {
@@ -48,6 +48,9 @@
     "check:standardization-evidence": "node scripts/check-standardization-evidence.mjs",
     "build:cyclonedx20-quant-fixtures": "node scripts/build-cyclonedx-20-quantization-evidence.mjs",
     "check:cyclonedx20-quant-fixtures": "node scripts/check-cyclonedx-20-quantization-evidence.mjs",
+    "check:cyclonedx-draft-profiles": "node scripts/check-cyclonedx-draft-profiles.mjs",
+    "check:cyclonedx-perspectives": "node scripts/check-cyclonedx-perspective-audit.mjs",
+    "check:conversion-receipt": "node scripts/check-conversion-receipt.mjs",
     "corpus:google:baseline": "node scripts/write-google-corpus-measurement-baseline.mjs",
     "corpus:hf:sync": "node scripts/sync-huggingface-community-corpus.mjs",
     "corpus:hf:list": "node scripts/list-huggingface-community-corpus.mjs",
@@ -256,6 +259,7 @@
     "verify:onnx-ml-value-source-pin": "node scripts/verify-onnx-ml-value-source-pin.mjs",
     "verify:onnx-tfidf-source-pin": "node scripts/verify-onnx-tfidf-source-pin.mjs",
     "verify:coreml-source-pins": "node scripts/verify-coreml-source-pins.mjs",
+    "verify:cyclonedx-draft-pins": "node scripts/verify-cyclonedx-draft-pins.mjs",
     "check:coreml-deployment-contract": "node scripts/check-coreml-deployment-contract.mjs",
     "check:coreml-compute-plan": "node scripts/check-coreml-compute-plan.mjs",
     "verify:gguf-codebooks": "node scripts/generate-gguf-codebooks.mjs --check",
@@ -280,6 +284,7 @@
   "type": "module",
   "dependencies": {
     "@litertjs/core": "^2.5.2",
+    "jsonpath-rfc9535": "1.3.0",
     "onnxruntime-web": "^1.26.0"
   },
   "devDependencies": {

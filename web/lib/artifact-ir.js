@@ -11,6 +11,7 @@ import { buildQuantizationContracts } from "./artifact-ir/internal/quantization.
 import { clone, deepFreeze, list, normalizeFormat } from "./artifact-ir/internal/shared.js";
 import { buildStorageTopology } from "./artifact-ir/internal/storage.js";
 import { validateArtifactIrBody } from "./artifact-ir/internal/validation.js";
+import { buildConversionLineageEvidence } from "./conversion-receipt.js";
 
 export { ARTIFACT_IR_METHOD_VERSION, ARTIFACT_IR_SCHEMA };
 
@@ -26,6 +27,12 @@ export function buildArtifactEvidenceIrUnchecked(analysis, artifact = {}, { runt
   const architecture = buildArchitectureProjection(analysis, format, tensors);
   const quantization = buildQuantizationContracts(analysis, format, graph, storage, tensors);
   const overlays = buildOverlays(analysis, format, graph, architecture, runtimeEvidence, identity.sha256);
+  const lineage = buildConversionLineageEvidence(analysis, {
+    filename: identity.filename,
+    format: identity.format,
+    sha256: identity.sha256,
+    byte_length_decimal: identity.byte_length?.decimal ?? null,
+  });
   const body = {
     schema: ARTIFACT_IR_SCHEMA,
     method_version: ARTIFACT_IR_METHOD_VERSION,
@@ -46,6 +53,7 @@ export function buildArtifactEvidenceIrUnchecked(analysis, artifact = {}, { runt
     storage_topology: storage,
     architecture_projection: architecture,
     quantization_contracts: quantization,
+    lineage_evidence: lineage,
     overlays,
     completeness: completeness(graph, storage, architecture, quantization, overlays),
     interpretation_boundary: "The canonical graph, storage, architecture, and quantization ledgers preserve distinct evidence scopes. Static backend eligibility and imported runtime observations are overlays and never rewrite serialized artifact facts. A missing executable graph is represented as not_serialized; no execution edge is synthesized from tensor names or architecture order.",

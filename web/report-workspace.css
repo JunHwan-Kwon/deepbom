@@ -44,6 +44,101 @@
   overflow: hidden;
 }
 
+.perspective-audit-tool {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--teal, #0f766e);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-tight);
+  overflow: hidden;
+}
+
+.perspective-audit-tool > header,
+.perspective-audit-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+}
+
+.perspective-audit-tool > header {
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+
+.perspective-audit-tool > header span {
+  color: var(--teal, #0f766e);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.perspective-audit-tool h3,
+.perspective-audit-tool p {
+  margin: 3px 0 0;
+}
+
+.perspective-audit-tool p {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+#perspectiveAuditStatus {
+  max-width: 44ch;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: right;
+}
+
+#perspectiveAuditStatus[data-state="ok"] { color: var(--success, #047857); }
+#perspectiveAuditStatus[data-state="error"] { color: var(--danger, #b91c1c); }
+
+.perspective-audit-inputs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.perspective-audit-inputs label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.perspective-audit-inputs small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.perspective-audit-inputs input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--surface-tint);
+  color: var(--ink);
+}
+
+.perspective-audit-actions {
+  flex-wrap: wrap;
+}
+
+.perspective-audit-actions button {
+  min-height: 44px;
+}
+
+.perspective-audit-actions p {
+  flex: 1 1 280px;
+  overflow-wrap: anywhere;
+}
+
 .interface-contract-checker > header,
 .interface-contract-actions {
   display: flex;
@@ -747,6 +842,17 @@ body.workspace-output .bundle-scope small {
     max-width: none;
     text-align: left;
   }
+
+  .perspective-audit-tool > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #perspectiveAuditStatus { max-width: none; text-align: left; }
+
+  .perspective-audit-inputs { grid-template-columns: minmax(0, 1fr); }
+
+  .perspective-audit-actions button { width: 100%; }
 
   .export-contract-binding {
     grid-template-columns: minmax(0, 1fr);

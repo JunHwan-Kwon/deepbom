@@ -10,6 +10,7 @@
     "schema_or_opset": null
   },
   "artifact_set": null,
+  "conversion_receipt": null,
   "cpu_cost_target_binding": null,
   "accelerator_profile_binding": null,
   "accelerator_bindings": [
@@ -2607,5 +2608,5 @@
     ]
   },
   "evidence_boundary": "Serialized artifact facts and deterministic static derivations. Declarations and runtime measurements are accepted only through separately identified inputs.",
-  "envelope_sha256": "a5ddcc0172d1992cd222839e9c66d526c6141c8b589b44217c9102b21b178177"
+  "envelope_sha256": "e8b35ac4711bb99b3aab0a8551bd0a75275d51730543008afaa4f3e4ef4cbea9"
 }

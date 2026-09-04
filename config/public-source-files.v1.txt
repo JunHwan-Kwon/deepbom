@@ -113,6 +113,7 @@ docs/SUPPORT_MATRIX.md
 docs/ZENODO_RELEASE.md
 docs/native-runtime-capture.md
 docs/schemas/deepbom-artifact-ir-v2.schema.json
+docs/schemas/deepbom-conversion-receipt-v1.schema.json
 docs/schemas/deepbom-onnx-contract-conflict-capsule-v1.schema.json
 docs/zenodo-validation-metadata.json
 examples/expected-output/README.md
@@ -150,7 +151,7 @@ reference/cyclonedx/1.7/cryptography-defs.schema.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/README.md
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_artifact_evidence_envelope.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_artifact_ir.json
-reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_2_0_parameter_contract.preview.cdx.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_2_0_draft_compatibility.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_evidence.cdx.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_interface_contracts.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_missing_provenance_fields.json
@@ -235,6 +236,7 @@ scripts/check-cli-graph-export.mjs
 scripts/check-cli.mjs
 scripts/check-contract-migration-viewer.mjs
 scripts/check-contract-migration.mjs
+scripts/check-conversion-receipt.mjs
 scripts/check-core-isolation-roofline.mjs
 scripts/check-core-isolation-viewer.mjs
 scripts/check-coreml-classical-analysis.mjs
@@ -249,6 +251,8 @@ scripts/check-corpus-validation-provenance.mjs
 scripts/check-curated-micro-corpus.mjs
 scripts/check-custom-targets.mjs
 scripts/check-cyclonedx-20-quantization-evidence.mjs
+scripts/check-cyclonedx-draft-profiles.mjs
+scripts/check-cyclonedx-perspective-audit.mjs
 scripts/check-deepbom-analysis-contract.mjs
 scripts/check-delegation-repair-viewer.mjs
 scripts/check-delegation-repair.mjs
@@ -639,6 +643,7 @@ web/lib/channel-vitality.js
 web/lib/citation-ui.js
 web/lib/clipboard.js
 web/lib/contract-migration.js
+web/lib/conversion-receipt.js
 web/lib/core-isolation-view.js
 web/lib/coreml-blob.js
 web/lib/coreml-classical-model.js
@@ -654,7 +659,10 @@ web/lib/custom-target-editor.js
 web/lib/custom-targets.js
 web/lib/cyclonedx-20-preview.js
 web/lib/cyclonedx-component-metadata.js
+web/lib/cyclonedx-draft-profiles.js
 web/lib/cyclonedx-identity.js
+web/lib/cyclonedx-perspective-audit.js
+web/lib/cyclonedx-perspective-view.js
 web/lib/decision-coverage.js
 web/lib/deepbom-worker-client.js
 web/lib/delegation-repair.js
@@ -948,6 +956,8 @@ web/styles.css
 web/sw.js
 web/test.html
 web/test.js
+web/vendor/jsonpath-rfc9535.LICENSE.txt
+web/vendor/jsonpath-rfc9535.mjs
 web/verify.html
 web/workers/deepbom-analysis-worker.js
 web/workers/static-audit-worker.js

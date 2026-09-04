@@ -9,7 +9,7 @@ import {
   ANALYZER_BUILD_SOURCE_STATE,
   ANALYZER_BUNDLE_CONTENT_SHA256,
 } from "./build-metadata.js";
-import { buildCycloneDx20ParameterContractPreview } from "./cyclonedx-20-preview.js";
+import { buildCycloneDxDraftCompatibilityRecord } from "./cyclonedx-draft-profiles.js";
 import { buildInterfaceQuantizationContractLedger } from "./quantization-contract-summary.js";
 import { canonicalJson, normalizeJsonContractValue } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
@@ -47,10 +47,9 @@ export function buildPublicCycloneDxDocuments(analysis, options = {}) {
         generatedAt,
         interfaceLedger,
       }),
-      cyclonedx_2_0_parameter_contract_preview: buildCycloneDx20ParameterContractPreview(analysis, {
+      cyclonedx_2_0_draft_compatibility: buildCycloneDxDraftCompatibilityRecord(analysis, {
         ...options,
         generatedAt,
-        interfaceLedger,
       }),
     },
   };

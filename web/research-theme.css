@@ -541,7 +541,8 @@ body.workspace-input .layout {
     "artifact package"
     ". run"
     "sample sample"
-    "external external";
+    "external external"
+    "lineage lineage";
   align-content: start;
   gap: 10px;
 }
@@ -582,6 +583,18 @@ body.workspace-input .layout {
 .file-button-formats small {
   font-family: var(--mono);
   font-size: 9px;
+}
+
+.conversion-receipt-control {
+  grid-area: lineage;
+  display: grid;
+  grid-template-columns: minmax(190px, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.conversion-receipt-control .file-button {
+  min-height: 44px;
 }
 
 .run-audit-button {
@@ -905,6 +918,7 @@ body.workspace-output .session-anchor .module-tab {
 .export-contract-pack,
 .export-contract-row,
 .interface-contract-checker,
+.perspective-audit-tool,
 .table-wrap {
   border-radius: 4px;
   box-shadow: none;
@@ -922,7 +936,8 @@ body.workspace-output .session-anchor .module-tab {
 .export-contract-binding,
 .export-contract-pack,
 .export-contract-row,
-.interface-contract-checker {
+.interface-contract-checker,
+.perspective-audit-tool {
   background: var(--surface);
 }
 
@@ -1841,7 +1856,12 @@ textarea {
       "package"
       "run"
       "sample"
-      "external";
+      "external"
+      "lineage";
+  }
+
+  .conversion-receipt-control {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .sample-model-control {

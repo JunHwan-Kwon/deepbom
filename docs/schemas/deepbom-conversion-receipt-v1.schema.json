@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-conversion-receipt-v1.schema.json",
+  "title": "DEEPBOM Conversion Receipt v1",
+  "description": "A self-hashed declaration that binds source artifacts, a converter invocation, an environment manifest, and one deployment artifact. Validation does not execute or deserialize the source artifacts.",
+  "$ref": "deepbom-artifact-ir-v2.schema.json#/$defs/conversionReceipt"
+}

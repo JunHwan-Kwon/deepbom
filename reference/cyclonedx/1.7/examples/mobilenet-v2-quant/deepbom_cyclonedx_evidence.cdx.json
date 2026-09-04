@@ -172,7 +172,7 @@
         },
         {
           "name": "deepbom:model:artifactIrSha256",
-          "value": "aebc2c7a01e063ecb9dcef899dde35832f6801789eaf4921d2d6adb9e63a70bb"
+          "value": "da81494f981d6c68e408008eb77f4eb2aada143393eb27c3e8cd37b45ece637d"
         },
         {
           "name": "deepbom:model:artifactIrLocation",
@@ -463,7 +463,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "d9a7772bd32bc92940af269e48ed120daa8d9a66f0f78ee17dc771bafcdc4d9f"
+              "content": "00e6544e060ab1e7c4f3f1094963000688dfdecfbcea3e384a040d6b3ef1160b"
             }
           ]
         },
@@ -474,7 +474,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "b41d5bdb61b5030d501c18ccc68dd9d08985cc29ed0f1f181215e15fd5088437"
+              "content": "663a096b8420edd60bdaf574ab998faebc5522e2e8938b25fe5f189c3a15f2f5"
             }
           ]
         },
@@ -491,12 +491,12 @@
         },
         {
           "type": "evidence",
-          "url": "deepbom_cyclonedx_2_0_parameter_contract.preview.cdx.json",
-          "comment": "Commit-pinned CycloneDX 2.0 non-conformant proposal fixture; the pinned draft schema closure is unavailable and this is not a 2.0 conformance claim. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
+          "url": "deepbom_cyclonedx_2_0_draft_compatibility.json",
+          "comment": "Machine-readable status for the pinned CycloneDX 2.0 draft integration. This is not a 2.0 BOM or conformance claim. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "c1ea5d6c84678fa6fd15d9342b7281e29bf87a612badbf3c2e790fa7540a33a0"
+              "content": "97ac88f50f5f024bd620d2b3d1905b979344ac881b40225c5a40fdb5e5d19adc"
             }
           ]
         },
@@ -803,7 +803,7 @@
     },
     {
       "name": "deepbom:artifactEvidenceEnvelopeSha256",
-      "value": "a5ddcc0172d1992cd222839e9c66d526c6141c8b589b44217c9102b21b178177"
+      "value": "e8b35ac4711bb99b3aab0a8551bd0a75275d51730543008afaa4f3e4ef4cbea9"
     },
     {
       "name": "deepbom:artifactIrSchema",
@@ -811,7 +811,7 @@
     },
     {
       "name": "deepbom:artifactIrSha256",
-      "value": "aebc2c7a01e063ecb9dcef899dde35832f6801789eaf4921d2d6adb9e63a70bb"
+      "value": "da81494f981d6c68e408008eb77f4eb2aada143393eb27c3e8cd37b45ece637d"
     },
     {
       "name": "deepbom:accelerator:bindingCount",

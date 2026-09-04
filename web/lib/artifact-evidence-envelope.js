@@ -9,6 +9,7 @@ import { collectAcceleratorBindings, validateAcceleratorBinding } from "./accele
 import { validateCpuCostTargetBinding } from "./cpu-target-binding.js";
 import { deriveMacCoverage } from "./mac-coverage.js";
 import { EVIDENCE_CLASSES, normalizeEvidenceClass } from "./evidence-class.js";
+import { validateBoundConversionReceipt } from "./conversion-receipt.js";
 
 export const ARTIFACT_EVIDENCE_SCHEMA = "deepbom.artifact_evidence_envelope.v1";
 export { EVIDENCE_CLASSES } from "./evidence-class.js";
@@ -338,6 +339,7 @@ export function buildArtifactEvidenceEnvelope(analysis = {}, options = {}) {
     generated_at: text(options.generatedAt) || null,
     identity,
     artifact_set: analysis?.artifact_set || null,
+    conversion_receipt: analysis?.conversion_receipt || null,
     cpu_cost_target_binding: analysis?.cpu_cost_target_binding || null,
     accelerator_profile_binding: analysis?.accelerator_profile_binding || null,
     ...(llmTokenBudgetScenario ? { llm_token_budget_scenario: llmTokenBudgetScenario } : {}),
@@ -375,6 +377,16 @@ export function validateArtifactEvidenceEnvelope(envelope) {
   if (envelope?.artifact_set) {
     try { validateArtifactSet(envelope.artifact_set); }
     catch { errors.push("invalid_artifact_set"); }
+  }
+  if (envelope?.conversion_receipt) {
+    try {
+      validateBoundConversionReceipt(envelope.conversion_receipt, {
+        filename: envelope.identity.filename,
+        format: envelope.identity.format,
+        sha256: envelope.identity.sha256,
+        byte_length_decimal: envelope.identity.byte_length == null ? null : String(envelope.identity.byte_length),
+      });
+    } catch { errors.push("invalid_conversion_receipt"); }
   }
   if (envelope?.cpu_cost_target_binding) {
     try { validateCpuCostTargetBinding(envelope.cpu_cost_target_binding); }

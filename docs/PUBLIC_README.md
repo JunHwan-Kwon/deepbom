@@ -36,6 +36,8 @@ deepbom diff baseline.tflite candidate.tflite
 deepbom explore model.tflite
 deepbom placement model.tflite --profiles xnnpack_cpu,tflite_coreml_delegate,litert_qualcomm_qnn
 deepbom graph model.onnx --format json --output artifact-graph.json
+deepbom perspective bom.json --perspective-source perspective.json --format html --output perspective-review.html
+deepbom audit model.onnx --conversion-receipt conversion-receipt.json --format cyclonedx
 ```
 
 The default is a terminal-sized evidence summary. `--json` and `--compact`
@@ -52,7 +54,9 @@ The graph JSON output includes the evidence-preserving
 `deepbom.artifact_ir.v2` ledger and a deterministic `deepbom.graph_ir.v1`
 visualization compatibility projection. Serialized graph, storage topology,
 architecture grouping, scoped quantization, static placement, and imported
-runtime evidence remain separate. Method `2.1.0` materializes exactly decoded
+runtime evidence remain separate. Method `2.2.0` also preserves an optional,
+output-bound conversion receipt without promoting declared converter execution
+to observed evidence. It materializes exactly decoded
 TFLite subgraphs, ONNX nested graphs/local functions, and ExecuTorch primary
 plans without flattening conditional scopes. Runtime-node fusion is reconciled
 only from artifact-bound subject references or primary native op indices;
@@ -60,6 +64,15 @@ names are never guessed. `graph_ir.v1` remains primary-scope-only for legacy
 consumers. The v2 JSON Schema is published at
 [`docs/schemas/deepbom-artifact-ir-v2.schema.json`](docs/schemas/deepbom-artifact-ir-v2.schema.json)
 and at `https://deepbom.org/schemas/deepbom-artifact-ir-v2.schema.json`.
+The conversion receipt schema is published at
+[`docs/schemas/deepbom-conversion-receipt-v1.schema.json`](docs/schemas/deepbom-conversion-receipt-v1.schema.json).
+
+CycloneDX 2.0 remains a moving draft. DEEPBOM keeps CycloneDX 1.7 as the stable
+default and exposes a hash-pinned draft compatibility status instead of
+claiming a 2.0 BOM when #990, #175, #1067, and #1075 are unresolved or
+incompatible. The `perspective` command and browser tool evaluate RFC 9535
+JSONPath mappings without inventing required-match cardinality or implicit
+`/definitions` traversal.
 
 `verify` compares the serialized external tensor ABI with a supplied,
 artifact-bound production declaration. `diff` uses the canonical deterministic

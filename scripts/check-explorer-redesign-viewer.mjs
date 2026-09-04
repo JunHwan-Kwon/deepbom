@@ -1530,7 +1530,7 @@ async function runAudit(page, modelPath, name) {
   }
   const publicExports = await page.evaluate(() => ({
     cdx17: document.querySelector("#downloadCycloneDxEvidence")?.disabled,
-    cdx20: document.querySelector("#downloadCycloneDx20Preview")?.disabled,
+    cdx20: document.querySelector("#downloadCycloneDx20DraftStatus")?.disabled,
     companion: document.querySelector("#downloadRuntimeRequirements")?.disabled,
     pack: document.querySelector("#downloadContractPack")?.disabled,
   }));

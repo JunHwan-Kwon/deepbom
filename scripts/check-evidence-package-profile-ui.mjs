@@ -33,8 +33,15 @@ let browser;
 try {
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   browser = await launchChromium(chromium);
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, acceptDownloads: true });
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, acceptDownloads: true, serviceWorkers: "block" });
+  const page = await context.newPage();
   const errors = [];
+  let engineeringFormatterRequests = 0;
+  await page.route("**/report-engineering-entry.js*", async (route) => {
+    engineeringFormatterRequests += 1;
+    if (engineeringFormatterRequests === 1) await route.abort("connectionfailed");
+    else await route.continue();
+  });
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "error" && !/Failed to load resource/i.test(message.text())) errors.push(message.text());
@@ -62,6 +69,7 @@ try {
   await page.locator(".report-export-panel > summary").click();
   await page.locator("#downloadMarkdown:not([disabled])").waitFor({ timeout: 20_000 });
   assert.match(await page.locator("#reportPreview").innerText(), /^# DEEPBOM .+ Audit/m);
+  assert(engineeringFormatterRequests >= 2, "Engineering Report formatter must recover from one transient module-fetch failure");
   const [engineeringReportDownload] = await Promise.all([
     page.waitForEvent("download", { timeout: 120_000 }),
     page.locator("#downloadMarkdown").click(),
@@ -96,7 +104,9 @@ try {
       assert.equal(scope.profile, profile);
       assert.equal(scope.evidence_level, level);
       assert.equal(levelManifest.requested_level, level);
-      assert.equal([...members.keys()].filter((name) => name.endsWith(".cdx.json")).length, level === "all_available" ? 2 : 0);
+      const standardsEvidence = [...members.keys()].filter((name) => name.endsWith(".cdx.json")
+        || name.endsWith("cyclonedx_2_0_draft_compatibility.json"));
+      assert.equal(standardsEvidence.length, level === "all_available" ? 2 : 0);
       assert.equal(scope.login_required, false);
       assert.match(scope.integrity_boundary, /changes detectable/i);
       assert.match(scope.integrity_boundary, /do not prevent copying or editing/i);
@@ -150,7 +160,7 @@ try {
   assert.equal(medicalOverflow, 0, "mobile Regulatory Support Report workspace must not overflow");
   await medicalPage.close();
   assert.deepEqual(errors, [], `Evidence Package browser diagnostics: ${errors.join(" | ")}`);
-  console.log("Evidence Package UI passed (four profiles x four evidence levels, scoped manifests, raw gates, signatures, and mobile geometry)." );
+  console.log("Evidence Package UI passed (transient formatter recovery, four profiles x four evidence levels, scoped manifests, raw gates, signatures, and mobile geometry)." );
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.close(resolve));
