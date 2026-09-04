@@ -274,6 +274,7 @@ export function createPerformanceVisualController({
   jumpToGraphOp,
 }) {
   let targetComparisonCache = null;
+  let targetComparisonRenderToken = 0;
   const quantExposureOptions = { metric: "macs", groupBy: "stage" };
 
   // ── Per-panel inline detail card ─────────────────────────────────────────
@@ -337,7 +338,7 @@ export function createPerformanceVisualController({
     renderOnDeviceLlmView(elements.llmEvidencePanel, analysis);
     renderMacDistribution(analysis);
     renderBottleneckContribution(analysis);
-    renderTargetComparison(analysis);
+    void renderTargetComparison(analysis);
     renderXnnpackChainFlow(analysis);
     renderXnnpackFallbackMap(analysis);
     renderXnnpackBreakTable(analysis);
@@ -401,9 +402,10 @@ export function createPerformanceVisualController({
 
   function resetTargetComparisonCache() {
     targetComparisonCache = null;
+    targetComparisonRenderToken += 1;
   }
 
-  function buildTargetComparisonRows(analysis) {
+  async function buildTargetComparisonRows(analysis) {
     const context = getContext();
     if ((analysis.format || "tflite") !== "tflite" || !context.currentModelBytes?.length) {
       return [summarizeTargetComparison(analysis)];
@@ -546,7 +548,9 @@ export function createPerformanceVisualController({
     );
   }
 
-  function renderTargetComparison(analysis) {
+  async function renderTargetComparison(analysis) {
+    const renderToken = ++targetComparisonRenderToken;
+    const artifactSha256 = analysis?.model_sha256 || analysis?.artifact_sha256 || null;
     const context = getContext();
     if ((analysis.format || "tflite") !== "tflite") {
       elements.targetCompareGrid.replaceChildren(targetCompareMessage("Target comparison is available for TFLite artifacts."));
@@ -563,7 +567,16 @@ export function createPerformanceVisualController({
       elements.targetCompareGrid.replaceChildren(targetCompareCard(row));
       return;
     }
-    elements.targetCompareGrid.replaceChildren(...getTargetComparisonRows(analysis, availableIds).map((row) => targetCompareCard(row)));
+    const frontierReady = Array.isArray(analysis?.deployment_frontier?.targets)
+      && availableIds.every((targetId) => analysis.deployment_frontier.targets.some((target) => target.target_id === targetId));
+    if (!frontierReady) {
+      elements.targetCompareGrid.replaceChildren(targetCompareMessage("Computing isolated target comparison..."));
+    }
+    const rows = await getTargetComparisonRows(analysis, availableIds);
+    const current = getContext().current;
+    const currentSha256 = current?.model_sha256 || current?.artifact_sha256 || null;
+    if (renderToken !== targetComparisonRenderToken || currentSha256 !== artifactSha256) return;
+    elements.targetCompareGrid.replaceChildren(...rows.map((row) => targetCompareCard(row)));
   }
 
   function availableTargetComparisonIds() {
@@ -571,7 +584,7 @@ export function createPerformanceVisualController({
     return deploymentFrontierTargetIds(context.targetProfiles, context.selectedTargetId);
   }
 
-  function getTargetComparisonRows(analysis, availableIds = availableTargetComparisonIds()) {
+  async function getTargetComparisonRows(analysis, availableIds = availableTargetComparisonIds()) {
     if (!availableIds.length) return [];
     const frontierTargets = analysis?.deployment_frontier?.targets;
     if (Array.isArray(frontierTargets)
@@ -592,10 +605,10 @@ export function createPerformanceVisualController({
     if (!targetComparisonCache || targetComparisonCache.key !== cacheKey) {
       targetComparisonCache = {
         key: cacheKey,
-        rows: availableIds.map((targetId) => summarizeTargetForComparison(analysis, targetId)),
+        rows: Promise.all(availableIds.map((targetId) => summarizeTargetForComparison(analysis, targetId))),
       };
     }
-    return targetComparisonCache.rows;
+    return await targetComparisonCache.rows;
   }
 
   function targetComparisonRowFromFrontier(target) {
@@ -612,12 +625,12 @@ export function createPerformanceVisualController({
     ].join(":");
   }
 
-  function summarizeTargetForComparison(analysis, targetId) {
+  async function summarizeTargetForComparison(analysis, targetId) {
     const context = getContext();
     try {
       const compared = targetId === (analysis.target_profile?.id || context.selectedTargetId)
         ? analysis
-        : analyzeForTarget(context.currentModelBytes, context.currentFilename || analysis.filename || "model.tflite", targetId);
+        : await analyzeForTarget(context.currentModelBytes, context.currentFilename || analysis.filename || "model.tflite", targetId);
       return summarizeTargetComparison(compared);
     } catch (error) {
       const profile = context.targetProfiles.find((item) => item.id === targetId) || { id: targetId, label: targetId };

@@ -98,6 +98,14 @@ const corePlan = await inspectArtifactBundle(coreFiles);
 expect(corePlan.rootFile.name === "model.mlmodel", "Core ML root manifest binding");
 const coreBundle = await readArtifactBundle(coreFiles);
 expect(coreBundle.analysis.artifact_bundle.files.length === 5, "Core ML package inventory includes every selected unmanifested file, including entries outside the package root");
+const workerDescriptorBundle = await readArtifactBundle(coreFiles.map((entry) => ({
+  file: entry,
+  path: entry.webkitRelativePath,
+})));
+expect(
+  workerDescriptorBundle.analysis.artifact_bundle.artifact_set_sha256 === coreBundle.analysis.artifact_bundle.artifact_set_sha256,
+  "Worker package descriptors preserve relative paths and artifact-set identity",
+);
 expect(coreBundle.analysis.artifact_bundle.files.some((item) => item.role === "weights"), "Core ML weights role");
 expect(coreBundle.analysis.artifact_bundle.files.some((item) => item.role === "unreferenced_package_file" && item.required === false), "Core ML unmanifested file remains hash-bound without becoming a required package item");
 expect(coreBundle.analysis.artifact_bundle.files.some((item) => item.path === "__MACOSX/._Fixture.mlpackage"), "Core ML package inventory hash-binds selected AppleDouble metadata instead of silently dropping it");

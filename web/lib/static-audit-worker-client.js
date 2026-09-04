@@ -1,3 +1,5 @@
+import { STATIC_AUDIT_OPERATION } from "./static-audit-worker-protocol.js";
+
 const WORKER_URL = new URL("../workers/static-audit-worker.js", import.meta.url);
 
 export function createStaticAuditWorkerClient({ createWorker = null, inactivityTimeoutMs = 300_000 } = {}) {
@@ -25,7 +27,7 @@ export function createStaticAuditWorkerClient({ createWorker = null, inactivityT
     if (!request) return;
     if (data.type === "status") {
       armTimeout(data.id, request);
-      request.onStatus?.(data.phase || "Analyzing artifact");
+      request.onStatus?.(data.phase || "Analyzing artifact", data.progress || null);
       return;
     }
     pending.delete(data.id);
@@ -66,19 +68,40 @@ export function createStaticAuditWorkerClient({ createWorker = null, inactivityT
 
   async function ensureModel(bytes, filename, onStatus) {
     if (bytes === loadedBytes && filename === loadedFilename) return;
-    await request("load_model", { bytes, filename }, onStatus);
+    await request(STATIC_AUDIT_OPERATION.LOAD_MODEL, { bytes, filename }, onStatus);
     loadedBytes = bytes;
     loadedFilename = filename;
   }
 
   async function run(operation, { bytes, filename, onStatus = null, ...payload }) {
+    if (!(bytes instanceof Uint8Array)) {
+      throw new Error("Static audit Worker model operations require Uint8Array bytes.");
+    }
     await ensureModel(bytes, filename, onStatus);
     return request(operation, payload, onStatus);
+  }
+
+  function runFile(operation, { file = null, files = null, onStatus = null, ...payload }) {
+    const hasFile = Boolean(file && typeof file.slice === "function" && Number.isFinite(file.size));
+    const hasFiles = Array.isArray(files) && files.length > 0
+      && files.every((item) => item && typeof item.slice === "function" && Number.isFinite(item.size));
+    if (hasFile === hasFiles) {
+      throw new Error("Static audit Worker file operations require exactly one file or one non-empty file array.");
+    }
+    const filePayload = hasFile
+      ? { file }
+      : {
+          files: files.map((item) => ({
+            file: item,
+            path: String(item.webkitRelativePath || item.name || ""),
+          })),
+        };
+    return request(operation, { ...payload, ...filePayload }, onStatus);
   }
 
   function reset() {
     failWorker("Static audit worker was reset.");
   }
 
-  return { reset, run };
+  return { reset, run, runFile };
 }

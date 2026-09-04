@@ -1,19 +1,4 @@
 import init, {
-  analyze_tflite_for_target,
-  compute_deployment_delta,
-  compute_input_influence,
-  compute_output_influence,
-  compute_static_runtime_calibration,
-  compute_weight_histogram,
-  compute_kernel_haar_decomposition,
-  compute_activation_haar,
-  landscape_directions,
-  synthetic_landscape_grid,
-  compute_model_tomography,
-  landscape_tomography,
-  layer_landscape_grid,
-  explore_tflite_redesign_pareto,
-  project_tflite_redesign,
   runtime_guard,
   target_profiles,
 } from "../pkg/tflite_wasm_audit.js";
@@ -217,7 +202,7 @@ import {
   renderGraphMapContent,
   renderOpDetailPanel,
 } from "./lib/graph-ui.js";
-import { getArtifactIrContext } from "./lib/artifact-ir-context.js";
+import { getArtifactIrContext, invalidateArtifactIrContext } from "./lib/artifact-ir-context.js";
 import { buildSingleFileArtifactSet } from "./lib/artifact-set.js";
 import { exportGraphVisualization } from "./lib/graph-export.js";
 import {
@@ -234,11 +219,11 @@ import {
   selectedModelCopy,
   stagedModelCopy,
 } from "./lib/model-file.js";
-import { readMetadataModelFile } from "./lib/metadata-model-adapters.js";
 import { parseStrictJson } from "./lib/strict-json.js";
 import { bindConversionReceipt, validateConversionReceipt } from "./lib/conversion-receipt.js";
-import { readCoreMlModelFile } from "./lib/coreml-metadata-adapter.js";
-import { inspectArtifactBundle, readArtifactBundle } from "./lib/artifact-bundle.js";
+import { inspectArtifactBundle } from "./lib/artifact-bundle.js";
+import { STATIC_AUDIT_OPERATION } from "./lib/static-audit-worker-protocol.js";
+import { createTfliteWorkerRpc } from "./lib/tflite-worker-rpc.js";
 import { initPrivacyAgreementUi } from "./lib/privacy-ui.js";
 import { closeModal, installModalKeyboard, openModal } from "./lib/modal-accessibility.js";
 import {
@@ -795,6 +780,13 @@ const auditProgressController = createAuditProgressController({
 });
 const MAX_CONVERSION_RECEIPT_BYTES = 1024 * 1024;
 const staticAuditWorkerClient = createStaticAuditWorkerClient();
+const tfliteWorkerRpc = createTfliteWorkerRpc(staticAuditWorkerClient, {
+  resolveTarget: (targetId) => resolveTargetSpec(targetId || selectedTargetId(), customTargetSpecs),
+  getCurrentModel: () => ({
+    bytes: currentModelBytes,
+    filename: currentFilename || current?.filename || "model.tflite",
+  }),
+});
 const liteRtRuntime = createLiteRtRuntimeLoader({
   onStatus: (message) => { runtimeStatus.textContent = message; },
 });
@@ -863,11 +855,12 @@ let currentFilename = "";
 let targetProfiles = [];
 let customTargetSpecs = [];
 
-function rebuildCurrentArtifactIrContext(analysis = current) {
+function rebuildCurrentArtifactIrContext(analysis = current, { invalidate = false } = {}) {
   if (!analysis) {
     currentArtifactIrContext = null;
     return null;
   }
+  if (invalidate) invalidateArtifactIrContext(analysis);
   currentArtifactIrContext = getArtifactIrContext(analysis, {
     filename: analysis.filename || currentFilename || "model",
     format: analysis.format,
@@ -979,8 +972,7 @@ const performanceVisualController = createPerformanceVisualController({
     selectedTargetId: selectedTargetId(),
     selectedTargetProfile: selectedTargetProfile(),
   }),
-  analyzeForTarget: (bytes, filename, targetId) =>
-    analyze_tflite_for_target(bytes, filename, resolveTargetSpec(targetId, customTargetSpecs)),
+  analyzeForTarget: tfliteWorkerRpc.analyzeForTarget,
   jumpToGraphOp,
 });
 const coreIsolationController = createCoreIsolationController({
@@ -1069,7 +1061,7 @@ const explorerRedesignController = createExplorerRedesignController({
     if (!current || current.format !== "tflite" || !currentModelBytes) {
       throw new Error("A bound TFLite source audit is required for Redesign.");
     }
-    return project_tflite_redesign(
+    return tfliteWorkerRpc.projectRedesign(
       currentModelBytes,
       currentFilename || current.filename || "model.tflite",
       current.target_profile?.id || selectedTargetId(),
@@ -1080,7 +1072,7 @@ const explorerRedesignController = createExplorerRedesignController({
     if (!current || current.format !== "tflite" || !currentModelBytes) {
       throw new Error("A bound TFLite source audit is required for Pareto exploration.");
     }
-    return explore_tflite_redesign_pareto(
+    return tfliteWorkerRpc.exploreRedesignPareto(
       currentModelBytes,
       currentFilename || current.filename || "model.tflite",
       current.target_profile?.id || selectedTargetId(),
@@ -1689,10 +1681,10 @@ graphWorkspace = createGraphWorkspace({
   clearRuntimeAssignment,
   collectFullGraph,
   collectNeighborhood,
-  compute_input_influence,
-  compute_output_influence,
-  compute_static_runtime_calibration,
-  compute_weight_histogram,
+  compute_input_influence: tfliteWorkerRpc.inputInfluence,
+  compute_output_influence: tfliteWorkerRpc.outputInfluence,
+  compute_static_runtime_calibration: tfliteWorkerRpc.runtimeCalibration,
+  compute_weight_histogram: tfliteWorkerRpc.weightHistogram,
   downloadTextArtifact,
   ensureLiteRtRuntime,
   evidenceCursor,
@@ -1884,7 +1876,7 @@ const deepBomWorkspace = createDeepBomWorkspace({
   applyProtectedTfliteDelegateCompatibilityEvidence,
   applyProtectedXnnpackSelectorEvidence,
   assessedOpLogicalBytes,
-  compute_model_tomography,
+  compute_model_tomography: tfliteWorkerRpc.modelTomography,
   deepBomMetric,
   deploymentFrontierController,
   drawMvDepth,
@@ -1892,7 +1884,7 @@ const deepBomWorkspace = createDeepBomWorkspace({
   formatBytes,
   formatNumber,
   formatPercent1,
-  layer_landscape_grid,
+  layer_landscape_grid: tfliteWorkerRpc.layerLandscape,
   mk,
   modelIdentity,
   modelSupportsCapability,
@@ -1902,6 +1894,7 @@ const deepBomWorkspace = createDeepBomWorkspace({
   renderCurrentKernelInspector,
   renderGraphOpRows,
   renderOpDetail,
+  rebuildArtifactIrContext: () => rebuildCurrentArtifactIrContext(current, { invalidate: true }),
   score100,
   selectedTargetId,
   setStatus,
@@ -3777,24 +3770,45 @@ async function analyzeFile(file) {
     auditProgressController.begin(8, "Reading model bytes", { ceiling: 15, step: 2 });
     await nextPaint();
     const formatGate = modelFormatGate(format);
-    const { adapter } = formatGate;
     if (formatGate.blocked) throw new Error(formatGate.message);
     if (pendingArtifactBundleFiles.length) {
-      const parsed = await readArtifactBundle(pendingArtifactBundleFiles, {
-        onProgress: ({ index, count, phase }) => auditProgressController.set(8 + Math.round((index + 1) / count * 7), `${phase} ${index + 1}/${count}`, "running"),
+      const parsed = await staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.ARTIFACT_BUNDLE_ANALYZE, {
+        files: pendingArtifactBundleFiles,
+        onStatus: (phase, progress) => {
+          const index = Number(progress?.index);
+          const count = Number(progress?.count);
+          if (Number.isSafeInteger(index) && Number.isSafeInteger(count) && count > 0) {
+            auditProgressController.set(8 + Math.round(((index + 1) / count) * 7), phase, "running");
+          } else {
+            auditProgressController.describe(phase);
+          }
+        },
       });
       current = parsed.analysis;
       currentModelBytes = parsed.retainedBytes;
       currentModelPayloadLoaded = false;
     } else if (["gguf", "safetensors"].includes(format)) {
-      const parsed = await readMetadataModelFile(file, format, {
-        onProgress: ({ index, count }) => auditProgressController.set(8 + Math.round((index + 1) / count * 7), `Payload ${index + 1}/${count}`, "running"),
+      const parsed = await staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.METADATA_ANALYZE, {
+        file,
+        format,
+        onStatus: (phase, progress) => {
+          const index = Number(progress?.index);
+          const count = Number(progress?.count);
+          if (Number.isSafeInteger(index) && Number.isSafeInteger(count) && count > 0) {
+            auditProgressController.set(8 + Math.round(((index + 1) / count) * 7), phase, "running");
+          } else {
+            auditProgressController.describe(phase);
+          }
+        },
       });
       current = parsed.analysis;
       currentModelBytes = parsed.retainedBytes;
       currentModelPayloadLoaded = false;
     } else if (format === "coreml") {
-      const parsed = await readCoreMlModelFile(file);
+      const parsed = await staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.COREML_ANALYZE, {
+        file,
+        onStatus: (phase) => auditProgressController.describe(phase),
+      });
       current = parsed.analysis;
       currentModelBytes = parsed.retainedBytes;
       currentModelPayloadLoaded = false;
@@ -4197,7 +4211,11 @@ async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = fal
     current = cachedAnalysis;
   } else {
     if (cachedAnalysis) targetAnalysisCache.delete(cacheKey);
-    const workerOperation = format === "onnx" ? "onnx_analyze" : format === "executorch" ? "executorch_analyze" : "tflite_analyze";
+    const workerOperation = format === "onnx"
+      ? STATIC_AUDIT_OPERATION.ONNX_ANALYZE
+      : format === "executorch"
+        ? STATIC_AUDIT_OPERATION.EXECUTORCH_ANALYZE
+        : STATIC_AUDIT_OPERATION.TFLITE_ANALYZE;
     current = metadataOnly ? current : await staticAuditWorkerClient.run(
       workerOperation,
       {
@@ -4247,7 +4265,7 @@ async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = fal
       || !deploymentFrontierMatchesTargetIds(currentDeploymentFrontier, frontierTargetIds)) {
       try {
         await nextPaint();
-        currentDeploymentFrontier = await staticAuditWorkerClient.run("tflite_frontier", {
+        currentDeploymentFrontier = await staticAuditWorkerClient.run(STATIC_AUDIT_OPERATION.TFLITE_FRONTIER, {
           bytes: currentModelBytes,
           filename,
           targetIdsJson: JSON.stringify(frontierTargetIds.map((id) => resolveTargetSpec(id, customTargetSpecs))),
@@ -4270,7 +4288,7 @@ async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = fal
       || currentDelegationRepair?.target_profile_sha256 !== current.target_profile?.profile_sha256) {
       try {
         await nextPaint();
-        currentDelegationRepair = await staticAuditWorkerClient.run("tflite_delegation_repair", {
+        currentDelegationRepair = await staticAuditWorkerClient.run(STATIC_AUDIT_OPERATION.TFLITE_DELEGATION_REPAIR, {
           bytes: currentModelBytes,
           filename,
           targetId: resolveTargetSpec(targetId, customTargetSpecs),
@@ -4294,7 +4312,7 @@ async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = fal
     auditProgressController.set(78, format === "onnx" ? "Assembling ONNX evidence" : "Assembling container evidence", "running", { step: 7 });
   }
   await nextPaint();
-  updateDeploymentDeltaForCurrent(format, targetId);
+  await updateDeploymentDeltaForCurrent(format, targetId);
   const elapsedMs = performance.now() - started;
   setStatus("Rendering audit");
   auditProgressController.begin(86, "Rendering audit overview", { ceiling: 87, step: 8 });
@@ -4558,7 +4576,7 @@ async function ensureModelHash() {
   return current.model_sha256;
 }
 
-function updateDeploymentDeltaForCurrent(format, targetId = selectedTargetId()) {
+async function updateDeploymentDeltaForCurrent(format, targetId = selectedTargetId()) {
   if (currentDeploymentDelta?.baseline?.sha256 === deploymentDeltaBaseline?.sha256
     && currentDeploymentDelta?.candidate?.sha256 === current?.model_sha256) {
     current.deployment_delta = currentDeploymentDelta;
@@ -4573,13 +4591,11 @@ function updateDeploymentDeltaForCurrent(format, targetId = selectedTargetId()) 
     return;
   }
   try {
-    currentDeploymentDelta = compute_deployment_delta(
-      deploymentDeltaBaseline.bytes,
-      deploymentDeltaBaseline.filename,
-      currentModelBytes,
-      currentFilename || current.filename || "candidate.tflite",
-      JSON.stringify(targetIds),
-    );
+    currentDeploymentDelta = await tfliteWorkerRpc.run(STATIC_AUDIT_OPERATION.TFLITE_DEPLOYMENT_DELTA, {
+      baselineBytes: deploymentDeltaBaseline.bytes,
+      baselineFilename: deploymentDeltaBaseline.filename,
+      targetIdsJson: JSON.stringify(targetIds),
+    });
     current.deployment_delta = currentDeploymentDelta;
     delete current.deployment_delta_error;
   } catch (error) {
@@ -5386,7 +5402,11 @@ function renderLossLandscapePanel(result) {
 
 async function runLandscapeTomography({ numProjections = 12, gridSize = 9, radius = 0.4 } = {}) {
   if (!currentModelBytes) return null;
-  const raw = landscape_tomography(currentModelBytes, numProjections, gridSize, radius);
+  const raw = await tfliteWorkerRpc.run(STATIC_AUDIT_OPERATION.TFLITE_LANDSCAPE_TOMOGRAPHY, {
+    numProjections,
+    gridSize,
+    radius,
+  });
   return summarizeOutputDriftProjectionEnsemble(raw, { numProjections, gridSize, radius });
 }
 
@@ -5600,9 +5620,14 @@ async function runLossLandscape(baseline, { numSeeds = 5, gridSize = 9, radius =
   for (let k = 0; k < numSeeds; k++) {
     const s1 = 1000 + 7 * k, s2 = 5000 + 13 * k;
 
-    // f64 WASM landscape — synchronous, fast (no LiteRT.js round-trip)
+    // f64 WASM landscape runs off the main thread without a LiteRT.js round-trip.
     try {
-      const res = synthetic_landscape_grid(currentModelBytes, s1, s2, G, radius);
+      const res = await tfliteWorkerRpc.run(STATIC_AUDIT_OPERATION.TFLITE_SYNTHETIC_LANDSCAPE, {
+        seed1: s1,
+        seed2: s2,
+        gridSize: G,
+        radius,
+      });
       if (res?.grid?.length === G * G) {
         f64Grids.push(Array.from({ length: G }, (_, bi) =>
           Array.from({ length: G }, (_, ai) => res.grid[bi * G + ai])));
@@ -5611,7 +5636,12 @@ async function runLossLandscape(baseline, { numSeeds = 5, gridSize = 9, radius =
 
     // INT8 LiteRT.js landscape
     let dirs;
-    try { dirs = landscape_directions(currentModelBytes, s1, s2); } catch (_) { continue; }
+    try {
+      dirs = await tfliteWorkerRpc.run(STATIC_AUDIT_OPERATION.TFLITE_LANDSCAPE_DIRECTIONS, {
+        seed1: s1,
+        seed2: s2,
+      });
+    } catch (_) { continue; }
     if (!dirs?.metas?.length) continue;
     const d1 = dirs.d1 instanceof Float32Array ? dirs.d1 : new Float32Array(dirs.d1);
     const d2 = dirs.d2 instanceof Float32Array ? dirs.d2 : new Float32Array(dirs.d2);
@@ -6550,7 +6580,9 @@ async function runHaarPatternSweep(baselineOutputs) {
   let alignment  = null;
   let activationHaar = null;
   try {
-    kernelHaar = compute_kernel_haar_decomposition(currentModelBytes, currentFilename || "model.tflite", selectedTargetId());
+    kernelHaar = await tfliteWorkerRpc.run(STATIC_AUDIT_OPERATION.TFLITE_KERNEL_HAAR, {
+      targetId: selectedTargetId(),
+    });
     if (kernelHaar && patterns.length > 0) {
       const haarProfile = haarSensitivityProfile(patterns);
       alignment = computeStaticRuntimeAlignment(kernelHaar, patterns, haarProfile);
@@ -6560,7 +6592,9 @@ async function runHaarPatternSweep(baselineOutputs) {
   }
   try {
     // Activation Haar: synthetic forward pass in WASM (32×32 input, f64 precision)
-    const rawActHaar = compute_activation_haar(currentModelBytes, currentFilename || "model.tflite", selectedTargetId());
+    const rawActHaar = await tfliteWorkerRpc.run(STATIC_AUDIT_OPERATION.TFLITE_ACTIVATION_HAAR, {
+      targetId: selectedTargetId(),
+    });
     if (Array.isArray(rawActHaar) && rawActHaar.length > 0) {
       const convOps = rawActHaar.filter(r => !r.skipped && !r.spatial_too_small);
       const allBands = ["LL", "LH", "HL", "HH"];

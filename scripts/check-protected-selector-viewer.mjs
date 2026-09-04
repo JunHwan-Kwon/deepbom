@@ -267,13 +267,28 @@ try {
   const mobilePath = path.join(output, "protected-selector-mobile.png");
   await selectorSurface.screenshot({ path: mobilePath });
   await page.getByRole("button", { name: "Open Kernel Inspector" }).click();
-  await page.waitForFunction(() => {
-    const filter = document.querySelector('[data-kernel-filter="selector"]');
-    return filter?.classList.contains("active")
-      && document.querySelectorAll("#kernelInspectorBody tr:not(.kernel-empty-row)").length > 0
-      && document.querySelectorAll("#kernelInspectorSummary .kernel-selector-ledger-metric").length === 8
-      && document.querySelectorAll("#kernelInspectorSummary .kernel-selector-hotspot").length > 0;
-  }, null, { timeout: 10_000 });
+  try {
+    await page.waitForFunction(() => {
+      const filter = document.querySelector('[data-kernel-filter="selector"]');
+      return filter?.classList.contains("active")
+        && document.querySelectorAll("#kernelInspectorBody tr:not(.kernel-empty-row)").length > 0
+        && document.querySelectorAll("#kernelInspectorSummary .kernel-selector-ledger-metric").length === 8
+        && document.querySelectorAll("#kernelInspectorSummary .kernel-selector-hotspot").length > 0;
+    }, null, { timeout: 10_000 });
+  } catch (error) {
+    const inspectorState = await page.evaluate(() => ({
+      workflow: document.querySelector('[data-workflow-step="graph"]')?.className || "missing",
+      explorerTab: document.querySelector('[data-explorer-tab="kernels"]')?.className || "missing",
+      filter: document.querySelector('[data-kernel-filter="selector"]')?.className || "missing",
+      panelHidden: document.querySelector("#kernelInspectorPanel")?.hidden ?? null,
+      rowCount: document.querySelectorAll("#kernelInspectorBody tr:not(.kernel-empty-row)").length,
+      metricCount: document.querySelectorAll("#kernelInspectorSummary .kernel-selector-ledger-metric").length,
+      hotspotCount: document.querySelectorAll("#kernelInspectorSummary .kernel-selector-hotspot").length,
+      status: document.querySelector("#runtimeAssignmentStatus")?.textContent || "",
+      appStatus: document.querySelector("#status")?.textContent || "",
+    }));
+    throw new Error(`Open Kernel Inspector navigation did not settle: ${JSON.stringify(inspectorState)}. ${error.message}`);
+  }
   const mobileLedgerPath = path.join(output, "selector-ledger-mobile.png");
   const ledgerSummary = page.locator("#kernelInspectorSummary");
   const inspectorPanel = page.locator("#kernelInspectorPanel");

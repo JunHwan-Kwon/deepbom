@@ -145,6 +145,7 @@ export function createGraphWorkspace(workspace) {
   } = workspace;
 
 const resourceMapOptions = { metric: "macs", groupBy: "stage", colorBy: "intensity" };
+let opDetailRequestToken = 0;
 
 function artifactIrAnalysisView(analysis) {
   const context = workspace.currentArtifactIrContext;
@@ -278,7 +279,7 @@ async function buildVisualPngFiles() {
     analysis: analysisView,
     filename: workspace.current.filename || workspace.currentFilename,
     targetProfile: workspace.current.target_profile || selectedTargetProfile(),
-    targetComparisonRows: performanceVisualController.buildTargetComparisonRows(workspace.current),
+    targetComparisonRows: await performanceVisualController.buildTargetComparisonRows(workspace.current),
     preprocessingConsequenceResult: workspace.preprocessingConsequenceResult,
     preprocessingConsequenceCapture: preprocessingConsequenceController.getCapture(),
   });
@@ -384,7 +385,7 @@ function renderGraphExplorer(analysis) {
   renderOpParetoBar(analysisView);
   renderResourceMap(analysisView);
   renderGraphOpRows(analysisView);
-  renderOpDetail(analysisView, workspace.selectedOpIndex);
+  void renderOpDetail(analysisView, workspace.selectedOpIndex);
   deferGraphMap(analysisView, workspace.selectedOpIndex);
   renderTensorExplorer(analysisView);
   quantEvidenceController.setAnalysis(analysisView);
@@ -1549,7 +1550,7 @@ function selectGraphOp(analysis, opIndex, options = {}) {
   else nodeViewController.selectOp(opIndex, { openInspector: options.openInspector === true });
   quantEvidenceController.selectOp(opIndex);
   renderGraphOpRows(analysis);
-  renderOpDetail(analysis, opIndex);
+  void renderOpDetail(analysis, opIndex);
   deferGraphMap(analysis, opIndex);
   updateOpNav(analysis);
   if (options.scrollTable) {
@@ -1633,31 +1634,45 @@ function deferGraphMap(analysis, opIndex) {
   });
 }
 
-function renderOpDetail(analysis, opIndex) {
+async function renderOpDetail(analysis, opIndex) {
+  const requestToken = ++opDetailRequestToken;
   const op = graphOps(analysis).find(o => o.index === opIndex);
   let weightHistograms = null;
   let influence = null;
   let outputInfluence = null;
+  renderOpDetailPanel(opDetail, analysis, opIndex, {
+    weightHistograms,
+    influence,
+    outputInfluence,
+    runtimeAssignment: workspace.runtimeAssignmentEvidence,
+  });
   if (op && workspace.currentModelBytes) {
     // Determine if this op consumes a model input tensor (first-layer detection)
     const inputTensorSet = new Set(analysis.input_tensor_indices ?? []);
     const isInputLayer = op.inputs.some(idx => idx >= 0 && inputTensorSet.has(idx));
 
     // Weight histograms computed in the Rust/WASM core.
-    const hists = op.inputs
+    const histsPromise = Promise.all(op.inputs
       .filter(idx => idx >= 0 && graphTensors(analysis)[idx]?.constant_buffer)
-      .map(idx => {
+      .map(async (idx) => {
         try {
-          const h = compute_weight_histogram(workspace.currentModelBytes, analysis.filename, idx, selectedTargetId());
+          const h = await compute_weight_histogram(workspace.currentModelBytes, analysis.filename, idx, selectedTargetId());
           if (h) h.isInputLayer = isInputLayer;
           return h;
         } catch { return null; }
-      })
-      .filter(Boolean);
-    if (hists.length > 0) weightHistograms = hists;
-    // Influence computation in Rust/WASM using spatial BFS with kernel-weighted propagation.
-    try { influence = compute_input_influence(workspace.currentModelBytes, analysis.filename, opIndex, selectedTargetId()) || null; } catch { influence = null; }
-    try { outputInfluence = compute_output_influence(workspace.currentModelBytes, analysis.filename, opIndex, selectedTargetId()) || null; } catch { outputInfluence = null; }
+      }));
+    const [hists, nextInfluence, nextOutputInfluence] = await Promise.all([
+      histsPromise,
+      Promise.resolve(compute_input_influence(workspace.currentModelBytes, analysis.filename, opIndex, selectedTargetId())).catch(() => null),
+      Promise.resolve(compute_output_influence(workspace.currentModelBytes, analysis.filename, opIndex, selectedTargetId())).catch(() => null),
+    ]);
+    if (requestToken !== opDetailRequestToken
+      || workspace.selectedOpIndex !== opIndex
+      || !isCurrentAnalysisView(analysis)) return;
+    const resolvedHistograms = hists.filter(Boolean);
+    if (resolvedHistograms.length > 0) weightHistograms = resolvedHistograms;
+    influence = nextInfluence || null;
+    outputInfluence = nextOutputInfluence || null;
   }
   renderOpDetailPanel(opDetail, analysis, opIndex, { weightHistograms, influence, outputInfluence, runtimeAssignment: workspace.runtimeAssignmentEvidence });
 }
@@ -1848,7 +1863,7 @@ async function runInferenceBenchmark() {
       try {
         const measuredMs = wasmResult.steady_stats?.p50 ?? wasmResult.stats?.p50 ?? 0;
         if (measuredMs > 0) {
-          const cal = compute_static_runtime_calibration(
+          const cal = await compute_static_runtime_calibration(
             workspace.currentModelBytes, workspace.currentFilename, workspace.activeTargetId || "android_mid_a55", measuredMs
           );
           if (cal && findingsBody) renderFindingsCalibration(findingsBody, cal);

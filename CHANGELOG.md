@@ -4,6 +4,26 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.5 - 2026-09-04
+
+- Moved every heavyweight TFLite WebAssembly analysis call behind one isolated
+  Worker RPC boundary, including target/frontier, redesign, influence,
+  calibration, histogram, landscape, tomography, and Haar analysis paths.
+- Moved GGUF, SafeTensors, Core ML, and package range analysis to the same
+  file-scoped metadata Worker while preserving package-relative paths,
+  progress events, inactivity termination, and clean retry behavior.
+- Added a static main-thread WASM boundary gate, Worker RPC contract checks,
+  and a reproducible JavaScript screening benchmark for the only prospective
+  streaming WASM candidates: incremental hashing and large payload decoding.
+  Independent JavaScript validators remain authoritative cross-checks.
+- Fixed stale Artifact IR consumer views after protected selector or provider
+  evidence is merged, and kept the mobile Kernel Inspector controls and
+  selector decision ledger in the first visible panel region.
+- Raised only the measured ceilings needed by the separately modularized
+  Worker protocol, RPC facade, enforcement checks, benchmark, and execution-
+  boundary documentation. Generated data, corpus, native tooling, private
+  source, and individual runtime-file ceilings are unchanged.
+
 ## 1.96.4 - 2026-09-04
 
 - Replaced the mutable CycloneDX 2.0 preview pins with a hash-verified draft

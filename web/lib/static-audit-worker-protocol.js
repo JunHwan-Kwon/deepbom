@@ -1,0 +1,31 @@
+export const STATIC_AUDIT_OPERATION = Object.freeze({
+  LOAD_MODEL: "load_model",
+  ARTIFACT_BUNDLE_ANALYZE: "artifact_bundle_analyze",
+  METADATA_ANALYZE: "metadata_analyze",
+  COREML_ANALYZE: "coreml_analyze",
+  ONNX_ANALYZE: "onnx_analyze",
+  EXECUTORCH_ANALYZE: "executorch_analyze",
+  TFLITE_ANALYZE: "tflite_analyze",
+  TFLITE_FRONTIER: "tflite_frontier",
+  TFLITE_DELEGATION_REPAIR: "tflite_delegation_repair",
+  TFLITE_DEPLOYMENT_DELTA: "tflite_deployment_delta",
+  TFLITE_INPUT_INFLUENCE: "tflite_input_influence",
+  TFLITE_OUTPUT_INFLUENCE: "tflite_output_influence",
+  TFLITE_RUNTIME_CALIBRATION: "tflite_runtime_calibration",
+  TFLITE_WEIGHT_HISTOGRAM: "tflite_weight_histogram",
+  TFLITE_REDESIGN_PROJECT: "tflite_redesign_project",
+  TFLITE_REDESIGN_PARETO: "tflite_redesign_pareto",
+  TFLITE_MODEL_TOMOGRAPHY: "tflite_model_tomography",
+  TFLITE_LAYER_LANDSCAPE: "tflite_layer_landscape",
+  TFLITE_LANDSCAPE_TOMOGRAPHY: "tflite_landscape_tomography",
+  TFLITE_SYNTHETIC_LANDSCAPE: "tflite_synthetic_landscape",
+  TFLITE_LANDSCAPE_DIRECTIONS: "tflite_landscape_directions",
+  TFLITE_KERNEL_HAAR: "tflite_kernel_haar",
+  TFLITE_ACTIVATION_HAAR: "tflite_activation_haar",
+});
+
+export const FILE_SCOPED_STATIC_AUDIT_OPERATIONS = Object.freeze(new Set([
+  STATIC_AUDIT_OPERATION.ARTIFACT_BUNDLE_ANALYZE,
+  STATIC_AUDIT_OPERATION.METADATA_ANALYZE,
+  STATIC_AUDIT_OPERATION.COREML_ANALYZE,
+]));

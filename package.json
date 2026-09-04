@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "1.96.4",
+  "version": "1.96.5",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
   "homepage": "https://deepbom.org",
   "repository": {
@@ -97,6 +97,9 @@
     "check:placement-comparison": "node scripts/check-placement-comparison.mjs",
     "check:runtime-accelerator-import": "node scripts/check-runtime-accelerator-import.mjs",
     "check:static-audit-worker-client": "node scripts/check-static-audit-worker-client.mjs",
+    "check:no-main-thread-heavy-wasm": "node scripts/check-no-main-thread-heavy-wasm.mjs",
+    "check:tflite-worker-rpc": "node scripts/check-tflite-worker-rpc.mjs",
+    "benchmark:streaming-wasm-candidates": "node scripts/benchmark-streaming-wasm-candidates.mjs",
     "check:public-source": "node scripts/build-public-source-export.mjs",
     "verify:public-source": "node scripts/verify-public-source-export.mjs",
     "sign:official-package": "node scripts/sign-official-package-digest.mjs",

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
@@ -63,15 +64,20 @@ for (const required of [
   ".github/workflows/release-channels.yml",
   "docs/CLI_REFERENCE.md",
   "docs/PUBLIC_PRIVATE_BOUNDARY.md",
+  "docs/WASM_EXECUTION_BOUNDARY.md",
   "scripts/check-artifact-ir-import-boundary.mjs",
   "config/artifact-ir-import-policy.v2.json",
   "scripts/check-artifact-ir-consumers.mjs",
   "config/artifact-ir-consumer-policy.v1.json",
   "scripts/check-evidence-ui-contract.mjs",
   "scripts/check-ir-stabilization-ui.mjs",
+  "scripts/check-no-main-thread-heavy-wasm.mjs",
   "scripts/run-release-validation.mjs",
   "scripts/check-public-package-boundary.mjs",
   "scripts/generate-cli-docs.mjs",
+  "web/lib/static-audit-worker-protocol.js",
+  "web/lib/tflite-worker-rpc.js",
+  "web/workers/static-audit-worker.js",
   "web/lib/artifact-ir-context.js",
   "web/lib/artifact-ir-runtime.js",
   "web/lib/artifact-ir/internal/architecture.js",
@@ -91,8 +97,13 @@ assert(packageDocument.scripts?.["generate:cli-docs"] === "node scripts/generate
   "Public source CLI documentation generator script drifted.");
 assert(packageDocument.scripts?.["check:cli-docs"] === "node scripts/generate-cli-docs.mjs --check",
   "Public source CLI documentation check script drifted.");
+execFileSync(process.execPath, ["scripts/check-web-imports.mjs"], {
+  cwd: exportRoot,
+  encoding: "utf8",
+  stdio: ["ignore", "pipe", "pipe"],
+});
 
-console.log(`Public source export verification passed (${declared.length} files; exact member, byte-length, SHA-256, license, workflow, package-script, and private-path contracts checked).`);
+console.log(`Public source export verification passed (${declared.length} files; exact members, hashes, licenses, workflows, package scripts, private paths, and executable web imports checked).`);
 
 async function collectFiles(directory, rootDirectory = directory) {
   const files = [];

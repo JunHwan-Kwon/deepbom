@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v550";
+const CACHE_NAME = "tflite-wasm-static-audit-v551";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -88,6 +88,8 @@ const APP_ASSETS = [
   "./lib/arena-viewer.js",
   "./lib/audit-progress.js",
   "./lib/static-audit-worker-client.js",
+  "./lib/static-audit-worker-protocol.js",
+  "./lib/tflite-worker-rpc.js",
   "./lib/deepbom-worker-client.js",
   "./workers/static-audit-worker.js",
   "./workers/deepbom-analysis-worker.js",

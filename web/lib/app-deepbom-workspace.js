@@ -49,6 +49,7 @@ export function createDeepBomWorkspace(ctx) {
     renderCurrentKernelInspector,
     renderGraphOpRows,
     renderOpDetail,
+    rebuildArtifactIrContext,
     runDeepBom,
     runtimeBasinGrid,
     runtimeBasinNotes,
@@ -82,25 +83,31 @@ async function runDeepBomAnalysis(manifest, { activateWorkflow = true } = {}) {
       onStatus: (phase) => { deepBomStatus.textContent = phase; },
     });
     const protectedFormat = String(ctx.current?.format || "").toLowerCase();
+    let evidenceChanged = false;
     if (protectedFormat === "onnx" && ctx.deepBomResult?.ort_compatibility_evidence) {
       applyProtectedOrtCompatibilityEvidence(ctx.current, ctx.deepBomResult.ort_compatibility_evidence);
-      deploymentFrontierController.render(ctx.current);
+      evidenceChanged = true;
     }
     if (protectedFormat === "tflite" && ctx.deepBomResult?.xnnpack_selector_evidence) {
       applyProtectedXnnpackSelectorEvidence(ctx.current, ctx.deepBomResult.xnnpack_selector_evidence);
-      renderGraphOpRows(ctx.current);
+      evidenceChanged = true;
     }
     if (protectedFormat === "tflite" && ctx.deepBomResult?.tflite_delegate_compatibility_evidence) {
       applyProtectedTfliteDelegateCompatibilityEvidence(
         ctx.current,
         ctx.deepBomResult.tflite_delegate_compatibility_evidence,
       );
+      evidenceChanged = true;
+    }
+    if (evidenceChanged) {
+      rebuildArtifactIrContext();
+      if (protectedFormat === "tflite" && ctx.deepBomResult?.xnnpack_selector_evidence) renderGraphOpRows(ctx.current);
       deploymentFrontierController.render(ctx.current);
     }
     renderCurrentKernelInspector(true);
     renderAuditClaimBoundary(ctx.current?.format, ctx.current);
     renderDeepBomResult(ctx.deepBomResult, { updateWorkflow: activateWorkflow });
-    if (ctx.current && ctx.selectedOpIndex != null) renderOpDetail(ctx.current, ctx.selectedOpIndex);
+    if (ctx.current && ctx.selectedOpIndex != null) void renderOpDetail(ctx.current, ctx.selectedOpIndex);
     setStatus("DEEPBOM complete", "ok");
     return ctx.deepBomResult;
   } catch (error) {
@@ -352,7 +359,7 @@ function renderDeepBomResult(result, { updateWorkflow = true } = {}) {
         document.querySelector('[data-workflow-step="graph"]')?.click();
         document.querySelector('[data-explorer-tab="kernels"]')?.click();
         document.querySelector('[data-kernel-filter="selector"]')?.click();
-        requestAnimationFrame(() => document.getElementById("kernelInspectorPanel")?.scrollIntoView({ behavior: "auto", block: "start" }));
+        requestAnimationFrame(() => document.getElementById("kernelInspectorSummary")?.scrollIntoView({ behavior: "auto", block: "start" }));
       });
       selectorActions.append(inspect);
     }
@@ -1161,7 +1168,7 @@ function renderModelViewer(tomo) {
       lscCtx.fillText("Running…", 70, 74);
       try {
         const G = 13;
-        const raw = layer_landscape_grid(ctx.currentModelBytes, entry.op_index, 1234, 5678, G, 0.4);
+        const raw = await layer_landscape_grid(ctx.currentModelBytes, entry.op_index, 1234, 5678, G, 0.4);
         const { grid: flat } = raw;
         const ci = Math.floor(G / 2);
         const center = flat[ci * G + ci] ?? 0;
@@ -1263,7 +1270,7 @@ async function runModelViewer() {
   if (!ctx.currentModelBytes || !modelSupportsCapability(ctx.current?.format, "model_tomography")) return;
   if (!modelViewerPanel) return;
   try {
-    const tomo = compute_model_tomography(ctx.currentModelBytes, ctx.currentFilename || "model.tflite", selectedTargetId());
+    const tomo = await compute_model_tomography(ctx.currentModelBytes, ctx.currentFilename || "model.tflite", selectedTargetId());
     if (!Array.isArray(tomo) || !tomo.length) {
       modelViewerPanel.hidden = false;
       modelViewerPanel.textContent = "No weight layers found — Model Explorer requires at least one CONV/DW_CONV op with a constant weight tensor.";

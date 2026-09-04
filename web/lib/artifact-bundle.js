@@ -12,7 +12,9 @@ const MAX_BUNDLE_FILES = 20_000;
 const MAX_MANIFEST_BYTES = 16 * 1024 * 1024;
 
 function selectedPath(file) {
-  return String(file?.webkitRelativePath || file?.name || "").replaceAll("\\", "/").replace(/^\.\//, "");
+  return String(file?.path || file?.file?.webkitRelativePath || file?.webkitRelativePath || file?.file?.name || file?.name || "")
+    .replaceAll("\\", "/")
+    .replace(/^\.\//, "");
 }
 
 function safePath(path, label = "bundle path") {
@@ -29,8 +31,12 @@ function bundleEntries(files) {
   if (rows.length > MAX_BUNDLE_FILES) throw new Error(`Package selection exceeds ${MAX_BUNDLE_FILES} files`);
   const exact = new Map();
   const folded = new Map();
-  for (const file of rows) {
-    const path = safePath(selectedPath(file));
+  for (const row of rows) {
+    const path = safePath(selectedPath(row));
+    const file = row?.file || row;
+    if (!file || typeof file.slice !== "function" || !Number.isFinite(file.size)) {
+      throw new Error(`Package selection entry ${path} is not a Blob-compatible file`);
+    }
     const lower = path.toLowerCase();
     if (exact.has(path)) throw new Error(`Package selection repeats ${path}`);
     if (folded.has(lower)) throw new Error(`Package selection contains a cross-platform case collision: ${folded.get(lower)} and ${path}`);

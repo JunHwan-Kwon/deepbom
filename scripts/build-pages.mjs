@@ -244,7 +244,7 @@ async function minifyProjectAssets(rootDir) {
     source_bytes: sourceBytes,
     output_bytes: outputBytes,
     byte_reduction_ratio: sourceBytes > 0 ? Number((1 - outputBytes / sourceBytes).toFixed(6)) : 0,
-    security_boundary: "Copy-resistance only. Browser-delivered code remains inspectable; authoritative analysis and projections execute in stripped WASM.",
+    security_boundary: "Copy-resistance only. Browser-delivered code remains inspectable. TFLite analysis and selected protected projections execute in stripped WASM; ONNX, ExecuTorch, Core ML, GGUF, and SafeTensors analysis uses minified browser modules with isolated Worker execution where payload processing is heavy.",
   };
 }
 

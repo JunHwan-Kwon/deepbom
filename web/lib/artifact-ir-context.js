@@ -6,6 +6,10 @@ import { sha256TextHex } from "./sha256-sync.js";
 
 const CACHE = new WeakMap();
 
+export function invalidateArtifactIrContext(analysis) {
+  if (analysis && typeof analysis === "object") CACHE.delete(analysis);
+}
+
 export function getArtifactIrContext(analysis, artifact = {}, { runtimeEvidence = null } = {}) {
   if (!analysis || typeof analysis !== "object") return null;
   const sha256 = String(artifact.sha256 || analysis.model_sha256 || analysis.artifact_sha256 || "").toLowerCase();

@@ -1,7 +1,7 @@
 // Canonical analyzer/rulepack identity for both ungated runtime code and gated
 // report formatters. Release checks bind these values to package and HTML metadata.
 export const ANALYZER_VERSION = "2026-08-03";
-export const ANALYZER_SEMANTIC_VERSION = "1.96.4";
+export const ANALYZER_SEMANTIC_VERSION = "1.96.5";
 export const RULEPACK_VERSION = "deepbom.rulepack.2026-07-24.63";
 export const DEEPBOM_CITATION = "Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts (Version 1.94.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.21834509";
 

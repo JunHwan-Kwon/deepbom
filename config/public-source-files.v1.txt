@@ -110,6 +110,7 @@ docs/REPRODUCIBILITY.md
 docs/SOFTWARE_RECORD.md
 docs/STANDARDIZATION_EVIDENCE.md
 docs/SUPPORT_MATRIX.md
+docs/WASM_EXECUTION_BOUNDARY.md
 docs/ZENODO_RELEASE.md
 docs/native-runtime-capture.md
 docs/schemas/deepbom-artifact-ir-v2.schema.json
@@ -179,6 +180,7 @@ reference/xnnpack-readme/rule-manifest-v2.21.0.json
 reference/xnnpack-readme/version-diff.json
 release/version.json
 requirements-onnx-corpus.txt
+scripts/benchmark-streaming-wasm-candidates.mjs
 scripts/bootstrap-instrumented-runtime.mjs
 scripts/browser-launch.mjs
 scripts/build-cargo-engine-release.mjs
@@ -315,6 +317,7 @@ scripts/check-metadata-model-adapters.mjs
 scripts/check-mlbom-conservation.mjs
 scripts/check-model-file-contract.mjs
 scripts/check-native-capture-pipeline.mjs
+scripts/check-no-main-thread-heavy-wasm.mjs
 scripts/check-numerical-abi-propagation-viewer.mjs
 scripts/check-numerical-abi-propagation.mjs
 scripts/check-nvidia-accelerator-profile.mjs
@@ -417,6 +420,7 @@ scripts/check-tflite-runtime-info-adapter.mjs
 scripts/check-tflite-runtime-info-viewer.mjs
 scripts/check-tflite-sparse-storage.mjs
 scripts/check-tflite-subgraph-inventory.mjs
+scripts/check-tflite-worker-rpc.mjs
 scripts/check-tier.mjs
 scripts/check-wasm-hardening.mjs
 scripts/check-web-imports.mjs
@@ -512,6 +516,7 @@ scripts/test-live-permissions.mjs
 scripts/validate-cyclonedx-17.mjs
 scripts/validate-supported-formats.mjs
 scripts/verify-coreml-source-pins.mjs
+scripts/verify-cyclonedx-draft-pins.mjs
 scripts/verify-gguf-runtime-capture.mjs
 scripts/verify-interface-boundary-corpus.mjs
 scripts/verify-litert-interface-corpus.py
@@ -898,6 +903,7 @@ web/lib/session-evidence.js
 web/lib/sha256-sync.js
 web/lib/signing-key-trust.js
 web/lib/static-audit-worker-client.js
+web/lib/static-audit-worker-protocol.js
 web/lib/status.js
 web/lib/storage.js
 web/lib/strict-json.js
@@ -918,6 +924,7 @@ web/lib/tflite-delegate-compatibility.js
 web/lib/tflite-delegate-rulepack-metadata.js
 web/lib/tflite-profile-info-adapter.js
 web/lib/tflite-runtime-info-adapter.js
+web/lib/tflite-worker-rpc.js
 web/lib/theme-ui.js
 web/lib/transformer-architecture-projection.js
 web/lib/visual-export.js

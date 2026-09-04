@@ -7,6 +7,8 @@ const CHECKS = [
   "scripts/check-build-metadata.mjs",
   "scripts/check-js.mjs",
   "scripts/check-wasm-hardening.mjs",
+  "scripts/check-no-main-thread-heavy-wasm.mjs",
+  "scripts/check-tflite-worker-rpc.mjs",
   "scripts/check-web-imports.mjs",
   "scripts/check-browser-import-contract.mjs",
   "scripts/check-dom-contract.mjs",

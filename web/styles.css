@@ -5681,6 +5681,14 @@ td.op-dead-low {
     overflow-y: visible;
   }
 
+  .table-wrap.kernel-inspector-wrap > .kernel-inspector-toolbar {
+    order: -3;
+  }
+
+  .table-wrap.kernel-inspector-wrap > .kernel-inspector-summary {
+    order: -2;
+  }
+
   .table-wrap.kernel-inspector-wrap > .explorer-execution-placement {
     order: 10;
   }

@@ -11,6 +11,8 @@ const CHECKS = [
   "scripts/check-placement-comparison.mjs",
   "scripts/check-runtime-accelerator-import.mjs",
   "scripts/check-static-audit-worker-client.mjs",
+  "scripts/check-no-main-thread-heavy-wasm.mjs",
+  "scripts/check-tflite-worker-rpc.mjs",
   "scripts/check-zenodo-release.mjs",
   "scripts/check-js.mjs",
   "scripts/check-wasm-hardening.mjs",

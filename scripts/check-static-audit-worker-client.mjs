@@ -6,12 +6,14 @@ class FakeWorker {
   constructor(mode) {
     this.mode = mode;
     this.listeners = new Map();
+    this.messages = [];
     this.terminated = false;
   }
 
   addEventListener(type, listener) { this.listeners.set(type, listener); }
 
   postMessage(message) {
+    this.messages.push(message);
     if (this.mode === "hang") return;
     const emit = (data, delay) => setTimeout(() => {
       if (!this.terminated) this.listeners.get("message")?.({ data });
@@ -55,6 +57,32 @@ assert.equal(workers.length, 2, "timeout recovery must create exactly one replac
 
 client.reset();
 assert.equal(workers[1].terminated, true, "reset must terminate the active Worker");
+
+const fileResult = await client.runFile("metadata_analyze", {
+  file: { name: "fixture.gguf", size: 16, slice() {} },
+  format: "gguf",
+});
+assert.deepEqual(fileResult, { status: "ok" }, "file-scoped analysis must not require model state");
+assert.equal(workers.length, 3, "file-scoped analysis must recover on a fresh Worker");
+const packageFiles = [
+  { name: "model.mlmodel", size: 12, slice() {}, webkitRelativePath: "Fixture.mlpackage/Data/model.mlmodel" },
+  { name: "weights.bin", size: 24, slice() {}, webkitRelativePath: "Fixture.mlpackage/Data/weights/weights.bin" },
+];
+await client.runFile("artifact_bundle_analyze", { files: packageFiles });
+assert.deepEqual(
+  workers[2].messages.at(-1).payload.files.map(({ path }) => path),
+  packageFiles.map(({ webkitRelativePath }) => webkitRelativePath),
+  "package-relative paths must survive the Worker RPC descriptor boundary",
+);
+assert.throws(
+  () => client.runFile("metadata_analyze", {}),
+  /exactly one file or one non-empty file array/,
+);
+await assert.rejects(
+  client.run("analyze", { bytes: new ArrayBuffer(1), filename: "fixture.tflite" }),
+  /Uint8Array bytes/,
+);
+client.reset();
 assert.throws(() => createStaticAuditWorkerClient({ inactivityTimeoutMs: 0 }), /positive safe integer/);
 
-console.log("Static audit Worker client checks passed: inactivity timeout, termination, progress reset, and clean retry.");
+console.log("Static audit Worker client checks passed: model/file isolation, validation, timeout termination, progress reset, and clean retry.");
