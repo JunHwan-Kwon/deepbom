@@ -2346,7 +2346,7 @@ function setActiveWorkspace(workspace = "input", options = {}) {
 function navigateToWorkspace(workspace = "input") {
   if (!setActiveWorkspace(workspace)) return false;
   const target = {
-    input: dropzone,
+    input: dropzone?.querySelector(".upload-controls"),
     audit: auditWorkbench,
     findings: findingsPanel,
     output: outputModuleSelector,

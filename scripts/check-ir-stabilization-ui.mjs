@@ -168,14 +168,14 @@ async function runVerifiedExample(page) {
 async function verifyPrimaryWorkflowNavigation(page) {
   for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport);
-    for (const [workspace, targetId] of [["input", "dropzone"], ["audit", "auditWorkbench"]]) {
+    for (const [workspace, selector] of [["input", ".upload-controls"], ["audit", "#auditWorkbench"]]) {
       await page.locator(`[data-workflow-step="${workspace}"]`).click();
-      await page.waitForFunction(({ workspaceId, target }) => {
-        const node = document.getElementById(target);
+      await page.waitForFunction(({ workspaceId, targetSelector }) => {
+        const node = document.querySelector(targetSelector);
         const rect = node?.getBoundingClientRect();
         return document.body.classList.contains(`workspace-${workspaceId}`)
-          && node && !node.hidden && rect.bottom > 0 && rect.top < innerHeight;
-      }, { workspaceId: workspace, target: targetId });
+          && node && !node.hidden && rect.top >= 0 && rect.top < innerHeight;
+      }, { workspaceId: workspace, targetSelector: selector });
     }
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
