@@ -4,6 +4,13 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Raised only the measured 1.96.7 source ceilings: handwritten runtime by
+  64 KiB, verification by 16 KiB, and development tooling by 16 KiB. The same
+  source-budget gate now runs as part of local release validation, preventing
+  a clean local release record from diverging from the Cloudflare deployment
+  preflight. The generated public-source provenance manifest is excluded from
+  handwritten development-source accounting in both repository layouts.
+
 ## 1.96.7 - 2026-09-04
 
 - Kept the Cloudflare deployment preflight browser-free by separating the

@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "4d6065e6ba4fb71a774622001f9fa2fe2b4afd46",
+  "source_commit": "bae7697f54cf9509a7492bca14a6d50db8df0bd6",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 984,
@@ -37,8 +37,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 27661,
-      "sha256": "2591aa112691d3cc2d533b7e6016d131f222878c1142c93dec5d21ede2f8f895"
+      "byte_length": 28119,
+      "sha256": "8f881d20f767394946ce64f333f69f28404212133278e25fe422715abffb568e"
     },
     {
       "path": "CITATION.cff",
@@ -2042,13 +2042,13 @@
     },
     {
       "path": "scripts/check-size-utils.mjs",
-      "byte_length": 6184,
-      "sha256": "9414899fdf524bd37563e47c7246077be3e283ee7a4ba4a33963fcc6b249c5e2"
+      "byte_length": 6345,
+      "sha256": "ec343ad82d74c02f68577f42f4cd53b2095c6ed715734c9d34651ad06d8538e4"
     },
     {
       "path": "scripts/check-source-budget.mjs",
       "byte_length": 10690,
-      "sha256": "b9bbfcca905db8f7e5a789b81234ef304f2f6fa7dd1523ad74db3a5035165d59"
+      "sha256": "af5ae1c7209a95837340b6eaed44ebe3bae179ca0758aed3cf8827376c4d5608"
     },
     {
       "path": "scripts/check-standardization-evidence.mjs",
@@ -2507,8 +2507,8 @@
     },
     {
       "path": "scripts/run-release-validation.mjs",
-      "byte_length": 9370,
-      "sha256": "34024fda2d1968ea226cf7b8e313271c4541498a0e78f80e612dcead70069574"
+      "byte_length": 9467,
+      "sha256": "b4d7f72340217f32de4cfbe7eaca60d5146e11bfc2d5c4ee00706e3e4ee035eb"
     },
     {
       "path": "scripts/run-utils.mjs",
@@ -2537,8 +2537,8 @@
     },
     {
       "path": "scripts/source-size-utils.mjs",
-      "byte_length": 7529,
-      "sha256": "b4a2539e59e62bc1b41aa12c11b41b1cefcc73ce7a90b2f1dc501d97cbb9db05"
+      "byte_length": 7567,
+      "sha256": "2b93afd20df4f2a76441e05c5abda9a60430c81b165a07a905e0c8db1854dcd0"
     },
     {
       "path": "scripts/static-test-server.mjs",
@@ -3268,7 +3268,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 81908,
-      "sha256": "6c279f4e622f7219ce6ee3bacd6b435b5b20eb1031a297ad6bb8ee48f106885d"
+      "sha256": "8b45df1e1f708ae992eb8acfa8620e5ee8fb38928eccc6052a518b23e9dc2d28"
     },
     {
       "path": "web/lib/bundle.js",

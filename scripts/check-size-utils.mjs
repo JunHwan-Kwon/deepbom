@@ -48,6 +48,7 @@ expectEqual(isDocsSourcePath("web/app.js"), false, "runtime app code should not 
 expectEqual(isIgnoredSourceFile("LOCAL_PRIVATE_ROADMAP.local.md"), true, "local-private roadmap should not count toward source budget.");
 expectEqual(isIgnoredSourceFile("package-lock.json"), true, "dependency lockfile should stay tracked but not count toward source budget.");
 expectEqual(isIgnoredSourceFile("docs-site/package-lock.json"), true, "nested documentation lockfiles should not count toward source budget.");
+expectEqual(isIgnoredSourceFile("PUBLIC_SOURCE_MANIFEST.json"), true, "generated public-source provenance should not count as handwritten development source.");
 expectEqual(DEFAULT_IGNORED_DIRS.has("node_modules.incomplete"), true, "incomplete dependency staging directories should not count toward source budget.");
 expectEqual(DEFAULT_IGNORED_DIRS.has(".wrangler"), true, "local Worker build output should not count toward source budget.");
 expectEqual(isIgnoredSourceFile("docs/PROJECT_STATUS.md"), false, "public project status should count toward source budget.");

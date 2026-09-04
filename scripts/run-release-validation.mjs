@@ -46,7 +46,10 @@ const releaseEnvironment = {
 };
 
 try {
-  if (selected("quality")) await run("quality", process.execPath, ["scripts/check-all.mjs"]);
+  if (selected("quality")) {
+    await run("quality", process.execPath, ["scripts/check-all.mjs"]);
+    await run("source-budget", process.execPath, ["scripts/check-source-budget.mjs"]);
+  }
   if (selected("deploy")) {
     await run("deploy-gate", process.execPath, ["scripts/check-deploy.mjs"]);
     await run("release-build", npmCommand(), npmArgs(["run", "build:release"]), releaseEnvironment);

@@ -21,7 +21,10 @@ export const DEFAULT_IGNORED_DIRS = new Set([
   "target",
   "reports",
 ]);
-export const DEFAULT_IGNORED_FILES = new Set(["package-lock.json"]);
+export const DEFAULT_IGNORED_FILES = new Set([
+  "package-lock.json",
+  "PUBLIC_SOURCE_MANIFEST.json",
+]);
 export const DEFAULT_IGNORED_FILE_SUFFIXES = [".local.md"];
 export const BUDGET_SOURCE_EXTENSIONS = new Set([
   ".js",
