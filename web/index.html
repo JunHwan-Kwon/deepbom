@@ -52,6 +52,15 @@
           "url": "https://deepbom.org/",
           "softwareVersion": "1.96.8",
           "identifier": "https://doi.org/10.5281/zenodo.21834508",
+          "sameAs": [
+            "https://github.com/JunHwan-Kwon/deepbom",
+            "https://doi.org/10.5281/zenodo.21834508",
+            "https://zenodo.org/records/21834508"
+          ],
+          "codeRepository": "https://github.com/JunHwan-Kwon/deepbom",
+          "license": "https://www.apache.org/licenses/LICENSE-2.0",
+          "datePublished": "2026-08-07",
+          "screenshot": "https://deepbom.org/web/og-image.png",
           "citation": "Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts [Computer software]. Zenodo concept DOI. https://doi.org/10.5281/zenodo.21834508",
           "description": "Browser-local deployment artifact evidence for TFLite, ONNX, GGUF, SafeTensors, and Core ML. The analyzer separates serialized facts, deterministic derivations, target-specific models, imported runtime observations, and unassessed claims.",
           "featureList": [
@@ -187,7 +196,10 @@
     <link rel="stylesheet" href="./onnx-domain.css" />
     <link rel="stylesheet" href="./research-theme.css" />
   </head>
-  <body>
+  <!-- The application module is interaction-loaded, so the first paint has to
+       declare the same idle state it will re-affirm once it runs. Without this
+       the pre-audit panels render, then vanish on the first interaction. -->
+  <body data-workflow-state="idle">
     <a class="skip-link" href="#mainContent">Skip to analysis workspace</a>
     <header class="topbar">
       <div>
@@ -261,7 +273,7 @@
             </div>
           </div>
         </div>
-        <div class="status" id="status">Select an artifact</div>
+        <div class="status" id="status" role="status">Select an artifact</div>
       </div>
     </header>
 
@@ -448,11 +460,12 @@
       <section class="session-anchor" id="sessionAnchor" aria-label="Pinned model session">
         <section class="upload-panel" id="dropzone">
           <div class="artifact-intro">
-            <p class="artifact-intro-kicker">Deployment artifact evidence</p>
+            <p class="artifact-intro-kicker">Local static audit</p>
             <h2>Inspect the AI model artifact that will actually run.</h2>
             <p class="artifact-intro-lead">Find artifact defects, review cautions, and see which claims still need runtime or process evidence.</p>
             <h3 id="artifactContextTitle">Choose a local artifact</h3>
-            <p id="artifactContextCopy">Drop a supported file here or choose one below. Analysis runs on this device.</p>
+            <p id="artifactContextCopy">Drop a supported file into this panel, or use the controls alongside. Analysis runs on this device.</p>
+            <p class="artifact-drop-target">Drop a supported artifact anywhere in this panel</p>
           </div>
           <div class="upload-controls">
             <select id="targetSelect" hidden aria-hidden="true"></select>
@@ -799,13 +812,13 @@
             </div>
             <div class="audit-tabs audit-lens-tabs" role="toolbar" aria-label="Specialized evidence lenses">
               <button class="audit-tab" type="button" data-audit-tab="xnnpack" data-audit-domain="placement" data-audit-lens="true" data-format-scope="tflite" aria-label="TFLite XNNPACK conditional eligibility and predicted partition segments">
-                <span>Delegate lens</span><strong>XNNPACK</strong><em>Segments</em>
+                <strong>XNNPACK</strong><em>Segments</em>
               </button>
               <button class="audit-tab" type="button" data-audit-tab="quant-labs" data-audit-domain="numerical" data-audit-lens="true" data-analysis-depth="deep" aria-label="Quantization labs, Q/DQ and arithmetic contracts">
-                <span>Arithmetic lens</span><strong>Quant Labs</strong><em>Q/DQ</em>
+                <strong>Quant Labs</strong><em>Q/DQ</em>
               </button>
               <button class="audit-tab" type="button" data-audit-tab="llm" data-audit-domain="architecture" data-audit-lens="true" data-format-scope="tflite onnx gguf safetensors" aria-label="On-device LLM serialized graph or architecture, state, tokenizer, runtime, and medical evidence boundary">
-                <span>Architecture lens</span><strong>On-device LLM</strong><em>Contract</em>
+                <strong>On-device LLM</strong><em>Contract</em>
               </button>
             </div>
             <label class="mobile-audit-view" for="mobileAuditView">

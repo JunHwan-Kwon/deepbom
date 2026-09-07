@@ -163,6 +163,7 @@ try {
     }
 
     if (["gguf", "safetensors"].includes(format)) {
+      await page.locator('[data-audit-tab="stage"]').click();
       await page.locator('[data-audit-tab="llm"]').click();
       const llmState = await page.locator("#perfVisuals").evaluate((root) => ({
         title: root.querySelector("#perfVisualTitle")?.textContent || "",

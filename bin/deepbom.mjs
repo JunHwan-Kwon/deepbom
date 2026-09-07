@@ -6,6 +6,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
+import { runMcpServer } from "./deepbom-mcp.mjs";
 import { detectModelFormat } from "../web/lib/model-file.js";
 import { analyzeOnnxModel, MAX_ONNX_DECODED_ELEMENTS } from "../web/onnx.js";
 import { attachOnnxContractConflictCapsule } from "../web/lib/onnx-contract-conflict.js";
@@ -99,6 +100,13 @@ async function main(argv) {
     await preflightOutputDestinations(parsed);
     const capabilities = buildCliCapabilities(VERSION, { defaultTarget: DEFAULT_TARGET, deltaTargets: DEFAULT_DELTA_TARGETS });
     return emitDocument(parsed, capabilities, () => buildCapabilitiesSummary(capabilities));
+  }
+  // The MCP server is a transport, not an analysis command: it produces no
+  // evidence document of its own and therefore declares no output contract in
+  // deepbom.cli_capabilities.v1. Every request it serves re-enters this CLI.
+  if (parsed.command === "mcp") {
+    validateStandaloneCommand(parsed, "mcp", { allowInput: false });
+    return runMcpServer({ cliEntry: process.argv[1], version: VERSION });
   }
   if (parsed.command === "self-test") {
     validateStandaloneCommand(parsed, "self-test", { allowInput: false });
@@ -1567,7 +1575,7 @@ function parseArguments(argv) {
   const first = values[0] || "";
   if (["-h", "--help", "help"].includes(first)) return { help: true };
   if (["-v", "--version", "version"].includes(first)) return { version: true };
-  const command = ["audit", "gguf", "verify", "diff", "explore", "graph", "placement", "capabilities", "accelerator", "self-test", "explain-rule"].includes(first) ? values.shift() : "audit";
+  const command = ["audit", "gguf", "verify", "diff", "explore", "graph", "placement", "capabilities", "accelerator", "self-test", "explain-rule", "mcp"].includes(first) ? values.shift() : "audit";
   const acceleratorAction = command === "accelerator" ? values.shift() || "" : "";
   const acceleratorProvider = command === "accelerator" ? values.shift() || "" : "";
   const parsed = {
@@ -1825,6 +1833,7 @@ async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_B
 function printHelp() {
   process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --output-format <kind> json, json-compact, envelope, cyclonedx, or sarif\n  --section <names>      Emit selected analysis sections; use --list-sections to discover names\n  --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity\n  --list-sections        List selectable analysis sections for this artifact\n  --gate defects         Exit 2 only when an artifact_defect finding is present\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Compatibility severity gate: informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Compatibility alias for --output-format json\n  --compact              Compatibility alias for --output-format json-compact\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
   process.stdout.write("\nInstallation and rule checks:\n  deepbom self-test [--json|--compact]\n  deepbom explain-rule <rule-id> [--json|--compact]\n  deepbom explain-rule --list\n");
+  process.stdout.write("\nAssistant tool access (Model Context Protocol over stdio, local process only):\n  deepbom mcp\n  Tools: deepbom_capabilities, deepbom_audit, deepbom_diff\n");
   process.stdout.write("\nNVIDIA accelerator binding:\n  --accelerator-profile <json>\n                          Bind an observed NVIDIA host profile without inferring selected-build or runtime assignment\n  --accelerator-device <index>\n                          Select one device when the bound profile contains multiple NVIDIA devices\n");
   process.stdout.write("\nN-way placement comparison:\n  deepbom placement <artifact> [--profiles <id,id|all>] [--json|--compact]\n  --profiles <ids|all>   Compare selected independent profiles (default: all available profiles)\n");
   process.stdout.write("\nCompiled accelerator evidence:\n  --coreml-compute-plan <json>\n                          Import an artifact- and compiled-model-bound MLComputePlan estimate; not executed placement\n  --edgetpu-compiler-evidence <json>\n                          Import an artifact/compiler/invocation/compiled-artifact-bound Edge TPU operation ledger\n  --litert-qualcomm-evidence <json>\n                          Import an artifact/source/compiler/QNN-plan-bound operation ledger\n");

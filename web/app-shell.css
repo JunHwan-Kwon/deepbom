@@ -74,24 +74,62 @@ body[data-workflow-state="idle"] #modelPlan {
   display: none;
 }
 
+/* 그룹 라벨 + 대상별 브리프. 옆의 테마 토글과 같은 컨트롤 어휘를 쓴다. */
 .evaluation-nav {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.35rem 0.7rem;
+  gap: 4px 8px;
   align-items: center;
-  font-size: 0.82rem;
 }
 
+/* "Evaluate" 는 항목이 아니라 묶음의 이름이다. */
 .evaluation-nav span {
   color: var(--muted, #445260);
-  font-weight: 800;
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-inline-end: 6px;
 }
 
+/* 라벨과 같은 활자. 상자가 아니라 마스트헤드 항목으로 읽히게 한다. */
 .evaluation-nav a {
-  color: var(--ink, #17212b);
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink-soft, #34423d);
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 9px;
   font-weight: 700;
-  text-underline-offset: 0.2em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* 항목 사이 구분자. 마지막 항목 뒤에는 붙지 않는다. */
+.evaluation-nav a:not(:last-child)::after {
+  content: "·";
+  margin-inline-start: 8px;
+  color: var(--line-strong, #a8b4ad);
+  font-weight: 400;
+}
+
+.evaluation-nav a:hover {
+  color: var(--ink, #17212b);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.evaluation-nav a:hover::after {
+  text-decoration: none;
+}
+
+.evaluation-nav a:focus-visible {
+  outline: 2px solid var(--blue, #315d73);
+  outline-offset: 3px;
 }
 
 @media (max-width: 720px) {
@@ -102,8 +140,7 @@ body[data-workflow-state="idle"] #modelPlan {
 
   .evaluation-nav a {
     min-height: 44px;
-    display: inline-flex;
-    align-items: center;
+    padding-block: 12px;
   }
 }
 

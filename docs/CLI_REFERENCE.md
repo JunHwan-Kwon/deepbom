@@ -121,6 +121,10 @@ Installation and rule checks:
   deepbom explain-rule <rule-id> [--json|--compact]
   deepbom explain-rule --list
 
+Assistant tool access (Model Context Protocol over stdio, local process only):
+  deepbom mcp
+  Tools: deepbom_capabilities, deepbom_audit, deepbom_diff
+
 NVIDIA accelerator binding:
   --accelerator-profile <json>
                           Bind an observed NVIDIA host profile without inferring selected-build or runtime assignment

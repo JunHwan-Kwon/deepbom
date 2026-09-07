@@ -36,6 +36,7 @@ try {
   const auditStatus = await page.locator("#status").textContent();
   if (!auditStatus.includes("audit run complete")) throw new Error(auditStatus);
   await page.waitForFunction(() => document.documentElement.dataset.analysisDepth === "deep");
+  await page.locator('[data-audit-tab="quant"]').click();
   await page.locator('[data-audit-tab="quant-labs"]').click();
   await page.locator('[data-quant-lab-tab="residual-contract"]').click();
   await page.locator("#quantizationLatticePanel").waitFor({ state: "visible" });

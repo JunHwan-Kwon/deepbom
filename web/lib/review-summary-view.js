@@ -46,8 +46,7 @@ export function renderReviewSummary(root, summary) {
 
   const coverage = doc.createElement("p");
   coverage.className = "review-summary-coverage";
-  coverage.textContent = `${graphCopy(summary)} ${summary.coverage.assessed} assessed, ${summary.coverage.partial} partial, ${summary.coverage.needs_external_evidence} need external evidence. `
-    + targetCopy(summary);
+  coverage.textContent = `${graphCopy(summary)} ${coverageCopy(summary)} ${targetCopy(summary)}`.replace(/\s+/g, " ").trim();
 
   const actions = doc.createElement("div");
   actions.className = "review-summary-actions";
@@ -83,6 +82,21 @@ function targetCopy(summary) {
   const binding = summary.target?.binding_source;
   if (!target) return "No target-specific cost profile was applied.";
   return `Target: ${target}${binding ? ` (${binding})` : ""}.`;
+}
+
+// 셋은 evidence capability 의 상태 분포다. 세는 대상을 문장에 남겨 두어야
+// "10 assessed, 2 partial, 1 need" 처럼 잘려 보이지 않는다.
+function coverageCopy(summary) {
+  const coverage = summary.coverage || {};
+  const assessed = Number(coverage.assessed || 0);
+  const partial = Number(coverage.partial || 0);
+  const external = Number(coverage.needs_external_evidence || 0);
+  const total = assessed + partial + external;
+  if (!total) return "";
+  const parts = [`${assessed} assessed`];
+  if (partial) parts.push(`${partial} partial`);
+  parts.push(`${external} ${external === 1 ? "needs" : "need"} external evidence`);
+  return `Evidence capabilities: ${total} in scope — ${parts.join(", ")}.`;
 }
 
 function graphCopy(summary) {

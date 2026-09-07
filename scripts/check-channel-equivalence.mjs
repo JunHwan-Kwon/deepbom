@@ -58,6 +58,17 @@ if (npmCli) {
     "installed npm capability discovery diverged from canonical CLI");
   const npmSelfTest = json(runNpmExecutable(npmCli, ["self-test", "--compact"]).stdout);
   assert.equal(npmSelfTest.status, "pass", "installed npm executable self-test failed");
+  const mcpFrames = exchangeMcp(process.execPath, [npmCli, "mcp"], [
+    { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "channel-check", version: "0" } } },
+    { jsonrpc: "2.0", method: "notifications/initialized" },
+    { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "deepbom_audit", arguments: { path: path.resolve(fileCases[1].path) } } },
+  ]);
+  assert.equal(mcpFrames.length, 2, "installed npm MCP transport must not answer notifications");
+  assert.equal(mcpFrames[0].result.serverInfo.name, "deepbom", "installed npm MCP initialization failed");
+  const mcpAudit = json(mcpFrames[1].result.content[0].text);
+  assert.equal(mcpAudit.schema, "deepbom.artifact_evidence_envelope.v1", "installed npm MCP audit contract diverged");
+  assert.equal(mcpAudit.identity.sha256, createHash("sha256").update(readFileSync(fileCases[1].path)).digest("hex"),
+    "installed npm MCP audit identity diverged");
 }
 if (platformSmoke || releaseContract) {
   assert.deepEqual(json(run(engine, capabilityArgs).stdout), canonicalCapabilities,
@@ -190,7 +201,7 @@ if (platformSmoke) {
   assert.equal(manifest.channels.cargo.status, "launcher_ready_for_immutable_engine_matrix");
   const cargoStatus = releaseContract ? "Cargo execution and unbound-engine rejection" : "Cargo execution reserved for --release-contract";
   const nativeStatus = releaseContract ? "standalone/Python TFLite and ONNX execution parity" : "native/Python execution reserved for platform release smoke";
-  console.log(`Channel equivalence passed (installed npm tarball across five formats and two package forms; ${nativeStatus}; capability/envelope/SARIF/policy and verify/diff/explore npm parity; ${cargoStatus}; packaged self-test/WASM tamper rejection).`);
+  console.log(`Channel equivalence passed (installed npm tarball across five formats and two package forms; installed MCP audit; ${nativeStatus}; capability/envelope/SARIF/policy and verify/diff/explore npm parity; ${cargoStatus}; packaged self-test/WASM tamper rejection).`);
 }
 
 async function installNpmPackage(release) {
@@ -268,6 +279,19 @@ function runNpmExecutable(npmCli, args, expectSuccess = true) {
   const installRoot = path.resolve(path.dirname(npmCli), "..", "..", "..");
   const invocation = resolveNpmCommand(["exec", "--", "deepbom", ...args]);
   return run(invocation.command, invocation.args, {}, expectSuccess, installRoot);
+}
+
+function exchangeMcp(command, args, messages) {
+  const result = spawnSync(command, args, {
+    cwd: root,
+    encoding: "utf8",
+    env: process.env,
+    input: `${messages.map((message) => JSON.stringify(message)).join("\n")}\n`,
+    maxBuffer: 256 * 1024 * 1024,
+  });
+  if (result.status !== 0) throw new Error(`${command} ${args.join(" ")} failed\n${result.stdout}\n${result.stderr}`);
+  if (result.stderr.trim()) throw new Error(`installed npm MCP wrote to stderr: ${result.stderr.trim()}`);
+  return result.stdout.split("\n").filter(Boolean).map((line) => JSON.parse(line));
 }
 
 function json(source) {

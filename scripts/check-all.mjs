@@ -21,6 +21,7 @@ const CHECKS = [
   "scripts/check-bootstrap-retry.mjs",
   "scripts/check-dom-contract.mjs",
   "scripts/check-workflow-contract.mjs",
+  "scripts/check-pre-interaction-shell.mjs",
   "scripts/check-product-guidance-contracts.mjs",
   "scripts/check-access-hierarchy.mjs",
   "scripts/check-external-test-access.mjs",

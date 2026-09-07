@@ -36,9 +36,26 @@
   }
 
   function applyTheme(theme, source) {
+    // Elements that transition a colour resolved from a custom property keep
+    // the previous theme's value when only the token changes: the transition
+    // never starts, so nothing repaints them until an unrelated reflow. That
+    // left the evidence-state badges in light colours on the dark ground.
+    // Suppressing transitions across the swap forces the new value to settle.
+    root.dataset.themeSwapping = "true";
     root.dataset.theme = theme;
     root.dataset.themeSource = source;
     root.style.colorScheme = theme;
+    // Reading a computed style on the root is not enough: descendants keep
+    // their cached colour. Detaching the root from layout for one tick forces
+    // the whole tree to restyle while transitions are suppressed, so the new
+    // token values settle instead of waiting for an unrelated invalidation.
+    const previousDisplay = root.style.display;
+    root.style.display = "none";
+    void root.offsetHeight;
+    root.style.display = previousDisplay;
+    const release = () => delete root.dataset.themeSwapping;
+    if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => requestAnimationFrame(release));
+    else release();
     updateBrowserChrome(theme);
     updateControl(theme);
     window.dispatchEvent(new CustomEvent("deepbom:themechange", { detail: { theme, source } }));

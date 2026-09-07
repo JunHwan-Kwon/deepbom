@@ -36,6 +36,7 @@ try {
   await page.waitForFunction(() => /audit run complete|Audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 90_000 });
   const auditStatus = await page.locator("#status").textContent();
   if (!auditStatus.includes("audit run complete")) throw new Error(auditStatus);
+  await page.locator('[data-audit-tab="accelerator"]').click();
   await page.locator('[data-audit-tab="xnnpack"]').click();
   await page.locator("#delegationRepairPanel").waitFor({ state: "visible" });
   await page.waitForFunction(

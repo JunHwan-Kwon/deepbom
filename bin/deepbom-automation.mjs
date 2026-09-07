@@ -92,6 +92,14 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       atomic_file_output: true,
       no_clobber_output: true,
       structured_stderr: ["text", "json"],
+      // A transport, not an analysis command: it emits no evidence document of
+      // its own, so it is declared here rather than in `commands`.
+      mcp_stdio_server: {
+        invocation: "deepbom mcp",
+        transport: "stdio_jsonrpc",
+        tools: ["deepbom_capabilities", "deepbom_audit", "deepbom_diff"],
+        hosted_endpoint: false,
+      },
     },
     targets: {
       default_tflite_target: defaultTarget || null,

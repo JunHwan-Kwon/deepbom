@@ -2,6 +2,7 @@ import {
   buildResourceMapPresentation,
   renderEvidenceTreemap,
 } from "./evidence-treemap.js";
+import { buildOverviewDomainMap } from "./overview-domain-map.js";
 
 export function createGraphWorkspace(workspace) {
   const {
@@ -181,8 +182,15 @@ function renderSummary(analysis) {
     },
   }));
 
+  // 도메인 요약 줄 자체가 해당 도메인 탭으로 가는 경로다. 별도 렌즈 버튼을 두지 않는다.
+  const domainMap = buildOverviewDomainMap(analysis, {
+    format: analysis?.format,
+    onOpen: (tabId) => setActiveAuditTab(tabId),
+  });
+
   summary.replaceChildren(
     artifactOverviewHeader(analysis),
+    domainMap,
     metrics,
     evidence,
   );

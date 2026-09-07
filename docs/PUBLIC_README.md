@@ -41,7 +41,14 @@ deepbom explore model.tflite
 deepbom placement model.tflite --profiles xnnpack_cpu,tflite_coreml_delegate,litert_qualcomm_qnn
 deepbom graph model.onnx --format json --output artifact-graph.json
 deepbom audit model.onnx --conversion-receipt conversion-receipt.json --format cyclonedx
+deepbom mcp
 ```
+
+`deepbom mcp` serves the same local analysis to an assistant over the Model
+Context Protocol (stdio), exposing `deepbom_capabilities`, `deepbom_audit`, and
+`deepbom_diff`. Artifact bytes stay on the machine; there is no hosted analysis
+endpoint. Agent-facing usage guidance is in
+[the DEEPBOM skill](skills/deepbom/SKILL.md).
 
 The default is a terminal-sized evidence summary. `--json` and `--compact`
 expose complete format evidence; `--format envelope` provides the canonical

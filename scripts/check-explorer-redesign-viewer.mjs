@@ -177,6 +177,8 @@ try {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await runAudit(page, TFLITE, "mobilenet_v2_1.0_224_quant.tflite");
 
+  // 렌즈는 부모 도메인에 종속되므로 가시성은 부모를 연 상태에서 확인한다.
+  await page.locator('[data-audit-tab="quant"]').click();
   const fullDepth = await page.evaluate(() => ({
     mode: document.documentElement.dataset.analysisDepth,
     graphVisible: Boolean(document.querySelector('[data-workflow-step="graph"]')?.getClientRects().length),
@@ -1372,6 +1374,7 @@ try {
   await page.locator('[data-workflow-step="input"]').click();
   await runAudit(page, ONNX, "sample_cnn_float.onnx");
   await page.locator('[data-workflow-step="audit"]').click();
+  await page.locator('[data-audit-tab="quant"]').click();
   await page.locator('[data-audit-tab="quant-labs"]').click();
   const onnxQuantLabs = await page.locator(".quant-lab-workbench").evaluate((root) => ({
     active: root.querySelector("[data-quant-lab-tab].active")?.dataset.quantLabTab || "",
@@ -1761,11 +1764,31 @@ function createStaticServer(root) {
       const relative = url.pathname === "/web/" ? "web/index.html" : decodeURIComponent(url.pathname).replace(/^\/+/, "");
       const file = path.resolve(root, relative);
       if (!file.startsWith(`${root}${path.sep}`)) return send(response, 403, "text/plain", "forbidden");
-      send(response, 200, mimeType(file), await readFile(file));
-    } catch {
-      send(response, 404, "text/plain", "not found");
+      send(response, 200, mimeType(file), await readServedFile(file));
+    } catch (error) {
+      // Only a missing path is a 404. Reporting a transient descriptor or
+      // sharing error that way turns it into a module-fetch failure that reads
+      // like a product defect.
+      if (error?.code === "ENOENT" || error?.code === "EISDIR") {
+        return send(response, 404, "text/plain", "not found");
+      }
+      console.error(`viewer static server: ${error?.code || "read failure"}`);
+      send(response, 500, "text/plain", "read failure");
     }
   });
+}
+
+const TRANSIENT_READ_CODES = new Set(["EMFILE", "ENFILE", "EBUSY", "EAGAIN", "EPERM", "EACCES"]);
+
+async function readServedFile(file) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await readFile(file);
+    } catch (error) {
+      if (attempt >= 3 || !TRANSIENT_READ_CODES.has(error?.code)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 20 * (attempt + 1)));
+    }
+  }
 }
 
 function send(response, status, type, body) {

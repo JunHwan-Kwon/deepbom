@@ -56,6 +56,21 @@ try {
     if (message.type() === "error" && !/Failed to load resource/i.test(message.text())) browserErrors.push(`console: ${message.text()}`);
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/web/`, { waitUntil: "domcontentloaded" });
+  // The focus below is the first interaction, so this is the only moment the
+  // shell is observable before app.js loads. The idle panels must already be
+  // hidden here, or they render on arrival and vanish at the first click.
+  const preInteraction = await page.evaluate(() => {
+    const shown = ["#preAuditReference", "#formatCapabilityPanel", "#modelPlan"].filter((selector) => {
+      const node = document.querySelector(selector);
+      if (!node) return false;
+      const rect = node.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    });
+    return { workflowState: document.body.dataset.workflowState || null, shown };
+  });
+  if (preInteraction.workflowState !== "idle" || preInteraction.shown.length) {
+    throw new Error(`Pre-interaction shell is not idle: ${JSON.stringify(preInteraction)}`);
+  }
   await page.locator("#fileInput").focus();
   await page.waitForFunction(() => document.querySelector("#status")?.textContent?.includes("Ready"), null, { timeout: 60_000 });
   const targetPlacement = await page.evaluate(() => ({

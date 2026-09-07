@@ -1252,6 +1252,8 @@ updateFormatSpecificAuditLabels({
   activeTab: getActiveAuditTab,
   selectTab: setActiveAuditTab,
 });
+// 렌즈 행은 활성 도메인에 종속되므로 최초 렌더에서도 한 번 동기화한다.
+setActiveAuditTab(getActiveAuditTab());
 updateWorkflowState("idle");
 populateTargetProfiles();
 updateModuleAccessState();
@@ -2402,7 +2404,7 @@ function getActiveAuditTab() {
 }
 
 function setActiveAuditTab(tabId = "overview") {
-  workflowController.setAuditTab(tabId);
+  workflowController?.setAuditTab(tabId);
 }
 
 function initPinnedSessionOffset() {
@@ -3732,7 +3734,6 @@ function syncFormatWorkflowVisibility(analysis = current) {
 
 async function analyzeFile(file) {
   const auditStarted = performance.now();
-  const controlTop = runAudit.getBoundingClientRect().top;
   try {
     setStatus("Analyzing");
     auditProgressController.begin(2, "Preparing analyzer", { ceiling: 7, step: 1 });
@@ -3835,11 +3836,13 @@ async function analyzeFile(file) {
     await nextPaint();
     await nextPaint();
     setStatus(scope.completion, "ok");
-    if (matchMedia("(max-width: 820px)").matches) {
-      auditWorkbench.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      window.scrollBy(0, runAudit.getBoundingClientRect().top - controlTop);
-    }
+    // Holding the run button in place left the verdict and the evidence panels
+    // below the fold, so a completed audit looked like nothing had happened.
+    // Move to the first result surface instead.
+    const auditResultTarget = reviewSummaryPanel && !reviewSummaryPanel.hidden
+      ? reviewSummaryPanel
+      : auditWorkbench;
+    auditResultTarget.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (error) {
     console.error("[analyzeFile]", error);
     const errorMsg = error?.message || String(error) || "Unknown error";
@@ -4463,7 +4466,8 @@ async function render(analysis, { keepTab = false, keepModule = false } = {}) {
     selectTab: setActiveAuditTab,
   });
   if (!keepModule) setActiveModule("deepbom");
-  if (!keepTab) setActiveAuditTab("overview");
+  // 포맷별 가용성이 갱신된 뒤이므로 탭을 유지하는 경우에도 렌즈 범위를 다시 맞춘다.
+  setActiveAuditTab(keepTab ? getActiveAuditTab() : "overview");
   updateExportLockState();
   resetResearchModulePanels();
   renderCurrentReviewSummary(artifactView);

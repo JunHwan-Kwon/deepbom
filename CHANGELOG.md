@@ -4,6 +4,26 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Added `deepbom mcp`, a stdio Model Context Protocol server exposing
+  `deepbom_capabilities`, `deepbom_audit`, and `deepbom_diff`. It is a transport
+  rather than an analysis command: it declares no output contract of its own,
+  answers every call by re-entering this CLI in a child process so the JSON-RPC
+  stream never shares stdout with an evidence document, and rejects undeclared
+  tool arguments. Its tool descriptions carry the finding-kind distinction and
+  the static-evidence boundary, and `scripts/check-mcp-server.mjs` rejects a
+  version that drops either. Source and installed-channel checks execute a real
+  ONNX audit through the transport, and runtime validation rejects undeclared or
+  conflicting arguments rather than silently ignoring them.
+  `deepbom.cli_capabilities.v1` now declares the transport under
+  `automation.mcp_stdio_server`.
+- Published `llms.txt` at the domain root and an agent-facing skill at
+  `skills/deepbom/SKILL.md`, both stating that analysis is local and that no
+  hosted analysis endpoint exists. The discovery-metadata check asserts the
+  generated file keeps that boundary and the three finding kinds.
+- Raised the measured source ceilings that the preceding web and agent work
+  exceeded: handwritten runtime to 11776 KiB, verification to 3328 KiB,
+  development tooling to 1408 KiB, and docs to 384 KiB.
+
 ## 1.96.8 - 2026-09-05
 
 - Added the bounded ONNX installation probe to every standalone engine and

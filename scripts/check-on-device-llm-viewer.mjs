@@ -247,6 +247,8 @@ try {
     && /audit run complete|audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 120_000 });
   const liveStatus = await page.locator("#status").innerText();
   if (/audit failed/i.test(liveStatus)) throw new Error(`Live GGUF sample audit failed: ${liveStatus}`);
+  // 렌즈는 부모 도메인(Architecture)이 활성일 때만 노출된다.
+  await page.locator('[data-audit-tab="stage"]').click();
   const liveTabState = await page.locator('[data-audit-tab="llm"]').evaluate((tab) => ({
     hidden: tab.hidden,
     formatScope: tab.dataset.formatScope,
@@ -257,6 +259,7 @@ try {
   if (liveTabState.hidden || liveTabState.display === "none" || liveTabState.bodyFormat !== "gguf") {
     throw new Error(`Live GGUF LLM tab visibility failed: ${JSON.stringify(liveTabState)}`);
   }
+  await page.locator('[data-audit-tab="stage"]').click();
   await page.locator('[data-audit-tab="llm"]').click();
   await page.locator("#llmEvidencePanel:not([hidden])").waitFor({ timeout: 10_000 });
   const integrated = await page.locator("#llmEvidencePanel").evaluate((panel) => ({
@@ -275,6 +278,7 @@ try {
     && /audit run complete|audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 120_000 });
   const onnxStatus = await page.locator("#status").innerText();
   if (/audit failed/i.test(onnxStatus)) throw new Error(`Live ONNX LLM sample audit failed: ${onnxStatus}`);
+  await page.locator('[data-audit-tab="stage"]').click();
   await page.locator('[data-audit-tab="llm"]').click();
   await page.locator("#llmEvidencePanel:not([hidden])").waitFor({ timeout: 10_000 });
   for (const width of [1440, 390, 320]) {

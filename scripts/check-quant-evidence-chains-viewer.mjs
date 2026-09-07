@@ -38,6 +38,7 @@ try {
   await page.waitForFunction(() => /audit run complete|Audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 120_000 });
   const auditStatus = await page.locator("#status").textContent();
   if (!auditStatus.includes("audit run complete")) throw new Error(auditStatus);
+  await page.locator('[data-audit-tab="quant"]').click();
   await page.locator('[data-audit-tab="quant-labs"]').click();
   await page.locator(".quant-lab-workbench").waitFor({ state: "visible" });
   await page.locator('[data-quant-evidence-chain="integer-safety"]').waitFor({ state: "attached" });
@@ -135,6 +136,7 @@ try {
     await page.waitForFunction(() => /audit run complete|Audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 180_000 });
     const dynamicStatus = await page.locator("#status").textContent();
     if (!dynamicStatus.includes("audit run complete")) throw new Error(dynamicStatus);
+    await page.locator('[data-audit-tab="quant"]').click();
     await page.locator('[data-audit-tab="quant-labs"]').click();
     await page.locator('[data-quant-lab-tab="coverage"]').click();
     const dynamic = await page.locator("#perfVisuals").evaluate((root) => ({

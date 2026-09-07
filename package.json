@@ -284,7 +284,8 @@
     "wait:live-sw": "node scripts/check-live-sw.mjs --wait-ms 600000 --interval-ms 30000",
     "test:live-permissions": "node scripts/test-live-permissions.mjs",
     "report:dist-size": "node scripts/report-dist-size.mjs",
-    "report:source-size": "node scripts/report-source-size.mjs"
+    "report:source-size": "node scripts/report-source-size.mjs",
+    "check:pre-interaction-shell": "node scripts/check-pre-interaction-shell.mjs"
   },
   "keywords": [],
   "author": "",

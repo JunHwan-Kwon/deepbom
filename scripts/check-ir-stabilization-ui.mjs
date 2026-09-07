@@ -122,7 +122,7 @@ try {
   const heapBefore = await usedHeap(page);
   for (let round = 0; round < 3; round += 1) {
     for (const tab of AUDIT_TABS) {
-      await page.locator(`[data-audit-tab="${tab}"]`).click();
+      await selectDesktopAuditTab(page, tab);
     }
   }
   await page.requestGC().catch(() => {});
@@ -204,7 +204,7 @@ async function verifyFormatNavigation(page, format, viewport) {
   }
   for (const tab of AUDIT_TABS) {
     if (viewport === "mobile") await page.locator("#mobileAuditView").selectOption(tab);
-    else await page.locator(`[data-audit-tab="${tab}"]`).click();
+    else await selectDesktopAuditTab(page, tab);
     const selected = await page.evaluate(() => {
       const selectedTab = document.querySelector("#mobileAuditView")?.value || "overview";
       const active = document.querySelector(`[data-audit-tab="${CSS.escape(selectedTab)}"]`);
@@ -231,6 +231,16 @@ async function verifyFormatNavigation(page, format, viewport) {
     if (undersized.length) throw new Error(`${format}/${viewport} undersized touch targets: ${JSON.stringify(undersized)}`);
   }
   return { artifact_format: format, theme: "current", viewport, navigation_status: "pass", ...after };
+}
+
+async function selectDesktopAuditTab(page, tab) {
+  const target = page.locator(`[data-audit-tab="${tab}"]`);
+  const parentDomain = await target.getAttribute("data-audit-domain");
+  const isLens = await target.getAttribute("data-audit-lens") === "true";
+  if (isLens && parentDomain) {
+    await page.locator(`[data-audit-domain="${parentDomain}"][data-audit-primary="true"]`).click();
+  }
+  await target.click();
 }
 
 async function navigationState(page) {

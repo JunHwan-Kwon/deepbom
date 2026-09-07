@@ -35,6 +35,7 @@ try {
   await page.waitForFunction(() => /audit run complete|Audit failed/i.test(document.querySelector("#status")?.textContent || ""), null, { timeout: 90_000 });
   const auditStatus = await page.locator("#status").textContent();
   if (!auditStatus.includes("audit run complete")) throw new Error(auditStatus);
+  await page.locator('[data-audit-tab="quant"]').click();
   await page.locator('[data-audit-tab="quant-labs"]').click();
   await page.locator('[data-quant-lab-tab="numerical-abi"]').click();
   await page.locator("#requantizationFidelityPanel").waitFor({ state: "visible" });

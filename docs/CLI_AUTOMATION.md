@@ -73,6 +73,30 @@ deepbom audit model.tflite --format envelope \
   --policy-output review-result.json
 ```
 
+## Assistant tool access
+
+`deepbom mcp` speaks the Model Context Protocol over stdio. It declares three
+tools — `deepbom_capabilities`, `deepbom_audit`, and `deepbom_diff` — and every
+call re-enters this CLI in a child process on the same machine. There is no
+hosted analysis endpoint and no artifact upload; the privacy contract is the one
+`capabilities` reports.
+
+```json
+{ "mcpServers": { "deepbom": { "command": "npx", "args": ["deepbom", "mcp"] } } }
+```
+
+The tool schemas reject undeclared arguments, so an assistant cannot pass an
+option that has not been reviewed here. Tool descriptions carry the finding-kind
+distinction and the static-evidence boundary, because the model reads them
+before it writes a summary. `scripts/check-mcp-server.mjs` rejects a version
+that drops either statement.
+
+MCP is a transport, not an analysis command: it produces no evidence document of
+its own and therefore declares no output contract in
+`deepbom.cli_capabilities.v1`.
+
+Agent-facing usage guidance lives in [the DEEPBOM skill](../skills/deepbom/SKILL.md).
+
 ## CPU and accelerator bindings
 
 `--target` and `--target-profile` bind a TFLite CPU cost model. The envelope

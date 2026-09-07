@@ -215,9 +215,21 @@ export function createWorkflowController({
     const lensTabs = auditTabs.filter((tab) => tab.dataset.auditLens === "true");
     for (const tab of primaryTabs) tab.classList.toggle("active", tab.dataset.auditDomain === activeDomain);
     for (const tab of lensTabs) {
-      const active = tab.dataset.auditTab === activeAuditTab;
+      const inDomain = tab.dataset.auditDomain === activeDomain;
+      const active = inDomain && tab.dataset.auditTab === activeAuditTab;
+      tab.classList.toggle("lens-out-of-scope", !inDomain);
       tab.classList.toggle("active", active);
       tab.setAttribute("aria-pressed", String(active));
+    }
+    const lensRow = lensTabs[0]?.closest(".audit-lens-tabs");
+    if (lensRow) {
+      const scoped = lensTabs.filter((tab) => tab.dataset.auditDomain === activeDomain && !tab.hidden);
+      lensRow.classList.toggle("lens-row-empty", scoped.length === 0);
+      const parent = primaryTabs.find((tab) => tab.dataset.auditDomain === activeDomain);
+      const parentName = parent?.querySelector("strong")?.textContent?.trim();
+      lensRow.setAttribute("aria-label", parentName
+        ? `${parentName} detail views`
+        : "Specialized evidence lenses");
     }
     if (mobileAuditView) mobileAuditView.value = activeAuditTab;
     syncSelection(primaryTabs, (tab) => tab.dataset.auditDomain === activeDomain);

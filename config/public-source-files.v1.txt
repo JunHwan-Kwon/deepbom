@@ -14,6 +14,7 @@ SECURITY.md
 THIRD_PARTY_NOTICES.md
 bin/deepbom-automation.mjs
 bin/deepbom-input.mjs
+bin/deepbom-mcp.mjs
 bin/deepbom.mjs
 bin/graph-png-export.mjs
 bin/nvidia-accelerator-collector.mjs
@@ -314,6 +315,7 @@ scripts/check-landscape-math.mjs
 scripts/check-litert-runtime-assets.mjs
 scripts/check-live-product.mjs
 scripts/check-live-sw.mjs
+scripts/check-mcp-server.mjs
 scripts/check-metadata-model-adapters.mjs
 scripts/check-mlbom-conservation.mjs
 scripts/check-model-file-contract.mjs
@@ -354,6 +356,7 @@ scripts/check-package-verifier.mjs
 scripts/check-parser-robustness-isolated.mjs
 scripts/check-parser-robustness.mjs
 scripts/check-placement-comparison.mjs
+scripts/check-pre-interaction-shell.mjs
 scripts/check-preprocessing-consequence-viewer.mjs
 scripts/check-preprocessing-consequence.mjs
 scripts/check-preprocessing-realizability-viewer.mjs
@@ -545,6 +548,7 @@ scripts/write-build-metadata.mjs
 scripts/write-cloudflare-deploy-config.mjs
 scripts/write-google-corpus-measurement-baseline.mjs
 scripts/zenodo-release-lib.mjs
+skills/deepbom/SKILL.md
 src/accumulator_atlas.rs
 src/accumulator_reachability.rs
 src/arena_planner.rs
@@ -807,6 +811,7 @@ web/lib/ort-build-attestation.js
 web/lib/ort-compatibility-evidence.js
 web/lib/ort-reduced-operator-config.js
 web/lib/ort-selected-build-binding.js
+web/lib/overview-domain-map.js
 web/lib/performance-visuals.js
 web/lib/placement-comparison.js
 web/lib/preprocess-ui.js

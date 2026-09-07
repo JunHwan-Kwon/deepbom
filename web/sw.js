@@ -57,6 +57,7 @@ const APP_ASSETS = [
   "./lib/graph-export.js",
   "./lib/graph-hierarchy.js",
   "./lib/evidence-treemap.js",
+  "./lib/overview-domain-map.js",
   "./lib/evidence-cursor.js",
   "./lib/evidence-applicability.js",
   "./lib/evidence-class.js",
