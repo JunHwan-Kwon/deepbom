@@ -1080,6 +1080,75 @@
         "public_private_and_worker_boundaries"
       ],
       "qualification": "The exhaustive release-candidate gate passed after independently reproducing the version-bound envelope digest and extending the loaded-suite capability-viewer readiness bound to 60 seconds."
+    },
+    {
+      "kind": "private_web_preflight",
+      "version": "1.96.9",
+      "platform": "windows-x64",
+      "command": "npm run check:deploy",
+      "elapsed_seconds": 149.319,
+      "check_count": 84,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "interaction_loaded_browser_delivery_boundary",
+        "artifact_ir_and_stable_cyclonedx_1_7_contracts",
+        "route_bound_cloudflare_deployment_contract",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy",
+        "no_full_corpus_or_browser_matrix"
+      ],
+      "qualification": "All 84 bounded product checks completed in 149.319 seconds after the separately measured non-self-referential preflight established the current-version observation."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.96.9",
+      "platform": "windows-x64",
+      "command": "npm run build:channels",
+      "elapsed_seconds": 63.287,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball",
+        "single_executable_engine",
+        "python_wheel",
+        "cargo_launcher_source",
+        "manifest_bound_self_test_probe",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.96.9",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 175.529,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "manifest_bound_self_test_execution",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.96.9",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 632.088,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "installed_npm_mcp_protocol_and_audit",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "capability_envelope_sarif_policy_and_review_contract_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_self_test_and_wasm_tamper_rejection"
+      ],
+      "qualification": "The release-only equivalence contract executed an MCP audit from the installed npm tarball, preserved the existing npm, Python, standalone, and Cargo contracts, and remained within its dedicated wall-time budget."
     }
   ],
   "budgets": {

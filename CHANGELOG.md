@@ -4,6 +4,8 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.9 - 2026-09-07
+
 - Added `deepbom mcp`, a stdio Model Context Protocol server exposing
   `deepbom_capabilities`, `deepbom_audit`, and `deepbom_diff`. It is a transport
   rather than an analysis command: it declares no output contract of its own,
