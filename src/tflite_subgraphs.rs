@@ -62,19 +62,17 @@ pub(super) struct SubgraphOperatorIntrinsic {
     pub(super) version: i32,
     pub(super) inputs: Vec<i32>,
     pub(super) outputs: Vec<i32>,
-    nominal_macs: Option<f64>,
+    pub(super) nominal_macs: Option<f64>,
     nominal_macs_decimal: Option<String>,
-    mac_assessment_status: &'static str,
+    pub(super) mac_assessment_status: &'static str,
     mac_formula_class: &'static str,
-    mac_assessment_reason: String,
+    pub(super) mac_assessment_reason: String,
     logical_io_payload_bytes: Option<usize>,
     assessed_logical_io_payload_bytes: usize,
     logical_io_payload_status: &'static str,
     present_io_tensor_slot_count: usize,
     assessed_io_tensor_slot_count: usize,
     unassessed_io_tensor_slot_count: usize,
-    #[serde(skip)]
-    pub(super) raw_macs: f64,
     #[serde(skip)]
     pub(super) raw_ops: f64,
     #[serde(skip)]
@@ -207,6 +205,32 @@ pub(super) struct TfliteSubgraphInventory {
     nominal_mac_sources: Vec<SourceFile>,
     method: &'static str,
     execution_count_boundary: &'static str,
+}
+
+pub(super) struct PrimaryMacAssessment {
+    pub(super) compute_operator_count: usize,
+    pub(super) assessed_operator_count: usize,
+    pub(super) unassessed_operator_count: usize,
+    pub(super) assessed_macs: Option<f64>,
+    pub(super) assessed_macs_decimal: String,
+    pub(super) complete_macs: Option<f64>,
+    pub(super) complete_macs_decimal: Option<String>,
+}
+
+impl TfliteSubgraphInventory {
+    pub(super) fn primary_mac_assessment(&self) -> PrimaryMacAssessment {
+        let cost = &self.rows[self.primary_subgraph_index].intrinsic_cost;
+        PrimaryMacAssessment {
+            compute_operator_count: cost.mac_compute_operator_count,
+            assessed_operator_count: cost.assessed_nominal_mac_operator_count,
+            unassessed_operator_count: cost.unassessed_mac_operator_count
+                + cost.modeled_scenario_mac_operator_count,
+            assessed_macs: cost.assessed_nominal_macs,
+            assessed_macs_decimal: cost.assessed_nominal_macs_decimal.clone(),
+            complete_macs: cost.complete_nominal_macs,
+            complete_macs_decimal: cost.complete_nominal_macs_decimal.clone(),
+        }
+    }
 }
 
 pub(super) fn build_tflite_subgraph_inventory(
@@ -506,7 +530,6 @@ fn build_operator_intrinsic(
         present_io_tensor_slot_count: io_payload.present_slot_count,
         assessed_io_tensor_slot_count: io_payload.assessed_slot_count,
         unassessed_io_tensor_slot_count: io_payload.unassessed_slot_count,
-        raw_macs: estimated_macs,
         raw_ops: estimated_ops,
         raw_estimated_bytes: estimated_bytes,
         raw_estimated_input_strip: estimated_input_strip,

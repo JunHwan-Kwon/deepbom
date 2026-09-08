@@ -348,7 +348,8 @@ export function buildFindingsRegister(analysis, {
     if (compromised.length) {
       findings.push(finding({
         id: "EA-SER-0001",
-        category: "numerical_structure_review",
+        category: "numerical_integrity",
+        findingKind: "artifact_defect",
         title: "Serialized tensor payload contains non-finite or invalid numerical values",
         evidence: "OBSERVED/DERIVED",
         priority: "High",

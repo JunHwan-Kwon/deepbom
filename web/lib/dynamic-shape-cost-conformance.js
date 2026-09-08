@@ -825,7 +825,7 @@ function tensorRowsMatch(contract, analysis, format, symbols) {
       && (payload.bits ? formulaMatches(row.payload_bits_formula, payload.bits, "bits") : row.payload_bits_formula == null)
       && (payload.bytes ? formulaMatches(row.payload_bytes_formula, payload.bytes, "bytes") : row.payload_bytes_formula == null)
       && row?.payload_bytes_expression === payload.byteExpression
-      && row?.declared_shape_projection_bytes === projection;
+      && (row?.declared_shape_projection_bytes ?? null) === projection;
   });
 }
 

@@ -1,4 +1,5 @@
 import { auditTabApplicability } from "./evidence-applicability.js";
+import { deriveMacConfidence } from "./analysis-summary-contract.js";
 
 export const REVIEW_SUMMARY_SCHEMA = "deepbom.review_summary.v1";
 const FINDING_KINDS = Object.freeze(["artifact_defect", "caution", "evidence_gap"]);
@@ -40,7 +41,15 @@ export function buildReviewSummary({ analysis = {}, envelope, artifactIrContext 
       operator_count: envelope.graph?.operator_count ?? null,
       tensor_count: envelope.graph?.tensor_count ?? null,
       total_macs: envelope.graph?.total_macs ?? null,
+      mac_confidence: envelope.graph?.mac_confidence || deriveMacConfidence(analysis),
       mac_assessment_status: envelope.graph?.mac_assessment_status || null,
+    },
+    quantization: {
+      classification: analysis?.quantization_status?.classification || null,
+      max_risk: analysis?.quantization_status?.max_quantization_risk || "none",
+      max_risk_op_index: analysis?.quantization_status?.max_quantization_risk_op_index ?? null,
+      max_risk_op_name: analysis?.quantization_status?.max_quantization_risk_op_name || null,
+      max_risk_detail: analysis?.quantization_status?.max_quantization_risk_detail || null,
     },
     coverage: {
       assessed: Array.isArray(capabilities.assessed) ? capabilities.assessed.length : 0,
@@ -76,6 +85,8 @@ export function validateReviewSummary(summary) {
   if (count("caution_count") !== (summary?.findings?.cautions || []).length) errors.push("caution_count_mismatch");
   if (count("evidence_needed_count") !== (summary?.findings?.evidence_needed || []).length) errors.push("evidence_needed_count_mismatch");
   if (summary?.graph?.total_macs != null && !Number.isFinite(Number(summary.graph.total_macs))) errors.push("graph_total_macs_invalid");
+  if (!["exact", "symbolic", "partial", "not_applicable"].includes(summary?.graph?.mac_confidence)) errors.push("graph_mac_confidence_invalid");
+  if (!summary?.quantization || typeof summary.quantization.max_risk !== "string") errors.push("quantization_summary_missing");
   if (errors.length) throw new Error(`Invalid review summary: ${errors.join(", ")}`);
   return { valid: true, errors: [] };
 }

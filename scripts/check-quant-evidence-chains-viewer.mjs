@@ -96,7 +96,7 @@ try {
       || !state.synthesisText.includes("27/27 weights are zero")
       || !state.synthesisText.includes("shift -30")
       || !state.synthesisText.includes("output code -128")
-      || !state.reachabilityText.includes("46 exact-local source ops = 1 full model-input constructive + 45 upstream-activation unresolved")) {
+      || !state.reachabilityText.includes("46 exact-local source ops = 0 full model-input constructive + 45 upstream-activation unresolved + 1 not assessed")) {
       throw new Error(`Exact-channel synthesis is incomplete: ${JSON.stringify(state)}`);
     }
     await page.locator('[data-quant-lab-tab="integer-safety"]').click();

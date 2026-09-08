@@ -321,6 +321,12 @@ fn build_deployment_frontier(analyses: &[Analysis]) -> Result<DeploymentFrontier
     if first.ops.is_empty() {
         return Err("The model contains no operators to compare.".to_string());
     }
+    if analyses
+        .iter()
+        .any(|analysis| analysis.total_macs.is_none())
+    {
+        return Err("Deployment frontier requires complete numeric MAC ledgers for every target analysis. This artifact retains symbolic or partial compute cost; bind its runtime dimensions before comparing cost projections.".to_string());
+    }
     for analysis in analyses.iter().skip(1) {
         if analysis.model_sha256 != first.model_sha256
             || analysis.ops.len() != first.ops.len()

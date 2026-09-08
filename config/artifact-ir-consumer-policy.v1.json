@@ -47,6 +47,7 @@
     "web/lib/tensor-numerical-integrity.js",
     "web/lib/tensorrt-static-preflight.js",
     "web/lib/tflite-accelerator-source-profiles.js",
+    "web/lib/tflite-analysis-contract.js",
     "web/lib/tflite-delegate-compatibility.js",
     "web/lib/tflite-runtime-info-adapter.js",
     "web/lib/xnnpack-selector-evidence.js"

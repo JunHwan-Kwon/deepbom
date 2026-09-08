@@ -1798,7 +1798,17 @@ function computedAnalysisCoverageMarkdown(analysis) {
     ["Export-only computed artifacts", exportOnlyArtifactSummary(analysis)],
   ];
   if (!onnx) {
+    const macAssessment = analysis?.mac_assessment || {};
+    const shapeReconciliation = analysis?.tflite_shape_reconciliation || null;
     rows.splice(2, 0,
+      ["MAC assessment coverage", analysis?.mac_assessment
+        ? `${macAssessment.status || "not assessed"}; ${formatNumber(macAssessment.assessed_compute_ops || 0)}/${formatNumber(macAssessment.compute_ops || 0)} compute operator(s) assessed; ${formatNumber(macAssessment.not_assessed_compute_ops || 0)} unassessed; subtotal ${macAssessment.total_assessed_macs_decimal ?? formatNumber(macAssessment.total_assessed_macs || 0)} MACs; numeric mirror ${macAssessment.total_assessed_macs == null ? "withheld" : formatNumber(macAssessment.total_assessed_macs)}`
+        : "not emitted"],
+      ["Source-backed shape reconciliation", shapeReconciliation
+        ? `${shapeReconciliation.schema || "schema not emitted"}; ${shapeReconciliation.status || "not assessed"}; ${formatNumber(shapeReconciliation.reconciled_tensor_count || 0)}/${formatNumber(shapeReconciliation.tensor_count || 0)} tensor(s) reconciled; ${formatNumber(shapeReconciliation.serialized_conflict_count || 0)} serialized placeholder conflict(s); ${formatNumber(shapeReconciliation.unresolved_tensor_count || 0)} unresolved tensor(s); ${shapeReconciliation.evidence_class || "evidence class not emitted"}`
+        : "not emitted"],
+      ["Shape reconciliation method", shapeReconciliation?.method || "not emitted"],
+      ["Shape reconciliation boundary", shapeReconciliation?.interpretation_boundary || "not emitted"],
       ["Conditionally delegatable / predicted-fallback MACs", hasOwn(analysis, "delegated_macs") || hasOwn(analysis, "fallback_macs")
         ? `${formatNumber(delegatedMacs)} / ${formatNumber(fallbackMacs)} (${percentOf(delegatedMacs, totalMacs)} delegated)`
         : "not emitted"],

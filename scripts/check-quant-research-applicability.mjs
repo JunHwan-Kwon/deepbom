@@ -130,7 +130,8 @@ if (existsSync(fullIntegerPath)) {
     && row.consumerFamilies[0] === "DEPTHWISE_CONV_2D"
     && row.directConvolutionCandidate
     && row.runtimeFusionObserved === false), "A direct-convolution PAD candidate must remain distinct from observed runtime fusion.");
-  expect(glance.latency.range.padFusionRecoverableUpperBoundUs > 0, "The modeled low bound should expose the direct-convolution PAD candidate upper bound.");
+  expectEqual(glance.latency.range.status, "not_assessed_dynamic_shape", "A dynamic-shape artifact must not expose a numeric latency projection without bound runtime dimensions.");
+  expect(glance.latency.range.padFusionRecoverableUpperBoundUs == null, "PAD candidates may remain structurally visible, but their cost upper bound must be withheld for an incomplete MAC ledger.");
   expect(buildStaticAnalysisExport(artifact).accumulator_atlas != null, "Applicable full-integer proof detail must remain in the static export.");
 }
 if (existsSync(dynamicRangePath)) {

@@ -43,6 +43,19 @@ assert.equal(resource.conservationStatus, "exact");
 assert.ok(resource.items.every((item) => !/unnamed group/i.test(item.groupLabel)), "internal unnamed-group labels must not reach the review UI");
 assert.match(resource.items.find((item) => item.index === 0).groupLabel, /Ungrouped operators/);
 
+const notApplicableMacs = buildResourceMapPresentation({
+  format: "tflite",
+  ops: [
+    { index: 0, name: "RESHAPE", macs: null, macs_status: "not_applicable", estimated_bytes: 120 },
+  ],
+  tensors: [],
+}, { metric: "macs", groupBy: "op_type" });
+assert.equal(notApplicableMacs.status, "not_applicable");
+assert.equal(notApplicableMacs.assessedCount, 0);
+assert.equal(notApplicableMacs.zeroCount, 0);
+assert.equal(notApplicableMacs.unassessedCount, 0);
+assert.equal(notApplicableMacs.notApplicableCount, 1);
+
 const grouped = layoutGroupedTreemap(resource.items, 1000, 500);
 assert.equal(grouped.tiles.length, 2);
 assert.equal(grouped.groups.length, 2);
@@ -114,4 +127,4 @@ assert.match(performanceVisuals, /renderQuantizationExposureMap\(analysis\)/);
 assert.match(visualExport, /visuals\/explorer_resource_map\.png/);
 assert.match(visualExport, /visuals\/quantization_exposure_map\.png/);
 
-console.log("Evidence treemap checks passed: exact totals, zero/unassessed separation, deterministic linear area, format-aware scope, and DOM integration.");
+console.log("Evidence treemap checks passed: exact totals, zero/unassessed/not-applicable separation, deterministic linear area, format-aware scope, and DOM integration.");

@@ -2,6 +2,8 @@ import {
   FILE_SCOPED_STATIC_AUDIT_OPERATIONS,
   STATIC_AUDIT_OPERATION,
 } from "../lib/static-audit-worker-protocol.js";
+import { normalizeTfliteAnalysisContract } from "../lib/tflite-analysis-contract.js";
+import { normalizeAnalysisSummaryContract } from "../lib/analysis-summary-contract.js";
 
 let modelBytes = null;
 let filename = "";
@@ -72,6 +74,7 @@ self.addEventListener("message", async ({ data }) => {
     }
     if (FILE_SCOPED_STATIC_AUDIT_OPERATIONS.has(operation)) {
       const result = await runFileScopedOperation(id, operation, payload);
+      if (result?.analysis) normalizeAnalysisSummaryContract(result.analysis);
       self.postMessage({ id, type: "result", result });
       return;
     }
@@ -82,7 +85,9 @@ self.addEventListener("message", async ({ data }) => {
     let result;
     if (operation === STATIC_AUDIT_OPERATION.TFLITE_ANALYZE) {
       status(id, "Decoding FlatBuffer graph, tensors, and numerical contracts");
-      result = tflite.analyze_tflite_for_target(requestModelBytes, requestFilename, payload.targetId);
+      result = normalizeTfliteAnalysisContract(
+        tflite.analyze_tflite_for_target(requestModelBytes, requestFilename, payload.targetId),
+      );
     } else if (operation === STATIC_AUDIT_OPERATION.TFLITE_FRONTIER) {
       const count = JSON.parse(payload.targetIdsJson || "[]").length;
       status(id, `Modeling latency, memory, and cache across ${count} targets`);
@@ -166,7 +171,7 @@ self.addEventListener("message", async ({ data }) => {
     } else {
       throw new Error(`Unknown static audit worker operation: ${operation}`);
     }
-    self.postMessage({ id, type: "result", result });
+    self.postMessage({ id, type: "result", result: normalizeAnalysisSummaryContract(result) });
   } catch (error) {
     self.postMessage({
       id,

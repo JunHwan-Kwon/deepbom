@@ -31,6 +31,13 @@ pub(crate) struct DynamicShapeCostContract {
     interpretation_boundary: String,
 }
 
+impl DynamicShapeCostContract {
+    pub(crate) fn has_exact_total_formula(&self) -> bool {
+        self.total_macs_formula.is_some()
+            && self.total_macs_formula_status == "exact_symbolic_integer_polynomial"
+    }
+}
+
 #[derive(Clone, Serialize)]
 struct DynamicShapeSymbol {
     symbol_id: String,

@@ -11,6 +11,7 @@ import { deriveMacCoverage } from "./mac-coverage.js";
 import { EVIDENCE_CLASSES, normalizeEvidenceClass } from "./evidence-class.js";
 import { validateBoundConversionReceipt } from "./conversion-receipt.js";
 import { FINDING_KINDS } from "./finding-contract.js";
+import { deriveMacConfidence } from "./analysis-summary-contract.js";
 
 export const ARTIFACT_EVIDENCE_SCHEMA = "deepbom.artifact_evidence_envelope.v1";
 export { EVIDENCE_CLASSES } from "./evidence-class.js";
@@ -357,6 +358,7 @@ export function buildArtifactEvidenceEnvelope(analysis = {}, options = {}) {
       operator_count: ["gguf", "safetensors"].includes(format) ? null : finite(analysis.operator_count ?? artifactIrOperators(analysis)?.length),
       tensor_count: finite(analysis.tensor_count ?? artifactIrValues(analysis)?.length),
       total_macs: finite(analysis.total_macs),
+      mac_confidence: deriveMacConfidence(analysis),
       mac_assessment_status: macCoverage.status,
       mac_coverage: macCoverage,
     },

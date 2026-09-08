@@ -278,6 +278,9 @@ fn build_delegation_repair(
     if analysis.ops.is_empty() {
         return Err("Delegation repair requires at least one operator.".to_string());
     }
+    if analysis.total_macs.is_none() {
+        return Err("Delegation repair requires a complete numeric primary-subgraph MAC ledger. This artifact retains symbolic or partial compute cost; bind its runtime dimensions before projecting delegation counterfactuals.".to_string());
+    }
     let graph_edges = build_graph_edges(analysis);
     let baseline_assignments = analysis
         .ops

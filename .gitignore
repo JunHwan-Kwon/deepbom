@@ -58,4 +58,8 @@ protected/target_inversion_wasm/
 # Public reference sample models (Apache-2.0 upstream releases) are the one
 # deliberate exception — never place user or research models here.
 !web/samples/*.tflite
+!corpus/external-review/fixtures/*.tflite
 !web/samples/*.onnx
+
+# The clean public export commits its generated, source-bound build identity.
+!web/lib/build-metadata.js

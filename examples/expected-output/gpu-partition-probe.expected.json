@@ -12,6 +12,7 @@
     "operator_count": 5,
     "tensor_count": 9,
     "total_macs": 6912,
+    "mac_confidence": "exact",
     "mac_assessment_status": "assessed",
     "total_assessed_macs": 6912,
     "assessed_compute_ops": 1,
@@ -20,6 +21,6 @@
   },
   "fixed_timestamp": "2026-08-31T00:00:00.000Z",
   "artifact_set_sha256": "447201ee68f40f19d7602debdb8f15f3daba4d749bcfaa759fd22ff956730ce8",
-  "artifact_evidence_envelope_sha256": "fd176be66c4d7e07184d2cd427392dfaf29d3c6bea28b4de649205bf10daf13f",
+  "artifact_evidence_envelope_sha256": "c1be0c65f0d3f2366b0f943ec86e8f105f49e368ac637183c09bfe38b51c2cd5",
   "claim_boundary": "Static artifact evidence does not establish observed runtime assignment, latency, task quality, clinical validity, or release readiness."
 }

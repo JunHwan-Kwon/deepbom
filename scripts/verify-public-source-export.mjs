@@ -44,6 +44,11 @@ assert(sha256(await readFile(path.join(exportRoot, "README.md"))) === sha256(awa
 const packageDocument = JSON.parse(await readFile(path.join(exportRoot, "package.json"), "utf8"));
 const lockDocument = JSON.parse(await readFile(path.join(exportRoot, "package-lock.json"), "utf8"));
 const wasmPackageDocument = JSON.parse(await readFile(path.join(exportRoot, "pkg", "package.json"), "utf8"));
+const publicGitignore = await readFile(path.join(exportRoot, ".gitignore"), "utf8");
+assert(publicGitignore.split(/\r?\n/).includes("!web/lib/build-metadata.js"),
+  "Public source export must make its generated build metadata trackable.");
+assert(actualPaths.includes("web/lib/build-metadata.js"),
+  "Public source export is missing its generated build metadata.");
 assert(packageDocument.private === true, "Public source root must retain the accidental-publication guard.");
 assert(packageDocument.license === "Apache-2.0", "Public source package metadata license drifted.");
 assert(packageDocument.homepage === "https://deepbom.org", "Public source homepage metadata drifted.");

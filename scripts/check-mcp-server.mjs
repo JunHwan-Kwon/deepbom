@@ -11,11 +11,14 @@ import { pathToFileURL } from "node:url";
 
 const root = process.cwd();
 const onnxPath = path.resolve("web/samples/gpu_partition_probe.onnx");
+const externalReviewTfliteRoot = path.resolve("corpus/external-review/fixtures");
 const scratch = path.resolve(".local-validation/mcp-server");
 await rm(scratch, { recursive: true, force: true });
 await mkdir(scratch, { recursive: true });
 
 async function checkRealServerContract() {
+  const nanPath = path.join(scratch, "nan-weight.safetensors");
+  await writeFile(nanPath, safetensorsF32("weight", [Number.NaN, 1]));
   const session = new McpSession(process.execPath, ["bin/deepbom.mjs", "mcp"]);
   try {
     const initialize = await initializeSession(session);
@@ -107,9 +110,65 @@ async function checkRealServerContract() {
     assert.equal((await session.response(13)).error.code, -32601);
     session.request(14, "tools/call", { name: "deepbom_explain_rule", arguments: { rule: "--list" } });
     assert.match((await session.response(14)).result.content[0].text, /not a CLI option/);
+    session.request(15, "tools/call", { name: "deepbom_audit", arguments: { path: nanPath, output_format: "envelope" } });
+    const nanEnvelopeResult = (await session.response(15)).result;
+    const nanEnvelope = JSON.parse(nanEnvelopeResult.content[0].text);
+    const nanFinding = nanEnvelope.findings.find((finding) => finding.id === "EA-SER-0001");
+    assert.equal(nanFinding?.finding_kind, "artifact_defect", "MCP must preserve the canonical serialized-defect classification.");
+    session.request(16, "tools/call", { name: "deepbom_audit", arguments: { path: nanPath, output_format: "envelope", gate: "defects" } });
+    const nanGate = (await session.response(16)).result;
+    assert.equal(nanGate._meta?.deepbom?.exit_code, 2, "MCP must expose the blocked artifact-defect gate without corrupting the envelope.");
+    assert.equal(JSON.parse(nanGate.content[0].text).findings.some((finding) => finding.id === "EA-SER-0001"), true);
+
+    session.request(17, "tools/call", {
+      name: "deepbom_audit",
+      arguments: { path: path.join(externalReviewTfliteRoot, "space-to-batch-stale-shapes.tflite"), output_format: "envelope" },
+    });
+    const staleShapeEnvelope = (await session.response(17)).result.structuredContent;
+    assert.equal(staleShapeEnvelope.graph.total_macs, 589_824);
+    assert.equal(staleShapeEnvelope.graph.mac_assessment_status, "assessed_complete");
+
+    session.request(18, "tools/call", {
+      name: "deepbom_audit",
+      arguments: { path: path.join(externalReviewTfliteRoot, "conv-16x8.tflite"), output_format: "json-compact" },
+    });
+    const sixteenByEight = (await session.response(18)).result.structuredContent;
+    assert.equal(sixteenByEight.quantization_status.classification, "full_integer_16x8");
+    assert.equal(sixteenByEight.quantization_status.quantized_compute_mac_percent, 1);
+    assert.equal(sixteenByEight.estimated_int8_speedup, 1);
+
+    session.request(19, "tools/call", {
+      name: "deepbom_audit",
+      arguments: { path: path.join(externalReviewTfliteRoot, "dynamic-reshape.tflite"), output_format: "json-compact" },
+    });
+    const dynamicShape = (await session.response(19)).result.structuredContent;
+    assert.equal(dynamicShape.total_macs, null);
+    assert.equal(dynamicShape.total_macs_decimal, null);
+    assert.equal(dynamicShape.mac_confidence, "symbolic");
+    assert.equal(dynamicShape.dynamic_shape_cost_contract.total_macs_formula.expression, "4096*D2");
+
+    session.request(20, "tools/call", {
+      name: "deepbom_audit",
+      arguments: { path: path.join(externalReviewTfliteRoot, "quant-scale-risk.tflite") },
+    });
+    const quantRiskSummary = (await session.response(20)).result.content[0].text;
+    assert.match(quantRiskSummary, /Quantization: risk at #0 CONV_2D/);
   } finally {
     await session.close();
   }
+}
+
+function safetensorsF32(name, values) {
+  const payload = Buffer.alloc(values.length * 4);
+  values.forEach((value, index) => payload.writeFloatLE(value, index * 4));
+  const rawHeader = Buffer.from(JSON.stringify({
+    [name]: { dtype: "F32", shape: [values.length], data_offsets: [0, payload.length] },
+  }), "utf8");
+  const padding = (8 - (rawHeader.length % 8)) % 8;
+  const header = Buffer.concat([rawHeader, Buffer.alloc(padding, 0x20)]);
+  const length = Buffer.alloc(8);
+  length.writeBigUInt64LE(BigInt(header.length));
+  return Buffer.concat([length, header, payload]);
 }
 
 async function checkCancellationAndQueue() {

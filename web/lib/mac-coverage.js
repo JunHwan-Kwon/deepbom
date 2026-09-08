@@ -19,7 +19,10 @@ export function deriveMacCoverage(analysis = {}, quantizationStatus = null) {
 
   if (explicitStatus) {
     const assessed = explicitAssessed ?? (completeStatus(explicitStatus) ? computeOps : null);
-    return coverage(format, explicitStatus, computeOps, assessed,
+    const coverageStatus = format === "tflite" && completeStatus(explicitStatus)
+      ? "assessed"
+      : explicitStatus;
+    return coverage(format, coverageStatus, computeOps, assessed,
       assessed == null ? "assessed_compute_operator_count_not_emitted" : null);
   }
 

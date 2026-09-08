@@ -280,7 +280,7 @@ function validate(format, state) {
   if (staleTflite) throw new Error(`${format} retained TFLite quantization evidence: ${JSON.stringify(state)}`);
   if (format === "tflite") {
     if (state.tileCount !== 65 || !state.states.includes("53/53 ops") || !state.states.includes("64/65 graph ops")
-      || state.exposureTiles !== 53 || !state.exposure.includes("300,775,552 MACs") || !state.exposure.includes("Exact zero12")
+      || state.exposureTiles !== 53 || !state.exposure.includes("300,775,552 MACs") || !state.exposure.includes("Not applicable12")
       || !state.placement.includes("TFLite Execution Placement") || !state.placement.includes("Conditional XNNPACK partition flow")
       || !state.claimBoundary.includes("Deep graph and deployment-model audit")
       || state.notApplicableWorkflow.includes("runtime") || state.notApplicableWorkflow.includes("graph")) throw new Error(`TFLite quant baseline changed: ${JSON.stringify(state)}`);

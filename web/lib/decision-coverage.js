@@ -9,7 +9,7 @@ const DECISION_DOMAINS = Object.freeze([
     domain_id: "artifact_contract",
     label: "Artifact, graph, and interface contract",
     metric_ids: Object.freeze([
-      "artifact.identity", "artifact.metadata", "artifact.size", "artifact.byte_integrity", "artifact.canonical_ir", "graph.inventory", "architecture.blocks", "contract.io", "tflite.sparse_storage", "tflite.subgraph_inventory", "tflite.subgraph_deep_analysis",
+      "artifact.identity", "artifact.metadata", "artifact.size", "artifact.byte_integrity", "artifact.canonical_ir", "graph.inventory", "architecture.blocks", "contract.io", "tflite.sparse_storage", "tflite.shape_reconciliation", "tflite.subgraph_inventory", "tflite.subgraph_deep_analysis",
       "serialized.container_contract", "coreml.serialized_contract", "executorch.serialized_contract", "llm.on_device_contract",
       "runtime.artifact_requirements", "weights.integrity", "onnx.domains", "onnx.external_data",
       "onnx.shape_inference", "onnx.tensor_data_types", "onnx.type_proto_contract", "onnx.sparse_tensor_contract", "onnx.contract_conflict",

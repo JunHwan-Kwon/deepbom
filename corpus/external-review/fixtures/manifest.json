@@ -1,0 +1,36 @@
+{
+  "fixtures": [
+    {
+      "bytes": 10796,
+      "expected": {
+        "serialized_conv_macs": 147456,
+        "source_derived_conv_macs": 589824
+      },
+      "path": "space-to-batch-stale-shapes.tflite",
+      "sha256": "ff64f16a7741c4e517460982db47826bfbac8e0082aa13962d539a5559766877"
+    },
+    {
+      "bytes": 2112,
+      "expected": {
+        "classification": "full_integer_16x8",
+        "total_macs": 112896
+      },
+      "path": "conv-16x8.tflite",
+      "sha256": "f245d5a6435efb81edc0a15cfa24867978b0588ad260a4f4cc0b0d3933977e9f"
+    },
+    {
+      "bytes": 17812,
+      "expected": {
+        "numeric_total_macs": null,
+        "symbolic_total_macs": "4096*D2"
+      },
+      "path": "dynamic-reshape.tflite",
+      "sha256": "303d997682abd998c803282c3d47c10b3d25e88e292a6931fa1e9a28e4b9f9f9"
+    }
+  ],
+  "generator": {
+    "numpy": "1.26.4",
+    "tensorflow": "2.16.1"
+  },
+  "schema": "deepbom.external_review_tflite_fixtures.v1"
+}

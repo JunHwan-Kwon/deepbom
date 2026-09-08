@@ -1946,8 +1946,8 @@ export function buildConformanceReport({
       && (live.assessed === false ? live.peak_bytes === null : Number.isFinite(Number(live.peak_bytes))), "Declared-shape liveness status, peak bytes, or peak operator differs from independent graph reconstruction.", ["/evidence/static_analysis/tensor_liveness", "/evidence/static_analysis/ops", "/evidence/static_analysis/tensors"]);
     const expectedMovement = deriveMovementPayload(staticAnalysis);
     check("CF-MEMORY-002", movement.status === expectedMovement.status
-      && movement.total_movement_bytes === expectedMovement.totalBytes
-      && movement.xnn_break_movement_bytes === expectedMovement.breakBytes
+      && (movement.total_movement_bytes ?? null) === expectedMovement.totalBytes
+      && (movement.xnn_break_movement_bytes ?? null) === expectedMovement.breakBytes
       && Number(movement.assessed_movement_bytes) === expectedMovement.assessedBytes
       && Number(movement.assessed_xnn_break_movement_bytes) === expectedMovement.assessedBreakBytes
       && Number(movement.movement_op_count) === expectedMovement.opCount

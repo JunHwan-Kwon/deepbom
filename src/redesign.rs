@@ -1325,6 +1325,9 @@ fn pareto_dominates(left: &RedesignParetoCandidate, right: &RedesignParetoCandid
 }
 
 fn validate_request(analysis: &Analysis, request: &RedesignRequest) -> Result<(), String> {
+    if analysis.total_macs.is_none() {
+        return Err("Redesign projection requires a complete numeric source MAC ledger. This artifact retains symbolic or partial compute cost; bind its runtime dimensions before projecting structural changes.".to_string());
+    }
     if request.schema != "deepbom.redesign_request.v1" {
         return Err("Unsupported redesign request schema.".to_string());
     }
@@ -1878,7 +1881,9 @@ fn source_metrics(analysis: &Analysis) -> RedesignMetrics {
     let parameter_indices = parameter_tensor_indices(&analysis.ops, &analysis.tensors);
     RedesignMetrics {
         operator_count: analysis.ops.len(),
-        macs: analysis.total_macs,
+        macs: analysis
+            .total_macs
+            .expect("redesign request validation requires a complete numeric MAC ledger"),
         operations: analysis.total_ops,
         parameter_elements: parameter_indices
             .iter()

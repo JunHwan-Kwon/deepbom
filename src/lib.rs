@@ -32,6 +32,7 @@ mod tflite_deep_scopes;
 mod tflite_metadata;
 mod tflite_operator_names;
 mod tflite_scalar;
+mod tflite_shape_reconciliation;
 mod tflite_sparse;
 mod tflite_subgraphs;
 mod xnnpack_delegate;
@@ -107,6 +108,7 @@ use tflite_metadata::{
 };
 use tflite_operator_names::operator_code_name;
 use tflite_scalar::{f16_to_f32, tensor_type_name};
+use tflite_shape_reconciliation::{reconcile_tflite_shapes, TfliteShapeReconciliation};
 use tflite_sparse::{
     build_sparse_storage_contract, parse_sparsity, SparseStorageContract, SparseTensorEncoding,
 };
@@ -516,7 +518,12 @@ struct OpInfo {
     inputs: Vec<i32>,
     outputs: Vec<i32>,
     output_shapes: Vec<Vec<i32>>,
+    #[serde(skip)]
     macs: f64,
+    #[serde(rename = "macs")]
+    reported_macs: Option<f64>,
+    macs_status: String,
+    macs_reason: String,
     mac_percent: f64,
     ops: f64,
     estimated_bytes: f64,
@@ -857,11 +864,16 @@ struct QuantizationStatus {
     float16_constant_expansion_ops: usize,
     int8_tensors: usize,
     uint8_tensors: usize,
+    int16_tensors: usize,
     float16_tensors: usize,
     float_tensors: usize,
     input_dtypes: Vec<String>,
     output_dtypes: Vec<String>,
     op_state_counts: Vec<CountItem>,
+    max_quantization_risk: String,
+    max_quantization_risk_op_index: Option<usize>,
+    max_quantization_risk_op_name: Option<String>,
+    max_quantization_risk_detail: Option<String>,
     full_integer: bool,
 }
 
@@ -875,6 +887,22 @@ struct QuantRiskSummary {
     zero_point_status: String,
     label: String,
     detail: String,
+}
+
+#[derive(Serialize)]
+struct TfliteMacAssessment {
+    schema: &'static str,
+    status: String,
+    confidence: String,
+    complete: bool,
+    compute_ops: usize,
+    assessed_compute_ops: usize,
+    not_assessed_compute_ops: usize,
+    total_assessed_macs: Option<f64>,
+    total_assessed_macs_decimal: String,
+    complete_macs_decimal: Option<String>,
+    detail: String,
+    interpretation_boundary: &'static str,
 }
 
 struct WeightPackingSummary {
@@ -1444,6 +1472,7 @@ struct Analysis {
     subgraphs: usize,
     tflite_subgraph_inventory: TfliteSubgraphInventory,
     tflite_subgraph_deep_analysis: TfliteSubgraphDeepAnalysis,
+    tflite_shape_reconciliation: TfliteShapeReconciliation,
     operator_codes: usize,
     operator_count: usize,
     tensor_count: usize,
@@ -1470,7 +1499,10 @@ struct Analysis {
     contract_migration: ContractMigrationAnalysis,
     residual_step_response: ResidualStepResponseAnalysis,
     residual_contract_distortion: ResidualContractDistortionAnalysis,
-    total_macs: f64,
+    total_macs: Option<f64>,
+    total_macs_decimal: Option<String>,
+    mac_confidence: String,
+    mac_assessment: TfliteMacAssessment,
     total_ops: f64,
     delegated_macs: f64,
     fallback_macs: f64,
@@ -3375,7 +3407,7 @@ fn analyze_with_target_scope(
     };
 
     let buffer_locations = read_buffer_locations(&fb, model);
-    let scoped_tensors = subgraph_tables
+    let serialized_scoped_tensors = subgraph_tables
         .iter()
         .map(|subgraph| {
             fb.vector_tables(*subgraph, 0)
@@ -3385,6 +3417,8 @@ fn analyze_with_target_scope(
                 .collect::<Result<Vec<_>, _>>()
         })
         .collect::<Result<Vec<_>, _>>()?;
+    let (scoped_tensors, tflite_shape_reconciliation) =
+        reconcile_tflite_shapes(&fb, model, &operator_names, &serialized_scoped_tensors)?;
     let tensors = scoped_tensors[0].clone();
     let tflite_subgraph_inventory = build_tflite_subgraph_inventory(
         &fb,
@@ -3448,8 +3482,13 @@ fn analyze_with_target_scope(
                             .map(|tensor| tensor.shape.clone())
                     })
                     .collect::<Vec<_>>();
-                let macs = intrinsic.raw_macs;
-                let ops_count = intrinsic.raw_ops;
+                let macs = intrinsic.nominal_macs.unwrap_or(0.0);
+                let reported_macs = intrinsic.nominal_macs;
+                let ops_count = if intrinsic.raw_ops.is_finite() && intrinsic.raw_ops >= 0.0 {
+                    intrinsic.raw_ops
+                } else {
+                    0.0
+                };
                 let estimated_bytes = intrinsic.raw_estimated_bytes;
                 let estimated_input_strip = intrinsic.raw_estimated_input_strip;
                 let positive_option = |field: usize| {
@@ -3608,6 +3647,9 @@ fn analyze_with_target_scope(
                     outputs: outputs_idx,
                     output_shapes,
                     macs,
+                    reported_macs,
+                    macs_status: intrinsic.mac_assessment_status.to_string(),
+                    macs_reason: intrinsic.mac_assessment_reason.clone(),
                     mac_percent: 0.0,
                     ops: ops_count,
                     estimated_bytes,
@@ -3896,6 +3938,59 @@ fn analyze_with_target_scope(
         &input_tensor_indices,
         &output_tensor_indices,
     );
+    let primary_mac = tflite_subgraph_inventory.primary_mac_assessment();
+    let no_mac_compute = primary_mac.compute_operator_count == 0;
+    let complete_macs = if no_mac_compute {
+        Some(0.0)
+    } else {
+        primary_mac.complete_macs
+    };
+    let mac_confidence = if no_mac_compute {
+        "not_applicable"
+    } else if complete_macs.is_some() {
+        "exact"
+    } else if dynamic_shape_cost_contract.has_exact_total_formula() {
+        "symbolic"
+    } else {
+        "partial"
+    };
+    let mac_assessment = TfliteMacAssessment {
+        schema: "deepbom.tflite_mac_assessment.v1",
+        status: if complete_macs.is_some() {
+            "assessed_complete"
+        } else if mac_confidence == "symbolic" {
+            "not_assessed_numeric_symbolic_total_available"
+        } else {
+            "partially_assessed"
+        }
+        .to_string(),
+        confidence: mac_confidence.to_string(),
+        complete: complete_macs.is_some(),
+        compute_ops: primary_mac.compute_operator_count,
+        assessed_compute_ops: primary_mac.assessed_operator_count,
+        not_assessed_compute_ops: primary_mac.unassessed_operator_count,
+        total_assessed_macs: primary_mac.assessed_macs,
+        total_assessed_macs_decimal: primary_mac.assessed_macs_decimal,
+        complete_macs_decimal: if no_mac_compute {
+            Some("0".to_string())
+        } else {
+            primary_mac.complete_macs_decimal
+        },
+        detail: if complete_macs.is_some() {
+            format!(
+                "{}/{} MAC-bearing operators have complete source-backed nominal formulas.",
+                primary_mac.assessed_operator_count, primary_mac.compute_operator_count
+            )
+        } else {
+            format!(
+                "{}/{} MAC-bearing operators are numerically assessed; {} remain unassessed. The assessed subtotal is not promoted to total_macs.",
+                primary_mac.assessed_operator_count,
+                primary_mac.compute_operator_count,
+                primary_mac.unassessed_operator_count
+            )
+        },
+        interpretation_boundary: "A numeric total is emitted only when every primary-subgraph MAC-bearing operator has a complete nominal formula. Symbolic formulas remain in dynamic_shape_cost_contract and are never substituted with serialized placeholder dimensions.",
+    };
     let movement_analysis = compute_movement_analysis(&ops, &tensors);
     let input_contracts = validate_input_contracts(&tensors, &input_tensor_indices, &ops);
     let accumulator_atlas = build_accumulator_atlas(bytes, &ops, &tensors);
@@ -4068,6 +4163,7 @@ fn analyze_with_target_scope(
         subgraphs: subgraph_tables.len(),
         tflite_subgraph_inventory,
         tflite_subgraph_deep_analysis,
+        tflite_shape_reconciliation,
         operator_codes: operator_code_tables.len(),
         operator_count: ops.len(),
         tensor_count: tensors.len(),
@@ -4094,7 +4190,10 @@ fn analyze_with_target_scope(
         contract_migration,
         residual_step_response,
         residual_contract_distortion,
-        total_macs,
+        total_macs: complete_macs,
+        total_macs_decimal: mac_assessment.complete_macs_decimal.clone(),
+        mac_confidence: mac_confidence.to_string(),
+        mac_assessment,
         total_ops,
         delegated_macs,
         fallback_macs,
@@ -4681,8 +4780,9 @@ fn classify_tflite_constant_role(tensor_index: i32, ops: &[OpInfo]) -> &'static 
                 continue;
             }
             let role = match op.name.as_str() {
-                "CONV_2D" | "DEPTHWISE_CONV_2D" | "FULLY_CONNECTED"
-                    if slot == 1 || slot == 2 => "learned_parameter",
+                "CONV_2D" | "DEPTHWISE_CONV_2D" | "FULLY_CONNECTED" if slot == 1 || slot == 2 => {
+                    "learned_parameter"
+                }
                 "TRANSPOSE_CONV" if slot == 1 || slot == 3 => "learned_parameter",
                 "EMBEDDING_LOOKUP" if slot == 1 => "learned_parameter",
                 "BATCH_MATMUL" if slot == 1 => "learned_parameter",
@@ -4697,7 +4797,10 @@ fn classify_tflite_constant_role(tensor_index: i32, ops: &[OpInfo]) -> &'static 
                 "SPLIT_V" if slot == 1 || slot == 2 => "control_constant",
                 "GATHER" if slot == 1 => "control_constant",
                 "MEAN" | "SUM" | "REDUCE_MAX" | "REDUCE_MIN" | "REDUCE_PROD" | "REDUCE_ANY"
-                    if slot == 1 => "control_constant",
+                    if slot == 1 =>
+                {
+                    "control_constant"
+                }
                 "QUANTIZE" | "DEQUANTIZE" if slot > 0 => "quantization_parameter",
                 _ => "unknown_or_mixed",
             };
@@ -6458,6 +6561,71 @@ fn is_8bit_quantized(dtype: &str) -> bool {
     matches!(dtype, "INT8" | "UINT8")
 }
 
+fn is_quantized_int16_activation(tensor: &TensorInfo) -> bool {
+    tensor.dtype == "INT16"
+        && tensor.quant_scales == 1
+        && tensor.quant_zero_points == 1
+        && tensor.zero_point_min == 0
+        && tensor.zero_point_max == 0
+}
+
+fn has_symmetric_quantization(tensor: &TensorInfo) -> bool {
+    tensor.quant_scales > 0
+        && tensor.quant_zero_points == tensor.quant_scales
+        && tensor.zero_point_min == 0
+        && tensor.zero_point_max == 0
+}
+
+fn has_16x8_bias_contract(inputs: &[i32], tensors: &[TensorInfo], weight: &TensorInfo) -> bool {
+    let Some(bias_input) = inputs.get(2) else {
+        return true;
+    };
+    if *bias_input < 0 {
+        return true;
+    }
+    let Some(bias) = usize::try_from(*bias_input)
+        .ok()
+        .and_then(|index| tensors.get(index))
+    else {
+        return false;
+    };
+    matches!(bias.dtype.as_str(), "INT32" | "INT64")
+        && bias.constant_buffer
+        && has_symmetric_quantization(bias)
+        && bias.quant_scales == weight.quant_scales
+}
+
+fn is_16x8_quantized_compute_path(
+    name: &str,
+    inputs: &[i32],
+    outputs: &[i32],
+    tensors: &[TensorInfo],
+) -> bool {
+    if !matches!(name, "CONV_2D" | "DEPTHWISE_CONV_2D" | "FULLY_CONNECTED") {
+        return false;
+    }
+    let activation = inputs
+        .first()
+        .and_then(|index| usize::try_from(*index).ok())
+        .and_then(|index| tensors.get(index));
+    let weight = inputs
+        .get(1)
+        .and_then(|index| usize::try_from(*index).ok())
+        .and_then(|index| tensors.get(index));
+    let output = outputs
+        .first()
+        .and_then(|index| usize::try_from(*index).ok())
+        .and_then(|index| tensors.get(index));
+    activation.is_some_and(is_quantized_int16_activation)
+        && weight.is_some_and(|tensor| {
+            tensor.dtype == "INT8"
+                && tensor.constant_buffer
+                && has_symmetric_quantization(tensor)
+                && has_16x8_bias_contract(inputs, tensors, tensor)
+        })
+        && output.is_some_and(is_quantized_int16_activation)
+}
+
 fn is_float_dtype(dtype: &str) -> bool {
     matches!(dtype, "FLOAT32" | "FLOAT16" | "BFLOAT16" | "FLOAT64")
 }
@@ -6549,6 +6717,9 @@ fn op_has_quantized_compute_path(
 ) -> bool {
     if !is_quantized_compute_candidate(name) {
         return false;
+    }
+    if is_16x8_quantized_compute_path(name, inputs, outputs, tensors) {
+        return true;
     }
     let activation_input_slot = if matches!(name, "TRANSPOSE_CONV" | "CONV_3D_TRANSPOSE") {
         2
@@ -6728,6 +6899,7 @@ fn classify_op_quantization(
         "CONV_2D" | "DEPTHWISE_CONV_2D" | "FULLY_CONNECTED" | "BATCH_MATMUL"
     );
     let compute_q = op_has_quantized_compute_path(name, inputs, outputs, tensors);
+    let compute_16x8 = is_16x8_quantized_compute_path(name, inputs, outputs, tensors);
     let weight_like_q = matches!(
         name,
         "CONV_2D" | "DEPTHWISE_CONV_2D" | "FULLY_CONNECTED" | "BATCH_MATMUL"
@@ -6740,6 +6912,8 @@ fn classify_op_quantization(
     let conversion_state = precision_conversion_state(name, inputs, outputs, tensors);
     let state = if let Some(state) = conversion_state {
         state
+    } else if compute_16x8 {
+        "quantized_compute_16x8"
     } else if compute_q {
         "quantized_compute"
     } else if compute_like && weight_like_q && !input0_q && !output0_q {
@@ -6783,6 +6957,10 @@ fn classify_op_quantization(
         ),
         "quantized_compute" => format!(
             "activation input/output are 8-bit for this compute op: input0={} weight/input1={} output0={}",
+            input0_dtype, input1_dtype, output0_dtype
+        ),
+        "quantized_compute_16x8" => format!(
+            "activation input/output are quantized INT16 and the weight is quantized INT8: input0={} weight/input1={} output0={}",
             input0_dtype, input1_dtype, output0_dtype
         ),
         "weight_only_or_dynamic_range" => format!(
@@ -6835,6 +7013,10 @@ fn classify_model_quantization(
         .iter()
         .filter(|tensor| tensor.dtype == "UINT8")
         .count();
+    let int16_tensors = tensors
+        .iter()
+        .filter(|tensor| tensor.dtype == "INT16")
+        .count();
     let float16_tensors = tensors
         .iter()
         .filter(|tensor| tensor.dtype == "FLOAT16")
@@ -6851,6 +7033,9 @@ fn classify_model_quantization(
         && outputs
             .iter()
             .all(|tensor| is_8bit_quantized(&tensor.dtype));
+    let all_inputs_16bit = !inputs.is_empty() && inputs.iter().all(is_quantized_int16_activation);
+    let all_outputs_16bit =
+        !outputs.is_empty() && outputs.iter().all(is_quantized_int16_activation);
     let any_float_io = inputs
         .iter()
         .chain(outputs.iter())
@@ -6908,6 +7093,10 @@ fn classify_model_quantization(
         .iter()
         .filter(|op| is_mac_bearing_compute_op(&op.name))
         .collect::<Vec<_>>();
+    let all_compute_16x8 = !compute_ops.is_empty()
+        && compute_ops
+            .iter()
+            .all(|op| op.quantization_state == "quantized_compute_16x8");
     let quantized_compute_ops = compute_ops
         .iter()
         .filter(|op| op.quantized_compute_path)
@@ -6969,9 +7158,19 @@ fn classify_model_quantization(
         || activation_8bit_float_boundary_ops > 0
         || integer_requantization_ops > 0;
 
-    let (classification, label, summary, full_integer) = if !has_integer_signal
-        && float16_constant_expansion_ops > 0
+    let (classification, label, summary, full_integer) = if all_inputs_16bit
+        && all_outputs_16bit
+        && all_compute_16x8
+        && quantized_compute_ops == compute_ops.len()
+        && float_tensors == 0
     {
+        (
+            "full_integer_16x8",
+            "Full integer 16x8 activation path",
+            "Model I/O and compute activations are quantized INT16, MAC-bearing weights are quantized INT8, and no FLOAT tensor is serialized.",
+            true,
+        )
+    } else if !has_integer_signal && float16_constant_expansion_ops > 0 {
         (
             "float16_weight_storage",
             "FP16 weight storage",
@@ -7048,6 +7247,7 @@ fn classify_model_quantization(
         float16_constant_expansion_ops
     );
 
+    let maximum_risk = maximum_quantization_risk_op(ops);
     QuantizationStatus {
         classification: classification.to_string(),
         label: label.to_string(),
@@ -7069,11 +7269,18 @@ fn classify_model_quantization(
         float16_constant_expansion_ops,
         int8_tensors,
         uint8_tensors,
+        int16_tensors,
         float16_tensors,
         float_tensors,
         input_dtypes,
         output_dtypes,
         op_state_counts: count_items(op_state_map),
+        max_quantization_risk: maximum_risk
+            .map(|op| op.quant_risk.clone())
+            .unwrap_or_else(|| "none".to_string()),
+        max_quantization_risk_op_index: maximum_risk.map(|op| op.index),
+        max_quantization_risk_op_name: maximum_risk.map(|op| op.name.clone()),
+        max_quantization_risk_detail: maximum_risk.map(|op| op.quant_risk_detail.clone()),
         full_integer,
     }
 }
@@ -7313,6 +7520,40 @@ fn quant_risk_label(ratio: f64) -> &'static str {
     } else {
         "none"
     }
+}
+
+fn quant_risk_rank(label: &str) -> u8 {
+    match label {
+        "risk" => 3,
+        "warn" => 2,
+        "ok" => 1,
+        _ => 0,
+    }
+}
+
+fn quant_risk_score(op: &OpInfo) -> f64 {
+    let scale = if op.quant_scale_ratio_meaningful {
+        op.quant_scale_ratio.max(1.0).log10() + op.quant_scale_cv.max(0.0) * 1.5
+    } else {
+        0.0
+    };
+    let zero_point = if op.quant_zero_point_status == "out-of-range" {
+        op.quant_zero_point_offset.unsigned_abs() as f64 / 32.0
+    } else {
+        0.0
+    };
+    scale + zero_point
+}
+
+fn maximum_quantization_risk_op(ops: &[OpInfo]) -> Option<&OpInfo> {
+    ops.iter()
+        .filter(|op| op.quant_risk != "none")
+        .max_by(|a, b| {
+            quant_risk_rank(&a.quant_risk)
+                .cmp(&quant_risk_rank(&b.quant_risk))
+                .then_with(|| quant_risk_score(a).total_cmp(&quant_risk_score(b)))
+                .then_with(|| b.index.cmp(&a.index))
+        })
 }
 
 fn zero_point_score_signal(tensor: &TensorInfo) -> i64 {
@@ -7660,6 +7901,15 @@ fn estimate_model_int8_speedup(
         .iter()
         .filter(|op| is_mac_bearing_compute_op(&op.name))
         .collect::<Vec<_>>();
+    if compute_ops
+        .iter()
+        .any(|op| op.quantization_state == "quantized_compute_16x8")
+    {
+        return (
+            1.0,
+            "INT16 activation and INT8 weight compute is present. The selected target profile only binds an INT8-vs-FP32 throughput factor, so no 16x8 speedup is modeled without a source-backed 16x8 target contract.".to_string(),
+        );
+    }
     let quantized_compute_macs = compute_ops
         .iter()
         .filter(|op| op.quantized_compute_path)
@@ -9175,6 +9425,9 @@ mod tests {
             outputs,
             output_shapes: vec![output_shape],
             macs: 0.0,
+            reported_macs: Some(0.0),
+            macs_status: "assessed_nominal".to_string(),
+            macs_reason: "Test fixture supplies a closed nominal MAC value.".to_string(),
             mac_percent: 0.0,
             ops: 0.0,
             estimated_bytes: 0.0,

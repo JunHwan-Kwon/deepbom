@@ -408,7 +408,7 @@ try {
   }));
   if (resourceMap.title !== "Explorer Resource Map" || resourceMap.tileCount !== 53 || resourceMap.groupCount !== 6
     || resourceMap.metric !== "macs" || !resourceMap.summary.includes("300,775,552 MACs")
-    || !resourceMap.summary.includes("53 / 65") || !resourceMap.summary.includes("Groups mapped6 / 7") || !resourceMap.summary.includes("Exact zero12")
+    || !resourceMap.summary.includes("53 / 53") || !resourceMap.summary.includes("Groups mapped6 / 6") || !resourceMap.summary.includes("Not applicable12")
     || !resourceMap.summary.includes("Conservationexact") || resourceMap.mobileListDisplay !== "none" || resourceMap.overflow > 1) {
     throw new Error(`Explorer Resource Map is incomplete or non-conserving: ${JSON.stringify(resourceMap)}`);
   }

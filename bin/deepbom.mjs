@@ -32,6 +32,8 @@ import { resolveArtifactSource } from "./remote-artifact-resolver.mjs";
 import { resolveHuggingFaceOnnxExternalDataClosure, resolveHuggingFaceSafeTensorsClosure } from "./remote-artifact-closure.mjs";
 import { buildSingleFileArtifactSet, finalizeArtifactSet } from "../web/lib/artifact-set.js";
 import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
+import { normalizeTfliteAnalysisContract } from "../web/lib/tflite-analysis-contract.js";
+import { normalizeAnalysisSummaryContract } from "../web/lib/analysis-summary-contract.js";
 import { exportGraphVisualization } from "../web/lib/graph-export.js";
 import { exportGraphPng } from "./graph-png-export.mjs";
 import { buildNvidiaAcceleratorProfileBinding } from "../web/lib/accelerator-profile-binding.js";
@@ -194,6 +196,7 @@ async function main(argv) {
     preanalyzedOnnx,
     externalDataMembers: resolvedSource.external_data_members,
   });
+  analysis = normalizeAnalysisSummaryContract(analysis);
   const format = String(analysis.format || detectedFormat).toLowerCase();
   if (["unsupported", "pytorch_pickle"].includes(format)) {
     throw new Error(`Unsupported artifact format: ${format}`);
@@ -903,7 +906,9 @@ async function analyzeArtifact({ input, filename, format, target, externalDataRo
   if (format === "tflite") {
     const bytes = await readCliFileBytes(input);
     await initializeTfliteWasm();
-    return analyze_tflite_for_target(bytes, filename, target || DEFAULT_TARGET);
+    return normalizeTfliteAnalysisContract(
+      analyze_tflite_for_target(bytes, filename, target || DEFAULT_TARGET),
+    );
   }
   if (format === "onnx") {
     const bytes = await readCliFileBytes(input);
@@ -1259,6 +1264,9 @@ function buildHumanSummary(summary) {
   }
   lines.push("");
   lines.push(`Coverage: ${summary.coverage.assessed} assessed | ${summary.coverage.partial} partial | ${summary.coverage.needs_external_evidence} need external evidence`);
+  if (["risk", "warn"].includes(summary.quantization?.max_risk)) {
+    lines.push(`Quantization: ${summary.quantization.max_risk} at #${summary.quantization.max_risk_op_index ?? "?"} ${summary.quantization.max_risk_op_name || "operator"}`);
+  }
   if (summary.target.id) lines.push(`Target: ${summary.target.label || summary.target.id} (${summary.target.binding_source || "binding source recorded"})`);
   if (summary.rulepack.version || summary.rulepack.sha256) lines.push(`Rulepack: ${summary.rulepack.version || "version not declared"}${summary.rulepack.sha256 ? ` | sha256:${summary.rulepack.sha256}` : ""}`);
   lines.push(`Evidence boundary: ${verdict.scope}`);
@@ -1270,7 +1278,7 @@ function buildHumanSummary(summary) {
 function graphSummaryLine(graph = {}) {
   if (graph.operator_count == null && graph.tensor_count == null) return "Graph: not serialized by this artifact format";
   const macs = graph.total_macs == null ? "MACs not assessable" : `${Number(graph.total_macs).toLocaleString("en-US")} MACs`;
-  return `Graph: ${graph.operator_count ?? "unknown"} operators | ${graph.tensor_count ?? "unknown"} tensors | ${macs}`;
+  return `Graph: ${graph.operator_count ?? "unknown"} operators | ${graph.tensor_count ?? "unknown"} tensors | ${macs} (${graph.mac_confidence || "partial"})`;
 }
 
 function selectAnalysisOutput(analysis, parsed, reviewSummary, artifactIrContext) {

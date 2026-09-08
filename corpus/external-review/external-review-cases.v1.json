@@ -1,0 +1,291 @@
+{
+  "schema": "deepbom.external_review_cases.v1",
+  "baseline": {
+    "date": "2026-09-08",
+    "source_commit": "5b474ae",
+    "published_version": "1.96.10",
+    "review_rounds": 6
+  },
+  "status_lifecycle": [
+    "reported",
+    "reproduced",
+    "fixed",
+    "verified",
+    "deferred"
+  ],
+  "cases": [
+    {
+      "id": "ER-A1",
+      "title": "Serialized non-finite tensors bypass the artifact-defect gate",
+      "class": "correctness",
+      "priority": "P0",
+      "status": "verified",
+      "formats": ["safetensors", "gguf"],
+      "reproducer": "node scripts/check-external-review-defect-gate.mjs",
+      "fixture": {
+        "kind": "generated_safetensors_f32",
+        "sha256": "e65661c71d739ca23dfe9e6f1f83af86323c14d072a62895a5762e2d8efeaaef"
+      },
+      "expected": {
+        "finding_id": "EA-SER-0001",
+        "finding_kind": "artifact_defect",
+        "defect_gate_exit_code": 2
+      }
+    },
+    {
+      "id": "ER-A2",
+      "title": "Serialized non-finite finding is absent from SARIF",
+      "class": "export_contract",
+      "priority": "P0",
+      "status": "verified",
+      "formats": ["safetensors"],
+      "reproducer": "node scripts/check-external-review-defect-gate.mjs",
+      "expected": { "sarif_rule_id": "EA-SER-0001" },
+      "resolution": "Current SARIF projection already preserves all canonical findings; a regression assertion was added."
+    },
+    {
+      "id": "ER-A3",
+      "title": "Evidence gaps obscure artifact defects under severity gating",
+      "class": "policy_design",
+      "priority": "P1",
+      "status": "reported",
+      "formats": ["all"]
+    },
+    {
+      "id": "ER-B1",
+      "title": "SPACE_TO_BATCH_ND may omit the batch multiplier",
+      "class": "correctness",
+      "priority": "P0",
+      "status": "verified",
+      "formats": ["tflite"],
+      "reproducer": "node scripts/check-external-review-tflite-correctness.mjs",
+      "fixture": {
+        "path": "corpus/external-review/fixtures/space-to-batch-stale-shapes.tflite",
+        "sha256": "ff64f16a7741c4e517460982db47826bfbac8e0082aa13962d539a5559766877",
+        "generator": "TensorFlow 2.16.1 / NumPy 1.26.4"
+      },
+      "expected": {
+        "serialized_output_shape": [1, 10, 10, 16],
+        "effective_output_shape": [4, 10, 10, 16],
+        "total_macs": 589824
+      }
+    },
+    {
+      "id": "ER-B2",
+      "title": "Integer 16x8 quantization may be classified as weight-only",
+      "class": "correctness",
+      "priority": "P0",
+      "status": "verified",
+      "formats": ["tflite"],
+      "reproducer": "node scripts/check-external-review-tflite-correctness.mjs",
+      "fixture": {
+        "path": "corpus/external-review/fixtures/conv-16x8.tflite",
+        "sha256": "f245d5a6435efb81edc0a15cfa24867978b0588ad260a4f4cc0b0d3933977e9f",
+        "generator": "TensorFlow 2.16.1 / NumPy 1.26.4"
+      },
+      "expected": {
+        "classification": "full_integer_16x8",
+        "quantized_compute_mac_percent": 1,
+        "total_macs": 112896,
+        "activation_dtype": "INT16",
+        "weight_dtype": "INT8",
+        "bias_dtype": "INT64"
+      }
+    },
+    {
+      "id": "ER-B3",
+      "title": "Placeholder TFLite shapes may be promoted to exact MAC totals",
+      "class": "correctness",
+      "priority": "P0",
+      "status": "verified",
+      "formats": ["tflite"],
+      "reproducer": "node scripts/check-external-review-tflite-correctness.mjs",
+      "fixture": {
+        "path": "corpus/external-review/fixtures/dynamic-reshape.tflite",
+        "sha256": "303d997682abd998c803282c3d47c10b3d25e88e292a6931fa1e9a28e4b9f9f9",
+        "generator": "TensorFlow 2.16.1 / NumPy 1.26.4"
+      },
+      "expected": {
+        "total_macs": null,
+        "total_macs_decimal": null,
+        "mac_confidence": "symbolic",
+        "symbolic_total_macs": "4096*D2"
+      }
+    },
+    {
+      "id": "ER-B4",
+      "title": "TRANSPOSE_CONV MAC counting convention is not explicit",
+      "class": "documentation",
+      "priority": "P1",
+      "status": "reported",
+      "formats": ["tflite"]
+    },
+    {
+      "id": "ER-B5",
+      "title": "F16 GGUF storage is labeled as a quantization family",
+      "class": "semantic_label",
+      "priority": "P1",
+      "status": "reported",
+      "formats": ["gguf"]
+    },
+    {
+      "id": "ER-B6",
+      "title": "Saturation and grid-utilization denominators are not documented",
+      "class": "documentation",
+      "priority": "P1",
+      "status": "reported",
+      "formats": ["tflite"]
+    },
+    {
+      "id": "ER-C1",
+      "title": "Core ML ML Program blob references are not bound to MAC operands",
+      "class": "format_coverage",
+      "priority": "P1",
+      "status": "reported",
+      "formats": ["coreml"]
+    },
+    {
+      "id": "ER-C2",
+      "title": "Valid Core ML compressed packages may be rejected as malformed",
+      "class": "correctness",
+      "priority": "P0",
+      "status": "reported",
+      "formats": ["coreml"]
+    },
+    {
+      "id": "ER-C3",
+      "title": "ExecuTorch and TensorRT external review coverage is unavailable",
+      "class": "evidence_gap",
+      "priority": "P2",
+      "status": "deferred",
+      "formats": ["executorch", "tensorrt"],
+      "required_evidence": "Representative artifacts and a compatible native runtime/GPU environment"
+    },
+    {
+      "id": "ER-C4",
+      "title": "Accepted extensions do not communicate feature maturity",
+      "class": "product_contract",
+      "priority": "P1",
+      "status": "reported",
+      "formats": ["all"]
+    },
+    {
+      "id": "ER-D1",
+      "title": "Top-level summary omits the maximum per-operator quantization risk",
+      "class": "summary_contract",
+      "priority": "P1",
+      "status": "verified",
+      "formats": ["tflite"],
+      "reproducer": "node scripts/check-external-review-tflite-correctness.mjs",
+      "fixture": {
+        "path": "corpus/external-review/fixtures/quant-scale-risk.tflite",
+        "sha256": "cf04274f7758c08e7e93995a95eeaa48203da6753f94b14002731d4061ffac9b",
+        "generator": "TensorFlow 2.11.1 / NumPy 1.26.4"
+      },
+      "expected": {
+        "max_quantization_risk": "risk",
+        "max_quantization_risk_op_index": 0,
+        "max_quantization_risk_op_name": "CONV_2D"
+      }
+    },
+    {
+      "id": "ER-D2",
+      "title": "MAC totals lack one stable summary confidence field",
+      "class": "summary_contract",
+      "priority": "P1",
+      "status": "verified",
+      "formats": ["all"],
+      "reproducer": "node scripts/check-analysis-summary-contract.mjs",
+      "expected": {
+        "field": "mac_confidence",
+        "values": ["exact", "symbolic", "partial", "not_applicable"]
+      }
+    },
+    {
+      "id": "ER-D3",
+      "title": "Default CLI output is too large for interactive use",
+      "class": "cli_experience",
+      "priority": "P1",
+      "status": "verified",
+      "formats": ["all"],
+      "reproducer": "node scripts/check-cli-automation.mjs",
+      "resolution": "The default audit output is a bounded human summary; complete JSON remains explicit."
+    },
+    {
+      "id": "ER-D4",
+      "title": "SafeTensors human summary is incomplete",
+      "class": "summary_contract",
+      "priority": "P2",
+      "status": "reported",
+      "formats": ["safetensors"]
+    },
+    {
+      "id": "ER-E1",
+      "title": "Diff omits quantization-contract changes",
+      "class": "feature_gap",
+      "priority": "P1",
+      "status": "reported",
+      "formats": ["tflite"]
+    },
+    {
+      "id": "ER-E2",
+      "title": "Semantic diff is limited to TFLite",
+      "class": "feature_scope",
+      "priority": "P2",
+      "status": "reported",
+      "formats": ["all"]
+    },
+    {
+      "id": "ER-F1",
+      "title": "Rule explanation catalog covers only three identifiers",
+      "class": "explainability",
+      "priority": "P1",
+      "status": "reproduced",
+      "formats": ["all"],
+      "reproducer": "node bin/deepbom.mjs explain-rule --list --compact",
+      "actual": { "rule_count": 3 }
+    },
+    {
+      "id": "ER-G1",
+      "title": "CycloneDX consumers may ignore metadata.component",
+      "class": "interoperability_risk",
+      "priority": "P2",
+      "status": "reproduced",
+      "formats": ["cyclonedx"],
+      "boundary": "metadata.component is a valid root component; an empty components array is not a schema defect."
+    },
+    {
+      "id": "ER-I1",
+      "title": "Golden coverage does not include all reported boundary cases",
+      "class": "test_coverage",
+      "priority": "P0",
+      "status": "reproduced",
+      "formats": ["all"]
+    },
+    {
+      "id": "ER-I2",
+      "title": "A serialized NaN has no defect-gate regression",
+      "class": "test_coverage",
+      "priority": "P0",
+      "status": "verified",
+      "formats": ["safetensors"],
+      "reproducer": "node scripts/check-external-review-defect-gate.mjs"
+    },
+    {
+      "id": "ER-I3",
+      "title": "Stable machine-readable surfaces are not explicitly scoped",
+      "class": "compatibility_policy",
+      "priority": "P1",
+      "status": "reported",
+      "formats": ["all"]
+    },
+    {
+      "id": "ER-I4",
+      "title": "Stable and prerelease cadence are not separated",
+      "class": "release_policy",
+      "priority": "P2",
+      "status": "reported",
+      "formats": ["all"]
+    }
+  ]
+}

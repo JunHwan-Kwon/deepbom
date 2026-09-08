@@ -16,6 +16,7 @@ assert.equal(analysis.format, expected.analysis.format);
 assert.equal(analysis.operator_count, expected.analysis.operator_count);
 assert.equal(analysis.tensor_count, expected.analysis.tensor_count);
 assert.equal(analysis.total_macs, expected.analysis.total_macs);
+assert.equal(analysis.mac_confidence, expected.analysis.mac_confidence);
 assert.equal(analysis.mac_assessment?.status, expected.analysis.mac_assessment_status);
 assert.equal(analysis.mac_assessment?.total_assessed_macs, expected.analysis.total_assessed_macs);
 assert.equal(analysis.mac_assessment?.assessed_compute_ops, expected.analysis.assessed_compute_ops);

@@ -234,6 +234,14 @@ const REQUIRED_REPORT_FIELD_PATTERNS = new Map([
     "/tflite_sparse_storage_contract/schema_source_sha256", "/tflite_sparse_storage_contract/converter_source_sha256",
     "/tflite_sparse_storage_contract/method", "/tflite_sparse_storage_contract/interpretation_boundary",
   ]],
+  ["tflite.shape_reconciliation", [
+    "/tflite_shape_reconciliation/schema", "/tflite_shape_reconciliation/status",
+    "/tflite_shape_reconciliation/evidence_class", "/tflite_shape_reconciliation/tensor_count",
+    "/tflite_shape_reconciliation/reconciled_tensor_count",
+    "/tflite_shape_reconciliation/serialized_conflict_count",
+    "/tflite_shape_reconciliation/unresolved_tensor_count",
+    "/tflite_shape_reconciliation/method", "/tflite_shape_reconciliation/interpretation_boundary",
+  ]],
   ["tflite.subgraph_inventory", [
     "/tflite_subgraph_inventory/schema", "/tflite_subgraph_inventory/status",
     "/tflite_subgraph_inventory/evidence_class", "/tflite_subgraph_inventory/subgraph_count",
@@ -1469,7 +1477,7 @@ const REQUIRED_REPORT_FIELD_PATTERNS = new Map([
 
 const COMPUTATION_OBJECT_KEYS = new Set([
   "size_breakdown", "artifact_byte_integrity", "tensor_liveness", "tensor_arena_plan", "movement_analysis", "block_inventory",
-  "tflite_sparse_storage_contract", "tflite_subgraph_inventory", "tflite_subgraph_deep_analysis",
+  "tflite_sparse_storage_contract", "tflite_shape_reconciliation", "tflite_subgraph_inventory", "tflite_subgraph_deep_analysis",
   "dynamic_shape_cost_contract",
   "weight_integrity", "quantization_status", "mac_assessment", "runtime_compat",
   "predicted_partition_boundaries", "xnnpack_selector_evidence_provenance", "tflite_delegate_compatibility_evidence",
@@ -1704,7 +1712,7 @@ const SPECS = [
     pointers: ["/evidence/static_analysis/runtime_compat"], report: (format) => format === "onnx" ? "## ONNX Runtime Requirements" : "## Artifact-side Runtime Requirements", viewer: ["Overview", "Reports"],
     method: "Read artifact operator/opset requirements and derive only the necessary runtime floor supported by the pinned compatibility source." }),
   spec("compute.macs", "Arithmetic and MAC accounting", {
-    keys: ["mac_assessment", "total_macs", "total_macs_decimal", "total_ops", "total_ops_decimal"], status: (a, f) => f === "onnx" ? objectStatus(a?.mac_assessment) : hasOwn(a, "total_macs") ? "assessed" : "not_assessed",
+    keys: ["mac_assessment", "mac_confidence", "total_macs", "total_macs_decimal", "total_ops", "total_ops_decimal"], status: (a, f) => f === "onnx" ? objectStatus(a?.mac_assessment) : hasOwn(a, "total_macs") ? "assessed" : "not_assessed",
     pointers: ["/evidence/static_analysis/total_macs", "/evidence/static_analysis/mac_assessment", "/evidence/static_analysis/ops"],
     report: "## Compute Hotspots", viewer: ["Overview", "Explorer"], method: "Sum only operator rows whose complete shape-dependent arithmetic formula is assessable; preserve unassessed rows as null." }),
   spec("cost.dynamic_shape", "Symbolic dynamic-shape cost contract", {
@@ -1748,6 +1756,10 @@ const SPECS = [
     status: (a) => objectStatus(a?.tflite_sparse_storage_contract), evidenceClass: "SOURCE_PINNED/DERIVED",
     pointers: ["/evidence/static_analysis/tflite_sparse_storage_contract"], report: "## TFLite Sparse Storage Contract", viewer: ["Overview", "Explorer", "Reports"],
     method: "Validate every serialized traversal, block map, dense level, CSR segment/index vector, and stored leaf byte count; reconstruct logical dense values through the pinned TFLite converter ordering while conserving logical = stored + implicit-zero elements." }),
+  spec("tflite.shape_reconciliation", "TFLite source-backed shape reconciliation", {
+    formats: ["tflite"], keys: ["tflite_shape_reconciliation"], status: (a) => objectStatus(a?.tflite_shape_reconciliation), evidenceClass: "SOURCE_BACKED_DERIVED",
+    pointers: ["/evidence/static_analysis/tflite_shape_reconciliation"], report: "## Computed Analysis Coverage", viewer: ["Overview", "Explorer", "Reports"],
+    method: "Preserve serialized shapes, unbind negative shape-signature dimensions, and replace only dimensions closed by pinned TFLite Prepare contracts and serialized constant operands; unresolved dimensions remain explicit and prevent a complete numeric MAC total." }),
   spec("tflite.subgraph_inventory", "TFLite all-subgraph and control-flow inventory", {
     formats: ["tflite"], keys: ["tflite_subgraph_inventory"], status: (a) => objectStatus(a?.tflite_subgraph_inventory), evidenceClass: "OBSERVED/SOURCE_PINNED/DERIVED",
     pointers: ["/evidence/static_analysis/tflite_subgraph_inventory"], report: "## TFLite Subgraph And Control-flow Inventory", viewer: ["Overview", "Explorer", "Reports"],

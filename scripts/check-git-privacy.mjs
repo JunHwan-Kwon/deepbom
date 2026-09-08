@@ -42,6 +42,10 @@ const modelArtifactExtensions = new Set([
 
 const sanctionedModelFixtures = new Map([
   ["corpus/coreml-legacy-quantization-corpus/per-output-channel-linear-int4.mlmodel", "scripts/build-coreml-legacy-quantization-corpus.mjs"],
+  ["corpus/external-review/fixtures/conv-16x8.tflite", "scripts/fixtures/generate-external-review-tflite.py"],
+  ["corpus/external-review/fixtures/dynamic-reshape.tflite", "scripts/fixtures/generate-external-review-tflite.py"],
+  ["corpus/external-review/fixtures/quant-scale-risk.tflite", "scripts/fixtures/generate-quant-risk-tflite.py"],
+  ["corpus/external-review/fixtures/space-to-batch-stale-shapes.tflite", "scripts/fixtures/generate-external-review-tflite.py"],
   ["corpus/onnx-extension-contract-corpus/deepbom-static-per-axis-qdq.onnx", "scripts/build-onnx-extension-contract-corpus.mjs"],
   ["corpus/onnx-extension-contract-corpus/onnx-dequantize-linear-runtime-per-axis.onnx", "scripts/build-onnx-extension-contract-corpus.mjs"],
   ["corpus/onnx-extension-contract-corpus/onnx-quantize-linear-runtime-per-axis.onnx", "scripts/build-onnx-extension-contract-corpus.mjs"],
@@ -98,8 +102,9 @@ function assertSyntheticFixtureContract() {
       throw new Error(`Sanctioned model fixture and generator must be tracked together: ${fixture} / ${generator}`);
     }
     const size = statSync(fixture).size;
-    if (size < 1 || size > 4096) {
-      throw new Error(`Sanctioned model fixture must remain non-empty and <= 4 KiB: ${fixture} (${size} bytes)`);
+    const maxBytes = fixture.startsWith("corpus/external-review/fixtures/") ? 24 * 1024 : 4096;
+    if (size < 1 || size > maxBytes) {
+      throw new Error(`Sanctioned model fixture must remain non-empty and <= ${maxBytes} bytes: ${fixture} (${size} bytes)`);
     }
   }
 }

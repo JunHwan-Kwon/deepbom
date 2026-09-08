@@ -57,6 +57,13 @@ corpus/cyclonedx-20-quantization-fixtures/valid-ai-ml-quantization-custom-scheme
 corpus/cyclonedx-20-quantization-fixtures/valid-ai-ml-quantization-per-channel-2.0.json
 corpus/cyclonedx-generalization-evidence.records.v1.json.gz
 corpus/cyclonedx-generalization-evidence.v1.json
+corpus/external-review/external-review-cases.v1.json
+corpus/external-review/fixtures/conv-16x8.tflite
+corpus/external-review/fixtures/dynamic-reshape.tflite
+corpus/external-review/fixtures/manifest.json
+corpus/external-review/fixtures/quant-scale-risk.manifest.json
+corpus/external-review/fixtures/quant-scale-risk.tflite
+corpus/external-review/fixtures/space-to-batch-stale-shapes.tflite
 corpus/gguf-architecture-encoding-corpus.v1.json
 corpus/google_legacy/README.md
 corpus/google_legacy/conversion/README.md
@@ -100,6 +107,7 @@ docs/CLI_AUTOMATION.md
 docs/CLI_REFERENCE.md
 docs/CYCLONEDX_20_QUANTIZATION_CONTRIBUTION.md
 docs/DELIVERY_OPERATIONS.md
+docs/EXTERNAL_REVIEW_TRIAGE.md
 docs/KNOWN_ISSUES.md
 docs/MODEL_FREE_BUG_REPORTING.md
 docs/ONNX_CONTRACT_CONFLICT_CAPSULE.md
@@ -218,6 +226,7 @@ scripts/check-advanced-copy-contract.mjs
 scripts/check-affine-interface-mismatch.py
 scripts/check-all.mjs
 scripts/check-analysis-invariants.mjs
+scripts/check-analysis-summary-contract.mjs
 scripts/check-artifact-bundle.mjs
 scripts/check-artifact-ir-consumers.mjs
 scripts/check-artifact-ir-import-boundary.mjs
@@ -288,6 +297,9 @@ scripts/check-explorer-redesign.mjs
 scripts/check-export-artifact-contract.mjs
 scripts/check-export-contract-documents.mjs
 scripts/check-export-contract-viewer.mjs
+scripts/check-external-review-defect-gate.mjs
+scripts/check-external-review-ledger.mjs
+scripts/check-external-review-tflite-correctness.mjs
 scripts/check-external-test-access.mjs
 scripts/check-external-test-page.mjs
 scripts/check-format-capability-viewer.mjs
@@ -451,6 +463,8 @@ scripts/download-huggingface-community-corpus.mjs
 scripts/download-public-multiformat-corpus.mjs
 scripts/fetch-pinned-source.mjs
 scripts/fixtures/executorch-fixtures.mjs
+scripts/fixtures/generate-external-review-tflite.py
+scripts/fixtures/generate-quant-risk-tflite.py
 scripts/fixtures/onnx_dynamic_conv.onnx
 scripts/fixtures/onnx_recursive_scope.onnx
 scripts/fixtures/onnx_zero_dim_identity.onnx
@@ -587,6 +601,7 @@ src/tflite_deep_scopes.rs
 src/tflite_metadata.rs
 src/tflite_operator_names.rs
 src/tflite_scalar.rs
+src/tflite_shape_reconciliation.rs
 src/tflite_sparse.rs
 src/tflite_subgraphs.rs
 src/verified_flatbuffer.rs
@@ -623,6 +638,7 @@ web/lib/accumulator-reachability-worker.js
 web/lib/accumulator-reachability.js
 web/lib/admin-elements.js
 web/lib/analysis-depth-mode.js
+web/lib/analysis-summary-contract.js
 web/lib/analysis.js
 web/lib/app-config.js
 web/lib/app-deepbom-workspace.js
@@ -938,6 +954,7 @@ web/lib/tensorrt-profile-cost.js
 web/lib/tensorrt-source-metadata.js
 web/lib/tensorrt-static-preflight.js
 web/lib/tflite-accelerator-source-profiles.js
+web/lib/tflite-analysis-contract.js
 web/lib/tflite-benchmark.js
 web/lib/tflite-build-configuration-binding.js
 web/lib/tflite-delegate-compatibility.js

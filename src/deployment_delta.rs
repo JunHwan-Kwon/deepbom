@@ -320,6 +320,9 @@ fn build_deployment_delta(
     if baseline.format != "tflite" || candidate.format != "tflite" {
         return Err("Deployment delta v1 supports TFLite artifacts only.".to_string());
     }
+    if baseline.total_macs.is_none() || candidate.total_macs.is_none() {
+        return Err("Deployment delta requires complete numeric MAC ledgers for both TFLite artifacts. At least one artifact retains symbolic or partial compute cost; audit that artifact and bind its runtime dimensions before requesting this modeled delta.".to_string());
+    }
     for (left, right) in baseline_analyses.iter().zip(candidate_analyses) {
         if left.target_profile.id != right.target_profile.id {
             return Err("Baseline and candidate target profile order differs.".to_string());
@@ -422,7 +425,11 @@ fn delta_artifact(role: &'static str, analysis: &Analysis, sha256: String) -> De
         format: analysis.format.clone(),
         operator_count: analysis.ops.len(),
         tensor_count: analysis.tensor_count,
-        total_macs: finite_non_negative(analysis.total_macs),
+        total_macs: finite_non_negative(
+            analysis
+                .total_macs
+                .expect("complete MAC ledgers are validated before delta construction"),
+        ),
         quantization_classification: analysis.quantization_status.classification.clone(),
         quantized_compute_mac_ratio: finite_non_negative(
             analysis.quantization_status.quantized_compute_mac_percent,

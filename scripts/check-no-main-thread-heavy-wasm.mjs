@@ -51,6 +51,10 @@ for (const file of browserFiles) {
 
 const appSource = readFileSync("web/app.js", "utf8");
 const workerSource = readFileSync("web/workers/static-audit-worker.js", "utf8");
+if (!workerSource.includes('import { normalizeTfliteAnalysisContract } from "../lib/tflite-analysis-contract.js"')
+  || !/TFLITE_ANALYZE[\s\S]*?normalizeTfliteAnalysisContract\([\s\S]*?analyze_tflite_for_target/.test(workerSource)) {
+  failures.push("web/workers/static-audit-worker.js: browser TFLite results must pass through the canonical null/confidence normalizer");
+}
 if (!appSource.includes('import("../pkg/tflite_wasm_audit.js")')
   || !appSource.includes("tfliteAnalyzerModule.runtime_guard()")) {
   failures.push("web/app.js: main-thread TFLite module access must remain limited to lazy initialization and runtime_guard");

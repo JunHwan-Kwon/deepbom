@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v561";
+const CACHE_NAME = "tflite-wasm-static-audit-v562";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -79,6 +79,8 @@ const APP_ASSETS = [
   "./lib/custom-target-editor.js",
   "./lib/custom-targets.js",
   "./lib/analysis.js",
+  "./lib/analysis-summary-contract.js",
+  "./lib/tflite-analysis-contract.js",
   "./lib/artifact-bundle.js",
   "./lib/artifact-overview.js",
   "./lib/graph-topology.js",

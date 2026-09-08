@@ -563,6 +563,7 @@
     "operator_count": 65,
     "tensor_count": 173,
     "total_macs": 300775552,
+    "mac_confidence": "exact",
     "mac_assessment_status": "assessed",
     "mac_coverage": {
       "schema": "deepbom.mac_coverage.v1",
@@ -2632,5 +2633,5 @@
     ]
   },
   "evidence_boundary": "Serialized artifact facts and deterministic static derivations. Declarations and runtime measurements are accepted only through separately identified inputs.",
-  "envelope_sha256": "357e8adb0876f192ec955b1f305ce114642e9c705b93707418b6d515a2dcb039"
+  "envelope_sha256": "d86618ecc5bcd0768d65101e165c26909dcf5f40bfa5c2c33ee57c14015a8d75"
 }

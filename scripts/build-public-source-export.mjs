@@ -104,6 +104,7 @@ async function exportPublicSource(files) {
   await copyFile(path.join(root, "docs", "PUBLIC_README.md"), path.join(output, "README.md"));
   await rewritePublicPackageMetadata();
   writePublicBuildMetadata();
+  await exposeGeneratedPublicBuildMetadata();
   const records = [];
   for (const file of await collectFiles(output)) {
     records.push(await fileRecord(file, normalize(path.relative(output, file))));
@@ -130,6 +131,17 @@ function writePublicBuildMetadata() {
     stdio: ["ignore", "pipe", "pipe"],
   });
   assert(existsSync(path.join(output, "web", "lib", "build-metadata.js")), "Public build metadata was not generated.");
+}
+
+async function exposeGeneratedPublicBuildMetadata() {
+  const gitignorePath = path.join(output, ".gitignore");
+  const source = await readFile(gitignorePath, "utf8");
+  const exception = "!web/lib/build-metadata.js";
+  if (source.split(/\r?\n/).includes(exception)) return;
+  await writeFile(
+    gitignorePath,
+    `${source.trimEnd()}\n\n# The clean public export commits its generated, source-bound build identity.\n${exception}\n`,
+  );
 }
 
 async function rewritePublicPackageMetadata() {

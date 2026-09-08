@@ -76,7 +76,7 @@
             "decimal": "10838016",
             "number": 10838016
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "552928",
             "number": 552928
@@ -132,7 +132,7 @@
             "decimal": "3612672",
             "number": 3612672
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "803232",
             "number": 803232
@@ -188,7 +188,7 @@
             "decimal": "6422528",
             "number": 6422528
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "602688",
             "number": 602688
@@ -244,7 +244,7 @@
             "decimal": "19267584",
             "number": 19267584
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "1406848",
             "number": 1406848
@@ -300,7 +300,7 @@
             "decimal": "2709504",
             "number": 2709504
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "1506528",
             "number": 1506528
@@ -356,7 +356,7 @@
             "decimal": "7225344",
             "number": 7225344
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "378720",
             "number": 378720
@@ -412,7 +412,7 @@
             "decimal": "10838016",
             "number": 10838016
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "530880",
             "number": 530880
@@ -468,7 +468,7 @@
             "decimal": "4064256",
             "number": 4064256
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "905040",
             "number": 905040
@@ -524,7 +524,7 @@
             "decimal": "10838016",
             "number": 10838016
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "530400",
             "number": 530400
@@ -572,11 +572,8 @@
           }
         ],
         "metrics": {
-          "macs": {
-            "decimal": "0",
-            "number": 0
-          },
-          "mac_assessment_status": "assessed",
+          "macs": null,
+          "mac_assessment_status": "not_applicable",
           "logical_io_bytes": {
             "decimal": "225792",
             "number": 225792
@@ -632,7 +629,7 @@
             "decimal": "10838016",
             "number": 10838016
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "530880",
             "number": 530880
@@ -688,7 +685,7 @@
             "decimal": "1016064",
             "number": 1016064
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "566352",
             "number": 566352
@@ -744,7 +741,7 @@
             "decimal": "3612672",
             "number": 3612672
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "142720",
             "number": 142720
@@ -800,7 +797,7 @@
             "decimal": "4816896",
             "number": 4816896
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "182528",
             "number": 182528
@@ -856,7 +853,7 @@
             "decimal": "1354752",
             "number": 1354752
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "303552",
             "number": 303552
@@ -912,7 +909,7 @@
             "decimal": "4816896",
             "number": 4816896
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "181888",
             "number": 181888
@@ -960,11 +957,8 @@
           }
         ],
         "metrics": {
-          "macs": {
-            "decimal": "0",
-            "number": 0
-          },
-          "mac_assessment_status": "assessed",
+          "macs": null,
+          "mac_assessment_status": "not_applicable",
           "logical_io_bytes": {
             "decimal": "75264",
             "number": 75264
@@ -1020,7 +1014,7 @@
             "decimal": "4816896",
             "number": 4816896
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "182528",
             "number": 182528
@@ -1076,7 +1070,7 @@
             "decimal": "1354752",
             "number": 1354752
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "303552",
             "number": 303552
@@ -1132,7 +1126,7 @@
             "decimal": "4816896",
             "number": 4816896
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "181888",
             "number": 181888
@@ -1180,11 +1174,8 @@
           }
         ],
         "metrics": {
-          "macs": {
-            "decimal": "0",
-            "number": 0
-          },
-          "mac_assessment_status": "assessed",
+          "macs": null,
+          "mac_assessment_status": "not_applicable",
           "logical_io_bytes": {
             "decimal": "75264",
             "number": 75264
@@ -1240,7 +1231,7 @@
             "decimal": "4816896",
             "number": 4816896
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "182528",
             "number": 182528
@@ -1296,7 +1287,7 @@
             "decimal": "338688",
             "number": 338688
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "190656",
             "number": 190656
@@ -1352,7 +1343,7 @@
             "decimal": "2408448",
             "number": 2408448
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "62720",
             "number": 62720
@@ -1408,7 +1399,7 @@
             "decimal": "4816896",
             "number": 4816896
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "113920",
             "number": 113920
@@ -1464,7 +1455,7 @@
             "decimal": "677376",
             "number": 677376
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "155520",
             "number": 155520
@@ -1520,7 +1511,7 @@
             "decimal": "4816896",
             "number": 4816896
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "112640",
             "number": 112640
@@ -1568,11 +1559,8 @@
           }
         ],
         "metrics": {
-          "macs": {
-            "decimal": "0",
-            "number": 0
-          },
-          "mac_assessment_status": "assessed",
+          "macs": null,
+          "mac_assessment_status": "not_applicable",
           "logical_io_bytes": {
             "decimal": "37632",
             "number": 37632
@@ -1628,7 +1616,7 @@
             "decimal": "4816896",
             "number": 4816896
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "113920",
             "number": 113920
@@ -1684,7 +1672,7 @@
             "decimal": "677376",
             "number": 677376
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "155520",
             "number": 155520
@@ -1740,7 +1728,7 @@
             "decimal": "4816896",
             "number": 4816896
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "112640",
             "number": 112640
@@ -1788,11 +1776,8 @@
           }
         ],
         "metrics": {
-          "macs": {
-            "decimal": "0",
-            "number": 0
-          },
-          "mac_assessment_status": "assessed",
+          "macs": null,
+          "mac_assessment_status": "not_applicable",
           "logical_io_bytes": {
             "decimal": "37632",
             "number": 37632
@@ -1848,7 +1833,7 @@
             "decimal": "4816896",
             "number": 4816896
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "113920",
             "number": 113920
@@ -1904,7 +1889,7 @@
             "decimal": "677376",
             "number": 677376
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "155520",
             "number": 155520
@@ -1960,7 +1945,7 @@
             "decimal": "4816896",
             "number": 4816896
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "112640",
             "number": 112640
@@ -2008,11 +1993,8 @@
           }
         ],
         "metrics": {
-          "macs": {
-            "decimal": "0",
-            "number": 0
-          },
-          "mac_assessment_status": "assessed",
+          "macs": null,
+          "mac_assessment_status": "not_applicable",
           "logical_io_bytes": {
             "decimal": "37632",
             "number": 37632
@@ -2068,7 +2050,7 @@
             "decimal": "4816896",
             "number": 4816896
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "113920",
             "number": 113920
@@ -2124,7 +2106,7 @@
             "decimal": "677376",
             "number": 677376
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "155520",
             "number": 155520
@@ -2180,7 +2162,7 @@
             "decimal": "7225344",
             "number": 7225344
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "131328",
             "number": 131328
@@ -2236,7 +2218,7 @@
             "decimal": "10838016",
             "number": 10838016
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "189312",
             "number": 189312
@@ -2292,7 +2274,7 @@
             "decimal": "1016064",
             "number": 1016064
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "233280",
             "number": 233280
@@ -2348,7 +2330,7 @@
             "decimal": "10838016",
             "number": 10838016
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "187392",
             "number": 187392
@@ -2396,11 +2378,8 @@
           }
         ],
         "metrics": {
-          "macs": {
-            "decimal": "0",
-            "number": 0
-          },
-          "mac_assessment_status": "assessed",
+          "macs": null,
+          "mac_assessment_status": "not_applicable",
           "logical_io_bytes": {
             "decimal": "56448",
             "number": 56448
@@ -2456,7 +2435,7 @@
             "decimal": "10838016",
             "number": 10838016
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "189312",
             "number": 189312
@@ -2512,7 +2491,7 @@
             "decimal": "1016064",
             "number": 1016064
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "233280",
             "number": 233280
@@ -2568,7 +2547,7 @@
             "decimal": "10838016",
             "number": 10838016
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "187392",
             "number": 187392
@@ -2616,11 +2595,8 @@
           }
         ],
         "metrics": {
-          "macs": {
-            "decimal": "0",
-            "number": 0
-          },
-          "mac_assessment_status": "assessed",
+          "macs": null,
+          "mac_assessment_status": "not_applicable",
           "logical_io_bytes": {
             "decimal": "56448",
             "number": 56448
@@ -2676,7 +2652,7 @@
             "decimal": "10838016",
             "number": 10838016
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "189312",
             "number": 189312
@@ -2732,7 +2708,7 @@
             "decimal": "254016",
             "number": 254016
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "148608",
             "number": 148608
@@ -2788,7 +2764,7 @@
             "decimal": "4515840",
             "number": 4515840
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "128864",
             "number": 128864
@@ -2844,7 +2820,7 @@
             "decimal": "7526400",
             "number": 7526400
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "212320",
             "number": 212320
@@ -2900,7 +2876,7 @@
             "decimal": "423360",
             "number": 423360
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "106560",
             "number": 106560
@@ -2956,7 +2932,7 @@
             "decimal": "7526400",
             "number": 7526400
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "209120",
             "number": 209120
@@ -3004,11 +2980,8 @@
           }
         ],
         "metrics": {
-          "macs": {
-            "decimal": "0",
-            "number": 0
-          },
-          "mac_assessment_status": "assessed",
+          "macs": null,
+          "mac_assessment_status": "not_applicable",
           "logical_io_bytes": {
             "decimal": "23520",
             "number": 23520
@@ -3064,7 +3037,7 @@
             "decimal": "7526400",
             "number": 7526400
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "212320",
             "number": 212320
@@ -3120,7 +3093,7 @@
             "decimal": "423360",
             "number": 423360
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "106560",
             "number": 106560
@@ -3176,7 +3149,7 @@
             "decimal": "7526400",
             "number": 7526400
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "209120",
             "number": 209120
@@ -3224,11 +3197,8 @@
           }
         ],
         "metrics": {
-          "macs": {
-            "decimal": "0",
-            "number": 0
-          },
-          "mac_assessment_status": "assessed",
+          "macs": null,
+          "mac_assessment_status": "not_applicable",
           "logical_io_bytes": {
             "decimal": "23520",
             "number": 23520
@@ -3284,7 +3254,7 @@
             "decimal": "7526400",
             "number": 7526400
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "212320",
             "number": 212320
@@ -3340,7 +3310,7 @@
             "decimal": "423360",
             "number": 423360
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "106560",
             "number": 106560
@@ -3396,7 +3366,7 @@
             "decimal": "15052800",
             "number": 15052800
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "371200",
             "number": 371200
@@ -3452,7 +3422,7 @@
             "decimal": "20070400",
             "number": 20070400
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "493120",
             "number": 493120
@@ -3496,11 +3466,8 @@
           }
         ],
         "metrics": {
-          "macs": {
-            "decimal": "0",
-            "number": 0
-          },
-          "mac_assessment_status": "assessed",
+          "macs": null,
+          "mac_assessment_status": "not_applicable",
           "logical_io_bytes": {
             "decimal": "64000",
             "number": 64000
@@ -3556,7 +3523,7 @@
             "decimal": "1281280",
             "number": 1281280
           },
-          "mac_assessment_status": "assessed",
+          "mac_assessment_status": "assessed_nominal",
           "logical_io_bytes": {
             "decimal": "1287565",
             "number": 1287565
@@ -3604,11 +3571,8 @@
           }
         ],
         "metrics": {
-          "macs": {
-            "decimal": "0",
-            "number": 0
-          },
-          "mac_assessment_status": "assessed",
+          "macs": null,
+          "mac_assessment_status": "not_applicable",
           "logical_io_bytes": {
             "decimal": "2010",
             "number": 2010
@@ -9866,11 +9830,11 @@
         "number": 300775552
       },
       "mac_assessment": {
-        "status": "complete_without_separate_compute_denominator",
-        "compute_op_count": null,
-        "assessed_compute_op_count": null,
-        "unassessed_compute_op_count": null,
-        "scope": "sum_of_operator_macs_present_in_artifact_ir"
+        "status": "complete",
+        "compute_op_count": 53,
+        "assessed_compute_op_count": 53,
+        "unassessed_compute_op_count": 0,
+        "scope": "nominal tensor-contraction MACs"
       }
     },
     "completeness": "serialized_scope_materialized",
@@ -22420,5 +22384,5 @@
     "unknown_is_zero": false
   },
   "interpretation_boundary": "The canonical graph, storage, architecture, and quantization ledgers preserve distinct evidence scopes. Static backend eligibility and imported runtime observations are overlays and never rewrite serialized artifact facts. A missing executable graph is represented as not_serialized; no execution edge is synthesized from tensor names or architecture order.",
-  "artifact_ir_sha256": "da81494f981d6c68e408008eb77f4eb2aada143393eb27c3e8cd37b45ece637d"
+  "artifact_ir_sha256": "88b850ade73779ee629696a077a418f84c6d2de808490c63f2b9be0e43c13b0a"
 }

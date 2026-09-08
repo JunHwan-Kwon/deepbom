@@ -204,10 +204,16 @@ function storageTone(tensor) {
 }
 
 function finalizePresentation(base, rawItems, metric) {
-  const assessed = rawItems.filter((item) => item.value != null);
+  const notApplicable = base.metricId === "macs"
+    ? rawItems.filter((item) => item.source?.macs_status === "not_applicable")
+    : [];
+  const notApplicableIds = new Set(notApplicable.map((item) => item.id));
+  const assessable = rawItems.filter((item) => !notApplicableIds.has(item.id));
+  const assessed = assessable.filter((item) => item.value != null);
   const positive = assessed.filter((item) => item.value > 0);
   const zeroCount = assessed.length - positive.length;
-  const unassessedCount = rawItems.length - assessed.length;
+  const unassessedCount = assessable.length - assessed.length;
+  const notApplicableCount = notApplicable.length;
   const total = positive.reduce((sum, item) => sum + item.value, 0);
   const itemTotal = positive.reduce((sum, item) => sum + item.value, 0);
   const assessedGroupCount = new Set(assessed.map((item) => item.groupId)).size;
@@ -219,6 +225,7 @@ function finalizePresentation(base, rawItems, metric) {
     assessedCount: assessed.length,
     zeroCount,
     unassessedCount,
+    notApplicableCount,
     assessedGroupCount,
     mappedGroupCount,
     conservationStatus: Number.isFinite(total) && Math.abs(total - itemTotal) <= Math.max(1e-9, total * 1e-12)
@@ -227,7 +234,9 @@ function finalizePresentation(base, rawItems, metric) {
     metricLabel: metric.label,
     unit: metric.unit,
     evidenceClass: metric.evidenceClass,
-    status: positive.length ? "assessed" : unassessedCount ? "not_assessed" : "zero_only",
+    status: positive.length ? "assessed"
+      : unassessedCount ? "not_assessed"
+        : notApplicableCount === rawItems.length ? "not_applicable" : "zero_only",
   };
 }
 
@@ -358,7 +367,9 @@ export function buildQuantizationExposurePresentation(analysis = {}, options = {
     groupOptions,
     colorOptions: [option("quantization", "Quantization state / risk")],
     legend: quantLegend(),
-    boundary: "Area encodes assessed MACs or logical traffic, not risk severity. Zero-MAC boundary ops are counted separately and become visible when a byte metric is selected. Runtime fusion, placement, and task accuracy remain unobserved.",
+    boundary: metricId === "macs"
+      ? "Area encodes assessed MACs, not risk severity. Operators for which a MAC count is not applicable are counted separately; operators requiring unresolved runtime dimensions remain not assessed. Runtime fusion, placement, and task accuracy remain unobserved."
+      : "Area encodes assessed logical traffic, not risk severity. Exact-zero and unassessed traffic rows are counted separately. Runtime fusion, placement, and task accuracy remain unobserved.",
   }, items, metric);
 }
 
@@ -491,6 +502,7 @@ export function renderEvidenceTreemap(container, presentation, { onSelect = null
     ["Groups mapped", `${presentation.mappedGroupCount} / ${presentation.assessedGroupCount}`],
     ["Exact zero", String(presentation.zeroCount)],
     ["Not assessed", String(presentation.unassessedCount)],
+    ...(presentation.notApplicableCount ? [["Not applicable", String(presentation.notApplicableCount)]] : []),
     ["Conservation", presentation.conservationStatus],
   ];
   for (const [label, value] of summaryRows) {

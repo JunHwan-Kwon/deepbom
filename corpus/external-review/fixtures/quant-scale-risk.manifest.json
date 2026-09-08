@@ -1,0 +1,16 @@
+{
+  "fixture": {
+    "bytes": 1048,
+    "expected": {
+      "maximum_quantization_risk": "risk",
+      "minimum_scale_ratio": 100000.0
+    },
+    "path": "quant-scale-risk.tflite",
+    "sha256": "cf04274f7758c08e7e93995a95eeaa48203da6753f94b14002731d4061ffac9b"
+  },
+  "generator": {
+    "numpy": "1.26.4",
+    "tensorflow": "2.11.1"
+  },
+  "schema": "deepbom.external_review_quant_risk_fixture.v1"
+}

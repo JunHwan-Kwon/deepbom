@@ -1176,7 +1176,7 @@ function renderEvidenceTreemapCanvas(analysis, filename, kind) {
   ctx.fillStyle = "#536273";
   ctx.font = "10px Inter, Arial, sans-serif";
   ctx.fillText(
-    `${formatNumber(presentation.items.length)}/${formatNumber(presentation.assessedCount)} positive/assessed; ${formatNumber(presentation.zeroCount)} exact zero; ${formatNumber(presentation.unassessedCount)} not assessed; conservation ${presentation.conservationStatus}`,
+    `${formatNumber(presentation.items.length)}/${formatNumber(presentation.assessedCount)} positive/assessed; ${formatNumber(presentation.zeroCount)} exact zero; ${formatNumber(presentation.unassessedCount)} not assessed; ${formatNumber(presentation.notApplicableCount || 0)} not applicable; conservation ${presentation.conservationStatus}`,
     48,
     y + 17,
     width - 96,
