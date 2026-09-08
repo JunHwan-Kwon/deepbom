@@ -315,6 +315,7 @@ scripts/check-landscape-math.mjs
 scripts/check-litert-runtime-assets.mjs
 scripts/check-live-product.mjs
 scripts/check-live-sw.mjs
+scripts/check-mcp-registry-metadata.mjs
 scripts/check-mcp-server.mjs
 scripts/check-metadata-model-adapters.mjs
 scripts/check-mlbom-conservation.mjs
@@ -548,6 +549,7 @@ scripts/write-build-metadata.mjs
 scripts/write-cloudflare-deploy-config.mjs
 scripts/write-google-corpus-measurement-baseline.mjs
 scripts/zenodo-release-lib.mjs
+server.json
 skills/deepbom/SKILL.md
 src/accumulator_atlas.rs
 src/accumulator_reachability.rs

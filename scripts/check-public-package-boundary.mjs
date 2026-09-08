@@ -26,6 +26,7 @@ assertEqual(members, expectedMembers, "npm package member allowlist");
 
 const packageDocument = JSON.parse(await readFile(path.join(packageRoot, "package.json"), "utf8"));
 assert(packageDocument.name === "deepbom", "Unexpected npm package name.");
+assert(packageDocument.mcpName === "io.github.JunHwan-Kwon/deepbom", "npm MCP Registry identity drifted.");
 assert(packageDocument.license === "Apache-2.0", "Public npm package must use Apache-2.0.");
 assert(packageDocument.private !== true, "Generated npm package must not inherit the private monorepo publication guard.");
 assert(packageDocument.repository?.url === "git+https://github.com/JunHwan-Kwon/deepbom.git", "npm repository identity drifted.");

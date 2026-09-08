@@ -76,6 +76,8 @@ async function verifyAllowlist(files) {
     "scripts/build-channel-artifacts.mjs",
     "scripts/build-public-source-export.mjs",
     "scripts/check-public-package-boundary.mjs",
+    "scripts/check-mcp-registry-metadata.mjs",
+    "server.json",
     "scripts/generate-cli-docs.mjs",
     "src/lib.rs",
     "web/lib/artifact-ir-context.js",

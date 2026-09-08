@@ -53,10 +53,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.96.9`:
+`1.96.10`:
 
 ```console
-DEEPBOM 1.96.9
+DEEPBOM 1.96.10
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -123,7 +123,9 @@ Installation and rule checks:
 
 Assistant tool access (Model Context Protocol over stdio, local process only):
   deepbom mcp
-  Tools: deepbom_capabilities, deepbom_audit, deepbom_diff
+  Tools: deepbom_capabilities, deepbom_audit, deepbom_diff, deepbom_explain_rule
+  Audit default: bounded human summary; request envelope, section, or pointer for detail
+  Local paths: launch directory, or roots declared by DEEPBOM_MCP_ALLOWED_ROOTS
 
 NVIDIA accelerator binding:
   --accelerator-profile <json>

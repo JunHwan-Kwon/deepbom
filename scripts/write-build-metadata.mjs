@@ -336,7 +336,7 @@ export function computeRulepackDigest({ publicDistribution = false } = {}) {
       if (optionalPrivate) continue;
       throw new Error(`Required public rulepack source is missing: ${item.path}`);
     }
-    const fullSource = readFileSync(absolute, "utf8");
+    const fullSource = readStableFileSync(absolute, "utf8");
     const source = sliceSource(fullSource, item);
     hash.update(`\n--- ${item.path} :: ${item.label} ---\n`);
     hash.update(source.replace(/\r\n/g, "\n"));
@@ -363,7 +363,7 @@ function computeBundleContentDigest({ publicDistribution = false } = {}) {
     .map(normalizePath)
     .filter((entry) => existsSync(path.join(root, entry)));
   const fileDigests = files.map((relativePath) => {
-    const bytes = readFileSync(path.join(root, relativePath));
+    const bytes = readStableFileSync(path.join(root, relativePath));
     return {
       path: relativePath,
       size: bytes.byteLength,
@@ -396,7 +396,7 @@ function computeBundleContentDigest({ publicDistribution = false } = {}) {
     },
     generator: {
       path: generatorPath,
-      sha256: sha256Hex(readFileSync(fileURLToPath(import.meta.url))),
+      sha256: sha256Hex(readStableFileSync(fileURLToPath(import.meta.url))),
       toolchain: {
         node: process.version,
         npm: toolVersion(process.platform === "win32" ? "npm.cmd" : "npm", ["--version"]),
@@ -425,6 +425,21 @@ function computeBundleContentDigest({ publicDistribution = false } = {}) {
       `directory excludes: ${manifest.selection.directory_excludes.join(", ")}`,
     ],
   };
+}
+
+function readStableFileSync(filePath, encoding = null) {
+  const transientCodes = new Set(["UNKNOWN", "EBUSY", "EPERM", "EACCES"]);
+  let lastError;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    try {
+      return encoding ? readFileSync(filePath, encoding) : readFileSync(filePath);
+    } catch (error) {
+      lastError = error;
+      if (process.platform !== "win32" || !transientCodes.has(error?.code) || attempt === 5) throw error;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50 * (attempt + 1));
+    }
+  }
+  throw lastError;
 }
 
 function collectBundleContentFiles({ publicDistribution = false } = {}) {

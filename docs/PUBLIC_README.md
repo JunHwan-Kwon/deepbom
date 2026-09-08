@@ -22,6 +22,21 @@ The pinned expected values and independent verifier are in
 require Rust and, for the Python channel, Python 3.9 or newer; maintainer setup
 is documented separately below.
 
+## Assistant integration
+
+Run the same local analyzer as an MCP server over stdio:
+
+```bash
+npx deepbom mcp
+```
+
+It exposes `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
+`deepbom_explain_rule` without uploading artifact bytes or using a hosted
+analysis endpoint. Audit calls default to a bounded human summary; detailed
+formats and large-model scan depth are explicit. Local paths are restricted to
+the launch directory unless `DEEPBOM_MCP_ALLOWED_ROOTS` is configured.
+Agent-facing usage guidance is in [the DEEPBOM skill](skills/deepbom/SKILL.md).
+
 Verified release channels expose the same analysis implementation:
 
 ```bash
@@ -41,14 +56,7 @@ deepbom explore model.tflite
 deepbom placement model.tflite --profiles xnnpack_cpu,tflite_coreml_delegate,litert_qualcomm_qnn
 deepbom graph model.onnx --format json --output artifact-graph.json
 deepbom audit model.onnx --conversion-receipt conversion-receipt.json --format cyclonedx
-npx deepbom mcp
 ```
-
-`npx deepbom mcp` serves the same local analysis to an assistant over the Model
-Context Protocol (stdio), exposing `deepbom_capabilities`, `deepbom_audit`, and
-`deepbom_diff`. Artifact bytes stay on the machine; there is no hosted analysis
-endpoint. Agent-facing usage guidance is in
-[the DEEPBOM skill](skills/deepbom/SKILL.md).
 
 The default is a terminal-sized evidence summary. `--json` and `--compact`
 expose complete format evidence; `--format envelope` provides the canonical

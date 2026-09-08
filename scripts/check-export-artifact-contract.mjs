@@ -346,6 +346,29 @@ const unregisteredMetricCoverage = buildMetricCoverageManifest({
 });
 expectEqual(unregisteredMetricCoverage.unregistered_computation_object_keys.join(","), "future_calculation", "Metric coverage discovery must reject a new structured calculation until it has report/viewer/export bindings.");
 expectEqual(unregisteredMetricCoverage.unregistered_analysis_object_keys.join(","), "future_calculation,future_rows,future_scalar", "Metric coverage must reject unowned scalar, array, and structured top-level analysis fields.");
+const artifactSetMetricCoverage = buildMetricCoverageManifest({
+  ...reportBoundaryAnalysis,
+  artifact_set: {
+    schema: "deepbom.artifact_set.v1",
+    artifact_set_sha256: "a".repeat(64),
+    files: [],
+  },
+});
+expectEqual(artifactSetMetricCoverage.unregistered_computation_object_keys.length, 0, "Artifact-set identity must remain owned by the artifact identity metric family.");
+expectEqual(artifactSetMetricCoverage.unregistered_analysis_object_keys.length, 0, "Artifact-set identity must not become an unowned top-level analysis field.");
+for (const format of ["gguf", "safetensors", "coreml", "executorch"]) {
+  const coverage = buildMetricCoverageManifest({
+    format,
+    artifact_set: {
+      schema: "deepbom.artifact_set.v1",
+      artifact_set_sha256: "b".repeat(64),
+      files: [],
+    },
+  });
+  expect(!coverage.unregistered_computation_object_keys.includes("artifact_set"), `${format} artifact-set identity must be owned by its serialized-format metric family.`);
+  const canonicalIrMetric = coverage.entries.find((entry) => entry.metric_id === "artifact.canonical_ir");
+  expectEqual(canonicalIrMetric?.report_section, "## Artifact Identity", `${format} canonical IR metric must bind to the serialized-artifact report identity section.`);
+}
 const reportBoundaryIdentity = {
   filename: "boundary_check.tflite",
   format: "tflite",

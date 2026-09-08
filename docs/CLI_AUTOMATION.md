@@ -75,9 +75,10 @@ deepbom audit model.tflite --format envelope \
 
 ## Assistant tool access
 
-`deepbom mcp` speaks the Model Context Protocol over stdio. It declares three
-tools — `deepbom_capabilities`, `deepbom_audit`, and `deepbom_diff` — and every
-call re-enters this CLI in a child process on the same machine. There is no
+`deepbom mcp` speaks the Model Context Protocol over stdio. It declares four
+tools: `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
+`deepbom_explain_rule`. Every call re-enters this CLI in a cancellable child
+process on the same machine. There is no
 hosted analysis endpoint and no artifact upload; the privacy contract is the one
 `capabilities` reports.
 
@@ -90,6 +91,16 @@ option that has not been reviewed here. Tool descriptions carry the finding-kind
 distinction and the static-evidence boundary, because the model reads them
 before it writes a summary. `scripts/check-mcp-server.mjs` rejects a version
 that drops either statement.
+
+`deepbom_audit` defaults to a bounded human summary. Complete evidence requires
+an explicit `output_format`, `section`, or `pointer`; `scan` lets the caller
+select `structure` or streamed `integrity` work for large GGUF and SafeTensors
+artifacts. Local paths are restricted to the launch directory by default. Set
+`DEEPBOM_MCP_ALLOWED_ROOTS` to a platform-delimited allowlist when the server
+must inspect other directories. `DEEPBOM_MCP_MAX_RESPONSE_BYTES`,
+`DEEPBOM_MCP_MAX_FRAME_BYTES`, `DEEPBOM_MCP_TOOL_TIMEOUT_MS`,
+`DEEPBOM_MCP_MAX_CONCURRENT`, and `DEEPBOM_MCP_MAX_QUEUE` are bounded controls;
+raising one is a deliberate host policy decision.
 
 MCP is a transport, not an analysis command: it produces no evidence document of
 its own and therefore declares no output contract in

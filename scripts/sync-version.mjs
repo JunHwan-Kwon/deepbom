@@ -19,6 +19,13 @@ if (validateIndex >= 0) {
 
 const updates = new Map();
 await updateJson("package.json", (document) => ({ ...document, version: contract.npmVersion }));
+await updateJson("server.json", (document) => {
+  document.version = contract.npmVersion;
+  for (const entry of document.packages || []) {
+    if (entry.registryType === "npm" && entry.identifier === "deepbom") entry.version = contract.npmVersion;
+  }
+  return document;
+});
 await updateJson("pkg/package.json", (document) => ({ ...document, version: contract.npmVersion }));
 await updateJson("package-lock.json", (document) => {
   document.version = contract.npmVersion;

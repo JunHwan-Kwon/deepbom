@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { resolveNpmCommand } from "./run-utils.mjs";
@@ -14,6 +14,9 @@ const releaseRoot = path.join(root, ".local-validation", "channel-release");
 const manifestPath = path.join(releaseRoot, "channel-release-manifest.json");
 const platformSmoke = process.argv.includes("--platform-smoke");
 const releaseContract = process.argv.includes("--release-contract");
+const commandTimeoutMs = boundedPositiveInteger(process.env.DEEPBOM_CHANNEL_COMMAND_TIMEOUT_MS, 5 * 60_000);
+const mcpTimeoutMs = boundedPositiveInteger(process.env.DEEPBOM_CHANNEL_MCP_TIMEOUT_MS, 5 * 60_000);
+const installProbeRunId = `${process.pid}-${Date.now()}`;
 if (platformSmoke && releaseContract) throw new Error("--platform-smoke and --release-contract are mutually exclusive.");
 if (!process.argv.includes("--no-build")) run(process.execPath, ["scripts/build-channel-artifacts.mjs"]);
 const buildMetadataPath = path.join(root, "web", "lib", "build-metadata.js");
@@ -59,16 +62,28 @@ if (npmCli) {
   const npmSelfTest = json(runNpmExecutable(npmCli, ["self-test", "--compact"]).stdout);
   assert.equal(npmSelfTest.status, "pass", "installed npm executable self-test failed");
   const mcpFrames = exchangeMcp(process.execPath, [npmCli, "mcp"], [
-    { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "channel-check", version: "0" } } },
+    { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "channel-check", version: "0" } } },
     { jsonrpc: "2.0", method: "notifications/initialized" },
-    { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "deepbom_audit", arguments: { path: path.resolve(fileCases[1].path) } } },
+    { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "deepbom_audit", arguments: { path: path.resolve(fileCases[1].path), output_format: "envelope" } } },
+    { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "deepbom_audit", arguments: { path: path.resolve(fileCases[0].path), output_format: "envelope" } } },
+    { jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "deepbom_audit", arguments: { path: path.resolve(fileCases[2].path), output_format: "envelope", scan: "structure" } } },
   ]);
-  assert.equal(mcpFrames.length, 2, "installed npm MCP transport must not answer notifications");
-  assert.equal(mcpFrames[0].result.serverInfo.name, "deepbom", "installed npm MCP initialization failed");
-  const mcpAudit = json(mcpFrames[1].result.content[0].text);
+  assert.equal(mcpFrames.length, 4, "installed npm MCP transport must not answer notifications");
+  const mcpById = new Map(mcpFrames.map((frame) => [frame.id, frame]));
+  assert.equal(mcpById.get(1).result.serverInfo.name, "deepbom", "installed npm MCP initialization failed");
+  assert.equal(mcpById.get(1).result.protocolVersion, "2025-11-25", "installed npm MCP protocol negotiation drifted");
+  const mcpAudit = json(mcpById.get(2).result.content[0].text);
   assert.equal(mcpAudit.schema, "deepbom.artifact_evidence_envelope.v1", "installed npm MCP audit contract diverged");
   assert.equal(mcpAudit.identity.sha256, createHash("sha256").update(readFileSync(fileCases[1].path)).digest("hex"),
     "installed npm MCP audit identity diverged");
+  const mcpTflite = json(mcpById.get(3).result.content[0].text);
+  assert.equal(mcpTflite.identity.format, "tflite", "installed npm MCP could not reach its packaged TFLite WASM runtime");
+  assert.equal(mcpTflite.identity.sha256, createHash("sha256").update(readFileSync(fileCases[0].path)).digest("hex"),
+    "installed npm MCP TFLite identity diverged");
+  const mcpGguf = json(mcpById.get(4).result.content[0].text);
+  assert.equal(mcpGguf.identity.format, "gguf", "installed npm MCP bounded GGUF scan failed");
+  assert.equal(mcpGguf.identity.sha256, createHash("sha256").update(readFileSync(fileCases[2].path)).digest("hex"),
+    "installed npm MCP GGUF identity diverged");
 }
 if (platformSmoke || releaseContract) {
   assert.deepEqual(json(run(engine, capabilityArgs).stdout), canonicalCapabilities,
@@ -205,8 +220,7 @@ if (platformSmoke) {
 }
 
 async function installNpmPackage(release) {
-  const directory = path.join(releaseRoot, "install-probe", "npm");
-  await rm(directory, { recursive: true, force: true });
+  const directory = path.join(releaseRoot, "install-probe", `npm-${installProbeRunId}`);
   await mkdir(directory, { recursive: true });
   await writeFile(path.join(directory, "package.json"), '{"private":true}\n');
   const tarball = path.join(releaseRoot, release.channels.npm.package);
@@ -218,8 +232,7 @@ async function installNpmPackage(release) {
 }
 
 async function installPythonWheel(release) {
-  const directory = path.join(releaseRoot, "install-probe", "python");
-  await rm(directory, { recursive: true, force: true });
+  const directory = path.join(releaseRoot, "install-probe", `python-${installProbeRunId}`);
   run("python", ["-m", "venv", directory]);
   const python = path.join(directory, process.platform === "win32" ? "Scripts/python.exe" : "bin/python");
   const wheel = path.join(releaseRoot, release.channels.python.path);
@@ -265,13 +278,32 @@ async function corruptLastByte(file) {
 }
 
 function run(command, args, environment = {}, expectSuccess = true, cwd = root) {
-  const result = spawnSync(command, args, {
-    cwd,
-    encoding: "utf8",
-    env: { ...process.env, ...environment },
-    maxBuffer: 256 * 1024 * 1024,
-  });
-  if (expectSuccess && result.status !== 0) throw new Error(`${command} ${args.join(" ")} failed\n${result.stdout}\n${result.stderr}`);
+  const label = `${path.basename(command)} ${args.slice(0, 4).join(" ")}`;
+  const startedAt = Date.now();
+  console.log(`[channel-check] start ${label}`);
+  let result;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    result = spawnSync(command, args, {
+      cwd,
+      encoding: "utf8",
+      env: { ...process.env, ...environment },
+      maxBuffer: 256 * 1024 * 1024,
+      timeout: commandTimeoutMs,
+    });
+    if (!expectSuccess || result.status === 0 || !isTransientWindowsModuleReadFailure(result) || attempt === 1) break;
+    console.log(`[channel-check] retry ${label} after transient Windows module read failure`);
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
+  }
+  const elapsedSeconds = ((Date.now() - startedAt) / 1000).toFixed(1);
+  console.log(`[channel-check] end ${label} (${elapsedSeconds}s, status=${result.status ?? result.signal ?? "unknown"})`);
+  if (result.error?.code === "ETIMEDOUT") {
+    throw new Error(`${command} ${args.join(" ")} exceeded ${commandTimeoutMs} ms`);
+  }
+  if (expectSuccess && result.status !== 0) {
+    const executionError = result.error ? `\n${result.error.stack || result.error.message}` : "";
+    const signal = result.signal ? `\nsignal=${result.signal}` : "";
+    throw new Error(`${command} ${args.join(" ")} failed\n${result.stdout}\n${result.stderr}${executionError}${signal}`);
+  }
   return result;
 }
 
@@ -288,7 +320,9 @@ function exchangeMcp(command, args, messages) {
     env: process.env,
     input: `${messages.map((message) => JSON.stringify(message)).join("\n")}\n`,
     maxBuffer: 256 * 1024 * 1024,
+    timeout: mcpTimeoutMs,
   });
+  if (result.error?.code === "ETIMEDOUT") throw new Error(`installed npm MCP exchange exceeded ${mcpTimeoutMs} ms`);
   if (result.status !== 0) throw new Error(`${command} ${args.join(" ")} failed\n${result.stdout}\n${result.stderr}`);
   if (result.stderr.trim()) throw new Error(`installed npm MCP wrote to stderr: ${result.stderr.trim()}`);
   return result.stdout.split("\n").filter(Boolean).map((line) => JSON.parse(line));
@@ -296,4 +330,15 @@ function exchangeMcp(command, args, messages) {
 
 function json(source) {
   return JSON.parse(source.replace(/^\uFEFF/, ""));
+}
+
+function boundedPositiveInteger(value, fallback) {
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function isTransientWindowsModuleReadFailure(result) {
+  if (process.platform !== "win32") return false;
+  const diagnostic = `${result.error?.message || ""}\n${result.stderr || ""}`;
+  return /ERR_MODULE_NOT_FOUND|UNKNOWN: unknown error, (?:open|stat)/.test(diagnostic);
 }

@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "cd602d2fe46810dc30d7eecf64dcf387dcdcab9b",
+  "source_commit": "9f836cb09ee1d6c9b101217e624e0de86471dd55",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 989,
+  "file_count": 991,
   "files": [
     {
       "path": ".gitattributes",
@@ -37,8 +37,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 30728,
-      "sha256": "8114df399d62e4b8a76750c844d5b17bf17fa5174a0336af310240a1698c8735"
+      "byte_length": 32143,
+      "sha256": "3afd2762d463ee78ab60e587f860a2bf90c7a1e9ab118ab5084708af144eb968"
     },
     {
       "path": "CITATION.cff",
@@ -52,13 +52,13 @@
     },
     {
       "path": "Cargo.lock",
-      "byte_length": 8652,
-      "sha256": "bac73ed0e6b823b13e24bc67aafee566d454078f379b9a76b4bb5a97acef491a"
+      "byte_length": 8653,
+      "sha256": "7d2dedffa24802471f25cd6c9a1a1597efc2e67c838dbbb8b9b3650f7e322c70"
     },
     {
       "path": "Cargo.toml",
-      "byte_length": 981,
-      "sha256": "2502ae51861ac74f238d18ce35e00bb64bf07a6e165e1d4521dc68e85d51629e"
+      "byte_length": 982,
+      "sha256": "40d57ac26d9be5ad9c95042d7d27e010bc51ed9dc714e25c9b7f09324d7e8eea"
     },
     {
       "path": "LICENSE",
@@ -67,8 +67,8 @@
     },
     {
       "path": "README.md",
-      "byte_length": 8222,
-      "sha256": "a696e82c480861d1d7f1d0e38e25352e7c7b2a07ea7d500f1c7426ae28161f44"
+      "byte_length": 8428,
+      "sha256": "dde76ae14489634dbdc8cb1521cc46a3f0355545ec489b2783ff5d45c0186718"
     },
     {
       "path": "SECURITY.md",
@@ -82,8 +82,8 @@
     },
     {
       "path": "bin/deepbom-automation.mjs",
-      "byte_length": 17156,
-      "sha256": "d6ca1d750605d6cba588760007efe49f8b7983b5562a703c59809930364eb5fa"
+      "byte_length": 17673,
+      "sha256": "12317272ea4a6b948717e07527bfb213b17ce6ff75fafe32269658c3bd2f317d"
     },
     {
       "path": "bin/deepbom-input.mjs",
@@ -92,13 +92,13 @@
     },
     {
       "path": "bin/deepbom-mcp.mjs",
-      "byte_length": 11788,
-      "sha256": "1e758cbce7ca9aabec4934a72e2feae276323668b1e7a4e0c5925886d04306a9"
+      "byte_length": 28223,
+      "sha256": "c5deef92e71a6eacab3d0e303a8cab5861fca883256197e5fe818e6bf64a3703"
     },
     {
       "path": "bin/deepbom.mjs",
-      "byte_length": 107483,
-      "sha256": "6f53f88e6c8586020131b4946f0f04c3312babc4aea5ccbcfd670e60745e8bdb"
+      "byte_length": 107676,
+      "sha256": "a4394a892e7b3edba80d37cdf310ce24b38667343e51726e4be483c9a3cf769f"
     },
     {
       "path": "bin/graph-png-export.mjs",
@@ -137,13 +137,13 @@
     },
     {
       "path": "channels/cargo/Cargo.lock",
-      "byte_length": 12291,
-      "sha256": "b022ef12af8cb3753c21766e934a3e118bd7d0f229a9ad37b5d5c9ddf9a93155"
+      "byte_length": 12292,
+      "sha256": "bfc10c9e5762e65ef843b03548f4c7b6002678f3bf44b603c9489410eb8b415d"
     },
     {
       "path": "channels/cargo/Cargo.toml",
-      "byte_length": 751,
-      "sha256": "b983b953aa1b2852724141681eb0ebc3f9c70dd530212378e35cd36bce845601"
+      "byte_length": 752,
+      "sha256": "2174c78fd91433a5790fceeb0787e59a3274e4f198bca0879fb93521f71e1947"
     },
     {
       "path": "channels/cargo/README.md",
@@ -182,8 +182,8 @@
     },
     {
       "path": "channels/python/pyproject.toml",
-      "byte_length": 901,
-      "sha256": "49355fc27f16c23f27481b1cf906c053596bbbb55d6ed019ce8b7d35a0372ca7"
+      "byte_length": 902,
+      "sha256": "5fa10bc57ea11e43f2c923668049578d012309c68129117688f9f474f548dabb"
     },
     {
       "path": "channels/python/requirements-build.txt",
@@ -197,8 +197,8 @@
     },
     {
       "path": "channels/python/src/deepbom/__init__.py",
-      "byte_length": 94,
-      "sha256": "a1d2a6851a6523cd5ec12e56def5f8b85b726113a38f2c2554080ec4352b4db9"
+      "byte_length": 95,
+      "sha256": "c09f368273acb3c3f9fe50c216517f15b87884243dcf9fedad5888399d8c1016"
     },
     {
       "path": "channels/python/src/deepbom/__main__.py",
@@ -217,13 +217,13 @@
     },
     {
       "path": "config/delivery-operations.v1.json",
-      "byte_length": 45239,
-      "sha256": "30ef8e98c21556b6218788ebc9840bb1604a0647525c41562a0c35495becbaba"
+      "byte_length": 49712,
+      "sha256": "95d74f35f5fc5c356f36d116448ed427401bbeaded1c3c497194373a20c60151"
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 36416,
-      "sha256": "394e4daf1b7ecff5cea94f369911ae9018a1625aeae9eb30aaee3f6edac414d5"
+      "byte_length": 36468,
+      "sha256": "9ded2c8c56ff7b1b5b7026cfdb5709fd69f106ef18a487ac0e9611e585f71cff"
     },
     {
       "path": "corpus/README.md",
@@ -497,13 +497,13 @@
     },
     {
       "path": "docs/CLI_AUTOMATION.md",
-      "byte_length": 7625,
-      "sha256": "a9409078d6252ee899030acccefe3b16806abd9319e813bda23abe696fb62e43"
+      "byte_length": 8296,
+      "sha256": "24adeb43563553d0a772ce89b8718b98a72831b31e53e5e82778524277f9ff01"
     },
     {
       "path": "docs/CLI_REFERENCE.md",
-      "byte_length": 10010,
-      "sha256": "f1f55d688565a9c9c710edd15a746ccd12d33654c1349eba5695c821ec5de7f2"
+      "byte_length": 10203,
+      "sha256": "81302b1613fcf13b9331983d6e3e231b113cdb124c756d78e3a8a26268c72f85"
     },
     {
       "path": "docs/CYCLONEDX_20_QUANTIZATION_CONTRIBUTION.md",
@@ -512,8 +512,8 @@
     },
     {
       "path": "docs/DELIVERY_OPERATIONS.md",
-      "byte_length": 13081,
-      "sha256": "6cb802b28f2f812cbea47815d5e22d43f00e881e3a17e158564d597f35796635"
+      "byte_length": 14013,
+      "sha256": "a3c3860203fc55faba820d59be49067a090c7864b2e51c4f39ca2f77be7330c2"
     },
     {
       "path": "docs/KNOWN_ISSUES.md",
@@ -547,8 +547,8 @@
     },
     {
       "path": "docs/PUBLIC_README.md",
-      "byte_length": 8222,
-      "sha256": "a696e82c480861d1d7f1d0e38e25352e7c7b2a07ea7d500f1c7426ae28161f44"
+      "byte_length": 8428,
+      "sha256": "dde76ae14489634dbdc8cb1521cc46a3f0355545ec489b2783ff5d45c0186718"
     },
     {
       "path": "docs/REPRESENTATIVE_DATASET_CAPTURE.md",
@@ -618,12 +618,12 @@
     {
       "path": "examples/expected-output/gpu-partition-probe.expected.json",
       "byte_length": 1012,
-      "sha256": "3a795750d88ffe2a3e2a00e85bc20a06f8d231a415ad883c15dfe7d8e02c296c"
+      "sha256": "7e2eee1486cab27e4f47ec922e2767453fd9c6b1a52d5dd04e302f380b74181d"
     },
     {
       "path": "examples/expected-output/gpu-partition-probe.human.txt",
-      "byte_length": 665,
-      "sha256": "236464a2144838fd7147b552fa7ab40576e23cad022fde28106b27acd78c7311"
+      "byte_length": 666,
+      "sha256": "735283b53b0c036cad7a5a4a4c3dd07b31cdb308f260b7603f3ecb0f8bda3573"
     },
     {
       "path": "native/capture-run.schema.json",
@@ -712,13 +712,13 @@
     },
     {
       "path": "package-lock.json",
-      "byte_length": 41689,
-      "sha256": "054e1e241f9875c7fe93bcc4b81057e54336dddbf214b0b5327972cbd538eb2f"
+      "byte_length": 41691,
+      "sha256": "b2048df67fc092dda404a85572bb2bf996bf55fbb9ee71a2f93d3e032361d88e"
     },
     {
       "path": "package.json",
-      "byte_length": 23247,
-      "sha256": "33451ff5ca6a0e3b8a061bff79b37f6417c06e835403938b04bc4544e7f56474"
+      "byte_length": 23369,
+      "sha256": "956965fbcc076f9c6413a165603ba4fb91983d3a7fe410b25428f5d01081df19"
     },
     {
       "path": "pkg/LICENSE",
@@ -727,8 +727,8 @@
     },
     {
       "path": "pkg/package.json",
-      "byte_length": 494,
-      "sha256": "754008b1895a8ecdf204c1e8cb3911724e91d531c03e0c62192a30a4ff5c83e0"
+      "byte_length": 495,
+      "sha256": "12a1b96a4d0a7d46947d95a7ce28946483c90de71ff92b3061c86270a58b9b4d"
     },
     {
       "path": "pkg/tflite_wasm_audit.d.ts",
@@ -912,8 +912,8 @@
     },
     {
       "path": "release/version.json",
-      "byte_length": 97,
-      "sha256": "b93a89872a8a081b5466b93937b0f992d241a0bbb567dccc1505a909b5dc0ab7"
+      "byte_length": 98,
+      "sha256": "9220446dc8375170dcfbfcc251cd4b43cfa077129413b7fd5c00ffc623e52864"
     },
     {
       "path": "requirements-onnx-corpus.txt",
@@ -942,8 +942,8 @@
     },
     {
       "path": "scripts/build-channel-artifacts.mjs",
-      "byte_length": 18422,
-      "sha256": "81700786e3b265428f8dc049659252a414e2a8edcf62fb13793c516705d85113"
+      "byte_length": 18458,
+      "sha256": "21d5d1c8aad373ebbd61ae88fdddf5fc25fdf1ac326a7fc4095ba7fffa73759b"
     },
     {
       "path": "scripts/build-coreml-legacy-quantization-corpus.mjs",
@@ -987,8 +987,8 @@
     },
     {
       "path": "scripts/build-public-source-export.mjs",
-      "byte_length": 9209,
-      "sha256": "340bae4b98b1b5f4b4d8ef4430739969c2205dda4f4c72349a2c6148c4519b1c"
+      "byte_length": 9275,
+      "sha256": "1c670d728dfddd025b9fc553395bfbe81143afee4bb77748c37f23e39dc142c9"
     },
     {
       "path": "scripts/build-release.mjs",
@@ -1097,8 +1097,8 @@
     },
     {
       "path": "scripts/check-all.mjs",
-      "byte_length": 11247,
-      "sha256": "dff501fc12bba8672d33e7e94e73e2fee5e31b05f5d9802f8ddf7445b564fe19"
+      "byte_length": 11291,
+      "sha256": "2350e64b181921304b6d3f36f7e5a2277aa9a03afef7f34baf6b1d4d53cae41a"
     },
     {
       "path": "scripts/check-analysis-invariants.mjs",
@@ -1122,8 +1122,8 @@
     },
     {
       "path": "scripts/check-artifact-ir.mjs",
-      "byte_length": 34638,
-      "sha256": "94150200f67e2da23c432be86528d14b859cc67cdba075da8004c3d95f095276"
+      "byte_length": 34800,
+      "sha256": "9dde02882d0d7f7b4c2f8403ca962939ee5ee5d848815507a4669586ef44acdc"
     },
     {
       "path": "scripts/check-assert.mjs",
@@ -1172,8 +1172,8 @@
     },
     {
       "path": "scripts/check-channel-equivalence.mjs",
-      "byte_length": 17671,
-      "sha256": "fd35e1b0a78145afb7c01825e9bd4763ff8016904f00cf04b08826b3edbe0cb4"
+      "byte_length": 20781,
+      "sha256": "a6e7f338750ee72fbef46adb7b53715a6aa9244ab27c386256164a90004b2db0"
     },
     {
       "path": "scripts/check-channel-vitality-viewer.mjs",
@@ -1187,8 +1187,8 @@
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
-      "byte_length": 33176,
-      "sha256": "d16f039b8a6a6b294df212e383a0f02757666ca9a7bd0acd0d84538ce0d655e9"
+      "byte_length": 34192,
+      "sha256": "ac99d3cde759b8af14ec6eb0de81eaf5084c8a31031d8f8827dffdc3c4fdd3ac"
     },
     {
       "path": "scripts/check-cli-automation.mjs",
@@ -1317,8 +1317,8 @@
     },
     {
       "path": "scripts/check-deploy.mjs",
-      "byte_length": 4139,
-      "sha256": "7a68cee540f45457522cc7d45dbe7e8eab028c1625aebddb700ef4f29879a45e"
+      "byte_length": 4465,
+      "sha256": "198be10c71035719aa2232f7beba1191dc0fe93a6f0c55610fd82d0bf847a4b6"
     },
     {
       "path": "scripts/check-deployment-delta-viewer.mjs",
@@ -1442,8 +1442,8 @@
     },
     {
       "path": "scripts/check-export-artifact-contract.mjs",
-      "byte_length": 106795,
-      "sha256": "b19fb879a9b0bb92a37283021c162869b4be3f2a2947b242f5a8e6e3382339b5"
+      "byte_length": 108059,
+      "sha256": "1ef6917aa1df4fe88027661a06f16498a93ffe66bc6310a78275eb5cbdfa991d"
     },
     {
       "path": "scripts/check-export-contract-documents.mjs",
@@ -1596,9 +1596,14 @@
       "sha256": "9922cb3d25e8bc12313d556a1680f727c5953c347e8aae048d84ecc3a75667b1"
     },
     {
+      "path": "scripts/check-mcp-registry-metadata.mjs",
+      "byte_length": 1896,
+      "sha256": "5cfcbaba579704cac5482d9115bfcf64a0909ab9963463c87381ba4a281eb56c"
+    },
+    {
       "path": "scripts/check-mcp-server.mjs",
-      "byte_length": 6644,
-      "sha256": "7a37f4bbe67e2296ae328ed559ae246f8f7acfef48eaba91f4cf3549c9665cb7"
+      "byte_length": 15586,
+      "sha256": "653bfc2f61f42d4cc2474df2e320e20a4e1d883d251ee59cdf64b6790c72e17e"
     },
     {
       "path": "scripts/check-metadata-model-adapters.mjs",
@@ -1872,8 +1877,8 @@
     },
     {
       "path": "scripts/check-public-package-boundary.mjs",
-      "byte_length": 7691,
-      "sha256": "0f725b567c9eba99461b74cc474427d02e8915725e95562985b8122b2f98b770"
+      "byte_length": 7799,
+      "sha256": "546b4d9f2499b8d04cb70c1115a3888a88c2925d5463e6791b8d09a860deb351"
     },
     {
       "path": "scripts/check-public-product-boundary.mjs",
@@ -2152,8 +2157,8 @@
     },
     {
       "path": "scripts/check-tier.mjs",
-      "byte_length": 4926,
-      "sha256": "c6b88ded2fe61016a9162d5c2750686391f064f72c51076c2ef6a851fe250206"
+      "byte_length": 4969,
+      "sha256": "c8fc32ecc07aca4bd685ec10412031063e7cadbfcdd5e72beb7a7ee189b713c9"
     },
     {
       "path": "scripts/check-wasm-hardening.mjs",
@@ -2522,8 +2527,8 @@
     },
     {
       "path": "scripts/run-release-validation.mjs",
-      "byte_length": 9467,
-      "sha256": "b4d7f72340217f32de4cfbe7eaca60d5146e11bfc2d5c4ee00706e3e4ee035eb"
+      "byte_length": 9582,
+      "sha256": "16a7fd436880ff9504127af0d36525f278aff930a8af046195f77d62d7788f80"
     },
     {
       "path": "scripts/run-utils.mjs",
@@ -2597,8 +2602,8 @@
     },
     {
       "path": "scripts/sync-version.mjs",
-      "byte_length": 4657,
-      "sha256": "2c5dcb9a0d01c8dc980cd46573b5b9333eeac567570aead5bab8c3e8700037a6"
+      "byte_length": 4932,
+      "sha256": "ced6827375d2be082af5381abae2fb80c5c35bcb18c3028ec229ab40cf9cf146"
     },
     {
       "path": "scripts/tensorrt-capture-lib.mjs",
@@ -2692,8 +2697,8 @@
     },
     {
       "path": "scripts/verify-public-source-export.mjs",
-      "byte_length": 8074,
-      "sha256": "ec9fb557ba25605984646b17830a7978947a3d9979576c8565aabc35e30fb30f"
+      "byte_length": 8254,
+      "sha256": "20aba928fb2fd68b285319b6697dc19b0948b3cf4ed13e9b6270917e6632dec1"
     },
     {
       "path": "scripts/verify-python-wheel-matrix.py",
@@ -2742,8 +2747,8 @@
     },
     {
       "path": "scripts/write-build-metadata.mjs",
-      "byte_length": 19604,
-      "sha256": "b9cc28295e0691634d676b375f1f3fdecbaed6ddd6af86fb48d43e75b92a4a6d"
+      "byte_length": 20190,
+      "sha256": "6653b3020f00ab4d05fe5b4df31170660ed1d24cad4a4ed0d14be1b25e9dcade"
     },
     {
       "path": "scripts/write-cloudflare-deploy-config.mjs",
@@ -2761,9 +2766,14 @@
       "sha256": "9800b6f6a64b2e2f3c38975baad3b0397e1af2cb345db08ecd1c2578b0b2a941"
     },
     {
+      "path": "server.json",
+      "byte_length": 712,
+      "sha256": "86d293f5c972c6ec8547b7ce4a0806b8c6e5762fecffdeeb5fc74e988f2b114c"
+    },
+    {
       "path": "skills/deepbom/SKILL.md",
-      "byte_length": 5974,
-      "sha256": "63075a358dba5b39461c3ba7e9ff7e655a5880ac240c22ca66c32659a2d00f0e"
+      "byte_length": 6385,
+      "sha256": "dfedfa1b57ae5444ce70733a4757704db09eeeb27a1a2e4e9f67b186f22524cb"
     },
     {
       "path": "src/accumulator_atlas.rs",
@@ -3062,8 +3072,8 @@
     },
     {
       "path": "web/index.html",
-      "byte_length": 142004,
-      "sha256": "0c6b7bf2736e6b0160c8b0dbc2246645678724251f330e257a75fa6b791192c0"
+      "byte_length": 142006,
+      "sha256": "e40a19cd331818154c7d6b108d0bb59f955ed7c7ade0063ab254eb76f232bd67"
     },
     {
       "path": "web/lib/accelerator-binding.js",
@@ -3127,8 +3137,8 @@
     },
     {
       "path": "web/lib/app-config.js",
-      "byte_length": 4761,
-      "sha256": "6f38aa23afa54548502a02a5fd073d777d4ebbc0af7ce1932b730b71c82003ef"
+      "byte_length": 4762,
+      "sha256": "4577dd3404f74db630251a07efbe2108151b10d799d94446d328cebd6242fe95"
     },
     {
       "path": "web/lib/app-deepbom-workspace.js",
@@ -3177,8 +3187,8 @@
     },
     {
       "path": "web/lib/artifact-ir-context.js",
-      "byte_length": 9217,
-      "sha256": "cf079ab7b89180b4904e568bb0c1a9a5a6811f38176f767140d981723acc4972"
+      "byte_length": 9196,
+      "sha256": "50819db2a59dd6af31e2e5cf045a7b81d6520eccc3e631d301cc6ab2b3569408"
     },
     {
       "path": "web/lib/artifact-ir-runtime.js",
@@ -3288,7 +3298,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 82072,
-      "sha256": "adc3a661b5f399f46a30f706c55ac706500bc5323c615c954d6ef4daced48444"
+      "sha256": "d602d889308ffc2ac6a83c412c11545c0931cc9b9d54c365d4184b446f9f58fc"
     },
     {
       "path": "web/lib/bundle.js",
@@ -3777,8 +3787,8 @@
     },
     {
       "path": "web/lib/metric-coverage.js",
-      "byte_length": 207385,
-      "sha256": "d1b4da9fca0bdfb6281ed45ef845d97e4f474f69eccf5fdce9cbb0ecc7525b6f"
+      "byte_length": 207559,
+      "sha256": "cba6f2faedcbbccdc38bc60401a145d558b451ed3e0e0f2bf6c3ac323a0b1463"
     },
     {
       "path": "web/lib/modal-accessibility.js",
@@ -4913,7 +4923,7 @@
     {
       "path": "web/sw.js",
       "byte_length": 15725,
-      "sha256": "816cd873df1f25dcb214f63900f5301c08e956eca5adaffa521e479529402fa5"
+      "sha256": "16827dbead12ca93c536963c249e2993593492ffbc75d1e31d7dfe380f90dd72"
     },
     {
       "path": "web/test.html",

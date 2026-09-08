@@ -31,6 +31,7 @@ const CHECKS = [
   "scripts/check-cli.mjs",
   "scripts/generate-cli-docs.mjs --check",
   "scripts/check-cli-automation.mjs",
+  "scripts/check-mcp-registry-metadata.mjs",
   "scripts/check-public-product-boundary.mjs",
   "scripts/check-evaluation-briefs.mjs",
   "scripts/generate-browser-target-profiles.mjs --check",

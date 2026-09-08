@@ -48,6 +48,7 @@ assert(packageDocument.private === true, "Public source root must retain the acc
 assert(packageDocument.license === "Apache-2.0", "Public source package metadata license drifted.");
 assert(packageDocument.homepage === "https://deepbom.org", "Public source homepage metadata drifted.");
 assert(packageDocument.repository?.url === "git+https://github.com/JunHwan-Kwon/deepbom.git", "Public source repository metadata drifted.");
+assert(packageDocument.mcpName === "io.github.JunHwan-Kwon/deepbom", "Public source MCP Registry identity drifted.");
 assert(packageDocument.bugs?.url === "https://github.com/JunHwan-Kwon/deepbom/issues", "Public source issue-tracker metadata drifted.");
 assert(lockDocument.packages?.[""]?.license === "Apache-2.0", "Public source lockfile root license drifted.");
 assert(wasmPackageDocument.license === "Apache-2.0", "Public WASM package metadata license drifted.");
@@ -74,6 +75,8 @@ for (const required of [
   "scripts/check-no-main-thread-heavy-wasm.mjs",
   "scripts/run-release-validation.mjs",
   "scripts/check-public-package-boundary.mjs",
+  "scripts/check-mcp-registry-metadata.mjs",
+  "server.json",
   "scripts/generate-cli-docs.mjs",
   "web/lib/static-audit-worker-protocol.js",
   "web/lib/tflite-worker-rpc.js",

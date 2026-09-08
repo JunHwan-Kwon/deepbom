@@ -109,6 +109,7 @@ for (const format of ["gguf", "safetensors"]) {
   assert.equal(context.primary_view.artifact_ir, context.artifact_ir, `${format} graphless consumer Artifact IR identity`);
   assert.equal(context.primary_view.artifact_ir_primary_scope_ref, null, `${format} graphless consumer primary scope`);
   assert.equal(context.primary_view.artifact_ir_nested_scope_count, 0, `${format} graphless consumer nested scope count`);
+  assert.equal(Object.hasOwn(context.primary_view, "on_device_llm"), false, `${format} graphless consumer view must not invent an absent optional LLM contract`);
 }
 
 const recursiveOnnx = runGraph("scripts/fixtures/onnx_recursive_scope.onnx");

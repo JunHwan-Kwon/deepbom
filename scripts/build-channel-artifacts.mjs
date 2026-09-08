@@ -69,6 +69,7 @@ await copyFile(publicLicense, path.join(npmRoot, "LICENSE"));
 await writeFile(path.join(npmRoot, "package.json"), `${JSON.stringify({
   name: "deepbom",
   version: packageDocument.version,
+  mcpName: packageDocument.mcpName,
   description: "Local multi-format deployment-artifact analysis for on-device AI models",
   type: "module",
   bin: { deepbom: "bin/deepbom.mjs" },

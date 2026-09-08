@@ -29,10 +29,16 @@ expect(deliveryOperations.execution_policy?.cross_platform_equivalence?.includes
   "Delivery operations must preserve six-target platform execution.");
 const successfulWebPreflight = deliveryOperations.observations?.find((row) =>
   row.kind === "private_web_preflight" && row.version === packageManifest.version && row.conclusion === "success");
-expect(deployGateCheckCount > 0 && successfulWebPreflight?.check_count === deployGateCheckCount,
-  "Delivery operations must bind the current bounded web-preflight check count.");
-expect(Number(successfulWebPreflight?.elapsed_seconds) > 0
-  && Number(successfulWebPreflight.elapsed_seconds) <= Number(deliveryOperations.budgets?.private_web_preflight_seconds),
+const successfulWebPreflightBasis = deliveryOperations.observations?.find((row) =>
+  row.kind === "private_web_preflight_basis" && row.version === packageManifest.version && row.conclusion === "success");
+const webPreflightEvidence = successfulWebPreflight || successfulWebPreflightBasis;
+expect(deployGateCheckCount > 0 && (
+  successfulWebPreflight?.check_count === deployGateCheckCount
+  || (successfulWebPreflightBasis?.check_count === deployGateCheckCount - 1
+    && successfulWebPreflightBasis.command === "node scripts/check-deploy.mjs --establish-observation")
+), "Delivery operations must bind the current bounded web-preflight or its non-self-referential basis.");
+expect(Number(webPreflightEvidence?.elapsed_seconds) > 0
+  && Number(webPreflightEvidence.elapsed_seconds) <= Number(deliveryOperations.budgets?.private_web_preflight_seconds),
 "The measured private web preflight must remain inside its recorded wall-time budget.");
 for (const [kind, budgetKey] of [
   ["local_channel_build", "local_channel_build_seconds"],
@@ -76,6 +82,7 @@ const qualityWorkflow = readFileSync(".github/workflows/quality.yml", "utf8");
 const channelBuildSource = readFileSync("scripts/build-channel-artifacts.mjs", "utf8");
 const checkTierSource = readFileSync("scripts/check-tier.mjs", "utf8");
 const releaseBuildSource = readFileSync("scripts/build-release.mjs", "utf8");
+const releaseValidationSource = readFileSync("scripts/run-release-validation.mjs", "utf8");
 const buildPagesSource = readFileSync("scripts/build-pages.mjs", "utf8");
 const buildMetadataSource = readFileSync("scripts/write-build-metadata.mjs", "utf8");
 const releaseGeneratedSource = readFileSync("scripts/release-generated-artifacts.mjs", "utf8");
@@ -243,6 +250,10 @@ for (const snippet of ["--untracked-files=all", "RELEASE_GENERATED_TRACKED_ARTIF
   expect(releaseBuildSource.includes(snippet), `Release build gate should contain: ${snippet}`);
 }
 expect(buildMetadataSource.includes("RELEASE_GENERATED_TRACKED_ARTIFACTS"), "Build metadata clean-tree gate should share the release-generated artifact inventory.");
+expect(releaseValidationSource.includes('run("channel-build", process.execPath, ["scripts/build-channel-artifacts.mjs"])'),
+  "Local release validation must record channel construction as its own measured stage.");
+expect(releaseValidationSource.includes('["scripts/check-channel-equivalence.mjs", "--no-build", "--release-contract"]'),
+  "Local release validation must not rebuild channel artifacts inside the equivalence stage.");
 expect(
   packageManifest.scripts?.["validate:supported-formats"] === "node scripts/write-build-metadata.mjs && node scripts/validate-supported-formats.mjs",
   "Supported-format validation must generate ignored build metadata before importing report modules in a clean checkout.",

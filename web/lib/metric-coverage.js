@@ -1533,7 +1533,8 @@ const SPECS = [
       ? "assessed" : "not_assessed",
     evidenceClass: "OBSERVED/DERIVED",
     pointers: ["/evidence/artifact_ir"],
-    report: "## Artifact And Target",
+    report: (format) => ["gguf", "safetensors", "coreml", "executorch"].includes(format)
+      ? "## Artifact Identity" : "## Artifact And Target",
     viewer: ["Overview", "Explorer", "Reports"],
     exports: ["engineering_evidence.json", "static/artifact_ir.json", "static/static_analysis.json"],
     method: "Validate one hash-bound deepbom.artifact_ir.v2 document and reuse its graph, storage, architecture, quantization, static-projection, and imported-runtime overlay identities across viewer and export surfaces without reconstructing it from a compatibility view.",
@@ -1548,7 +1549,7 @@ const SPECS = [
       "total_macs", "total_macs_decimal", "total_ops", "mac_assessment", "tensor_liveness", "size_breakdown",
       "weight_integrity", "metadata_presence", "runtime_compat", "static_audit_timing",
       "xnnpack_assumption", "xnnpack_chains", "xnnpack_chain_breaks", "markdown",
-      "findings", "recommendations", "suspects", "artifact_bundle",
+      "findings", "recommendations", "suspects", "artifact_bundle", "artifact_set",
     ],
     status: (a) => {
       const container = String(a?.executorch_container || "");
@@ -1600,7 +1601,7 @@ const SPECS = [
       "tensors", "tensor_inventory", "metadata_presence", "quantization_status", "weight_integrity",
       "format_extensions", "gguf", "safetensors", "static_audit_timing", "markdown",
       "findings", "recommendations", "suspects",
-      "artifact_bundle",
+      "artifact_bundle", "artifact_set",
     ],
     status: (a, format) => {
       const detail = format === "gguf" ? a?.gguf : a?.safetensors;
@@ -1625,7 +1626,7 @@ const SPECS = [
       "findings", "recommendations", "suspects",
       "input_tensor_indices", "output_tensor_indices", "runtime_requirements", "states", "training_inputs",
       "weight_integrity", "coreml_blob_references", "coreml_blob_integrity", "size_breakdown", "tensor_liveness", "flexible_input_scenarios",
-      "artifact_bundle",
+      "artifact_bundle", "artifact_set",
     ],
     status: (a) => a?.quantization_status?.assessment_status === "assessed"
       && ((Array.isArray(a?.coreml?.neural_network?.layers) && a.coreml.neural_network.layers.length === Number(a?.operator_count || 0))
@@ -1651,7 +1652,7 @@ const SPECS = [
     report: "## Core ML Serialized Graph And Numerical Evidence", viewer: ["Overview", "Reports"],
     method: "Map the serialized specificationVersion through the exact pinned Model.proto OS-availability table and independently derive a necessary observed-feature version from representation, external dtype/flexibility, multi-function/state declarations, updatability, and MIL opset identity; reject declared versions below the observed-feature floor." }),
   spec("artifact.identity", "Artifact identity and byte size", {
-    keys: ["schema", "format", "filename", "file_size", "file_size_bytes", "model_sha256", "version", "target_profile", "cpu_cost_target_binding"],
+    keys: ["schema", "format", "filename", "file_size", "file_size_bytes", "model_sha256", "version", "target_profile", "cpu_cost_target_binding", "artifact_set"],
     status: (a) => hasOwn(a, "file_size") ? "assessed" : "not_assessed",
     evidenceClass: "OBSERVED", pointers: ["/evidence/static_analysis/file_size", "/evidence/static_analysis/model_sha256"],
     report: "## Artifact And Target", viewer: ["Overview", "Reports"], method: "Read format, byte length, and digest from the locally selected artifact." }),

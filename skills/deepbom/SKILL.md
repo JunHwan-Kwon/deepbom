@@ -135,8 +135,13 @@ over stdio JSON-RPC:
 npx deepbom mcp
 ```
 
-It provides `deepbom_capabilities`, `deepbom_audit`, and `deepbom_diff`, and
-runs locally on the same terms as the CLI.
+It provides `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
+`deepbom_explain_rule`, and runs locally on the same terms as the CLI. Audit
+calls return the bounded human summary unless the task requires an explicit
+`envelope`, `section`, or `pointer`. For large GGUF or SafeTensors artifacts,
+prefer `scan: structure` for inventory questions and request `integrity` or
+`full` only when payload evidence is necessary. Do not increase response or
+download limits merely to obtain a complete dump; narrow the evidence first.
 
 ## Reference
 

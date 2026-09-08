@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-04T19:54:41.501Z",
+  "recorded_at": "2026-09-08T08:59:00.000Z",
   "scope": "Public installation channels and private web delivery",
   "observations": [
     {
@@ -1149,6 +1149,115 @@
         "packaged_self_test_and_wasm_tamper_rejection"
       ],
       "qualification": "The release-only equivalence contract executed an MCP audit from the installed npm tarball, preserved the existing npm, Python, standalone, and Cargo contracts, and remained within its dedicated wall-time budget."
+    },
+    {
+      "kind": "private_web_preflight_basis",
+      "version": "1.96.10",
+      "platform": "windows-x64",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 205.063,
+      "check_count": 83,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "current_version_non_self_referential_basis",
+        "artifact_ir_and_stable_cyclonedx_1_7_contracts",
+        "mcp_transport_and_registry_metadata_contracts",
+        "route_bound_cloudflare_deployment_contract",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy"
+      ],
+      "qualification": "All 83 non-self-referential deployment checks passed. This observation exists only to establish the current-version input required by the 84th delivery-operations check."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.96.10",
+      "platform": "windows-x64",
+      "command": "npm run build:channels",
+      "elapsed_seconds": 104.475,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball_with_mcp_server",
+        "single_executable_engine",
+        "python_wheel",
+        "cargo_launcher_source",
+        "manifest_bound_self_test_probe",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.96.10",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 260.045,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "manifest_bound_self_test_execution",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.96.10",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 433.065,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "installed_npm_mcp_2025_11_25_negotiation",
+        "installed_npm_mcp_onnx_tflite_gguf_audits",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "capability_envelope_sarif_policy_and_review_contract_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_self_test_and_wasm_tamper_rejection"
+      ],
+      "qualification": "The installed npm MCP negotiated protocol 2025-11-25 and audited ONNX, packaged TFLite/WASM, and bounded GGUF input while all existing npm, Python, standalone, Cargo, and tamper contracts remained equivalent."
+    },
+    {
+      "kind": "private_web_preflight",
+      "version": "1.96.10",
+      "platform": "windows-x64",
+      "command": "npm run check:deploy",
+      "elapsed_seconds": 182.382,
+      "check_count": 84,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "interaction_loaded_browser_delivery_boundary",
+        "artifact_ir_and_stable_cyclonedx_1_7_contracts",
+        "mcp_transport_and_registry_metadata_contracts",
+        "route_bound_cloudflare_deployment_contract",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy",
+        "no_full_corpus_or_browser_matrix"
+      ],
+      "qualification": "All 84 bounded product checks completed after the separately recorded 83-check non-self-referential basis established the current-version observation."
+    },
+    {
+      "kind": "local_full_quality",
+      "version": "1.96.10",
+      "platform": "windows-x64",
+      "command": "npm run check",
+      "elapsed_seconds": 1862.022,
+      "check_count": 207,
+      "conclusion": "success",
+      "conditions": [
+        "complete_parser_and_format_contract_matrix",
+        "artifact_ir_and_export_conservation",
+        "mcp_lifecycle_structured_output_and_resource_bounds",
+        "browser_viewer_and_accessibility_regressions",
+        "isolated_parser_robustness",
+        "installed_channel_probe_and_tamper_contracts",
+        "public_private_and_worker_boundaries"
+      ],
+      "qualification": "All 207 quality checks passed after MCP lifecycle hardening, channel-install isolation, and the Artifact IR export regressions were closed."
     }
   ],
   "budgets": {

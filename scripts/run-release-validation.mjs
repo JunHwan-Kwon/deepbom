@@ -60,7 +60,10 @@ try {
     await run("public-source-build", process.execPath, ["scripts/build-public-source-export.mjs", "--export"]);
     await run("public-source-verify", process.execPath, ["scripts/verify-public-source-export.mjs"]);
   }
-  if (selected("channels")) await run("channel-equivalence", process.execPath, ["scripts/check-channel-equivalence.mjs", "--release-contract"]);
+  if (selected("channels")) {
+    await run("channel-build", process.execPath, ["scripts/build-channel-artifacts.mjs"]);
+    await run("channel-equivalence", process.execPath, ["scripts/check-channel-equivalence.mjs", "--no-build", "--release-contract"]);
+  }
   manifest.artifacts = await collectArtifactRecords();
   manifest.source.git_state_after = sourceState();
   if (manifest.source.git_state_after !== "clean") throw new Error("Release validation changed tracked source files.");

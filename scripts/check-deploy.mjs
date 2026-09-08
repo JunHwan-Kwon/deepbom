@@ -89,9 +89,15 @@ const CHECKS = [
   "scripts/check-worker-config.mjs",
 ];
 
-for (const check of CHECKS) {
+const establishObservation = process.argv.includes("--establish-observation");
+const selectedChecks = establishObservation
+  ? CHECKS.filter((check) => check !== "scripts/check-ci-deploy-contract.mjs")
+  : CHECKS;
+
+for (const check of selectedChecks) {
   const [script, ...args] = check.split(/\s+/);
   await runNode(script, args);
 }
 
-console.log(`Deployment gate passed (${CHECKS.length} checks, no browser matrix).`);
+const mode = establishObservation ? ", self-referential delivery record excluded" : "";
+console.log(`Deployment gate passed (${selectedChecks.length} checks, no browser matrix${mode}).`);

@@ -1,112 +1,308 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { pathToFileURL } from "node:url";
 
-// The MCP surface is read by a model, not a person. Its tool descriptions are
-// the only place the evidence boundary is stated before an assistant writes a
-// summary, so they are checked here the same way the CLI contract is.
+// The MCP surface is read by a model, not a person. These checks exercise the
+// live transport so cancellation, control-message responsiveness, bounded
+// output, and the evidence boundary cannot drift behind the CLI contract.
 
-const frames = await exchange([
-  { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "check", version: "0" } } },
-  { jsonrpc: "2.0", method: "notifications/initialized" },
-  { jsonrpc: "2.0", id: 2, method: "tools/list" },
-  { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "deepbom_capabilities", arguments: {} } },
-  { jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "deepbom_audit", arguments: { path: "" } } },
-  { jsonrpc: "2.0", id: 5, method: "tools/call", params: { name: "deepbom_audit", arguments: { path: path.resolve("web/samples/gpu_partition_probe.onnx") } } },
-  { jsonrpc: "2.0", id: 6, method: "tools/call", params: { name: "deepbom_audit", arguments: { path: "model.onnx", passthrough: "--help" } } },
-  { jsonrpc: "2.0", id: 7, method: "tools/call", params: { name: "deepbom_audit", arguments: { path: "model.onnx", pointer: "/format", section: "summary" } } },
-  { jsonrpc: "2.0", id: 8, method: "resources/list" },
-]);
+const root = process.cwd();
+const onnxPath = path.resolve("web/samples/gpu_partition_probe.onnx");
+const scratch = path.resolve(".local-validation/mcp-server");
+await rm(scratch, { recursive: true, force: true });
+await mkdir(scratch, { recursive: true });
 
-const byId = new Map(frames.map((frame) => [frame.id, frame]));
-assert.equal(frames.length, 8, "Each request receives exactly one frame and the notification receives none.");
+async function checkRealServerContract() {
+  const session = new McpSession(process.execPath, ["bin/deepbom.mjs", "mcp"]);
+  try {
+    const initialize = await initializeSession(session);
+    assert.equal(initialize.protocolVersion, "2025-11-25");
+    assert.equal(initialize.serverInfo.name, "deepbom");
+    assert.match(initialize.serverInfo.version, /^\d+\.\d+\.\d+/);
+    assert.equal(initialize.capabilities.tools.listChanged, false);
+    for (const phrase of ["never uploaded", "DEEPBOM_MCP_ALLOWED_ROOTS", "human-readable summary", "evidence_gap", "latency"]) {
+      assert.ok(initialize.instructions.includes(phrase), `Server instructions must retain the "${phrase}" boundary.`);
+    }
 
-const initialize = byId.get(1).result;
-assert.equal(initialize.protocolVersion, "2025-06-18", "The server must accept the protocol version the client offered.");
-assert.equal(initialize.serverInfo.name, "deepbom");
-assert.match(initialize.serverInfo.version, /^\d+\.\d+\.\d+/, "The server reports the CLI release version.");
-assert.equal(initialize.capabilities.tools.listChanged, false);
-for (const phrase of ["never uploaded", "evidence_gap", "latency"]) {
-  assert.ok(initialize.instructions.includes(phrase),
-    `Server instructions must keep the "${phrase}" boundary statement.`);
+    session.request(2, "tools/list");
+    const tools = (await session.response(2)).result.tools;
+    assert.deepEqual(tools.map((tool) => tool.name), [
+      "deepbom_capabilities",
+      "deepbom_audit",
+      "deepbom_diff",
+      "deepbom_explain_rule",
+    ]);
+    for (const tool of tools) {
+      assert.equal(tool.inputSchema.type, "object");
+      assert.equal(tool.inputSchema.additionalProperties, false);
+      assert.equal(typeof tool.annotations.readOnlyHint, "boolean");
+      assert.equal(tool.annotations.destructiveHint, false);
+      assert.equal(typeof tool.title, "string");
+    }
+    assert.equal(tools.find((tool) => tool.name === "deepbom_capabilities").annotations.readOnlyHint, true);
+    assert.equal(tools.find((tool) => tool.name === "deepbom_explain_rule").annotations.readOnlyHint, true);
+    assert.equal(tools.find((tool) => tool.name === "deepbom_audit").annotations.readOnlyHint, false,
+      "Remote audit may populate a verified local cache and must not claim strict read-only behaviour.");
+    assert.equal(tools.find((tool) => tool.name === "deepbom_diff").annotations.readOnlyHint, false,
+      "Remote diff may populate a verified local cache and must not claim strict read-only behaviour.");
+    const auditTool = tools.find((tool) => tool.name === "deepbom_audit");
+    assert.deepEqual(auditTool.inputSchema.properties.scan.enum, ["auto", "structure", "integrity", "full"]);
+    assert.deepEqual(auditTool.inputSchema.properties.output_format.enum,
+      ["summary", "envelope", "json", "json-compact", "cyclonedx", "sarif"]);
+    assert.match(auditTool.description, /immutable remote/);
+    assert.match(auditTool.description, /an evidence_gap is not a defect/i);
+    assert.match(auditTool.description, /never establishes executed accelerator assignment, latency, energy, accuracy, or device fit/);
+    assert.match(tools.find((tool) => tool.name === "deepbom_diff").description, /standalone TFLite artifacts/);
+
+    session.request(3, "tools/call", { name: "deepbom_capabilities", arguments: {} });
+    const capabilityResult = (await session.response(3)).result;
+    const capabilities = JSON.parse(capabilityResult.content[0].text);
+    assert.deepEqual(capabilityResult.structuredContent, capabilities);
+    assert.equal(capabilities.schema, "deepbom.cli_capabilities.v1");
+    assert.equal(capabilities.privacy.model_bytes_network_transfer, false);
+    assert.equal(capabilities.privacy.analysis_location, "local_process");
+    const declared = capabilities.automation.mcp_stdio_server;
+    assert.equal(declared.invocation, "deepbom mcp");
+    assert.equal(declared.default_audit_output, "summary");
+    assert.deepEqual(declared.protocol_versions, ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"]);
+    assert.deepEqual(declared.tools, tools.map((tool) => tool.name));
+
+    session.request(4, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath } });
+    const summary = (await session.response(4)).result;
+    assert.equal(summary.isError, undefined);
+    assert.equal(summary.structuredContent, undefined, "The human-readable default must not pretend to be structured JSON.");
+    assert.ok(Buffer.byteLength(summary.content[0].text, "utf8") < 20 * 1024, "The default agent response must stay concise.");
+    assert.match(summary.content[0].text, /deployment-artifact audit/);
+    assert.match(summary.content[0].text, /sha256:/);
+
+    session.request(5, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, output_format: "envelope", scan: "auto" } });
+    const envelopeResult = (await session.response(5)).result;
+    const envelope = JSON.parse(envelopeResult.content[0].text);
+    assert.deepEqual(envelopeResult.structuredContent, envelope);
+    assert.equal(envelope.schema, "deepbom.artifact_evidence_envelope.v1");
+    assert.equal(envelope.identity.format, "onnx");
+    assert.match(envelope.identity.sha256, /^[a-f0-9]{64}$/);
+
+    session.request(6, "tools/call", { name: "deepbom_explain_rule", arguments: { rule: "onnx.conv.output-shape" } });
+    const explanation = (await session.response(6)).result;
+    assert.equal(explanation.structuredContent.schema, "deepbom.rule_explanation.v1");
+    assert.equal(JSON.parse(explanation.content[0].text).rule_id, "onnx.conv.output-shape");
+
+    session.request(7, "tools/call", { name: "deepbom_audit", arguments: { path: "" } });
+    assert.equal((await session.response(7)).result.isError, true);
+    session.request(8, "tools/call", { name: "missing_tool", arguments: {} });
+    assert.equal((await session.response(8)).error.code, -32602, "Unknown tools are invalid JSON-RPC params, not tool results.");
+    session.request(9, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, passthrough: "--help" } });
+    assert.match((await session.response(9)).result.content[0].text, /Undeclared tool argument/);
+    session.request(10, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, pointer: "/format", section: "summary" } });
+    assert.match((await session.response(10)).result.content[0].text, /mutually exclusive/);
+    session.request(11, "tools/call", { name: "deepbom_audit", arguments: { path: path.resolve("..", "outside.onnx") } });
+    assert.match((await session.response(11)).result.content[0].text, /outside DEEPBOM_MCP_ALLOWED_ROOTS/);
+    session.request(12, "tools/call", { name: "deepbom_audit", arguments: { path: "https://example.com/model.onnx" } });
+    assert.match((await session.response(12)).result.content[0].text, /must include #sha256/);
+    session.request(13, "resources/list");
+    assert.equal((await session.response(13)).error.code, -32601);
+    session.request(14, "tools/call", { name: "deepbom_explain_rule", arguments: { rule: "--list" } });
+    assert.match((await session.response(14)).result.content[0].text, /not a CLI option/);
+  } finally {
+    await session.close();
+  }
 }
 
-const tools = byId.get(2).result.tools;
-assert.deepEqual(tools.map((tool) => tool.name), ["deepbom_capabilities", "deepbom_audit", "deepbom_diff"]);
-for (const tool of tools) {
-  assert.equal(tool.inputSchema.type, "object");
-  assert.equal(tool.inputSchema.additionalProperties, false,
-    `${tool.name} must not accept undeclared arguments; option pass-through would bypass the checked contract.`);
+async function checkCancellationAndQueue() {
+  const fixture = await writeFixtureCli();
+  const session = new McpSession(process.execPath, [fixture, "serve"], {
+    DEEPBOM_MCP_MAX_CONCURRENT: "1",
+    DEEPBOM_MCP_MAX_QUEUE: "0",
+  });
+  try {
+    await initializeSession(session);
+    const slowPath = path.join(scratch, "slow.onnx");
+    await writeFile(slowPath, "fixture");
+    session.request(20, "tools/call", {
+      name: "deepbom_audit",
+      arguments: { path: slowPath, output_format: "envelope" },
+      _meta: { progressToken: "audit-progress" },
+    });
+    await session.frame((frame) => frame.method === "notifications/progress" && frame.params?.progressToken === "audit-progress");
+
+    const pingStarted = Date.now();
+    session.request(21, "ping");
+    assert.deepEqual((await session.response(21, 1000)).result, {});
+    assert.ok(Date.now() - pingStarted < 1000, "ping must not wait behind an audit child process.");
+
+    session.request(22, "tools/call", { name: "deepbom_audit", arguments: { path: slowPath } });
+    assert.equal((await session.response(22, 1000)).error.code, -32001, "A full zero-length queue must fail closed.");
+
+    session.notify("notifications/cancelled", { requestId: 20, reason: "test cancellation" });
+    await delay(500);
+    assert.equal(session.frames.some((frame) => frame.id === 20), false, "A cancelled request must not emit a response.");
+    session.request(23, "ping");
+    assert.deepEqual((await session.response(23, 1000)).result, {});
+  } finally {
+    const closeStarted = Date.now();
+    await session.close();
+    assert.ok(Date.now() - closeStarted < 2500, "Cancellation must terminate the child instead of waiting for its full delay.");
+  }
 }
 
-const audit = tools.find((tool) => tool.name === "deepbom_audit");
-assert.deepEqual(audit.inputSchema.required, ["path"]);
-for (const kind of ["artifact_defect", "caution", "evidence_gap"]) {
-  assert.ok(audit.description.includes(kind), `deepbom_audit must name the ${kind} finding kind.`);
+async function checkGateJsonPreservation() {
+  const fixture = await writeFixtureCli();
+  const session = new McpSession(process.execPath, [fixture, "serve"]);
+  try {
+    await initializeSession(session);
+    session.request(30, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, output_format: "envelope", gate: "defects" } });
+    const result = (await session.response(30)).result;
+    const firstBlock = JSON.parse(result.content[0].text);
+    assert.equal(firstBlock.schema, "deepbom.test_gate_result.v1");
+    assert.deepEqual(result.structuredContent, firstBlock);
+    assert.equal(result.content.length, 2);
+    assert.match(result.content[1].text, /policy outcome/);
+    assert.deepEqual(result._meta.deepbom, { exit_code: 2, policy_status: "blocked", analysis_completed: true });
+  } finally {
+    await session.close();
+  }
 }
-assert.ok(audit.description.includes("An evidence_gap is not a defect."),
-  "deepbom_audit must state that an evidence gap is not a defect.");
-assert.ok(/never establishes executed accelerator assignment, latency, energy, accuracy, or device fit/.test(audit.description),
-  "deepbom_audit must state what the static result never establishes.");
-const diff = tools.find((tool) => tool.name === "deepbom_diff");
-assert.deepEqual(diff.inputSchema.required, ["baseline", "candidate"]);
-assert.ok(diff.description.includes("not measured behaviour"),
-  "deepbom_diff must state that its static estimates are not measured behaviour.");
 
-const capabilities = JSON.parse(byId.get(3).result.content[0].text);
-assert.equal(capabilities.schema, "deepbom.cli_capabilities.v1");
-assert.equal(capabilities.privacy.model_bytes_network_transfer, false,
-  "The MCP path must expose the same local-analysis privacy contract as the CLI.");
-assert.equal(capabilities.privacy.analysis_location, "local_process");
-// Discovery must reach the transport too, or an assistant that only reads the
-// capability document never learns the MCP entry point exists.
-const declared = capabilities.automation.mcp_stdio_server;
-assert.equal(declared.invocation, "deepbom mcp");
-assert.equal(declared.transport, "stdio_jsonrpc");
-assert.equal(declared.hosted_endpoint, false);
-assert.deepEqual(declared.tools, tools.map((tool) => tool.name),
-  "The declared MCP tool list must match what tools/list actually serves.");
+async function checkResponseAndFrameLimits() {
+  const bounded = new McpSession(process.execPath, ["bin/deepbom.mjs", "mcp"], {
+    DEEPBOM_MCP_MAX_RESPONSE_BYTES: String(64 * 1024),
+  });
+  try {
+    await initializeSession(bounded);
+    bounded.request(40, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, output_format: "json-compact" } });
+    const result = (await bounded.response(40, 5000)).result;
+    assert.equal(result.isError, true);
+    assert.match(result.content[0].text, /exceeded the 64 KiB MCP response limit/);
+    assert.ok(Buffer.byteLength(JSON.stringify(result), "utf8") < 64 * 1024);
+  } finally {
+    await bounded.close();
+  }
 
-const rejected = byId.get(4).result;
-assert.equal(rejected.isError, true, "A missing artifact path is rejected before the CLI is spawned.");
-assert.match(rejected.content[0].text, /non-empty path/);
+  const framed = new McpSession(process.execPath, ["bin/deepbom.mjs", "mcp"], {
+    DEEPBOM_MCP_MAX_FRAME_BYTES: "4096",
+  });
+  try {
+    await initializeSession(framed);
+    framed.raw(`${JSON.stringify({ jsonrpc: "2.0", id: 41, method: "tools/call", params: { name: "deepbom_audit", arguments: { path: onnxPath, padding: "x".repeat(5000) } } })}\n`);
+    const rejection = await framed.frame((frame) => frame.id === null && frame.error?.code === -32600);
+    assert.match(rejection.error.message, /frame exceeds/);
+    framed.request(42, "ping");
+    assert.deepEqual((await framed.response(42)).result, {}, "The server must recover after discarding one oversized frame.");
+  } finally {
+    await framed.close();
+  }
+}
 
-const auditResult = JSON.parse(byId.get(5).result.content[0].text);
-assert.equal(auditResult.schema, "deepbom.artifact_evidence_envelope.v1");
-assert.equal(auditResult.identity.format, "onnx");
-assert.match(auditResult.identity.sha256, /^[a-f0-9]{64}$/);
+async function initializeSession(session) {
+  session.request(1, "initialize", { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "deepbom-check", version: "0" } });
+  const frame = await session.response(1);
+  assert.equal(frame.error, undefined, frame.error?.message);
+  session.notify("notifications/initialized");
+  return frame.result;
+}
 
-assert.equal(byId.get(6).result.isError, true, "Undeclared tool arguments must be rejected at runtime.");
-assert.match(byId.get(6).result.content[0].text, /Undeclared tool argument: passthrough/);
-assert.equal(byId.get(7).result.isError, true, "Conflicting audit selectors must not be silently ignored.");
-assert.match(byId.get(7).result.content[0].text, /mutually exclusive/);
+async function writeFixtureCli() {
+  const fixturePath = path.join(scratch, "mcp-fixture-cli.mjs");
+  const mcpModule = pathToFileURL(path.resolve("bin/deepbom-mcp.mjs")).href;
+  await writeFile(fixturePath, `import process from "node:process";\nimport { runMcpServer } from ${JSON.stringify(mcpModule)};\nif (process.argv[2] === "serve") {\n  await runMcpServer({ cliEntry: process.argv[1], version: "0.0.0-test" });\n} else if (process.argv.some((value) => value.endsWith("slow.onnx"))) {\n  await new Promise((resolve) => setTimeout(resolve, 10000));\n  process.stdout.write('{"schema":"deepbom.slow_fixture.v1"}\\n');\n} else {\n  process.stdout.write('{"schema":"deepbom.test_gate_result.v1","valid_json":true}\\n');\n  process.exitCode = 2;\n}\n`, "utf8");
+  return fixturePath;
+}
 
-assert.equal(byId.get(8).error.code, -32601, "An unsupported method returns method-not-found, not a crash.");
-
-console.log("MCP server check passed (protocol handshake, tool contract, evidence boundary, and local-analysis privacy).\n");
-
-function exchange(messages) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, ["bin/deepbom.mjs", "mcp"], { stdio: ["pipe", "pipe", "pipe"] });
+class McpSession {
+  constructor(command, args, extraEnv = {}) {
+    this.frames = [];
+    this.waiters = [];
+    this.stderr = "";
+    this.closed = false;
+    this.child = spawn(command, args, {
+      cwd: root,
+      env: { ...process.env, ...extraEnv },
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
+    });
     let stdout = "";
-    let stderr = "";
-    child.stdout.setEncoding("utf8");
-    child.stdout.on("data", (chunk) => { stdout += chunk; });
-    child.stderr.setEncoding("utf8");
-    child.stderr.on("data", (chunk) => { stderr += chunk; });
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code !== 0) return reject(new Error(`deepbom mcp exited ${code}: ${stderr.trim()}`));
-      // stdout is the JSON-RPC transport; a stray diagnostic write would corrupt it.
-      if (stderr.trim()) return reject(new Error(`deepbom mcp wrote to stderr: ${stderr.trim()}`));
-      try {
-        resolve(stdout.split("\n").filter(Boolean).map((line) => JSON.parse(line)));
-      } catch (error) {
-        reject(new Error(`deepbom mcp emitted a non-JSON frame: ${error.message}`));
+    this.child.stdout.setEncoding("utf8");
+    this.child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+      let newline = stdout.indexOf("\n");
+      while (newline !== -1) {
+        const line = stdout.slice(0, newline);
+        stdout = stdout.slice(newline + 1);
+        if (line) this.pushFrame(JSON.parse(line));
+        newline = stdout.indexOf("\n");
       }
     });
-    for (const message of messages) child.stdin.write(`${JSON.stringify(message)}\n`);
-    child.stdin.end();
-  });
+    this.child.stderr.setEncoding("utf8");
+    this.child.stderr.on("data", (chunk) => { this.stderr += chunk; });
+    this.exit = new Promise((resolve, reject) => {
+      this.child.on("error", reject);
+      this.child.on("close", (code) => {
+        this.closed = true;
+        if (code !== 0) reject(new Error(`MCP fixture exited ${code}: ${this.stderr.trim()}`));
+        else if (this.stderr.trim()) reject(new Error(`MCP server wrote to stderr: ${this.stderr.trim()}`));
+        else resolve();
+      });
+    });
+  }
+
+  request(id, method, params) {
+    this.raw(`${JSON.stringify({ jsonrpc: "2.0", id, method, ...(params === undefined ? {} : { params }) })}\n`);
+  }
+
+  notify(method, params) {
+    this.raw(`${JSON.stringify({ jsonrpc: "2.0", method, ...(params === undefined ? {} : { params }) })}\n`);
+  }
+
+  raw(value) {
+    this.child.stdin.write(value);
+  }
+
+  response(id, timeout = 10000) {
+    return this.frame((candidate) => candidate.id === id, timeout);
+  }
+
+  frame(predicate, timeout = 10000) {
+    const index = this.frames.findIndex(predicate);
+    if (index !== -1) return Promise.resolve(this.frames.splice(index, 1)[0]);
+    return new Promise((resolve, reject) => {
+      const waiter = { predicate, resolve, reject };
+      waiter.timer = setTimeout(() => {
+        const waiterIndex = this.waiters.indexOf(waiter);
+        if (waiterIndex !== -1) this.waiters.splice(waiterIndex, 1);
+        reject(new Error(`Timed out waiting for an MCP frame. Seen: ${JSON.stringify(this.frames)}`));
+      }, timeout);
+      this.waiters.push(waiter);
+    });
+  }
+
+  pushFrame(frame) {
+    const index = this.waiters.findIndex((waiter) => waiter.predicate(frame));
+    if (index === -1) {
+      this.frames.push(frame);
+      return;
+    }
+    const [waiter] = this.waiters.splice(index, 1);
+    clearTimeout(waiter.timer);
+    waiter.resolve(frame);
+  }
+
+  async close() {
+    if (!this.closed) this.child.stdin.end();
+    await this.exit;
+  }
 }
+
+function delay(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+await checkRealServerContract();
+await checkCancellationAndQueue();
+await checkGateJsonPreservation();
+await checkResponseAndFrameLimits();
+
+console.log("MCP server checks passed (2025-11-25 contract, bounded output, structured results, cancellation, responsive ping, queue/root limits, and gate JSON preservation).\n");

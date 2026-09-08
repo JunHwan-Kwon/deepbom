@@ -55,6 +55,11 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 | Local Windows 1.96.5 channel build | release-version npm, executable, Python wheel, Cargo launcher, and public/private boundary | 284.038 s |
 | Local Windows 1.96.5 platform smoke | installed Python and standalone TFLite/WASM plus ONNX execution parity | 227.984 s |
 | Local Windows 1.96.5 release-contract equivalence | npm full-format/package and command parity, native/Python execution, Cargo binding, and packaged-WASM tamper rejection | 668.305 s |
+| Private web 1.96.10 preflight | 84 bounded checks including MCP lifecycle, registry metadata, Artifact IR, cache, privacy, and deployment contracts | 182.382 s |
+| Local Windows 1.96.10 channel build | npm with MCP server, executable, Python wheel, Cargo launcher, and public/private boundary | 104.475 s |
+| Local Windows 1.96.10 platform smoke | installed Python and standalone TFLite/WASM plus ONNX execution parity | 260.045 s |
+| Local Windows 1.96.10 release-contract equivalence | installed MCP 2025-11-25 negotiation and ONNX/TFLite/GGUF audit plus npm, Python, standalone, Cargo, and tamper parity | 433.065 s |
+| Local Windows 1.96.10 full quality | 207 parser, Artifact IR, MCP, browser, export, robustness, package, and source-boundary checks | 1,862.022 s |
 
 The 1.94.4 run is retained as timing and incident evidence. It is not a known-good
 quality baseline. A registry success is never treated as sufficient without a
@@ -103,9 +108,11 @@ build, dist, cache, and egg-info directories before packaging.
 The web deployment gate is the bounded `scripts/check-deploy.mjs` set. The
 exhaustive release tier remains available as `npm run check:release`; it must not
 be wired back into every Cloudflare deployment. The measured preflight budget is
-240 seconds; the current measured baseline is 175.733 seconds for 80 checks.
+240 seconds; the current measured baseline is 182.382 seconds for 84 checks.
 Release-contract equivalence is a manual publication gate with a 720-second
-budget; it is not repeated for ordinary pushes or web-only delivery.
+budget; it is not repeated for ordinary pushes or web-only delivery. Local
+release validation records channel construction and no-build equivalence as
+separate stages so a slow build cannot be mistaken for an analysis mismatch.
 
 ## Cross-platform release rule
 

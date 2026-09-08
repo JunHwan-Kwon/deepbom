@@ -136,7 +136,6 @@ export function buildPrimaryScopeAnalysisView(analysis, artifactIr) {
     "_reportGeneratedAt",
     "external_node_edge_evidence_overlay",
     "findings",
-    "on_device_llm",
   ]);
   if (String(analysis.format || "").toLowerCase() === "tflite") {
     passthroughKeys.add("deployment_delta");

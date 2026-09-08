@@ -86,6 +86,7 @@ const RELEASE = [
   "scripts/generate-cli-docs.mjs --check",
   "scripts/check-cli-automation.mjs",
   "scripts/check-mcp-server.mjs",
+  "scripts/check-mcp-registry-metadata.mjs",
   "scripts/check-source-budget.mjs",
   "scripts/check-ci-deploy-contract.mjs",
   "scripts/check-git-privacy.mjs",

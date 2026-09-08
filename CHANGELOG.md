@@ -4,6 +4,28 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.10 - 2026-09-08
+
+- Hardened the local MCP stdio server with request cancellation, responsive
+  control requests during analysis, bounded concurrency and queueing, tool
+  timeouts, input-frame and response limits, and launch-root filesystem
+  confinement. The server now negotiates MCP `2025-11-25`, returns unknown
+  tools as JSON-RPC invalid-parameter errors, and preserves a cancelled
+  request's no-response contract while terminating its child analysis.
+- Made the bounded human audit summary the MCP default. Detailed evidence,
+  section and pointer selection, large-model scan depth, offline acquisition,
+  and download bounds are explicit tool inputs. JSON results expose matching
+  `structuredContent`; a defect-gate exit keeps the first JSON block unchanged
+  and reports policy status separately.
+- Added read-only tool metadata and `deepbom_explain_rule`, corrected
+  `deepbom_diff` to disclose its TFLite-only scope, and expanded installed npm
+  MCP checks to real TFLite WASM, ONNX, and bounded GGUF audits. Official MCP
+  Inspector strict discovery and transport checks cover the same contract.
+- Registered `artifact_set` under the artifact identity metric family, fixing
+  an Engineering Bundle conformance failure exposed by full browser download
+  validation. The package selector now states both accepted directory forms
+  using their literal `.mlpackage` and `.safetensors` extensions.
+
 ## 1.96.9 - 2026-09-07
 
 - Added `deepbom mcp`, a stdio Model Context Protocol server exposing
