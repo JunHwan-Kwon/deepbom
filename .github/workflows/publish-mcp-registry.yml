@@ -1,0 +1,63 @@
+name: Publish DEEPBOM MCP Registry Metadata
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_version:
+        description: Exact npm and server.json version to publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deepbom-mcp-registry-${{ inputs.expected_version }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.12.0
+          registry-url: https://registry.npmjs.org
+      - name: Verify source and published npm identity
+        env:
+          EXPECTED_VERSION: ${{ inputs.expected_version }}
+        run: |
+          node scripts/sync-version.mjs --validate-release "$EXPECTED_VERSION"
+          node scripts/check-mcp-registry-metadata.mjs
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";
+          import { execFileSync } from "node:child_process";
+          import { readFileSync } from "node:fs";
+
+          const expected = process.env.EXPECTED_VERSION;
+          const local = JSON.parse(readFileSync("package.json", "utf8"));
+          const published = JSON.parse(execFileSync("npm", ["view", `deepbom@${expected}`, "--json"], { encoding: "utf8" }));
+          assert.equal(local.version, expected);
+          assert.equal(local.mcpName, "io.github.JunHwan-Kwon/deepbom");
+          assert.equal(published.version, expected);
+          assert.equal(published.mcpName, local.mcpName);
+          NODE
+      - name: Install pinned MCP Publisher
+        run: |
+          curl --fail --location --retry 3 \
+            --output /tmp/mcp-publisher.tar.gz \
+            https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz
+          echo "a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc  /tmp/mcp-publisher.tar.gz" | sha256sum --check --strict
+          tar --extract --gzip --file /tmp/mcp-publisher.tar.gz --directory /tmp mcp-publisher
+          chmod 0755 /tmp/mcp-publisher
+          /tmp/mcp-publisher --version
+          /tmp/mcp-publisher validate server.json
+      - name: Publish registry metadata with GitHub OIDC
+        run: |
+          /tmp/mcp-publisher login github-oidc
+          /tmp/mcp-publisher publish server.json

@@ -1,6 +1,7 @@
 .gitattributes
 .github/workflows/crates-maintenance.yml
 .github/workflows/public-quality.yml
+.github/workflows/publish-mcp-registry.yml
 .github/workflows/release-channels.yml
 .gitignore
 .zenodo.json

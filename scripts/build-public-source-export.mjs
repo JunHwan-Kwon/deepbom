@@ -69,6 +69,7 @@ async function verifyAllowlist(files) {
     assert(record.isFile(), `Public source member is missing or not a file: ${file}`);
   }
   for (const required of [
+    ".github/workflows/publish-mcp-registry.yml",
     "bin/deepbom.mjs",
     "channels/LICENSE",
     "docs/CLI_REFERENCE.md",

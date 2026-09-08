@@ -6,6 +6,7 @@ import process from "node:process";
 const root = process.cwd();
 const packageDocument = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
 const server = JSON.parse(await readFile(path.join(root, "server.json"), "utf8"));
+const workflow = await readFile(path.join(root, ".github", "workflows", "publish-mcp-registry.yml"), "utf8");
 const expectedName = "io.github.JunHwan-Kwon/deepbom";
 
 assert.equal(packageDocument.mcpName, expectedName, "package.json mcpName must bind the GitHub namespace.");
@@ -27,4 +28,15 @@ assert.deepEqual(entry.transport, { type: "stdio" });
 assert.deepEqual(entry.packageArguments, [{ type: "positional", value: "mcp" }]);
 assert.equal(entry.runtimeArguments, undefined, "The npm runtime is registry-selected; only the package subcommand is fixed.");
 
-console.log("MCP Registry metadata check passed (namespace, npm ownership, version, stdio transport, and positional subcommand).");
+assert.match(workflow, /^\s*workflow_dispatch:\s*$/m, "Registry publishing must remain manually dispatched.");
+assert.doesNotMatch(workflow, /^\s*(?:push|pull_request|schedule|release):\s*$/m,
+  "Registry publishing must not consume Actions minutes on unrelated repository events.");
+assert.match(workflow, /^\s*id-token:\s*write\s*$/m, "Registry publishing requires GitHub OIDC permission.");
+assert.match(workflow, /modelcontextprotocol\/registry\/releases\/download\/v1\.8\.1\/mcp-publisher_linux_amd64\.tar\.gz/,
+  "Registry publisher release must remain version-pinned.");
+assert.match(workflow, /a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc/,
+  "Registry publisher archive digest must remain pinned.");
+assert.match(workflow, /mcp-publisher login github-oidc/, "Registry publishing must authenticate without a stored token.");
+assert.match(workflow, /mcp-publisher publish server\.json/, "Registry workflow must publish the reviewed metadata file.");
+
+console.log("MCP Registry metadata check passed (namespace, npm ownership, version, stdio transport, positional subcommand, and OIDC workflow).");

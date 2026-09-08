@@ -61,6 +61,7 @@ for (const privateScript of [
 ]) assert(!(privateScript in (packageDocument.scripts || {})), `Private package script entered public source: ${privateScript}`);
 
 for (const required of [
+  ".github/workflows/publish-mcp-registry.yml",
   ".github/workflows/public-quality.yml",
   ".github/workflows/release-channels.yml",
   "docs/CLI_REFERENCE.md",

@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "9f836cb09ee1d6c9b101217e624e0de86471dd55",
+  "source_commit": "5b474aeb36d7263c73ed502b7553e52b7b5faf7c",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 991,
+  "file_count": 992,
   "files": [
     {
       "path": ".gitattributes",
@@ -19,6 +19,11 @@
       "path": ".github/workflows/public-quality.yml",
       "byte_length": 1496,
       "sha256": "6dc047bbb7ffacc9523c76ccefab5a155b15f1ba23e1e304b2b3798ac11ec916"
+    },
+    {
+      "path": ".github/workflows/publish-mcp-registry.yml",
+      "byte_length": 2454,
+      "sha256": "c97d78883eb88730b980cb567e014ab5143685318f4f18e139ef51d3c5374e90"
     },
     {
       "path": ".github/workflows/release-channels.yml",
@@ -222,8 +227,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 36468,
-      "sha256": "9ded2c8c56ff7b1b5b7026cfdb5709fd69f106ef18a487ac0e9611e585f71cff"
+      "byte_length": 36511,
+      "sha256": "de3e452ac6582caaa91dcaeffff900e6fb9f606597f9d2382c189e1bfa0cc160"
     },
     {
       "path": "corpus/README.md",
@@ -987,8 +992,8 @@
     },
     {
       "path": "scripts/build-public-source-export.mjs",
-      "byte_length": 9275,
-      "sha256": "1c670d728dfddd025b9fc553395bfbe81143afee4bb77748c37f23e39dc142c9"
+      "byte_length": 9325,
+      "sha256": "fc93906ffc1ac69c49fea5d5cc6fcd51b6d1983434e66a0a1e8be15d541860e0"
     },
     {
       "path": "scripts/build-release.mjs",
@@ -1597,8 +1602,8 @@
     },
     {
       "path": "scripts/check-mcp-registry-metadata.mjs",
-      "byte_length": 1896,
-      "sha256": "5cfcbaba579704cac5482d9115bfcf64a0909ab9963463c87381ba4a281eb56c"
+      "byte_length": 2999,
+      "sha256": "1f3fb4326b4c34135d1678cffbcf0579bcc3cf1905e75392fc2918619d798f64"
     },
     {
       "path": "scripts/check-mcp-server.mjs",
@@ -2697,8 +2702,8 @@
     },
     {
       "path": "scripts/verify-public-source-export.mjs",
-      "byte_length": 8254,
-      "sha256": "20aba928fb2fd68b285319b6697dc19b0948b3cf4ed13e9b6270917e6632dec1"
+      "byte_length": 8302,
+      "sha256": "7aff62c24d5dea9ea228cc2c8fd998f3c17b24da374b0058013bd5e5872b34e9"
     },
     {
       "path": "scripts/verify-python-wheel-matrix.py",
@@ -3298,7 +3303,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 82072,
-      "sha256": "d602d889308ffc2ac6a83c412c11545c0931cc9b9d54c365d4184b446f9f58fc"
+      "sha256": "9ea458583096afc0905765549f09e6c4651297f5839da3f3a8fc8cea3eb1ff93"
     },
     {
       "path": "web/lib/bundle.js",
