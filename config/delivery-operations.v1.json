@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-08T08:59:00.000Z",
+  "recorded_at": "2026-09-09T04:39:39.569Z",
   "scope": "Public installation channels and private web delivery",
   "observations": [
     {
@@ -1258,6 +1258,77 @@
         "public_private_and_worker_boundaries"
       ],
       "qualification": "All 207 quality checks passed after MCP lifecycle hardening, channel-install isolation, and the Artifact IR export regressions were closed."
+    },
+    {
+      "kind": "private_web_preflight_basis",
+      "version": "1.96.11",
+      "platform": "windows-x64",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 158.546,
+      "check_count": 83,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "current_version_non_self_referential_basis",
+        "artifact_ir_and_stable_cyclonedx_1_7_contracts",
+        "mcp_transport_and_registry_metadata_contracts",
+        "external_review_defect_and_format_contracts",
+        "route_bound_cloudflare_deployment_contract",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy"
+      ],
+      "qualification": "All 83 non-self-referential deployment checks passed within the recorded wall-time budget. This observation establishes only the current-version input required by the delivery-operations check."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.96.11",
+      "platform": "windows-x64",
+      "command": "npm run build:channels",
+      "elapsed_seconds": 220.704,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball_with_mcp_server",
+        "single_executable_engine",
+        "python_wheel",
+        "cargo_launcher_source",
+        "manifest_bound_self_test_probe",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.96.11",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 183.407,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "manifest_bound_self_test_execution",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.96.11",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 520.079,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "installed_npm_mcp_2025_11_25_negotiation",
+        "installed_npm_mcp_onnx_tflite_gguf_audits",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "capability_envelope_sarif_policy_and_review_contract_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_self_test_and_wasm_tamper_rejection"
+      ],
+      "qualification": "The installed npm package, MCP server, Python wheel, standalone engine, and Cargo launcher retained the release contract while packaged self-test and WASM tampering were rejected."
     }
   ],
   "budgets": {

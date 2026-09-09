@@ -4,6 +4,32 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.11 - 2026-09-09
+
+- Unified the bounded human audit summary behind one shared output contract
+  consumed by the CLI, MCP server, and capability document. Explicit
+  `--output-format summary` and the `--summary` compatibility alias now produce
+  the same projection derived from `deepbom.review_summary.v1`.
+- Corrected externally reproduced deployment-artifact evidence defects without
+  broad severity escalation: non-finite learned tensors block the defect gate,
+  all-zero tensors remain cautions, TFLite nominal MAC and dynamic-shape
+  confidence contracts retain exact or symbolic totals, and quantization-risk
+  summaries preserve the affected operation.
+- Bound the external-review fixtures, expected values, lifecycle states, and
+  fix/verification commits in a machine-readable ledger. The fastest public CI
+  tiers now retain the non-finite defect gate and the format tier retains the
+  TFLite correctness corpus.
+- Rebased the documentation budget from 384 KiB to 416 KiB and the verification
+  budget from 3328 KiB to 3392 KiB after adding the external-review triage,
+  product-direction record, and bound regression fixtures. These are explicit
+  non-runtime allowances and do not increase the runtime source budget.
+- Known issue: a source-pinned Core ML iOS 16/17
+  `constexpr_affine_dequantize` package using operation-attribute constant
+  serialization may still be rejected during static analysis. This release
+  does not claim complete support for compressed Core ML MLProgram artifacts;
+  such a rejection must not be interpreted as proof that the artifact itself
+  is malformed.
+
 ## 1.96.10 - 2026-09-08
 
 - Hardened the local MCP stdio server with request cancellation, responsive
