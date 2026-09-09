@@ -45,6 +45,9 @@ for (const row of ledger.cases) {
   }
   if (row.status === "released") {
     assert.match(row.release_version || "", /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/, `${row.id} must bind a release version before release.`);
+    assert.match(row.release_commit || "", /^[a-f0-9]{40}$/, `${row.id} must bind its full public release commit before release.`);
+    assert.equal(row.release_tag, `channels-v${row.release_version}`, `${row.id} release tag must match its release version.`);
+    assert(Number.isSafeInteger(row.release_workflow_run) && row.release_workflow_run > 0, `${row.id} must bind its publishing workflow run.`);
   }
 }
 

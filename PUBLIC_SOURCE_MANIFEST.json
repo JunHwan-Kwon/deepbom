@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "8978f5c30f1c78e6cb940e756c87ea52f83a99eb",
+  "source_commit": "839cd2faf60ef91495b6bc95b1f2dc0fbc72105b",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1010,
@@ -307,8 +307,8 @@
     },
     {
       "path": "corpus/external-review/external-review-cases.v1.json",
-      "byte_length": 10540,
-      "sha256": "66b9446867d528bd6c94af75bb38beafe6ed97457423f8342bf76c446ea065a6"
+      "byte_length": 12241,
+      "sha256": "de5b9d05a3d01a5f150df8926ff18d51c6e243e70f607f53ea17121fe88a80ec"
     },
     {
       "path": "corpus/external-review/fixtures/conv-16x8.tflite",
@@ -557,8 +557,8 @@
     },
     {
       "path": "docs/EXTERNAL_REVIEW_TRIAGE.md",
-      "byte_length": 22950,
-      "sha256": "f77b80d97e2012907fe076e864a5da4785052f6a779e5fe485ca0e9a466bccfc"
+      "byte_length": 23299,
+      "sha256": "68827e15331443ccb9c3069e641b95712dd72fa3270123784be839589d1d73f0"
     },
     {
       "path": "docs/KNOWN_ISSUES.md",
@@ -1512,8 +1512,8 @@
     },
     {
       "path": "scripts/check-external-review-ledger.mjs",
-      "byte_length": 4129,
-      "sha256": "730907b6a3b0e6188b83bb9aaab4176e271bea928d80829d99601e0d776da38f"
+      "byte_length": 4533,
+      "sha256": "be6229233a04d3abf03965a6e3949c5b52d44573093c7e3a21d9747dcfcfb6cb"
     },
     {
       "path": "scripts/check-external-review-tflite-correctness.mjs",
@@ -3388,7 +3388,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 82746,
-      "sha256": "6f08e855aeec01ae7e653a4b18d21d52f89502598863060597b5dba95b834402"
+      "sha256": "e71d1fdb970eaddc165778fc20ae2649ebf8afad6b3665f9f1ea6a13d50c5ef2"
     },
     {
       "path": "web/lib/bundle.js",

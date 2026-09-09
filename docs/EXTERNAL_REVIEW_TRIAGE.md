@@ -3,11 +3,12 @@
 제품/API·사용자군·공개 범위에 관한 비검증 방향 후보는 이 결함 원장과 분리하여
 별도의 비공개 제품 방향 원장에서 관리합니다.
 
-## Verified correctness addendum (2026-09-09)
+## Released correctness addendum (2026-09-09)
 
 The machine-readable authority for status remains
 `corpus/external-review/external-review-cases.v1.json`. The following cases
-have advanced to `verified` with hash-bound fixtures and cross-surface checks:
+were released in `1.96.11` after hash-bound fixture, cross-surface, clean-install,
+and six-platform channel checks:
 
 - `ER-A1`, `ER-A2`, `ER-I2`: a serialized NaN is an `artifact_defect`, is
   retained in SARIF and MCP, and makes `--gate defects` exit with code 2.
@@ -24,8 +25,11 @@ have advanced to `verified` with hash-bound fixtures and cross-surface checks:
   per-op quantization risk, op identity, and detail into the review summary.
 - `ER-D2`: `mac_confidence` is normalized to `exact`, `symbolic`, `partial`, or
   `not_applicable` across executable formats and weight containers.
+- `ER-D3`: the default CLI audit is a bounded human summary, while complete
+  machine-readable evidence remains available through explicit output formats.
 
-These changes are verified source state, not a published release. Cases still
+The release is bound to public commit `c912db408ee12c3e4a49e4a847e4f6cb1c567559`,
+tag `channels-v1.96.11`, and publishing workflow run `34327309895`. Cases still
 marked `reported`, `reproduced`, or `deferred` in the machine ledger remain
 open and must not be described as fixed.
 
@@ -55,7 +59,7 @@ open and must not be described as fixed.
 
 ### ER-A1. NaN/Inf 가중치가 artifact-defect 게이트를 우회했던 회귀
 
-**상태: verified**
+**상태: released**
 
 **현재 검증 결과.** NaN fixture는 `artifact_defect`로 분류되고 defect gate를 차단하며,
 같은 canonical finding identity가 SARIF와 MCP에 보존됩니다.
@@ -104,7 +108,7 @@ all-zero tensor는 계속 caution이며 defect gate를 차단하지 않습니다
 
 ### ER-A2. NaN이 SARIF 출력에 실리지 않음
 
-**상태: verified**
+**상태: released**
 
 ONNX/safetensors에서 JSON 분석에는 `nan_tensors: 1`이 있는데 SARIF에는 없었다는
 보고였습니다. 현재 SARIF 투영은 canonical finding 전체를 보존하며, A1 수정 후
@@ -129,7 +133,7 @@ ONNX/safetensors에서 JSON 분석에는 `nan_tensors: 1`이 있는데 SARIF에�
 
 ### ER-B1. `SPACE_TO_BATCH_ND`의 배치 차원 전파 누락 — dilated conv MAC 4배 과소
 
-**상태: verified**
+**상태: released**
 
 TFLite 컨버터는 dilation conv를 `SPACE_TO_BATCH_ND` + `CONV_2D` +
 `BATCH_TO_SPACE_ND`로 낮춥니다. deepbom은 `SPACE_TO_BATCH_ND` 출력 shape를
@@ -147,7 +151,7 @@ padding을 확정할 수 없으면 숫자를 추측하지 않습니다.
 
 ### ER-B2. 16x8 양자화(int16 활성화 + int8 가중치) 오분류
 
-**상태: verified**
+**상태: released**
 
 `dynamic_range_or_weight_only`로 분류하고 "양자화된 compute MAC 0%"라고 보고했습니다.
 실제로는 int16 텐서 13개에 모든 compute op이 정수 도메인에서 돕니다. JSON 안에 int16이
@@ -165,7 +169,7 @@ INT8 weight의 MAC `112,896`을 quantized compute로 집계합니다. 타깃 프
 
 ### ER-B3. TFLite 파서가 자리표시자 shape를 확정값처럼 계산 — 문서화된 계약 위반
 
-**상태: verified**
+**상태: released**
 
 Transformer를 Keras 경로로 변환하면 FFN Dense가 런타임 RESHAPE를 거치고, 파일에
 직렬화된 정적 shape는 자리표시자 `[1,1]`입니다. deepbom은 이를 그대로 읽어 FC 출력을
@@ -256,7 +260,7 @@ axis 표현이 파서 기대와 다른 것으로 보입니다. **정상 파일�
 
 ### ER-D1. 요약 필드가 정상 모델과 이상 모델을 구별하지 못함
 
-**상태: verified**
+**상태: released**
 
 per-channel scale 비율을 1012배로 벌린 모델과 정상 모델의 top-level 요약 필드
 (`saturated`, `low_grid` 등)가 완전히 같은 값입니다. SARIF와 op 단위
@@ -270,7 +274,7 @@ per-channel scale 비율을 1012배로 벌린 모델과 정상 모델의 top-lev
 
 ### ER-D2. `total_macs`에 확실성 필드 없음
 
-**상태: verified**
+**상태: released**
 
 `mac_confidence`를 `exact` / `symbolic` / `partial` / `not_applicable` 중 하나로
 정규화해 Web, CLI, MCP envelope와 report가 함께 소비합니다. 숫자 합계를 닫지 못한
@@ -278,7 +282,7 @@ per-channel scale 비율을 1012배로 벌린 모델과 정상 모델의 top-lev
 
 ### ER-D3. 출력 크기
 
-**상태: verified**
+**상태: released**
 
 21KB 모델에 219KB JSON, MobileNetV2에 2MB. 요약 / 소견 / 전체 증거 3층으로 나누고
 기본은 요약이어야 합니다.
@@ -368,7 +372,7 @@ conv, 16x8, fp16, Q4/Q8 GGUF, 그리고 NaN·죽은 채널·scale 이상·잘린
 
 ### ER-I2. 결함 주입 회귀 테스트 부재
 
-**상태: verified**
+**상태: released**
 
 "NaN 심은 모델은 `--gate defects`에서 반드시 exit 2"라는 테스트 하나가 A1을 막았을
 것입니다. 현재 이 계약은 `node scripts/check-external-review-defect-gate.mjs`에서
@@ -418,19 +422,22 @@ semver 대상으로 선언하고, 나머지 내부 스키마는 명시적으로 
 후속 안정화에서 CLI·MCP·capabilities의 출력 형식을 공통 계약으로 통일했고,
 `summary`의 세 표기(`--format`, `--output-format`, `--summary`)와 충돌 처리를 검증했습니다.
 외부 리뷰 ledger/NaN gate는 smoke와 공개 CI에, TFLite correctness fixture는 formats-core에
-편입했습니다. 이 소스는 private `45f9e06`, clean public export `393aefe`까지 푸시됐습니다.
+편입했습니다. 릴리스 소스는 private `8978f5c`, clean public export `c912db4`에
+고정됐습니다.
 
-현재 기계 원장은 `verified 9`, `reproduced 3`, `reported 12`, `deferred 1`, `released 0`입니다.
-즉 수정과 소스 공개는 완료됐지만 `1.96.11` 패키지 게시와 `released` 승격은 아직 아닙니다.
+현재 기계 원장은 `released 9`, `reproduced 3`, `reported 12`, `deferred 1`, `verified 0`입니다.
+`1.96.11`은 npm, PyPI, crates.io와 6개 플랫폼 GitHub 엔진 자산으로 게시됐고,
+동일 private source의 웹 빌드도 Cloudflare에 배포됐습니다.
 
-### 바로 다음: 릴리스 폐쇄
+### 완료된 릴리스 폐쇄
 
-4. **1.96.11 correctness release** 범위는 위 verified 9건, 공통 summary 계약, CI tier,
-   문서·원장 정합성으로 동결합니다.
-5. clean commit에서 npm·PyPI·Cargo channel artifact를 만들고 동일 sample의 semantic digest,
-   clean install, 전체 quality/deploy gate를 다시 검증합니다.
-6. 세 registry 게시와 설치본 재검증이 끝난 뒤에만 9건을 `released`로 올리고
-   `release_version`과 release commit을 원장에 기록합니다.
+4. **1.96.11 correctness release**는 위 9건, 공통 summary 계약, CI tier,
+   문서·원장 정합성으로 범위를 동결해 게시했습니다.
+5. clean private commit `8978f5c30f1c78e6cb940e756c87ea52f83a99eb`에서
+   quality `211/211`, deploy `84/84`, 6포맷 Web/CLI semantic digest와 channel
+   clean-install 검사를 통과했습니다.
+6. npm, PyPI, Cargo 게시와 설치본 검증은 GitHub Actions run `34327309895`,
+   웹 배포와 캐시 퍼지는 run `34328200766`에서 성공했습니다.
 
 ### 다음 correctness 라운드
 
