@@ -60,6 +60,14 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 | Local Windows 1.96.10 platform smoke | installed Python and standalone TFLite/WASM plus ONNX execution parity | 260.045 s |
 | Local Windows 1.96.10 release-contract equivalence | installed MCP 2025-11-25 negotiation and ONNX/TFLite/GGUF audit plus npm, Python, standalone, Cargo, and tamper parity | 433.065 s |
 | Local Windows 1.96.10 full quality | 207 parser, Artifact IR, MCP, browser, export, robustness, package, and source-boundary checks | 1,862.022 s |
+| Private web 1.96.11 preflight | 84 bounded checks after external-review defect, summary, MCP, Artifact IR, cache, privacy, and deployment contracts | 158.546 s basis; final preflight recorded in the machine ledger |
+| Local Windows 1.96.11 channel build | npm with MCP server, executable, Python wheel, Cargo launcher, and public/private boundary | 220.704 s |
+| Local Windows 1.96.11 platform smoke | installed Python and standalone TFLite/WASM plus ONNX execution parity | 183.407 s |
+| Local Windows 1.96.11 release-contract equivalence | installed npm, MCP, Python, standalone, Cargo, self-test, and tamper contracts | 520.079 s |
+| Private web 1.96.12 preflight | 84 bounded checks including the external-review boundary corpus, finding registry, semantic diff, Artifact IR, cache, privacy, and deployment contracts | 176.725 s |
+| Local Windows 1.96.12 channel build | npm with MCP server, executable, Python wheel, Cargo launcher, and public/private boundary | 215.842 s |
+| Local Windows 1.96.12 platform smoke | installed Python and standalone TFLite/WASM plus ONNX execution parity | 181.819 s |
+| Local Windows 1.96.12 release-contract equivalence | installed npm across five formats and two package forms plus MCP, Python, standalone, Cargo, diff, self-test, and tamper contracts | 584.402 s |
 
 The 1.94.4 run is retained as timing and incident evidence. It is not a known-good
 quality baseline. A registry success is never treated as sufficient without a

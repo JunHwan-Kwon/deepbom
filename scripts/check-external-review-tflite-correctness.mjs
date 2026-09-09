@@ -18,6 +18,12 @@ const manifest = JSON.parse(await readFile(path.join(fixtureRoot, "manifest.json
 const quantRiskManifest = JSON.parse(await readFile(path.join(fixtureRoot, "quant-scale-risk.manifest.json"), "utf8"));
 assert.equal(manifest.schema, "deepbom.external_review_tflite_fixtures.v1");
 assert.deepEqual(manifest.generator, { numpy: "1.26.4", tensorflow: "2.16.1" });
+assert.deepEqual(manifest.transpose_conv_counting_source, {
+  repository: "tensorflow/tensorflow",
+  commit: "87bbf65b8d23d3f06912b1b2183587e1884bc45c",
+  path: "tensorflow/lite/kernels/internal/reference/transpose_conv.h",
+  sha256: "3d54a1a3c918f16fc699f1202aab0f4b4a4b7dc01ebfa761e1ea5301927e081c",
+});
 assert.equal(quantRiskManifest.schema, "deepbom.external_review_quant_risk_fixture.v1");
 assert.deepEqual(quantRiskManifest.generator, { numpy: "1.26.4", tensorflow: "2.11.1" });
 
@@ -79,6 +85,27 @@ assert.equal(sixteenByEightBias.zero_point_min, 0);
 assert.equal(sixteenByEightBias.zero_point_max, 0);
 assert.equal(sixteenByEight.estimated_int8_speedup, 1);
 assert.match(sixteenByEight.estimated_int8_speedup_detail, /no 16x8 speedup is modeled/i);
+assert.equal(sixteenByEight.weight_integrity.quant_grid_details.length, 1);
+const sixteenByEightGrid = sixteenByEight.weight_integrity.quant_grid_details[0];
+assert.deepEqual({
+  dtype: sixteenByEightGrid.dtype,
+  code_domain_min: sixteenByEightGrid.code_domain_min,
+  code_domain_max: sixteenByEightGrid.code_domain_max,
+  elements_scanned: sixteenByEightGrid.elements_scanned,
+  endpoint_elements: sixteenByEightGrid.endpoint_elements,
+  legal_integer_levels: sixteenByEightGrid.legal_integer_levels,
+}, {
+  dtype: "INT8",
+  code_domain_min: -128,
+  code_domain_max: 127,
+  elements_scanned: 576,
+  endpoint_elements: 8,
+  legal_integer_levels: 256,
+});
+assert.equal(sixteenByEightGrid.grid_utilization, sixteenByEightGrid.unique_integer_levels / sixteenByEightGrid.legal_integer_levels);
+assert.equal(sixteenByEightGrid.saturation_ratio, sixteenByEightGrid.endpoint_elements / sixteenByEightGrid.elements_scanned);
+assert.match(sixteenByEightGrid.formula, /q==qmin or stored q==qmax/);
+assert.match(sixteenByEightGrid.interpretation_boundary, /do(?:es)? not measure dequantized clipping/i);
 assertSummary("conv-16x8.tflite", /112,896 MACs/);
 assertEnvelope("conv-16x8.tflite", {
   total_macs: 112_896,
@@ -138,6 +165,45 @@ assert.throws(
   ),
   /complete numeric primary-subgraph MAC ledger/i,
 );
+
+for (const name of ["transpose-conv-valid.tflite", "transpose-conv-same-cropped.tflite"]) {
+  const row = fixture(name);
+  const analysis = audit(name);
+  const transpose = analysis.ops.find((op) => op.name === "TRANSPOSE_CONV");
+  assert(transpose, `${name} must contain TRANSPOSE_CONV`);
+  assert.equal(analysis.total_macs, row.expected.nominal_dense_macs);
+  assert.equal(analysis.total_macs_decimal, String(row.expected.nominal_dense_macs));
+  assert.equal(analysis.mac_confidence, "exact");
+  assert.equal(transpose.macs, row.expected.nominal_dense_macs);
+  assert.equal(transpose.macs_status, "assessed_nominal");
+  assert.match(transpose.macs_reason, /N\*Hin\*Win\*Cin\*Kh\*Kw\*Cout/);
+  assert.match(transpose.macs_reason, /not a claim about cropped valid-overlap/i);
+  assertEnvelope(name, {
+    total_macs: row.expected.nominal_dense_macs,
+    status: "assessed",
+    assessed: 1,
+    unassessed: 0,
+  });
+}
+assert.notEqual(
+  fixture("transpose-conv-same-cropped.tflite").expected.nominal_dense_macs,
+  fixture("transpose-conv-same-cropped.tflite").expected.reference_valid_overlap_macs,
+  "The cropped reference-loop overlap must remain distinct from the nominal dense footprint.",
+);
+
+const dynamicTranspose = audit("transpose-conv-dynamic.tflite");
+const dynamicTransposeOp = dynamicTranspose.ops.find((op) => op.name === "TRANSPOSE_CONV");
+assert(dynamicTransposeOp);
+assert.equal(dynamicTranspose.total_macs, null);
+assert.equal(dynamicTranspose.total_macs_decimal, null);
+assert.equal(dynamicTranspose.mac_confidence, "symbolic");
+assert.equal(dynamicTransposeOp.macs, null);
+assert.equal(dynamicTransposeOp.macs_status, "not_assessed");
+assert.equal(dynamicTransposeOp.row_working_set_bytes, 0);
+assert.equal(dynamicTransposeOp.row_working_set_ratio, 0);
+assert.equal(dynamicTranspose.ops.some((op) => Number(op.row_working_set_bytes) < 0 || Number(op.row_working_set_ratio) < 0), false);
+assert.equal(dynamicTranspose.dynamic_shape_cost_contract.total_macs_formula.expression, fixture("transpose-conv-dynamic.tflite").expected.symbolic_total_macs);
+assert.match(dynamicTranspose.dynamic_shape_cost_contract.op_formulas.find((row) => row.op_name === "TRANSPOSE_CONV").reason, /nominal dense scatter footprint/i);
 assert.throws(
   () => compute_deployment_frontier(
     new Uint8Array(readFileSync(fixture("dynamic-reshape.tflite").path)),

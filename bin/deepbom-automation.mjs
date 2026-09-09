@@ -7,6 +7,9 @@ import {
   AUDIT_OUTPUT_FORMATS,
   cloneAuditOutputContracts,
 } from "../web/lib/audit-output-contracts.js";
+import { clonePublicProductContracts } from "../web/lib/public-product-contracts.js";
+import { findFindingRule } from "../web/lib/finding-rule-catalog.js";
+import { evaluateGatePolicyProfile, listGatePolicyProfiles } from "../web/lib/gate-policy-profiles.js";
 
 export const CLI_CAPABILITIES_SCHEMA = "deepbom.cli_capabilities.v1";
 export const CLI_ERROR_SCHEMA = "deepbom.cli_error.v1";
@@ -26,7 +29,7 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       { name: "audit", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },
       { name: "gguf", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },
       { name: "verify", input_count: 1, outputs: ["deepbom.cli_interface_contract_verification.v1"] },
-      { name: "diff", input_count: 2, outputs: ["deepbom.deployment_delta.v1.1"] },
+      { name: "diff", input_count: 2, outputs: ["deepbom.semantic_artifact_diff.v1"], supported_formats: ["tflite", "onnx", "coreml", "gguf", "safetensors", "executorch"], matching_format_required: true },
       { name: "explore", input_count: 1, outputs: ["deepbom.redesign_pareto.v1"] },
         { name: "graph", input_count: 1, outputs: ["svg", "png", "html", "mermaid", "dot", "deepbom.artifact_ir.v2", "deepbom.graph_ir.v1", "deepbom.visualization_manifest.v1"] },
         { name: "placement", input_count: 1, outputs: ["deepbom.placement_comparison.v1"] },
@@ -72,6 +75,7 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       monolithic_executable_fail_closed_above_bytes: "1073741824",
       payload_execution: false,
     },
+    public_product_contracts: clonePublicProductContracts(),
     accelerator_profiles: {
       nvidia_collector_schema: "deepbom.accelerator_profile.v1",
       legacy_nvidia_binding_schema: "deepbom.accelerator_profile_binding.v1",
@@ -95,6 +99,7 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       default_gate: "artifact_defect_only",
       review_policy_schema: "deepbom.review_policy.v1",
       review_policy_states: ["execution_status", "coverage_status", "finding_policy_status"],
+      builtin_policy_profiles: listGatePolicyProfiles(),
       identity_scoped_expiring_exceptions: true,
       deterministic_json: true,
       reproducible_timestamp_sources: ["--timestamp", "SOURCE_DATE_EPOCH"],
@@ -147,22 +152,27 @@ export function buildSarifDocument(envelope, { version, policyResult = null } = 
   const findings = Array.isArray(envelope.findings) ? envelope.findings : [];
   const uniqueRuleFindings = [...new Map(findings.map((finding) => [finding.id, finding])).values()];
   const ruleIndexById = new Map(uniqueRuleFindings.map((finding, index) => [finding.id, index]));
-  const rules = uniqueRuleFindings.map((finding) => ({
-    id: finding.id,
-    name: sarifName(finding.id),
-    shortDescription: { text: finding.title || finding.id },
-    fullDescription: { text: finding.summary || finding.title || finding.id },
-    help: {
-      text: finding.recommendation || finding.interpretation || "Review the hash-bound DEEPBOM evidence envelope.",
-    },
-    defaultConfiguration: { level: sarifLevel(finding.severity) },
-    properties: {
-      category: finding.rule_id || null,
-      deepbomEvidenceClass: finding.evidence_class || null,
-      deepbomSeverity: normalizeFindingLevel(finding.severity),
-      deepbomFindingKind: finding.finding_kind || "caution",
-    },
-  }));
+  const rules = uniqueRuleFindings.map((finding) => {
+    const catalog = findFindingRule(finding.id);
+    return {
+      id: finding.id,
+      name: sarifName(finding.id),
+      shortDescription: { text: finding.title || catalog?.title || finding.id },
+      fullDescription: { text: finding.summary || finding.title || catalog?.title || finding.id },
+      help: {
+        text: catalog?.remediation || finding.recommendation || finding.interpretation || "Review the hash-bound DEEPBOM evidence envelope.",
+      },
+      defaultConfiguration: { level: sarifLevel(finding.severity) },
+      properties: {
+        category: finding.rule_id || null,
+        deepbomEvidenceClass: finding.evidence_class || null,
+        deepbomSeverity: normalizeFindingLevel(finding.severity),
+        deepbomFindingKind: finding.finding_kind || "caution",
+        deepbomRuleCatalogSchema: catalog ? "deepbom.finding_rule_explanation.v1" : null,
+        deepbomRuleTriggerContract: catalog?.trigger_contract || null,
+      },
+    };
+  });
   const artifactUri = artifactUriFor(envelope.identity?.filename || "model");
   const artifact = {
     location: { uri: artifactUri },
@@ -265,6 +275,8 @@ export function evaluateDefectGate(envelope) {
     evidence_envelope_sha256: envelope?.envelope_sha256 || null,
   };
 }
+
+export { evaluateGatePolicyProfile };
 
 export function normalizeFailOn(value) {
   const normalized = String(value || "none").trim().toLowerCase();

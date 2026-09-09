@@ -1,0 +1,48 @@
+{
+  "schema": "deepbom.external_review_gguf_fixtures.v1",
+  "generator": "deterministic_node_binary_writer",
+  "source": {
+    "repository": "ggml-org/llama.cpp",
+    "commit": "7bd8282c37fcd9c4d7236106d664761a23318f18",
+    "path": "ggml/src/ggml.c",
+    "sha256": "9e40ad07323c7925f06a105119dfb07c1d4a21d3263a9e9bd0bd21792c42e1e4"
+  },
+  "fixtures": [
+    {
+      "path": "gguf-f16.gguf",
+      "bytes": 192,
+      "sha256": "614b6e9ad523240cddffc0b08ef27b706fd06684f4acfc8f1b0f3f40b31d1d99",
+      "expected": {
+        "dtype": "F16",
+        "tensor_count": 1,
+        "block_quantized_tensor_count": 0,
+        "quantization_classification": "not_quantized_storage_encoding",
+        "storage_precision_classification": "reduced_precision_floating_point_storage"
+      }
+    },
+    {
+      "path": "gguf-q4-0.gguf",
+      "bytes": 146,
+      "sha256": "62229e9a4b0a3efe6ee29e0b32ce42ed9ffd9d9d46ef3d7ea5928560a2e5d1c7",
+      "expected": {
+        "dtype": "Q4_0",
+        "tensor_count": 1,
+        "block_quantized_tensor_count": 1,
+        "quantization_classification": "format_defined_block_quantized_weights",
+        "storage_precision_classification": "block_quantized_storage"
+      }
+    },
+    {
+      "path": "gguf-q8-0.gguf",
+      "bytes": 162,
+      "sha256": "43b21049046d5b3982be949ed529cb8c57bee4031fe312b3b1d0e1df13eed6b6",
+      "expected": {
+        "dtype": "Q8_0",
+        "tensor_count": 1,
+        "block_quantized_tensor_count": 1,
+        "quantization_classification": "format_defined_block_quantized_weights",
+        "storage_precision_classification": "block_quantized_storage"
+      }
+    }
+  ]
+}

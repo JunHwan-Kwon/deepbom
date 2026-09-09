@@ -623,9 +623,10 @@ function tfliteMacFormula(op, byIndex, symbols, fallbackByIndex) {
     );
   }
   if (op.name === "TRANSPOSE_CONV") {
-    if (output?.shape?.length !== 4 || weight?.shape?.length !== 4) return null;
+    const input = tensorAt(byIndex, op?.inputs?.[2]);
+    if (input?.shape?.length !== 4 || weight?.shape?.length !== 4) return null;
     return multiply(
-      dimensionsPolynomial(output, [0, 1, 2], "tflite", symbols, fallback(output)),
+      dimensionsPolynomial(input, [0, 1, 2], "tflite", symbols, fallback(input)),
       dimensionsPolynomial(weight, [0, 1, 2, 3], "tflite", symbols, fallback(weight)),
     );
   }

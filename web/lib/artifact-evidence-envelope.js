@@ -432,6 +432,9 @@ export function validateArtifactEvidenceEnvelope(envelope) {
 }
 
 function validPolicyIdentity(value) {
+  if (value?.schema === "deepbom.gate_policy_profile.v1") {
+    return ["engineering", "regulatory"].includes(value?.profile) && value?.mode === "builtin_evidence_gate";
+  }
   return value?.schema === "deepbom.review_policy.v1"
     && sha256(value?.policy_sha256)
     && sha256(value?.source_file_sha256)

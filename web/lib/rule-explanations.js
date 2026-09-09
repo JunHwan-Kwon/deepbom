@@ -1,4 +1,5 @@
 import { ONNX_OPERATION_COST_SOURCE } from "../onnx.js";
+import { explainFindingRule, listFindingRuleExplanations } from "./finding-rule-catalog.js";
 
 const TENSORFLOW_COMMIT = "87bbf65b8d23d3f06912b1b2183587e1884bc45c";
 
@@ -55,16 +56,26 @@ const RULES = Object.freeze({
 });
 
 export function explainRule(ruleId) {
-  const id = String(ruleId || "").trim().toLowerCase();
+  const requested = String(ruleId || "").trim();
+  if (/^EA-[A-Z][A-Z0-9_]{1,15}-\d{4}$/i.test(requested)) return explainFindingRule(requested);
+  const id = requested.toLowerCase();
   const rule = RULES[id];
   if (!rule) throw new Error(`Unknown rule: ${ruleId}. Use deepbom explain-rule --list.`);
   return {
     schema: "deepbom.rule_explanation.v1",
+    rule_kind: "analysis_rule",
     rule_id: id,
     ...rule,
   };
 }
 
 export function listRuleExplanations() {
-  return Object.entries(RULES).map(([rule_id, rule]) => ({ rule_id, title: rule.title }));
+  return [
+    ...Object.entries(RULES).map(([rule_id, rule]) => ({ rule_kind: "analysis_rule", rule_id, title: rule.title })),
+    ...listFindingRuleExplanations(),
+  ];
+}
+
+export function listAnalysisRuleExplanations() {
+  return Object.entries(RULES).map(([rule_id, rule]) => ({ rule_kind: "analysis_rule", rule_id, title: rule.title }));
 }

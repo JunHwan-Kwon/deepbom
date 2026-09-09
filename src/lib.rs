@@ -1255,6 +1255,30 @@ struct ZeroKernelSliceDetail {
 }
 
 #[derive(Clone, Serialize, Default)]
+struct QuantGridDetail {
+    tensor_index: usize,
+    tensor_name: String,
+    dtype: String,
+    shape: Vec<i32>,
+    code_domain_min: i32,
+    code_domain_max: i32,
+    elements_scanned: usize,
+    unique_integer_levels: usize,
+    legal_integer_levels: usize,
+    grid_utilization: f64,
+    endpoint_elements: usize,
+    saturation_ratio: f64,
+    low_utilization_review: bool,
+    saturation_review: bool,
+    threshold_minimum_elements: usize,
+    low_utilization_threshold: f64,
+    saturation_threshold: f64,
+    evidence_class: String,
+    formula: String,
+    interpretation_boundary: String,
+}
+
+#[derive(Clone, Serialize, Default)]
 struct WeightIntegrityReport {
     constant_tensors_scanned: usize,
     weight_tensors_scanned: usize,
@@ -1291,6 +1315,7 @@ struct WeightIntegrityReport {
     threshold_eligible_quantized_constant_tensors: usize,
     min_threshold_eligible_grid_utilization: Option<f64>,
     max_saturation_percent: f64,
+    quant_grid_details: Vec<QuantGridDetail>,
     quant_grid_detail: String,
     status: String, // "ok" | "warn" | "risk"
     detail: String,
@@ -3527,7 +3552,13 @@ fn analyze_with_target_scope(
                 let row_ws = cache_payload
                     .logical_row_payload_bytes
                     .map(|value| value as f64)
-                    .unwrap_or(estimated_input_strip);
+                    .unwrap_or_else(|| {
+                        if estimated_input_strip.is_finite() && estimated_input_strip >= 0.0 {
+                            estimated_input_strip
+                        } else {
+                            0.0
+                        }
+                    });
                 let row_ws_ratio = if target.l1_data_bytes > 0 {
                     row_ws / target.l1_data_bytes as f64
                 } else {
@@ -4313,6 +4344,7 @@ fn compute_weight_integrity(
         threshold_eligible_quantized_constant_tensors: 0,
         min_threshold_eligible_grid_utilization: None,
         max_saturation_percent: 0.0,
+        quant_grid_details: Vec::new(),
         quant_grid_detail: String::new(),
         status: "ok".to_string(),
         detail: String::new(),
@@ -4381,6 +4413,28 @@ fn compute_weight_integrity(
                 } else {
                     saturated as f64 / q.len() as f64
                 };
+                r.quant_grid_details.push(QuantGridDetail {
+                    tensor_index: t.index,
+                    tensor_name: t.name.clone(),
+                    dtype: t.dtype.clone(),
+                    shape: t.shape.clone(),
+                    code_domain_min: qmin,
+                    code_domain_max: qmax,
+                    elements_scanned: q.len(),
+                    unique_integer_levels: used,
+                    legal_integer_levels: 256,
+                    grid_utilization: utilization,
+                    endpoint_elements: saturated,
+                    saturation_ratio: saturation,
+                    low_utilization_review: q.len() >= 256 && utilization < 0.25,
+                    saturation_review: q.len() >= 256 && saturation > 0.01,
+                    threshold_minimum_elements: 256,
+                    low_utilization_threshold: 0.25,
+                    saturation_threshold: 0.01,
+                    evidence_class: "DERIVED".to_string(),
+                    formula: "grid_utilization=unique(stored q)/(qmax-qmin+1); saturation=count(stored q==qmin or stored q==qmax)/stored N".to_string(),
+                    interpretation_boundary: "Stored 8-bit code occupancy only. Threshold reviews require N>=256 and do not measure dequantized clipping, activation saturation, task accuracy, or runtime behavior.".to_string(),
+                });
                 if utilization < r.min_grid_utilization {
                     r.min_grid_utilization = utilization;
                 }
@@ -5926,15 +5980,18 @@ fn estimate_op(
             tensors.get(inputs[2] as usize),
             tensors.get(outputs[0] as usize),
         ) {
-            if filter.shape.len() == 4 && out.shape.len() == 4 {
-                let batch = out.shape[0] as f64;
-                let out_h = out.shape[1] as f64;
-                let out_w = out.shape[2] as f64;
+            if filter.shape.len() == 4 && inp.shape.len() == 4 && out.shape.len() == 4 {
+                let batch = inp.shape[0] as f64;
+                let in_h = inp.shape[1] as f64;
+                let in_w = inp.shape[2] as f64;
                 let out_c = filter.shape[0] as f64;
                 let kernel_h = filter.shape[1] as f64;
                 let kernel_w = filter.shape[2] as f64;
                 let in_c = filter.shape[3] as f64;
-                macs = batch * out_h * out_w * out_c * kernel_h * kernel_w * in_c;
+                // Nominal dense footprint of the serialized scatter operation.
+                // This does not claim the selected runtime evaluates cropped
+                // out-of-bounds contributions or uses this exact kernel path.
+                macs = batch * in_h * in_w * in_c * kernel_h * kernel_w * out_c;
                 row_ws = kernel_h
                     * inp.shape.get(2).copied().unwrap_or(0) as f64
                     * inp.shape.get(3).copied().unwrap_or(0) as f64

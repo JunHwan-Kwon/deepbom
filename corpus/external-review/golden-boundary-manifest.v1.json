@@ -1,0 +1,44 @@
+{
+  "schema": "deepbom.external_review_golden_boundary_manifest.v1",
+  "boundaries": [
+    {
+      "id": "tflite_dynamic_and_transpose_conv",
+      "manifest": "corpus/external-review/fixtures/manifest.json",
+      "manifest_sha256": "c33b9a9b92c8af2f45c519d5c99bb034c99e42cc5ef4512ef661c7c56c27d18b",
+      "required_cases": [
+        "space-to-batch-stale-shapes.tflite",
+        "conv-16x8.tflite",
+        "dynamic-reshape.tflite",
+        "transpose-conv-valid.tflite",
+        "transpose-conv-same-cropped.tflite",
+        "transpose-conv-dynamic.tflite"
+      ],
+      "verification_script": "scripts/check-external-review-tflite-correctness.mjs"
+    },
+    {
+      "id": "gguf_f16_q4_q8_storage",
+      "manifest": "corpus/external-review/fixtures/gguf-storage-classes.manifest.json",
+      "manifest_sha256": "cc63fb10e7e7bb964b23b4ea12c621ebe03f5985a8dac14d28988a8b8cf336f8",
+      "required_cases": ["gguf-f16.gguf", "gguf-q4-0.gguf", "gguf-q8-0.gguf"],
+      "verification_script": "scripts/check-external-review-gguf-correctness.mjs"
+    },
+    {
+      "id": "coreml_compressed_affine_contract",
+      "manifest": "corpus/external-review/fixtures/coreml-affine-attributes.manifest.json",
+      "manifest_sha256": "04f8096ec7a7299b7de95dd86a10fe254beb5de3a332ba230fddc120ea6a1441",
+      "required_cases": [
+        "coreml-affine-attributes.mlpackage/Data/com.deepbom.fixture/model.mlmodel",
+        "coreml-affine-missing-axis.mlmodel"
+      ],
+      "verification_script": "scripts/check-external-review-coreml-correctness.mjs"
+    },
+    {
+      "id": "onnx_invalid_external_byte_range",
+      "manifest": "corpus/external-review/fixtures/onnx-invalid-external-range/manifest.json",
+      "manifest_sha256": "116821ef192fcf9967254e8198a4e689d9ca3d023046e297c928c3e75ea765a8",
+      "required_cases": ["model.onnx", "weights.bin"],
+      "verification_script": "scripts/check-external-review-onnx-correctness.mjs"
+    }
+  ],
+  "closure_contract": "Every listed manifest is hash-bound, contains every required boundary fixture, and has a format-tier verifier. Removing a boundary or verifier fails CI."
+}

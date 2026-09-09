@@ -51,7 +51,7 @@ python -m pip install deepbom
 cargo install deepbom
 deepbom audit model.gguf --compact
 deepbom verify model.tflite --contract production-interface.json
-deepbom diff baseline.tflite candidate.tflite
+deepbom diff baseline.onnx candidate.onnx
 deepbom explore model.tflite
 deepbom placement model.tflite --profiles xnnpack_cpu,tflite_coreml_delegate,litert_qualcomm_qnn
 deepbom graph model.onnx --format json --output artifact-graph.json
@@ -67,6 +67,10 @@ keeps execution, coverage, and finding-policy states independent. See
 [`docs/CLI_AUTOMATION.md`](docs/CLI_AUTOMATION.md). The complete
 option inventory is generated from the executable in
 [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md).
+
+CycloneDX 1.7 consumers should read the analyzed model from
+`metadata.component` and additional inventory members from `components[]`.
+DEEPBOM does not duplicate the BOM root into the additional-components array.
 
 The graph JSON output includes the evidence-preserving
 `deepbom.artifact_ir.v2` ledger and a deterministic `deepbom.graph_ir.v1`
@@ -126,6 +130,15 @@ npm run check:rust
 The browser workbench is available at [deepbom.org](https://deepbom.org/).
 
 ## Evidence scope
+
+### Format maturity
+
+Accepted extensions do not imply equal analytical depth. TFLite and ONNX have
+stable executable-graph contracts. GGUF and SafeTensors have stable container,
+storage, and architecture contracts but do not serialize an executable graph.
+Core ML and ExecuTorch analysis remains preview and fixture-bounded. The exact
+parser, graph, quantization, and placement status for every format is available
+from `deepbom capabilities --compact` under `public_product_contracts`.
 
 | Format | Public static evidence |
 | --- | --- |

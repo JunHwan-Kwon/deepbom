@@ -201,7 +201,7 @@ for (const snippet of [
   "npm run check:public-package-boundary",
   "verify-python-wheel-matrix.py",
   "pypa/gh-action-pypi-publish@v1.14.2",
-  "npm publish ./dist/deepbom-${{ inputs.expected_version }}.tgz --access public",
+  "npm publish ./dist/deepbom-${{ inputs.expected_version }}.tgz --access public --tag \"$npm_tag\"",
   "node scripts/build-cargo-engine-release.mjs",
   "cargo +1.85.0 package --locked --manifest-path channels/cargo/Cargo.toml",
   "web/samples/mobilenet_v2_1.0_224_quant.tflite",
@@ -213,6 +213,11 @@ for (const snippet of [
   "environment: pypi",
   "environment: npm",
   "npm >= 11.5.1 is required for Trusted Publishing",
+  "release_tier:",
+  "actual_tier=stable",
+  "npm_tag=latest",
+  "npm_tag=next",
+  "--prerelease",
   "test \"${GITHUB_REF}\" = \"refs/tags/channels-v${actual}\"",
 ]) expect(channelReleaseWorkflow.includes(snippet), `Channel release workflow should contain: ${snippet}`);
 for (const identity of ["windows-x64", "windows-arm64", "linux-x64", "linux-arm64", "macos-x64", "macos-arm64"]) {

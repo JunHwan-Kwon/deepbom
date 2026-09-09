@@ -25,7 +25,7 @@ asset verification, and equivalence checks are documented in
 | `audit` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
 | `gguf` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
 | `verify` | 1 | `deepbom.cli_interface_contract_verification.v1` |
-| `diff` | 2 | `deepbom.deployment_delta.v1.1` |
+| `diff` | 2 | `deepbom.semantic_artifact_diff.v1` |
 | `explore` | 1 | `deepbom.redesign_pareto.v1` |
 | `graph` | 1 | `svg`<br>`png`<br>`html`<br>`mermaid`<br>`dot`<br>`deepbom.artifact_ir.v2`<br>`deepbom.graph_ir.v1`<br>`deepbom.visualization_manifest.v1` |
 | `placement` | 1 | `deepbom.placement_comparison.v1` |
@@ -53,16 +53,16 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.96.11`:
+`1.96.12`:
 
 ```console
-DEEPBOM 1.96.11
+DEEPBOM 1.96.12
 
 Usage:
   deepbom audit <artifact-or-package> [options]
   deepbom gguf <artifact.gguf> [options]
   deepbom verify <artifact> --contract <json> [options]
-  deepbom diff <baseline.tflite> <candidate.tflite> [options]
+  deepbom diff <baseline-artifact-or-package> <candidate-artifact-or-package> [options]
   deepbom explore <artifact.tflite> [options]
   deepbom graph <artifact> [options]
   deepbom accelerator collect nvidia [options]
@@ -115,6 +115,10 @@ Options:
 
 Exit codes:
   0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding
+
+Built-in gate profiles:
+  --policy engineering  Block artifact defects; keep cautions and evidence gaps visible
+  --policy regulatory   Block artifact defects and unresolved evidence gaps; this is not a legal-compliance determination
 
 Human-readable audit output:
   --output-format summary  Emit the bounded projection derived from deepbom.review_summary.v1
@@ -176,7 +180,7 @@ Bounded scan policy:
 Repeat-review policy:
   --review-policy <json> Bind required analysis coverage, finding threshold, and identity-scoped expiring exceptions
   --policy-output <path> Write the deterministic policy decision JSON
-  --review-policy and --fail-on are mutually exclusive policy sources.
+  --policy, --gate, --review-policy, and --fail-on are mutually exclusive policy sources.
 
 Output format selection:
   --output-format <kind>  Preferred unambiguous spelling for --format

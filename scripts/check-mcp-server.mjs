@@ -58,7 +58,9 @@ async function checkRealServerContract() {
     assert.match(auditTool.description, /immutable remote/);
     assert.match(auditTool.description, /an evidence_gap is not a defect/i);
     assert.match(auditTool.description, /never establishes executed accelerator assignment, latency, energy, accuracy, or device fit/);
-    assert.match(tools.find((tool) => tool.name === "deepbom_diff").description, /standalone TFLite artifacts/);
+    assert.match(tools.find((tool) => tool.name === "deepbom_diff").description, /same supported format/);
+    assert.equal(tools.find((tool) => tool.name === "deepbom_diff").outputSchema.properties.schema.const,
+      "deepbom.semantic_artifact_diff.v1");
 
     session.request(3, "tools/call", { name: "deepbom_capabilities", arguments: {} });
     const capabilityResult = (await session.response(3)).result;

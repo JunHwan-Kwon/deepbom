@@ -62,7 +62,7 @@ assert.match(run(["--help"]).stdout, /--json\s+Compatibility alias for --output-
 assert.match(run(["--help"]).stdout, /--output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif/, "the canonical output-format list includes summary");
 assert.match(run(["--help"]).stdout, /--summary\s+Compatibility alias for --output-format summary/, "summary mode is discoverable");
 assert.match(run(["--help"]).stdout, /deepbom verify <artifact> --contract <json>/, "verify command is discoverable");
-assert.match(run(["--help"]).stdout, /deepbom diff <baseline\.tflite> <candidate\.tflite>/, "diff command is discoverable");
+assert.match(run(["--help"]).stdout, /deepbom diff <baseline-artifact-or-package> <candidate-artifact-or-package>/, "cross-format semantic diff command is discoverable");
 assert.match(run(["--help"]).stdout, /deepbom explore <artifact\.tflite>/, "explore command is discoverable");
 assert.match(run(["--help"]).stdout, /--executorch-build <json>/, "ExecuTorch selected-build binding is discoverable");
 assert.match(run(["--help"]).stdout, /--tensorrt-engine-inspector <json>/, "TensorRT optimized-engine evidence import is discoverable");
@@ -408,8 +408,11 @@ try {
   assert.notEqual(conflictingTarget.status, 0, "target id/profile conflict must fail closed");
   assert.match(conflictingTarget.stderr, /mutually exclusive/);
 
-  const delta = JSON.parse(run(["diff", "web/samples/mobilenet_v1_025_224_float.tflite", cases[0][0], "--compact"]).stdout);
-  assert.equal(delta.schema, "deepbom.deployment_delta.v1.1", "diff uses the canonical deployment-delta schema");
+  const semanticDiff = JSON.parse(run(["diff", "web/samples/mobilenet_v1_025_224_float.tflite", cases[0][0], "--compact"]).stdout);
+  assert.equal(semanticDiff.schema, "deepbom.semantic_artifact_diff.v1", "diff uses the canonical cross-format semantic schema");
+  assert.equal(semanticDiff.format, "tflite", "diff retains the common artifact format");
+  const delta = semanticDiff.tflite_deployment_delta;
+  assert.equal(delta.schema, "deepbom.deployment_delta.v1.1", "TFLite diff retains the target-bound deployment delta");
   assert.equal(delta.target_count, 4, "diff default target denominator");
   assert.equal(delta.alignment.matched_op_count + delta.alignment.removed_op_count, delta.baseline.operator_count,
     "diff baseline op conservation");

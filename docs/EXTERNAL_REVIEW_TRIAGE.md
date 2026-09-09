@@ -117,15 +117,17 @@ ONNX/safetensors에서 JSON 분석에는 `nan_tensors: 1`이 있는데 SARIF에�
 
 ### ER-A3. 출처 메타데이터 부재가 실제 결함보다 앞에 나옴
 
-**상태: reported**
+**상태: fixed**
 
 `--fail-on high`로 빌드가 막혔는데, 막은 이유가 NaN이 아니라 "소스 체크포인트 해시와
 변환기 버전 정보 없음"이었습니다. 규제 문맥에서는 타당한 설계지만, 엔지니어가
 "이 모델 괜찮아?"라고 물었을 때 첫 답이 "출처 문서가 없습니다"이면 도구를 안 씁니다.
 
-**제안.** `--policy engineering|regulatory` 분기. 기본 `engineering`에서는 lineage
-부재를 NOTE로 낮추고 NaN·scale 이상을 ERROR로 올립니다. `scan_policy`에 이미 분기
-구조가 있으므로 새 개념이 아닙니다.
+**해결.** `--policy engineering|regulatory`를 추가했습니다. `engineering`은
+`artifact_defect`만 차단하고, `regulatory`는 artifact defect와 unresolved
+`evidence_gap`을 차단합니다. 두 정책 모두 동일 finding identity를 보존하며,
+`regulatory` 통과가 법적 적합성·안전성·규제 승인 판정이 아니라는 경계를 결과에
+포함합니다. `node scripts/check-cli-automation.mjs`가 두 정책의 차단 집합을 검증합니다.
 
 ---
 
@@ -198,24 +200,40 @@ shape signature의 음수 차원을 런타임 미바인딩 상태로 유지합�
 
 ### ER-B4. `TRANSPOSE_CONV` 집계 관례 미문서화
 
-**상태: reported**
+**상태: fixed**
 
 2,359,296(출력 기준)으로 보고했는데, 실제 커널 곱셈 수인 입력 기준은 589,824입니다.
 stride² 만큼 차이가 납니다. 어느 관례든 문서화만 되면 틀렸다고 할 수 없지만, B1의
 과소집계와 합쳐지면 한 모델 안에서 오차가 양방향으로 생깁니다.
 
+**해결.** DEEPBOM의 TFLite `TRANSPOSE_CONV` MAC을 source-pinned reference loop의
+명목상 dense scatter footprint `N*Hin*Win*Cin*Kh*Kw*Cout`으로 고정했습니다. VALID,
+SAME-cropped, dynamic-output fixture를 함께 두며, cropped valid-overlap 곱셈 수는 별도
+참조값일 뿐 top-level MAC으로 바꾸지 않습니다. 동적 입력 차원은 숫자로 추측하지 않고
+`54*D0*D1` 기호식으로 유지합니다.
+
 ### ER-B5. F16 GGUF를 양자화 계열로 라벨링
 
-**상태: reported**
+**상태: fixed**
 
 양자화 텐서 0개라고 스스로 세면서 라벨은 `block_or_tensor_encoded_weights`입니다.
 
+**해결.** F16/BF16은 reduced-precision floating-point storage로, Q4/Q8 계열만
+format-defined block quantization으로 분리했습니다. F16/Q4_0/Q8_0 최소 GGUF의
+바이트와 기대 라벨을 해시 고정하고 native analysis, Artifact IR, CLI, envelope가 같은
+분류를 내는지 검증합니다.
+
 ### ER-B6. saturation 비율 정의 미문서화
 
-**상태: reported**
+**상태: fixed**
 
 deepbom 보고값 최대 4.86% 대 리뷰어가 `|w| == 127`로 직접 센 값 11.1%(depthwise).
 정의가 다를 수 있으나 문서가 없으면 검증이 불가능합니다. `grid_utilization`도 같습니다.
+
+**해결.** saturation은 선택된 tensor scope에서 decode된 값 수를 분모로, grid
+utilization은 dtype의 representable centered integer code 수를 분모로 고정했습니다.
+대상 tensor, 분자·분모와 제외 사유를 `quant_grid_denominator_ledger`에 기록하며,
+분모가 0이거나 payload를 decode하지 못하면 0으로 만들지 않고 `not_assessed`로 남깁니다.
 
 ---
 
@@ -223,7 +241,7 @@ deepbom 보고값 최대 4.86% 대 리뷰어가 `|w| == 127`로 직접 센 값 1
 
 ### ER-C1. Core ML mlprogram: blob 참조 미해석 → MAC 전부 계산 실패
 
-**상태: reported**
+**상태: fixed**
 
 conv 4개와 matmul 1개의 출력 shape는 다 읽어놓고 MAC을 하나도 계산하지 못해 total이
 None입니다. 가중치가 `weights/weight.bin` 블롭으로 분리되어 있는데 그 참조를 따라가
@@ -232,9 +250,15 @@ None입니다. 가중치가 `weights/weight.bin` 블롭으로 분리되어 있�
 
 **영향 범위.** mlprogram은 현재 Apple의 기본 포맷입니다. iOS 팀에게는 사실상 미지원.
 
+**해결.** 동일 package 안의 여러 blob file을 filename, byte offset, byte length,
+payload SHA-256으로 각각 바인딩하고 MIL operand tensor에 연결합니다. source-backed
+conv/linear/matmul MAC은 바인딩된 shape만 사용하며, 누락·범위 초과·중복 blob range는
+fail-closed 처리합니다. `check-coreml-mlprogram-analysis.mjs`가 multi-blob operand와
+MAC conservation을 검증합니다.
+
 ### ER-C2. 양자화 mlpackage를 손상 파일로 오판
 
-**상태: reported**
+**상태: fixed**
 
 coremltools로 int8 per-channel 양자화한 mlpackage를 "constexpr_affine_dequantize에
 quantized_data, zero_point, scale 또는 axis가 없다"며 파싱 거부했습니다. 리뷰어가 MIL을
@@ -242,17 +266,28 @@ quantized_data, zero_point, scale 또는 axis가 없다"며 파싱 거부했습�
 axis 표현이 파서 기대와 다른 것으로 보입니다. **정상 파일을 손상으로 오판하는 것은
 지원 목록에 올려둔 것 대비 가장 나쁜 실패 모드입니다.**
 
+**해결.** coremltools 9.0의 해시 고정 생성물로 CoreML6
+`constexpr_affine_dequantize`가 인자를 input binding뿐 아니라 attribute로 직렬화하는
+형식을 재현했습니다. 파서는 두 소유 위치를 정확히 지원하되 같은 인자가 양쪽에 있으면
+거부합니다. 정상 attribute-bound package는 `assessed_exact_serialized_contract`, 필수
+axis가 실제로 빠진 음성 대조군은 malformed 입력으로 fail-closed 됩니다.
+
 ### ER-C3. ExecuTorch(.pte), TensorRT 미검증
 
 **상태: deferred** — 리뷰어 환경 제약(디스크, GPU 부재)으로 검증 자체가 불가했습니다.
 
 ### ER-C4. 포맷 성숙도 표시 부재
 
-**상태: reported**
+**상태: fixed**
 
 지원 확장자 7개가 동등하게 광고되지만 실제 신뢰 수준은 TFLite / ONNX(정적 shape 필요)
 / GGUF / safetensors 4개입니다. **성숙도 표를 문서와 MCP 도구 설명문 양쪽에 넣어야
 합니다.** 미지원이라고 적는 편이 지원한다고 적고 정상 파일을 거부하는 것보다 낫습니다.
+
+**해결.** 여섯 포맷의 parser, serialized graph, quantization, execution placement 성숙도를
+`deepbom.public_product_contracts.v1`로 공개하고 `deepbom capabilities --compact`와 공개
+문서가 같은 객체를 소비합니다. TFLite/ONNX와 storage-only GGUF/SafeTensors, preview
+Core ML/ExecuTorch의 경계를 별도로 표시합니다.
 
 ---
 
@@ -293,9 +328,14 @@ MCP와 CLI의 기본 audit 출력은 같은 bounded human summary를 사용합�
 
 ### ER-D4. safetensors markdown 요약 누락
 
-**상태: reported**
+**상태: fixed**
 
 포맷별 출력 완성도가 들쭉날쭉합니다.
+
+**해결.** SafeTensors와 GGUF의 bounded human summary가 tensor 수, 선언 payload bytes,
+dtype별 tensor 수, 수치 무결성 상태, quantization contract 상태를 구조화된
+`deepbom.review_summary.v1`에서만 투영합니다. 실행 DAG가 직렬화되지 않았다는 사실도
+0-op 그래프로 오해되지 않게 별도 문장으로 표시합니다.
 
 ---
 
@@ -303,18 +343,24 @@ MCP와 CLI의 기본 audit 출력은 같은 bounded human summary를 사용합�
 
 ### ER-E1. `graph_delta` 전부 0, `change_impact`는 자명한 문장만
 
-**상태: reported**
+**상태: fixed**
 
 scale이 1000배 벌어진 것이 diff에 안 잡혔고, change_impact는 "바이트가 바뀌었으니
 성능 재검증 필요"라는 말만 합니다.
 
+**해결.** `deepbom.semantic_artifact_diff.v1`이 Artifact IR의 graph, storage,
+quantization contract를 별도 축으로 비교합니다. scale을 약 1000배 바꾼 해시 고정
+TFLite fixture에서 changed record, scale ratio, integration revalidation을 검증하며,
+기존 target-bound TFLite delta도 중첩 보존합니다.
+
 ### ER-E2. TFLite 전용
 
-**상태: reported**
+**상태: fixed**
 
-**기회.** FDA PCCP(사전 변경 관리 계획)는 정확히 "어떤 변경이 재검증을 요구하는가"를
-다룹니다. `change_impact`가 제대로 되면 이 도구만의 차별점이 됩니다. 지금은 그 자리가
-비어 있습니다.
+**해결.** 같은 semantic diff 계약을 TFLite, ONNX, Core ML, GGUF, SafeTensors,
+ExecuTorch에 적용했습니다. 서로 다른 포맷 비교는 대응 관계를 추측하지 않고 거부합니다.
+change impact는 재검토할 증거 범주를 제시할 뿐, lineage·runtime behavior·task quality·
+규제상 중요도를 판정하지 않습니다.
 
 ---
 
@@ -322,7 +368,7 @@ scale이 1000배 벌어진 것이 diff에 안 잡혔고, change_impact는 "바�
 
 ### ER-F1. `explain-rule`에 규칙이 3개뿐
 
-**상태: reproduced**
+**상태: fixed**
 
 ```
 $ deepbom explain-rule --list --json
@@ -335,13 +381,19 @@ ID는 설명을 받을 수 없습니다. **CI에서 `--fail-on`을 걸려면 각
 근거, 오탐 가능성이 문서화되어야 합니다.** MCP에 `deepbom_explain_rule` 도구가
 추가됐지만 카탈로그가 비어 있어 그 도구도 반쪽입니다.
 
+**해결.** analysis rule 3개와 canonical `EA-*` finding rule 119개 namespace를 분리하고,
+119개 모두에 trigger, 적용 포맷, finding kind, priority 근거, 필요 evidence pointer,
+오탐 경계, remediation, method/source reference를 생성했습니다. 새 미분류 ID나 설명 없는
+finding이 들어오면 CI가 실패합니다. CLI·MCP·SARIF와 웹 `Why?`가 같은 registry를
+소비하며, 웹은 초기 번들을 키우지 않도록 클릭 시 catalog를 동적 로드합니다.
+
 ---
 
 ## G. CycloneDX
 
 ### ER-G1. CycloneDX 일반 소비자에서 root component를 놓칠 수 있음
 
-**상태: reproduced interoperability risk**
+**상태: fixed**
 
 ```
 components: 0 | metadata.component: machine-learning-model | properties: 111
@@ -352,23 +404,28 @@ components: 0 | metadata.component: machine-learning-model | properties: 111
 아닙니다. 다만 `components`만 순회하는 일반 SBOM 소비자에서는 빈 BOM처럼 보일 수
 있으므로 실제 소비자 호환성 검사와 명시적인 export 문서가 필요합니다.
 
+**해결.** 해시 고정 CycloneDX 1.7 fixture를 공식 vendored schema로 검증하고,
+schema-aware inventory가 `metadata.component`와 `components[]`를 함께 순회하는 계약을
+추가했습니다. components-only negative control은 root를 0건으로 놓침을 재현합니다.
+root를 배열에 중복하지 않으며, 이 검증은 모든 제3자 consumer 호환성을 주장하지 않습니다.
+
 ---
 
 ## I. 품질·릴리스 운영
 
 ### ER-I1. 외부 리뷰 경계를 포괄하는 정확성 골든 코퍼스 부족
 
-**상태: reproduced**
+**상태: fixed**
 
 저장소에는 expected-output, 공개 다중 포맷, 양자화, Core ML, GGUF, SafeTensors 등
 여러 회귀 코퍼스가 이미 있습니다. 다만 리뷰어가 하루 만에 찾은 ER-B1, ER-B2,
 ER-A1과 같은 경계 조건을 하나의 hash-bound 기대값 행렬로 묶는 장치가 부족합니다.
 
-**제안.** 아키텍처별 참조 모델 30~50개를 저장소에 넣고 정답(MAC, 파라미터 수, 양자화
-분류, 기대 소견 ID)을 JSON으로 고정해 모든 커밋에서 대조합니다. 목록: MobileNet,
-ResNet, U-Net, LSTM, Transformer(batch 고정/미고정 양쪽), dilated conv, transposed
-conv, 16x8, fp16, Q4/Q8 GGUF, 그리고 NaN·죽은 채널·scale 이상·잘린 파일 결함 주입 모델.
-**Keras 몇 줄로 생성되므로 저작권·용량 문제가 없습니다.**
+**해결.** 기존 광범위 공개 코퍼스를 복제하지 않고, 외부 리뷰에서 실제로 드러난 경계만
+별도 golden boundary manifest에 묶었습니다. TFLite dynamic/TRANSPOSE_CONV/16x8,
+GGUF F16/Q4/Q8, Core ML compressed affine, ONNX external byte-range 네 family의 child
+manifest SHA-256과 필수 fixture, format-tier verifier를 고정합니다. 하나라도 제거되거나
+검증 명령이 tier에서 빠지면 CI가 실패합니다.
 
 ### ER-I2. 결함 주입 회귀 테스트 부재
 
@@ -380,17 +437,27 @@ canonical finding, summary, SARIF, CLI gate, MCP와 함께 검증됩니다.
 
 ### ER-I3. 스키마 안정성 신호 없음
 
-**상태: reported**
+**상태: fixed**
 
 0.1.0에서 1.94.2로 뛴 이력, 거의 매일 패치, 내부 스키마 버전 수십 개. 소비자가 어느
 필드를 믿고 코드를 짤지 알 수 없습니다. **요약 층, SARIF 규칙 ID, CLI 플래그만이라도
 semver 대상으로 선언하고, 나머지 내부 스키마는 명시적으로 불안정 표시.**
 
+**해결.** CLI capabilities, evidence envelope, Artifact IR v2, semantic artifact diff,
+review summary, SARIF finding identity, CycloneDX 1.7 projection을 공개 machine contract로
+열거했습니다. format-specific full analysis는 명시적 compatibility surface로 남기며,
+breaking semantics는 새 schema id를 요구합니다.
+
 ### ER-I4. stable / nightly 채널 분리
 
-**상태: reported**
+**상태: fixed**
 
 매일 나오는 건 pre-release로, 2~4주 단위로 골든 코퍼스를 통과한 빌드만 stable로 승격.
+
+**해결.** release contract와 workflow를 `dev`, `prerelease`, `release`로 분리했습니다.
+stable은 npm `latest`, prerelease는 `next`와 GitHub prerelease를 사용하고, dev는 게시할
+수 없습니다. stable의 목표 최소 간격은 14일이며 P0 correctness/security 수정만 예외로
+기록합니다.
 
 ---
 

@@ -648,24 +648,28 @@ fn tflite_op_mac_polynomial(
             ))
         }
         "TRANSPOSE_CONV" => {
-            let output = output.ok_or("TRANSPOSE_CONV output tensor is missing")?;
+            let input = op
+                .inputs
+                .get(2)
+                .and_then(|index| tensor(tensors, *index))
+                .ok_or("TRANSPOSE_CONV activation input tensor is missing")?;
             let weight = op
                 .inputs
                 .get(1)
                 .and_then(|index| tensor(tensors, *index))
                 .ok_or("TRANSPOSE_CONV filter tensor is missing")?;
-            if output.shape.len() != 4 || weight.shape.len() != 4 {
+            if input.shape.len() != 4 || weight.shape.len() != 4 {
                 return Err(
-                    "TRANSPOSE_CONV requires rank-4 output and OHWI filter tensors".to_string(),
+                    "TRANSPOSE_CONV requires rank-4 NHWC input and OHWI filter tensors".to_string(),
                 );
             }
-            let spatial = dimensions_polynomial(output, &[0, 1, 2], symbols)
-                .ok_or("TRANSPOSE_CONV output dimensions are unresolved")?;
+            let spatial = dimensions_polynomial(input, &[0, 1, 2], symbols)
+                .ok_or("TRANSPOSE_CONV input dimensions are unresolved")?;
             let kernel = dimensions_polynomial(weight, &[0, 1, 2, 3], symbols)
                 .ok_or("TRANSPOSE_CONV filter dimensions are unresolved")?;
             Ok((
                 multiply_all(&[spatial, kernel]).ok_or("TRANSPOSE_CONV polynomial overflow")?,
-                "N*Hout*Wout*Cout*Kh*Kw*Cin from output and filter dimensions".to_string(),
+                "N*Hin*Win*Cin*Kh*Kw*Cout nominal dense scatter footprint from NHWC input and OHWI filter dimensions; cropped valid-overlap and selected-kernel work are not claimed".to_string(),
             ))
         }
         "CONV_3D" | "CONV_3D_TRANSPOSE" => {

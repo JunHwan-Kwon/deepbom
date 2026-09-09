@@ -61,8 +61,15 @@
       "title": "Evidence gaps obscure artifact defects under severity gating",
       "class": "policy_design",
       "priority": "P1",
-      "status": "reported",
-      "formats": ["all"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["all"],
+      "reproducer": "node scripts/check-cli-automation.mjs",
+      "expected": {
+        "engineering_blocks": ["artifact_defect"],
+        "regulatory_blocks": ["artifact_defect", "evidence_gap"],
+        "regulatory_boundary": "evidence completeness only; not a legal-compliance determination"
+      }
     },
     {
       "id": "ER-B1",
@@ -148,40 +155,81 @@
       "title": "TRANSPOSE_CONV MAC counting convention is not explicit",
       "class": "documentation",
       "priority": "P1",
-      "status": "reported",
-      "formats": ["tflite"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["tflite"],
+      "reproducer": "node scripts/check-external-review-tflite-correctness.mjs",
+      "fixture_manifest": "corpus/external-review/fixtures/manifest.json",
+      "expected": {
+        "counting_convention": "nominal_dense_scatter_footprint",
+        "formula": "N*Hin*Win*Cin*Kh*Kw*Cout",
+        "cropped_valid_overlap_reported_as_mac_total": false
+      }
     },
     {
       "id": "ER-B5",
       "title": "F16 GGUF storage is labeled as a quantization family",
       "class": "semantic_label",
       "priority": "P1",
-      "status": "reported",
-      "formats": ["gguf"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["gguf"],
+      "reproducer": "node scripts/check-external-review-gguf-correctness.mjs",
+      "fixture_manifest": "corpus/external-review/fixtures/gguf-storage-classes.manifest.json",
+      "expected": {
+        "F16": "not_quantized_storage_encoding",
+        "Q4_0": "format_defined_block_quantized_weights",
+        "Q8_0": "format_defined_block_quantized_weights"
+      }
     },
     {
       "id": "ER-B6",
       "title": "Saturation and grid-utilization denominators are not documented",
       "class": "documentation",
       "priority": "P1",
-      "status": "reported",
-      "formats": ["tflite"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["tflite"],
+      "reproducer": "node scripts/check-external-review-tflite-correctness.mjs",
+      "expected": {
+        "saturation_denominator": "decoded values in the selected tensor scope",
+        "grid_utilization_denominator": "representable centered integer codes for the tensor dtype",
+        "zero_denominator_status": "not_assessed"
+      }
     },
     {
       "id": "ER-C1",
       "title": "Core ML ML Program blob references are not bound to MAC operands",
       "class": "format_coverage",
       "priority": "P1",
-      "status": "reported",
-      "formats": ["coreml"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["coreml"],
+      "reproducer": "node scripts/check-coreml-mlprogram-analysis.mjs",
+      "expected": {
+        "multi_blob_operand_binding": "hash_and_byte_range_bound",
+        "mac_operand_conservation": true,
+        "missing_or_overlapping_blob_range": "fail_closed"
+      }
     },
     {
       "id": "ER-C2",
       "title": "Valid Core ML compressed packages may be rejected as malformed",
       "class": "correctness",
       "priority": "P0",
-      "status": "reported",
-      "formats": ["coreml"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["coreml"],
+      "reproducer": "node scripts/check-external-review-coreml-correctness.mjs",
+      "fixture": {
+        "manifest": "corpus/external-review/fixtures/coreml-affine-attributes.manifest.json",
+        "generator": "coremltools 9.0",
+        "valid_model_sha256": "0c2bb2b1a8207b5eaa06959c7059df4201b16ae666dd81d7d8a88c3fa729c54a"
+      },
+      "expected": {
+        "valid_attribute_binding": "assessed_exact_serialized_contract",
+        "missing_axis": "fail_closed_as_malformed"
+      }
     },
     {
       "id": "ER-C3",
@@ -197,8 +245,11 @@
       "title": "Accepted extensions do not communicate feature maturity",
       "class": "product_contract",
       "priority": "P1",
-      "status": "reported",
-      "formats": ["all"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["all"],
+      "reproducer": "node scripts/check-public-product-contracts.mjs",
+      "expected": { "format_rows": 6, "machine_readable_location": "deepbom capabilities --compact#/public_product_contracts/format_maturity" }
     },
     {
       "id": "ER-D1",
@@ -265,51 +316,72 @@
       "title": "SafeTensors human summary is incomplete",
       "class": "summary_contract",
       "priority": "P2",
-      "status": "reported",
-      "formats": ["safetensors"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["safetensors"],
+      "reproducer": "node scripts/check-cli-automation.mjs",
+      "expected": { "bounded_fields": ["tensor_count", "declared_tensor_bytes", "dtype_counts", "numerical_integrity_status", "quantization_contract_status"] }
     },
     {
       "id": "ER-E1",
       "title": "Diff omits quantization-contract changes",
       "class": "feature_gap",
       "priority": "P1",
-      "status": "reported",
-      "formats": ["tflite"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["tflite"],
+      "reproducer": "node scripts/check-semantic-artifact-diff.mjs",
+      "fixture": {
+        "baseline_sha256": "cf04274f7758c08e7e93995a95eeaa48203da6753f94b14002731d4061ffac9b",
+        "candidate_sha256": "94e7d995ae44ad0d33c559aa6532c5db17c68d52d352a7a69cc229932201ff1b"
+      },
+      "expected": { "changed_quantization_records": 1, "candidate_over_baseline_scale_ratio": "approximately_1000" }
     },
     {
       "id": "ER-E2",
       "title": "Semantic diff is limited to TFLite",
       "class": "feature_scope",
       "priority": "P2",
-      "status": "reported",
-      "formats": ["all"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["all"],
+      "reproducer": "node scripts/check-semantic-artifact-diff.mjs",
+      "expected": { "schema": "deepbom.semantic_artifact_diff.v1", "formats": ["tflite", "onnx", "coreml", "gguf", "safetensors", "executorch"], "same_format_required": true }
     },
     {
       "id": "ER-F1",
       "title": "Rule explanation catalog covers only three identifiers",
       "class": "explainability",
       "priority": "P1",
-      "status": "reproduced",
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
       "formats": ["all"],
-      "reproducer": "node bin/deepbom.mjs explain-rule --list --compact",
-      "actual": { "rule_count": 3 }
+      "reproducer": "node scripts/check-finding-rule-registry.mjs",
+      "expected": { "analysis_rule_count": 3, "canonical_finding_rule_count": 119, "unexplained_finding_rule_count": 0, "new_unclassified_ids": "ci_failure" }
     },
     {
       "id": "ER-G1",
       "title": "CycloneDX consumers may ignore metadata.component",
       "class": "interoperability_risk",
       "priority": "P2",
-      "status": "reproduced",
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
       "formats": ["cyclonedx"],
-      "boundary": "metadata.component is a valid root component; an empty components array is not a schema defect."
+      "reproducer": "node scripts/check-cyclonedx-consumer-compatibility.mjs",
+      "fixture": "corpus/external-review/cyclonedx-17-consumer-compatibility.v1.json",
+      "boundary": "metadata.component is a valid root component; an empty components array is not a schema defect. Compatibility is proven only for the hash-bound fixture and schema-aware inventory contract, not every third-party consumer."
     },
     {
       "id": "ER-I1",
       "title": "Golden coverage does not include all reported boundary cases",
       "class": "test_coverage",
       "priority": "P0",
-      "status": "reproduced",
-      "formats": ["all"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["all"],
+      "reproducer": "node scripts/check-external-review-boundary-corpus.mjs",
+      "fixture": "corpus/external-review/golden-boundary-manifest.v1.json",
+      "expected": { "hash_bound_boundary_families": 4, "required_format_tier_verifier": true }
     },
     {
       "id": "ER-I2",
@@ -331,16 +403,22 @@
       "title": "Stable machine-readable surfaces are not explicitly scoped",
       "class": "compatibility_policy",
       "priority": "P1",
-      "status": "reported",
-      "formats": ["all"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["all"],
+      "reproducer": "node scripts/check-public-product-contracts.mjs",
+      "expected": { "schema": "deepbom.public_product_contracts.v1", "stable_contracts_include": ["deepbom.cli_capabilities.v1", "deepbom.artifact_evidence_envelope.v1", "deepbom.artifact_ir.v2", "deepbom.semantic_artifact_diff.v1", "cyclonedx-1.7-json"] }
     },
     {
       "id": "ER-I4",
       "title": "Stable and prerelease cadence are not separated",
       "class": "release_policy",
       "priority": "P2",
-      "status": "reported",
-      "formats": ["all"]
+      "status": "fixed",
+      "fix_commit": "cabd570c27ebbcf81286b74683907f80aacd52cc",
+      "formats": ["all"],
+      "reproducer": "node scripts/check-public-product-contracts.mjs",
+      "expected": { "stable_npm_tag": "latest", "prerelease_npm_tag": "next", "development_publishable": false }
     }
   ]
 }

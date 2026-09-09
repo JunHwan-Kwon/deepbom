@@ -1,0 +1,24 @@
+{
+  "schema": "deepbom.finding_rule_registry_policy.v1",
+  "canonical_report_findings": {
+    "producer": "web/lib/report-findings.js",
+    "count": 119,
+    "sorted_ids_sha256": "c70eb440025f4091e0cebb0dfc0342a1fe0f899df758f59b08ea8c90ddb8a8bf"
+  },
+  "auxiliary_ui_findings": [
+    "EA-ABI-0001"
+  ],
+  "retired_ids": [
+    "EA-ONX-0041"
+  ],
+  "analysis_rule_ids": [
+    "finding.gate.defects",
+    "onnx.conv.output-shape",
+    "tflite.conv2d.macs"
+  ],
+  "legacy_unexplained": {
+    "count": 0,
+    "sorted_ids_sha256": null
+  },
+  "enforcement": "Every production EA identifier must be classified as a canonical report finding, auxiliary UI finding, or retired identifier. Every canonical finding requires a complete generated catalog entry; unexplained debt is zero."
+}

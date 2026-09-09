@@ -530,9 +530,25 @@ function exactAttributeBinding(attributes, argument) {
 
 function exactScalarBinding(inputBindings, tensors, argument) {
   const tensor = exactBinding(inputBindings, tensors, argument);
+  return exactScalarTensorValue(tensor);
+}
+
+function exactScalarTensorValue(tensor) {
   const immediate = tensor?.immediate_value;
   return tensor?.shape?.length === 0 && immediate && !immediate.truncated && immediate.count === 1
     ? immediate.values[0] : null;
+}
+
+function exactAffineBinding(inputBindings, tensors, attributes, argument) {
+  const input = exactBinding(inputBindings, tensors, argument);
+  const attribute = exactAttributeBinding(attributes, argument);
+  if (input && attribute) {
+    throw new Error(`Core ML MIL constexpr_affine_dequantize serializes ${argument} as both an input and an attribute`);
+  }
+  return {
+    tensor: input || attribute,
+    source: input ? "input" : attribute ? "attribute" : null,
+  };
 }
 
 function coreMlOpsetGeneration(opset) {
@@ -660,11 +676,15 @@ function exactCompressionContract(type, outputShapes, outputIds, inputBindings, 
     if (opsetGeneration < 6) {
       throw new Error("Core ML MIL constexpr_affine_dequantize is unavailable before the pinned CoreML6 opset");
     }
-    const data = exactBinding(inputBindings, tensors, "quantized_data");
-    const zeroPoint = exactBinding(inputBindings, tensors, "zero_point");
-    const scale = exactBinding(inputBindings, tensors, "scale");
-    const axisTensor = exactBinding(inputBindings, tensors, "axis");
-    const axisRaw = exactScalarBinding(inputBindings, tensors, "axis");
+    const dataBinding = exactAffineBinding(inputBindings, tensors, attributes, "quantized_data");
+    const zeroPointBinding = exactAffineBinding(inputBindings, tensors, attributes, "zero_point");
+    const scaleBinding = exactAffineBinding(inputBindings, tensors, attributes, "scale");
+    const axisBinding = exactAffineBinding(inputBindings, tensors, attributes, "axis");
+    const data = dataBinding.tensor;
+    const zeroPoint = zeroPointBinding.tensor;
+    const scale = scaleBinding.tensor;
+    const axisTensor = axisBinding.tensor;
+    const axisRaw = exactScalarTensorValue(axisTensor);
     if (!data || !zeroPoint || !scale || !axisTensor || axisRaw == null) {
       throw new Error("Core ML MIL constexpr_affine_dequantize is missing a serialized quantized_data, zero_point, scale, or scalar axis binding");
     }
@@ -703,6 +723,12 @@ function exactCompressionContract(type, outputShapes, outputIds, inputBindings, 
       serialized_axis: axisRaw, normalized_axis: normalizedAxis, axis_extent: axisExtent,
       quantized_data_dtype: data.dtype, zero_point_dtype: zeroPoint.dtype,
       scale_dtype: scale.dtype, output_dtype: scale.dtype, output_shape: [...data.shape],
+      serialized_binding_sources: {
+        quantized_data: dataBinding.source,
+        zero_point: zeroPointBinding.source,
+        scale: scaleBinding.source,
+        axis: axisBinding.source,
+      },
       quantized_data_tensor_index: Number.isSafeInteger(data.index) ? data.index : null,
       zero_point_tensor_index: Number.isSafeInteger(zeroPoint.index) ? zeroPoint.index : null,
       scale_tensor_index: Number.isSafeInteger(scale.index) ? scale.index : null,

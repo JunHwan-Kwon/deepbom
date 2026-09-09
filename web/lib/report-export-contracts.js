@@ -1839,7 +1839,9 @@ function releaseManifestFields(analysis, options, observed) {
   const noPredecessor = release.no_predecessor === true || /^(initial|initial_release|none)$/i.test(text(release.previous_release_status));
   const previousArtifact = firstValue({ release, analysis }, ["release.previous_artifact_sha256", "analysis.previous_artifact_sha256"]);
   const quantized = quantization.quantized_tensor_count > 0;
-  const calibrationDatasetApplicable = quantized && quantization.classification !== "block_or_tensor_encoded_weights";
+  const formatDefinedWeightEncoding = ["block_or_tensor_encoded_weights", "format_defined_block_quantized_weights"]
+    .includes(quantization.classification);
+  const calibrationDatasetApplicable = quantized && !formatDefinedWeightEncoding;
   const frameworkStatus = declaredFrameworkName && declaredFrameworkVersion
     ? "present"
     : declaredFrameworkName || declaredFrameworkVersion || observedFramework
@@ -1922,7 +1924,7 @@ function releaseManifestFields(analysis, options, observed) {
         ? "No quantized tensors were observed."
         : quantizationConfiguration
           ? "Release context binds the quantization recipe."
-          : quantization.classification === "block_or_tensor_encoded_weights"
+          : formatDefinedWeightEncoding
             ? "The GGUF tensor directory exposes block encodings, but not the quantizer build, source weights, or quantization command."
             : "The artifact exposes resulting scales and zero-points, but not the complete recipe or calibration run.",
       impact: "Without the recipe and representative-data binding, quantization drift and calibration regressions cannot be reproduced.",

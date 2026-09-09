@@ -68,6 +68,7 @@ const GENERATED_RUNTIME_DATA_PATHS = new Set([
   "web/lib/gguf-backend-contract.generated.js",
   "web/lib/gguf-codebooks.generated.js",
   "web/lib/executorch-operator-signatures.generated.js",
+  "web/lib/finding-rule-catalog.generated.js",
 ]);
 const VERIFICATION_SOURCE_PREFIXES = [
   "scripts/check-",

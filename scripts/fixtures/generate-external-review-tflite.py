@@ -61,6 +61,41 @@ class DynamicReshapeModel(tf.Module):
         return {"output": tf.reshape(projected, [1, -1, 128])}
 
 
+class TransposeConvModel(tf.Module):
+    def __init__(self, padding: str):
+        super().__init__()
+        self.padding = padding
+
+    @tf.function(input_signature=[tf.TensorSpec([1, 4, 4, 3], tf.float32, name="input")])
+    @tf.autograph.experimental.do_not_convert
+    def __call__(self, value):
+        kernel = tf.constant(
+            np.arange(3 * 3 * 2 * 3, dtype=np.float32).reshape(3, 3, 2, 3) / 54.0
+        )
+        output_size = 9 if self.padding == "VALID" else 8
+        return {"output": tf.nn.conv2d_transpose(
+            value,
+            kernel,
+            output_shape=[1, output_size, output_size, 2],
+            strides=[1, 2, 2, 1],
+            padding=self.padding,
+        )}
+
+
+class DynamicTransposeConvModel(tf.Module):
+    @tf.function(input_signature=[tf.TensorSpec([1, None, None, 3], tf.float32, name="input")])
+    @tf.autograph.experimental.do_not_convert
+    def __call__(self, value):
+        kernel = tf.constant(
+            np.arange(3 * 3 * 2 * 3, dtype=np.float32).reshape(3, 3, 2, 3) / 54.0
+        )
+        shape = tf.shape(value)
+        output_shape = tf.stack([shape[0], (shape[1] - 1) * 2 + 3, (shape[2] - 1) * 2 + 3, 2])
+        return {"output": tf.nn.conv2d_transpose(
+            value, kernel, output_shape=output_shape, strides=[1, 2, 2, 1], padding="VALID"
+        )}
+
+
 def patch_space_to_batch_placeholders(model_bytes: bytes) -> bytes:
     data = bytearray(model_bytes)
     model = schema_fb.Model.GetRootAsModel(data, 0)
@@ -126,6 +161,14 @@ def main() -> None:
     quant_bytes = convert(quant, quant.__call__.get_concrete_function(), configure_16x8)
     dynamic = DynamicReshapeModel()
     dynamic_bytes = convert(dynamic, dynamic.__call__.get_concrete_function())
+    transpose_valid = TransposeConvModel("VALID")
+    transpose_valid_bytes = convert(transpose_valid, transpose_valid.__call__.get_concrete_function())
+    transpose_same = TransposeConvModel("SAME")
+    transpose_same_bytes = convert(transpose_same, transpose_same.__call__.get_concrete_function())
+    transpose_dynamic = DynamicTransposeConvModel()
+    transpose_dynamic_bytes = convert(
+        transpose_dynamic, transpose_dynamic.__call__.get_concrete_function()
+    )
 
     fixtures = [
         write_fixture(
@@ -146,10 +189,34 @@ def main() -> None:
             dynamic_bytes,
             {"numeric_total_macs": None, "symbolic_total_macs": "4096*D2"},
         ),
+        write_fixture(
+            args.output,
+            "transpose-conv-valid.tflite",
+            transpose_valid_bytes,
+            {"nominal_dense_macs": 864, "reference_valid_overlap_macs": 864},
+        ),
+        write_fixture(
+            args.output,
+            "transpose-conv-same-cropped.tflite",
+            transpose_same_bytes,
+            {"nominal_dense_macs": 864, "reference_valid_overlap_macs": 726},
+        ),
+        write_fixture(
+            args.output,
+            "transpose-conv-dynamic.tflite",
+            transpose_dynamic_bytes,
+            {"numeric_total_macs": None, "symbolic_total_macs": "54*D0*D1"},
+        ),
     ]
     manifest = {
         "schema": "deepbom.external_review_tflite_fixtures.v1",
         "generator": {"tensorflow": tf.__version__, "numpy": np.__version__},
+        "transpose_conv_counting_source": {
+            "repository": "tensorflow/tensorflow",
+            "commit": "87bbf65b8d23d3f06912b1b2183587e1884bc45c",
+            "path": "tensorflow/lite/kernels/internal/reference/transpose_conv.h",
+            "sha256": "3d54a1a3c918f16fc699f1202aab0f4b4a4b7dc01ebfa761e1ea5301927e081c",
+        },
         "fixtures": fixtures,
     }
     (args.output / "manifest.json").write_text(

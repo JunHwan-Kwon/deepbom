@@ -986,6 +986,7 @@ function weightIntegrityMarkdown(analysis, weightIntegrity = {}) {
       ["Criteria", "near-zero means |x| < 1e-8; high-sparsity means >50% near-zero elements; near-zero decoded slice applies that threshold to every element; exact-zero stored slice requires every centered quantized code or stored float value to equal zero"],
       ["Analyzer detail", weightIntegrity.detail || "not emitted"],
     ]),
+    onnxQuantGridDetailsMarkdown(weightIntegrity),
     deadChannelDetailsMarkdown(weightIntegrity),
     weightIntegrity.high_sparsity_tensors ? "> High sparsity may enable XNNPACK sparse kernels on supported runtimes." : "",
     "> OBSERVED: read directly from decodable constant bytes in the artifact. FLOAT32/FLOAT16 are read as stored; INT8/UINT8 constants preserve both stored centered-code exact-zero and dequantized near-zero classifications. Functional model-output inactivity remains separate from this kernel-slice evidence and requires the channel-vitality/downstream/representative-output chain.",

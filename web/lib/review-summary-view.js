@@ -46,7 +46,7 @@ export function renderReviewSummary(root, summary) {
 
   const coverage = doc.createElement("p");
   coverage.className = "review-summary-coverage";
-  coverage.textContent = `${graphCopy(summary)} ${coverageCopy(summary)} ${targetCopy(summary)}`.replace(/\s+/g, " ").trim();
+  coverage.textContent = `${storageCopy(summary)} ${graphCopy(summary)} ${coverageCopy(summary)} ${targetCopy(summary)}`.replace(/\s+/g, " ").trim();
 
   const actions = doc.createElement("div");
   actions.className = "review-summary-actions";
@@ -101,9 +101,25 @@ function coverageCopy(summary) {
 
 function graphCopy(summary) {
   const graph = summary.graph || {};
+  if (graph.operator_count == null && graph.mac_confidence === "not_applicable") return "Executable graph: not serialized by this artifact format.";
   if (graph.operator_count == null && graph.tensor_count == null) return "";
   const macs = graph.total_macs == null ? "MAC total not assessable" : `${Number(graph.total_macs).toLocaleString("en-US")} MACs`;
   return `Graph: ${graph.operator_count ?? "unknown"} operators, ${graph.tensor_count ?? "unknown"} tensors, ${macs}.`;
+}
+
+function storageCopy(summary) {
+  const storage = summary.storage;
+  if (!storage) return "";
+  const encoded = storage.encodings.map((row) => `${row.dtype} ${row.tensor_count}`).join(", ") || "no dtype rows";
+  return `Serialized storage: ${storage.tensor_count} tensors, ${formatBytes(storage.declared_tensor_bytes)}, ${encoded}; integrity ${storage.numerical_integrity_status}.`;
+}
+
+function formatBytes(value) {
+  const bytes = Number(value);
+  if (!Number.isFinite(bytes)) return "unknown size";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KiB`;
+  return `${(bytes / 1024 ** 2).toFixed(1)} MiB`;
 }
 
 function shortDigest(value) {

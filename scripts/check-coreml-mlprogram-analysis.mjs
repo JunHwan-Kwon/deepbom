@@ -64,6 +64,43 @@ function mlProgramModel({ forwardReference = false } = {}) {
   return concat(uint(1, 8), message(2, description), message(502, program));
 }
 
+function multiBlobMacProgramModel() {
+  const convShape = [2, 1, 3, 3];
+  const matmulShape = [4, 3];
+  const operations = [];
+  const outputs = [];
+  for (let index = 0; index < 4; index += 1) {
+    const weight = `conv_weight_${index}`;
+    const output = `conv_output_${index}`;
+    operations.push(operation("const", [["val", valueBinding(blobValue(11, convShape, `@model_path/weights/conv${index}.bin`, 64))]], [[weight, 11, convShape]]));
+    operations.push(operation("conv", [["x", nameBinding("image")], ["weight", nameBinding(weight)]], [[output, 11, [1, 2, 2, 2]]]));
+    outputs.push([output, 11, [1, 2, 2, 2]]);
+  }
+  operations.push(operation("const", [["val", valueBinding(blobValue(11, matmulShape, "@model_path/weights/matmul.bin", 64))]], [["matmul_weight", 11, matmulShape]]));
+  operations.push(operation("matmul", [
+    ["x", nameBinding("matrix")],
+    ["y", nameBinding("matmul_weight")],
+    ["transpose_y", valueBinding(boolValue(true))],
+  ], [["matmul_output", 11, [2, 4]]]));
+  outputs.push(["matmul_output", 11, [2, 4]]);
+  const block = concat(outputs.map((output) => string(2, output[0])), operations.map((op) => message(3, op)));
+  const fn = concat(
+    message(1, named("image", 11, [1, 1, 4, 4])),
+    message(1, named("matrix", 11, [2, 3])),
+    string(2, "CoreML7"),
+    message(3, concat(string(1, "CoreML7"), message(2, block))),
+  );
+  const program = concat(uint(1, 1), message(2, concat(string(1, "main"), message(2, fn))));
+  const array = (shape) => message(5, concat(packedUint(1, shape), uint(2, 65568)));
+  const feature = (name, shape) => concat(string(1, name), message(3, array(shape)));
+  const description = concat(
+    message(1, feature("image", [1, 1, 4, 4])),
+    message(1, feature("matrix", [2, 3])),
+    outputs.map(([name, , shape]) => message(10, feature(name, shape))),
+  );
+  return concat(uint(1, 8), message(2, description), message(502, program));
+}
+
 function matmulProgramModel(outputShape = [2, 4], { xShape = [2, 3], yShape = [4, 3] } = {}) {
   const matmul = operation("matmul", [
     ["x", nameBinding("x")],
@@ -544,4 +581,27 @@ assert(report.includes("72 MACs") && report.includes("Core ML Serialized Constan
   && report.includes("Core ML Static Resource Accounting") && report.includes("96 B"), `Core ML ML Program report omits exact graph, payload, memory, or source evidence: mac=${report.includes("72 MACs")} integrity=${report.includes("Core ML Serialized Constant Numerical Integrity")} source=${report.includes("Pinned MIL.proto")} memory=${report.includes("96 B")}`);
 assert(!buildFindingsRegister(bundled).some((item) => item.id === "EA-CML-0003"), "Fully bound Core ML package emitted a false partial-coverage finding");
 
-console.log("Core ML ML Program SSA, shape/MAC, package blob, F32/INT4, digest, and fail-closed checks passed.");
+const multiBlobModel = multiBlobMacProgramModel();
+const convWeights = floatPayload(Array.from({ length: 18 }, (_, index) => (index + 1) / 32));
+const matmulWeights = floatPayload(Array.from({ length: 12 }, (_, index) => (index + 1) / 16));
+const multiBlobFiles = [
+  packageFile(manifest, "Manifest.json", "MultiBlob.mlpackage/Manifest.json"),
+  packageFile(multiBlobModel, "model.mlmodel", "MultiBlob.mlpackage/Data/com.example/model.mlmodel"),
+  ...Array.from({ length: 4 }, (_, index) => packageFile(
+    blobFile(2, convWeights), `conv${index}.bin`, `MultiBlob.mlpackage/Data/com.example/weights/conv${index}.bin`,
+  )),
+  packageFile(blobFile(2, matmulWeights), "matmul.bin", "MultiBlob.mlpackage/Data/com.example/weights/matmul.bin"),
+];
+const multiBlob = (await readArtifactBundle(multiBlobFiles)).analysis;
+const multiBlobMacOps = multiBlob.ops.filter((op) => ["CONV", "MATMUL"].includes(op.name));
+assert(multiBlobMacOps.length === 5 && multiBlobMacOps.every((op) => Number.isSafeInteger(op.macs) && op.macs_status.startsWith("derived_exact_mil_")),
+  "Every Core ML blob-backed conv/matmul operand must retain its serialized shape for MAC derivation");
+assert(multiBlob.total_macs === 312 && multiBlob.mac_assessment?.assessed_compute_ops === 5,
+  `Core ML multi-blob MAC conservation failed: ${JSON.stringify(multiBlob.mac_assessment)}`);
+assert(multiBlob.weight_integrity?.blob_reference_count === 5
+  && multiBlob.weight_integrity.assessed_parameter_count === 5
+  && multiBlob.weight_integrity.payload_byte_conservation === true
+  && multiBlob.weight_integrity.payload_bytes === convWeights.length * 4 + matmulWeights.length,
+`Core ML multi-blob operand binding did not conserve all five serialized payloads: ${JSON.stringify(multiBlob.weight_integrity)}`);
+
+console.log("Core ML ML Program SSA, shape/MAC, multi-blob operand binding, F32/INT4, digest, and fail-closed checks passed.");

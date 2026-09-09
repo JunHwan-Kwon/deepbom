@@ -1,6 +1,7 @@
 import { formatBytes } from "./format.js";
 
 import { formatEvidenceScope } from "./format-evidence-scope.js";
+import { formatMaturity } from "./public-product-contracts.js";
 
 export const FULL_AUDIT_ESTIMATE_METHOD = "deepbom.full_audit_estimate.2026-07-23.2";
 export const MODEL_FORMAT_ADAPTERS = Object.freeze({
@@ -15,7 +16,9 @@ export const MODEL_FORMAT_ADAPTERS = Object.freeze({
 });
 
 export function modelFormatAdapter(format) {
-  return MODEL_FORMAT_ADAPTERS[String(format || "").toLowerCase()] || MODEL_FORMAT_ADAPTERS.unsupported;
+  const adapter = MODEL_FORMAT_ADAPTERS[String(format || "").toLowerCase()] || MODEL_FORMAT_ADAPTERS.unsupported;
+  const maturity = formatMaturity(adapter.id);
+  return maturity ? Object.freeze({ ...adapter, maturity }) : adapter;
 }
 
 export function modelFormatGate(format) {

@@ -20,6 +20,7 @@ const TFLITE_CONTROL_FLOW_SOURCE = Object.freeze({
     Object.freeze({ path: "tensorflow/lite/kernels/depthwise_conv.cc", expected: "343f85c01e6adf2b21dbcd7e610ae04acf78f4ba1fea912e2fb02e33c92f6629" }),
     Object.freeze({ path: "tensorflow/lite/kernels/fully_connected.cc", expected: "a2667242af7d0d933d31408a0393974718e82da221248db9cb25aac2a8d3c585" }),
     Object.freeze({ path: "tensorflow/lite/kernels/conv3d.cc", expected: "7dfd75d047b7d22f76c365d48ecb1facad4656897ed3d58a661afcb0ad503b36" }),
+    Object.freeze({ path: "tensorflow/lite/kernels/internal/reference/transpose_conv.h", expected: "3d54a1a3c918f16fc699f1202aab0f4b4a4b7dc01ebfa761e1ea5301927e081c" }),
   ]),
 });
 

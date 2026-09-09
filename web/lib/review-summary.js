@@ -44,6 +44,7 @@ export function buildReviewSummary({ analysis = {}, envelope, artifactIrContext 
       mac_confidence: envelope.graph?.mac_confidence || deriveMacConfidence(analysis),
       mac_assessment_status: envelope.graph?.mac_assessment_status || null,
     },
+    storage: buildStorageSummary(analysis, envelope.identity?.format),
     quantization: {
       classification: analysis?.quantization_status?.classification || null,
       max_risk: analysis?.quantization_status?.max_quantization_risk || "none",
@@ -87,8 +88,41 @@ export function validateReviewSummary(summary) {
   if (summary?.graph?.total_macs != null && !Number.isFinite(Number(summary.graph.total_macs))) errors.push("graph_total_macs_invalid");
   if (!["exact", "symbolic", "partial", "not_applicable"].includes(summary?.graph?.mac_confidence)) errors.push("graph_mac_confidence_invalid");
   if (!summary?.quantization || typeof summary.quantization.max_risk !== "string") errors.push("quantization_summary_missing");
+  if (summary?.storage) {
+    if (!Number.isSafeInteger(summary.storage.tensor_count) || summary.storage.tensor_count < 0) errors.push("storage_tensor_count_invalid");
+    if (!Number.isSafeInteger(summary.storage.declared_tensor_bytes) || summary.storage.declared_tensor_bytes < 0) errors.push("storage_byte_count_invalid");
+    if (!Array.isArray(summary.storage.encodings) || summary.storage.encodings.length > 32) errors.push("storage_encodings_invalid");
+  }
   if (errors.length) throw new Error(`Invalid review summary: ${errors.join(", ")}`);
   return { valid: true, errors: [] };
+}
+
+function buildStorageSummary(analysis, format) {
+  if (!['gguf', 'safetensors'].includes(String(format || '').toLowerCase())) return null;
+  const summary = analysis?.tensor_storage_summary || {};
+  const safeTensors = analysis?.safetensors || {};
+  const integrity = analysis?.tensor_numerical_integrity || {};
+  return {
+    schema: "deepbom.review_storage_summary.v1",
+    container_kind: analysis?.artifact_bundle?.kind || `${format}_single_file`,
+    tensor_count: Number.isSafeInteger(summary.tensor_count) ? summary.tensor_count : Number(analysis?.tensor_count || 0),
+    declared_tensor_bytes: Number.isSafeInteger(summary.byte_length) ? summary.byte_length : Number(analysis?.tensor_inventory?.total_declared_tensor_bytes || 0),
+    encodings: (summary.encodings || []).slice(0, 32).map((row) => ({
+      dtype: row.dtype,
+      tensor_count: row.tensor_count,
+      byte_length: row.byte_length,
+    })),
+    encoding_count: Number(summary.encoding_count || 0),
+    shard_count: format === "safetensors" ? Number(safeTensors.shard_count || 1) : 1,
+    index_binding_status: format === "safetensors" ? safeTensors.index_binding_status || "not_required_single_file" : "not_applicable",
+    numerical_integrity_status: integrity.status || "not_assessed",
+    assessed_tensor_count: Number(integrity.assessed_tensor_count || 0),
+    quantization_contract_status: format === "safetensors"
+      ? safeTensors.quantization_contract?.status || "not_assessed"
+      : analysis?.quantization_status?.status || "not_assessed",
+    evidence_class: "OBSERVED/DERIVED",
+    boundary: "This bounded projection reports serialized storage and integrity coverage; it does not infer an executable graph, runtime placement, model quality, or task accuracy.",
+  };
 }
 
 function compactFindings(findings) {

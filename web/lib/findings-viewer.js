@@ -149,15 +149,7 @@ export function renderFindings(findingsBody, analysis, { onSelectEvidence = null
       why.type = "button";
       why.className = "secondary-action finding-evidence-link";
       why.textContent = "Why?";
-      why.addEventListener("click", () => onExplain({
-        title: f.title,
-        value: `${f.severity} / ${f.category}`,
-        evidence_class: f.confidence || "NOT_ASSESSED",
-        method: "Finding assembled from the cited evidence rows and action policy.",
-        source_pointers: (f.evidence || []).map((row) => row.source).filter(Boolean),
-        limitations: f.impact || "No limitation statement was supplied.",
-        report_pointer: `findings[id=${f.id}]`,
-      }));
+      why.addEventListener("click", async () => onExplain(await buildFindingEvidenceExplanation(f)));
       evidenceActions.append(why);
     }
 
@@ -201,6 +193,43 @@ export function renderFindings(findingsBody, analysis, { onSelectEvidence = null
   mobileActions.append(expandAll, collapseAll);
 
   findingsBody.replaceChildren(summary, mobileActions, ...cards);
+}
+
+export async function buildFindingEvidenceExplanation(finding = {}) {
+  const findingId = String(finding.id || finding.finding_id || "").toUpperCase();
+  let catalog = null;
+  if (/^EA-[A-Z][A-Z0-9_]{1,15}-\d{4}$/.test(findingId)) {
+    const module = await import("./finding-rule-catalog.js");
+    catalog = module.findFindingRule(findingId);
+  }
+  const evidenceRows = Array.isArray(finding.evidence) ? finding.evidence : [];
+  const sourcePointers = [
+    ...evidenceRows.map((row) => row?.source).filter(Boolean),
+    ...(Array.isArray(finding.evidence_json_pointers) ? finding.evidence_json_pointers : []),
+    ...(catalog?.evidence_requirements || []),
+    ...(catalog?.source_reference ? [sourceReference(catalog.source_reference)] : []),
+  ];
+  return {
+    title: finding.title || catalog?.title || findingId || "Finding explanation",
+    value: `${finding.severity || finding.technical_priority || "unrated"} / ${finding.category || catalog?.category || "uncategorized"}`,
+    evidence_class: finding.evidence_class || finding.evidenceClass || "NOT_ASSESSABLE",
+    method: catalog
+      ? `${catalog.trigger_contract} Method: ${catalog.method_reference}.`
+      : "Finding assembled from the cited evidence rows and action policy.",
+    formula: catalog?.default_priority_basis ? `Priority basis: ${catalog.default_priority_basis}` : null,
+    source_pointers: [...new Set(sourcePointers)],
+    conditions: catalog?.trigger_contract ? [catalog.trigger_contract] : [],
+    limitations: [...new Set([
+      finding.limitations,
+      catalog?.false_positive_boundary,
+    ].filter(Boolean))],
+    report_pointer: `findings[id=${findingId || finding.id}]`,
+  };
+}
+
+function sourceReference(reference) {
+  const lines = reference.lines || (reference.line ? [reference.line] : []);
+  return `${reference.path}${lines.length ? `:${lines.join(",")}` : ""}`;
 }
 
 export function findingReferences(finding, analysis) {

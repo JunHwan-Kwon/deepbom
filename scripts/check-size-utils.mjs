@@ -5,6 +5,7 @@ import {
   canonicalSourceText,
   DEFAULT_IGNORED_DIRS,
   isDocsSourcePath,
+  isGeneratedRuntimeDataPath,
   isIgnoredSourceFile,
   isPrivateSourcePath,
   isPrivateTestSourcePath,
@@ -41,6 +42,8 @@ for (const moduleCase of privateModuleCases) {
 }
 expectEqual(isRuntimeSourcePath("scripts/check-all.mjs"), false, "local check scripts should not count as runtime source.");
 expectEqual(isRuntimeSourcePath("docs/PROJECT_STATUS.md"), false, "docs should not count as runtime source.");
+expectEqual(isGeneratedRuntimeDataPath("web/lib/finding-rule-catalog.generated.js"), true, "generated finding metadata should not count as handwritten runtime source.");
+expectEqual(isGeneratedRuntimeDataPath("web/lib/finding-rule-catalog.js"), false, "the finding catalog loader should remain handwritten runtime source.");
 expectEqual(isDocsSourcePath("README.md"), true, "root README should count as docs source.");
 expectEqual(isDocsSourcePath("docs/PROJECT_STATUS.md"), true, "public docs should count as docs source.");
 expectEqual(isDocsSourcePath("docs-site/src/content/docs/index.mdx"), true, "the standalone documentation site should count as docs source.");

@@ -26,10 +26,15 @@ const forbiddenFiles = new Set([
   "scripts/generate-xnnpack-delegate-rulepack.mjs",
 ]);
 const forbiddenSuffixes = [".local.md", ".map"];
+const exportGeneratedFiles = new Set([
+  "PUBLIC_SOURCE_MANIFEST.json",
+  "web/lib/build-metadata.js",
+]);
 
 if (process.argv.includes("--refresh")) await refreshAllowlist();
 const allowed = await readAllowlist();
 await verifyAllowlist(allowed);
+await verifyAllowlistCoverage(allowed);
 if (process.argv.includes("--export")) await exportPublicSource(allowed);
 else console.log(`Public source allowlist passed (${allowed.length} exact files; private source roots and generators excluded).`);
 
@@ -88,6 +93,17 @@ async function verifyAllowlist(files) {
     "web/lib/evidence-visual-contract.js",
   ]) assert(files.includes(required), `Public source allowlist is missing required member ${required}.`);
   assert(!files.some((file) => forbiddenPrefixes.some((prefix) => file.startsWith(prefix))), "Protected source prefix entered public allowlist.");
+}
+
+async function verifyAllowlistCoverage(files) {
+  const candidates = gitLines(["ls-files", "--cached"])
+    .map(normalize)
+    .filter((file) => file && !isForbidden(file) && !exportGeneratedFiles.has(file))
+    .sort();
+  const missing = candidates.filter((file) => !files.includes(file));
+  const stale = files.filter((file) => !candidates.includes(file));
+  assert(!missing.length && !stale.length,
+    `Public source allowlist drifted (missing: ${missing.join(", ") || "none"}; stale: ${stale.join(", ") || "none"}). Review added paths, then run the acknowledged refresh.`);
 }
 
 async function exportPublicSource(files) {

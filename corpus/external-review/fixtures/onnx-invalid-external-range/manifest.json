@@ -1,0 +1,29 @@
+{
+  "schema": "deepbom.external_review_onnx_external_range_fixture.v1",
+  "files": [
+    {
+      "role": "model",
+      "path": "model.onnx",
+      "bytes": 126,
+      "sha256": "ecdfca73755244df97396f181426e5020dc2720e22daef515328b378e2ab87c7"
+    },
+    {
+      "role": "external_data",
+      "path": "weights.bin",
+      "bytes": 24,
+      "sha256": "bd08c84505322186939c2652b908791530126e54e9739b1b26a80bff4307153c"
+    }
+  ],
+  "expected": {
+    "external_data_status": "payload_verification_failed",
+    "range_out_of_bounds_count": 1,
+    "verified_payload_count": 0
+  },
+  "mutation_contract": {
+    "declared_offset": "20",
+    "declared_length": "8",
+    "sidecar_byte_length": "24",
+    "declared_end_exclusive": "28"
+  },
+  "interpretation_boundary": "The model and sidecar are structurally readable, but the serialized external-data range exceeds the selected sidecar. No tensor value may be decoded from that range."
+}

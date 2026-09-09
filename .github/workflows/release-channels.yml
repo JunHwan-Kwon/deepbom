@@ -12,6 +12,14 @@ on:
         required: true
         default: false
         type: boolean
+      release_tier:
+        description: Stable uses registry latest; prerelease uses registry next and a prerelease GitHub Release
+        required: true
+        default: stable
+        type: choice
+        options:
+          - stable
+          - prerelease
 
 permissions:
   contents: read
@@ -71,6 +79,9 @@ jobs:
           node scripts/sync-version.mjs --release "${{ inputs.expected_version }}"
           actual="$(node -p "require('./package.json').version")"
           test "$actual" = "${{ inputs.expected_version }}"
+          actual_tier=stable
+          if [[ "$actual" == *-* ]]; then actual_tier=prerelease; fi
+          test "$actual_tier" = "${{ inputs.release_tier }}"
           if [[ "${{ inputs.publish }}" == "true" ]]; then
             test "${GITHUB_REF}" = "refs/tags/channels-v${actual}"
           fi
@@ -206,7 +217,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: channels-v${{ inputs.expected_version }}
         run: |
-          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "DEEPBOM ${{ inputs.expected_version }}" --notes "Verified DEEPBOM installation-channel engines for Windows, Linux, and macOS on x86-64 and ARM64. Asset identities are recorded in engine-matrix.v1.json and SHA256SUMS."
+          release_class=()
+          if [[ "${{ inputs.release_tier }}" == "prerelease" ]]; then release_class+=(--prerelease); fi
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft "${release_class[@]}" --title "DEEPBOM ${{ inputs.expected_version }}" --notes "Verified DEEPBOM installation-channel engines for Windows, Linux, and macOS on x86-64 and ARM64. Asset identities are recorded in engine-matrix.v1.json and SHA256SUMS."
           gh release upload "$RELEASE_TAG" release/* --repo "$GITHUB_REPOSITORY"
           gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false
 
@@ -318,4 +331,8 @@ jobs:
             }
           ' "$npm_version"
       - name: Publish verified package
-        run: npm publish ./dist/deepbom-${{ inputs.expected_version }}.tgz --access public
+        shell: bash
+        run: |
+          npm_tag=latest
+          if [[ "${{ inputs.release_tier }}" == "prerelease" ]]; then npm_tag=next; fi
+          npm publish ./dist/deepbom-${{ inputs.expected_version }}.tgz --access public --tag "$npm_tag"

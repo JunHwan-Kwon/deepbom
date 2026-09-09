@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile, rm } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -13,6 +13,7 @@ import {
   buildSarifDocument,
   evaluateDefectGate,
   evaluateFindingPolicy,
+  evaluateGatePolicyProfile,
   renderCliError,
   resolveGenerationTimestamp,
   writeOutputAtomically,
@@ -42,6 +43,7 @@ assert.deepEqual(capabilities.output_contracts.summary, {
 assert.deepEqual(capabilities.output_contracts.analysis.compatibility_alias_for, ["json", "json-compact"]);
 assert.equal(capabilities.inputs.symbolic_stdin, false);
 assert.equal(capabilities.automation.atomic_file_output, true);
+assert.deepEqual(capabilities.automation.builtin_policy_profiles.map((row) => row.id), ["engineering", "regulatory"]);
 assert.equal(capabilities.exit_codes[2].includes("policy"), true);
 assert.deepEqual(capabilities.commands.find((row) => row.name === "accelerator collect nvidia").outputs,
   ["deepbom.accelerator_profile.v1"]);
@@ -105,6 +107,11 @@ assert.equal(blockLow.blocking_finding_count, 2);
 const defectGate = evaluateDefectGate(syntheticEnvelope);
 assert.equal(defectGate.status, "block");
 assert.deepEqual(defectGate.blocking_finding_ids, ["EA-TEST-0001"]);
+const engineeringGate = evaluateGatePolicyProfile(syntheticEnvelope, "engineering");
+assert.deepEqual(engineeringGate.blocking_finding_ids, ["EA-TEST-0001"]);
+const regulatoryGate = evaluateGatePolicyProfile(syntheticEnvelope, "regulatory");
+assert.deepEqual(regulatoryGate.blocking_finding_ids, ["EA-TEST-0001", "EA-TEST-0002"]);
+assert.match(regulatoryGate.interpretation_boundary, /does not determine legal compliance/);
 
 const sarif = buildSarifDocument(syntheticEnvelope, { version, policyResult: blockHigh });
 assert.equal(sarif.version, "2.1.0");
@@ -181,6 +188,17 @@ const stableCycloneDx = JSON.parse(run(["audit", onnxPath, "--output-format", "c
 assert.equal(stableCycloneDx.bomFormat, "CycloneDX");
 assert.equal(stableCycloneDx.specVersion, "1.7");
 
+const safeTensorsPath = path.join(scratch, "bounded-summary.safetensors");
+await writeFile(safeTensorsPath, safeTensorsFixture());
+const safeTensorsSummaryRun = run(["audit", safeTensorsPath, "--output-format", "summary"]);
+assert.match(safeTensorsSummaryRun.stdout, /Storage: 2 tensors \| 16 B \| F32 1, I32 1 \| integrity assessed/);
+assert.match(safeTensorsSummaryRun.stdout, /Graph: executable graph not serialized by this artifact format/);
+const safeTensorsSummary = JSON.parse(run(["audit", safeTensorsPath, "--section", "summary", "--compact"]).stdout).sections.summary;
+assert.deepEqual(safeTensorsSummary.storage.encodings.map((row) => [row.dtype, row.tensor_count]), [["F32", 1], ["I32", 1]]);
+assert.equal(safeTensorsSummary.storage.declared_tensor_bytes, 16);
+assert.equal(safeTensorsSummary.storage.numerical_integrity_status, "assessed");
+assert.equal(safeTensorsSummary.storage.quantization_contract_status, "not_applicable_no_quantization_declaration");
+
 const sarifPath = path.join(scratch, "mnist.sarif");
 const sarifRun = run(["audit", onnxPath, "--format", "sarif", "--output", sarifPath]);
 assert.equal(sarifRun.stdout, "", "file output must keep stdout clean");
@@ -222,6 +240,17 @@ const defectPolicy = JSON.parse(await readFile(defectPolicyPath, "utf8"));
 assert.equal(defectPolicy.schema, "deepbom.cli_defect_gate_result.v1");
 assert.equal(defectPolicy.finding_kind_counts.evidence_gap > 0, true);
 
+const regulatoryPolicyPath = path.join(scratch, "regulatory-policy.json");
+const regulatoryRun = run(["audit", onnxPath, "--policy", "regulatory", "--policy-output", regulatoryPolicyPath, "--compact"], { expectSuccess: false });
+assert.equal(regulatoryRun.status, 2);
+assert.doesNotThrow(() => JSON.parse(regulatoryRun.stdout));
+const regulatoryPolicy = JSON.parse(await readFile(regulatoryPolicyPath, "utf8"));
+assert.equal(regulatoryPolicy.profile, "regulatory");
+assert.equal(regulatoryPolicy.finding_kind_counts.evidence_gap > 0, true);
+assert.equal(regulatoryPolicy.blocking_finding_ids.includes("EA-LIM-0001"), true);
+const engineeringRun = run(["audit", onnxPath, "--policy", "engineering", "--compact"]);
+assert.equal(engineeringRun.status, 0);
+
 const unchangedDelta = JSON.parse(run([
   "diff",
   "web/samples/mobilenet_v1_025_224_float.tflite",
@@ -248,4 +277,19 @@ function run(args, { expectSuccess = true, env = process.env } = {}) {
     throw new Error(`CLI failed: ${args.join(" ")}\n${result.stdout}\n${result.stderr}`);
   }
   return result;
+}
+
+function safeTensorsFixture() {
+  const header = Buffer.from(JSON.stringify({
+    weight: { dtype: "F32", shape: [2], data_offsets: [0, 8] },
+    index: { dtype: "I32", shape: [2], data_offsets: [8, 16] },
+  }), "utf8");
+  const prefix = Buffer.alloc(8);
+  prefix.writeBigUInt64LE(BigInt(header.length));
+  const payload = Buffer.alloc(16);
+  payload.writeFloatLE(0.25, 0);
+  payload.writeFloatLE(-0.5, 4);
+  payload.writeInt32LE(3, 8);
+  payload.writeInt32LE(7, 12);
+  return Buffer.concat([prefix, header, payload]);
 }

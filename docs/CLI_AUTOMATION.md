@@ -25,6 +25,21 @@ schema.
 
 ## Machine outputs
 
+### Stable machine-readable contracts
+
+The capability document publishes the supported compatibility tier for every
+machine surface under `public_product_contracts.machine_contracts`. The
+cross-format envelope, Artifact Evidence IR v2, CLI capabilities, stable SARIF
+finding fingerprints, and CycloneDX 1.7 projection retain their declared schema
+semantics. Rich format-specific analysis is a compatibility surface and may add
+or refine fields; automation should use the envelope or Artifact IR.
+
+Stable releases use ordinary `MAJOR.MINOR.PATCH` versions and the npm `latest`
+tag. Prereleases use `-(alpha|beta|rc).N` and npm `next`; they are never promoted
+to `latest` without the full stable release gate. Development builds are not
+publishable. The machine-readable cadence and promotion conditions are emitted
+under `public_product_contracts.release_policy`.
+
 | Option | Contract | Intended consumer |
 | --- | --- | --- |
 | `--compact` | Complete format-specific analysis JSON | Deep format inspection |
@@ -32,10 +47,22 @@ schema.
 | `--format cyclonedx` | CycloneDX 1.7 JSON | ML-BOM and supply-chain tooling |
 | `--format sarif` | OASIS SARIF 2.1.0 Errata 01 | CI findings and security dashboards |
 
+In the CycloneDX 1.7 projection, the analyzed model is the BOM root at
+`metadata.component`; `components[]` contains additional inventory members.
+Consumers must inspect both locations and must not require the root to be
+duplicated in `components[]`.
+
 The envelope is the canonical cross-format contract. It binds artifact identity,
 capability status, interfaces, graph totals, external files, normalized findings,
 format extensions, provenance, and its own reproducible SHA-256. Format-specific
 analysis remains intentionally richer and can evolve independently.
+
+`deepbom diff <baseline> <candidate>` emits
+`deepbom.semantic_artifact_diff.v1` for matching TFLite, ONNX, Core ML, GGUF,
+SafeTensors, or ExecuTorch artifacts. It compares canonical graph, storage, and
+quantization contracts from Artifact IR. TFLite additionally retains its
+target-bound `deepbom.deployment_delta.v1.1`; no diff result proves lineage,
+runtime behavior, task quality, or regulatory significance.
 
 SARIF results point to the binary model artifact rather than inventing source
 line locations. Each result carries a stable artifact/finding fingerprint,

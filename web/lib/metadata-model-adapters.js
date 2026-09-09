@@ -653,6 +653,20 @@ function containerAnalysis(format, filename, fileSize, tensors, details) {
   const unsupportedEncodingTensorCount = format === "gguf"
     ? tensors.filter((tensor) => tensor.storage_status !== "assessed").length
     : 0;
+  const reducedPrecisionFloatTensorCount = format === "gguf"
+    ? tensors.filter((tensor) => ["F16", "BF16"].includes(String(tensor.dtype || "").toUpperCase())).length
+    : 0;
+  const fullPrecisionFloatTensorCount = format === "gguf"
+    ? tensors.filter((tensor) => ["F32", "F64"].includes(String(tensor.dtype || "").toUpperCase())).length
+    : 0;
+  const ggufQuantizationClassification = blockQuantizedTensorCount > 0
+    ? "format_defined_block_quantized_weights"
+    : "not_quantized_storage_encoding";
+  const ggufStoragePrecisionClassification = blockQuantizedTensorCount > 0
+    ? scalarEncodedTensorCount > 0 ? "mixed_block_quantized_and_scalar_storage" : "block_quantized_storage"
+    : reducedPrecisionFloatTensorCount > 0 && reducedPrecisionFloatTensorCount + fullPrecisionFloatTensorCount === tensors.length
+      ? fullPrecisionFloatTensorCount > 0 ? "mixed_floating_point_storage" : "reduced_precision_floating_point_storage"
+      : "scalar_or_mixed_typed_storage";
   return {
     schema: "deepbom.static_analysis.container.v1",
     format,
@@ -683,10 +697,17 @@ function containerAnalysis(format, filename, fileSize, tensors, details) {
       output_semantics_documented: false,
     },
     quantization_status: {
-      classification: format === "gguf" ? "block_or_tensor_encoded_weights" : "weight_container",
-      label: format === "gguf" ? "GGUF tensor encodings" : "SafeTensors weight container",
+      status: format === "gguf"
+        ? blockQuantizedTensorCount > 0 ? "assessed" : "not_applicable_no_block_quantization"
+        : "not_applicable_weight_container",
+      classification: format === "gguf" ? ggufQuantizationClassification : "weight_container",
+      label: format === "gguf"
+        ? blockQuantizedTensorCount > 0 ? "GGUF block-quantized tensor storage" : "GGUF tensor storage (no block quantization observed)"
+        : "SafeTensors weight container",
       summary: format === "gguf"
-        ? `${blockQuantizedTensorCount}/${tensors.length} tensors use source-pinned block-quantized GGML encodings.`
+        ? blockQuantizedTensorCount > 0
+          ? `${blockQuantizedTensorCount}/${tensors.length} tensors use source-pinned block-quantized GGML encodings.`
+          : `0/${tensors.length} tensors use a source-pinned block-quantized GGML encoding; floating-point storage is not relabeled as quantization.`
         : "Tensor payload dtypes are declared, but no execution-graph quantization contract is present.",
       detail: format === "gguf"
         ? `${blockQuantizedTensorCount} block-quantized, ${scalarEncodedTensorCount} scalar-encoded, ${unsupportedEncodingTensorCount} unsupported or invalid encoding tensor(s). GGML block encoding is not TFLite/ONNX affine per-tensor or per-axis quantization.`
@@ -697,6 +718,9 @@ function containerAnalysis(format, filename, fileSize, tensors, details) {
       quantized_compute_mac_percent: null,
       encoded_tensor_count: format === "gguf" ? tensors.length - unsupportedEncodingTensorCount : tensors.length,
       block_quantized_tensor_count: blockQuantizedTensorCount,
+      reduced_precision_float_tensor_count: reducedPrecisionFloatTensorCount,
+      full_precision_float_tensor_count: fullPrecisionFloatTensorCount,
+      storage_precision_classification: format === "gguf" ? ggufStoragePrecisionClassification : "typed_weight_container",
       scalar_encoded_tensor_count: scalarEncodedTensorCount,
       unsupported_encoding_tensor_count: unsupportedEncodingTensorCount,
       op_state_counts: [],

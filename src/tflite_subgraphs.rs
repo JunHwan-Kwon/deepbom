@@ -552,7 +552,7 @@ fn assess_intrinsic_macs(
             "The operator is not classified as a multiply-accumulate family; its elementwise or structural work is not relabeled as MACs.".to_string(),
         );
     }
-    if formula_class == "derived_nominal_dense" {
+    if formula_class == "derived_nominal_dense" || name == "TRANSPOSE_CONV" {
         if let Err(reason) = validate_nominal_mac_shape_contract(name, inputs, outputs, tensors) {
             return ("not_assessed", formula_class, None, reason);
         }
@@ -578,27 +578,38 @@ fn assess_intrinsic_macs(
         );
     }
     if formula_class == "modeled_scenario" {
+        let reason = if name == "TRANSPOSE_CONV" {
+            "The value is the nominal dense scatter footprint N*Hin*Win*Cin*Kh*Kw*Cout from the serialized NHWC input and OHWI filter. It is not a claim about cropped valid-overlap multiplications or a selected runtime kernel."
+        } else {
+            "The shared analyzer scenario formula produced a deterministic value for the serialized shape, but the operator contract is not promoted to the complete nominal-MAC subtotal."
+        };
         (
             "modeled_scenario",
             formula_class,
             Some(value),
-            "The shared analyzer scenario formula produced a deterministic value for the serialized shape, but the operator contract is not promoted to the complete nominal-MAC subtotal.".to_string(),
+            reason.to_string(),
         )
     } else {
+        let reason = if name == "TRANSPOSE_CONV" {
+            "The complete nominal dense scatter footprint N*Hin*Win*Cin*Kh*Kw*Cout is derived from the serialized NHWC input and OHWI filter. It is not a claim about cropped valid-overlap multiplications or a selected runtime kernel."
+        } else {
+            "The shared nominal dense-MAC formula and every required serialized tensor shape are closed for one invocation of this subgraph."
+        };
         (
             "assessed_nominal",
             formula_class,
             Some(value),
-            "The shared nominal dense-MAC formula and every required serialized tensor shape are closed for one invocation of this subgraph.".to_string(),
+            reason.to_string(),
         )
     }
 }
 
 fn mac_formula_class(name: &str) -> &'static str {
     match name {
-        "CONV_2D" | "DEPTHWISE_CONV_2D" | "FULLY_CONNECTED" | "CONV_3D" => "derived_nominal_dense",
+        "CONV_2D" | "DEPTHWISE_CONV_2D" | "FULLY_CONNECTED" | "TRANSPOSE_CONV" | "CONV_3D" => {
+            "derived_nominal_dense"
+        }
         "BATCH_MATMUL"
-        | "TRANSPOSE_CONV"
         | "CONV_3D_TRANSPOSE"
         | "STABLEHLO_CONVOLUTION"
         | "STABLEHLO_DOT_GENERAL"
@@ -698,6 +709,20 @@ fn validate_nominal_mac_shape_contract(
                 || filter.shape[4] != output.shape[4]
             {
                 return Err("CONV_3D input/filter/output channel or batch dimensions do not satisfy the pinned nominal DHWIO/NDHWC contract".to_string());
+            }
+        }
+        "TRANSPOSE_CONV" => {
+            let input = tensor(inputs, 2, "activation input")?;
+            let filter = tensor(inputs, 1, "filter")?;
+            let output = tensor(outputs, 0, "output")?;
+            static_rank(input, 4, "activation input")?;
+            static_rank(filter, 4, "filter")?;
+            static_rank(output, 4, "output")?;
+            if input.shape[0] != output.shape[0]
+                || filter.shape[0] != output.shape[3]
+                || filter.shape[3] != input.shape[3]
+            {
+                return Err("TRANSPOSE_CONV input/filter/output channel or batch dimensions do not satisfy the nominal NHWC/OHWI contract".to_string());
             }
         }
         _ => {

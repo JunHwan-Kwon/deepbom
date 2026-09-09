@@ -685,7 +685,8 @@
       "interpretation": "The utilization and saturation values are deterministically derived from artifact constants; the alert threshold is a methodology heuristic for calibration review, not a task-accuracy claim.",
       "recommendation": "Review calibration/QAT histograms for the flagged constants and compare representative-output drift against a re-calibrated export.",
       "source_pointers": [
-        "/evidence/static_analysis/weight_integrity/quant_grid_detail"
+        "/evidence/static_analysis/weight_integrity/quant_grid_detail",
+        "/evidence/static_analysis/weight_integrity/quant_grid_details"
       ],
       "rule_id": "deepbom.report_findings.EA-QNT-0100.v1"
     },
@@ -2633,5 +2634,5 @@
     ]
   },
   "evidence_boundary": "Serialized artifact facts and deterministic static derivations. Declarations and runtime measurements are accepted only through separately identified inputs.",
-  "envelope_sha256": "d86618ecc5bcd0768d65101e165c26909dcf5f40bfa5c2c33ee57c14015a8d75"
+  "envelope_sha256": "7f0056d63def0a064b25c3d18d5207b535e1831d6997347c7c14c7c19cd51c90"
 }

@@ -1,0 +1,12 @@
+{
+  "fileFormatVersion": "1.0.0",
+  "rootModelIdentifier": "root",
+  "itemInfoEntries": {
+    "root": {
+      "path": "com.deepbom.fixture",
+      "name": "Model",
+      "author": "DEEPBOM",
+      "description": "coremltools 9.0 affine-attribute conformance fixture"
+    }
+  }
+}

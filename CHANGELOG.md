@@ -4,6 +4,48 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.12 - 2026-09-09
+
+- Closed the remaining reproducible external-review correctness boundaries with
+  hash-bound fixtures: TFLite `TRANSPOSE_CONV` uses an explicit nominal dense
+  scatter MAC convention, unresolved extents remain symbolic, and saturation
+  and quantization-grid denominators are emitted instead of implied.
+- Separated GGUF F16 floating-point storage from Q4/Q8 block quantization,
+  accepted the source-backed Core ML attribute form of
+  `constexpr_affine_dequantize`, and bound ML Program operands to exact package
+  blob files and byte ranges. Invalid or contradictory ranges still fail closed.
+- Added `deepbom.semantic_artifact_diff.v1` for same-format TFLite, ONNX,
+  Core ML, GGUF, SafeTensors, and ExecuTorch comparisons. Quantization mapping,
+  granularity, axis, scale, and zero-point changes are first-class; TFLite also
+  retains its target-bound deployment delta.
+- Completed the explanation registry for all 119 canonical `EA-*` findings and
+  made new unclassified identifiers a CI failure. CLI, MCP, SARIF, and the web
+  evidence drawer now consume the same trigger, evidence, boundary, and
+  remediation records.
+- Added explicit engineering and regulatory evidence-completeness gate
+  profiles, six-format maturity and stable machine-contract declarations, and
+  separate stable/prerelease publication behavior. Neither policy profile
+  claims safety, clinical validity, legal compliance, or regulatory acceptance.
+- Added a CycloneDX 1.7 root-component compatibility fixture and documentation:
+  the analyzed model is `metadata.component`, while `components[]` contains
+  additional inventory. The root remains valid without duplication.
+- Bound the external-review golden boundary corpus to TFLite, GGUF, Core ML,
+  and ONNX manifests and their format-tier verifiers. ExecuTorch native-runtime
+  and TensorRT GPU observations remain deferred evidence gaps rather than
+  statically inferred results.
+- Classified the reproducibly generated finding catalog as generated runtime
+  data instead of handwritten code. Raised only the measured 1.96.12 ceilings:
+  handwritten runtime by 16 KiB for the semantic-diff and policy surfaces,
+  generated runtime data by 192 KiB for the 119-rule catalog, development
+  tooling by 32 KiB for source-pinned fixture generators, and corpus evidence
+  by 16 KiB for the bound Core ML, GGUF, ONNX, and CycloneDX fixtures.
+- Refreshed the public-source boundary with all 39 new public contracts,
+  fixtures, generators, checks, and runtime modules. Public export now fails
+  before copying when any tracked non-private path is absent from or stale in
+  the reviewed exact-file allowlist. The manifest and source-bound build
+  metadata generated only inside an export remain outside that source-coverage
+  comparison.
+
 ## 1.96.11 - 2026-09-09
 
 - Unified the bounded human audit summary behind one shared output contract

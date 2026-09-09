@@ -1,0 +1,22 @@
+{
+  "schema": "deepbom.external_review_quant_scale_diff_fixture.v1",
+  "source": {
+    "path": "quant-scale-risk.tflite",
+    "sha256": "cf04274f7758c08e7e93995a95eeaa48203da6753f94b14002731d4061ffac9b",
+    "bytes": 1048
+  },
+  "candidate": {
+    "path": "quant-scale-risk-1000x.tflite",
+    "sha256": "94e7d9951be252c9e2bbe1680de444f6505cb2ee494a67bf60b7dfdbdcf82553",
+    "bytes": 1048
+  },
+  "mutation": {
+    "byte_offset": 852,
+    "scalar_encoding": "IEEE754_FLOAT32_LITTLE_ENDIAN",
+    "baseline_value": 1.3509341215134363e-11,
+    "candidate_value": 1.3509341201256575e-8,
+    "requested_factor": 1000,
+    "observed_factor": 999.9999989727265
+  },
+  "interpretation_boundary": "This deterministic fixture changes one serialized per-axis affine scale only. It does not claim that the resulting model has acceptable task accuracy or runtime behaviour."
+}

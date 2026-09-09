@@ -32,6 +32,7 @@ import { resolveArtifactSource } from "./remote-artifact-resolver.mjs";
 import { resolveHuggingFaceOnnxExternalDataClosure, resolveHuggingFaceSafeTensorsClosure } from "./remote-artifact-closure.mjs";
 import { buildSingleFileArtifactSet, finalizeArtifactSet } from "../web/lib/artifact-set.js";
 import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
+import { buildSemanticArtifactDiff, validateSemanticArtifactDiff } from "../web/lib/semantic-artifact-diff.js";
 import { normalizeTfliteAnalysisContract } from "../web/lib/tflite-analysis-contract.js";
 import { normalizeAnalysisSummaryContract } from "../web/lib/analysis-summary-contract.js";
 import { AUDIT_OUTPUT_FORMATS } from "../web/lib/audit-output-contracts.js";
@@ -66,6 +67,7 @@ import {
   buildSarifDocument,
   evaluateDefectGate,
   evaluateFindingPolicy,
+  evaluateGatePolicyProfile,
   normalizeFailOn,
   outputExists,
   renderCliError,
@@ -90,7 +92,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.11";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.12";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 const EXPECTED_SELF_TEST_SHA256 = typeof __DEEPBOM_SELF_TEST_SHA256__ === "string" ? __DEEPBOM_SELF_TEST_SHA256__ : "";
 
@@ -353,6 +355,12 @@ async function main(argv) {
       source_file_sha256: reviewPolicyInput.sha256,
       mode: reviewPolicy.mode,
     };
+  } else if (parsed.policyProfile) {
+    analysis.policy_identity = {
+      schema: "deepbom.gate_policy_profile.v1",
+      profile: parsed.policyProfile,
+      mode: "builtin_evidence_gate",
+    };
   }
   const artifactIrContext = requiresArtifactIrContext(parsed)
     ? getArtifactIrContext(analysis, {
@@ -392,9 +400,11 @@ async function main(argv) {
         evaluatedAt: generatedAt || new Date().toISOString(),
         sourceFileSha256: reviewPolicyInput.sha256,
       })
-    : parsed.gate === "defects"
-      ? evaluateDefectGate(envelope)
-      : parsed.failOn !== "none" ? evaluateFindingPolicy(envelope, parsed.failOn) : null;
+    : parsed.policyProfile
+      ? evaluateGatePolicyProfile(envelope, parsed.policyProfile)
+      : parsed.gate === "defects"
+        ? evaluateDefectGate(envelope)
+        : parsed.failOn !== "none" ? evaluateFindingPolicy(envelope, parsed.failOn) : null;
   const completeDocument = parsed.outputFormat === "cyclonedx"
     ? buildMlBomDocument(analysisView, {
         hash: artifactSha256,
@@ -420,7 +430,7 @@ async function main(argv) {
   }
   if (policyResult?.status === "block") {
     const blockingCount = policyResult.blocking_finding_count ?? policyResult.finding_policy?.blocking_finding_count ?? 0;
-    const threshold = policyResult.fail_on ?? policyResult.finding_policy?.fail_on ?? "configured policy";
+    const threshold = policyResult.profile ?? policyResult.fail_on ?? policyResult.finding_policy?.fail_on ?? "configured policy";
     process.stderr.write(`deepbom: review policy blocked (${blockingCount} finding(s) at or above ${threshold}; coverage ${policyResult.coverage_status || "not evaluated"}).\n`);
     process.exitCode = 2;
   }
@@ -486,7 +496,7 @@ function validateInvocation(parsed) {
   }
   if (parsed.view && parsed.command !== "graph") throw new Error("--view is valid only with the graph command.");
   if (parsed.command === "verify" && !parsed.contract) throw new Error("The verify command requires --contract <json>.");
-  if (parsed.command === "diff" && !parsed.candidate) throw new Error("The diff command requires baseline and candidate TFLite artifacts.");
+  if (parsed.command === "diff" && !parsed.candidate) throw new Error("The diff command requires baseline and candidate artifacts.");
   if (parsed.executorchBuild && parsed.command !== "audit") throw new Error("--executorch-build is valid only with the audit command.");
   if (parsed.scanExplicit && ["verify", "diff", "explore"].includes(parsed.command)) {
     throw new Error(`--scan is not accepted by the ${parsed.command} command.`);
@@ -498,24 +508,25 @@ function validateInvocation(parsed) {
       && !["audit", "graph", "placement"].includes(parsed.command)) {
     throw new Error("Compiled accelerator evidence is valid only with audit, graph, or placement.");
   }
-  if (parsed.reviewPolicy && !["audit", "gguf"].includes(parsed.command)) {
-    throw new Error("--review-policy is valid only with audit or gguf.");
+  if ((parsed.reviewPolicy || parsed.policyProfile) && !["audit", "gguf"].includes(parsed.command)) {
+    throw new Error("--policy and --review-policy are valid only with audit or gguf.");
   }
   if (parsed.acceleratorDeviceIndex != null && !parsed.acceleratorProfile) {
     throw new Error("--accelerator-device requires --accelerator-profile.");
   }
-  if (parsed.reviewPolicy && parsed.failOnExplicit) throw new Error("--review-policy and --fail-on are mutually exclusive sources of finding policy.");
-  if (parsed.gate !== "none" && (parsed.reviewPolicy || parsed.failOnExplicit)) throw new Error("--gate, --review-policy, and --fail-on are mutually exclusive policy sources.");
-  if (parsed.policyOutput && parsed.failOn === "none" && !parsed.reviewPolicy && parsed.gate === "none") throw new Error("--policy-output requires --gate, --fail-on, or --review-policy.");
+  const policySourceCount = Number(Boolean(parsed.policyProfile)) + Number(Boolean(parsed.reviewPolicy))
+    + Number(parsed.failOnExplicit) + Number(parsed.gate !== "none");
+  if (policySourceCount > 1) throw new Error("--policy, --gate, --review-policy, and --fail-on are mutually exclusive policy sources.");
+  if (parsed.policyOutput && parsed.failOn === "none" && !parsed.reviewPolicy && !parsed.policyProfile && parsed.gate === "none") throw new Error("--policy-output requires --policy, --gate, --fail-on, or --review-policy.");
   if (parsed.noClobber && !parsed.output && !parsed.policyOutput) throw new Error("--no-clobber requires --output or --policy-output.");
   if (parsed.noClobber && parsed.output === "-" && !parsed.policyOutput) {
     throw new Error("--no-clobber cannot protect stdout; provide a file path with --output.");
   }
   if (parsed.policyOutput === "-") throw new Error("--policy-output requires a file path; use --output - for the primary document.");
-  if (parsed.timestamp && parsed.outputFormat === "analysis" && parsed.failOn === "none" && parsed.gate === "none") {
+  if (parsed.timestamp && parsed.outputFormat === "analysis" && parsed.failOn === "none" && parsed.gate === "none" && !parsed.policyProfile) {
     throw new Error("--timestamp applies only to envelope, CycloneDX, SARIF, or finding-policy evidence.");
   }
-  if (["verify", "diff", "explore"].includes(parsed.command) && (parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyOutput)) {
+  if (["verify", "diff", "explore"].includes(parsed.command) && (parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyProfile || parsed.policyOutput)) {
     throw new Error(`The ${parsed.command} command does not accept finding-policy options.`);
   }
   if (["verify", "diff", "explore"].includes(parsed.command) && parsed.timestamp) {
@@ -527,12 +538,12 @@ function validateInvocation(parsed) {
   }
   if (["verify", "diff", "explore"].includes(parsed.command)) assertCommandOutputFormat(parsed, parsed.command);
   if (parsed.command === "graph") {
-    if (parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyOutput) throw new Error("The graph command does not accept finding-policy options.");
+    if (parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyProfile || parsed.policyOutput) throw new Error("The graph command does not accept finding-policy options.");
     if (parsed.timestamp) throw new Error("The graph command is deterministic and does not accept --timestamp.");
     if (parsed.contract || parsed.request) throw new Error("The graph command does not accept verify or redesign sidecars.");
   }
   if (parsed.command === "placement") {
-    if (parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyOutput || parsed.reviewPolicy) throw new Error("The placement command does not accept finding-policy options.");
+    if (parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyProfile || parsed.policyOutput || parsed.reviewPolicy) throw new Error("The placement command does not accept finding-policy options.");
     if (parsed.timestamp) throw new Error("The placement command is deterministic and does not accept --timestamp.");
     if (parsed.contract || parsed.request) throw new Error("The placement command does not accept verify or redesign sidecars.");
     if (parsed.formatExplicit) throw new Error("The placement command emits deepbom.placement_comparison.v1; --format is not supported.");
@@ -565,7 +576,7 @@ function validateCapabilitiesInvocation(parsed) {
     "tensorrtParserEvidence", "tensorrtEngineInspector", "tensorrtLlmConfig", "tensorrtLlmBinding",
     "llmMemoryProfile", "conversionReceipt", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
   ], "capabilities");
-  if (parsed.targetExplicit || parsed.failOn !== "none" || parsed.gate !== "none") throw new Error("The capabilities command does not accept target or finding-policy options.");
+  if (parsed.targetExplicit || parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyProfile) throw new Error("The capabilities command does not accept target or finding-policy options.");
   if (parsed.sections.length || parsed.pointer || parsed.listSections) throw new Error("The capabilities command does not accept analysis-selection options.");
   if (parsed.deviceIndex != null || parsed.includeDeviceIdentifiers) throw new Error("The capabilities command does not accept NVIDIA collector options.");
   if (parsed.acceleratorDeviceIndex != null) throw new Error("The capabilities command does not accept --accelerator-device.");
@@ -589,7 +600,7 @@ function validateAcceleratorInvocation(parsed) {
     "llmMemoryProfile", "conversionReceipt", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
   ], "accelerator collect nvidia");
   if (parsed.acceleratorDeviceIndex != null) throw new Error("The collector uses --device, not --accelerator-device.");
-  if (parsed.gate !== "none" || parsed.sections.length || parsed.pointer || parsed.listSections) throw new Error("The accelerator command does not accept gate or analysis-selection options.");
+  if (parsed.gate !== "none" || parsed.policyProfile || parsed.sections.length || parsed.pointer || parsed.listSections) throw new Error("The accelerator command does not accept gate or analysis-selection options.");
   if (parsed.scanExplicit) throw new Error("The accelerator collect nvidia command does not accept --scan.");
   if (parsed.placementProfilesExplicit) throw new Error("The accelerator collect nvidia command does not accept --profiles.");
   if (parsed.targetExplicit || parsed.failOn !== "none") throw new Error("The accelerator collect nvidia command does not accept target or finding-policy options.");
@@ -610,7 +621,7 @@ function validateStandaloneCommand(parsed, command, { allowInput }) {
     "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "reviewPolicy", "cacheDir",
     "expectedSha256", "offline",
   ], command);
-  if (parsed.targetExplicit || parsed.failOn !== "none" || parsed.gate !== "none") throw new Error(`The ${command} command does not accept target or finding-policy options.`);
+  if (parsed.targetExplicit || parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyProfile) throw new Error(`The ${command} command does not accept target or finding-policy options.`);
   if (parsed.sections.length || parsed.pointer || parsed.listSections) throw new Error(`The ${command} command does not accept analysis-selection options.`);
   if (parsed.deviceIndex != null || parsed.includeDeviceIdentifiers || parsed.acceleratorDeviceIndex != null) throw new Error(`The ${command} command does not accept device options.`);
   if (parsed.scanExplicit || parsed.placementProfilesExplicit || parsed.maxDownloadExplicit || parsed.timestamp) throw new Error(`The ${command} command does not accept scan, placement, download, or timestamp options.`);
@@ -700,46 +711,123 @@ async function runDiffCommand(parsed, targetBinding) {
     "contract", "request", "context", "images", "tokensPerImage", "batch", "stateBits", "memoryMib", "tensorrtProfile", "tensorrtParserEvidence", "tensorrtEngineInspector",
     "tensorrtLlmConfig", "tensorrtLlmBinding", "llmMemoryProfile", "conversionReceipt", "externalDataRoot", "executorchBuild",
   ], "diff");
-  const baselineSource = await resolveCliArtifactSource(parsed.input, parsed);
-  const candidateSource = await resolveArtifactSource(parsed.candidate, {
+  const baseline = await analyzeDiffArtifact(parsed.input, parsed, targetBinding, { expectedSha256: parsed.expectedSha256 });
+  const candidate = await analyzeDiffArtifact(parsed.candidate, parsed, targetBinding);
+  if (baseline.format !== candidate.format) {
+    throw new Error(`The diff command requires matching artifact formats, received ${baseline.format} and ${candidate.format}.`);
+  }
+  let tfliteDeploymentDelta = null;
+  if (baseline.format === "tflite") {
+    const targetIds = parsed.targetProfile
+      ? [targetBinding.value, ...DEFAULT_DELTA_TARGETS]
+      : parsed.targetExplicit
+        ? [targetBinding.value, ...DEFAULT_DELTA_TARGETS.filter((id) => id !== parsed.target)]
+        : [...DEFAULT_DELTA_TARGETS];
+    tfliteDeploymentDelta = compute_deployment_delta(
+      await readCliFileBytes(baseline.input),
+      baseline.input.filename,
+      await readCliFileBytes(candidate.input),
+      candidate.input.filename,
+      JSON.stringify(targetIds),
+    );
+    tfliteDeploymentDelta.change_impact = classifyDeploymentDeltaImpact(tfliteDeploymentDelta);
+    tfliteDeploymentDelta = JSON.parse(JSON.stringify(tfliteDeploymentDelta));
+  }
+  let document = buildSemanticArtifactDiff(
+    baseline.artifactIrContext.artifact_ir,
+    candidate.artifactIrContext.artifact_ir,
+    { tfliteDeploymentDelta },
+  );
+  if (baseline.source.acquisition || candidate.source.acquisition) {
+    document = rehashSemanticDiff({
+      ...document,
+      cli_artifact_sources: {
+        baseline: baseline.source.acquisition,
+        candidate: candidate.source.acquisition,
+      },
+    });
+  }
+  if (targetBinding.evidence && baseline.format === "tflite") {
+    document = rehashSemanticDiff({ ...document, cli_target_profile_input: targetBinding.evidence });
+  }
+  validateSemanticArtifactDiff(document);
+  return emitDocument(parsed, document, () => buildDiffSummary(document));
+}
+
+async function analyzeDiffArtifact(spec, parsed, targetBinding, { expectedSha256 = "" } = {}) {
+  const options = {
     cacheDir: parsed.cacheDir || undefined,
+    expectedSha256,
     offline: parsed.offline,
     maximumBytes: BigInt(parsed.maxDownloadGib) * 1024n * 1024n * 1024n,
+  };
+  let source = await resolveArtifactSource(spec, options);
+  source = await resolveHuggingFaceSafeTensorsClosure(spec, source, options);
+  const input = source.virtual_bundle_members
+    ? await loadCliBundleMembers(source.virtual_bundle_members, "remote-model")
+    : await loadCliInput(source.path);
+  const detectedFormat = input.kind === "file" ? detectModelFormat(input.filename, input.prefix) : "package";
+  if (input.kind === "file" && ["unsupported", "pytorch_pickle"].includes(detectedFormat)) {
+    throw new Error(`Unsupported artifact format: ${detectedFormat}`);
+  }
+  let scanPolicy = resolveScanPolicy("auto", detectedFormat, input);
+  let preanalyzedOnnx = null;
+  if (input.kind === "file" && detectedFormat === "onnx" && source.acquisition?.source?.kind === "huggingface") {
+    const bytes = await readCliFileBytes(input);
+    preanalyzedOnnx = analyzeOnnxModel(bytes, input.filename);
+    const locations = [...new Set((preanalyzedOnnx?.onnx_external_data?.tensors || [])
+      .map((row) => String(row.normalized_location || "")).filter(Boolean))].sort();
+    if (locations.length) source = await resolveHuggingFaceOnnxExternalDataClosure(spec, source, locations, options);
+    if (source.external_data_members) scanPolicy = resolveOnnxExternalAutoScanPolicy(scanPolicy, "auto", preanalyzedOnnx, source.closure);
+  }
+  let analysis = await analyzeArtifact({
+    input,
+    filename: input.filename,
+    format: detectedFormat,
+    target: targetBinding.value,
+    externalDataRoot: source.closure?.model_root || "",
+    execuTorchBuild: null,
+    scanPolicy,
+    preanalyzedOnnx,
+    externalDataMembers: source.external_data_members,
   });
-  const baselineInput = await loadCliInput(baselineSource.path);
-  const candidateInput = await loadCliInput(candidateSource.path);
-  if (baselineInput.kind !== "file" || candidateInput.kind !== "file") {
-    throw new Error("The diff command requires two standalone TFLite files.");
+  analysis = normalizeAnalysisSummaryContract(analysis);
+  const format = String(analysis.format || detectedFormat).toLowerCase();
+  if (["unsupported", "pytorch_pickle"].includes(format)) throw new Error(`Unsupported artifact format: ${format}`);
+  if ((parsed.targetProfile || parsed.targetExplicit) && format !== "tflite") {
+    throw new Error(`${parsed.targetProfile ? "--target-profile" : "--target"} applies only to TFLite artifacts, received ${format}.`);
   }
-  const baselineFormat = detectModelFormat(baselineInput.filename, baselineInput.prefix);
-  const candidateFormat = detectModelFormat(candidateInput.filename, candidateInput.prefix);
-  if (baselineFormat !== "tflite" || candidateFormat !== "tflite") {
-    throw new Error(`The diff command supports TFLite artifacts only, received ${baselineFormat} and ${candidateFormat}.`);
+  const artifact = input.kind === "file"
+    ? { ...(await identifyCliFile(input)), format }
+    : packageIdentity(analysis, format, input.filename);
+  if (expectedSha256 && artifact.sha256 !== expectedSha256) {
+    throw new Error(`Artifact SHA-256 mismatch: expected ${expectedSha256}, observed ${artifact.sha256}.`);
   }
-  await initializeTfliteWasm();
-  const baselineBytes = await readCliFileBytes(baselineInput);
-  const candidateBytes = await readCliFileBytes(candidateInput);
-  const targetIds = parsed.targetProfile
-    ? [targetBinding.value, ...DEFAULT_DELTA_TARGETS]
-    : parsed.targetExplicit
-      ? [targetBinding.value, ...DEFAULT_DELTA_TARGETS.filter((id) => id !== parsed.target)]
-      : [...DEFAULT_DELTA_TARGETS];
-  const delta = compute_deployment_delta(
-    baselineBytes,
-    baselineInput.filename,
-    candidateBytes,
-    candidateInput.filename,
-    JSON.stringify(targetIds),
-  );
-  if (baselineSource.acquisition || candidateSource.acquisition) {
-    delta.cli_artifact_sources = {
-      baseline: baselineSource.acquisition,
-      candidate: candidateSource.acquisition,
-    };
+  if (source.acquisition && source.closure?.kind !== "huggingface_safetensors_shards"
+      && artifact.sha256 !== source.acquisition.file.sha256) {
+    throw new Error("Analyzed artifact SHA-256 differs from the remote acquisition receipt.");
   }
-  if (targetBinding.evidence) delta.cli_target_profile_input = targetBinding.evidence;
-  delta.change_impact = classifyDeploymentDeltaImpact(delta);
-  return emitDocument(parsed, delta, () => buildDiffSummary(delta));
+  enforceArtifactIdentity(analysis, artifact);
+  analysis.cli_scan_policy = scanPolicy;
+  analysis.artifact_set = buildCliArtifactSet(artifact, source.acquisition, analysis, source.closure);
+  if (format === "onnx") attachOnnxContractConflictCapsule(analysis);
+  if (format === "tflite") {
+    analysis.cpu_cost_target_binding = buildCpuCostTargetBinding(analysis.target_profile, {
+      bindingSource: targetBinding.bindingSource,
+      sourceInput: targetBinding.evidence,
+    });
+  }
+  const artifactIrContext = getArtifactIrContext(analysis, {
+    ...artifact,
+    artifact_set_sha256: analysis.artifact_set?.artifact_set_sha256 || null,
+  });
+  if (!artifactIrContext) throw new Error(`Canonical Artifact Evidence IR could not be constructed for ${artifact.filename}.`);
+  return { source, input, format, artifactIrContext };
+}
+
+function rehashSemanticDiff(document) {
+  const { semantic_diff_sha256: _ignored, ...body } = document;
+  return { ...body, semantic_diff_sha256: createHash("sha256").update(canonicalJson(body)).digest("hex") };
 }
 
 function classifyDeploymentDeltaImpact(delta) {
@@ -1251,11 +1339,12 @@ function buildHumanSummary(summary) {
     `Identity: sha256:${artifact.sha256}`,
     `Artifact IR: sha256:${artifact.artifact_ir_sha256}`,
     graphSummaryLine(summary.graph),
+    storageSummaryLine(summary.storage),
     "",
     `${verdict.artifact_defect_count} Artifact defects`,
     `${verdict.caution_count} Cautions`,
     `${verdict.evidence_needed_count} Evidence needed`,
-  ];
+  ].filter((line) => line !== null);
   for (const [label, findings] of [
     ["Defect", summary.findings.artifact_defects],
     ["Caution", summary.findings.cautions],
@@ -1278,9 +1367,17 @@ function buildHumanSummary(summary) {
 }
 
 function graphSummaryLine(graph = {}) {
+  if (graph.operator_count == null && graph.mac_confidence === "not_applicable") return "Graph: executable graph not serialized by this artifact format";
   if (graph.operator_count == null && graph.tensor_count == null) return "Graph: not serialized by this artifact format";
   const macs = graph.total_macs == null ? "MACs not assessable" : `${Number(graph.total_macs).toLocaleString("en-US")} MACs`;
   return `Graph: ${graph.operator_count ?? "unknown"} operators | ${graph.tensor_count ?? "unknown"} tensors | ${macs} (${graph.mac_confidence || "partial"})`;
+}
+
+function storageSummaryLine(storage) {
+  if (!storage) return null;
+  const encodings = storage.encodings.map((row) => `${row.dtype} ${row.tensor_count}`).join(", ") || "none declared";
+  const shards = storage.shard_count > 1 ? ` | ${storage.shard_count} shards (${storage.index_binding_status})` : "";
+  return `Storage: ${storage.tensor_count} tensors | ${formatBytes(storage.declared_tensor_bytes)} | ${encodings}${shards} | integrity ${storage.numerical_integrity_status}`;
 }
 
 function selectAnalysisOutput(analysis, parsed, reviewSummary, artifactIrContext) {
@@ -1370,26 +1467,30 @@ function buildVerifySummary(document) {
 }
 
 function buildDiffSummary(delta) {
-  const alignment = delta.alignment || {};
-  const worst = delta.target_deltas?.find((row) => row.target_id === delta.worst_relative_delta_target_id) || null;
+  const graph = delta.graph_delta || {};
+  const quantization = delta.quantization_delta || {};
+  const storage = delta.storage_delta || {};
+  const tflite = delta.tflite_deployment_delta || null;
+  const worst = tflite?.target_deltas?.find((row) => row.target_id === tflite.worst_relative_delta_target_id) || null;
   const lines = [
-    `DEEPBOM ${VERSION} deterministic TFLite deployment delta`,
+    `DEEPBOM ${VERSION} deterministic semantic artifact diff`,
     `Baseline: ${delta.baseline.filename} | sha256:${delta.baseline.sha256}`,
     `Candidate: ${delta.candidate.filename} | sha256:${delta.candidate.sha256}`,
-    `Relation: ${alignment.artifact_relation || "not assessed"}`,
-    `Alignment: ${alignment.matched_op_count ?? 0} matched | ${alignment.added_op_count ?? 0} added | ${alignment.removed_op_count ?? 0} removed`,
+    `Format: ${delta.format}`,
+    `Graph: ${graph.matched_operator_count ?? 0} matched | ${graph.changed_operator_count ?? 0} changed | ${graph.added_operator_count ?? 0} added | ${graph.removed_operator_count ?? 0} removed`,
+    `Quantization: ${quantization.changed_record_count ?? 0} changed | ${quantization.added_record_count ?? 0} added | ${quantization.removed_record_count ?? 0} removed`,
+    `Storage: ${storage.changed_object_count ?? 0} changed | ${storage.added_object_count ?? 0} added | ${storage.removed_object_count ?? 0} removed`,
     `Change action: ${String(delta.change_impact?.highest_action || "not assessed").replaceAll("_", " ")}`,
-    `Targets: ${delta.target_count}`,
   ];
   for (const category of delta.change_impact?.categories || []) {
     if (category.required) lines.push(`  - ${category.id.replaceAll("_", " ")}: ${category.reasons.join(", ")}`);
   }
-  for (const target of delta.target_deltas || []) {
+  if (tflite) lines.push(`TFLite modeled targets: ${tflite.target_count}`);
+  for (const target of tflite?.target_deltas || []) {
     lines.push(`  - ${target.target_id}: ${formatSigned(target.signed_delta_us, " us")} | ${formatSignedPercent(target.relative_delta)}`);
   }
   if (worst) lines.push(`Largest relative modeled delta: ${worst.target_id} (${formatSignedPercent(worst.relative_delta)})`);
   lines.push(`Evidence boundary: ${delta.interpretation_boundary}`);
-  lines.push("The alignment is a deterministic comparison coordinate and does not establish model lineage or semantic layer identity.");
   return `${lines.join("\n")}\n`;
 }
 
@@ -1604,6 +1705,7 @@ function parseArguments(argv) {
     output: "",
     policyOutput: "",
     reviewPolicy: "",
+    policyProfile: "",
     failOn: "none",
     failOnExplicit: false,
     gate: "none",
@@ -1725,6 +1827,10 @@ function parseArguments(argv) {
     else if (token === "--output" || token === "-o") parsed.output = requiredValue(values, token);
     else if (token === "--policy-output") parsed.policyOutput = requiredValue(values, token);
     else if (token === "--review-policy") parsed.reviewPolicy = requiredValue(values, token);
+    else if (token === "--policy") {
+      parsed.policyProfile = requiredValue(values, token).toLowerCase();
+      if (!new Set(["engineering", "regulatory"]).has(parsed.policyProfile)) throw new Error("--policy must be engineering or regulatory.");
+    }
     else if (token === "--fail-on") {
       parsed.failOn = normalizeFailOn(requiredValue(values, token));
       parsed.failOnExplicit = true;
@@ -1858,7 +1964,8 @@ async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_B
 }
 
 function printHelp() {
-  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif\n  --section <names>      Emit selected analysis sections; use --list-sections to discover names\n  --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity\n  --list-sections        List selectable analysis sections for this artifact\n  --gate defects         Exit 2 only when an artifact_defect finding is present\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Compatibility severity gate: informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Compatibility alias for --output-format json\n  --compact              Compatibility alias for --output-format json-compact\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
+  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline-artifact-or-package> <candidate-artifact-or-package> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif\n  --section <names>      Emit selected analysis sections; use --list-sections to discover names\n  --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity\n  --list-sections        List selectable analysis sections for this artifact\n  --gate defects         Exit 2 only when an artifact_defect finding is present\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Compatibility severity gate: informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Compatibility alias for --output-format json\n  --compact              Compatibility alias for --output-format json-compact\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
+  process.stdout.write("\nBuilt-in gate profiles:\n  --policy engineering  Block artifact defects; keep cautions and evidence gaps visible\n  --policy regulatory   Block artifact defects and unresolved evidence gaps; this is not a legal-compliance determination\n");
   process.stdout.write("\nHuman-readable audit output:\n  --output-format summary  Emit the bounded projection derived from deepbom.review_summary.v1\n  --summary                Compatibility alias for --output-format summary\n");
   process.stdout.write("\nInstallation and rule checks:\n  deepbom self-test [--json|--compact]\n  deepbom explain-rule <rule-id> [--json|--compact]\n  deepbom explain-rule --list\n");
   process.stdout.write("\nAssistant tool access (Model Context Protocol over stdio, local process only):\n  deepbom mcp\n  Tools: deepbom_capabilities, deepbom_audit, deepbom_diff, deepbom_explain_rule\n  Audit default: bounded human summary; request envelope, section, or pointer for detail\n  Local paths: launch directory, or roots declared by DEEPBOM_MCP_ALLOWED_ROOTS\n");
@@ -1869,7 +1976,7 @@ function printHelp() {
   process.stdout.write("\nNVIDIA accelerator observation:\n  deepbom accelerator collect nvidia [--device <index>] [--json|--compact]\n  --device <index>        Collect one NVIDIA device index (default: all devices)\n  --include-device-identifiers\n                          Include raw GPU UUID and PCI bus ID; hashes are always emitted\n");
   process.stdout.write("\nRemote immutable artifact input:\n  hf://owner/repo@<40-hex-commit>/path\n  gs://bucket/object#generation=<generation>\n  https://host/path#sha256=<64-hex>\n  --expected-sha256 <hex> Add an independent content digest requirement\n  --cache-dir <directory> Use a content-addressed cache directory\n  --offline               Refuse network access and require a verified cache receipt\n  --max-download-gib <n>  Bound one remote download (default: 50, maximum: 1024)\n");
   process.stdout.write("\nBounded scan policy:\n  --scan <mode>           auto, structure, integrity, or full\n  GGUF/SafeTensors use range reads; auto selects structure above 10 GiB and streamed integrity above 2 GiB.\n  Monolithic TFLite/ONNX/ExecuTorch files above 1 GiB fail before full-file allocation.\n");
-  process.stdout.write("\nRepeat-review policy:\n  --review-policy <json> Bind required analysis coverage, finding threshold, and identity-scoped expiring exceptions\n  --policy-output <path> Write the deterministic policy decision JSON\n  --review-policy and --fail-on are mutually exclusive policy sources.\n");
+  process.stdout.write("\nRepeat-review policy:\n  --review-policy <json> Bind required analysis coverage, finding threshold, and identity-scoped expiring exceptions\n  --policy-output <path> Write the deterministic policy decision JSON\n  --policy, --gate, --review-policy, and --fail-on are mutually exclusive policy sources.\n");
   process.stdout.write("\nOutput format selection:\n  --output-format <kind>  Preferred unambiguous spelling for --format\n  --format <kind>         Backward-compatible alias; retained for existing automation\n");
   process.stdout.write("\nDeterministic graph export:\n  deepbom graph <artifact> --view structure --output-format svg -o graph.svg\n  --view <kind>           structure, placement, quantization, or architecture\n  --output-format <kind>  svg, png, html, mermaid, dot, or json for graph\n");
   process.stdout.write("\nTensorRT optimized-engine option:\n  --tensorrt-engine-inspector <json>\n                          Import identity-bound TensorRT optimized-engine inspector evidence\n");

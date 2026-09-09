@@ -13,7 +13,7 @@ export function buildQuantizationContracts(analysis, format, graph, storage, ten
     const index = tensorIndex(tensor, position);
     const scales = finiteNumberArray(tensor.scale_sample?.length ? tensor.scale_sample : tensor.interface_scale_values);
     const zeroPoints = integerArray(tensor.zero_point_sample?.length ? tensor.zero_point_sample : tensor.interface_zero_point_values);
-    const encoded = format === "gguf" && /^Q\d|^IQ\d|^TQ\d|^MXFP|^BF16$/i.test(String(tensor.dtype || ""));
+    const encoded = format === "gguf" && /^(?:Q\d|IQ\d|TQ\d|MXFP|NVFP)/i.test(String(tensor.dtype || ""));
     if (!scales.length && !zeroPoints.length && !encoded) continue;
     const parameterization = encoded
       ? { kind: "per_block", axes: [], block_size: positiveInteger(tensor.block_elements) }

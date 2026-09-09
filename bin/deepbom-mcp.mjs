@@ -64,6 +64,7 @@ const TOOLS = Object.freeze([
         offline: { type: "boolean", description: "Refuse network access and require a verified cache receipt." },
         max_download_gib: { type: "integer", minimum: 1, maximum: 1024, description: "Upper bound for one remote download in GiB." },
         gate: { type: "string", enum: ["defects"], description: "Return a policy-blocked status when an artifact_defect is present. Nothing is gated by default." },
+        policy: { type: "string", enum: ["engineering", "regulatory"], description: "Built-in gate profile. Engineering blocks artifact defects; regulatory also requires evidence gaps to be resolved but does not determine legal compliance." },
       },
       required: ["path"],
       additionalProperties: false,
@@ -72,14 +73,14 @@ const TOOLS = Object.freeze([
   },
   {
     name: "deepbom_diff",
-    title: "Compare two TFLite artifacts",
-    description: "Compare two standalone TFLite artifacts and return deepbom.deployment_delta.v1.1. Static estimates are bound to a pinned target profile and are not measured behaviour.",
+    title: "Compare two model artifacts",
+    description: "Compare two artifacts of the same supported format and return deepbom.semantic_artifact_diff.v1. TFLite results also retain the target-bound deployment delta. The comparison does not prove lineage, runtime behaviour, task quality, or regulatory significance.",
     inputSchema: {
       type: "object",
       properties: {
-        baseline: { type: "string", description: "Local or immutable remote baseline TFLite artifact." },
-        candidate: { type: "string", description: "Local or immutable remote candidate TFLite artifact." },
-        target: { type: "string", description: "TFLite target profile id for the pinned cost model." },
+        baseline: { type: "string", description: "Local or immutable remote baseline artifact or package." },
+        candidate: { type: "string", description: "Local or immutable remote candidate artifact or package of the same format." },
+        target: { type: "string", description: "Optional TFLite target profile id for the embedded pinned cost model." },
         expected_sha256: { type: "string", pattern: "^[A-Fa-f0-9]{64}$", description: "Expected digest for the baseline source. Use independently pinned remote URLs for both artifacts when possible." },
         cache_dir: { type: "string", description: "Content-addressed cache directory under the allowed roots." },
         offline: { type: "boolean", description: "Refuse network access and require verified cache receipts." },
@@ -88,7 +89,7 @@ const TOOLS = Object.freeze([
       required: ["baseline", "candidate"],
       additionalProperties: false,
     },
-    outputSchema: { type: "object", required: ["schema"], properties: { schema: { const: "deepbom.deployment_delta.v1.1" } }, additionalProperties: true },
+    outputSchema: { type: "object", required: ["schema"], properties: { schema: { const: "deepbom.semantic_artifact_diff.v1" } }, additionalProperties: true },
     annotations: CACHE_WRITING_ANNOTATIONS,
   },
   {
@@ -260,7 +261,7 @@ async function callTool(params, state, signal) {
   const structured = parseStructuredObject(text);
   if (structured) result.structuredContent = structured;
   if (run.code === 2) {
-    result.content.push({ type: "text", text: "The artifact-defect gate blocked this run (exit 2). The first content block remains the complete, unmodified result; treat this as a policy outcome, not an analysis failure." });
+    result.content.push({ type: "text", text: "The requested gate policy blocked this run (exit 2). The first content block remains the complete, unmodified result; treat this as a policy outcome, not an analysis failure." });
     result._meta = { deepbom: { exit_code: 2, policy_status: "blocked", analysis_completed: true } };
   }
   if (Buffer.byteLength(JSON.stringify(result), "utf8") > MAX_RESPONSE_BYTES) {
@@ -288,6 +289,7 @@ function commandArguments(name, args, roots) {
     if (args.external_data_dir) argv.push("--external-data-dir", requiredLocalPath(args.external_data_dir, "external_data_dir", roots));
     appendRemoteControls(argv, args, roots);
     if (args.gate === "defects") argv.push("--gate", "defects");
+    if (args.policy) argv.push("--policy", String(args.policy));
     return argv;
   }
   if (name === "deepbom_diff") {
@@ -315,7 +317,7 @@ function validateToolArguments(name, args) {
   if (!args || typeof args !== "object" || Array.isArray(args)) throw new Error("Tool arguments must be a JSON object.");
   const allowed = {
     deepbom_capabilities: [],
-    deepbom_audit: ["path", "output_format", "scan", "section", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate"],
+    deepbom_audit: ["path", "output_format", "scan", "section", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
     deepbom_diff: ["baseline", "candidate", "target", "expected_sha256", "cache_dir", "offline", "max_download_gib"],
     deepbom_explain_rule: ["rule"],
   }[name];

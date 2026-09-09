@@ -58,4 +58,6 @@ jobs:
           npm run check:cli
           npm run check:external-review-ledger
           npm run check:external-review-defect-gate
+          npm run check:finding-rule-registry
+          npm run check:cyclonedx-consumer-compatibility
           npm run check:formats:core
