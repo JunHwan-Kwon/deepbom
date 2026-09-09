@@ -33,6 +33,23 @@ tag `channels-v1.96.11`, and publishing workflow run `34327309895`. Cases still
 marked `reported`, `reproduced`, or `deferred` in the machine ledger remain
 open and must not be described as fixed.
 
+## Released correctness closure (2026-09-10)
+
+DEEPBOM `1.96.12` released the remaining statically reproducible review cases:
+policy-specific evidence gates; TFLite `TRANSPOSE_CONV`, GGUF F16/Q4/Q8, and
+quantization-denominator contracts; Core ML compressed attributes and blob
+ranges; bounded SafeTensors summaries; six-format semantic diff; all 119
+canonical finding explanations; the boundary corpus; public maturity and
+release contracts; and bounded CycloneDX 1.7 root-component interoperability.
+
+The closure was qualified from clean private commit
+`4fbadccf84cd1c6b71c30e8f9c5f83e008c17a58`, released from public commit
+`3ca9e662fed7d88ba20cf3993e6d06ecb837dd84`, tagged
+`channels-v1.96.12`, and published by workflow run `34377018948`. The website
+was deployed by run `34377953986`; MCP Registry metadata was published by run
+`34377957318`. `ER-C3` remains deferred because it requires representative
+native ExecuTorch and TensorRT/GPU runtime evidence, not another static rule.
+
 외부 리뷰어가 6회에 걸쳐 직접 모델을 생성해 돌린 검증 결과를 항목화한 것입니다.
 기준 시점 2026-09-08, 로컬 HEAD `5b474ae`, 게시본 `1.96.10`.
 
@@ -117,7 +134,7 @@ ONNX/safetensors에서 JSON 분석에는 `nan_tensors: 1`이 있는데 SARIF에�
 
 ### ER-A3. 출처 메타데이터 부재가 실제 결함보다 앞에 나옴
 
-**상태: fixed**
+**상태: released**
 
 `--fail-on high`로 빌드가 막혔는데, 막은 이유가 NaN이 아니라 "소스 체크포인트 해시와
 변환기 버전 정보 없음"이었습니다. 규제 문맥에서는 타당한 설계지만, 엔지니어가
@@ -200,7 +217,7 @@ shape signature의 음수 차원을 런타임 미바인딩 상태로 유지합�
 
 ### ER-B4. `TRANSPOSE_CONV` 집계 관례 미문서화
 
-**상태: fixed**
+**상태: released**
 
 2,359,296(출력 기준)으로 보고했는데, 실제 커널 곱셈 수인 입력 기준은 589,824입니다.
 stride² 만큼 차이가 납니다. 어느 관례든 문서화만 되면 틀렸다고 할 수 없지만, B1의
@@ -214,7 +231,7 @@ SAME-cropped, dynamic-output fixture를 함께 두며, cropped valid-overlap 곱
 
 ### ER-B5. F16 GGUF를 양자화 계열로 라벨링
 
-**상태: fixed**
+**상태: released**
 
 양자화 텐서 0개라고 스스로 세면서 라벨은 `block_or_tensor_encoded_weights`입니다.
 
@@ -225,7 +242,7 @@ format-defined block quantization으로 분리했습니다. F16/Q4_0/Q8_0 최소
 
 ### ER-B6. saturation 비율 정의 미문서화
 
-**상태: fixed**
+**상태: released**
 
 deepbom 보고값 최대 4.86% 대 리뷰어가 `|w| == 127`로 직접 센 값 11.1%(depthwise).
 정의가 다를 수 있으나 문서가 없으면 검증이 불가능합니다. `grid_utilization`도 같습니다.
@@ -241,7 +258,7 @@ utilization은 dtype의 representable centered integer code 수를 분모로 고
 
 ### ER-C1. Core ML mlprogram: blob 참조 미해석 → MAC 전부 계산 실패
 
-**상태: fixed**
+**상태: released**
 
 conv 4개와 matmul 1개의 출력 shape는 다 읽어놓고 MAC을 하나도 계산하지 못해 total이
 None입니다. 가중치가 `weights/weight.bin` 블롭으로 분리되어 있는데 그 참조를 따라가
@@ -258,7 +275,7 @@ MAC conservation을 검증합니다.
 
 ### ER-C2. 양자화 mlpackage를 손상 파일로 오판
 
-**상태: fixed**
+**상태: released**
 
 coremltools로 int8 per-channel 양자화한 mlpackage를 "constexpr_affine_dequantize에
 quantized_data, zero_point, scale 또는 axis가 없다"며 파싱 거부했습니다. 리뷰어가 MIL을
@@ -278,7 +295,7 @@ axis가 실제로 빠진 음성 대조군은 malformed 입력으로 fail-closed 
 
 ### ER-C4. 포맷 성숙도 표시 부재
 
-**상태: fixed**
+**상태: released**
 
 지원 확장자 7개가 동등하게 광고되지만 실제 신뢰 수준은 TFLite / ONNX(정적 shape 필요)
 / GGUF / safetensors 4개입니다. **성숙도 표를 문서와 MCP 도구 설명문 양쪽에 넣어야
@@ -328,7 +345,7 @@ MCP와 CLI의 기본 audit 출력은 같은 bounded human summary를 사용합�
 
 ### ER-D4. safetensors markdown 요약 누락
 
-**상태: fixed**
+**상태: released**
 
 포맷별 출력 완성도가 들쭉날쭉합니다.
 
@@ -343,7 +360,7 @@ dtype별 tensor 수, 수치 무결성 상태, quantization contract 상태를 �
 
 ### ER-E1. `graph_delta` 전부 0, `change_impact`는 자명한 문장만
 
-**상태: fixed**
+**상태: released**
 
 scale이 1000배 벌어진 것이 diff에 안 잡혔고, change_impact는 "바이트가 바뀌었으니
 성능 재검증 필요"라는 말만 합니다.
@@ -355,7 +372,7 @@ TFLite fixture에서 changed record, scale ratio, integration revalidation을 �
 
 ### ER-E2. TFLite 전용
 
-**상태: fixed**
+**상태: released**
 
 **해결.** 같은 semantic diff 계약을 TFLite, ONNX, Core ML, GGUF, SafeTensors,
 ExecuTorch에 적용했습니다. 서로 다른 포맷 비교는 대응 관계를 추측하지 않고 거부합니다.
@@ -368,7 +385,7 @@ change impact는 재검토할 증거 범주를 제시할 뿐, lineage·runtime b
 
 ### ER-F1. `explain-rule`에 규칙이 3개뿐
 
-**상태: fixed**
+**상태: released**
 
 ```
 $ deepbom explain-rule --list --json
@@ -393,7 +410,7 @@ finding이 들어오면 CI가 실패합니다. CLI·MCP·SARIF와 웹 `Why?`가 
 
 ### ER-G1. CycloneDX 일반 소비자에서 root component를 놓칠 수 있음
 
-**상태: fixed**
+**상태: released**
 
 ```
 components: 0 | metadata.component: machine-learning-model | properties: 111
@@ -415,7 +432,7 @@ root를 배열에 중복하지 않으며, 이 검증은 모든 제3자 consumer 
 
 ### ER-I1. 외부 리뷰 경계를 포괄하는 정확성 골든 코퍼스 부족
 
-**상태: fixed**
+**상태: released**
 
 저장소에는 expected-output, 공개 다중 포맷, 양자화, Core ML, GGUF, SafeTensors 등
 여러 회귀 코퍼스가 이미 있습니다. 다만 리뷰어가 하루 만에 찾은 ER-B1, ER-B2,
@@ -437,7 +454,7 @@ canonical finding, summary, SARIF, CLI gate, MCP와 함께 검증됩니다.
 
 ### ER-I3. 스키마 안정성 신호 없음
 
-**상태: fixed**
+**상태: released**
 
 0.1.0에서 1.94.2로 뛴 이력, 거의 매일 패치, 내부 스키마 버전 수십 개. 소비자가 어느
 필드를 믿고 코드를 짤지 알 수 없습니다. **요약 층, SARIF 규칙 ID, CLI 플래그만이라도
@@ -450,7 +467,7 @@ breaking semantics는 새 schema id를 요구합니다.
 
 ### ER-I4. stable / nightly 채널 분리
 
-**상태: fixed**
+**상태: released**
 
 매일 나오는 건 pre-release로, 2~4주 단위로 골든 코퍼스를 통과한 빌드만 stable로 승격.
 
@@ -492,9 +509,9 @@ stable은 npm `latest`, prerelease는 `next`와 GitHub prerelease를 사용하�
 편입했습니다. 릴리스 소스는 private `8978f5c`, clean public export `c912db4`에
 고정됐습니다.
 
-현재 기계 원장은 `released 9`, `reproduced 3`, `reported 12`, `deferred 1`, `verified 0`입니다.
-`1.96.11`은 npm, PyPI, crates.io와 6개 플랫폼 GitHub 엔진 자산으로 게시됐고,
-동일 private source의 웹 빌드도 Cloudflare에 배포됐습니다.
+현재 기계 원장은 `released 24`, `deferred 1`, 그 밖의 상태 `0`입니다.
+`1.96.11`과 `1.96.12`는 npm, PyPI, crates.io와 6개 플랫폼 GitHub 엔진
+자산으로 게시됐고, `1.96.12` 웹 빌드와 MCP Registry metadata도 배포됐습니다.
 
 ### 완료된 릴리스 폐쇄
 
@@ -506,27 +523,23 @@ stable은 npm `latest`, prerelease는 `next`와 GitHub prerelease를 사용하�
 6. npm, PyPI, Cargo 게시와 설치본 검증은 GitHub Actions run `34327309895`,
    웹 배포와 캐시 퍼지는 run `34328200766`에서 성공했습니다.
 
-### 다음 correctness 라운드
+### 1.96.12에서 완료된 correctness 라운드
 
-7. **C2** 정상 Core ML compressed mlpackage를 hash-bound fixture로 먼저 재현합니다.
-   재현 전에는 파서를 수정하지 않습니다.
-8. **B4·B5·B6** source pin과 최소 fixture를 확보한 뒤 집계 관례, F16 storage 의미,
-   saturation/grid-utilization의 분자·분모를 고정합니다.
-9. **C1** ML Program blob operand 연결을 공개 fixture와 MAC conservation으로 검증합니다.
-10. **D4** SafeTensors 사람용 summary를 구조화된 review summary에서만 파생시킵니다.
-11. **F1** 실제 finding/rule inventory를 기준으로 설명 카탈로그의 완결 조건을 먼저 정한 뒤
-    누락 rule을 추가합니다.
-12. **A3** evidence gap과 artifact defect의 identity는 유지하고 정책별 차단 조건만 분리합니다.
-13. **E1·E2** Artifact IR 기반 quantization-contract diff를 TFLite에서 먼저 닫은 뒤
-    다른 executable graph 포맷으로 확대합니다.
+7. **C2** 정상 Core ML compressed mlpackage와 음성 대조군을 hash-bound fixture로 고정했습니다.
+8. **B4·B5·B6** source pin과 최소 fixture로 집계 관례, F16 storage 의미,
+   saturation/grid-utilization의 분자·분모를 고정했습니다.
+9. **C1** ML Program blob operand 연결을 공개 fixture와 MAC conservation으로 검증했습니다.
+10. **D4** SafeTensors 사람용 summary를 구조화된 review summary에서 파생시켰습니다.
+11. **F1** 119개 canonical finding의 설명 카탈로그를 완성하고 신규 미등록 ID를 CI에서 차단했습니다.
+12. **A3** evidence gap과 artifact defect의 identity를 유지하면서 정책별 차단 조건을 분리했습니다.
+13. **E1·E2** Artifact IR 기반 quantization-contract diff를 여섯 포맷으로 확대했습니다.
 
 ### 횡단 게이트와 후순위
 
-14. **I1**은 마지막에 한 번 만드는 코퍼스가 아닙니다. 7~13의 각 reproduced/fixed 전이에
-    hash, 기대값, 음성 대조를 추가하고 전체 경계가 바인딩됐을 때 닫습니다.
-15. **C4·I3·I4**는 지원 포맷 성숙도, 안정 표면의 semver, stable/prerelease cadence를
-    공개 계약으로 정리합니다. B4/B6 정의도 같은 문서 계약에 연결합니다.
-16. **G1**은 schema defect로 승격하지 않고 일반 CycloneDX 1.7 소비자 호환성 fixture와
-    export 설명으로만 검증합니다.
+14. **I1**에 각 correctness 경계의 hash, 기대값, 음성 대조와 format-tier verifier를 연결했습니다.
+15. **C4·I3·I4**의 지원 포맷 성숙도, 안정 표면의 semver, stable/prerelease cadence를
+    공개 기계 계약으로 정리했습니다.
+16. **G1**은 schema defect로 승격하지 않고 CycloneDX 1.7 root-component 호환성 fixture와
+    export 설명으로 검증했습니다.
 17. **C3**은 대표 ExecuTorch artifact와 TensorRT native/GPU 실행 증거가 확보될 때까지
     `deferred`를 유지합니다.
