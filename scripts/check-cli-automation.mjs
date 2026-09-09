@@ -32,7 +32,14 @@ const capabilities = buildCliCapabilities(version, {
 });
 assert.equal(capabilities.schema, "deepbom.cli_capabilities.v1");
 assert.deepEqual(capabilities.commands.find((row) => row.name === "audit").outputs,
-  ["analysis", "envelope", "cyclonedx", "sarif"]);
+  ["summary", "envelope", "json", "json-compact", "cyclonedx", "sarif"]);
+assert.equal(capabilities.default_audit_output, "summary");
+assert.deepEqual(capabilities.output_contracts.summary, {
+  media_type: "text/plain; charset=utf-8",
+  derived_from: "deepbom.review_summary.v1",
+  stability: "bounded_human_projection",
+});
+assert.deepEqual(capabilities.output_contracts.analysis.compatibility_alias_for, ["json", "json-compact"]);
 assert.equal(capabilities.inputs.symbolic_stdin, false);
 assert.equal(capabilities.automation.atomic_file_output, true);
 assert.equal(capabilities.exit_codes[2].includes("policy"), true);

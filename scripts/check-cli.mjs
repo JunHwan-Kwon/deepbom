@@ -39,11 +39,28 @@ assert.match(humanSummary, /^DEEPBOM \S+ deployment-artifact audit/m, "default C
 assert.match(humanSummary, /Graph: 9 operators \| 16 tensors \| 6,488,384 MACs/, "human summary projects exact graph totals");
 assert.match(humanSummary, /Evidence boundary:/, "human summary states its evidence boundary");
 assert.equal(Buffer.byteLength(humanSummary, "utf8") < 8192, true, "human summary remains terminal-sized");
+assert.equal(run(["audit", cases[1][0], "--output-format", "summary"]).stdout, humanSummary,
+  "explicit summary output must match the default human projection byte-for-byte");
+assert.equal(run(["audit", cases[1][0], "--format", "summary"]).stdout, humanSummary,
+  "the backward-compatible --format spelling must accept summary");
+assert.equal(run(["audit", cases[1][0], "--summary"]).stdout, humanSummary,
+  "the --summary alias must use the canonical human projection");
+for (const args of [
+  ["audit", cases[1][0], "--summary", "--json"],
+  ["audit", cases[1][0], "--summary", "--section", "findings"],
+  ["audit", cases[1][0], "--summary", "--pointer", "/format"],
+]) {
+  const conflict = run(args, false);
+  assert.notEqual(conflict.status, 0, `${args.join(" ")} must fail closed`);
+  assert.match(conflict.stderr, /conflicts|require JSON analysis output/);
+}
 const incompleteMacSummary = run(["audit", "scripts/fixtures/onnx_dynamic_conv.onnx"]).stdout;
 assert.match(incompleteMacSummary, /Graph: 1 operators \| 3 tensors \| MACs not assessable/, "human summary preserves an incomplete ONNX MAC total as not assessable");
 assert.doesNotMatch(incompleteMacSummary, /\| 0 MACs/, "human summary must not coerce an unassessed ONNX MAC total to zero");
 assert.equal(JSON.parse(run(["audit", cases[1][0], "--json"]).stdout).format, "onnx", "--json retains complete formatted machine output");
 assert.match(run(["--help"]).stdout, /--json\s+Compatibility alias for --output-format json/, "JSON mode is discoverable");
+assert.match(run(["--help"]).stdout, /--output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif/, "the canonical output-format list includes summary");
+assert.match(run(["--help"]).stdout, /--summary\s+Compatibility alias for --output-format summary/, "summary mode is discoverable");
 assert.match(run(["--help"]).stdout, /deepbom verify <artifact> --contract <json>/, "verify command is discoverable");
 assert.match(run(["--help"]).stdout, /deepbom diff <baseline\.tflite> <candidate\.tflite>/, "diff command is discoverable");
 assert.match(run(["--help"]).stdout, /deepbom explore <artifact\.tflite>/, "explore command is discoverable");

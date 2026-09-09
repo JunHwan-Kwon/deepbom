@@ -34,6 +34,7 @@ import { buildSingleFileArtifactSet, finalizeArtifactSet } from "../web/lib/arti
 import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
 import { normalizeTfliteAnalysisContract } from "../web/lib/tflite-analysis-contract.js";
 import { normalizeAnalysisSummaryContract } from "../web/lib/analysis-summary-contract.js";
+import { AUDIT_OUTPUT_FORMATS } from "../web/lib/audit-output-contracts.js";
 import { exportGraphVisualization } from "../web/lib/graph-export.js";
 import { exportGraphPng } from "./graph-png-export.mjs";
 import { buildNvidiaAcceleratorProfileBinding } from "../web/lib/accelerator-profile-binding.js";
@@ -410,7 +411,7 @@ async function main(argv) {
       : parsed.outputFormat === "sarif"
         ? buildSarifDocument(envelope, { version: VERSION, policyResult })
         : analysis;
-  const document = parsed.outputFormat === "analysis"
+  const document = ["analysis", "summary"].includes(parsed.outputFormat)
     ? selectAnalysisOutput(completeDocument, parsed, reviewSummary, artifactIrContext)
     : completeDocument;
   await emitDocument(parsed, document, () => buildHumanSummary(reviewSummary));
@@ -866,11 +867,12 @@ async function initializeTfliteWasm() {
 }
 
 async function emitDocument(parsed, document, humanBuilder) {
-  const machineReadable = parsed.json || parsed.compact || Boolean(parsed.output) || parsed.outputFormat !== "analysis"
-    || parsed.sections?.length || parsed.pointer || parsed.listSections;
-  const text = machineReadable
-    ? `${JSON.stringify(document, bigintReplacer, parsed.compact ? 0 : 2)}\n`
-    : humanBuilder();
+  const explicitHumanSummary = parsed.outputFormat === "summary";
+  const machineReadable = !explicitHumanSummary && (parsed.json || parsed.compact || Boolean(parsed.output) || parsed.outputFormat !== "analysis"
+    || parsed.sections?.length || parsed.pointer || parsed.listSections);
+  const text = explicitHumanSummary || !machineReadable
+    ? humanBuilder()
+    : `${JSON.stringify(document, bigintReplacer, parsed.compact ? 0 : 2)}\n`;
   if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, text, { noClobber: parsed.noClobber });
   else process.stdout.write(text);
 }
@@ -1645,6 +1647,7 @@ function parseArguments(argv) {
     listRules: false,
     json: false,
     compact: false,
+    summary: false,
     formatExplicit: false,
   };
   while (values.length) {
@@ -1695,6 +1698,7 @@ function parseArguments(argv) {
     else if (token === "--device") parsed.deviceIndex = parseNonNegativeInteger(requiredValue(values, token), token);
     else if (token === "--include-device-identifiers") parsed.includeDeviceIdentifiers = true;
     else if (token === "--format" || token === "--output-format") {
+      if (parsed.summary) throw new Error("--summary conflicts with an explicit --format or --output-format.");
       const outputFormat = requiredValue(values, token).toLowerCase();
       if (outputFormat === "json" || outputFormat === "json-compact") {
         if (parsed.command === "graph") {
@@ -1706,6 +1710,12 @@ function parseArguments(argv) {
           parsed.compact = outputFormat === "json-compact";
         }
       } else parsed.outputFormat = outputFormat;
+      parsed.formatExplicit = true;
+    }
+    else if (token === "--summary") {
+      if (parsed.formatExplicit || parsed.json || parsed.compact) throw new Error("--summary conflicts with --format, --output-format, --json, or --compact.");
+      parsed.outputFormat = "summary";
+      parsed.summary = true;
       parsed.formatExplicit = true;
     }
     else if (token === "--section") parsed.sections = parseSections(requiredValue(values, token));
@@ -1726,8 +1736,14 @@ function parseArguments(argv) {
     else if (token === "--no-clobber") parsed.noClobber = true;
     else if (token === "--error-format") parsed.errorFormat = requiredValue(values, token).toLowerCase();
     else if (token === "--timestamp") parsed.timestamp = normalizeTimestamp(requiredValue(values, token));
-    else if (token === "--json") parsed.json = true;
-    else if (token === "--compact") parsed.compact = true;
+    else if (token === "--json") {
+      if (parsed.summary) throw new Error("--json conflicts with --summary.");
+      parsed.json = true;
+    }
+    else if (token === "--compact") {
+      if (parsed.summary) throw new Error("--compact conflicts with --summary.");
+      parsed.compact = true;
+    }
     else if (token === "--help" || token === "-h") parsed.help = true;
     else if (token === "--version" || token === "-v") parsed.version = true;
     else if (token.startsWith("-")) throw new Error(`Unknown option: ${token}`);
@@ -1739,13 +1755,16 @@ function parseArguments(argv) {
     if (parsed.formatExplicit && parsed.outputFormat !== "json") throw new Error("--json or --compact conflicts with an explicit non-JSON graph --format.");
     parsed.outputFormat = "json";
   }
+  if (parsed.outputFormat === "summary" && (parsed.json || parsed.compact)) {
+    throw new Error("--output-format summary conflicts with --json or --compact.");
+  }
   const outputFormats = parsed.command === "graph"
     ? new Set(["svg", "png", "html", "mermaid", "dot", "json"])
-    : new Set(["analysis", "envelope", "cyclonedx", "sarif"]);
+    : new Set(["analysis", ...AUDIT_OUTPUT_FORMATS.filter((format) => !["json", "json-compact"].includes(format))]);
   if (!outputFormats.has(parsed.outputFormat)) {
     throw new Error(parsed.command === "graph"
       ? "--format must be svg, png, html, mermaid, dot, or json for graph."
-      : "--format must be json, json-compact, envelope, cyclonedx, or sarif.");
+      : `--format must be ${AUDIT_OUTPUT_FORMATS.join(", ")}.`);
   }
   if (parsed.command === "graph" && !new Set(["structure", "placement", "quantization", "architecture"]).has(parsed.view)) {
     throw new Error("--view must be structure, placement, quantization, or architecture.");
@@ -1839,7 +1858,8 @@ async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_B
 }
 
 function printHelp() {
-  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --output-format <kind> json, json-compact, envelope, cyclonedx, or sarif\n  --section <names>      Emit selected analysis sections; use --list-sections to discover names\n  --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity\n  --list-sections        List selectable analysis sections for this artifact\n  --gate defects         Exit 2 only when an artifact_defect finding is present\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Compatibility severity gate: informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Compatibility alias for --output-format json\n  --compact              Compatibility alias for --output-format json-compact\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
+  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline.tflite> <candidate.tflite> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif\n  --section <names>      Emit selected analysis sections; use --list-sections to discover names\n  --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity\n  --list-sections        List selectable analysis sections for this artifact\n  --gate defects         Exit 2 only when an artifact_defect finding is present\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Compatibility severity gate: informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Compatibility alias for --output-format json\n  --compact              Compatibility alias for --output-format json-compact\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
+  process.stdout.write("\nHuman-readable audit output:\n  --output-format summary  Emit the bounded projection derived from deepbom.review_summary.v1\n  --summary                Compatibility alias for --output-format summary\n");
   process.stdout.write("\nInstallation and rule checks:\n  deepbom self-test [--json|--compact]\n  deepbom explain-rule <rule-id> [--json|--compact]\n  deepbom explain-rule --list\n");
   process.stdout.write("\nAssistant tool access (Model Context Protocol over stdio, local process only):\n  deepbom mcp\n  Tools: deepbom_capabilities, deepbom_audit, deepbom_diff, deepbom_explain_rule\n  Audit default: bounded human summary; request envelope, section, or pointer for detail\n  Local paths: launch directory, or roots declared by DEEPBOM_MCP_ALLOWED_ROOTS\n");
   process.stdout.write("\nNVIDIA accelerator binding:\n  --accelerator-profile <json>\n                          Bind an observed NVIDIA host profile without inferring selected-build or runtime assignment\n  --accelerator-device <index>\n                          Select one device when the bound profile contains multiple NVIDIA devices\n");

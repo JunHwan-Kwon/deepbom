@@ -1,5 +1,8 @@
 # 외부 검증 결과 트리아지
 
+제품/API·사용자군·공개 범위에 관한 비검증 방향 후보는 이 결함 원장과 분리하여
+별도의 비공개 제품 방향 원장에서 관리합니다.
+
 ## Verified correctness addendum (2026-09-09)
 
 The machine-readable authority for status remains
@@ -35,9 +38,10 @@ open and must not be described as fixed.
 - `reproduced` — 이 저장소 HEAD에서 독립적으로 재현했습니다.
 - `fixed` — 재현 fixture를 통과하도록 수정했지만 전체 surface 검증 전입니다.
 - `verified` — Web, CLI, MCP 및 관련 export 회귀를 통과했습니다.
+- `released` — 검증된 수정이 식별 가능한 정식 패키지 버전으로 게시됐습니다.
 - `deferred` — 증거 또는 실행 환경이 없어 의도적으로 보류했습니다.
 
-상태는 반드시 `reported -> reproduced -> fixed -> verified` 순서로만 승격합니다.
+상태는 반드시 `reported -> reproduced -> fixed -> verified -> released` 순서로만 승격합니다.
 각 항목의 기계 판독 상태, 재현 명령, 기대값과 증거 hash는
 `corpus/external-review/external-review-cases.v1.json`에서 관리합니다.
 
@@ -49,13 +53,25 @@ open and must not be described as fixed.
 
 ## A. 결함 분류와 게이트 — 최우선
 
-### ER-A1. NaN/Inf 가중치가 `artifact_defect`가 아니라 `caution`으로 분류됨
+### ER-A1. NaN/Inf 가중치가 artifact-defect 게이트를 우회했던 회귀
 
 **상태: verified**
 
-NaN 하나를 심은 safetensors를 만들어 돌린 결과입니다.
+**현재 검증 결과.** NaN fixture는 `artifact_defect`로 분류되고 defect gate를 차단하며,
+같은 canonical finding identity가 SARIF와 MCP에 보존됩니다.
 
+```text
+artifact_defect | EA-SER-0001 | Serialized tensor payload contains non-finite ...
+$ deepbom audit nan.safetensors --gate defects
+exit 2
+SARIF: EA-SER-0001 level=error kind=artifact_defect
 ```
+
+all-zero 대조군은 별도 `EA-SER-0002` caution으로 유지되며 defect gate exit code는 0입니다.
+
+**수정 전 재현 결과.** 아래 출력은 현재 동작이 아니라 최초 보고를 독립 재현한 기록입니다.
+
+```text
 findings: 3
   caution      | EA-SER-0001 | Serialized tensor payload contains non-finite ...
   evidence_gap | EA-LIN-0001 | Source checkpoint and conversion lineage were not provided
@@ -65,8 +81,8 @@ $ deepbom audit nan.safetensors --gate defects ; echo $?
 0
 ```
 
-`--gate defects`는 "artifact_defect 소견이 있을 때만 exit 2"인데, 명백한 가중치 결함이
-있는 모델이 통과합니다. 게이트의 존재 이유가 무너집니다.
+`--gate defects`는 "artifact_defect 소견이 있을 때만 exit 2"인데, 수정 전에는 명백한
+가중치 결함이 있는 모델이 통과했습니다.
 
 **근본 원인 특정.** `web/lib/report-findings.js:213` `inferFindingKind()`는 category가
 `integrity`, `numerical_integrity`, `input_contract`, `output_contract`,
@@ -328,13 +344,6 @@ components: 0 | metadata.component: machine-learning-model | properties: 111
 
 ---
 
-## H. 제품/API 방향
-
-Python·npm 라이브러리 API 제안은 검증 결함이 아니라 공개 제품 표면에 관한 결정입니다.
-외부 리뷰의 원문과 후속 후보는 `docs/PRODUCT_DIRECTION.md`에서 별도로 관리합니다.
-
----
-
 ## I. 품질·릴리스 운영
 
 ### ER-I1. 외부 리뷰 경계를 포괄하는 정확성 골든 코퍼스 부족
@@ -368,14 +377,6 @@ semver 대상으로 선언하고, 나머지 내부 스키마는 명시적으로 
 ### ER-I4. stable / nightly 채널 분리
 
 매일 나오는 건 pre-release로, 2~4주 단위로 골든 코퍼스를 통과한 빌드만 stable로 승격.
-
----
-
-## J. 방향과 포지셔닝
-
-사용자군, 포맷 집중도, 공개·비공개 경계, 진입 경험과 지속 가능성은 코드 결함과 별도의
-의사결정입니다. 외부 리뷰의 원문과 후속 후보는 `docs/PRODUCT_DIRECTION.md`에서 관리하며,
-이 트리아지의 release blocker 수에는 포함하지 않습니다.
 
 ---
 

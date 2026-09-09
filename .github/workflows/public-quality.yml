@@ -56,4 +56,6 @@ jobs:
         run: |
           npm run check:cli-docs
           npm run check:cli
+          npm run check:external-review-ledger
+          npm run check:external-review-defect-gate
           npm run check:formats:core

@@ -267,7 +267,11 @@ expect(
   "The full supported-format evidence capture must remain available through an explicit slow tier.",
 );
 const formatTierBlock = /const FORMATS = \[([\s\S]*?)\n\];/.exec(checkTierSource)?.[1] || "";
+const smokeTierBlock = /const SMOKE = \[([\s\S]*?)\n\];/.exec(checkTierSource)?.[1] || "";
 const formatEvidenceTierBlock = /const FORMAT_EVIDENCE = \[([\s\S]*?)\n\];/.exec(checkTierSource)?.[1] || "";
+expect(smokeTierBlock.includes("check-external-review-ledger.mjs"), "The smoke tier must validate the external-review lifecycle ledger.");
+expect(smokeTierBlock.includes("check-external-review-defect-gate.mjs"), "The smoke tier must retain the injected-defect regression.");
+expect(formatTierBlock.includes("check-external-review-tflite-correctness.mjs"), "The format tier must retain external-review TFLite correctness fixtures.");
 expect(!formatTierBlock.includes("validate-supported-formats.mjs"), "The fast format-contract tier must not run full browser evidence capture.");
 expect(formatEvidenceTierBlock.includes("validate-supported-formats.mjs"), "The explicit format-evidence tier must retain full browser evidence capture.");
 expect(formatEvidenceTierBlock.includes("verify-supported-format-outputs.mjs"), "The explicit format-evidence tier must independently verify captured outputs.");
@@ -435,6 +439,8 @@ function checkPublicDistributionCiContract() {
     "node scripts/check-ci-deploy-contract.mjs",
     "npm run check:cli-docs",
     "npm run check:cli",
+    "npm run check:external-review-ledger",
+    "npm run check:external-review-defect-gate",
     "npm run check:formats:core",
   ]) {
     expect(publicQualityWorkflow.includes(snippet), `Public core quality should contain: ${snippet}`);

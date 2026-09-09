@@ -22,8 +22,8 @@ asset verification, and equivalence checks are documented in
 
 | Command | Artifact inputs | Declared outputs |
 | --- | ---: | --- |
-| `audit` | 1 | `analysis`<br>`envelope`<br>`cyclonedx`<br>`sarif` |
-| `gguf` | 1 | `analysis`<br>`envelope`<br>`cyclonedx`<br>`sarif` |
+| `audit` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
+| `gguf` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
 | `verify` | 1 | `deepbom.cli_interface_contract_verification.v1` |
 | `diff` | 2 | `deepbom.deployment_delta.v1.1` |
 | `explore` | 1 | `deepbom.redesign_pareto.v1` |
@@ -97,7 +97,7 @@ Options:
                           Bind that config to model-source/component digests
   --llm-memory-profile <json>
                           Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools
-  --output-format <kind> json, json-compact, envelope, cyclonedx, or sarif
+  --output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif
   --section <names>      Emit selected analysis sections; use --list-sections to discover names
   --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity
   --list-sections        List selectable analysis sections for this artifact
@@ -115,6 +115,10 @@ Options:
 
 Exit codes:
   0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding
+
+Human-readable audit output:
+  --output-format summary  Emit the bounded projection derived from deepbom.review_summary.v1
+  --summary                Compatibility alias for --output-format summary
 
 Installation and rule checks:
   deepbom self-test [--json|--compact]

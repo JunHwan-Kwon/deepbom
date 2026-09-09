@@ -665,6 +665,7 @@ web/lib/artifact-ir/internal/storage.js
 web/lib/artifact-ir/internal/validation.js
 web/lib/artifact-overview.js
 web/lib/artifact-set.js
+web/lib/audit-output-contracts.js
 web/lib/audit-progress.js
 web/lib/audit-ui.js
 web/lib/auth-labels.js

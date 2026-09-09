@@ -3,12 +3,13 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import process from "node:process";
 
+import { AUDIT_DEFAULT_OUTPUT_FORMAT, AUDIT_OUTPUT_FORMATS } from "../web/lib/audit-output-contracts.js";
+
 // Model Context Protocol server over stdio. Each analysis runs in a child
 // process so cancellation can terminate work without corrupting the JSON-RPC
 // transport or leaving the server unable to answer control requests.
 
 const PROTOCOL_VERSIONS = Object.freeze(["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"]);
-const AUDIT_OUTPUT_FORMATS = Object.freeze(["summary", "envelope", "json", "json-compact", "cyclonedx", "sarif"]);
 const SCAN_MODES = Object.freeze(["auto", "structure", "integrity", "full"]);
 const MAX_RESPONSE_BYTES = boundedEnvironmentInteger("DEEPBOM_MCP_MAX_RESPONSE_BYTES", 4 * 1024 * 1024, 64 * 1024, 64 * 1024 * 1024);
 const MAX_FRAME_BYTES = boundedEnvironmentInteger("DEEPBOM_MCP_MAX_FRAME_BYTES", 1024 * 1024, 4096, 8 * 1024 * 1024);
@@ -278,8 +279,8 @@ function commandArguments(name, args, roots) {
     } else if (Object.hasOwn(args, "pointer")) {
       argv.push("--pointer", String(args.pointer));
     } else {
-      const format = args.output_format || "summary";
-      if (format !== "summary") argv.push("--output-format", format);
+      const format = args.output_format || AUDIT_DEFAULT_OUTPUT_FORMAT;
+      argv.push("--output-format", format);
       if (args.section) argv.push("--section", String(args.section));
     }
     if (args.scan) argv.push("--scan", args.scan);

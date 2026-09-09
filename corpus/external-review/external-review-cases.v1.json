@@ -11,6 +11,7 @@
     "reproduced",
     "fixed",
     "verified",
+    "released",
     "deferred"
   ],
   "cases": [
@@ -20,6 +21,8 @@
       "class": "correctness",
       "priority": "P0",
       "status": "verified",
+      "fix_commit": "9923c05d33a0d741c62ca08bb03eba177dd00436",
+      "verification_commit": "c30980c11a4c77f5cfeae73713213d3c04130a87",
       "formats": ["safetensors", "gguf"],
       "reproducer": "node scripts/check-external-review-defect-gate.mjs",
       "fixture": {
@@ -38,6 +41,8 @@
       "class": "export_contract",
       "priority": "P0",
       "status": "verified",
+      "fix_commit": "9923c05d33a0d741c62ca08bb03eba177dd00436",
+      "verification_commit": "c30980c11a4c77f5cfeae73713213d3c04130a87",
       "formats": ["safetensors"],
       "reproducer": "node scripts/check-external-review-defect-gate.mjs",
       "expected": { "sarif_rule_id": "EA-SER-0001" },
@@ -57,6 +62,8 @@
       "class": "correctness",
       "priority": "P0",
       "status": "verified",
+      "fix_commit": "9923c05d33a0d741c62ca08bb03eba177dd00436",
+      "verification_commit": "c30980c11a4c77f5cfeae73713213d3c04130a87",
       "formats": ["tflite"],
       "reproducer": "node scripts/check-external-review-tflite-correctness.mjs",
       "fixture": {
@@ -76,6 +83,8 @@
       "class": "correctness",
       "priority": "P0",
       "status": "verified",
+      "fix_commit": "9923c05d33a0d741c62ca08bb03eba177dd00436",
+      "verification_commit": "c30980c11a4c77f5cfeae73713213d3c04130a87",
       "formats": ["tflite"],
       "reproducer": "node scripts/check-external-review-tflite-correctness.mjs",
       "fixture": {
@@ -98,6 +107,8 @@
       "class": "correctness",
       "priority": "P0",
       "status": "verified",
+      "fix_commit": "9923c05d33a0d741c62ca08bb03eba177dd00436",
+      "verification_commit": "c30980c11a4c77f5cfeae73713213d3c04130a87",
       "formats": ["tflite"],
       "reproducer": "node scripts/check-external-review-tflite-correctness.mjs",
       "fixture": {
@@ -175,6 +186,8 @@
       "class": "summary_contract",
       "priority": "P1",
       "status": "verified",
+      "fix_commit": "9923c05d33a0d741c62ca08bb03eba177dd00436",
+      "verification_commit": "c30980c11a4c77f5cfeae73713213d3c04130a87",
       "formats": ["tflite"],
       "reproducer": "node scripts/check-external-review-tflite-correctness.mjs",
       "fixture": {
@@ -194,6 +207,8 @@
       "class": "summary_contract",
       "priority": "P1",
       "status": "verified",
+      "fix_commit": "9923c05d33a0d741c62ca08bb03eba177dd00436",
+      "verification_commit": "c30980c11a4c77f5cfeae73713213d3c04130a87",
       "formats": ["all"],
       "reproducer": "node scripts/check-analysis-summary-contract.mjs",
       "expected": {
@@ -207,6 +222,8 @@
       "class": "cli_experience",
       "priority": "P1",
       "status": "verified",
+      "fix_commit": "5bcc8881acbf15d02dfca1b8d90dc4300a97ff1a",
+      "verification_commit": "c30980c11a4c77f5cfeae73713213d3c04130a87",
       "formats": ["all"],
       "reproducer": "node scripts/check-cli-automation.mjs",
       "resolution": "The default audit output is a bounded human summary; complete JSON remains explicit."
@@ -268,6 +285,8 @@
       "class": "test_coverage",
       "priority": "P0",
       "status": "verified",
+      "fix_commit": "9923c05d33a0d741c62ca08bb03eba177dd00436",
+      "verification_commit": "c30980c11a4c77f5cfeae73713213d3c04130a87",
       "formats": ["safetensors"],
       "reproducer": "node scripts/check-external-review-defect-gate.mjs"
     },

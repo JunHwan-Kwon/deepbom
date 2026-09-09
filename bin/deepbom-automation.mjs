@@ -2,6 +2,12 @@ import { createHash, randomBytes } from "node:crypto";
 import { access, mkdir, open, rename, unlink } from "node:fs/promises";
 import path from "node:path";
 
+import {
+  AUDIT_DEFAULT_OUTPUT_FORMAT,
+  AUDIT_OUTPUT_FORMATS,
+  cloneAuditOutputContracts,
+} from "../web/lib/audit-output-contracts.js";
+
 export const CLI_CAPABILITIES_SCHEMA = "deepbom.cli_capabilities.v1";
 export const CLI_ERROR_SCHEMA = "deepbom.cli_error.v1";
 export const CLI_POLICY_RESULT_SCHEMA = "deepbom.cli_finding_policy_result.v1";
@@ -17,8 +23,8 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
     cli_version: String(version),
     analysis_engine: "shared_browser_cli_javascript_and_tflite_wasm",
     commands: [
-      { name: "audit", input_count: 1, outputs: ["analysis", "envelope", "cyclonedx", "sarif"] },
-      { name: "gguf", input_count: 1, outputs: ["analysis", "envelope", "cyclonedx", "sarif"] },
+      { name: "audit", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },
+      { name: "gguf", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },
       { name: "verify", input_count: 1, outputs: ["deepbom.cli_interface_contract_verification.v1"] },
       { name: "diff", input_count: 2, outputs: ["deepbom.deployment_delta.v1.1"] },
       { name: "explore", input_count: 1, outputs: ["deepbom.redesign_pareto.v1"] },
@@ -43,11 +49,14 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       symbolic_stdin: false,
       symbolic_stdin_reason: "Artifact identity, sidecar resolution, and bounded range reads require a stable regular file or package directory.",
     },
+    default_audit_output: AUDIT_DEFAULT_OUTPUT_FORMAT,
     output_contracts: {
-      analysis: { media_type: "application/json", stability: "format_specific_complete_evidence" },
-      envelope: { media_type: "application/json", schema: "deepbom.artifact_evidence_envelope.v1", stability: "canonical_cross_format_contract" },
-      cyclonedx: { media_type: "application/vnd.cyclonedx+json", spec_version: "1.7" },
-      sarif: { media_type: "application/sarif+json", version: SARIF_VERSION },
+      ...cloneAuditOutputContracts(),
+      analysis: {
+        media_type: "application/json",
+        compatibility_alias_for: ["json", "json-compact"],
+        stability: "format_specific_complete_evidence",
+      },
     },
     provenance_inputs: {
       conversion_receipt: "deepbom.conversion_receipt.v1",
@@ -99,7 +108,7 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
         transport: "stdio_jsonrpc",
         protocol_versions: ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"],
         tools: ["deepbom_capabilities", "deepbom_audit", "deepbom_diff", "deepbom_explain_rule"],
-        default_audit_output: "summary",
+        default_audit_output: AUDIT_DEFAULT_OUTPUT_FORMAT,
         detailed_outputs_are_explicit: true,
         local_path_policy: "DEEPBOM_MCP_ALLOWED_ROOTS_or_launch_directory",
         bounded_environment_controls: [

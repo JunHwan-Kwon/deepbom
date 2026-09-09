@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
@@ -65,6 +65,8 @@ async function checkRealServerContract() {
     const capabilities = JSON.parse(capabilityResult.content[0].text);
     assert.deepEqual(capabilityResult.structuredContent, capabilities);
     assert.equal(capabilities.schema, "deepbom.cli_capabilities.v1");
+    assert.equal(capabilities.default_audit_output, "summary");
+    assert.equal(capabilities.output_contracts.summary.derived_from, "deepbom.review_summary.v1");
     assert.equal(capabilities.privacy.model_bytes_network_transfer, false);
     assert.equal(capabilities.privacy.analysis_location, "local_process");
     const declared = capabilities.automation.mcp_stdio_server;
@@ -80,6 +82,14 @@ async function checkRealServerContract() {
     assert.ok(Buffer.byteLength(summary.content[0].text, "utf8") < 20 * 1024, "The default agent response must stay concise.");
     assert.match(summary.content[0].text, /deployment-artifact audit/);
     assert.match(summary.content[0].text, /sha256:/);
+    const explicitCliSummary = spawnSync(process.execPath, ["bin/deepbom.mjs", "audit", onnxPath, "--output-format", "summary"], {
+      cwd: root,
+      encoding: "utf8",
+      env: { ...process.env, DEEPBOM_PROGRESS: "0" },
+    });
+    assert.equal(explicitCliSummary.status, 0, explicitCliSummary.stderr);
+    assert.equal(summary.content[0].text, explicitCliSummary.stdout.trim(),
+      "MCP default and explicit CLI summary must be byte-identical after transport newline trimming");
 
     session.request(5, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, output_format: "envelope", scan: "auto" } });
     const envelopeResult = (await session.response(5)).result;
@@ -126,7 +136,8 @@ async function checkRealServerContract() {
     });
     const staleShapeEnvelope = (await session.response(17)).result.structuredContent;
     assert.equal(staleShapeEnvelope.graph.total_macs, 589_824);
-    assert.equal(staleShapeEnvelope.graph.mac_assessment_status, "assessed_complete");
+    assert.equal(staleShapeEnvelope.graph.mac_assessment_status, "assessed",
+      "MCP must preserve the canonical normalized MAC coverage status used by CLI envelopes");
 
     session.request(18, "tools/call", {
       name: "deepbom_audit",

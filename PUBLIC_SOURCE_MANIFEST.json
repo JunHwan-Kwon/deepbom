@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "c30980c11a4c77f5cfeae73713213d3c04130a87",
+  "source_commit": "45f9e06f0277436088645bfcb133223db51a9bd6",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 1009,
+  "file_count": 1010,
   "files": [
     {
       "path": ".gitattributes",
@@ -17,8 +17,8 @@
     },
     {
       "path": ".github/workflows/public-quality.yml",
-      "byte_length": 1496,
-      "sha256": "6dc047bbb7ffacc9523c76ccefab5a155b15f1ba23e1e304b2b3798ac11ec916"
+      "byte_length": 1595,
+      "sha256": "567d7e28d564aa6e10d3234ea63975de92e71a062281480fd6e8c3f49638002d"
     },
     {
       "path": ".github/workflows/publish-mcp-registry.yml",
@@ -87,8 +87,8 @@
     },
     {
       "path": "bin/deepbom-automation.mjs",
-      "byte_length": 17673,
-      "sha256": "12317272ea4a6b948717e07527bfb213b17ce6ff75fafe32269658c3bd2f317d"
+      "byte_length": 17640,
+      "sha256": "82b0232d9d07d626ade7a9979ef86eeeb36a2014c46a3bb3855f0275943ba625"
     },
     {
       "path": "bin/deepbom-input.mjs",
@@ -97,13 +97,13 @@
     },
     {
       "path": "bin/deepbom-mcp.mjs",
-      "byte_length": 28223,
-      "sha256": "c5deef92e71a6eacab3d0e303a8cab5861fca883256197e5fe818e6bf64a3703"
+      "byte_length": 28207,
+      "sha256": "46b6446fa4705411e1fa71369da2b9628646d71562bd35dbb4e4cf0e4e82b742"
     },
     {
       "path": "bin/deepbom.mjs",
-      "byte_length": 108233,
-      "sha256": "9802bf349bb8ebf5c6f10c26ed6918833827cd1d9a36fcd32cb0307181471c6f"
+      "byte_length": 109491,
+      "sha256": "28026c54d2bbac3f38deaaf32aef5e7853712f21686878e8b8c16c47e52299a8"
     },
     {
       "path": "bin/graph-png-export.mjs",
@@ -227,8 +227,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 37322,
-      "sha256": "6788e8f38eebbadb082b25a9ff8bbda1955810a5eb716d239d49fbf0af9beeaf"
+      "byte_length": 37356,
+      "sha256": "69d461371eb4b46934dac26afda9032cca337c7974bae9416a2fd1a15a4af547"
     },
     {
       "path": "corpus/README.md",
@@ -307,8 +307,8 @@
     },
     {
       "path": "corpus/external-review/external-review-cases.v1.json",
-      "byte_length": 9291,
-      "sha256": "111f0df7ba43c6f2439c5d0eea69e22a29e084ad06b89ed299865cb0b663a14d"
+      "byte_length": 10540,
+      "sha256": "66b9446867d528bd6c94af75bb38beafe6ed97457423f8342bf76c446ea065a6"
     },
     {
       "path": "corpus/external-review/fixtures/conv-16x8.tflite",
@@ -542,8 +542,8 @@
     },
     {
       "path": "docs/CLI_REFERENCE.md",
-      "byte_length": 10203,
-      "sha256": "81302b1613fcf13b9331983d6e3e231b113cdb124c756d78e3a8a26268c72f85"
+      "byte_length": 10465,
+      "sha256": "2ad409aa424b9f3b2f407297982b6c9a8830b808d330ca04d58bb81ee04e60c4"
     },
     {
       "path": "docs/CYCLONEDX_20_QUANTIZATION_CONTRIBUTION.md",
@@ -557,8 +557,8 @@
     },
     {
       "path": "docs/EXTERNAL_REVIEW_TRIAGE.md",
-      "byte_length": 20595,
-      "sha256": "038a4870acf2416cda9b652e94c197c28aa297bed5851b65591d1892038d5050"
+      "byte_length": 20796,
+      "sha256": "b7be6ff83393b131a70b2c32a415a00c0ae028314842c7ce11adeba78f8d939d"
     },
     {
       "path": "docs/KNOWN_ISSUES.md",
@@ -1237,13 +1237,13 @@
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
-      "byte_length": 34192,
-      "sha256": "ac99d3cde759b8af14ec6eb0de81eaf5084c8a31031d8f8827dffdc3c4fdd3ac"
+      "byte_length": 34809,
+      "sha256": "6da2715af74a44c7e5de65cd90aed1f63f6e80d3c7c0e6f5ff745f1611799e4e"
     },
     {
       "path": "scripts/check-cli-automation.mjs",
-      "byte_length": 12227,
-      "sha256": "618c939da8e67b35090dc80f65f98a2c4e7d06b9898cb051986f3b7b17b0fb22"
+      "byte_length": 12609,
+      "sha256": "c1cf93098e4d1db962151efe51b26687d6727f3015e5581e97144f644e026249"
     },
     {
       "path": "scripts/check-cli-graph-export.mjs",
@@ -1252,8 +1252,8 @@
     },
     {
       "path": "scripts/check-cli.mjs",
-      "byte_length": 42905,
-      "sha256": "666ce5a21f804ce5a3392e578c05c0ca1d6ec7785e02bd002f68ebdfe92c4b86"
+      "byte_length": 44080,
+      "sha256": "eec50f07990d489e3733acbc9a5d239a14120ea18e522f8aaf42446ea0cd54cd"
     },
     {
       "path": "scripts/check-contract-migration-viewer.mjs",
@@ -1512,8 +1512,8 @@
     },
     {
       "path": "scripts/check-external-review-ledger.mjs",
-      "byte_length": 2337,
-      "sha256": "889f9d67f441a6aaeb3691e348db98cb57e0ad51084badaa09657d26631c992f"
+      "byte_length": 3399,
+      "sha256": "1965f5c94ff49bc256ac614fc9f28349dc83de08621363df82e04a6688e5ed1e"
     },
     {
       "path": "scripts/check-external-review-tflite-correctness.mjs",
@@ -1667,8 +1667,8 @@
     },
     {
       "path": "scripts/check-mcp-server.mjs",
-      "byte_length": 19153,
-      "sha256": "064c015b07536f49f1a397f94510cc612cd71819a7e493c4117eb5e7a3a5e436"
+      "byte_length": 19900,
+      "sha256": "b8ffb0361e0685e8b11a5cc4201df12406463338b541933a35e1a84f5becf5da"
     },
     {
       "path": "scripts/check-metadata-model-adapters.mjs",
@@ -2222,8 +2222,8 @@
     },
     {
       "path": "scripts/check-tier.mjs",
-      "byte_length": 4969,
-      "sha256": "c8fc32ecc07aca4bd685ec10412031063e7cadbfcdd5e72beb7a7ee189b713c9"
+      "byte_length": 5120,
+      "sha256": "692a451bba980f9a1036116bd4dc05f1ab403e7381cf0537bde920f3bd4fb5d9"
     },
     {
       "path": "scripts/check-wasm-hardening.mjs",
@@ -3346,6 +3346,11 @@
       "sha256": "c983426078f63122b03e32756276002bd00564be7d73e4103e1fc6ffd0928c3e"
     },
     {
+      "path": "web/lib/audit-output-contracts.js",
+      "byte_length": 1242,
+      "sha256": "bd07a3f49368dd09c13ad893b06d34e1c3e1b9ed88d5e2b25e81636388f6aaa7"
+    },
+    {
       "path": "web/lib/audit-progress.js",
       "byte_length": 3027,
       "sha256": "6f2bcb6686219a4b31323239d5883f12dd89d8d17fc35d9b7a5739f0a60fec96"
@@ -3382,8 +3387,8 @@
     },
     {
       "path": "web/lib/build-metadata.js",
-      "byte_length": 82579,
-      "sha256": "13df3ea046a6a734007bd8aa5f298df4c449ab8e1f11d10d782a613b0ccb9d9b"
+      "byte_length": 82746,
+      "sha256": "5f27830004ce8164434b159e6cbc6c0cb79d4d8a3c6e39c43f07afc42c0508c4"
     },
     {
       "path": "web/lib/bundle.js",
