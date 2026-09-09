@@ -28,6 +28,14 @@ for (const row of ledger.cases) {
   assert(ledger.status_lifecycle.includes(row.status), `${row.id} has an invalid status.`);
   assert(Array.isArray(row.formats) && row.formats.length > 0, `${row.id} must declare formats.`);
   assert(triage.includes(`### ${row.id}.`), `${row.id} is missing from EXTERNAL_REVIEW_TRIAGE.md.`);
+  const sectionStart = triage.indexOf(`### ${row.id}.`);
+  const followingCase = triage.indexOf("\n### ER-", sectionStart + 1);
+  const followingSection = triage.indexOf("\n## ", sectionStart + 1);
+  const sectionEnd = [followingCase, followingSection]
+    .filter((offset) => offset >= 0)
+    .reduce((minimum, offset) => Math.min(minimum, offset), triage.length);
+  const documentedStatus = /\*\*상태:\s*([a-z_]+)/.exec(triage.slice(sectionStart, sectionEnd))?.[1] || "";
+  assert.equal(documentedStatus, row.status, `${row.id} Markdown status must match the machine ledger.`);
   if (["fixed", "verified", "released"].includes(row.status)) {
     assert.equal(typeof row.reproducer, "string", `${row.id} must bind a reproducer before ${row.status}.`);
   }
@@ -43,6 +51,7 @@ for (const row of ledger.cases) {
 const documentedIds = [...triage.matchAll(/^### (ER-[A-Z]\d+)\./gm)].map((match) => match[1]);
 assert.deepEqual(new Set(documentedIds), ids, "The Markdown and JSON external-review case sets differ.");
 assert.doesNotMatch(triage, /^## [HJ]\./m, "Product direction sections must not be duplicated in the correctness triage.");
+assert.doesNotMatch(triage, /\bH1\/H2\b|\bER-H\d+\b/, "Removed product-direction case identifiers must not remain in the correctness work order.");
 assert.doesNotMatch(
   triage,
   /docs\/PRODUCT_DIRECTION\.md/,

@@ -244,6 +244,8 @@ axis 표현이 파서 기대와 다른 것으로 보입니다. **정상 파일�
 
 ### ER-C4. 포맷 성숙도 표시 부재
 
+**상태: reported**
+
 지원 확장자 7개가 동등하게 광고되지만 실제 신뢰 수준은 TFLite / ONNX(정적 shape 필요)
 / GGUF / safetensors 4개입니다. **성숙도 표를 문서와 MCP 도구 설명문 양쪽에 넣어야
 합니다.** 미지원이라고 적는 편이 지원한다고 적고 정상 파일을 거부하는 것보다 낫습니다.
@@ -287,6 +289,8 @@ MCP와 CLI의 기본 audit 출력은 같은 bounded human summary를 사용합�
 
 ### ER-D4. safetensors markdown 요약 누락
 
+**상태: reported**
+
 포맷별 출력 완성도가 들쭉날쭉합니다.
 
 ---
@@ -301,6 +305,8 @@ scale이 1000배 벌어진 것이 diff에 안 잡혔고, change_impact는 "바�
 성능 재검증 필요"라는 말만 합니다.
 
 ### ER-E2. TFLite 전용
+
+**상태: reported**
 
 **기회.** FDA PCCP(사전 변경 관리 계획)는 정확히 "어떤 변경이 재검증을 요구하는가"를
 다룹니다. `change_impact`가 제대로 되면 이 도구만의 차별점이 됩니다. 지금은 그 자리가
@@ -370,11 +376,15 @@ canonical finding, summary, SARIF, CLI gate, MCP와 함께 검증됩니다.
 
 ### ER-I3. 스키마 안정성 신호 없음
 
+**상태: reported**
+
 0.1.0에서 1.94.2로 뛴 이력, 거의 매일 패치, 내부 스키마 버전 수십 개. 소비자가 어느
 필드를 믿고 코드를 짤지 알 수 없습니다. **요약 층, SARIF 규칙 ID, CLI 플래그만이라도
 semver 대상으로 선언하고, 나머지 내부 스키마는 명시적으로 불안정 표시.**
 
 ### ER-I4. stable / nightly 채널 분리
+
+**상태: reported**
 
 매일 나오는 건 pre-release로, 2~4주 단위로 골든 코퍼스를 통과한 빌드만 stable로 승격.
 
@@ -399,25 +409,50 @@ semver 대상으로 선언하고, 나머지 내부 스키마는 명시적으로 
 
 ## 권장 처리 순서
 
-**검증 완료**
+### 현재 완료된 범위
 
 1. **A1·A2·I2** NaN defect gate, SARIF, MCP, 정상/all-zero 음성 대조
 2. **B1·B2·B3** TFLite shape reconciliation, 16x8, nullable numeric MAC total
 3. **D1·D2·D3** quant risk 승격, 공통 MAC confidence, bounded 기본 summary
 
-**다음 correctness 순서**
+후속 안정화에서 CLI·MCP·capabilities의 출력 형식을 공통 계약으로 통일했고,
+`summary`의 세 표기(`--format`, `--output-format`, `--summary`)와 충돌 처리를 검증했습니다.
+외부 리뷰 ledger/NaN gate는 smoke와 공개 CI에, TFLite correctness fixture는 formats-core에
+편입했습니다. 이 소스는 private `45f9e06`, clean public export `393aefe`까지 푸시됐습니다.
 
-4. **C2** 정상 mlpackage 오판을 독립 fixture로 재현
-5. **B4·B6** TRANSPOSE_CONV와 saturation/grid-utilization 정의를 source-pin과 함께 고정
-6. **C1** ML Program blob operand 연결을 공개 fixture로 검증
-7. **B5·D4** GGUF F16 및 SafeTensors 사람용 문구를 실제 fixture로 대조
-8. **F1** 규칙 카탈로그 완성 (SARIF에 나오는 모든 ID)
-9. **A3** 정책별 차단 조건을 finding identity와 분리
-10. **E1·E2** Artifact IR 기반 semantic diff 범위 확대
-11. **H1/H2** Python·npm 얇은 래퍼
+현재 기계 원장은 `verified 9`, `reproduced 3`, `reported 12`, `deferred 1`, `released 0`입니다.
+즉 수정과 소스 공개는 완료됐지만 `1.96.11` 패키지 게시와 `released` 승격은 아직 아닙니다.
 
-**구조 작업**
+### 바로 다음: 릴리스 폐쇄
 
-13. **I1** 골든 코퍼스 — 위 전부의 재발을 막는 유일한 장치
-14. **I3/I4** 스키마 semver 선언과 stable 채널
-15. **C4/B4/B6** 문서 세 가지: 포맷 성숙도 표, MAC 집계 관례, saturation·grid_utilization 정의
+4. **1.96.11 correctness release** 범위는 위 verified 9건, 공통 summary 계약, CI tier,
+   문서·원장 정합성으로 동결합니다.
+5. clean commit에서 npm·PyPI·Cargo channel artifact를 만들고 동일 sample의 semantic digest,
+   clean install, 전체 quality/deploy gate를 다시 검증합니다.
+6. 세 registry 게시와 설치본 재검증이 끝난 뒤에만 9건을 `released`로 올리고
+   `release_version`과 release commit을 원장에 기록합니다.
+
+### 다음 correctness 라운드
+
+7. **C2** 정상 Core ML compressed mlpackage를 hash-bound fixture로 먼저 재현합니다.
+   재현 전에는 파서를 수정하지 않습니다.
+8. **B4·B5·B6** source pin과 최소 fixture를 확보한 뒤 집계 관례, F16 storage 의미,
+   saturation/grid-utilization의 분자·분모를 고정합니다.
+9. **C1** ML Program blob operand 연결을 공개 fixture와 MAC conservation으로 검증합니다.
+10. **D4** SafeTensors 사람용 summary를 구조화된 review summary에서만 파생시킵니다.
+11. **F1** 실제 finding/rule inventory를 기준으로 설명 카탈로그의 완결 조건을 먼저 정한 뒤
+    누락 rule을 추가합니다.
+12. **A3** evidence gap과 artifact defect의 identity는 유지하고 정책별 차단 조건만 분리합니다.
+13. **E1·E2** Artifact IR 기반 quantization-contract diff를 TFLite에서 먼저 닫은 뒤
+    다른 executable graph 포맷으로 확대합니다.
+
+### 횡단 게이트와 후순위
+
+14. **I1**은 마지막에 한 번 만드는 코퍼스가 아닙니다. 7~13의 각 reproduced/fixed 전이에
+    hash, 기대값, 음성 대조를 추가하고 전체 경계가 바인딩됐을 때 닫습니다.
+15. **C4·I3·I4**는 지원 포맷 성숙도, 안정 표면의 semver, stable/prerelease cadence를
+    공개 계약으로 정리합니다. B4/B6 정의도 같은 문서 계약에 연결합니다.
+16. **G1**은 schema defect로 승격하지 않고 일반 CycloneDX 1.7 소비자 호환성 fixture와
+    export 설명으로만 검증합니다.
+17. **C3**은 대표 ExecuTorch artifact와 TensorRT native/GPU 실행 증거가 확보될 때까지
+    `deferred`를 유지합니다.

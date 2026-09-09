@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "45f9e06f0277436088645bfcb133223db51a9bd6",
+  "source_commit": "6e14054b6db8ff2e9ade11e698bc6e9ea7e2e0a3",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1010,
@@ -557,8 +557,8 @@
     },
     {
       "path": "docs/EXTERNAL_REVIEW_TRIAGE.md",
-      "byte_length": 20796,
-      "sha256": "b7be6ff83393b131a70b2c32a415a00c0ae028314842c7ce11adeba78f8d939d"
+      "byte_length": 22950,
+      "sha256": "f77b80d97e2012907fe076e864a5da4785052f6a779e5fe485ca0e9a466bccfc"
     },
     {
       "path": "docs/KNOWN_ISSUES.md",
@@ -1512,8 +1512,8 @@
     },
     {
       "path": "scripts/check-external-review-ledger.mjs",
-      "byte_length": 3399,
-      "sha256": "1965f5c94ff49bc256ac614fc9f28349dc83de08621363df82e04a6688e5ed1e"
+      "byte_length": 4129,
+      "sha256": "730907b6a3b0e6188b83bb9aaab4176e271bea928d80829d99601e0d776da38f"
     },
     {
       "path": "scripts/check-external-review-tflite-correctness.mjs",
@@ -3388,7 +3388,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 82746,
-      "sha256": "5f27830004ce8164434b159e6cbc6c0cb79d4d8a3c6e39c43f07afc42c0508c4"
+      "sha256": "fc4fe7d98492ad9a5ed7e4edbd8ddde836957a0dcd87827877f4fda3d7565e52"
     },
     {
       "path": "web/lib/bundle.js",
