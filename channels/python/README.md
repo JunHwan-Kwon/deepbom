@@ -5,6 +5,25 @@ DEEPBOM engine used by the npm CLI release. Each wheel binds its operating
 system, architecture, engine SHA-256, and canonical TFLite WASM SHA-256 in an
 installed manifest. No parser or numerical rule is reimplemented in Python.
 
+An experimental typed facade invokes that same verified engine and converts its
+JSON and exit-code contracts into Python values and exceptions:
+
+```python
+from deepbom import audit, capabilities, tensor_inventory, tensors
+
+caps = capabilities()
+envelope = audit("model.gguf")
+rows = tensors("model.gguf")
+inventory = tensor_inventory("model.gguf")
+```
+
+`audit()` defaults to the canonical envelope. It accepts explicit timeout and
+maximum-output-byte bounds. Exit 1 raises `DeepBomInvocationError`, exit 2
+raises `DeepBomPolicyBlocked`, and exit 3 raises
+`DeepBomIncompleteBinding`; policy exceptions retain any completed JSON result
+as `.document`. The facade is experimental in 1.96.x, and the CLI schemas remain
+the compatibility contract.
+
 ```console
 deepbom audit model.tflite --compact
 deepbom audit model.onnx --format cyclonedx

@@ -1494,6 +1494,81 @@
         "packaged_self_test_and_wasm_tamper_rejection"
       ],
       "qualification": "The installed npm package, MCP server, agent integration surfaces, Python wheel, standalone engine, and Cargo launcher retained the release contract while packaged self-test and WASM tampering boundaries remained enforced."
+    },
+    {
+      "kind": "private_web_preflight_basis",
+      "version": "1.96.14",
+      "platform": "windows-x64",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 160.249,
+      "check_count": 81,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "current_version_non_self_referential_basis",
+        "artifact_ir_and_stable_cyclonedx_1_7_contracts",
+        "agent_native_python_facade_and_mcp_product_boundary_contracts",
+        "route_bound_cloudflare_and_medbom_redirect_contract",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy"
+      ],
+      "qualification": "All 81 non-self-referential deployment checks passed within the recorded wall-time budget. A prior successful 240.449-second measurement was not used because it exceeded the 240-second operations budget."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.96.14",
+      "platform": "windows-x64",
+      "command": "npm run build:channels",
+      "elapsed_seconds": 62.812,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball_with_mcp_server_and_agent_skill",
+        "official_mcpb_bundle",
+        "single_executable_engine",
+        "python_wheel_with_typed_facade",
+        "cargo_launcher_source",
+        "manifest_bound_self_test_probe",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.96.14",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 184.429,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "installed_python_capabilities_and_gguf_tensor_inventory",
+        "manifest_bound_self_test_execution",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity",
+        "path_with_spaces_execution"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.96.14",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 520.023,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "installed_npm_mcp_2025_11_25_negotiation",
+        "installed_npm_mcp_onnx_tflite_gguf_audits",
+        "installed_npm_agent_integration_preview_apply_status_remove",
+        "installed_python_capabilities_and_gguf_tensor_inventory",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "capability_envelope_sarif_policy_and_review_contract_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_self_test_and_wasm_tamper_rejection"
+      ],
+      "qualification": "The installed npm package, MCP server, Agent Skill, typed Python facade, standalone engine, and Cargo launcher retained the release contract while packaged self-test and WASM tampering boundaries remained enforced."
     }
   ],
   "budgets": {

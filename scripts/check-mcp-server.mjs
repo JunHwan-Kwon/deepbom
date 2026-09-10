@@ -11,6 +11,7 @@ import { pathToFileURL } from "node:url";
 
 const root = process.cwd();
 const onnxPath = path.resolve("web/samples/gpu_partition_probe.onnx");
+const ggufPath = path.resolve("web/samples/tinymqa1m.Q4_0.gguf");
 const externalReviewTfliteRoot = path.resolve("corpus/external-review/fixtures");
 const scratch = path.resolve(".local-validation/mcp-server");
 await rm(scratch, { recursive: true, force: true });
@@ -53,6 +54,8 @@ async function checkRealServerContract() {
       "Remote diff may populate a verified local cache and must not claim strict read-only behaviour.");
     const auditTool = tools.find((tool) => tool.name === "deepbom_audit");
     assert.deepEqual(auditTool.inputSchema.properties.scan.enum, ["auto", "structure", "integrity", "full"]);
+    assert.equal(auditTool.inputSchema.properties.tensors.type, "boolean");
+    assert.match(auditTool.inputSchema.properties.tensors.description, /deepbom\.tensor_table\.v1/);
     assert.deepEqual(auditTool.inputSchema.properties.output_format.enum,
       ["summary", "envelope", "json", "json-compact", "cyclonedx", "sarif"]);
     assert.match(auditTool.description, /immutable remote/);
@@ -166,6 +169,31 @@ async function checkRealServerContract() {
     });
     const quantRiskSummary = (await session.response(20)).result.content[0].text;
     assert.match(quantRiskSummary, /Quantization: risk at #0 CONV_2D/);
+
+    session.request(21, "tools/call", {
+      name: "deepbom_audit",
+      arguments: { path: ggufPath, tensors: true },
+    });
+    const tensorTableResult = (await session.response(21)).result;
+    const tensorTable = JSON.parse(tensorTableResult.content[0].text);
+    assert.deepEqual(tensorTableResult.structuredContent, tensorTable);
+    assert.equal(tensorTable.schema, "deepbom.tensor_table.v1");
+    assert.equal(tensorTable.scan_policy.effective_mode, "structure");
+    assert.equal(tensorTable.tensor_count, tensorTable.tensors.length);
+    assert.equal(tensorTable.tensors[0].numerical_integrity, undefined,
+      "MCP tensor projection must omit the full numerical-integrity ledger.");
+
+    session.request(22, "tools/call", {
+      name: "deepbom_audit",
+      arguments: { path: ggufPath, tensors: true, output_format: "envelope" },
+    });
+    assert.match((await session.response(22)).result.content[0].text, /output_format cannot be combined with tensors/);
+
+    session.request(23, "tools/call", {
+      name: "deepbom_audit",
+      arguments: { path: ggufPath, tensors: true, scan: "full" },
+    });
+    assert.match((await session.response(23)).result.content[0].text, /tensors accepts only the structure scan policy/);
   } finally {
     await session.close();
   }

@@ -94,6 +94,21 @@ for (const [artifact, expectedFormat] of cases) {
 
 const gguf = JSON.parse(run(["gguf", cases[2][0], "--compact"]).stdout);
 assert.equal(gguf.gguf?.tensor_count > 0, true, "GGUF command tensor inventory");
+const ggufTensorTable = run(["gguf", cases[2][0], "--tensors"]).stdout;
+assert.match(ggufTensorTable, /^DEEPBOM \S+ serialized tensor table/m, "GGUF concise tensor table heading");
+assert.match(ggufTensorTable, /INDEX\tNAME\tENCODING\tSHAPE\tBITS\/ELEMENT\tBYTES\tFILE BYTE RANGE/, "GGUF concise tensor table columns");
+assert.doesNotMatch(ggufTensorTable, /numerical_integrity/, "GGUF concise tensor table excludes nested numerical ledgers");
+const ggufTensorJson = JSON.parse(run(["gguf", cases[2][0], "--tensors", "--compact"]).stdout);
+assert.equal(ggufTensorJson.schema, "deepbom.tensor_table.v1", "GGUF tensor projection schema");
+assert.equal(ggufTensorJson.scan_policy?.effective_mode, "structure", "GGUF tensor projection defaults to structure-only scanning");
+assert.equal(ggufTensorJson.tensor_count, gguf.tensors.length, "GGUF tensor projection count");
+assert.equal(ggufTensorJson.tensors[0].numerical_integrity, undefined, "GGUF tensor projection remains bounded");
+assert.equal(ggufTensorJson.tensors[0].effective_bits_per_element, "8.5", "GGUF block overhead remains explicit");
+assert.equal(ggufTensorJson.tensors[0].file_byte_end_exclusive - ggufTensorJson.tensors[0].file_byte_start,
+  ggufTensorJson.tensors[0].byte_length, "GGUF tensor projection byte-range conservation");
+const invalidTensorCommand = run(["audit", cases[1][0], "--tensors"], false);
+assert.notEqual(invalidTensorCommand.status, 0, "--tensors must be GGUF-only");
+assert.match(invalidTensorCommand.stderr, /--tensors is valid only with the gguf command/);
 const ggufStructure = JSON.parse(run(["gguf", cases[2][0], "--scan", "structure", "--compact"]).stdout);
 assert.equal(ggufStructure.cli_scan_policy?.effective_mode, "structure", "GGUF structure scan policy");
 assert.equal(ggufStructure.tensor_numerical_integrity?.status, "not_assessed_scan_policy_structure", "structure mode must not imply payload integrity");

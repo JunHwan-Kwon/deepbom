@@ -55,6 +55,7 @@ const TOOLS = Object.freeze([
         },
         scan: { type: "string", enum: [...SCAN_MODES], description: "Bounded scan policy. structure avoids payload integrity work; integrity streams supported payload checks; full requests all supported static analysis." },
         section: { type: "string", description: "Emit only these analysis sections, comma-separated. Use list_sections first. Applies to json formats." },
+        tensors: { type: "boolean", description: "For a GGUF artifact, return the bounded structure-only deepbom.tensor_table.v1 projection instead of the full tensor/numerical ledgers." },
         list_sections: { type: "boolean", description: "List selectable analysis sections instead of auditing." },
         pointer: { type: "string", description: "Emit one RFC 6901 JSON Pointer result, such as /operator_count." },
         target: { type: "string", description: "TFLite target profile id for cost-model binding; it is not host detection." },
@@ -274,8 +275,10 @@ function commandArguments(name, args, roots) {
   if (name === "deepbom_capabilities") return ["capabilities", "--json"];
   if (name === "deepbom_explain_rule") return ["explain-rule", requiredRuleId(args.rule), "--compact"];
   if (name === "deepbom_audit") {
-    const argv = ["audit", requiredArtifactSource(args.path, "path", roots, args.expected_sha256)];
-    if (args.list_sections) {
+    const argv = [args.tensors ? "gguf" : "audit", requiredArtifactSource(args.path, "path", roots, args.expected_sha256)];
+    if (args.tensors) {
+      argv.push("--tensors", "--compact");
+    } else if (args.list_sections) {
       argv.push("--list-sections");
     } else if (Object.hasOwn(args, "pointer")) {
       argv.push("--pointer", String(args.pointer));
@@ -317,7 +320,7 @@ function validateToolArguments(name, args) {
   if (!args || typeof args !== "object" || Array.isArray(args)) throw new Error("Tool arguments must be a JSON object.");
   const allowed = {
     deepbom_capabilities: [],
-    deepbom_audit: ["path", "output_format", "scan", "section", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
+    deepbom_audit: ["path", "output_format", "scan", "section", "tensors", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
     deepbom_diff: ["baseline", "candidate", "target", "expected_sha256", "cache_dir", "offline", "max_download_gib"],
     deepbom_explain_rule: ["rule"],
   }[name];
@@ -325,7 +328,7 @@ function validateToolArguments(name, args) {
   const extra = Object.keys(args).filter((key) => !allowed.includes(key));
   if (extra.length) throw new Error(`Undeclared tool argument${extra.length === 1 ? "" : "s"}: ${extra.sort().join(", ")}.`);
 
-  const booleanFields = ["list_sections", "offline"];
+  const booleanFields = ["tensors", "list_sections", "offline"];
   for (const key of allowed.filter((key) => !booleanFields.includes(key) && key !== "max_download_gib")) {
     if (Object.hasOwn(args, key) && typeof args[key] !== "string") throw new Error(`The ${key} argument must be a string.`);
   }
@@ -346,11 +349,16 @@ function validateToolArguments(name, args) {
   if (name === "deepbom_diff") return;
 
   const selectors = [
+    args.tensors ? "tensors" : null,
     args.list_sections ? "list_sections" : null,
     Object.hasOwn(args, "pointer") ? "pointer" : null,
     Object.hasOwn(args, "section") ? "section" : null,
   ].filter(Boolean);
   if (selectors.length > 1) throw new Error(`Audit selectors are mutually exclusive: ${selectors.join(", ")}.`);
+  if (args.tensors && Object.hasOwn(args, "output_format")) throw new Error("output_format cannot be combined with tensors.");
+  if (args.tensors && (args.target || args.external_data_dir)) throw new Error("tensors does not accept target or external_data_dir.");
+  if (args.tensors && args.scan && args.scan !== "structure") throw new Error("tensors accepts only the structure scan policy.");
+  if (args.tensors && (args.gate || args.policy)) throw new Error("tensors does not accept gate or policy evaluation.");
   if ((args.list_sections || Object.hasOwn(args, "pointer")) && Object.hasOwn(args, "output_format")) {
     throw new Error("output_format cannot be combined with list_sections or pointer.");
   }

@@ -94,13 +94,13 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.13";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.14";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 const EXPECTED_SELF_TEST_SHA256 = typeof __DEEPBOM_SELF_TEST_SHA256__ === "string" ? __DEEPBOM_SELF_TEST_SHA256__ : "";
 
 async function main(argv) {
   const parsed = parseArguments(argv);
-  if (parsed.help) return printHelp();
+  if (parsed.help) return printHelp(parsed.command);
   if (parsed.version) return process.stdout.write(`${VERSION}\n`);
   if (parsed.command === "capabilities") {
     validateCapabilitiesInvocation(parsed);
@@ -163,7 +163,7 @@ async function main(argv) {
     : await loadCliInput(inputPath);
   const filename = input.filename;
   const detectedFormat = input.kind === "file" ? detectModelFormat(filename, input.prefix) : "package";
-  let scanPolicy = resolveScanPolicy(parsed.scan, detectedFormat, input);
+  let scanPolicy = resolveScanPolicy(parsed.tensorTable && !parsed.scanExplicit ? "structure" : parsed.scan, detectedFormat, input);
   if ((parsed.targetProfile || parsed.targetExplicit) && input.kind === "file" && detectedFormat !== "tflite") {
     throw new Error(`${parsed.targetProfile ? "--target-profile" : "--target"} applies only to TFLite artifacts, received ${detectedFormat}.`);
   }
@@ -437,7 +437,7 @@ async function main(argv) {
   const document = ["analysis", "summary"].includes(parsed.outputFormat)
     ? selectAnalysisOutput(completeDocument, parsed, reviewSummary, artifactIrContext)
     : completeDocument;
-  await emitDocument(parsed, document, () => buildHumanSummary(reviewSummary));
+  await emitDocument(parsed, document, () => parsed.tensorTable ? buildTensorTable(document) : buildHumanSummary(reviewSummary));
   if (parsed.policyOutput) {
     await writeOutputAtomically(parsed.policyOutput, `${JSON.stringify(policyResult, null, parsed.compact ? 0 : 2)}\n`, { noClobber: parsed.noClobber });
   }
@@ -507,6 +507,7 @@ function validateInvocation(parsed) {
   if ((parsed.sections.length || parsed.pointer || parsed.listSections) && !["audit", "gguf"].includes(parsed.command)) {
     throw new Error("--section, --pointer, and --list-sections are valid only with audit or gguf.");
   }
+  if (parsed.tensorTable && parsed.command !== "gguf") throw new Error("--tensors is valid only with the gguf command.");
   if (parsed.view && parsed.command !== "graph") throw new Error("--view is valid only with the graph command.");
   if (parsed.command === "verify" && !parsed.contract) throw new Error("The verify command requires --contract <json>.");
   if (parsed.command === "diff" && !parsed.candidate) throw new Error("The diff command requires baseline and candidate artifacts.");
@@ -1416,6 +1417,7 @@ function storageSummaryLine(storage) {
 }
 
 function selectAnalysisOutput(analysis, parsed, reviewSummary, artifactIrContext) {
+  if (parsed.tensorTable) return buildTensorTableProjection(analysis, reviewSummary);
   if (parsed.listSections) return {
     schema: "deepbom.analysis_sections.v1",
     artifact: reviewSummary.artifact,
@@ -1527,6 +1529,84 @@ function buildDiffSummary(delta) {
   if (worst) lines.push(`Largest relative modeled delta: ${worst.target_id} (${formatSignedPercent(worst.relative_delta)})`);
   lines.push(`Evidence boundary: ${delta.interpretation_boundary}`);
   return `${lines.join("\n")}\n`;
+}
+
+function buildTensorTableProjection(analysis, reviewSummary) {
+  const tensorDataOffset = nonNegativeInteger(analysis.gguf?.tensor_data_offset);
+  const tensors = (analysis.tensors || []).map((tensor) => {
+    const elementCount = exactTensorElementCount(tensor.shape);
+    const byteLength = nonNegativeInteger(tensor.byte_length);
+    const relativeStart = nonNegativeInteger(tensor.data_offset);
+    const relativeEnd = nonNegativeInteger(tensor.data_end);
+    const effectiveBits = elementCount !== null && elementCount !== 0n && byteLength !== null
+      ? formatRatio(BigInt(byteLength) * 8n, elementCount, 6)
+      : null;
+    return {
+      index: nonNegativeInteger(tensor.index),
+      name: String(tensor.name || ""),
+      encoding: String(tensor.dtype || "unknown"),
+      shape: Array.isArray(tensor.shape) ? tensor.shape : [],
+      element_count: elementCount === null ? null : elementCount.toString(),
+      effective_bits_per_element: effectiveBits,
+      block_elements: nonNegativeInteger(tensor.block_elements),
+      block_bytes: nonNegativeInteger(tensor.block_bytes),
+      byte_length: byteLength,
+      file_byte_start: tensorDataOffset !== null && relativeStart !== null ? tensorDataOffset + relativeStart : null,
+      file_byte_end_exclusive: tensorDataOffset !== null && relativeEnd !== null ? tensorDataOffset + relativeEnd : null,
+    };
+  });
+  return {
+    schema: "deepbom.tensor_table.v1",
+    artifact: reviewSummary.artifact,
+    scan_policy: analysis.cli_scan_policy || null,
+    tensor_count: tensors.length,
+    encoding_inventory: analysis.on_device_llm?.storage?.encoding_inventory || [],
+    encoding_inventory_sha256: analysis.on_device_llm?.storage?.encoding_inventory_sha256 || null,
+    tensor_encoding_assignment_sha256: analysis.on_device_llm?.storage?.tensor_encoding_assignment_sha256 || null,
+    columns: ["index", "name", "encoding", "shape", "element_count", "effective_bits_per_element", "block_elements", "block_bytes", "byte_length", "file_byte_start", "file_byte_end_exclusive"],
+    tensors,
+    interpretation_boundary: "Observed serialized tensor directory and derived storage ratios only. The table does not establish the quantization recipe, calibration or importance-matrix use, lineage, runtime placement, or model quality.",
+  };
+}
+
+function exactTensorElementCount(shape) {
+  if (!Array.isArray(shape) || shape.some((value) => !Number.isSafeInteger(value) || value < 0)) return null;
+  return shape.reduce((product, value) => product * BigInt(value), 1n);
+}
+
+function formatRatio(numerator, denominator, digits) {
+  if (denominator === 0n) return null;
+  const scale = 10n ** BigInt(digits);
+  const rounded = (numerator * scale + denominator / 2n) / denominator;
+  const whole = rounded / scale;
+  const fraction = String(rounded % scale).padStart(digits, "0").replace(/0+$/, "");
+  return fraction ? `${whole}.${fraction}` : String(whole);
+}
+
+function buildTensorTable(document) {
+  const rows = [
+    `DEEPBOM ${VERSION} serialized tensor table`,
+    `Artifact: ${document.artifact.filename} | sha256:${document.artifact.sha256}`,
+    `Tensors: ${document.tensor_count} | scan ${document.scan_policy?.effective_mode || "unknown"}`,
+    "INDEX\tNAME\tENCODING\tSHAPE\tBITS/ELEMENT\tBYTES\tFILE BYTE RANGE [start,end)",
+  ];
+  for (const tensor of document.tensors) {
+    rows.push([
+      tensor.index,
+      tensor.name.replace(/[\t\r\n]+/g, " "),
+      tensor.encoding,
+      `[${tensor.shape.join("x")}]`,
+      tensor.effective_bits_per_element ?? "unknown",
+      tensor.byte_length ?? "unknown",
+      tensor.file_byte_start === null || tensor.file_byte_end_exclusive === null
+        ? "unknown"
+        : `${tensor.file_byte_start},${tensor.file_byte_end_exclusive}`,
+    ].join("\t"));
+  }
+  rows.push(`Assignment: sha256:${document.tensor_encoding_assignment_sha256 || "unavailable"}`);
+  rows.push(`Evidence boundary: ${document.interpretation_boundary}`);
+  rows.push("Machine-readable: add --json or --compact, or write with --output <path>.");
+  return `${rows.join("\n")}\n`;
 }
 
 function buildExploreSummary(pareto) {
@@ -1766,6 +1846,7 @@ function parseArguments(argv) {
     sections: [],
     pointer: "",
     listSections: false,
+    tensorTable: false,
     noClobber: false,
     errorFormat: "text",
     timestamp: "",
@@ -1878,6 +1959,7 @@ function parseArguments(argv) {
     else if (token === "--section") parsed.sections = parseSections(requiredValue(values, token));
     else if (token === "--pointer") parsed.pointer = requiredValue(values, token);
     else if (token === "--list-sections") parsed.listSections = true;
+    else if (token === "--tensors") parsed.tensorTable = true;
     else if (token === "--list" && parsed.command === "explain-rule") parsed.listRules = true;
     else if (token === "--output" || token === "-o") parsed.output = requiredValue(values, token);
     else if (token === "--policy-output") parsed.policyOutput = requiredValue(values, token);
@@ -1936,9 +2018,9 @@ function parseArguments(argv) {
   if (!new Set(["text", "json"]).has(parsed.errorFormat)) throw new Error("--error-format must be text or json.");
   if (parsed.apply && parsed.command !== "integrate") throw new Error("--apply is valid only with deepbom integrate.");
   if (parsed.json && parsed.compact) throw new Error("--json and --compact are mutually exclusive.");
-  const selectionCount = Number(parsed.sections.length > 0) + Number(Boolean(parsed.pointer)) + Number(parsed.listSections);
-  if (selectionCount > 1) throw new Error("--section, --pointer, and --list-sections are mutually exclusive.");
-  if (selectionCount && parsed.outputFormat !== "analysis") throw new Error("--section, --pointer, and --list-sections require JSON analysis output.");
+  const selectionCount = Number(parsed.sections.length > 0) + Number(Boolean(parsed.pointer)) + Number(parsed.listSections) + Number(parsed.tensorTable);
+  if (selectionCount > 1) throw new Error("--tensors, --section, --pointer, and --list-sections are mutually exclusive.");
+  if (selectionCount && parsed.outputFormat !== "analysis") throw new Error("--tensors, --section, --pointer, and --list-sections require JSON analysis output when combined with an explicit output format.");
   return parsed;
 }
 
@@ -2022,8 +2104,10 @@ async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_B
   }
 }
 
-function printHelp() {
+function printHelp(command) {
+  if (command === "gguf") return printGgufHelp();
   process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline-artifact-or-package> <candidate-artifact-or-package> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif\n  --section <names>      Emit selected analysis sections; use --list-sections to discover names\n  --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity\n  --list-sections        List selectable analysis sections for this artifact\n  --gate defects         Exit 2 only when an artifact_defect finding is present\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Compatibility severity gate: informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Compatibility alias for --output-format json\n  --compact              Compatibility alias for --output-format json-compact\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
+  process.stdout.write("\nGGUF quick inspection:\n  --tensors              Emit a concise tensor table; add --json or --compact for deepbom.tensor_table.v1\n");
   process.stdout.write("\nBuilt-in gate profiles:\n  --policy engineering  Block artifact defects; keep cautions and evidence gaps visible\n  --policy regulatory   Block artifact defects and unresolved evidence gaps; this is not a legal-compliance determination\n");
   process.stdout.write("\nHuman-readable audit output:\n  --output-format summary  Emit the bounded projection derived from deepbom.review_summary.v1\n  --summary                Compatibility alias for --output-format summary\n");
   process.stdout.write("\nInstallation and rule checks:\n  deepbom self-test [--json|--compact]\n  deepbom explain-rule <rule-id> [--json|--compact]\n  deepbom explain-rule --list\n");
@@ -2041,6 +2125,10 @@ function printHelp() {
   process.stdout.write("\nDeterministic graph export:\n  deepbom graph <artifact> --view structure --output-format svg -o graph.svg\n  --view <kind>           structure, placement, quantization, or architecture\n  --output-format <kind>  svg, png, html, mermaid, dot, or json for graph\n");
   process.stdout.write("\nTensorRT optimized-engine option:\n  --tensorrt-engine-inspector <json>\n                          Import identity-bound TensorRT optimized-engine inspector evidence\n");
   process.stdout.write("\nExecuTorch selected-build option:\n  --executorch-build <json>\n                          Bind backend/operator inventories and runtime binary digests to a PTE audit\n");
+}
+
+function printGgufHelp() {
+  process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom gguf <artifact.gguf> [options]\n\nGGUF inspection:\n  --tensors              Emit a concise tensor table; add --json or --compact for deepbom.tensor_table.v1\n  --scan <mode>           auto, structure, integrity, or full; --tensors defaults to structure\n  --context <tokens>      Bind a conditional text-token scenario\n  --images <count>        Bind image count; requires --tokens-per-image\n  --tokens-per-image <n>  Bind projector tokens per image\n  --batch <count>         Scenario batch size (default: 1)\n  --state-bits <bits>     State width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>      Compare the lower bound with a declared capacity\n  --llm-memory-profile <json>\n                         Evaluate serialized layer/state lower bounds against declared pools\n\nEvidence selection:\n  --section <names>       Emit selected JSON sections\n  --pointer <pointer>     Emit one RFC 6901 JSON Pointer result\n  --list-sections         List selectable sections\n\nOutput and identity:\n  --json                  Pretty machine-readable JSON\n  --compact               Compact machine-readable JSON\n  --output, -o <path>     Atomically write output; use - for stdout\n  --no-clobber            Refuse to replace an output\n  --expected-sha256 <hex> Require an independent artifact digest\n  --cache-dir <directory> Use a content-addressed cache\n  --offline               Refuse network access\n  --help                  Show this GGUF-specific help\n\nEvidence boundary:\n  Serialized structure does not establish recipe execution, calibration or importance-matrix use, lineage, runtime placement, latency, or model quality.\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy block; 3 incomplete verification binding\n`);
 }
 
 main(process.argv.slice(2)).catch((error) => {

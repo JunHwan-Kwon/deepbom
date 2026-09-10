@@ -54,10 +54,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.96.13`:
+`1.96.14`:
 
 ```console
-DEEPBOM 1.96.13
+DEEPBOM 1.96.14
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -116,6 +116,9 @@ Options:
 
 Exit codes:
   0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding
+
+GGUF quick inspection:
+  --tensors              Emit a concise tensor table; add --json or --compact for deepbom.tensor_table.v1
 
 Built-in gate profiles:
   --policy engineering  Block artifact defects; keep cautions and evidence gaps visible

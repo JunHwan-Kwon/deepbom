@@ -9,7 +9,7 @@ import {
 // Budget history belongs in git/CHANGELOG; this executable keeps only current policy.
 const handwrittenRuntimeBudgetKiB = Number(process.env.HANDWRITTEN_RUNTIME_SOURCE_BUDGET_KIB || process.env.SOURCE_BUDGET_KIB || 11840);
 const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_BUDGET_KIB || 1728);
-const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 416);
+const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 420);
 const verificationSourceBudgetKiB = Number(process.env.VERIFICATION_SOURCE_BUDGET_KIB || 3424);
 const devToolingSourceBudgetKiB = Number(process.env.DEV_TOOLING_SOURCE_BUDGET_KIB || 1456);
 const nativeToolingSourceBudgetKiB = Number(process.env.NATIVE_TOOLING_SOURCE_BUDGET_KIB || 256);

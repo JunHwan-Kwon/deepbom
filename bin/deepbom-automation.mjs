@@ -62,6 +62,14 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
         stability: "format_specific_complete_evidence",
       },
     },
+    bounded_projections: {
+      gguf_tensor_table: {
+        invocation: "deepbom gguf <artifact.gguf> --tensors --compact",
+        schema: "deepbom.tensor_table.v1",
+        default_scan: "structure",
+        excludes: ["decoded_tensor_values", "tensor_numerical_integrity_ledgers"],
+      },
+    },
     provenance_inputs: {
       conversion_receipt: "deepbom.conversion_receipt.v1",
       source_code_serialization_loaded: false,

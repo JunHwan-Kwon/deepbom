@@ -4,6 +4,24 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.14 - 2026-09-10
+
+- Added a structure-only `deepbom gguf --tensors` projection with a concise
+  human table and `deepbom.tensor_table.v1` JSON, including absolute byte
+  ranges, storage ratios, and existing assignment identities without nested
+  numerical payload ledgers.
+- Added GGUF-specific help and machine capability discovery for that bounded
+  projection.
+- Added an experimental Python facade (`audit`, `capabilities`, `tensors`, and
+  `tensor_inventory`) over the same verified engine, with timeout/output bounds
+  and typed exit-code exceptions.
+- Raised only the documentation source ceiling by 4 KiB for the generated CLI
+  reference and the new tensor/Python contract; runtime file ceilings are
+  unchanged.
+- Archived source-only, content-addressed CycloneDX review evidence for PRs
+  #990, #1067, and #1075 plus issue #862. These research fixtures remain
+  excluded from the website and installation artifacts.
+
 ## 1.96.13 - 2026-09-10
 
 - Added a serverless Agent-native path for Codex, Claude Code, and compatible

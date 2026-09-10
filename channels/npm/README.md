@@ -7,10 +7,10 @@ For a local Codex or Claude Code project, preview and install the bundled Agent
 Skill without operating an analysis server:
 
 ```console
-npx -y deepbom@1.96.13 integrate codex
-npx -y deepbom@1.96.13 integrate codex --apply
-npx -y deepbom@1.96.13 integrate claude-code
-npx -y deepbom@1.96.13 integrate claude-code --apply
+npx -y deepbom@1.96.14 integrate codex
+npx -y deepbom@1.96.14 integrate codex --apply
+npx -y deepbom@1.96.14 integrate claude-code
+npx -y deepbom@1.96.14 integrate claude-code --apply
 ```
 
 ```console
@@ -25,10 +25,10 @@ npx deepbom diff baseline.tflite candidate.tflite
 npx deepbom explore model.tflite --target-profile target-profile.json
 npx deepbom audit model.pte --executorch-build deepbom.executorch-build.json --compact
 npx deepbom capabilities --format agent-json
-npx -y deepbom@1.96.13 mcp
+npx -y deepbom@1.96.14 mcp
 ```
 
-Claude Desktop can install the version-matched `deepbom-1.96.13.mcpb` asset
+Claude Desktop can install the version-matched `deepbom-1.96.14.mcpb` asset
 from the corresponding GitHub Release as a local desktop extension.
 
 The default output is a bounded human-readable summary. Use `--json` or

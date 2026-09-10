@@ -98,6 +98,11 @@ if (platformSmoke || releaseContract) {
     "standalone engine capability discovery diverged from canonical CLI");
   assert.deepEqual(json(run(python, ["-m", "deepbom", ...capabilityArgs]).stdout), canonicalCapabilities,
     "installed Python capability discovery diverged from canonical CLI");
+  assert.deepEqual(json(run(python, ["-c", "import json, deepbom; print(json.dumps(deepbom.capabilities(), separators=(',', ':')))"]).stdout), canonicalCapabilities,
+    "installed Python facade capability discovery diverged from canonical CLI");
+  const pythonTensorInventory = json(run(python, ["-c", "import json, sys, deepbom; print(json.dumps(deepbom.tensor_inventory(sys.argv[1]), separators=(',', ':')))", fileCases[2].path]).stdout);
+  assert.equal(pythonTensorInventory.schema, "deepbom.tensor_table.v1", "installed Python tensor facade schema drifted");
+  assert.equal(pythonTensorInventory.scan_policy?.effective_mode, "structure", "installed Python tensor facade must remain bounded");
   assert.deepEqual(json(run(engine, agentCapabilityArgs).stdout), canonicalAgentCapabilities,
     "standalone engine agent capability discovery diverged from canonical CLI");
   assert.deepEqual(json(run(python, ["-m", "deepbom", ...agentCapabilityArgs]).stdout), canonicalAgentCapabilities,

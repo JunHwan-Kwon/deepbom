@@ -2,7 +2,7 @@
 
 import { spawnSync } from "node:child_process";
 
-const VERSION = "1.96.13";
+const VERSION = "1.96.14";
 const executable = process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : "npx";
 const args = process.platform === "win32"
   ? ["/d", "/s", "/c", "npx.cmd", "-y", `deepbom@${VERSION}`, "self-test", "--compact"]

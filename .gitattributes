@@ -5,3 +5,4 @@
 *.jpeg binary
 *.webp binary
 *.patch -whitespace
+reference/cyclonedx/2.0/review-evidence/** -whitespace

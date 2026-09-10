@@ -135,6 +135,26 @@ its own and therefore declares no output contract in
 
 Agent-facing usage guidance lives in [the DEEPBOM skill](../skills/deepbom/SKILL.md).
 
+## Bounded GGUF tensor projection
+
+`deepbom gguf model.gguf --tensors` emits a tab-separated table containing the
+tensor name, storage encoding, shape, effective serialized bits per element,
+byte length, and absolute file byte range. Add `--json` or `--compact` to emit
+`deepbom.tensor_table.v1`. Unless the caller explicitly chooses another scan,
+this projection uses `structure`, so it does not decode a multi-gigabyte tensor
+payload merely to list the tensor directory.
+
+The projection retains the encoding-inventory and tensor-assignment SHA-256
+identities but excludes nested numerical-integrity ledgers. It reports observed
+serialized storage only; it does not prove a quantization recipe, calibration
+or importance-matrix use, lineage, runtime behavior, or model quality.
+
+The Python channel exposes experimental `audit()`, `capabilities()`,
+`tensor_inventory()`, and `tensors()` helpers over the same verified engine.
+They enforce caller-supplied timeout and result-size bounds and map CLI exits 1,
+2, and 3 to distinct exceptions. They contain no parser or numerical rules;
+the CLI output schemas remain the compatibility contract for the 1.96 series.
+
 ## CPU and accelerator bindings
 
 `--target` and `--target-profile` bind a TFLite CPU cost model. The envelope
