@@ -59,13 +59,12 @@ expect(
   "CI deploy config must retain the validated production routes so Wrangler activates the uploaded version.",
 );
 for (const [pattern, zoneName] of [
-  ["deepbom.org/*", "deepbom.org"],
   ["www.deepbom.org/*", "deepbom.org"],
 ]) {
   expect(config.routes.some((route) => route.pattern === pattern && route.zone_name === zoneName),
     `wrangler.jsonc must bind ${pattern} to ${zoneName}.`);
 }
-for (const hostname of ["medbom.org", "www.medbom.org"]) {
+for (const hostname of ["deepbom.org", "medbom.org", "www.medbom.org"]) {
   expect(config.routes.some((route) => route.pattern === hostname
     && route.custom_domain === true
     && route.zone_name === undefined

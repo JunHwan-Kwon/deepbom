@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "49dbbffa5d6c67a4262c490ee27ef7ba904a6a26",
+  "source_commit": "0b5aa05c12fa34b6ef60f0344dc6351d1b3551b6",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1039,
@@ -42,8 +42,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 38581,
-      "sha256": "6d05e12b4b77b761533e762246d7f5c84574a046567ae0f6974ec8b5a7871981"
+      "byte_length": 38600,
+      "sha256": "12c1b24b0487b10643fcaf67d0c85e135429dc7647d98d95382ec5b4735b3451"
     },
     {
       "path": "CITATION.cff",
@@ -2332,8 +2332,8 @@
     },
     {
       "path": "scripts/check-worker-config.mjs",
-      "byte_length": 16007,
-      "sha256": "51de9c97c86303ac244259d1cc2abbff1452d251fce068a62e85442debc701c3"
+      "byte_length": 15986,
+      "sha256": "c887a87a1073df11544b519279f2947c5c8f0f23fa3e0a2aad2a335c16af6340"
     },
     {
       "path": "scripts/check-workflow-contract.mjs",
@@ -3533,7 +3533,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 83195,
-      "sha256": "935dddd4cd05895d0282b19f1a049f13355ef828b1d9c35c4002cc935ad3e5de"
+      "sha256": "bbad270a89c83034db10106e3578c233947c3ce2530cbf8124c113227b16573a"
     },
     {
       "path": "web/lib/bundle.js",
