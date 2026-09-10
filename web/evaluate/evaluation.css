@@ -226,6 +226,8 @@ code { font-family: var(--mono); font-size: 0.9em; }
   .brief-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; padding: 0.9rem 0; }
   .brief-nav a { min-height: 44px; }
   .brief-main { padding-top: 2rem; }
+  .agent-guide pre { max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .agent-guide pre code { white-space: inherit; }
   .fact-table,
   .fact-table tbody,
   .fact-table tr,

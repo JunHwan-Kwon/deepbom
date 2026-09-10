@@ -31,6 +31,12 @@ assert.match(engineering, /Rust analyzer compiled to WebAssembly/);
 assert.match(engineering, /one primary maintainer/i);
 assert.match(engineering, /--output-format sarif --gate defects/);
 
+const agentGuide = await readFile("web/for-agents/index.html", "utf8");
+const evaluationStyles = await readFile("web/evaluate/evaluation.css", "utf8");
+assert.match(agentGuide, /<body class="agent-guide">/);
+assert.match(evaluationStyles, /\.agent-guide pre \{[^}]*white-space: pre-wrap;[^}]*overflow-wrap: anywhere;/);
+assert.match(evaluationStyles, /\.agent-guide pre code \{ white-space: inherit; \}/);
+
 const buildSource = await readFile("scripts/build-pages.mjs", "utf8");
 assert.match(buildSource, /copyDir\(path\.join\(root, "web", "evaluate"\), path\.join\(dist, "evaluate"\)\)/);
 for (const brief of briefs) assert.match(buildSource, new RegExp(`evaluate/\\$\\{brief\\}/`));

@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "0b5aa05c12fa34b6ef60f0344dc6351d1b3551b6",
+  "source_commit": "db292d267a0546ff1a001ae31701b247429d8b4e",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1039,
@@ -1477,8 +1477,8 @@
     },
     {
       "path": "scripts/check-evaluation-briefs.mjs",
-      "byte_length": 2092,
-      "sha256": "31c83a1be71ace451d52c450c5a1d44e7e66de4594fe0346305280dabf6acbfa"
+      "byte_length": 2499,
+      "sha256": "9f3c644554ad06d26d810bddb73477eb26dfbdf981b80557645e98c2262a5184"
     },
     {
       "path": "scripts/check-evidence-package-profile-ui.mjs",
@@ -3252,8 +3252,8 @@
     },
     {
       "path": "web/evaluate/evaluation.css",
-      "byte_length": 6230,
-      "sha256": "f753693c2934878c195805ce66bd8824e44048041761e1e77185465820d2b6e3"
+      "byte_length": 6368,
+      "sha256": "2064f0d9c37b9259a1f3ea051bfe94cc018254f2f95630cefe98e1d69abe141c"
     },
     {
       "path": "web/evaluate/quality/index.html",
@@ -3292,8 +3292,8 @@
     },
     {
       "path": "web/for-agents/index.html",
-      "byte_length": 5871,
-      "sha256": "893605b86e17da4cae12e4bb85870c558f9cdd5d324f5959df1aa69ee2ee7921"
+      "byte_length": 5891,
+      "sha256": "b402aeb554868ee2f1644399aa0ab569ed1617dc0b67c7283770ff2cc450b572"
     },
     {
       "path": "web/index.html",
@@ -3533,7 +3533,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 83195,
-      "sha256": "bbad270a89c83034db10106e3578c233947c3ce2530cbf8124c113227b16573a"
+      "sha256": "5a3d929b503c1c5310bef772dd6dd510c7dbfbb8d931ed7aa250b50931385109"
     },
     {
       "path": "web/lib/bundle.js",
