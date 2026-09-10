@@ -155,7 +155,9 @@ for (const snippet of [
   "Cloudflare deployment requires CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.",
   "No targets deployed",
   "Wrangler uploaded a version without activating a production target.",
-  "CLOUDFLARE_ZONE_NAME: deepbom.org",
+  'CLOUDFLARE_ZONE_NAMES: "deepbom.org medbom.org"',
+  "for zone_name in ${CLOUDFLARE_ZONE_NAMES}; do",
+  'export CLOUDFLARE_ZONE_NAME="$zone_name"',
   '--data-urlencode "name=${CLOUDFLARE_ZONE_NAME}"',
   'zones/${zone_id}/purge_cache',
   "npm run build:release",
@@ -410,7 +412,7 @@ for (const stepName of [
 for (const stepName of [
   "Write route-preserving Cloudflare deploy config",
   "Deploy to Cloudflare Workers Static Assets",
-  "Purge configured Cloudflare zone cache",
+  "Purge configured Cloudflare zone caches",
 ]) {
   expectStepIf(stepName, "steps.deployable.outputs.changed == 'true' && steps.cloudflare-config.outputs.configured == 'true'");
 }

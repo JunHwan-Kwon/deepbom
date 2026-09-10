@@ -19,8 +19,9 @@ All notable archival releases of DEEPBOM are documented here.
 - Added `/for-agents/`, `/agent-capabilities.json`, assistant-readable discovery
   metadata, and an explicit no-hosted-analysis boundary. Plain chat can
   recommend the pinned local command but cannot claim to have run an audit.
-- Added a route-bound `medbom.org` redirect to the canonical `deepbom.org`
-  product without creating a second product or content surface.
+- Added Custom Domain-bound `medbom.org` redirects to the canonical `deepbom.org`,
+  allowing Cloudflare to provision DNS and TLS without creating a second product,
+  content surface, or origin.
 - Removed standards-development material from the website, public product
   documentation, normal quality and deployment gates, and release artifacts.
   CycloneDX product output remains fixed to version 1.7.

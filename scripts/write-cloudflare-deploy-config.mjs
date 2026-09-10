@@ -12,9 +12,15 @@ export function createRoutePreservingDeployConfig(config) {
   }
   for (const route of config.routes) {
     if (!route || typeof route !== "object" || Array.isArray(route)
-      || typeof route.pattern !== "string" || !route.pattern
-      || typeof route.zone_name !== "string" || !route.zone_name) {
-      throw new Error("Every Wrangler production route must bind a non-empty pattern and zone_name.");
+      || typeof route.pattern !== "string" || !route.pattern.trim()) {
+      throw new Error("Every Wrangler production route must bind a non-empty pattern.");
+    }
+    if (route.custom_domain === true) {
+      if (route.pattern.includes("*") || route.zone_name !== undefined || route.zone_id !== undefined) {
+        throw new Error("A Wrangler custom domain must use an exact hostname without zone_name or zone_id.");
+      }
+    } else if (typeof route.zone_name !== "string" || !route.zone_name.trim()) {
+      throw new Error("A Wrangler zone route must bind a non-empty zone_name.");
     }
   }
   if (config.workers_dev !== false) {

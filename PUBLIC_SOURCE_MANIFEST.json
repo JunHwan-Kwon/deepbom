@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "e564b5108799c28415c01eea5c54315273ab7679",
+  "source_commit": "49dbbffa5d6c67a4262c490ee27ef7ba904a6a26",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1039,
@@ -42,8 +42,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 38525,
-      "sha256": "3202ce34f57906421fda9cfbcc1bfb19ffd9f583d4cf63ad38fe5576950ed89c"
+      "byte_length": 38581,
+      "sha256": "6d05e12b4b77b761533e762246d7f5c84574a046567ae0f6974ec8b5a7871981"
     },
     {
       "path": "CITATION.cff",
@@ -1302,8 +1302,8 @@
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
-      "byte_length": 34992,
-      "sha256": "19b0ccc2ffd3eb6ca467fa1b5d92662ccff143f5fc8e827611a03f27f7657069"
+      "byte_length": 35104,
+      "sha256": "7b1fd852b95b91429685a0d8f616c8a0d8580dd2b1522384aef86500cdd2f394"
     },
     {
       "path": "scripts/check-cli-automation.mjs",
@@ -2332,8 +2332,8 @@
     },
     {
       "path": "scripts/check-worker-config.mjs",
-      "byte_length": 15623,
-      "sha256": "09bbc9d4ef198c40e39ed33ab9e67ae2cc00e7d3af85d4ff3fc81e14d67bee45"
+      "byte_length": 16007,
+      "sha256": "51de9c97c86303ac244259d1cc2abbff1452d251fce068a62e85442debc701c3"
     },
     {
       "path": "scripts/check-workflow-contract.mjs",
@@ -2942,8 +2942,8 @@
     },
     {
       "path": "scripts/write-cloudflare-deploy-config.mjs",
-      "byte_length": 1812,
-      "sha256": "6770e9d8f99b9079524305d277d92e1089b1107567eb66ce5dbc1d6860524f65"
+      "byte_length": 2171,
+      "sha256": "82bbe7cef86815e8887f00b4e0dc46c9427b5bb0943e7cdfd0d925e23ae00491"
     },
     {
       "path": "scripts/write-google-corpus-measurement-baseline.mjs",
@@ -3533,7 +3533,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 83195,
-      "sha256": "b3fb4e13384960c97e42fceb8f1e411ba7ed8d9ace239c93b1cf6b467cc777c6"
+      "sha256": "935dddd4cd05895d0282b19f1a049f13355ef828b1d9c35c4002cc935ad3e5de"
     },
     {
       "path": "web/lib/bundle.js",

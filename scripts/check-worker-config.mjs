@@ -61,13 +61,25 @@ expect(
 for (const [pattern, zoneName] of [
   ["deepbom.org/*", "deepbom.org"],
   ["www.deepbom.org/*", "deepbom.org"],
-  ["medbom.org/*", "medbom.org"],
-  ["www.medbom.org/*", "medbom.org"],
 ]) {
   expect(config.routes.some((route) => route.pattern === pattern && route.zone_name === zoneName),
     `wrangler.jsonc must bind ${pattern} to ${zoneName}.`);
 }
-for (const invalidRoute of [null, {}, { pattern: "", zone_name: "deepbom.org" }, { pattern: "deepbom.org/*", zone_name: "" }]) {
+for (const hostname of ["medbom.org", "www.medbom.org"]) {
+  expect(config.routes.some((route) => route.pattern === hostname
+    && route.custom_domain === true
+    && route.zone_name === undefined
+    && route.zone_id === undefined),
+  `wrangler.jsonc must bind ${hostname} as an exact Cloudflare custom domain.`);
+}
+for (const invalidRoute of [
+  null,
+  {},
+  { pattern: "", zone_name: "deepbom.org" },
+  { pattern: "deepbom.org/*", zone_name: "" },
+  { pattern: "medbom.org/*", custom_domain: true },
+  { pattern: "medbom.org", custom_domain: true, zone_name: "medbom.org" },
+]) {
   let rejected = false;
   try {
     createRoutePreservingDeployConfig({ ...config, routes: [invalidRoute] });
