@@ -53,6 +53,8 @@ assert.equal(capabilities.commands.find((row) => row.name === "graph").outputs.i
 assert.equal(capabilities.commands.find((row) => row.name === "graph").outputs.includes("deepbom.artifact_ir.v2"), true);
 assert.deepEqual(capabilities.commands.find((row) => row.name === "placement").outputs,
   ["deepbom.placement_comparison.v1"]);
+assert.equal(capabilities.commands.find((row) => row.name === "diff").outputs[0], "summary");
+assert.deepEqual(capabilities.commands.find((row) => row.name === "integrate").targets, ["codex", "claude-code", "generic"]);
 assert.equal(capabilities.accelerator_profiles.imports.litert_qualcomm_compiler_dispatch_evidence,
   "deepbom.litert_qualcomm_compiler_dispatch_evidence.v1");
 
@@ -151,7 +153,7 @@ assert.equal(structuredError.code, "input_unavailable");
 const capabilityRun = run(["capabilities", "--compact"]);
 assert.equal(JSON.parse(capabilityRun.stdout).schema, "deepbom.cli_capabilities.v1");
 const helpRun = run(["--help"]);
-assert.doesNotMatch(helpRun.stdout, /perspective|CycloneDX 2\.0|#990|#175|#1067|#1075/i);
+assert.doesNotMatch(helpRun.stdout, /perspective|CycloneDX 2\.0|working group|pull request/i);
 
 const selfTest = JSON.parse(run(["self-test", "--compact"]).stdout);
 assert.equal(selfTest.schema, "deepbom.cli_self_test.v1");
@@ -181,6 +183,10 @@ const summarySelection = JSON.parse(run(["audit", onnxPath, "--section", "summar
 assert.equal(summarySelection.schema, "deepbom.analysis_selection.v1");
 assert.equal(summarySelection.sections.summary.schema, "deepbom.review_summary.v1");
 assert.equal(summarySelection.sections.summary.evidence_envelope_sha256, envelope.envelope_sha256);
+assert.equal(summarySelection.sections.summary.reproduction.schema, "deepbom.reproduction_command.v1");
+assert.equal(summarySelection.sections.summary.reproduction.expected_sha256, summarySelection.artifact.sha256);
+assert.match(summarySelection.sections.summary.reproduction.shell_command, /npx -y deepbom@\d+\.\d+\.\d+ audit/);
+assert.match(summarySelection.sections.summary.reproduction.shell_command, /--expected-sha256 [a-f0-9]{64} --summary$/);
 const pointerSelection = JSON.parse(run(["audit", onnxPath, "--pointer", "/format", "--compact"]).stdout);
 assert.equal(pointerSelection.schema, "deepbom.analysis_pointer_result.v1");
 assert.equal(pointerSelection.value, "onnx");
@@ -257,6 +263,14 @@ const unchangedDelta = JSON.parse(run([
   "web/samples/mobilenet_v1_025_224_float.tflite",
   "--compact",
 ]).stdout);
+const unchangedDeltaSummary = run([
+  "diff",
+  "web/samples/gpu_partition_probe.onnx",
+  "web/samples/gpu_partition_probe.onnx",
+  "--summary",
+]).stdout;
+assert.match(unchangedDeltaSummary, /deterministic semantic artifact diff/);
+assert.match(unchangedDeltaSummary, /Graph: 5 matched \| 0 changed/);
 assert.equal(unchangedDelta.change_impact.schema, "deepbom.change_impact.v1");
 assert.equal(unchangedDelta.change_impact.highest_action, "no_change_observed");
 

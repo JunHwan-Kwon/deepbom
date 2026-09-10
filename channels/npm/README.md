@@ -3,6 +3,16 @@
 Local deployment-artifact analysis for TFLite, ONNX, GGUF, SafeTensors, Core ML,
 and ExecuTorch.
 
+For a local Codex or Claude Code project, preview and install the bundled Agent
+Skill without operating an analysis server:
+
+```console
+npx -y deepbom@1.96.13 integrate codex
+npx -y deepbom@1.96.13 integrate codex --apply
+npx -y deepbom@1.96.13 integrate claude-code
+npx -y deepbom@1.96.13 integrate claude-code --apply
+```
+
 ```console
 npx deepbom audit model.onnx --format cyclonedx
 npx deepbom audit model.onnx --format sarif --output deepbom.sarif --fail-on high
@@ -14,7 +24,12 @@ npx deepbom verify model.tflite --contract production-interface.json
 npx deepbom diff baseline.tflite candidate.tflite
 npx deepbom explore model.tflite --target-profile target-profile.json
 npx deepbom audit model.pte --executorch-build deepbom.executorch-build.json --compact
+npx deepbom capabilities --format agent-json
+npx -y deepbom@1.96.13 mcp
 ```
+
+Claude Desktop can install the version-matched `deepbom-1.96.13.mcpb` asset
+from the corresponding GitHub Release as a local desktop extension.
 
 The default output is a bounded human-readable summary. Use `--json` or
 `--compact` for the complete analysis document, `--format envelope` for the
@@ -28,7 +43,9 @@ WASM Pareto candidates. These commands do not add a second analysis engine.
 
 The package contains one generated JavaScript analysis bundle and the canonical
 TFLite WebAssembly module. It does not send model bytes or results over the
-network. TensorRT parser observations and build profiles can be imported with
+network, and it does not depend on a hosted DEEPBOM analysis endpoint. A plain
+chat client without local shell or MCP access cannot execute an audit.
+TensorRT parser observations and build profiles can be imported with
 `--tensorrt-parser-evidence` and `--tensorrt-profile`.
 
 ONNX external data next to the model is discovered only from safe serialized

@@ -116,7 +116,7 @@ for (const snippet of [
   "actions/setup-node@v6",
   "timeout-minutes: 10",
   "DEEPBOM_CHECK_TIMEOUT_MS: 120000",
-  "npm run check:public-source",
+  "node scripts/verify-public-source-export.mjs .",
   "npm run check:cli-docs",
   "npm run check:cli",
   "npm run check:formats:core",
@@ -438,7 +438,6 @@ function checkPublicDistributionCiContract() {
     "DEEPBOM_CHECK_TIMEOUT_MS: 120000",
     "npm ci",
     "npm audit --audit-level=high",
-    "npm run check:public-source",
     "node scripts/verify-public-source-export.mjs .",
     "node scripts/check-git-privacy.mjs",
     "node scripts/check-ci-deploy-contract.mjs",
@@ -461,6 +460,8 @@ function checkPublicDistributionCiContract() {
     "npm run build:channels",
     "npm run check:channels",
     "npm run check:public-package-boundary",
+    "deepbom-mcpb",
+    ".local-validation/channel-release/mcpb/deepbom-*.mcpb",
     "npm run check:rust",
   ]) {
     expect(!publicQualityWorkflow.includes(forbidden), `Public pull-request quality must defer expensive release/UI work: ${forbidden}`);

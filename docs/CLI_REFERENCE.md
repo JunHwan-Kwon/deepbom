@@ -24,15 +24,16 @@ asset verification, and equivalence checks are documented in
 | --- | ---: | --- |
 | `audit` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
 | `gguf` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
-| `verify` | 1 | `deepbom.cli_interface_contract_verification.v1` |
-| `diff` | 2 | `deepbom.semantic_artifact_diff.v1` |
-| `explore` | 1 | `deepbom.redesign_pareto.v1` |
+| `verify` | 1 | `summary`<br>`deepbom.cli_interface_contract_verification.v1` |
+| `diff` | 2 | `summary`<br>`deepbom.semantic_artifact_diff.v1` |
+| `explore` | 1 | `summary`<br>`deepbom.redesign_pareto.v1` |
 | `graph` | 1 | `svg`<br>`png`<br>`html`<br>`mermaid`<br>`dot`<br>`deepbom.artifact_ir.v2`<br>`deepbom.graph_ir.v1`<br>`deepbom.visualization_manifest.v1` |
 | `placement` | 1 | `deepbom.placement_comparison.v1` |
 | `accelerator collect nvidia` | none | `deepbom.accelerator_profile.v1` |
 | `explain-rule` | none | `deepbom.rule_explanation.v1`<br>`deepbom.rule_explanation_index.v1` |
 | `self-test` | none | `deepbom.cli_self_test.v1` |
 | `capabilities` | none | `deepbom.cli_capabilities.v1` |
+| `integrate` | none | `deepbom.agent_integration.v1` |
 
 Standalone extensions: `.tflite`, `.onnx`, `.gguf`, `.safetensors`, `.mlmodel`, `.pte`, `.ptd`.
 
@@ -53,10 +54,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.96.12`:
+`1.96.13`:
 
 ```console
-DEEPBOM 1.96.12
+DEEPBOM 1.96.13
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -128,6 +129,16 @@ Installation and rule checks:
   deepbom self-test [--json|--compact]
   deepbom explain-rule <rule-id> [--json|--compact]
   deepbom explain-rule --list
+
+Agent-native local use (no hosted analysis server):
+  deepbom capabilities --format agent-json
+  deepbom integrate codex                  Preview .agents/skills/deepbom
+  deepbom integrate claude-code            Preview .claude/skills/deepbom
+  deepbom integrate generic                Preview skills/deepbom
+  deepbom integrate <target> --apply       Write only managed Skill files
+  deepbom integrate status [target]        Inspect without changing files
+  deepbom integrate remove <target>        Preview managed-file removal
+  deepbom integrate remove <target> --apply  Remove only unchanged managed files
 
 Assistant tool access (Model Context Protocol over stdio, local process only):
   deepbom mcp

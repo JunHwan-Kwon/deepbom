@@ -28,6 +28,7 @@ if (target === "main") {
   }
   await normalizeGeneratedRepository("pkg/package.json");
   await runCommand("wasm-pack", ["build", "--target", "web", "--release"]);
+  await ensureTrailingNewline("pkg/package.json");
   reportHardening("pkg/tflite_wasm_audit_bg.wasm");
 } else if (target === "deepbom") {
   await normalizeGeneratedRepository("protected/deepbom_wasm/pkg/package.json");
@@ -35,6 +36,7 @@ if (target === "main") {
     "build", "protected/deepbom_wasm", "--target", "web", "--release",
     "--out-dir", "../../web/protected/deepbom/pkg", "--out-name", "deepbom_wasm",
   ]);
+  await ensureTrailingNewline("web/protected/deepbom/pkg/package.json");
   reportHardening("web/protected/deepbom/pkg/deepbom_wasm_bg.wasm");
 } else {
   throw new Error(`unknown wasm build target: ${target}`);
@@ -55,6 +57,11 @@ async function normalizeGeneratedRepository(filePath) {
   }
   manifest.repository = manifest.repository.url;
   await writeFile(filePath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+}
+
+async function ensureTrailingNewline(filePath) {
+  const source = await readFile(filePath, "utf8");
+  if (!source.endsWith("\n")) await writeFile(filePath, `${source}\n`, "utf8");
 }
 
 function reportHardening(filePath) {

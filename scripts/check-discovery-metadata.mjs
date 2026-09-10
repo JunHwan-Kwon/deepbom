@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 const html = readFileSync("web/index.html", "utf8");
 const manifest = JSON.parse(readFileSync("web/manifest.webmanifest", "utf8"));
 const buildPages = readFileSync("scripts/build-pages.mjs", "utf8");
+const agentPage = readFileSync("web/for-agents/index.html", "utf8");
+const packageVersion = JSON.parse(readFileSync("package.json", "utf8")).version;
 const errors = [];
 
 // The linked-data graph is what lets an answer engine resolve "DEEPBOM" to
@@ -28,6 +30,7 @@ function linkedData(source, label) {
 }
 
 const rootNodes = linkedData(html, "web/index.html");
+const agentNodes = linkedData(agentPage, "web/for-agents/index.html");
 const application = rootNodes.find((node) => node["@type"] === "SoftwareApplication") || {};
 const briefNodes = Object.fromEntries(
   BRIEFS.map((brief) => [brief, linkedData(briefPages[brief], `evaluate/${brief}`)]),
@@ -47,6 +50,7 @@ for (const [condition, message] of [
   [html.includes("p50/p90/p95/p99 statistics"), "public benchmark metadata lists every reported percentile"],
   [buildPages.includes('"Sitemap: https://deepbom.org/sitemap.xml"'), "generated robots file advertises the canonical sitemap"],
   [buildPages.includes('"    <loc>https://deepbom.org/</loc>"') && buildPages.includes('"    <loc>https://deepbom.org/verify</loc>"'), "generated sitemap lists the canonical app and report verifier"],
+  [buildPages.includes('"    <loc>https://deepbom.org/for-agents/</loc>"'), "generated sitemap lists the local agent guide"],
   [["regulatory", "quality", "engineering"].every((brief) => buildPages.includes(`"${brief}"`))
     && buildPages.includes("https://deepbom.org/evaluate/${brief}/"), "generated sitemap lists all evaluation briefs"],
   [!buildPages.includes('"    <loc>https://deepbom.org/web/</loc>"'), "generated sitemap does not index the duplicate /web/ shell"],
@@ -56,8 +60,12 @@ for (const [condition, message] of [
   // hosted analysis endpoint. If that boundary or the finding vocabulary drops
   // out of the generated file, an agent is free to invent an upload API.
   [buildPages.includes('path.join(dist, "llms.txt")'), "build generates llms.txt at the domain root"],
+  [buildPages.includes('path.join(dist, "agent-capabilities.json")'), "build generates the machine-readable agent capability contract"],
   [buildPages.includes('"# https://deepbom.org/llms.txt",'), "generated robots file points at llms.txt"],
+  [buildPages.includes('"User-agent: OAI-SearchBot"'), "robots file explicitly permits OAI-SearchBot"],
   [/there is no hosted analysis endpoint/.test(buildPages), "llms.txt states that no hosted analysis endpoint exists"],
+  [["deepbom_capabilities", "deepbom_audit", "deepbom_diff", "deepbom_explain_rule"].every((tool) => buildPages.includes(`\`${tool}\``)),
+    "llms.txt lists all four local MCP tools"],
   [["artifact_defect", "caution", "evidence_gap"].every((kind) => buildPages.includes(`\`${kind}\``)),
     "llms.txt keeps the three finding kinds distinct"],
 
@@ -68,6 +76,17 @@ for (const [condition, message] of [
   [typeof application.license === "string" && application.license.length > 0, "application entity declares a license"],
   [rootNodes.some((node) => node["@type"] === "FAQPage" && Array.isArray(node.mainEntity) && node.mainEntity.length >= 4),
     "FAQ linked data carries at least four answered questions"],
+  [agentPage.includes('rel="canonical" href="https://deepbom.org/for-agents/"'), "agent guide has a canonical URL"],
+  [agentPage.includes("there is no hosted DEEPBOM analysis endpoint") && agentPage.includes("without either cannot execute the audit"),
+    "agent guide states the no-server and no-tool execution boundaries"],
+  [agentPage.includes("integrate codex") && agentPage.includes("integrate claude-code") && agentPage.includes("--apply"),
+    "agent guide documents preview-before-apply installation"],
+  [agentPage.includes(`deepbom@${packageVersion}`) && !agentPage.includes("verified-version"),
+    "agent guide pins every zero-install command to the verified release"],
+  [agentPage.includes(`deepbom-${packageVersion}.mcpb`) && agentPage.includes(`channels-v${packageVersion}`),
+    "agent guide links the version-matched local Claude Desktop extension"],
+  [agentNodes.some((node) => node["@type"] === "TechArticle" && node.url === "https://deepbom.org/for-agents/"),
+    "agent guide carries a citable TechArticle identity"],
 
   // Each brief is a citable page in the sitemap, so it needs its own identity
   // and its own link back to the software and the author.

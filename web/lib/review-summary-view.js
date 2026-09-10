@@ -56,7 +56,9 @@ export function renderReviewSummary(root, summary) {
     actionButton(doc, "Why these counts?", "explain"),
   );
 
-  root.replaceChildren(heading, counts, coverage, actions);
+  const reproduction = reproductionBlock(doc, summary.reproduction);
+
+  root.replaceChildren(heading, counts, coverage, actions, reproduction);
   root.hidden = false;
 }
 
@@ -75,6 +77,33 @@ function actionButton(doc, label, action) {
   button.dataset.reviewSummaryAction = action;
   button.textContent = label;
   return button;
+}
+
+function reproductionBlock(doc, reproduction) {
+  const section = doc.createElement("section");
+  section.className = "review-summary-reproduction";
+  const text = doc.createElement("div");
+  const label = doc.createElement("span");
+  label.textContent = "Reproduce with a local AI agent or terminal";
+  const command = doc.createElement("code");
+  command.textContent = reproduction?.shell_command || "Reproduction command unavailable";
+  text.append(label, command);
+  const copy = doc.createElement("button");
+  copy.type = "button";
+  copy.className = "secondary-action";
+  copy.textContent = "Copy command";
+  copy.disabled = !reproduction?.shell_command;
+  copy.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(reproduction.shell_command);
+      copy.textContent = "Copied";
+      setTimeout(() => { copy.textContent = "Copy command"; }, 1400);
+    } catch {
+      copy.textContent = "Copy unavailable";
+    }
+  });
+  section.append(text, copy);
+  return section;
 }
 
 function targetCopy(summary) {

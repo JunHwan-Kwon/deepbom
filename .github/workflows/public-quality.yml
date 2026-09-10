@@ -11,6 +11,7 @@ on:
       - "corpus/**"
       - "pkg/**"
       - "scripts/**"
+      - "skills/**"
       - "src/**"
       - "web/**"
       - "Cargo.lock"
@@ -44,7 +45,6 @@ jobs:
           package-manager-cache: true
       - name: Verify immutable public source boundary
         run: |
-          npm run check:public-source
           node scripts/verify-public-source-export.mjs .
           node scripts/check-git-privacy.mjs
           node scripts/check-ci-deploy-contract.mjs
@@ -56,6 +56,7 @@ jobs:
         run: |
           npm run check:cli-docs
           npm run check:cli
+          npm run check:agent-native
           npm run check:external-review-ledger
           npm run check:external-review-defect-gate
           npm run check:finding-rule-registry

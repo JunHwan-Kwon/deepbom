@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v563";
+const CACHE_NAME = "tflite-wasm-static-audit-v565";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -182,12 +182,6 @@ const APP_ASSETS = [
   "./lib/evidence-package-rights.js",
   "./lib/review-summary.js",
   "./lib/review-summary-view.js",
-  "./lib/cyclonedx-20-preview.js",
-  "./lib/cyclonedx-draft-profiles.js",
-  "./lib/cyclonedx-perspective-audit.js",
-  "./lib/cyclonedx-perspective-view.js",
-  "./vendor/jsonpath-rfc9535.mjs",
-  "./vendor/jsonpath-rfc9535.LICENSE.txt",
   "./lib/cyclonedx-identity.js",
   "./lib/cyclonedx-component-metadata.js",
   "./lib/corpus-validation-provenance.js",

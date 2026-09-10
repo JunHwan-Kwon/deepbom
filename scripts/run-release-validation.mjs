@@ -49,6 +49,7 @@ try {
   if (selected("quality")) {
     await run("quality", process.execPath, ["scripts/check-all.mjs"]);
     await run("source-budget", process.execPath, ["scripts/check-source-budget.mjs"]);
+    await run("mcp-inspector", process.execPath, ["scripts/check-mcp-inspector.mjs"]);
   }
   if (selected("deploy")) {
     await run("deploy-gate", process.execPath, ["scripts/check-deploy.mjs"]);
@@ -63,6 +64,10 @@ try {
   if (selected("channels")) {
     await run("channel-build", process.execPath, ["scripts/build-channel-artifacts.mjs"]);
     await run("channel-equivalence", process.execPath, ["scripts/check-channel-equivalence.mjs", "--no-build", "--release-contract"]);
+    await run("mcpb", process.execPath, ["scripts/check-mcpb-bundle.mjs"]);
+  }
+  if (selected("deploy") && selected("public") && selected("channels")) {
+    await run("release-product-boundary", process.execPath, ["scripts/check-release-product-boundary.mjs"]);
   }
   manifest.artifacts = await collectArtifactRecords();
   manifest.source.git_state_after = sourceState();
@@ -118,6 +123,7 @@ async function collectArtifactRecords() {
   const candidates = [
     ["public_source_manifest", ".local-validation/public-source/PUBLIC_SOURCE_MANIFEST.json"],
     ["channel_release_manifest", ".local-validation/channel-release/channel-release-manifest.json"],
+    ["claude_desktop_mcpb", `.local-validation/channel-release/mcpb/deepbom-${packageDocument.version}.mcpb`],
     ["ui_regression_baseline", ".local-validation/1.96-stabilization/ui/ui-regression-baseline.v1.json"],
     ["deployment_hardening", "dist/deployment-hardening.json"],
   ];

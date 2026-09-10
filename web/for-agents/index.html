@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Local AI Agent Setup | DEEPBOM</title>
+  <meta name="description" content="Use DEEPBOM from Codex, Claude Code, or another local AI agent without operating an analysis server." />
+  <link rel="canonical" href="https://deepbom.org/for-agents/" />
+  <meta name="theme-color" content="#fffefa" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://deepbom.org/for-agents/" />
+  <meta property="og:title" content="Local AI Agent Setup | DEEPBOM" />
+  <meta property="og:description" content="A local npx and Agent Skill path for evidence-bounded deployment artifact analysis." />
+  <meta property="og:image" content="https://deepbom.org/web/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Local AI Agent Setup | DEEPBOM" />
+  <meta name="twitter:description" content="Run DEEPBOM through a local AI coding agent without hosting model analysis." />
+  <meta name="twitter:image" content="https://deepbom.org/web/og-image.png" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Use DEEPBOM from a local AI agent",
+    "url": "https://deepbom.org/for-agents/",
+    "inLanguage": "en",
+    "isAccessibleForFree": true,
+    "about": { "@id": "https://deepbom.org/#app" },
+    "author": { "@id": "https://deepbom.org/#author" }
+  }
+  </script>
+  <link rel="stylesheet" href="../evaluate/evaluation.css" />
+</head>
+<body>
+  <header class="brief-header">
+    <a class="brand" href="/">DEEPBOM</a>
+    <nav class="brief-nav" aria-label="Agent documentation">
+      <a href="/">Workspace</a>
+      <a aria-current="page" href="./">AI agents</a>
+      <a href="https://github.com/JunHwan-Kwon/deepbom">Source</a>
+    </nav>
+  </header>
+  <main class="brief-main">
+    <p class="eyebrow">Local agent setup</p>
+    <h1>Let the agent run the audit where the artifact already lives.</h1>
+    <p class="lede">DEEPBOM provides an Agent Skill and a zero-install <code>npx</code> path for Codex, Claude Code, and compatible local agents. The model stays in the local process; there is no hosted DEEPBOM analysis endpoint.</p>
+    <p class="decision-line">Use this route when the agent has shell and file access. A chat client without either cannot execute the audit.</p>
+
+    <section class="brief-section">
+      <h2>Install the local Skill</h2>
+      <p>Preview the exact managed files first. Add <code>--apply</code> only after reviewing the result.</p>
+      <pre><code>npx -y deepbom@1.96.13 integrate codex
+npx -y deepbom@1.96.13 integrate codex --apply
+
+npx -y deepbom@1.96.13 integrate claude-code
+npx -y deepbom@1.96.13 integrate claude-code --apply</code></pre>
+      <p>The installer writes only the DEEPBOM Skill directory. It refuses to replace or remove files changed by the user.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Ask normally</h2>
+      <p>Once the Skill is available, a supported request can be stated without memorizing the CLI.</p>
+      <pre><code>Statically audit this ONNX deployment artifact.
+Report MAC coverage, quantization contracts, unresolved evidence,
+and the exact reproduction command.</code></pre>
+      <p>The Skill selects DEEPBOM only for serialized deployment artifacts. It must not turn static estimates into claims about measured latency, accuracy, energy, or actual runtime assignment.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Run without installing a Skill</h2>
+      <pre><code>npx -y deepbom@1.96.13 capabilities --format agent-json
+npx -y deepbom@1.96.13 self-test --compact
+npx -y deepbom@1.96.13 audit "./model.onnx" --summary</code></pre>
+      <p>Start with the bounded summary. Request a section, JSON Pointer, or evidence envelope only when the question needs more detail.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Optional local MCP</h2>
+      <table class="fact-table">
+        <tbody>
+          <tr><th>Transport</th><td>Local stdio using <code>npx -y deepbom@1.96.13 mcp</code>.</td></tr>
+          <tr><th>Tools</th><td><code>deepbom_capabilities</code>, <code>deepbom_audit</code>, <code>deepbom_diff</code>, and <code>deepbom_explain_rule</code>.</td></tr>
+          <tr><th>Default response</th><td>Bounded human summary. Detailed evidence is explicit.</td></tr>
+          <tr><th>File boundary</th><td>The launch directory or roots declared through <code>DEEPBOM_MCP_ALLOWED_ROOTS</code>.</td></tr>
+        </tbody>
+      </table>
+      <p>Claude Desktop can install the same local server as a single desktop extension. Download <a href="https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v1.96.13/deepbom-1.96.13.mcpb"><code>deepbom-1.96.13.mcpb</code></a>, then choose Settings, Extensions, Advanced settings, and Install Extension. Select the model directory the extension may read during installation.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Machine-readable discovery</h2>
+      <ul class="plain-list">
+        <li><a href="/agent-capabilities.json">Agent capability contract</a></li>
+        <li><a href="/llms.txt">Plain-text tool and evidence boundary</a></li>
+        <li><a href="https://github.com/JunHwan-Kwon/deepbom/tree/main/skills/deepbom">Public Agent Skill source</a></li>
+      </ul>
+      <p class="boundary">DEEPBOM can be discovered or recommended in a plain chat, but actual analysis requires a connected local shell, Agent Skill, or local MCP process.</p>
+    </section>
+  </main>
+  <footer class="brief-footer">DEEPBOM runs deployment-artifact analysis locally and publishes CycloneDX 1.7 output as one optional evidence format.</footer>
+</body>
+</html>

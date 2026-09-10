@@ -74,7 +74,7 @@ assert.equal(validatePublicEvidencePackageFiles(files, packageScope), true);
 
 const cycloneDx17 = JSON.parse(byName.get("cyclonedx_1_7_artifact_evidence.cdx.json"));
 assertCycloneDx17(cycloneDx17, "public evidence package CycloneDX 1.7");
-assert.equal(byName.has("proposal/cyclonedx_2_0_draft_compatibility.json"), false);
+assert.equal([...byName.keys()].some((name) => name.startsWith("proposal/")), false);
 
 const tamperedScope = structuredClone(packageScope);
 tamperedScope.report_body_sha256 = "0".repeat(64);

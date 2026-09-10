@@ -7,9 +7,12 @@ import { build, transform } from "esbuild";
 import { readSwRuntimeCacheableSuffixes } from "./sw-utils.mjs";
 import { hardenWasmFile } from "./wasm-binary-hardening.mjs";
 import { writeBuildMetadata } from "./write-build-metadata.mjs";
+import { buildCliCapabilities } from "../bin/deepbom-automation.mjs";
+import { buildAgentCapabilities } from "../bin/deepbom-agent-contract.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
+const packageDocument = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
 const protectedDeepBomPackage = ["web", "protected", "deepbom", "pkg"];
 
 const pkgRuntimeFiles = [
@@ -22,6 +25,10 @@ const deploymentExcludedWebFiles = [
   "protected/deepbom/pkg/deepbom_wasm.d.ts",
   "protected/deepbom/pkg/deepbom_wasm_bg.wasm.d.ts",
   "protected/deepbom/pkg/package.json",
+];
+const deploymentExcludedWebPatterns = [
+  /^lib\/cyclonedx-(?:20|draft|perspective)(?:-|\.|$)/i,
+  /^vendor\/jsonpath-rfc95\d+(?:\.|$)/i,
 ];
 
 // Treat deploy assembly as the final WASM byte boundary. This second,
@@ -41,9 +48,15 @@ await rm(path.join(root, ...protectedDeepBomPackage, ".gitignore"), { force: tru
 
 await copyDir(path.join(root, "web"), path.join(dist, "web"));
 await copyDir(path.join(root, "web", "evaluate"), path.join(dist, "evaluate"));
+await copyDir(path.join(root, "web", "for-agents"), path.join(dist, "for-agents"));
 await rm(path.join(dist, "web", "evaluate"), { recursive: true, force: true });
+await rm(path.join(dist, "web", "for-agents"), { recursive: true, force: true });
 for (const file of deploymentExcludedWebFiles) {
   await rm(path.join(dist, "web", file), { force: true });
+}
+for (const file of await collectFiles(path.join(dist, "web"))) {
+  const relative = path.relative(path.join(dist, "web"), file).replaceAll(path.sep, "/");
+  if (deploymentExcludedWebPatterns.some((pattern) => pattern.test(relative))) await rm(file, { force: true });
 }
 
 for (const file of pkgRuntimeFiles) {
@@ -99,7 +112,16 @@ await writeFile(path.join(dist, "test.html"), await readFile(path.join(dist, "we
 
 // SEO: robots.txt and sitemap.xml at domain root
 const today = new Date().toISOString().slice(0, 10);
+const agentCapabilities = buildAgentCapabilities(buildCliCapabilities(packageDocument.version, {
+  defaultTarget: "android_mid_a55",
+  deltaTargets: ["android_mid_a55", "rpi4_a72", "x86_avx2", "wasm_simd"],
+}));
+await writeFile(path.join(dist, "agent-capabilities.json"), `${JSON.stringify(agentCapabilities, null, 2)}\n`);
 await writeFile(path.join(dist, "robots.txt"), [
+  "User-agent: OAI-SearchBot",
+  "Allow: /",
+  "Disallow: /test",
+  "",
   "User-agent: *",
   "Allow: /",
   "Disallow: /test",
@@ -127,15 +149,17 @@ await writeFile(path.join(dist, "llms.txt"), [
   "## Command line",
   "",
   "```",
-  "npx deepbom capabilities --json          # commands, inputs, output contracts, exit codes",
-  "npx deepbom audit model.tflite --output-format json",
-  "npx deepbom audit model.tflite --output-format sarif --gate defects",
-  "npx deepbom self-test",
+  `npx -y deepbom@${packageDocument.version} capabilities --format agent-json`,
+  `npx -y deepbom@${packageDocument.version} self-test --compact`,
+  `npx -y deepbom@${packageDocument.version} audit model.tflite --summary`,
+  `npx -y deepbom@${packageDocument.version} explain-rule <rule-id> --json`,
   "```",
   "",
-  "For tool-call access instead of shell invocation, `npx deepbom mcp` speaks the",
+  `For tool-call access instead of shell invocation, \`npx -y deepbom@${packageDocument.version} mcp\` speaks the`,
   "Model Context Protocol over stdio and exposes `deepbom_capabilities`,",
-  "`deepbom_audit`, and `deepbom_diff`. It runs locally on the same terms.",
+  "`deepbom_audit`, `deepbom_diff`, and `deepbom_explain_rule`. It runs locally",
+  "on the same terms. A plain chat without shell or local MCP access cannot run",
+  "the analysis; it can only provide the pinned command.",
   "",
   "Formats: .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd.",
   "Outputs: analysis JSON, evidence envelope, CycloneDX 1.7, SARIF 2.1.0.",
@@ -156,6 +180,7 @@ await writeFile(path.join(dist, "llms.txt"), [
   "## Pages",
   "",
   "- [Workspace](https://deepbom.org/): browser-local audit of one artifact",
+  "- [AI agent setup](https://deepbom.org/for-agents/): local Agent Skill, npx, and stdio MCP paths",
   "- [Regulatory brief](https://deepbom.org/evaluate/regulatory/): what the records can support in a controlled process, and where they stop",
   "- [Quality brief](https://deepbom.org/evaluate/quality/): validating an installed analyzer before relying on it",
   "- [Engineering brief](https://deepbom.org/evaluate/engineering/): architecture, CI entry point, and what it will not infer",
@@ -167,6 +192,7 @@ await writeFile(path.join(dist, "llms.txt"), [
   "- Record: https://doi.org/10.5281/zenodo.21834508",
   "- Author: Jun-Hwan Kwon, Ph.D. (ORCID 0000-0002-6464-3895)",
   "- Agent skill file: https://github.com/JunHwan-Kwon/deepbom/blob/main/skills/deepbom/SKILL.md",
+  `- Claude Desktop extension: https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v${packageDocument.version}/deepbom-${packageDocument.version}.mcpb`,
   "",
 ].join("\n"));
 await writeFile(path.join(dist, "sitemap.xml"), [
@@ -177,6 +203,12 @@ await writeFile(path.join(dist, "sitemap.xml"), [
   `    <lastmod>${today}</lastmod>`,
   "    <changefreq>weekly</changefreq>",
   "    <priority>1.0</priority>",
+  "  </url>",
+  "  <url>",
+  "    <loc>https://deepbom.org/for-agents/</loc>",
+  `    <lastmod>${today}</lastmod>`,
+  "    <changefreq>monthly</changefreq>",
+  "    <priority>0.7</priority>",
   "  </url>",
   "  <url>",
   "    <loc>https://deepbom.org/verify</loc>",

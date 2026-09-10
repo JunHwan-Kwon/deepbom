@@ -1,0 +1,7 @@
+interface:
+  display_name: "DEEPBOM Artifact Audit"
+  short_description: "Audit serialized AI deployment artifacts locally"
+  default_prompt: "Statically audit this deployment artifact with DEEPBOM and report bounded evidence, unresolved gaps, and the reproduction command."
+
+policy:
+  allow_implicit_invocation: true

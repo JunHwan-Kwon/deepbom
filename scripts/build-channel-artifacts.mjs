@@ -10,6 +10,7 @@ import { resolveNpmCommand } from "./run-utils.mjs";
 import { writeBuildMetadata } from "./write-build-metadata.mjs";
 import { readVersionContract } from "./version-contract.mjs";
 import { RELEASE_GENERATED_TRACKED_ARTIFACTS } from "./release-generated-artifacts.mjs";
+import { buildMcpbBundle } from "./build-mcpb-bundle.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const packageDocument = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
@@ -81,7 +82,7 @@ await writeFile(path.join(npmRoot, "package.json"), `${JSON.stringify({
   bugs: { url: "https://github.com/JunHwan-Kwon/deepbom/issues" },
   author: "Jun-Hwan Kwon",
   publishConfig: { access: "public" },
-  keywords: ["tflite", "onnx", "gguf", "safetensors", "coreml", "executorch", "tensorrt", "quantization", "on-device", "ml-bom", "cyclonedx", "sarif"],
+  keywords: ["tflite", "onnx", "gguf", "safetensors", "coreml", "executorch", "tensorrt", "quantization", "on-device", "ml-bom", "cyclonedx", "sarif", "static-analysis", "agent-skills", "model-context-protocol"],
 }, null, 2)}\n`);
 await writeFile(path.join(npmRoot, "pkg", "release-manifest.json"), `${JSON.stringify({
   schema: "deepbom.npm_release.v1",
@@ -98,6 +99,11 @@ await writeFile(path.join(npmRoot, "pkg", "release-manifest.json"), `${JSON.stri
 }, null, 2)}\n`);
 const npmPack = resolveNpmCommand(["pack", npmRoot, "--pack-destination", path.join(output, "npm")]);
 run(npmPack.command, npmPack.args);
+const mcpb = await buildMcpbBundle({
+  npmPackageRoot: npmRoot,
+  outputRoot: path.join(output, "mcpb"),
+  version: packageDocument.version,
+});
 
 const engineRoot = path.join(output, "engine", `${process.platform}-${process.arch}`);
 await mkdir(path.join(engineRoot, "pkg"), { recursive: true });
@@ -233,12 +239,14 @@ const manifest = {
     npm: { status: "built", runtime: "node>=20", package: relative(output, path.join(output, "npm", `deepbom-${packageDocument.version}.tgz`)) },
     python: { status: wheelName ? "platform_wheel_built" : "platform_wheel_source_built", runtime: "packaged_single_executable_engine", path: wheelName ? relative(output, path.join(pythonDist, wheelName)) : relative(output, pythonRoot) },
     cargo: { status: "launcher_ready_for_immutable_engine_matrix", runtime: "sha256_verified_release_engine", path: relative(output, cargoRoot) },
+    mcpb: { status: "local_desktop_extension_built", runtime: "claude_desktop_node", path: relative(output, mcpb.bundlePath) },
     huggingface: { status: withDist ? "static_space_built" : "recipe_built", runtime: "browser", path: relative(output, hfRoot) },
   },
   artifacts: {
     npm_bundle: await fileRecord(output, path.join(npmRoot, "bin", "deepbom.mjs")),
     tflite_wasm: await fileRecord(output, path.join(engineRoot, "pkg", "tflite_wasm_audit_bg.wasm")),
     standalone_engine: await fileRecord(output, executable),
+    mcpb: await fileRecord(output, mcpb.bundlePath),
     ...(wheelName ? { python_wheel: await fileRecord(output, path.join(pythonDist, wheelName)) } : {}),
   },
   claim_boundary: "All channel adapters invoke the same bundled JavaScript and TFLite WASM analysis implementation. Static TensorRT and TensorRT-LLM contracts do not imply that NVIDIA runtime libraries are bundled or that runtime execution was observed. Publication readiness additionally requires a clean source state, a verified cross-platform wheel matrix, and registry authentication supplied outside the source tree.",

@@ -1,0 +1,39 @@
+{
+  "schema": "deepbom.agent_evaluation_cases.v1",
+  "cases": [
+    {
+      "id": "tflite-static-deployment-audit",
+      "prompt": "Analyze this TFLite model from a static deployment perspective.",
+      "expected_selection": "use",
+      "fixture": "corpus/external-review/fixtures/transpose-conv-valid.tflite",
+      "arguments": ["audit", "corpus/external-review/fixtures/transpose-conv-valid.tflite", "--summary"]
+    },
+    {
+      "id": "onnx-mac-coverage",
+      "prompt": "Check whether this ONNX model has complete MAC coverage.",
+      "expected_selection": "use",
+      "fixture": "web/samples/gpu_partition_probe.onnx",
+      "arguments": ["audit", "web/samples/gpu_partition_probe.onnx", "--summary"]
+    },
+    {
+      "id": "gguf-memory-scenario",
+      "prompt": "Check whether this GGUF model fits a device with 8 GiB of memory at an 8192-token context.",
+      "expected_selection": "use_with_static_lower_bound",
+      "fixture": "web/samples/tinymqa1m.Q4_0.gguf",
+      "arguments": ["audit", "web/samples/tinymqa1m.Q4_0.gguf", "--scan", "structure", "--context", "8192", "--memory-mib", "8192", "--summary"]
+    },
+    {
+      "id": "artifact-version-diff",
+      "prompt": "Explain the deployment-contract differences between these two versions of the model.",
+      "expected_selection": "use",
+      "fixture": "web/samples/gpu_partition_probe.onnx",
+      "arguments": ["diff", "web/samples/gpu_partition_probe.onnx", "web/samples/gpu_partition_probe.onnx", "--summary"]
+    },
+    {
+      "id": "actual-gpu-speed-claim",
+      "prompt": "Prove from the model file that it will run fast on the actual GPU.",
+      "expected_selection": "use_for_preflight_but_refuse_runtime_conclusion",
+      "required_boundary": "Static eligibility is not measured latency or observed runtime assignment."
+    }
+  ]
+}

@@ -41,9 +41,12 @@ const cargoManifest = path.join(releaseRoot, "cargo", "Cargo.toml");
 const npmCli = platformSmoke ? null : await installNpmPackage(manifest);
 const python = platformSmoke || releaseContract ? await installPythonWheel(manifest) : null;
 const fixtures = platformSmoke ? null : await packageFixtures();
+const spacedOnnx = path.join(releaseRoot, "install-probe", "artifact path with spaces", "tiny decoder model.onnx");
+await mkdir(path.dirname(spacedOnnx), { recursive: true });
+await copyFile("web/samples/tiny_decoder_llm.onnx", spacedOnnx);
 const fileCases = [
   { path: "web/samples/mobilenet_v2_1.0_224_quant.tflite", format: "tflite" },
-  { path: "web/samples/tiny_decoder_llm.onnx", format: "onnx" },
+  { path: spacedOnnx, format: "onnx" },
   { path: "web/samples/tinymqa1m.Q4_0.gguf", format: "gguf" },
   { path: "web/samples/nanofable-1m-fp16.safetensors", format: "safetensors" },
   { path: "web/samples/MNISTClassifier.mlmodel", format: "coreml" },
@@ -56,9 +59,14 @@ const cases = platformSmoke ? fileCases.slice(0, 2) : [
 const canonicalByPath = new Map();
 const capabilityArgs = ["capabilities", "--compact"];
 const canonicalCapabilities = json(run(process.execPath, ["bin/deepbom.mjs", ...capabilityArgs]).stdout);
+const agentCapabilityArgs = ["capabilities", "--format", "agent-json"];
+const canonicalAgentCapabilities = json(run(process.execPath, ["bin/deepbom.mjs", ...agentCapabilityArgs]).stdout);
 if (npmCli) {
   assert.deepEqual(json(run(process.execPath, [npmCli, ...capabilityArgs]).stdout), canonicalCapabilities,
     "installed npm capability discovery diverged from canonical CLI");
+  assert.deepEqual(json(run(process.execPath, [npmCli, ...agentCapabilityArgs]).stdout), canonicalAgentCapabilities,
+    "installed npm agent capability discovery diverged from canonical CLI");
+  await verifyInstalledAgentIntegration(npmCli, manifest.version);
   const npmSelfTest = json(runNpmExecutable(npmCli, ["self-test", "--compact"]).stdout);
   assert.equal(npmSelfTest.status, "pass", "installed npm executable self-test failed");
   const mcpFrames = exchangeMcp(process.execPath, [npmCli, "mcp"], [
@@ -90,6 +98,10 @@ if (platformSmoke || releaseContract) {
     "standalone engine capability discovery diverged from canonical CLI");
   assert.deepEqual(json(run(python, ["-m", "deepbom", ...capabilityArgs]).stdout), canonicalCapabilities,
     "installed Python capability discovery diverged from canonical CLI");
+  assert.deepEqual(json(run(engine, agentCapabilityArgs).stdout), canonicalAgentCapabilities,
+    "standalone engine agent capability discovery diverged from canonical CLI");
+  assert.deepEqual(json(run(python, ["-m", "deepbom", ...agentCapabilityArgs]).stdout), canonicalAgentCapabilities,
+    "installed Python agent capability discovery diverged from canonical CLI");
   assert.equal(json(run(engine, ["self-test", "--compact"]).stdout).status, "pass",
     "standalone engine self-test failed");
   assert.equal(json(run(python, ["-m", "deepbom", "self-test", "--compact"]).stdout).status, "pass",
@@ -168,6 +180,12 @@ if (platformSmoke) {
       DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
     });
     assert.deepEqual(json(cargoCapabilities.stdout), canonicalCapabilities, "Cargo capability discovery diverged");
+    const cargoAgentCapabilities = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", ...agentCapabilityArgs], {
+      DEEPBOM_ENGINE: engine,
+      DEEPBOM_ENGINE_SHA256: createHash("sha256").update(await readFile(engine)).digest("hex"),
+      DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
+    });
+    assert.deepEqual(json(cargoAgentCapabilities.stdout), canonicalAgentCapabilities, "Cargo agent capability discovery diverged");
     const cargoSelfTest = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "self-test", "--compact"], {
       DEEPBOM_ENGINE: engine,
       DEEPBOM_ENGINE_SHA256: createHash("sha256").update(await readFile(engine)).digest("hex"),
@@ -216,7 +234,26 @@ if (platformSmoke) {
   assert.equal(manifest.channels.cargo.status, "launcher_ready_for_immutable_engine_matrix");
   const cargoStatus = releaseContract ? "Cargo execution and unbound-engine rejection" : "Cargo execution reserved for --release-contract";
   const nativeStatus = releaseContract ? "standalone/Python TFLite and ONNX execution parity" : "native/Python execution reserved for platform release smoke";
-  console.log(`Channel equivalence passed (installed npm tarball across five formats and two package forms; installed MCP audit; ${nativeStatus}; capability/envelope/SARIF/policy and verify/diff/explore npm parity; ${cargoStatus}; packaged self-test/WASM tamper rejection).`);
+  console.log(`Channel equivalence passed (installed npm tarball across five formats and two package forms; installed MCP audit; clean-agent integration; ${nativeStatus}; CLI and agent capability/envelope/SARIF/policy and verify/diff/explore parity; ${cargoStatus}; packaged self-test/WASM tamper rejection).`);
+}
+
+async function verifyInstalledAgentIntegration(npmCli, version) {
+  const directory = path.join(releaseRoot, "install-probe", `agent-${installProbeRunId}`);
+  await mkdir(directory, { recursive: true });
+  const preview = json(run(process.execPath, [npmCli, "integrate", "codex", "--compact"], {}, true, directory).stdout);
+  assert.equal(preview.schema, "deepbom.agent_integration.v1");
+  assert.equal(preview.status, "changes_pending");
+  assert.equal(preview.applied, false);
+  const installed = json(run(process.execPath, [npmCli, "integrate", "codex", "--apply", "--compact"], {}, true, directory).stdout);
+  assert.equal(installed.status, "installed");
+  assert.equal(installed.applied, true);
+  const skill = await readFile(path.join(directory, ".agents", "skills", "deepbom", "SKILL.md"), "utf8");
+  assert.match(skill, new RegExp(`deepbom@${version.replaceAll(".", "\\.")}`));
+  const status = json(run(process.execPath, [npmCli, "integrate", "status", "codex", "--compact"], {}, true, directory).stdout);
+  assert.equal(status.integrations[0].status, "current");
+  const removal = json(run(process.execPath, [npmCli, "integrate", "remove", "codex", "--apply", "--compact"], {}, true, directory).stdout);
+  assert.equal(removal.status, "removed");
+  assert.equal(existsSync(path.join(directory, ".agents", "skills", "deepbom")), false);
 }
 
 async function installNpmPackage(release) {

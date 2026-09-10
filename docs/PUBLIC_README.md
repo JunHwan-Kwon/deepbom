@@ -24,10 +24,25 @@ is documented separately below.
 
 ## Assistant integration
 
-Run the same local analyzer as an MCP server over stdio:
+Install the repository-local Agent Skill after previewing the managed files:
 
 ```bash
-npx deepbom mcp
+npx -y deepbom@1.96.13 integrate codex
+npx -y deepbom@1.96.13 integrate codex --apply
+npx -y deepbom@1.96.13 integrate claude-code
+npx -y deepbom@1.96.13 integrate claude-code --apply
+```
+
+The Skill lets a local agent select the pinned `npx` command for a supported
+deployment-artifact question. It does not create or call a hosted analysis
+server. See [the agent setup guide](https://deepbom.org/for-agents/) and the
+[machine-readable capability contract](https://deepbom.org/agent-capabilities.json).
+
+For persistent tool-call access, run the same local analyzer as an MCP server
+over stdio:
+
+```bash
+npx -y deepbom@1.96.13 mcp
 ```
 
 It exposes `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
@@ -36,6 +51,10 @@ analysis endpoint. Audit calls default to a bounded human summary; detailed
 formats and large-model scan depth are explicit. Local paths are restricted to
 the launch directory unless `DEEPBOM_MCP_ALLOWED_ROOTS` is configured.
 Agent-facing usage guidance is in [the DEEPBOM skill](skills/deepbom/SKILL.md).
+Claude Desktop users can instead install the version-matched
+`deepbom-1.96.13.mcpb` asset from the corresponding GitHub Release. The bundle
+contains the same CLI and WASM bytes as the npm channel and asks the user to
+select the only local directory it may read.
 
 Verified release channels expose the same analysis implementation:
 
@@ -89,8 +108,7 @@ and at `https://deepbom.org/schemas/deepbom-artifact-ir-v2.schema.json`.
 The conversion receipt schema is published at
 [`docs/schemas/deepbom-conversion-receipt-v1.schema.json`](docs/schemas/deepbom-conversion-receipt-v1.schema.json).
 
-Public product output uses CycloneDX 1.7. Experimental standards work is not
-included in the website, CLI commands, or release artifacts.
+Public product output uses CycloneDX 1.7.
 
 `verify` compares the serialized external tensor ABI with a supplied,
 artifact-bound production declaration. `diff` uses the canonical deterministic

@@ -1,5 +1,6 @@
 import { auditTabApplicability } from "./evidence-applicability.js";
 import { deriveMacConfidence } from "./analysis-summary-contract.js";
+import { ANALYZER_SEMANTIC_VERSION } from "./app-config.js";
 
 export const REVIEW_SUMMARY_SCHEMA = "deepbom.review_summary.v1";
 const FINDING_KINDS = Object.freeze(["artifact_defect", "caution", "evidence_gap"]);
@@ -68,6 +69,7 @@ export function buildReviewSummary({ analysis = {}, envelope, artifactIrContext 
       version: analysis?.rulepack_version || analysis?.target_profile?.source_rulepack_version || null,
       sha256: analysis?.rulepack_sha256 || analysis?.target_profile?.source_rulepack_sha256 || null,
     },
+    reproduction: buildReproductionCommand(envelope, analysis),
     applicability,
     next_actions: nextActions(grouped),
     evidence_envelope_sha256: envelope.envelope_sha256,
@@ -88,6 +90,12 @@ export function validateReviewSummary(summary) {
   if (summary?.graph?.total_macs != null && !Number.isFinite(Number(summary.graph.total_macs))) errors.push("graph_total_macs_invalid");
   if (!["exact", "symbolic", "partial", "not_applicable"].includes(summary?.graph?.mac_confidence)) errors.push("graph_mac_confidence_invalid");
   if (!summary?.quantization || typeof summary.quantization.max_risk !== "string") errors.push("quantization_summary_missing");
+  if (summary?.reproduction?.schema !== "deepbom.reproduction_command.v1"
+    || !Array.isArray(summary.reproduction.argv)
+    || summary.reproduction.argv.length < 6
+    || summary.reproduction.expected_sha256 !== summary?.artifact?.sha256) {
+    errors.push("reproduction_command_invalid");
+  }
   if (summary?.storage) {
     if (!Number.isSafeInteger(summary.storage.tensor_count) || summary.storage.tensor_count < 0) errors.push("storage_tensor_count_invalid");
     if (!Number.isSafeInteger(summary.storage.declared_tensor_bytes) || summary.storage.declared_tensor_bytes < 0) errors.push("storage_byte_count_invalid");
@@ -95,6 +103,30 @@ export function validateReviewSummary(summary) {
   }
   if (errors.length) throw new Error(`Invalid review summary: ${errors.join(", ")}`);
   return { valid: true, errors: [] };
+}
+
+function buildReproductionCommand(envelope, analysis) {
+  const filename = envelope.identity?.filename || "artifact";
+  const target = analysis?.target_profile?.id || analysis?.cpu_cost_target_binding?.profile_id || null;
+  const argv = ["-y", `deepbom@${ANALYZER_SEMANTIC_VERSION}`, "audit", "<artifact-path>"];
+  if (target) argv.push("--target", target);
+  argv.push("--expected-sha256", envelope.identity?.sha256 || "", "--summary");
+  return {
+    schema: "deepbom.reproduction_command.v1",
+    executable: "npx",
+    argv,
+    package_version: ANALYZER_SEMANTIC_VERSION,
+    artifact_filename: filename,
+    expected_sha256: envelope.identity?.sha256 || null,
+    shell_command: ["npx", ...argv].map(shellToken).join(" "),
+    boundary: "Run from a directory containing the named artifact, or replace the artifact argument with its local path. The expected SHA-256 prevents analyzing different bytes under the same filename.",
+  };
+}
+
+function shellToken(value) {
+  const text = String(value);
+  if (/^[A-Za-z0-9_@./:=+-]+$/.test(text)) return text;
+  return `"${text.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
 }
 
 function buildStorageSummary(analysis, format) {

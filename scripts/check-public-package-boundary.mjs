@@ -34,6 +34,9 @@ assert(packageDocument.homepage === "https://deepbom.org", "npm homepage identit
 assert(packageDocument.bugs?.url === "https://github.com/JunHwan-Kwon/deepbom/issues", "npm issue-tracker identity drifted.");
 assert(packageDocument.publishConfig?.access === "public", "npm package access must be explicit.");
 assert(packageDocument.bin?.deepbom === "bin/deepbom.mjs", "npm CLI entry point drifted.");
+for (const keyword of ["static-analysis", "agent-skills", "model-context-protocol"]) {
+  assert(packageDocument.keywords?.includes(keyword), `npm discovery keyword is missing: ${keyword}`);
+}
 
 const publicLicense = await readFile(path.join(root, "channels", "LICENSE"));
 const packagedLicense = await readFile(path.join(packageRoot, "LICENSE"));
@@ -60,6 +63,9 @@ assert(sha256(selfTest) === sha256(selfTestSource), "Packaged self-test differs 
 const bundle = await readFile(path.join(packageRoot, "bin", "deepbom.mjs"), "utf8");
 assert(bundle.includes(releaseManifest.runtime.tflite_wasm_sha256), "Packaged CLI does not bind the declared WASM digest.");
 assert(bundle.includes(releaseManifest.runtime.self_test.sha256), "Packaged CLI does not bind the declared self-test digest.");
+assert(bundle.includes("deepbom.agent_capabilities.v1"), "Packaged CLI is missing the agent capability contract.");
+assert(bundle.includes("deepbom.agent_integration.v1"), "Packaged CLI is missing safe agent integration management.");
+assert(bundle.includes("hosted_analysis_endpoint"), "Packaged CLI is missing the no-hosted-analysis boundary.");
 const forbiddenText = [
   [/(?:^|[^A-Za-z])(?:[A-Za-z]:\\\\(?:Users|consistency|workspace)|\/home\/runner\/work\/)/, "absolute build path"],
   [/(?:sourceMappingURL|sourcesContent)/, "source-map marker"],
@@ -67,6 +73,7 @@ const forbiddenText = [
   [/scripts\/generate-(?:ort-rulepack|tflite-delegate-rulepack|xnnpack-delegate-rulepack)\.mjs/, "private rulepack generator path"],
   [/(?:ORT_EP_RULES|TFLITE_DELEGATE_RULES|fn\s+a55_kernel_candidates)/, "private generated-rule symbol"],
   [/(?:npm_[A-Za-z0-9]{20,}|pypi-[A-Za-z0-9_-]{20,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)/, "publication credential or private key"],
+  [/(?:CycloneDX\s+2\.0|cyclonedx-(?:20-preview|draft-profiles|perspective)|jsonpath-rfc95(?:35))/i, "private standards draft material"],
 ];
 for (const [pattern, label] of forbiddenText) {
   assert(!pattern.test(bundle), `Public JavaScript bundle contains ${label}.`);

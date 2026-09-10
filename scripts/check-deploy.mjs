@@ -24,8 +24,6 @@ const CHECKS = [
   "scripts/check-regulatory-bundle-contract.mjs",
   "scripts/check-export-artifact-contract.mjs",
   "scripts/check-export-contract-documents.mjs",
-  "scripts/check-cyclonedx-draft-profiles.mjs",
-  "scripts/check-cyclonedx-perspective-audit.mjs",
   "scripts/check-conversion-receipt.mjs --no-browser",
   "scripts/check-artifact-ir.mjs",
   "scripts/check-artifact-ir-import-boundary.mjs",

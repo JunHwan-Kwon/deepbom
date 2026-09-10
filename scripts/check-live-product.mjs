@@ -43,6 +43,19 @@ try {
     if (response.status() >= 400) badResponses.push({ status: response.status(), url: response.url() });
   });
   await page.goto(baseUrl.href, { waitUntil: "domcontentloaded", timeout: 120_000 });
+  const firstPaint = await page.evaluate(() => ({
+    workflowState: document.body.dataset.workflowState,
+    dropzoneVisible: document.querySelector("#dropzone")?.getClientRects().length > 0,
+    reviewSummaryHidden: Boolean(document.querySelector("#reviewSummaryPanel")?.hidden),
+    placeholderPanelsVisible: ["preAuditReference", "formatCapabilityPanel", "modelPlan"]
+      .filter((id) => document.querySelector(`#${id}`)?.getClientRects().length > 0),
+    blockingAgreementPresent: Boolean(document.querySelector("#agreementBackdrop")),
+  }));
+  assert.equal(firstPaint.workflowState, "idle");
+  assert.equal(firstPaint.dropzoneVisible, true);
+  assert.equal(firstPaint.reviewSummaryHidden, true);
+  assert.deepEqual(firstPaint.placeholderPanelsVisible, []);
+  assert.equal(firstPaint.blockingAgreementPresent, false);
   await acceptPrivacy(page);
   for (const width of [1440, 1180, 1024, 821, 820, 768, 620, 390, 360]) {
     await page.setViewportSize({ width, height: 1000 });
@@ -57,6 +70,19 @@ try {
     const state = await productState(page);
     throw new Error(`Verified example was not staged: ${JSON.stringify(state)}; browser errors: ${browserErrors.join(" | ") || "none"}`, { cause: error });
   }
+  await page.waitForSelector("#reviewSummaryPanel:not([hidden])", { timeout: 30_000 });
+  const summary = await page.locator("#reviewSummaryPanel").evaluate((root) => ({
+    heading: root.querySelector("h2")?.textContent?.trim() || "",
+    countLabels: [...root.querySelectorAll(".review-summary-counts span")].map((node) => node.textContent?.trim()),
+    coverage: root.querySelector(".review-summary-coverage")?.textContent?.trim() || "",
+    reproduction: root.querySelector(".review-summary-reproduction code")?.textContent?.trim() || "",
+    workflowState: document.body.dataset.workflowState,
+  }));
+  assert.match(summary.heading, /artifact defect/i);
+  assert.deepEqual(summary.countLabels, ["Artifact defects", "Cautions", "Evidence needed"]);
+  assert.match(summary.coverage, /Evidence capabilities:/);
+  assert.match(summary.reproduction, /^npx -y deepbom@\d+\.\d+\.\d+ audit "<artifact-path>" .*--expected-sha256 [a-f0-9]{64} --summary$/);
+  assert.equal(summary.workflowState, "audited");
   await page.waitForSelector("#auditProgress:not([hidden])", { timeout: 30_000 });
   try {
     await page.waitForFunction(() => {
@@ -127,8 +153,18 @@ try {
   }, null, { timeout: auditTimeoutMs });
   const overflow = await mobilePage.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   assert(overflow <= 1, `Mobile horizontal overflow is ${overflow}px.`);
+  const agentPage = await mobile.newPage();
+  const agentUrl = server
+    ? new URL("/for-agents/index.html", baseUrl)
+    : new URL("/for-agents/", baseUrl);
+  await agentPage.goto(agentUrl.href, { waitUntil: "domcontentloaded", timeout: 120_000 });
+  assert.equal(await agentPage.locator("h1").innerText(), "Let the agent run the audit where the artifact already lives.");
+  const desktopBundle = agentPage.locator('a[href*="/releases/download/channels-v"][href$=".mcpb"]');
+  assert.equal(await desktopBundle.count(), 1, "Agent guide must expose one exact-version MCPB release asset.");
+  const agentOverflow = await agentPage.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  assert(agentOverflow <= 1, `Agent guide mobile horizontal overflow is ${agentOverflow}px.`);
   await mobile.close();
-  console.log(`Live product check passed (${baseUrl.href}; manifest ${destination}; mobile overflow ${overflow}px).`);
+  console.log(`Live product check passed (${baseUrl.href}; bounded first paint and audit summary; manifest ${destination}; mobile overflow ${overflow}px; agent guide overflow ${agentOverflow}px).`);
 } finally {
   await browser?.close();
   if (server) await new Promise((resolve) => server.close(resolve));

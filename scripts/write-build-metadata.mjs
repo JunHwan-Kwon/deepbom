@@ -277,6 +277,11 @@ const BUNDLE_CONTENT_FILE_EXCLUDES = new Set([
   "web/samples/sample_cnn_float.onnx",
 ]);
 
+const BUNDLE_CONTENT_FILE_EXCLUDE_PATTERNS = [
+  /^web\/lib\/cyclonedx-(?:20|draft|perspective)(?:-|\.|$)/i,
+  /^web\/vendor\/jsonpath-rfc95\d+(?:\.|$)/i,
+];
+
 const BUNDLE_CONTENT_DIR_EXCLUDES = new Set([
   ".git",
   ".wrangler",
@@ -387,6 +392,7 @@ function computeBundleContentDigest({ publicDistribution = false } = {}) {
     selection: {
       roots: selectedRoots,
       file_excludes: [...BUNDLE_CONTENT_FILE_EXCLUDES, "**/.gitignore"].sort(),
+      file_exclude_patterns: BUNDLE_CONTENT_FILE_EXCLUDE_PATTERNS.map((pattern) => pattern.source).sort(),
       directory_excludes: [
         ...BUNDLE_CONTENT_DIR_EXCLUDES,
         ...(publicDistribution ? ["web/protected"] : []),
@@ -422,6 +428,7 @@ function computeBundleContentDigest({ publicDistribution = false } = {}) {
       `manifest ${BUILD_CONTENT_MANIFEST_SCHEMA} SHA-256 ${manifestSha256}`,
       `roots: ${selectedRoots.join(", ")}`,
       `file excludes: ${manifest.selection.file_excludes.join(", ")}`,
+      `file exclude patterns: ${manifest.selection.file_exclude_patterns.join(", ")}`,
       `directory excludes: ${manifest.selection.directory_excludes.join(", ")}`,
     ],
   };
@@ -473,7 +480,9 @@ function walkBundleContentDir(relativeDir, files, { publicDistribution = false }
 }
 
 function shouldExcludeBundleContentFile(relativePath) {
-  return BUNDLE_CONTENT_FILE_EXCLUDES.has(relativePath) || path.basename(relativePath) === ".gitignore";
+  return BUNDLE_CONTENT_FILE_EXCLUDES.has(relativePath)
+    || BUNDLE_CONTENT_FILE_EXCLUDE_PATTERNS.some((pattern) => pattern.test(relativePath))
+    || path.basename(relativePath) === ".gitignore";
 }
 
 function sliceSource(source, item) {

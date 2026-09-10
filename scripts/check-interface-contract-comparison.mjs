@@ -1,5 +1,4 @@
 import { createCheck } from "./check-assert.mjs";
-import { buildCycloneDx20ParameterContractPreview, validateCycloneDx20ParameterContractPreview } from "../web/lib/cyclonedx-20-preview.js";
 import { buildInterfaceQuantizationContractLedger } from "../web/lib/quantization-contract-summary.js";
 import { canonicalContractSha256, compareInterfaceContracts, parseProductionInterfaceContract } from "../web/lib/interface-contract.js";
 
@@ -73,25 +72,9 @@ expectEqual(compareInterfaceContracts(ledger, malformedHash, artifactSha256).sta
 const partial = { parameters: structuredClone(ledger.parameters) };
 expectEqual(compareInterfaceContracts(ledger, partial, artifactSha256).status, "partial_artifact_and_implementation_hash_missing", "both missing release hashes remain explicit");
 
-const preview = buildCycloneDx20ParameterContractPreview(analysis, {
-  hash: artifactSha256,
-  generatedAt: "2026-08-06T00:00:00.000Z",
-  interfaceLedger: ledger,
-  profileId: "legacy-parameter-contract-2026-08-06",
-  allowHistoricalFixture: true,
-});
-preview.metadata.component.properties.push({ name: "deepbom:production:interfaceImplementationSha256", value: implementationSha256 });
-const previewValidation = validateCycloneDx20ParameterContractPreview(preview);
-expect(previewValidation.valid, `preview validation: ${previewValidation.errors.join("; ")}`);
-const parsedPreview = parseProductionInterfaceContract(preview);
-expect(parsedPreview.valid, `preview parser: ${parsedPreview.errors.join("; ")}`);
-expectDeepEqual(parsedPreview.contract.parameters.map((row) => [row.direction, row.ordinal]), [["input", 0], ["input", 1], ["output", 0]], "preview parameter identities");
-expectEqual(compareInterfaceContracts(ledger, preview, artifactSha256).status, "bound_exact_contract", "CycloneDX 2.0 draft preview round trip");
-const duplicatePropertyPreview = structuredClone(preview);
-duplicatePropertyPreview.metadata.component.modelCard.modelParameters.inputs[0].properties.push(
-  structuredClone(duplicatePropertyPreview.metadata.component.modelCard.modelParameters.inputs[0].properties[0]),
-);
-expectEqual(compareInterfaceContracts(ledger, duplicatePropertyPreview, artifactSha256).status, "invalid_declaration", "duplicate CycloneDX properties fail closed");
+const parsedDeclaration = parseProductionInterfaceContract(structuredDeclaration);
+expect(parsedDeclaration.valid, `production declaration parser: ${parsedDeclaration.errors.join("; ")}`);
+expectDeepEqual(parsedDeclaration.contract.parameters.map((row) => [row.direction, row.ordinal]), [["input", 0], ["input", 1], ["output", 0]], "production parameter identities");
 
 const forgedBlockedPass = buildInterfaceQuantizationContractLedger({
   outputs: [{
@@ -118,4 +101,4 @@ const unbound = compareInterfaceContracts(ledger, null, artifactSha256);
 expectEqual(unbound.status, "unbound", "missing declaration stays unbound");
 expectEqual(unbound.gate_result, "pending", "missing declaration is pending, not a vulnerability");
 
-done("Interface contract comparison passed (canonical hashing, all-I/O coverage, strict field validation, independent blocked cardinality, and CycloneDX 2.0 draft round trip).");
+done("Interface contract comparison passed (canonical hashing, all-I/O coverage, strict field validation, and independent blocked cardinality).");

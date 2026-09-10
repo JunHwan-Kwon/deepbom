@@ -26,7 +26,7 @@ assert.equal(PUBLIC_PRODUCT_CONTRACTS.format_maturity.find((row) => row.format =
 const schemas = new Set(PUBLIC_PRODUCT_CONTRACTS.machine_contracts.map((row) => row.schema));
 assert.equal(schemas.size, PUBLIC_PRODUCT_CONTRACTS.machine_contracts.length);
 for (const required of ["deepbom.cli_capabilities.v1", "deepbom.artifact_evidence_envelope.v1", "deepbom.artifact_ir.v2", "deepbom.semantic_artifact_diff.v1", "cyclonedx-1.7-json"]) assert(schemas.has(required));
-assert.equal([...schemas].some((value) => /2\.0|perspective|#990|#175|#1067|#1075/i.test(value)), false);
+assert.equal([...schemas].some((value) => /2\.0|perspective/i.test(value)), false);
 
 const release = PUBLIC_PRODUCT_CONTRACTS.release_policy;
 assert.equal(release.stable_channel.npm_dist_tag, "latest");
@@ -53,7 +53,7 @@ const automation = await readFile("docs/CLI_AUTOMATION.md", "utf8");
 assert.match(publicReadme, /Format maturity/i);
 assert.match(automation, /Stable machine-readable contracts/i);
 assert.match(`${publicReadme}\n${automation}`, /metadata\.component[\s\S]*components\[\]/i);
-assert.doesNotMatch(`${publicReadme}\n${automation}`, /#990|#175|#1067|#1075|CycloneDX 2\.0/i);
+assert.doesNotMatch(`${publicReadme}\n${automation}`, /CycloneDX 2\.0|working group|pull request/i);
 
 console.log("Public product contracts verified: six format maturity rows, stable machine surfaces, and separate stable/prerelease release policy.");
 

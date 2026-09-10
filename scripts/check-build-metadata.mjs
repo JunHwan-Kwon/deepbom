@@ -65,6 +65,18 @@ if (createHash("sha256").update(generatorBytes).digest("hex") !== manifest.gener
 if (!manifest.selection?.file_excludes?.includes("web/lib/build-metadata.js")) throw new Error("Build-content manifest must disclose its self-reference exclusion.");
 if (!manifest.selection?.file_excludes?.includes("web/samples/mobilenet_v1_025_224_float.tflite")) throw new Error("Build-content manifest must disclose the deployment-excluded FLOAT32 fixture.");
 if (!manifest.selection?.file_excludes?.includes("web/samples/sample_cnn_float.onnx")) throw new Error("Build-content manifest must disclose the deployment-excluded synthetic ONNX fixture.");
+const excludedStandardsPathPatterns = [
+  /^web\/lib\/cyclonedx-(?:20|draft|perspective)(?:-|\.|$)/i,
+  /^web\/vendor\/jsonpath-rfc95\d+(?:\.|$)/i,
+];
+for (const excludedPattern of excludedStandardsPathPatterns) {
+  if (!manifest.selection?.file_exclude_patterns?.includes(excludedPattern.source)) {
+    throw new Error(`Build-content manifest must disclose deployment exclusion pattern ${excludedPattern.source}.`);
+  }
+  if (manifest.files.some((item) => excludedPattern.test(item.path))) {
+    throw new Error(`Build-content manifest contains a deployment-excluded standards file matched by ${excludedPattern.source}.`);
+  }
+}
 if ((process.env.CI || process.env.DEEPBOM_RELEASE_BUILD) && ANALYZER_BUILD_SOURCE_STATE !== "clean") throw new Error("CI/release metadata must identify a clean source tree.");
 if (process.env.DEEPBOM_RELEASE_BUILD && [manifest.release_inputs?.app_expires_at_epoch_ms, manifest.release_inputs?.app_not_before_epoch_ms].some((value) => !/^\d{13}$/.test(String(value || "")))) {
   throw new Error("Release build metadata must bind explicit runtime-guard epoch inputs.");

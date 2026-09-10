@@ -3,6 +3,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { readVersionContract } from "./version-contract.mjs";
+import { buildAgentSkillFiles } from "../bin/deepbom-agent-skill.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -46,8 +47,19 @@ await updateRegex("web/index.html", /<meta name="deepbom-release" content="[^"]+
   `<meta name="deepbom-release" content="${contract.displayVersion}" />`);
 await updateRegex("web/index.html", /"softwareVersion":\s*"[^"]+"/,
   `"softwareVersion": "${contract.displayVersion}"`);
+await updateRegex("web/for-agents/index.html", /deepbom@(?:&lt;verified-version&gt;|\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?)/g,
+  `deepbom@${contract.displayVersion}`);
+await updateRegex("web/for-agents/index.html", /(?:channels-v|deepbom-)\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g,
+  (value) => `${value.startsWith("channels-v") ? "channels-v" : "deepbom-"}${contract.displayVersion}`);
+for (const relativePath of ["docs/PUBLIC_README.md", "channels/npm/README.md"]) {
+  await updateRegex(relativePath, /deepbom@\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g, `deepbom@${contract.displayVersion}`);
+  await updateRegex(relativePath, /deepbom-\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?\.mcpb/g, `deepbom-${contract.displayVersion}.mcpb`);
+}
 await updateRegex("examples/expected-output/gpu-partition-probe.human.txt", /^DEEPBOM\s+\S+\s+deployment-artifact audit/m,
   `DEEPBOM ${contract.displayVersion} deployment-artifact audit`);
+for (const [relativePath, content] of buildAgentSkillFiles(contract.displayVersion)) {
+  updates.set(`skills/deepbom/${relativePath}`, content);
+}
 
 const drift = [];
 for (const [relativePath, next] of updates) {

@@ -4,6 +4,39 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.13 - 2026-09-10
+
+- Added a serverless Agent-native path for Codex, Claude Code, and compatible
+  local agents. `deepbom integrate` previews, installs, verifies, and removes
+  only hash-bound managed Skill files; user edits, symlinks, and path escapes
+  fail closed.
+- Added `deepbom.agent_capabilities.v1`, a public Agent Skill, clean-agent
+  selection evaluations, and exact version-pinned `npx` commands. Every bounded
+  human summary now carries an artifact-hash-bound reproduction command.
+- Kept local stdio MCP as the persistent tool-call surface and verified its
+  four tools with the official MCP Inspector. Added a version-matched Claude
+  Desktop MCPB whose CLI and TFLite WASM bytes are identical to the npm channel.
+- Added `/for-agents/`, `/agent-capabilities.json`, assistant-readable discovery
+  metadata, and an explicit no-hosted-analysis boundary. Plain chat can
+  recommend the pinned local command but cannot claim to have run an audit.
+- Added a route-bound `medbom.org` redirect to the canonical `deepbom.org`
+  product without creating a second product or content surface.
+- Removed standards-development material from the website, public product
+  documentation, normal quality and deployment gates, and release artifacts.
+  CycloneDX product output remains fixed to version 1.7.
+- Unified explicit human-summary handling for audit, verify, diff, and explore,
+  and expanded installed-channel checks across TFLite, ONNX, GGUF, paths with
+  spaces, MCP, Agent Skill lifecycle, and the Cargo/Python/npm capability
+  contract.
+- Kept the three review verdict counts in one bounded mobile row so the audit
+  workbench remains reachable in the first 390 x 844 review viewport.
+- Raised only the source-budget categories consumed by the new Agent runtime,
+  evaluation fixtures, MCPB builder, and release checks; per-file and generated
+  rulepack limits remain unchanged.
+- Aligned the build-content provenance manifest with the deployed file set so
+  excluded standards-development paths cannot reappear through generated
+  release metadata.
+
 ## 1.96.12 - 2026-09-09
 
 - Closed the remaining reproducible external-review correctness boundaries with
@@ -196,11 +229,10 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## 1.96.4 - 2026-09-04
 
-- Replaced the mutable CycloneDX 2.0 preview pins with a hash-verified draft
-  profile registry spanning specification PRs #990, #1067, #1075 and property
-  taxonomy PR #175. Incompatible or unresolved draft combinations now emit a
-  status record and refuse 2.0 BOM export; stable CycloneDX 1.7 remains the
-  default export.
+- Replaced mutable pre-release schema pins with hash-verified compatibility
+  fixtures. Incompatible or unresolved combinations now emit a deterministic
+  status record instead of a false BOM conformance claim; the stable product
+  export remains unchanged.
 - Added an RFC 9535 Perspective evaluator for Web and CLI that records exact
   match counts and JSON Pointers while distinguishing zero, empty, multiple,
   and type-mismatched results. Reference projection is explicit and
@@ -217,8 +249,8 @@ All notable archival releases of DEEPBOM are documented here.
   regression checks.
 - Added bounded recovery for transient Engineering, regulatory, and raw-report
   formatter module fetches, and corrected Evidence Package membership checks
-  so the non-BOM CycloneDX 2.0 draft-status record is not mistaken for a
-  `.cdx.json` document.
+  so non-BOM compatibility-status records are not mistaken for `.cdx.json`
+  documents.
 
 ## 1.96.3 - 2026-09-03
 

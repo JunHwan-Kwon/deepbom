@@ -7,6 +7,8 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { runMcpServer } from "./deepbom-mcp.mjs";
+import { buildAgentCapabilities } from "./deepbom-agent-contract.mjs";
+import { manageAgentIntegration } from "./deepbom-agent-integration.mjs";
 import { detectModelFormat } from "../web/lib/model-file.js";
 import { analyzeOnnxModel, MAX_ONNX_DECODED_ELEMENTS } from "../web/onnx.js";
 import { attachOnnxContractConflictCapsule } from "../web/lib/onnx-contract-conflict.js";
@@ -92,7 +94,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.12";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.13";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 const EXPECTED_SELF_TEST_SHA256 = typeof __DEEPBOM_SELF_TEST_SHA256__ === "string" ? __DEEPBOM_SELF_TEST_SHA256__ : "";
 
@@ -104,7 +106,18 @@ async function main(argv) {
     validateCapabilitiesInvocation(parsed);
     await preflightOutputDestinations(parsed);
     const capabilities = buildCliCapabilities(VERSION, { defaultTarget: DEFAULT_TARGET, deltaTargets: DEFAULT_DELTA_TARGETS });
-    return emitDocument(parsed, capabilities, () => buildCapabilitiesSummary(capabilities));
+    const document = parsed.outputFormat === "agent-json" ? buildAgentCapabilities(capabilities) : capabilities;
+    return emitDocument(parsed, document, () => buildCapabilitiesSummary(capabilities));
+  }
+  if (parsed.command === "integrate") {
+    validateAgentIntegrationInvocation(parsed);
+    const document = await manageAgentIntegration({
+      action: parsed.integrationAction,
+      target: parsed.integrationTarget || null,
+      apply: parsed.apply,
+      version: VERSION,
+    });
+    return emitDocument(parsed, document, () => buildAgentIntegrationSummary(document));
   }
   // The MCP server is a transport, not an analysis command: it produces no
   // evidence document of its own and therefore declares no output contract in
@@ -586,7 +599,28 @@ function validateCapabilitiesInvocation(parsed) {
   if (parsed.timestamp) throw new Error("The capabilities command does not accept --timestamp.");
   if (parsed.noClobber && !parsed.output) throw new Error("--no-clobber requires --output.");
   if (parsed.noClobber && parsed.output === "-") throw new Error("--no-clobber cannot protect stdout; provide a file path with --output.");
-  if (parsed.formatExplicit) throw new Error("The capabilities command emits deepbom.cli_capabilities.v1; --format is not supported.");
+  if (parsed.formatExplicit && parsed.outputFormat !== "agent-json") throw new Error("The capabilities command supports only --format agent-json.");
+  if (parsed.outputFormat === "agent-json" && parsed.json) throw new Error("--format agent-json conflicts with --json.");
+}
+
+function validateAgentIntegrationInvocation(parsed) {
+  if (!new Set(["install", "status", "remove"]).has(parsed.integrationAction)) throw new Error("The integrate command requires codex, claude-code, generic, status, or remove.");
+  if (parsed.integrationAction !== "status" && !parsed.integrationTarget) throw new Error(`deepbom integrate ${parsed.integrationAction} requires a target.`);
+  if (parsed.integrationAction === "status" && parsed.apply) throw new Error("deepbom integrate status does not accept --apply.");
+  assertNoOptions(parsed, [
+    "targetProfile", "contract", "request", "context", "images", "tokensPerImage", "batch", "stateBits", "memoryMib",
+    "tensorrtProfile", "tensorrtParserEvidence", "tensorrtEngineInspector", "tensorrtLlmConfig", "tensorrtLlmBinding",
+    "llmMemoryProfile", "conversionReceipt", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence",
+    "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "reviewPolicy", "cacheDir",
+    "expectedSha256", "offline",
+  ], "integrate");
+  if (parsed.input || parsed.candidate || parsed.targetExplicit || parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyProfile) {
+    throw new Error("The integrate command does not accept artifact, target, or finding-policy options.");
+  }
+  if (parsed.sections.length || parsed.pointer || parsed.listSections || parsed.scanExplicit || parsed.placementProfilesExplicit || parsed.maxDownloadExplicit || parsed.timestamp) {
+    throw new Error("The integrate command does not accept analysis-selection, scan, placement, download, or timestamp options.");
+  }
+  if (parsed.outputFormat !== "analysis") throw new Error("The integrate command emits deepbom.agent_integration.v1 and does not accept --format.");
 }
 
 function validateAcceleratorInvocation(parsed) {
@@ -966,7 +1000,7 @@ async function emitDocument(parsed, document, humanBuilder) {
 }
 
 function assertCommandOutputFormat(parsed, command) {
-  if (parsed.outputFormat !== "analysis") {
+  if (!new Set(["analysis", "summary"]).has(parsed.outputFormat)) {
     throw new Error(`The ${command} command emits its own evidence schema; --format ${parsed.outputFormat} is not supported.`);
   }
 }
@@ -1362,6 +1396,7 @@ function buildHumanSummary(summary) {
   if (summary.rulepack.version || summary.rulepack.sha256) lines.push(`Rulepack: ${summary.rulepack.version || "version not declared"}${summary.rulepack.sha256 ? ` | sha256:${summary.rulepack.sha256}` : ""}`);
   lines.push(`Evidence boundary: ${verdict.scope}`);
   lines.push("");
+  lines.push(`Reproduce: ${summary.reproduction.shell_command}`);
   lines.push("Next: --section findings | --output-format json | --output-format cyclonedx");
   return `${lines.join("\n")}\n`;
 }
@@ -1542,6 +1577,18 @@ function buildCapabilitiesSummary(capabilities) {
   ].join("\n");
 }
 
+function buildAgentIntegrationSummary(document) {
+  const rows = document.integrations || [document];
+  const lines = [`DEEPBOM agent integration: ${document.action}`];
+  for (const row of rows) {
+    lines.push(`  ${row.target}: ${row.status} (${row.destination})`);
+    for (const change of row.changes || []) lines.push(`    ${change.status}: ${change.path}`);
+  }
+  if (document.next_command) lines.push(`Apply: ${document.next_command}`);
+  lines.push("");
+  return lines.join("\n");
+}
+
 function buildSelfTestSummary(document) {
   return [
     `DEEPBOM ${document.version} installation self-test: ${document.status.toUpperCase()}`,
@@ -1686,13 +1733,20 @@ function parseArguments(argv) {
   const first = values[0] || "";
   if (["-h", "--help", "help"].includes(first)) return { help: true };
   if (["-v", "--version", "version"].includes(first)) return { version: true };
-  const command = ["audit", "gguf", "verify", "diff", "explore", "graph", "placement", "capabilities", "accelerator", "self-test", "explain-rule", "mcp"].includes(first) ? values.shift() : "audit";
+  const command = ["audit", "gguf", "verify", "diff", "explore", "graph", "placement", "capabilities", "accelerator", "self-test", "explain-rule", "integrate", "mcp"].includes(first) ? values.shift() : "audit";
   const acceleratorAction = command === "accelerator" ? values.shift() || "" : "";
   const acceleratorProvider = command === "accelerator" ? values.shift() || "" : "";
+  const integrationSelector = command === "integrate" ? values.shift() || "status" : "";
+  const integrationAction = command !== "integrate" ? "" : integrationSelector === "remove" ? "remove" : integrationSelector === "status" ? "status" : "install";
+  const integrationTarget = command !== "integrate" ? "" : integrationAction === "install"
+    ? integrationSelector
+    : (values[0] && !values[0].startsWith("-") ? values.shift() : "");
   const parsed = {
     command,
     acceleratorAction,
     acceleratorProvider,
+    integrationAction,
+    integrationTarget,
     input: "",
     candidate: "",
     target: DEFAULT_TARGET,
@@ -1751,6 +1805,7 @@ function parseArguments(argv) {
     compact: false,
     summary: false,
     formatExplicit: false,
+    apply: false,
   };
   while (values.length) {
     const token = values.shift();
@@ -1840,6 +1895,7 @@ function parseArguments(argv) {
       if (parsed.gate !== "defects") throw new Error("--gate must be defects.");
     }
     else if (token === "--no-clobber") parsed.noClobber = true;
+    else if (token === "--apply") parsed.apply = true;
     else if (token === "--error-format") parsed.errorFormat = requiredValue(values, token).toLowerCase();
     else if (token === "--timestamp") parsed.timestamp = normalizeTimestamp(requiredValue(values, token));
     else if (token === "--json") {
@@ -1866,7 +1922,9 @@ function parseArguments(argv) {
   }
   const outputFormats = parsed.command === "graph"
     ? new Set(["svg", "png", "html", "mermaid", "dot", "json"])
-    : new Set(["analysis", ...AUDIT_OUTPUT_FORMATS.filter((format) => !["json", "json-compact"].includes(format))]);
+    : parsed.command === "capabilities"
+      ? new Set(["analysis", "agent-json"])
+      : new Set(["analysis", ...AUDIT_OUTPUT_FORMATS.filter((format) => !["json", "json-compact"].includes(format))]);
   if (!outputFormats.has(parsed.outputFormat)) {
     throw new Error(parsed.command === "graph"
       ? "--format must be svg, png, html, mermaid, dot, or json for graph."
@@ -1876,6 +1934,7 @@ function parseArguments(argv) {
     throw new Error("--view must be structure, placement, quantization, or architecture.");
   }
   if (!new Set(["text", "json"]).has(parsed.errorFormat)) throw new Error("--error-format must be text or json.");
+  if (parsed.apply && parsed.command !== "integrate") throw new Error("--apply is valid only with deepbom integrate.");
   if (parsed.json && parsed.compact) throw new Error("--json and --compact are mutually exclusive.");
   const selectionCount = Number(parsed.sections.length > 0) + Number(Boolean(parsed.pointer)) + Number(parsed.listSections);
   if (selectionCount > 1) throw new Error("--section, --pointer, and --list-sections are mutually exclusive.");
@@ -1968,6 +2027,7 @@ function printHelp() {
   process.stdout.write("\nBuilt-in gate profiles:\n  --policy engineering  Block artifact defects; keep cautions and evidence gaps visible\n  --policy regulatory   Block artifact defects and unresolved evidence gaps; this is not a legal-compliance determination\n");
   process.stdout.write("\nHuman-readable audit output:\n  --output-format summary  Emit the bounded projection derived from deepbom.review_summary.v1\n  --summary                Compatibility alias for --output-format summary\n");
   process.stdout.write("\nInstallation and rule checks:\n  deepbom self-test [--json|--compact]\n  deepbom explain-rule <rule-id> [--json|--compact]\n  deepbom explain-rule --list\n");
+  process.stdout.write("\nAgent-native local use (no hosted analysis server):\n  deepbom capabilities --format agent-json\n  deepbom integrate codex                  Preview .agents/skills/deepbom\n  deepbom integrate claude-code            Preview .claude/skills/deepbom\n  deepbom integrate generic                Preview skills/deepbom\n  deepbom integrate <target> --apply       Write only managed Skill files\n  deepbom integrate status [target]        Inspect without changing files\n  deepbom integrate remove <target>        Preview managed-file removal\n  deepbom integrate remove <target> --apply  Remove only unchanged managed files\n");
   process.stdout.write("\nAssistant tool access (Model Context Protocol over stdio, local process only):\n  deepbom mcp\n  Tools: deepbom_capabilities, deepbom_audit, deepbom_diff, deepbom_explain_rule\n  Audit default: bounded human summary; request envelope, section, or pointer for detail\n  Local paths: launch directory, or roots declared by DEEPBOM_MCP_ALLOWED_ROOTS\n");
   process.stdout.write("\nNVIDIA accelerator binding:\n  --accelerator-profile <json>\n                          Bind an observed NVIDIA host profile without inferring selected-build or runtime assignment\n  --accelerator-device <index>\n                          Select one device when the bound profile contains multiple NVIDIA devices\n");
   process.stdout.write("\nN-way placement comparison:\n  deepbom placement <artifact> [--profiles <id,id|all>] [--json|--compact]\n  --profiles <ids|all>   Compare selected independent profiles (default: all available profiles)\n");

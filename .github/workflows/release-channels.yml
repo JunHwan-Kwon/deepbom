@@ -132,6 +132,14 @@ jobs:
           path: .local-validation/channel-release/npm/deepbom-*.tgz
           if-no-files-found: error
           retention-days: 7
+      - name: Upload Claude Desktop MCP bundle
+        if: matrix.id == 'linux-x64'
+        uses: actions/upload-artifact@v6
+        with:
+          name: deepbom-mcpb
+          path: .local-validation/channel-release/mcpb/deepbom-*.mcpb
+          if-no-files-found: error
+          retention-days: 7
       - name: Upload standalone engine
         uses: actions/upload-artifact@v6
         with:
@@ -211,6 +219,10 @@ jobs:
       - uses: actions/download-artifact@v6
         with:
           name: deepbom-engine-release
+          path: release
+      - uses: actions/download-artifact@v6
+        with:
+          name: deepbom-mcpb
           path: release
       - name: Create draft, attach all assets, then publish
         env:

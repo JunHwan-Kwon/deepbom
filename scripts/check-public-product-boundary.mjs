@@ -10,19 +10,27 @@ const publicSurfaces = [
   "web/evaluate/regulatory/index.html",
   "web/evaluate/quality/index.html",
   "web/evaluate/engineering/index.html",
+  "web/for-agents/index.html",
   "bin/deepbom.mjs",
   "bin/deepbom-automation.mjs",
+  "bin/deepbom-agent-contract.mjs",
+  "bin/deepbom-agent-integration.mjs",
+  "bin/deepbom-agent-skill.mjs",
   "docs/PUBLIC_README.md",
   "docs/CLI_REFERENCE.md",
   "channels/npm/README.md",
   "channels/python/README.md",
   "channels/cargo/README.md",
+  "skills/deepbom/SKILL.md",
+  "skills/deepbom/references/capability-selection.md",
+  "skills/deepbom/references/evidence-semantics.md",
+  "skills/deepbom/references/failure-recovery.md",
 ];
 const forbidden = [
   /CycloneDX\s+2\.0/i,
-  /(?:^|\W)#(?:990|175|1067|1075)(?:\W|$)/,
   /deepbom\s+perspective\b/i,
   /cyclonedx[_-]perspective/i,
+  /working group|pull request/i,
 ];
 
 for (const relative of publicSurfaces) {
@@ -31,6 +39,11 @@ for (const relative of publicSurfaces) {
     assert.equal(pattern.test(source), false, `${relative} exposes private standards work through ${pattern}`);
   }
 }
+
+const pageBuilder = await readFile(path.join(root, "scripts/build-pages.mjs"), "utf8");
+assert.match(pageBuilder, /deploymentExcludedWebPatterns/);
+assert.match(pageBuilder, /cyclonedx-\(\?:20\|draft\|perspective\)/);
+assert.match(pageBuilder, /jsonpath-rfc95\\d\+/);
 
 const result = spawnSync(process.execPath, [
   "bin/deepbom.mjs",
