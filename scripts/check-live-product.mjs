@@ -157,7 +157,7 @@ try {
   const agentUrl = server
     ? new URL("/for-agents/index.html", baseUrl)
     : new URL("/for-agents/", baseUrl);
-  await agentPage.goto(agentUrl.href, { waitUntil: "domcontentloaded", timeout: 120_000 });
+  await agentPage.goto(agentUrl.href, { waitUntil: "load", timeout: 120_000 });
   assert.equal(await agentPage.locator("h1").innerText(), "Let the agent run the audit where the artifact already lives.");
   const desktopBundle = agentPage.locator('a[href*="/releases/download/channels-v"][href$=".mcpb"]');
   assert.equal(await desktopBundle.count(), 1, "Agent guide must expose one exact-version MCPB release asset.");
