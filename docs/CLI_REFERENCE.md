@@ -24,6 +24,7 @@ asset verification, and equivalence checks are documented in
 | --- | ---: | --- |
 | `audit` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
 | `gguf` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
+| `batch` | 1 | `summary`<br>`deepbom.batch_result.v1` |
 | `verify` | 1 | `summary`<br>`deepbom.cli_interface_contract_verification.v1` |
 | `diff` | 2 | `summary`<br>`deepbom.semantic_artifact_diff.v1` |
 | `explore` | 1 | `summary`<br>`deepbom.redesign_pareto.v1` |
@@ -54,10 +55,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.96.14`:
+`1.96.15`:
 
 ```console
-DEEPBOM 1.96.14
+DEEPBOM 1.96.15
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -119,6 +120,13 @@ Exit codes:
 
 GGUF quick inspection:
   --tensors              Emit a concise tensor table; add --json or --compact for deepbom.tensor_table.v1
+
+Format-neutral tensor evidence:
+  --encoding-inventory   Emit serialized encoding counts, assignments, and reproducible hashes for GGUF, SafeTensors, ONNX, or TFLite
+
+Windows-safe batch audit:
+  deepbom batch <manifest.json> --batch-output-dir <directory> [--json|--compact]
+  Manifest: deepbom.batch_manifest.v1 with safe relative paths and required SHA-256 identities
 
 Built-in gate profiles:
   --policy engineering  Block artifact defects; keep cautions and evidence gaps visible

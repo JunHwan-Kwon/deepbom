@@ -4,10 +4,21 @@ import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
+import { loadCliBundleMembers } from "../bin/deepbom-input.mjs";
 import { parseArtifactSource, resolveArtifactSource } from "../bin/remote-artifact-resolver.mjs";
 import { resolveHuggingFaceOnnxExternalDataClosure, resolveHuggingFaceSafeTensorsClosure } from "../bin/remote-artifact-closure.mjs";
+import { readArtifactBundle } from "../web/lib/artifact-bundle.js";
 import { finalizeArtifactSet, validateArtifactSet } from "../web/lib/artifact-set.js";
 import { buildOnnxExternalDataStructureBinding } from "../web/lib/onnx-external-data-structure-binding.js";
+
+function safeTensorBytes(tensorName, value) {
+  const header = Buffer.from(JSON.stringify({
+    [tensorName]: { dtype: "U8", shape: [1], data_offsets: [0, 1] },
+  }));
+  const prefix = Buffer.alloc(8);
+  prefix.writeBigUInt64LE(BigInt(header.length));
+  return Buffer.concat([prefix, header, Buffer.from([value])]);
+}
 
 const bytes = Buffer.from("deterministic remote model fixture\n", "utf8");
 const digest = createHash("sha256").update(bytes).digest("hex");
@@ -76,14 +87,18 @@ try {
 
   const indexBytes = Buffer.from(JSON.stringify({ weight_map: { "layer.0.weight": "model-00001-of-00002.safetensors", "layer.1.weight": "model-00002-of-00002.safetensors" } }));
   const indexDigest = createHash("sha256").update(indexBytes).digest("hex");
-  const shardOne = Buffer.from("shard-one");
-  const shardTwo = Buffer.from("shard-two");
+  const shardOne = safeTensorBytes("layer.0.weight", 1);
+  const shardTwo = safeTensorBytes("layer.1.weight", 2);
+  const remoteConfig = Buffer.from(JSON.stringify({ model_type: "fixture" }));
+  const remoteTokenizerConfig = Buffer.from(JSON.stringify({ chat_template: "{{ messages }}" }));
   const indexSpec = `hf://owner/repo@${commit}/weights/model.safetensors.index.json`;
   const closureFetch = async (url) => {
     const name = new URL(String(url)).pathname.split("/").pop();
     const payload = name === "model.safetensors.index.json" ? indexBytes
       : name === "model-00001-of-00002.safetensors" ? shardOne
-        : name === "model-00002-of-00002.safetensors" ? shardTwo : null;
+        : name === "model-00002-of-00002.safetensors" ? shardTwo
+          : name === "config.json" ? remoteConfig
+            : name === "tokenizer_config.json" ? remoteTokenizerConfig : null;
     return payload ? new Response(payload, { status: 200, headers: { "content-length": String(payload.length) } })
       : new Response("missing", { status: 404 });
   };
@@ -94,13 +109,24 @@ try {
     cacheDir: path.join(cache, "closure"), expectedSha256: indexDigest, fetchImpl: closureFetch, progress: null,
   });
   assert.equal(sharded.closure.kind, "huggingface_safetensors_shards");
-  assert.equal(sharded.closure.members.length, 3);
+  assert.equal(sharded.closure.members.length, 5);
+  assert(sharded.closure.members.some((row) => row.role === "tokenizer_config" && row.path.endsWith("tokenizer_config.json")),
+    "remote SafeTensors closure must bind an available tokenizer_config.json sidecar");
   assert.equal(sharded.closure.materialization, "content_addressed_member_map_no_copy");
   assert.equal(sharded.path, indexPrimary.path, "remote closure must not duplicate the primary artifact");
   const virtualShard = sharded.virtual_bundle_members.find((row) => row.path.endsWith("model-00002-of-00002.safetensors"));
   assert.equal((await stat(virtualShard.resolved_path)).size, shardTwo.length);
   assert.equal(sharded.virtual_bundle_members.every((row) => row.resolved_path.includes(`${path.sep}sha256${path.sep}`)), true,
     "virtual bundle members must reuse content-addressed cache files");
+  const remoteInput = await loadCliBundleMembers(sharded.virtual_bundle_members, "remote-model");
+  const remoteBundle = await readArtifactBundle(remoteInput.files);
+  assert.equal(remoteBundle.analysis.tensor_count, 2,
+    "commit-pinned remote SafeTensors closure must remain analyzable end to end");
+  assert.equal(remoteBundle.analysis.on_device_llm.tokenizer.chat_template.status, "declared_in_tokenizer_config",
+    "commit-pinned remote tokenizer_config chat_template must reach the hash-bound LLM evidence contract");
+  assert.equal(remoteBundle.analysis.on_device_llm.tokenizer.chat_template.sha256,
+    createHash("sha256").update("{{ messages }}").digest("hex"),
+    "remote chat-template evidence must retain its content digest without copying template text into the summary");
   const structureBinding = buildOnnxExternalDataStructureBinding({ onnx_external_data: { tensors: [{
     tensor_name: "weight", normalized_location: "model.onnx_data", offset: 4, length: 8, range_end: 12,
     expected_payload_bytes: 8, dtype: "FLOAT32", shape: [2],

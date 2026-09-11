@@ -4,6 +4,44 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.96.15 - 2026-09-11
+
+- Made the GGUF tensor-table assignment signature reproducible from the table
+  alone by documenting the `encoding`-to-`dtype` projection, recording the
+  GGUF `ne0`-first shape order, and retaining the existing signature identity.
+- Completed the Python facade contract: `audit()` now exposes the existing
+  engineering/regulatory policy profiles and defect gate, policy-blocked
+  results retain their parsed evidence document, section selection defaults to
+  analysis only when the caller omits an output kind, and tensor-table scalar
+  values use Python-native `int` and `Decimal` types. The module entry point no
+  longer imports through `deepbom.__main__`, removing the first-run warning.
+- Corrected SafeTensors precision-category counts for reduced- and
+  full-precision floating-point tensors and recomputed those counts over every
+  member of a sharded repository. Mixed single-file and cross-shard fixtures
+  enforce category conservation.
+- Separated ONNX serialized quantization representation from runtime claims.
+  Static QDQ, dynamic QDQ, weight-only QDQ, QOperator, mixed, and unresolved
+  forms are identified explicitly; runtime fusion and the executed integer
+  path remain unasserted, and compute coverage counts only serialized integer
+  compute operators.
+- Added `deepbom.tensor_encoding_inventory.v1`, a bounded format-neutral
+  encoding projection for GGUF, SafeTensors, ONNX, and TFLite with reproducible
+  inventory and tensor-assignment hashes and no duplicated decimal mirrors.
+- Added a Windows-safe `deepbom.batch_manifest.v1` input path. Every member is
+  separately hash-bound and audited into a non-clobbering result file; the
+  batch result does not infer a combined model or lineage.
+- Extended commit-pinned Hugging Face SafeTensors closure acquisition to
+  standard optional configuration and tokenizer sidecars, including chat
+  templates when present. Local directory selection binds the same sidecars,
+  while a lone local tensor file deliberately ignores ambient neighbors.
+- Narrowed the all-zero payload finding title to the tensors actually observed
+  and advanced the service-worker cache identity for the deployed contract.
+- Raised the handwritten runtime and verification source ceilings by 32 KiB
+  each for the batch, neutral encoding-inventory, Python facade, and
+  quantization-classification contracts, plus the development-tooling ceiling
+  by 16 KiB for the measured delivery record. Per-file and generated-data
+  ceilings are unchanged.
+
 ## 1.96.14 - 2026-09-10
 
 - Added a structure-only `deepbom gguf --tensors` projection with a concise

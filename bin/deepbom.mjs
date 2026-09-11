@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { access, readFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { access, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -94,7 +95,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.14";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.15";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 const EXPECTED_SELF_TEST_SHA256 = typeof __DEEPBOM_SELF_TEST_SHA256__ === "string" ? __DEEPBOM_SELF_TEST_SHA256__ : "";
 
@@ -131,6 +132,14 @@ async function main(argv) {
     await preflightOutputDestinations(parsed);
     return runSelfTest(parsed);
   }
+  if (parsed.command === "batch") {
+    validateBatchInvocation(parsed);
+    await preflightOutputDestinations(parsed);
+    const document = await runBatchCommand(parsed);
+    await emitDocument(parsed, document, () => buildBatchSummary(document));
+    if (document.failed_count > 0) process.exitCode = 1;
+    return;
+  }
   if (parsed.command === "explain-rule") {
     validateStandaloneCommand(parsed, "explain-rule", { allowInput: true });
     await preflightOutputDestinations(parsed);
@@ -163,7 +172,7 @@ async function main(argv) {
     : await loadCliInput(inputPath);
   const filename = input.filename;
   const detectedFormat = input.kind === "file" ? detectModelFormat(filename, input.prefix) : "package";
-  let scanPolicy = resolveScanPolicy(parsed.tensorTable && !parsed.scanExplicit ? "structure" : parsed.scan, detectedFormat, input);
+  let scanPolicy = resolveScanPolicy((parsed.tensorTable || parsed.encodingInventory) && !parsed.scanExplicit ? "structure" : parsed.scan, detectedFormat, input);
   if ((parsed.targetProfile || parsed.targetExplicit) && input.kind === "file" && detectedFormat !== "tflite") {
     throw new Error(`${parsed.targetProfile ? "--target-profile" : "--target"} applies only to TFLite artifacts, received ${detectedFormat}.`);
   }
@@ -233,6 +242,9 @@ async function main(argv) {
   }
   if (parsed.command === "gguf" && format !== "gguf") {
     throw new Error(`The gguf command requires a GGUF artifact, received ${format}.`);
+  }
+  if (parsed.encodingInventory && !["gguf", "safetensors", "onnx", "tflite"].includes(format)) {
+    throw new Error(`--encoding-inventory requires GGUF, SafeTensors, ONNX, or TFLite tensor evidence, received ${format}.`);
   }
   const llmScenarioRequested = parsed.context || parsed.batch !== 1 || parsed.stateBits !== 16
     || parsed.memoryMib || parsed.images || parsed.tokensPerImage;
@@ -437,7 +449,9 @@ async function main(argv) {
   const document = ["analysis", "summary"].includes(parsed.outputFormat)
     ? selectAnalysisOutput(completeDocument, parsed, reviewSummary, artifactIrContext)
     : completeDocument;
-  await emitDocument(parsed, document, () => parsed.tensorTable ? buildTensorTable(document) : buildHumanSummary(reviewSummary));
+  await emitDocument(parsed, document, () => parsed.tensorTable
+    ? buildTensorTable(document)
+    : parsed.encodingInventory ? buildEncodingInventoryTable(document) : buildHumanSummary(reviewSummary));
   if (parsed.policyOutput) {
     await writeOutputAtomically(parsed.policyOutput, `${JSON.stringify(policyResult, null, parsed.compact ? 0 : 2)}\n`, { noClobber: parsed.noClobber });
   }
@@ -508,6 +522,7 @@ function validateInvocation(parsed) {
     throw new Error("--section, --pointer, and --list-sections are valid only with audit or gguf.");
   }
   if (parsed.tensorTable && parsed.command !== "gguf") throw new Error("--tensors is valid only with the gguf command.");
+  if (parsed.encodingInventory && !["audit", "gguf"].includes(parsed.command)) throw new Error("--encoding-inventory is valid only with audit or gguf.");
   if (parsed.view && parsed.command !== "graph") throw new Error("--view is valid only with the graph command.");
   if (parsed.command === "verify" && !parsed.contract) throw new Error("The verify command requires --contract <json>.");
   if (parsed.command === "diff" && !parsed.candidate) throw new Error("The diff command requires baseline and candidate artifacts.");
@@ -591,7 +606,7 @@ function validateCapabilitiesInvocation(parsed) {
     "llmMemoryProfile", "conversionReceipt", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
   ], "capabilities");
   if (parsed.targetExplicit || parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyProfile) throw new Error("The capabilities command does not accept target or finding-policy options.");
-  if (parsed.sections.length || parsed.pointer || parsed.listSections) throw new Error("The capabilities command does not accept analysis-selection options.");
+  if (parsed.sections.length || parsed.pointer || parsed.listSections || parsed.tensorTable || parsed.encodingInventory) throw new Error("The capabilities command does not accept analysis-selection options.");
   if (parsed.deviceIndex != null || parsed.includeDeviceIdentifiers) throw new Error("The capabilities command does not accept NVIDIA collector options.");
   if (parsed.acceleratorDeviceIndex != null) throw new Error("The capabilities command does not accept --accelerator-device.");
   if (parsed.scanExplicit) throw new Error("The capabilities command does not accept --scan.");
@@ -602,6 +617,105 @@ function validateCapabilitiesInvocation(parsed) {
   if (parsed.noClobber && parsed.output === "-") throw new Error("--no-clobber cannot protect stdout; provide a file path with --output.");
   if (parsed.formatExplicit && parsed.outputFormat !== "agent-json") throw new Error("The capabilities command supports only --format agent-json.");
   if (parsed.outputFormat === "agent-json" && parsed.json) throw new Error("--format agent-json conflicts with --json.");
+}
+
+function validateBatchInvocation(parsed) {
+  if (!parsed.input) throw new Error("The batch command requires a deepbom.batch_manifest.v1 path.");
+  if (!parsed.batchOutputDir) throw new Error("The batch command requires --batch-output-dir <directory>.");
+  if (parsed.candidate || parsed.targetExplicit || parsed.targetProfile || parsed.contract || parsed.request
+      || parsed.sections.length || parsed.pointer || parsed.listSections || parsed.tensorTable || parsed.encodingInventory
+      || parsed.scanExplicit || parsed.policyProfile || parsed.reviewPolicy || parsed.gate !== "none" || parsed.failOn !== "none"
+      || parsed.context || parsed.batch !== 1 || parsed.stateBits !== 16 || parsed.memoryMib || parsed.images || parsed.tokensPerImage
+      || parsed.offline || parsed.cacheDir || parsed.expectedSha256 || parsed.maxDownloadExplicit || parsed.timestamp) {
+    throw new Error("The batch command accepts only its manifest, --batch-output-dir, JSON/compact output, --output, and --no-clobber.");
+  }
+  if (parsed.outputFormat !== "analysis") throw new Error("The batch command emits deepbom.batch_result.v1 and does not accept --output-format.");
+}
+
+async function runBatchCommand(parsed) {
+  const manifestPath = path.resolve(parsed.input);
+  const manifestBytes = await readFile(manifestPath);
+  const manifest = parseStrictJson(new TextDecoder().decode(manifestBytes), "batch manifest");
+  if (manifest.schema !== "deepbom.batch_manifest.v1" || !Array.isArray(manifest.artifacts)
+      || !manifest.artifacts.length || manifest.artifacts.length > 10_000) {
+    throw new Error("Batch manifest must be deepbom.batch_manifest.v1 with 1..10000 artifacts.");
+  }
+  const ids = new Set();
+  const root = path.dirname(manifestPath);
+  const outputRoot = path.resolve(parsed.batchOutputDir);
+  await mkdir(outputRoot, { recursive: true });
+  const results = [];
+  for (const item of manifest.artifacts) {
+    const id = String(item?.id || "");
+    const relativePath = String(item?.path || "").replaceAll("\\", "/");
+    const expectedSha256 = String(item?.expected_sha256 || "").toLowerCase();
+    const scan = String(item?.scan || "auto").toLowerCase();
+    const outputFormat = String(item?.output || "envelope").toLowerCase();
+    if (!/^[a-z0-9][a-z0-9_.-]{0,127}$/i.test(id) || ids.has(id)) throw new Error(`Batch artifact id is invalid or duplicated: ${id || "<empty>"}.`);
+    ids.add(id);
+    if (!relativePath || relativePath.startsWith("/") || /^[A-Za-z]:/.test(relativePath)
+        || relativePath.split("/").some((part) => !part || part === "." || part === "..")) {
+      throw new Error(`Batch artifact ${id} path must be a safe manifest-relative path.`);
+    }
+    if (!/^[a-f0-9]{64}$/.test(expectedSha256)) throw new Error(`Batch artifact ${id} requires a lowercase expected_sha256.`);
+    if (!["auto", "structure", "integrity", "full"].includes(scan)) throw new Error(`Batch artifact ${id} has an invalid scan policy.`);
+    if (!["analysis", "envelope", "cyclonedx", "sarif"].includes(outputFormat)) throw new Error(`Batch artifact ${id} has an invalid output kind.`);
+    const artifactPath = path.resolve(root, ...relativePath.split("/"));
+    const containmentPrefix = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
+    if (artifactPath !== root && !artifactPath.startsWith(containmentPrefix)) throw new Error(`Batch artifact ${id} escapes the manifest directory.`);
+    const outputPath = path.join(outputRoot, `${id}.json`);
+    const childArgs = ["audit", artifactPath, "--scan", scan, "--expected-sha256", expectedSha256,
+      "--output", outputPath, "--no-clobber", "--compact"];
+    if (outputFormat !== "analysis") childArgs.push("--output-format", outputFormat);
+    const completed = await runCliChild(childArgs);
+    let outputSha256 = null;
+    if (completed.status === 0) {
+      const bytes = await readFile(outputPath);
+      JSON.parse(new TextDecoder().decode(bytes));
+      outputSha256 = createHash("sha256").update(bytes).digest("hex");
+    }
+    results.push({
+      id,
+      path: relativePath,
+      expected_sha256: expectedSha256,
+      scan,
+      output: outputFormat,
+      status: completed.status === 0 ? "pass" : "fail",
+      exit_code: completed.status,
+      output_file: completed.status === 0 ? `${id}.json` : null,
+      output_sha256: outputSha256,
+      diagnostic: completed.status === 0 ? null : completed.stderr.slice(0, 4096),
+    });
+  }
+  const passed = results.filter((row) => row.status === "pass").length;
+  const body = {
+    schema: "deepbom.batch_result.v1",
+    manifest: {
+      filename: path.basename(manifestPath),
+      sha256: createHash("sha256").update(manifestBytes).digest("hex"),
+      artifact_count: manifest.artifacts.length,
+    },
+    execution: "sequential_bounded_child_processes",
+    output_directory_name: path.basename(outputRoot),
+    passed_count: passed,
+    failed_count: results.length - passed,
+    results,
+    interpretation_boundary: "The batch result records deterministic per-artifact CLI outcomes. It does not combine artifacts into one model, infer lineage, or turn a policy result into release authorization.",
+  };
+  return { ...body, batch_result_sha256: createHash("sha256").update(canonicalJson(body)).digest("hex") };
+}
+
+function runCliChild(args) {
+  const nodeHost = /^node(?:\.exe)?$/i.test(path.basename(process.execPath));
+  const command = process.execPath;
+  const commandArgs = nodeHost ? [process.argv[1], ...args] : args;
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, commandArgs, { cwd: process.cwd(), env: process.env, windowsHide: true });
+    let stderr = "";
+    child.stderr.on("data", (chunk) => { if (stderr.length < 4096) stderr += String(chunk).slice(0, 4096 - stderr.length); });
+    child.on("error", reject);
+    child.on("close", (code) => resolve({ status: Number.isInteger(code) ? code : 1, stderr }));
+  });
 }
 
 function validateAgentIntegrationInvocation(parsed) {
@@ -618,7 +732,7 @@ function validateAgentIntegrationInvocation(parsed) {
   if (parsed.input || parsed.candidate || parsed.targetExplicit || parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyProfile) {
     throw new Error("The integrate command does not accept artifact, target, or finding-policy options.");
   }
-  if (parsed.sections.length || parsed.pointer || parsed.listSections || parsed.scanExplicit || parsed.placementProfilesExplicit || parsed.maxDownloadExplicit || parsed.timestamp) {
+  if (parsed.sections.length || parsed.pointer || parsed.listSections || parsed.tensorTable || parsed.encodingInventory || parsed.scanExplicit || parsed.placementProfilesExplicit || parsed.maxDownloadExplicit || parsed.timestamp) {
     throw new Error("The integrate command does not accept analysis-selection, scan, placement, download, or timestamp options.");
   }
   if (parsed.outputFormat !== "analysis") throw new Error("The integrate command emits deepbom.agent_integration.v1 and does not accept --format.");
@@ -635,7 +749,7 @@ function validateAcceleratorInvocation(parsed) {
     "llmMemoryProfile", "conversionReceipt", "acceleratorProfile", "coreMlComputePlan", "edgeTpuCompilerEvidence", "liteRtQualcommEvidence", "externalDataRoot", "executorchBuild", "policyOutput", "cacheDir", "expectedSha256", "offline",
   ], "accelerator collect nvidia");
   if (parsed.acceleratorDeviceIndex != null) throw new Error("The collector uses --device, not --accelerator-device.");
-  if (parsed.gate !== "none" || parsed.policyProfile || parsed.sections.length || parsed.pointer || parsed.listSections) throw new Error("The accelerator command does not accept gate or analysis-selection options.");
+  if (parsed.gate !== "none" || parsed.policyProfile || parsed.sections.length || parsed.pointer || parsed.listSections || parsed.tensorTable || parsed.encodingInventory) throw new Error("The accelerator command does not accept gate or analysis-selection options.");
   if (parsed.scanExplicit) throw new Error("The accelerator collect nvidia command does not accept --scan.");
   if (parsed.placementProfilesExplicit) throw new Error("The accelerator collect nvidia command does not accept --profiles.");
   if (parsed.targetExplicit || parsed.failOn !== "none") throw new Error("The accelerator collect nvidia command does not accept target or finding-policy options.");
@@ -657,7 +771,7 @@ function validateStandaloneCommand(parsed, command, { allowInput }) {
     "expectedSha256", "offline",
   ], command);
   if (parsed.targetExplicit || parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyProfile) throw new Error(`The ${command} command does not accept target or finding-policy options.`);
-  if (parsed.sections.length || parsed.pointer || parsed.listSections) throw new Error(`The ${command} command does not accept analysis-selection options.`);
+  if (parsed.sections.length || parsed.pointer || parsed.listSections || parsed.tensorTable || parsed.encodingInventory) throw new Error(`The ${command} command does not accept analysis-selection options.`);
   if (parsed.deviceIndex != null || parsed.includeDeviceIdentifiers || parsed.acceleratorDeviceIndex != null) throw new Error(`The ${command} command does not accept device options.`);
   if (parsed.scanExplicit || parsed.placementProfilesExplicit || parsed.maxDownloadExplicit || parsed.timestamp) throw new Error(`The ${command} command does not accept scan, placement, download, or timestamp options.`);
   if (parsed.outputFormat !== "analysis") throw new Error(`The ${command} command emits its own evidence schema.`);
@@ -1418,6 +1532,7 @@ function storageSummaryLine(storage) {
 
 function selectAnalysisOutput(analysis, parsed, reviewSummary, artifactIrContext) {
   if (parsed.tensorTable) return buildTensorTableProjection(analysis, reviewSummary);
+  if (parsed.encodingInventory) return buildEncodingInventoryProjection(analysis, reviewSummary);
   if (parsed.listSections) return {
     schema: "deepbom.analysis_sections.v1",
     artifact: reviewSummary.artifact,
@@ -1562,7 +1677,12 @@ function buildTensorTableProjection(analysis, reviewSummary) {
     tensor_count: tensors.length,
     encoding_inventory: analysis.on_device_llm?.storage?.encoding_inventory || [],
     encoding_inventory_sha256: analysis.on_device_llm?.storage?.encoding_inventory_sha256 || null,
+    encoding_inventory_signature_basis: analysis.on_device_llm?.storage?.encoding_inventory_signature_basis || null,
     tensor_encoding_assignment_sha256: analysis.on_device_llm?.storage?.tensor_encoding_assignment_sha256 || null,
+    tensor_encoding_assignment_signature_basis: analysis.on_device_llm?.storage?.tensor_encoding_assignment_signature_basis
+      ? `${analysis.on_device_llm.storage.tensor_encoding_assignment_signature_basis} For this table, each row's encoding value is projected as the signature field dtype.`
+      : null,
+    shape_order: "gguf_ne_order_innermost_first",
     columns: ["index", "name", "encoding", "shape", "element_count", "effective_bits_per_element", "block_elements", "block_bytes", "byte_length", "file_byte_start", "file_byte_end_exclusive"],
     tensors,
     interpretation_boundary: "Observed serialized tensor directory and derived storage ratios only. The table does not establish the quantization recipe, calibration or importance-matrix use, lineage, runtime placement, or model quality.",
@@ -1572,6 +1692,80 @@ function buildTensorTableProjection(analysis, reviewSummary) {
 function exactTensorElementCount(shape) {
   if (!Array.isArray(shape) || shape.some((value) => !Number.isSafeInteger(value) || value < 0)) return null;
   return shape.reduce((product, value) => product * BigInt(value), 1n);
+}
+
+function buildEncodingInventoryProjection(analysis, reviewSummary) {
+  const format = String(analysis.format || reviewSummary.artifact?.format || "unknown").toLowerCase();
+  const shapeOrder = format === "gguf" ? "gguf_ne_order_innermost_first" : "declared_format_dimension_order";
+  const assignments = (analysis.tensors || []).map((tensor) => {
+    const elementCount = exactTensorElementCount(tensor.shape);
+    const byteLength = firstNonNegativeInteger(tensor.byte_length, tensor.initializer_available_bytes,
+      tensor.initializer_bytes, tensor.buffer_data_length);
+    return {
+      index: nonNegativeInteger(tensor.index),
+      name: String(tensor.name || ""),
+      encoding: String(tensor.dtype || "UNKNOWN"),
+      shape: Array.isArray(tensor.shape) ? tensor.shape : [],
+      element_count_decimal: elementCount === null ? null : elementCount.toString(),
+      byte_length_decimal: byteLength === null ? null : String(byteLength),
+      effective_bits_per_element: elementCount !== null && elementCount !== 0n && byteLength !== null
+        ? formatRatio(BigInt(byteLength) * 8n, elementCount, 6) : null,
+      parameterization: String(tensor.quantization_parameterization || (Number(tensor.block_elements || 0) > 1 ? "format_defined_block" : "not_declared")),
+      axis: Number.isSafeInteger(tensor.quantization_axis) ? tensor.quantization_axis : null,
+      block_elements: nonNegativeInteger(tensor.block_elements),
+      block_bytes: nonNegativeInteger(tensor.block_bytes),
+      scale_count: nonNegativeInteger(tensor.quant_scales ?? tensor.scale_count),
+      zero_point_count: nonNegativeInteger(tensor.quant_zero_points ?? tensor.zero_point_count),
+    };
+  }).sort((left, right) => Number(left.index ?? 0) - Number(right.index ?? 0) || left.name.localeCompare(right.name));
+  const aggregate = new Map();
+  for (const row of assignments) {
+    const current = aggregate.get(row.encoding) || {
+      encoding: row.encoding, tensor_count: 0, element_count: 0n, byte_length: 0n, complete_elements: true, complete_bytes: true,
+    };
+    current.tensor_count += 1;
+    if (row.element_count_decimal === null) current.complete_elements = false;
+    else current.element_count += BigInt(row.element_count_decimal);
+    if (row.byte_length_decimal === null) current.complete_bytes = false;
+    else current.byte_length += BigInt(row.byte_length_decimal);
+    aggregate.set(row.encoding, current);
+  }
+  const encodings = [...aggregate.values()].map((row) => ({
+    encoding: row.encoding,
+    tensor_count: row.tensor_count,
+    element_count_decimal: row.complete_elements ? row.element_count.toString() : null,
+    byte_length_decimal: row.complete_bytes ? row.byte_length.toString() : null,
+    effective_bits_per_element: row.complete_elements && row.complete_bytes && row.element_count !== 0n
+      ? formatRatio(row.byte_length * 8n, row.element_count, 6) : null,
+  })).sort((left, right) => {
+    const leftBytes = left.byte_length_decimal === null ? -1n : BigInt(left.byte_length_decimal);
+    const rightBytes = right.byte_length_decimal === null ? -1n : BigInt(right.byte_length_decimal);
+    return leftBytes === rightBytes ? left.encoding.localeCompare(right.encoding) : leftBytes > rightBytes ? -1 : 1;
+  });
+  return {
+    schema: "deepbom.tensor_encoding_inventory.v1",
+    artifact: reviewSummary.artifact,
+    format,
+    scan_policy: analysis.cli_scan_policy || null,
+    shape_order: shapeOrder,
+    tensor_count: assignments.length,
+    encoding_count: encodings.length,
+    encodings,
+    assignments,
+    encoding_inventory_sha256: createHash("sha256").update(canonicalJson(encodings)).digest("hex"),
+    encoding_inventory_signature_basis: "SHA-256 over UTF-8 RFC8785-JCS canonical JSON of the complete emitted encodings array in emitted order.",
+    tensor_encoding_assignment_sha256: createHash("sha256").update(canonicalJson(assignments)).digest("hex"),
+    tensor_encoding_assignment_signature_basis: "SHA-256 over UTF-8 RFC8785-JCS canonical JSON of the complete emitted assignments array sorted by numeric index then name.",
+    interpretation_boundary: "Format-neutral serialized tensor encoding evidence only. Quantizer execution, calibration or importance-matrix use, source lineage, runtime kernels, and task quality are not inferred.",
+  };
+}
+
+function firstNonNegativeInteger(...values) {
+  for (const value of values) {
+    const number = nonNegativeInteger(value);
+    if (number !== null) return number;
+  }
+  return null;
 }
 
 function formatRatio(numerator, denominator, digits) {
@@ -1588,7 +1782,7 @@ function buildTensorTable(document) {
     `DEEPBOM ${VERSION} serialized tensor table`,
     `Artifact: ${document.artifact.filename} | sha256:${document.artifact.sha256}`,
     `Tensors: ${document.tensor_count} | scan ${document.scan_policy?.effective_mode || "unknown"}`,
-    "INDEX\tNAME\tENCODING\tSHAPE\tBITS/ELEMENT\tBYTES\tFILE BYTE RANGE [start,end)",
+    "INDEX\tNAME\tENCODING\tSHAPE (GGUF ne0..; innermost first)\tBITS/ELEMENT\tBYTES\tFILE BYTE RANGE [start,end)",
   ];
   for (const tensor of document.tensors) {
     rows.push([
@@ -1606,6 +1800,37 @@ function buildTensorTable(document) {
   rows.push(`Assignment: sha256:${document.tensor_encoding_assignment_sha256 || "unavailable"}`);
   rows.push(`Evidence boundary: ${document.interpretation_boundary}`);
   rows.push("Machine-readable: add --json or --compact, or write with --output <path>.");
+  return `${rows.join("\n")}\n`;
+}
+
+function buildEncodingInventoryTable(document) {
+  const rows = [
+    `DEEPBOM ${VERSION} format-neutral tensor encoding inventory`,
+    `Artifact: ${document.artifact.filename} | sha256:${document.artifact.sha256}`,
+    `Format: ${document.format} | tensors ${document.tensor_count} | encodings ${document.encoding_count}`,
+    "ENCODING\tTENSORS\tELEMENTS\tBYTES\tBITS/ELEMENT",
+  ];
+  for (const row of document.encodings) rows.push([
+    row.encoding,
+    row.tensor_count,
+    row.element_count_decimal ?? "N/A",
+    row.byte_length_decimal ?? "N/A",
+    row.effective_bits_per_element ?? "N/A",
+  ].join("\t"));
+  rows.push(`Inventory: sha256:${document.encoding_inventory_sha256}`);
+  rows.push(`Assignment: sha256:${document.tensor_encoding_assignment_sha256}`);
+  rows.push(`Evidence boundary: ${document.interpretation_boundary}`);
+  return `${rows.join("\n")}\n`;
+}
+
+function buildBatchSummary(document) {
+  const rows = [
+    `DEEPBOM ${VERSION} deterministic batch audit`,
+    `Manifest: ${document.manifest.filename} | sha256:${document.manifest.sha256}`,
+    `Results: ${document.passed_count} pass | ${document.failed_count} fail`,
+  ];
+  for (const row of document.results) rows.push(`  - ${row.id}: ${row.status.toUpperCase()} | ${row.path}${row.output_file ? ` -> ${row.output_file}` : ""}`);
+  rows.push(`Evidence boundary: ${document.interpretation_boundary}`);
   return `${rows.join("\n")}\n`;
 }
 
@@ -1813,7 +2038,7 @@ function parseArguments(argv) {
   const first = values[0] || "";
   if (["-h", "--help", "help"].includes(first)) return { help: true };
   if (["-v", "--version", "version"].includes(first)) return { version: true };
-  const command = ["audit", "gguf", "verify", "diff", "explore", "graph", "placement", "capabilities", "accelerator", "self-test", "explain-rule", "integrate", "mcp"].includes(first) ? values.shift() : "audit";
+  const command = ["audit", "gguf", "batch", "verify", "diff", "explore", "graph", "placement", "capabilities", "accelerator", "self-test", "explain-rule", "integrate", "mcp"].includes(first) ? values.shift() : "audit";
   const acceleratorAction = command === "accelerator" ? values.shift() || "" : "";
   const acceleratorProvider = command === "accelerator" ? values.shift() || "" : "";
   const integrationSelector = command === "integrate" ? values.shift() || "status" : "";
@@ -1837,6 +2062,7 @@ function parseArguments(argv) {
     view: command === "graph" ? "structure" : "",
     outputFormat: command === "graph" ? "svg" : "analysis",
     output: "",
+    batchOutputDir: "",
     policyOutput: "",
     reviewPolicy: "",
     policyProfile: "",
@@ -1847,6 +2073,7 @@ function parseArguments(argv) {
     pointer: "",
     listSections: false,
     tensorTable: false,
+    encodingInventory: false,
     noClobber: false,
     errorFormat: "text",
     timestamp: "",
@@ -1960,8 +2187,10 @@ function parseArguments(argv) {
     else if (token === "--pointer") parsed.pointer = requiredValue(values, token);
     else if (token === "--list-sections") parsed.listSections = true;
     else if (token === "--tensors") parsed.tensorTable = true;
+    else if (token === "--encoding-inventory") parsed.encodingInventory = true;
     else if (token === "--list" && parsed.command === "explain-rule") parsed.listRules = true;
     else if (token === "--output" || token === "-o") parsed.output = requiredValue(values, token);
+    else if (token === "--batch-output-dir") parsed.batchOutputDir = requiredValue(values, token);
     else if (token === "--policy-output") parsed.policyOutput = requiredValue(values, token);
     else if (token === "--review-policy") parsed.reviewPolicy = requiredValue(values, token);
     else if (token === "--policy") {
@@ -2002,6 +2231,7 @@ function parseArguments(argv) {
   if (parsed.outputFormat === "summary" && (parsed.json || parsed.compact)) {
     throw new Error("--output-format summary conflicts with --json or --compact.");
   }
+  if (parsed.batchOutputDir && parsed.command !== "batch") throw new Error("--batch-output-dir is valid only with the batch command.");
   const outputFormats = parsed.command === "graph"
     ? new Set(["svg", "png", "html", "mermaid", "dot", "json"])
     : parsed.command === "capabilities"
@@ -2018,9 +2248,10 @@ function parseArguments(argv) {
   if (!new Set(["text", "json"]).has(parsed.errorFormat)) throw new Error("--error-format must be text or json.");
   if (parsed.apply && parsed.command !== "integrate") throw new Error("--apply is valid only with deepbom integrate.");
   if (parsed.json && parsed.compact) throw new Error("--json and --compact are mutually exclusive.");
-  const selectionCount = Number(parsed.sections.length > 0) + Number(Boolean(parsed.pointer)) + Number(parsed.listSections) + Number(parsed.tensorTable);
-  if (selectionCount > 1) throw new Error("--tensors, --section, --pointer, and --list-sections are mutually exclusive.");
-  if (selectionCount && parsed.outputFormat !== "analysis") throw new Error("--tensors, --section, --pointer, and --list-sections require JSON analysis output when combined with an explicit output format.");
+  const selectionCount = Number(parsed.sections.length > 0) + Number(Boolean(parsed.pointer))
+    + Number(parsed.listSections) + Number(parsed.tensorTable) + Number(parsed.encodingInventory);
+  if (selectionCount > 1) throw new Error("--tensors, --encoding-inventory, --section, --pointer, and --list-sections are mutually exclusive.");
+  if (selectionCount && parsed.outputFormat !== "analysis") throw new Error("--tensors, --encoding-inventory, --section, --pointer, and --list-sections require JSON analysis output when combined with an explicit output format.");
   return parsed;
 }
 
@@ -2108,6 +2339,8 @@ function printHelp(command) {
   if (command === "gguf") return printGgufHelp();
   process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom diff <baseline-artifact-or-package> <candidate-artifact-or-package> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif\n  --section <names>      Emit selected analysis sections; use --list-sections to discover names\n  --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity\n  --list-sections        List selectable analysis sections for this artifact\n  --gate defects         Exit 2 only when an artifact_defect finding is present\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Compatibility severity gate: informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Compatibility alias for --output-format json\n  --compact              Compatibility alias for --output-format json-compact\n  --version              Print version\n  --help                 Show this help\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding\n`);
   process.stdout.write("\nGGUF quick inspection:\n  --tensors              Emit a concise tensor table; add --json or --compact for deepbom.tensor_table.v1\n");
+  process.stdout.write("\nFormat-neutral tensor evidence:\n  --encoding-inventory   Emit serialized encoding counts, assignments, and reproducible hashes for GGUF, SafeTensors, ONNX, or TFLite\n");
+  process.stdout.write("\nWindows-safe batch audit:\n  deepbom batch <manifest.json> --batch-output-dir <directory> [--json|--compact]\n  Manifest: deepbom.batch_manifest.v1 with safe relative paths and required SHA-256 identities\n");
   process.stdout.write("\nBuilt-in gate profiles:\n  --policy engineering  Block artifact defects; keep cautions and evidence gaps visible\n  --policy regulatory   Block artifact defects and unresolved evidence gaps; this is not a legal-compliance determination\n");
   process.stdout.write("\nHuman-readable audit output:\n  --output-format summary  Emit the bounded projection derived from deepbom.review_summary.v1\n  --summary                Compatibility alias for --output-format summary\n");
   process.stdout.write("\nInstallation and rule checks:\n  deepbom self-test [--json|--compact]\n  deepbom explain-rule <rule-id> [--json|--compact]\n  deepbom explain-rule --list\n");
@@ -2129,6 +2362,7 @@ function printHelp(command) {
 
 function printGgufHelp() {
   process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom gguf <artifact.gguf> [options]\n\nGGUF inspection:\n  --tensors              Emit a concise tensor table; add --json or --compact for deepbom.tensor_table.v1\n  --scan <mode>           auto, structure, integrity, or full; --tensors defaults to structure\n  --context <tokens>      Bind a conditional text-token scenario\n  --images <count>        Bind image count; requires --tokens-per-image\n  --tokens-per-image <n>  Bind projector tokens per image\n  --batch <count>         Scenario batch size (default: 1)\n  --state-bits <bits>     State width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>      Compare the lower bound with a declared capacity\n  --llm-memory-profile <json>\n                         Evaluate serialized layer/state lower bounds against declared pools\n\nEvidence selection:\n  --section <names>       Emit selected JSON sections\n  --pointer <pointer>     Emit one RFC 6901 JSON Pointer result\n  --list-sections         List selectable sections\n\nOutput and identity:\n  --json                  Pretty machine-readable JSON\n  --compact               Compact machine-readable JSON\n  --output, -o <path>     Atomically write output; use - for stdout\n  --no-clobber            Refuse to replace an output\n  --expected-sha256 <hex> Require an independent artifact digest\n  --cache-dir <directory> Use a content-addressed cache\n  --offline               Refuse network access\n  --help                  Show this GGUF-specific help\n\nEvidence boundary:\n  Serialized structure does not establish recipe execution, calibration or importance-matrix use, lineage, runtime placement, latency, or model quality.\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy block; 3 incomplete verification binding\n`);
+  process.stdout.write("\nFormat-neutral tensor evidence:\n  --encoding-inventory   Emit deepbom.tensor_encoding_inventory.v1\n");
 }
 
 main(process.argv.slice(2)).catch((error) => {

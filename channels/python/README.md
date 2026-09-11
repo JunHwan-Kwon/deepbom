@@ -9,19 +9,29 @@ An experimental typed facade invokes that same verified engine and converts its
 JSON and exit-code contracts into Python values and exceptions:
 
 ```python
-from deepbom import audit, capabilities, tensor_inventory, tensors
+from deepbom import DeepBomPolicyBlocked, audit, capabilities, tensor_inventory, tensors
 
 caps = capabilities()
 envelope = audit("model.gguf")
+selected = audit("model.gguf", sections=["summary", "findings"])
+try:
+    gated = audit("model.safetensors", gate="defects")
+except DeepBomPolicyBlocked as blocked:
+    gated = blocked.document
 rows = tensors("model.gguf")
 inventory = tensor_inventory("model.gguf")
 ```
 
-`audit()` defaults to the canonical envelope. It accepts explicit timeout and
-maximum-output-byte bounds. Exit 1 raises `DeepBomInvocationError`, exit 2
+`audit()` defaults to the canonical envelope, or to analysis selection when
+`sections` are supplied without an explicit `output`. It accepts the CLI-equivalent
+`gate="defects"` and `policy="engineering"|"regulatory"` controls plus explicit
+timeout and maximum-output-byte bounds. `gate` and `policy` are mutually exclusive.
+Exit 1 raises `DeepBomInvocationError`, exit 2
 raises `DeepBomPolicyBlocked`, and exit 3 raises
 `DeepBomIncompleteBinding`; policy exceptions retain any completed JSON result
-as `.document`. The facade is experimental in 1.96.x, and the CLI schemas remain
+as `.document`. `tensors()` converts exact counts to Python `int` and decimal
+ratios to `decimal.Decimal`; `tensor_inventory()` preserves the raw JSON document.
+The facade is experimental in 1.96.x, and the CLI schemas remain
 the compatibility contract.
 
 ```console

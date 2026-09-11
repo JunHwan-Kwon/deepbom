@@ -7,6 +7,18 @@ import { defaultArtifactCacheDir, parseArtifactSource, resolveArtifactSource } f
 
 const MAX_INDEX_BYTES = 16 * 1024 * 1024;
 const MAX_COMPANIONS = 20_000;
+const HUGGING_FACE_SAFETENSORS_OPTIONAL_SIDECARS = Object.freeze([
+  ["config.json", "architecture_config"],
+  ["tokenizer_config.json", "tokenizer_config"],
+  ["generation_config.json", "generation_config"],
+  ["special_tokens_map.json", "special_token_map"],
+  ["chat_template.jinja", "chat_template"],
+  ["tokenizer.json", "tokenizer_definition"],
+  ["tokenizer.model", "tokenizer_definition"],
+  ["quant_config.json", "quantization_config"],
+  ["quantize_config.json", "quantization_config"],
+  ["quantization_config.json", "quantization_config"],
+]);
 
 export async function resolveHuggingFaceSafeTensorsClosure(spec, primary, options = {}) {
   const source = parseArtifactSource(spec, options.expectedSha256 || "");
@@ -27,7 +39,10 @@ export async function resolveHuggingFaceSafeTensorsClosure(spec, primary, option
     return safeRelativePath(value, `SafeTensors weight_map entry ${name}`);
   }))].sort();
   if (!shardPaths.length || shardPaths.length > MAX_COMPANIONS) throw new Error("Remote SafeTensors shard count is invalid.");
-  return resolveHuggingFaceClosure(source, primary, shardPaths.map((relativePath) => ({ relativePath, role: "shard" })), options);
+  return resolveHuggingFaceClosure(source, primary, [
+    ...shardPaths.map((relativePath) => ({ relativePath, role: "shard", required: true })),
+    ...HUGGING_FACE_SAFETENSORS_OPTIONAL_SIDECARS.map(([relativePath, role]) => ({ relativePath, role, required: false })),
+  ], options);
 }
 
 export async function resolveHuggingFaceOnnxExternalDataClosure(spec, primary, locations, options = {}) {
@@ -55,14 +70,20 @@ async function resolveHuggingFaceClosure(source, primary, companions, options) {
   for (const companion of companions) {
     const repositoryPath = modelDirectory ? `${modelDirectory}/${companion.relativePath}` : companion.relativePath;
     const locator = `hf://${source.repository}@${source.revision}/${repositoryPath}`;
-    const resolved = await resolveArtifactSource(locator, {
-      cacheDir,
-      offline: options.offline,
-      maximumBytes: options.maximumBytes,
-      fetchImpl: options.fetchImpl,
-      progress: options.progress,
-      environment: options.environment,
-    });
+    let resolved;
+    try {
+      resolved = await resolveArtifactSource(locator, {
+        cacheDir,
+        offline: options.offline,
+        maximumBytes: options.maximumBytes,
+        fetchImpl: options.fetchImpl,
+        progress: options.progress,
+        environment: options.environment,
+      });
+    } catch (error) {
+      if (companion.required === false && /(HTTP 404\b|unavailable in offline cache)/.test(String(error?.message || error))) continue;
+      throw error;
+    }
     members.push({ role: companion.role, path: repositoryPath, resolved_path: resolved.path, acquisition: resolved.acquisition });
     members[members.length - 1].model_relative_path = companion.relativePath;
   }

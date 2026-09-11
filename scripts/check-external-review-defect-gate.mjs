@@ -53,6 +53,8 @@ const zeroEnvelope = JSON.parse(zeroEnvelopeRun.stdout);
 assert.equal(zeroEnvelope.findings.some((finding) => finding.id === "EA-SER-0001"), false);
 const zeroStructureReview = zeroEnvelope.findings.find((finding) => finding.id === "EA-SER-0002");
 assert(zeroStructureReview, "The all-zero review signal should remain visible.");
+assert.equal(zeroStructureReview.title, "Exact all-zero serialized tensor payloads detected");
+assert.match(zeroStructureReview.summary, /1\/1 fully decoded tensor payload/);
 assert.equal(zeroStructureReview.finding_kind, "caution", "All-zero storage is not an unconditional artifact defect.");
 const zeroGateRun = run(["audit", zeroPath, "--gate", "defects", "--compact"]);
 assert.equal(zeroGateRun.status, 0, "An all-zero tensor without non-finite values must not be blocked as a defect.");

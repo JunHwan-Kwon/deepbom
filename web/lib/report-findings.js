@@ -367,7 +367,7 @@ export function buildFindingsRegister(analysis, {
       findings.push(finding({
         id: "EA-SER-0002",
         category: "numerical_structure_review",
-        title: "Serialized tensor payloads are exactly all-zero",
+        title: "Exact all-zero serialized tensor payloads detected",
         evidence: "DERIVED",
         priority: "Medium",
         op: "serialized tensor payload",

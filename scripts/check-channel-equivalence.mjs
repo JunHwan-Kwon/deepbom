@@ -40,7 +40,7 @@ const engine = path.join(releaseRoot, manifest.artifacts.standalone_engine.path)
 const cargoManifest = path.join(releaseRoot, "cargo", "Cargo.toml");
 const npmCli = platformSmoke ? null : await installNpmPackage(manifest);
 const python = platformSmoke || releaseContract ? await installPythonWheel(manifest) : null;
-const fixtures = platformSmoke ? null : await packageFixtures();
+const fixtures = await packageFixtures();
 const spacedOnnx = path.join(releaseRoot, "install-probe", "artifact path with spaces", "tiny decoder model.onnx");
 await mkdir(path.dirname(spacedOnnx), { recursive: true });
 await copyFile("web/samples/tiny_decoder_llm.onnx", spacedOnnx);
@@ -103,6 +103,21 @@ if (platformSmoke || releaseContract) {
   const pythonTensorInventory = json(run(python, ["-c", "import json, sys, deepbom; print(json.dumps(deepbom.tensor_inventory(sys.argv[1]), separators=(',', ':')))", fileCases[2].path]).stdout);
   assert.equal(pythonTensorInventory.schema, "deepbom.tensor_table.v1", "installed Python tensor facade schema drifted");
   assert.equal(pythonTensorInventory.scan_policy?.effective_mode, "structure", "installed Python tensor facade must remain bounded");
+  assert.equal(run(python, ["-c", "import sys, deepbom; from decimal import Decimal; rows=deepbom.tensors(sys.argv[1]); assert isinstance(rows[0]['element_count'], int); assert isinstance(rows[0]['effective_bits_per_element'], Decimal); print('typed')", fileCases[2].path]).stdout.trim(), "typed",
+    "installed Python tensors facade must expose native exact numeric types");
+  assert.equal(json(run(python, ["-c", "import json, sys, deepbom; print(json.dumps(deepbom.audit(sys.argv[1], sections=['summary']), separators=(',', ':')))", fileCases[1].path]).stdout).schema,
+    "deepbom.analysis_selection.v1", "installed Python sections must select analysis when output is omitted");
+  assert.deepEqual(json(run(python, ["-c", [
+    "import json, sys, deepbom",
+    "try:",
+    "    deepbom.audit(sys.argv[1], gate='defects')",
+    "except deepbom.DeepBomPolicyBlocked as error:",
+    "    print(json.dumps({'exit_code': error.exit_code, 'schema': error.document.get('schema'), 'finding': any(row.get('id') == 'EA-SER-0001' for row in error.document.get('findings', []))}, separators=(',', ':')))",
+    "else:",
+    "    raise AssertionError('defect gate did not block')",
+  ].join("\n"), fixtures.nan]).stdout), {
+    exit_code: 2, schema: "deepbom.artifact_evidence_envelope.v1", finding: true,
+  }, "installed Python defect gate must raise DeepBomPolicyBlocked with the completed document");
   assert.deepEqual(json(run(engine, agentCapabilityArgs).stdout), canonicalAgentCapabilities,
     "standalone engine agent capability discovery diverged from canonical CLI");
   assert.deepEqual(json(run(python, ["-m", "deepbom", ...agentCapabilityArgs]).stdout), canonicalAgentCapabilities,
@@ -279,7 +294,9 @@ async function installPythonWheel(release) {
   const python = path.join(directory, process.platform === "win32" ? "Scripts/python.exe" : "bin/python");
   const wheel = path.join(releaseRoot, release.channels.python.path);
   run(python, ["-m", "pip", "install", "--disable-pip-version-check", "--no-deps", wheel]);
-  assert.equal(run(python, ["-m", "deepbom", "--version"]).stdout.trim(), release.version);
+  const moduleVersion = run(python, ["-m", "deepbom", "--version"]);
+  assert.equal(moduleVersion.stdout.trim(), release.version);
+  assert.equal(moduleVersion.stderr, "", "python -m deepbom must not emit an import-cycle RuntimeWarning");
   return python;
 }
 
@@ -309,7 +326,17 @@ async function packageFixtures() {
     metadata: { total_size: source.byteLength - 8 - headerLength },
     weight_map: Object.fromEntries(tensorNames.map((name) => [name, shardName])),
   })}\n`);
-  return { mlpackage, sharded };
+  const nan = path.join(root, "nan-weight.safetensors");
+  const headerSource = Buffer.from(JSON.stringify({ weight: { dtype: "F32", shape: [2], data_offsets: [0, 8] } }), "utf8");
+  const padding = (8 - (headerSource.length % 8)) % 8;
+  const nanHeader = Buffer.concat([headerSource, Buffer.alloc(padding, 0x20)]);
+  const prefix = Buffer.alloc(8);
+  prefix.writeBigUInt64LE(BigInt(nanHeader.length));
+  const payload = Buffer.alloc(8);
+  payload.writeFloatLE(Number.NaN, 0);
+  payload.writeFloatLE(1, 4);
+  await writeFile(nan, Buffer.concat([prefix, nanHeader, payload]));
+  return { mlpackage, sharded, nan };
 }
 
 async function corruptLastByte(file) {

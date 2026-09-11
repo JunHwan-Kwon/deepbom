@@ -12,7 +12,7 @@ Run DEEPBOM locally. Never upload artifact bytes or invent a hosted DEEPBOM endp
 Use the release pinned by this skill:
 
 ```bash
-npx -y deepbom@1.96.14 capabilities --format agent-json
+npx -y deepbom@1.96.15 capabilities --format agent-json
 ```
 
 Treat that machine document as authoritative for commands, supported inputs, scan modes, targets, outputs, and exit codes. Read `references/capability-selection.md` when deciding whether the task belongs to DEEPBOM.
@@ -22,15 +22,15 @@ Treat that machine document as authoritative for commands, supported inputs, sca
 Start with the bounded human result:
 
 ```bash
-npx -y deepbom@1.96.14 audit "./model.onnx" --summary
+npx -y deepbom@1.96.15 audit "./model.onnx" --summary
 ```
 
 Then request only the evidence needed by the question:
 
 ```bash
-npx -y deepbom@1.96.14 audit "./model.onnx" --section quantization --json
-npx -y deepbom@1.96.14 audit "./model.onnx" --pointer /mac_assessment --json
-npx -y deepbom@1.96.14 audit "./model.onnx" --output-format envelope
+npx -y deepbom@1.96.15 audit "./model.onnx" --section quantization --json
+npx -y deepbom@1.96.15 audit "./model.onnx" --pointer /mac_assessment --json
+npx -y deepbom@1.96.15 audit "./model.onnx" --output-format envelope
 ```
 
 For a large GGUF or SafeTensors artifact, use `--scan structure` for inventory questions. Use `integrity` or `full` only when payload evidence is necessary.
@@ -38,14 +38,14 @@ For a large GGUF or SafeTensors artifact, use `--scan structure` for inventory q
 For a concise GGUF tensor table without nested numerical-integrity ledgers, use the bounded projection (it defaults to a structure scan):
 
 ```bash
-npx -y deepbom@1.96.14 gguf "./model.gguf" --tensors
-npx -y deepbom@1.96.14 gguf "./model.gguf" --tensors --compact
+npx -y deepbom@1.96.15 gguf "./model.gguf" --tensors
+npx -y deepbom@1.96.15 gguf "./model.gguf" --tensors --compact
 ```
 
 Before relying on a newly fetched package, run:
 
 ```bash
-npx -y deepbom@1.96.14 self-test --compact
+npx -y deepbom@1.96.15 self-test --compact
 ```
 
 ## Interpret the result
@@ -67,9 +67,9 @@ Never infer actual accelerator assignment, latency, energy, thermal behavior, ta
 ## Compare or explain
 
 ```bash
-npx -y deepbom@1.96.14 diff "./baseline.onnx" "./candidate.onnx" --summary
-npx -y deepbom@1.96.14 explain-rule <rule-id> --json
-npx -y deepbom@1.96.14 graph "./model.onnx" --view structure --format svg -o graph.svg
+npx -y deepbom@1.96.15 diff "./baseline.onnx" "./candidate.onnx" --summary
+npx -y deepbom@1.96.15 explain-rule <rule-id> --json
+npx -y deepbom@1.96.15 graph "./model.onnx" --view structure --format svg -o graph.svg
 ```
 
 Use matching serialized deployment formats for diff. Do not deserialize `.pth`, `.pt`, or `.h5`; bind a conversion receipt to the deployed artifact instead.

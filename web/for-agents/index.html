@@ -48,11 +48,11 @@
     <section class="brief-section">
       <h2>Install the local Skill</h2>
       <p>Preview the exact managed files first. Add <code>--apply</code> only after reviewing the result.</p>
-      <pre><code>npx -y deepbom@1.96.14 integrate codex
-npx -y deepbom@1.96.14 integrate codex --apply
+      <pre><code>npx -y deepbom@1.96.15 integrate codex
+npx -y deepbom@1.96.15 integrate codex --apply
 
-npx -y deepbom@1.96.14 integrate claude-code
-npx -y deepbom@1.96.14 integrate claude-code --apply</code></pre>
+npx -y deepbom@1.96.15 integrate claude-code
+npx -y deepbom@1.96.15 integrate claude-code --apply</code></pre>
       <p>The installer writes only the DEEPBOM Skill directory. It refuses to replace or remove files changed by the user.</p>
     </section>
 
@@ -67,9 +67,9 @@ and the exact reproduction command.</code></pre>
 
     <section class="brief-section">
       <h2>Run without installing a Skill</h2>
-      <pre><code>npx -y deepbom@1.96.14 capabilities --format agent-json
-npx -y deepbom@1.96.14 self-test --compact
-npx -y deepbom@1.96.14 audit "./model.onnx" --summary</code></pre>
+      <pre><code>npx -y deepbom@1.96.15 capabilities --format agent-json
+npx -y deepbom@1.96.15 self-test --compact
+npx -y deepbom@1.96.15 audit "./model.onnx" --summary</code></pre>
       <p>Start with the bounded summary. Request a section, JSON Pointer, or evidence envelope only when the question needs more detail.</p>
     </section>
 
@@ -77,13 +77,13 @@ npx -y deepbom@1.96.14 audit "./model.onnx" --summary</code></pre>
       <h2>Optional local MCP</h2>
       <table class="fact-table">
         <tbody>
-          <tr><th>Transport</th><td>Local stdio using <code>npx -y deepbom@1.96.14 mcp</code>.</td></tr>
+          <tr><th>Transport</th><td>Local stdio using <code>npx -y deepbom@1.96.15 mcp</code>.</td></tr>
           <tr><th>Tools</th><td><code>deepbom_capabilities</code>, <code>deepbom_audit</code>, <code>deepbom_diff</code>, and <code>deepbom_explain_rule</code>.</td></tr>
           <tr><th>Default response</th><td>Bounded human summary. Detailed evidence is explicit.</td></tr>
           <tr><th>File boundary</th><td>The launch directory or roots declared through <code>DEEPBOM_MCP_ALLOWED_ROOTS</code>.</td></tr>
         </tbody>
       </table>
-      <p>Claude Desktop can install the same local server as a single desktop extension. Download <a href="https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v1.96.14/deepbom-1.96.14.mcpb"><code>deepbom-1.96.14.mcpb</code></a>, then choose Settings, Extensions, Advanced settings, and Install Extension. Select the model directory the extension may read during installation.</p>
+      <p>Claude Desktop can install the same local server as a single desktop extension. Download <a href="https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v1.96.15/deepbom-1.96.15.mcpb"><code>deepbom-1.96.15.mcpb</code></a>, then choose Settings, Extensions, Advanced settings, and Install Extension. Select the model directory the extension may read during installation.</p>
     </section>
 
     <section class="brief-section">

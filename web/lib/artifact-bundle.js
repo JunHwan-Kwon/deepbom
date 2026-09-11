@@ -1,7 +1,7 @@
 import { readCoreMlModelFile, refreshCoreMlDerivedEvidence } from "./coreml-metadata-adapter.js";
 import { scanCoreMlBlobFile } from "./coreml-blob.js";
 import { sha256FileHex } from "./hash.js";
-import { buildTensorStorageSummary, parseStrictJson, readMetadataModelFile } from "./metadata-model-adapters.js";
+import { buildContainerQuantizationStatus, buildTensorStorageSummary, parseStrictJson, readMetadataModelFile } from "./metadata-model-adapters.js";
 import { buildHfSafeTensorsContract } from "./hf-safetensors-contract.js";
 import { buildSafeTensorsQuantizationContract } from "./safetensors-quantization-contract.js";
 import { buildOnDeviceLlmContract } from "./on-device-llm-contract.js";
@@ -469,6 +469,7 @@ async function analyzeSafeTensorsShards(plan, onProgress, scanMode = "full") {
   analysis.tensor_inventory.unassessed_payload_bytes = analysis.tensor_numerical_integrity.unassessed_tensor_bytes;
   analysis.tensor_inventory.decoded_value_count = analysis.tensor_numerical_integrity.decoded_value_count;
   analysis.tensor_storage_summary = buildTensorStorageSummary("safetensors", tensors, analysis.tensor_numerical_integrity);
+  analysis.quantization_status = buildContainerQuantizationStatus("safetensors", tensors);
   analysis.artifact_bundle = {
     schema: "deepbom.artifact_bundle.safetensors.v1",
     kind: plan.manifest ? "safetensors_sharded_repository" : "safetensors_single_file_repository",

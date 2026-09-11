@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { copyFile, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -96,10 +97,35 @@ const gguf = JSON.parse(run(["gguf", cases[2][0], "--compact"]).stdout);
 assert.equal(gguf.gguf?.tensor_count > 0, true, "GGUF command tensor inventory");
 const ggufTensorTable = run(["gguf", cases[2][0], "--tensors"]).stdout;
 assert.match(ggufTensorTable, /^DEEPBOM \S+ serialized tensor table/m, "GGUF concise tensor table heading");
-assert.match(ggufTensorTable, /INDEX\tNAME\tENCODING\tSHAPE\tBITS\/ELEMENT\tBYTES\tFILE BYTE RANGE/, "GGUF concise tensor table columns");
+assert.match(ggufTensorTable, /INDEX\tNAME\tENCODING\tSHAPE \(GGUF ne0\.\.; innermost first\)\tBITS\/ELEMENT\tBYTES\tFILE BYTE RANGE/, "GGUF concise tensor table columns and shape order");
 assert.doesNotMatch(ggufTensorTable, /numerical_integrity/, "GGUF concise tensor table excludes nested numerical ledgers");
 const ggufTensorJson = JSON.parse(run(["gguf", cases[2][0], "--tensors", "--compact"]).stdout);
 assert.equal(ggufTensorJson.schema, "deepbom.tensor_table.v1", "GGUF tensor projection schema");
+assert.equal(ggufTensorJson.shape_order, "gguf_ne_order_innermost_first", "GGUF tensor shape order is machine-readable");
+assert.match(ggufTensorJson.tensor_encoding_assignment_signature_basis, /encoding value is projected as the signature field dtype/, "tensor table documents the encoding-to-dtype hash projection");
+const assignmentRowsFromTable = ggufTensorJson.tensors.map((row) => ({
+  index: row.index,
+  name: row.name,
+  dtype: row.encoding,
+  shape: row.shape,
+  byte_length: row.byte_length,
+})).sort((left, right) => Number(left.index ?? 0) - Number(right.index ?? 0) || String(left.name).localeCompare(String(right.name)));
+assert.equal(sha256TextHex(canonicalJson(assignmentRowsFromTable)), ggufTensorJson.tensor_encoding_assignment_sha256,
+  "tensor assignment SHA-256 independently reconstructs from the tensor table alone");
+assert.equal(sha256TextHex(canonicalJson(ggufTensorJson.encoding_inventory)), ggufTensorJson.encoding_inventory_sha256,
+  "encoding inventory SHA-256 independently reconstructs from the tensor table alone");
+const ggufEncodingInventory = JSON.parse(run(["audit", cases[2][0], "--encoding-inventory", "--compact"]).stdout);
+assert.equal(ggufEncodingInventory.schema, "deepbom.tensor_encoding_inventory.v1", "format-neutral encoding inventory schema");
+assert.equal(ggufEncodingInventory.format, "gguf", "format-neutral inventory retains source format");
+assert.equal(ggufEncodingInventory.shape_order, "gguf_ne_order_innermost_first", "neutral inventory retains GGUF shape order");
+assert.equal(sha256TextHex(canonicalJson(ggufEncodingInventory.encodings)), ggufEncodingInventory.encoding_inventory_sha256,
+  "neutral encoding inventory hash reconstructs from emitted rows");
+assert.equal(sha256TextHex(canonicalJson(ggufEncodingInventory.assignments)), ggufEncodingInventory.tensor_encoding_assignment_sha256,
+  "neutral tensor assignment hash reconstructs from emitted rows");
+const safeTensorsEncodingInventory = JSON.parse(run(["audit", cases[3][0], "--encoding-inventory", "--compact"]).stdout);
+assert.equal(safeTensorsEncodingInventory.format, "safetensors", "neutral encoding inventory supports SafeTensors");
+assert.equal(safeTensorsEncodingInventory.assignments.some((row) => row.element_count_decimal && !Object.hasOwn(row, "element_count")), true,
+  "neutral inventory uses one exact decimal count representation without a duplicate numeric mirror");
 assert.equal(ggufTensorJson.scan_policy?.effective_mode, "structure", "GGUF tensor projection defaults to structure-only scanning");
 assert.equal(ggufTensorJson.tensor_count, gguf.tensors.length, "GGUF tensor projection count");
 assert.equal(ggufTensorJson.tensors[0].numerical_integrity, undefined, "GGUF tensor projection remains bounded");
@@ -172,6 +198,41 @@ assert.equal(cyclonedx.metadata.timestamp, timestamp);
 
 const temp = await mkdtemp(path.join(tmpdir(), "deepbom-cli-tensorrt-"));
 try {
+  const loneSafeTensorsPath = path.join(temp, "lone-model.safetensors");
+  await copyFile(cases[3][0], loneSafeTensorsPath);
+  await writeFile(path.join(temp, "tokenizer_config.json"), JSON.stringify({ chat_template: "ambient-template-must-not-bind" }), "utf8");
+  const loneSafeTensors = JSON.parse(run(["audit", loneSafeTensorsPath, "--output-format", "json-compact"]).stdout);
+  assert.equal(loneSafeTensors.artifact_set.files.length, 1,
+    "a lone SafeTensors file must not acquire unselected ambient repository sidecars");
+  assert.equal(loneSafeTensors.artifact_set.files.some((row) => row.role === "tokenizer_config"), false,
+    "an ambient tokenizer_config must not enter a single-file evidence boundary");
+
+  const batchArtifactName = "batch-model.onnx";
+  const batchArtifactPath = path.join(temp, batchArtifactName);
+  await copyFile(cases[1][0], batchArtifactPath);
+  const batchExpectedSha256 = createHash("sha256").update(await readFile(batchArtifactPath)).digest("hex");
+  const batchManifestPath = path.join(temp, "batch-manifest.json");
+  await writeFile(batchManifestPath, JSON.stringify({
+    schema: "deepbom.batch_manifest.v1",
+    artifacts: [{ id: "onnx-fixture", path: batchArtifactName, expected_sha256: batchExpectedSha256, scan: "auto", output: "envelope" }],
+  }), "utf8");
+  const batchOutputDir = path.join(temp, "batch-results");
+  const batchResult = JSON.parse(run(["batch", batchManifestPath, "--batch-output-dir", batchOutputDir, "--compact"]).stdout);
+  assert.equal(batchResult.schema, "deepbom.batch_result.v1", "Windows-safe batch manifest result schema");
+  assert.equal(batchResult.passed_count, 1, "batch audit must preserve the per-artifact pass count");
+  assert.match(batchResult.results[0].output_sha256, /^[a-f0-9]{64}$/, "batch output is content-addressed");
+  assert.equal(JSON.parse(await readFile(path.join(batchOutputDir, "onnx-fixture.json"), "utf8")).identity.sha256,
+    batchExpectedSha256, "batch child output retains the expected artifact identity");
+  assert.equal(JSON.stringify(batchResult).includes(temp), false, "batch result must not leak machine-local absolute paths");
+  const unsafeBatchManifestPath = path.join(temp, "unsafe-batch-manifest.json");
+  await writeFile(unsafeBatchManifestPath, JSON.stringify({
+    schema: "deepbom.batch_manifest.v1",
+    artifacts: [{ id: "escape", path: "../model.onnx", expected_sha256: batchExpectedSha256 }],
+  }), "utf8");
+  const unsafeBatch = run(["batch", unsafeBatchManifestPath, "--batch-output-dir", path.join(temp, "unsafe-results"), "--compact"], false);
+  assert.notEqual(unsafeBatch.status, 0, "batch manifest traversal must fail closed");
+  assert.match(unsafeBatch.stderr, /safe manifest-relative path/);
+
   assert.equal(gguf.on_device_llm?.storage?.layer_storage?.status, "assessed_exact_serialized_layer_storage", "GGUF CLI fixture exact layer ledger");
   const ggufSerializedBytes = BigInt(gguf.on_device_llm.storage.serialized_tensor_bytes_decimal);
   const memoryProfilePath = path.join(temp, "memory-profile.json");

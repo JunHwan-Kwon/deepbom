@@ -32,6 +32,7 @@ const validBytes = qlinearConvModel();
 const valid = analyzeOnnxModel(validBytes, "qlinearconv_valid.onnx");
 const contracts = buildQuantizationContractChecks(valid);
 expectEqual(valid.onnx_quantization_binding.status, "pass", "Valid QLinearConv parameters should bind completely.");
+expectEqual(valid.quantization_status.representation, "qoperator", "QLinearConv must be identified as the serialized QOperator representation.");
 expectEqual(valid.onnx_quantization_binding.binding_count, 3, "QLinearConv should bind input, weight, and output contracts.");
 expectEqual(valid.ops[0].macs, 8, "QLinearConv MACs should use x/w/y signature positions and inferred NCHW output shape.");
 expectEqual(valid.size_breakdown.stored_scalar_elements, 12, "Raw-data scalar quantization parameters should count as one ONNX initializer element each.");
@@ -77,10 +78,40 @@ expect(buildFindingsRegister(invalid).some((item) => item.finding_id === "EA-QNT
 
 const qdq = analyzeOnnxModel(qdqModel(), "qdq_roundtrip.onnx");
 const qdqContracts = buildQuantizationContractChecks(qdq);
+expectEqual(qdq.quantization_status.classification, "static_qdq_representation", "Bound static Q/DQ syntax must not be labeled dynamic-range or weight-only.");
+expectEqual(qdq.quantization_status.representation, "static_qdq", "Bound Q/DQ parameters must produce a static-QDQ representation record.");
+expectEqual(qdq.quantization_status.runtime_fusion_status, "not_asserted_requires_selected_runtime_and_execution_provider", "Static analysis must not assert QDQ runtime fusion.");
 expectEqual(qdq.onnx_quantization_binding.explicit_qdq_boundary_count, 2, "QuantizeLinear and DequantizeLinear boundaries should both be inventoried.");
 expectEqual(qdqContracts.qdq_boundaries.runtime_materialization_status, "not_assessed_static_graph_only", "Static Q/DQ syntax must not claim runtime materialization.");
 expectEqual(qdq.tensors.find((tensor) => tensor.name === "q")?.quantization_binding_status, "pass", "Matching Q and DQ parameters should bind to the same integer tensor without conflict.");
 expectDeepEqual(focusedEvidence(analyzeOnnxModel(validBytes, "qlinearconv_valid.onnx")), focusedEvidence(valid), "The synthetic corpus should reproduce identical focused evidence from identical bytes.");
+
+const staticQdqCompute = analyzeOnnxModel(staticQdqMatMulModel(), "static_qdq_matmul.onnx");
+expectEqual(staticQdqCompute.quantization_status.representation, "static_qdq", "Activation-and-weight static QDQ must retain its representation independently of serialized integer compute operators.");
+expectEqual(staticQdqCompute.quantization_status.classification, "static_qdq_representation", "A static QDQ MatMul must not be called dynamic-range or weight-only.");
+expectEqual(staticQdqCompute.quantization_status.quantized_compute_ops, 0, "Float MatMul wrapped in QDQ is not an explicit serialized integer compute operator.");
+expectEqual(staticQdqCompute.quantization_status.executed_integer_compute_path_status, "not_asserted_static_artifact_only", "Executed integer arithmetic remains runtime evidence.");
+
+const weightOnlyQdq = analyzeOnnxModel(weightOnlyQdqMatMulModel(), "weight_only_qdq_matmul.onnx");
+expectEqual(weightOnlyQdq.quantization_status.representation, "weight_only_qdq", "A bound weight DequantizeLinear path must be distinguished from activation QDQ.");
+expectEqual(weightOnlyQdq.quantization_status.classification, "weight_only_qdq_representation", "Weight-only QDQ must have a precise label.");
+
+const dynamicQdq = analyzeOnnxModel(dynamicQdqModel(), "dynamic_qdq.onnx");
+expectEqual(dynamicQdq.quantization_status.representation, "dynamic_qdq", "DynamicQuantizeLinear must be inventoried as dynamic QDQ representation.");
+expectEqual(dynamicQdq.quantization_status.classification, "dynamic_qdq_representation", "Dynamic QDQ must not share the ambiguous legacy classification.");
+
+const mixedRepresentation = analyzeOnnxModel(mixedQdqQoperatorModel(), "mixed_qdq_qoperator.onnx");
+expectEqual(mixedRepresentation.quantization_status.representation, "mixed", "QDQ and QOperator syntax in one graph must be recorded as mixed representation.");
+
+const unresolvedQdqRepresentation = analyzeOnnxModel(model(
+  [node("QuantizeLinear", "runtime_quant", ["x", "runtime_scale", "runtime_zp"], ["q"])],
+  [],
+  [valueInfo("x", 1, [1, 4]), valueInfo("runtime_scale", 1, []), valueInfo("runtime_zp", 2, [])],
+  [valueInfo("q", 2, [1, 4])],
+  13,
+), "qdq_runtime_parameters.onnx");
+expectEqual(unresolvedQdqRepresentation.quantization_status.representation, "qdq_parameters_unresolved", "Runtime QDQ parameters must remain explicitly unresolved.");
+expectEqual(unresolvedQdqRepresentation.quantization_status.classification, "qdq_representation_parameters_unresolved", "Partial QDQ binding must not be mislabeled as a measured compute mode.");
 
 const annotated = analyzeOnnxModel(model(
   [node("Identity", "annotated_identity", ["q"], ["y"])],
@@ -439,6 +470,52 @@ function qdqModel() {
     node("QuantizeLinear", "quant", ["x", "s", "zp"], ["q"]),
     node("DequantizeLinear", "dequant", ["q", "s", "zp"], ["y"]),
   ], initializers, [valueInfo("x", 1, [1, 4])], [valueInfo("y", 1, [1, 4])], 13);
+}
+
+function staticQdqMatMulModel() {
+  const initializers = [
+    tensor("x_scale", 1, [], float32([0.125])), tensor("x_zp", 2, [], new Uint8Array([128])),
+    tensor("w", 3, [3, 2], new Uint8Array([1, 2, 3, 4, 5, 6])),
+    tensor("w_scale", 1, [2], float32([0.25, 0.5])), tensor("w_zp", 3, [2], new Uint8Array([0, 0])),
+  ];
+  return model([
+    node("QuantizeLinear", "quant_x", ["x", "x_scale", "x_zp"], ["qx"]),
+    node("DequantizeLinear", "dequant_x", ["qx", "x_scale", "x_zp"], ["dx"]),
+    nodeWithIntegerAttributes("DequantizeLinear", "dequant_w", ["w", "w_scale", "w_zp"], ["dw"], { axis: 1 }),
+    node("MatMul", "matmul", ["dx", "dw"], ["y"]),
+  ], initializers, [valueInfo("x", 1, [1, 3])], [valueInfo("y", 1, [1, 2])], 13);
+}
+
+function weightOnlyQdqMatMulModel() {
+  const initializers = [
+    tensor("w", 3, [3, 2], new Uint8Array([1, 2, 3, 4, 5, 6])),
+    tensor("w_scale", 1, [2], float32([0.25, 0.5])), tensor("w_zp", 3, [2], new Uint8Array([0, 0])),
+  ];
+  return model([
+    nodeWithIntegerAttributes("DequantizeLinear", "dequant_w", ["w", "w_scale", "w_zp"], ["dw"], { axis: 1 }),
+    node("MatMul", "matmul", ["x", "dw"], ["y"]),
+  ], initializers, [valueInfo("x", 1, [1, 3])], [valueInfo("y", 1, [1, 2])], 13);
+}
+
+function dynamicQdqModel() {
+  return model([
+    node("DynamicQuantizeLinear", "dynamic_quant", ["x"], ["q", "scale", "zero_point"]),
+    node("DequantizeLinear", "dequant", ["q", "scale", "zero_point"], ["y"]),
+  ], [], [valueInfo("x", 1, [1, 4])], [valueInfo("y", 1, [1, 4])], 13);
+}
+
+function mixedQdqQoperatorModel() {
+  const initializers = [
+    tensor("s", 1, [], float32([0.25])), tensor("zp", 2, [], new Uint8Array([128])),
+    tensor("b", 2, [3, 2], new Uint8Array([1, 2, 3, 4, 5, 6])),
+    tensor("b_scale", 1, [], float32([0.5])), tensor("b_zp", 2, [], new Uint8Array([0])),
+    tensor("y_scale", 1, [], float32([0.75])), tensor("y_zp", 2, [], new Uint8Array([0])),
+  ];
+  return model([
+    node("QuantizeLinear", "quant_probe", ["probe", "s", "zp"], ["qprobe"]),
+    node("DequantizeLinear", "dequant_probe", ["qprobe", "s", "zp"], ["probe_out"]),
+    node("QLinearMatMul", "qmatmul", ["a", "s", "zp", "b", "b_scale", "b_zp", "y_scale", "y_zp"], ["y"]),
+  ], initializers, [valueInfo("probe", 1, [1, 4]), valueInfo("a", 2, [1, 3])], [valueInfo("probe_out", 1, [1, 4]), valueInfo("y", 2, [1, 2])], 13);
 }
 
 function modelWithFunctions(nodes, functions, opset) {

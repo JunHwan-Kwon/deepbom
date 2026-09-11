@@ -3226,7 +3226,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
   },
   "EA-SER-0002": {
     "finding_id": "EA-SER-0002",
-    "title": "Serialized tensor payloads are exactly all-zero",
+    "title": "Exact all-zero serialized tensor payloads detected",
     "category": "numerical_structure_review",
     "applicable_formats": [
       "gguf",

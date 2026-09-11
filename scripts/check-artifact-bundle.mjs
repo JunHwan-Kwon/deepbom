@@ -131,6 +131,41 @@ function safeTensorPayloadFile(path, descriptors, payload) {
   return file(path, concat(prefix, header, payload));
 }
 
+const mixedPrecisionSingle = await readArtifactBundle([
+  safeTensorPayloadFile("precision/mixed.safetensors", {
+    "f16.weight": { dtype: "F16", shape: [1], data_offsets: [0, 2] },
+    "i8.weight": { dtype: "I8", shape: [1], data_offsets: [2, 3] },
+    "f32.weight": { dtype: "F32", shape: [1], data_offsets: [3, 7] },
+    "f64.weight": { dtype: "F64", shape: [1], data_offsets: [7, 15] },
+  }, Uint8Array.from({ length: 15 }, (_, index) => index + 1)),
+]);
+expect(mixedPrecisionSingle.analysis.quantization_status.encoded_tensor_count === 4
+  && mixedPrecisionSingle.analysis.quantization_status.reduced_precision_float_tensor_count === 1
+  && mixedPrecisionSingle.analysis.quantization_status.full_precision_float_tensor_count === 2
+  && mixedPrecisionSingle.analysis.quantization_status.other_typed_tensor_count === 1
+  && mixedPrecisionSingle.analysis.quantization_status.precision_category_conservation === true,
+"Single-file SafeTensors precision categories conserve the complete tensor inventory");
+
+const precisionShardIndex = {
+  metadata: { total_size: 6 },
+  weight_map: { "half.weight": "model-00001-of-00002.safetensors", "full.weight": "model-00002-of-00002.safetensors" },
+};
+const mixedPrecisionShards = await readArtifactBundle([
+  file("precision-shards/model.safetensors.index.json", JSON.stringify(precisionShardIndex), "application/json"),
+  safeTensorPayloadFile("precision-shards/model-00001-of-00002.safetensors", {
+    "half.weight": { dtype: "F16", shape: [1], data_offsets: [0, 2] },
+  }, Uint8Array.of(0, 60)),
+  safeTensorPayloadFile("precision-shards/model-00002-of-00002.safetensors", {
+    "full.weight": { dtype: "F32", shape: [1], data_offsets: [0, 4] },
+  }, Uint8Array.of(0, 0, 128, 63)),
+]);
+expect(mixedPrecisionShards.analysis.quantization_status.encoded_tensor_count === 2
+  && mixedPrecisionShards.analysis.quantization_status.reduced_precision_float_tensor_count === 1
+  && mixedPrecisionShards.analysis.quantization_status.full_precision_float_tensor_count === 1
+  && mixedPrecisionShards.analysis.quantization_status.other_typed_tensor_count === 0
+  && mixedPrecisionShards.analysis.quantization_status.precision_category_conservation === true,
+"Sharded SafeTensors precision categories are recomputed over all shards");
+
 const shardIndex = {
   metadata: { total_size: 2 },
   weight_map: { "a.weight": "model-00001-of-00002.safetensors", "b.weight": "model-00002-of-00002.safetensors" },

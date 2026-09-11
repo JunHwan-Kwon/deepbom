@@ -1,0 +1,113 @@
+"""Resolve and verify the packaged DEEPBOM engine.
+
+This module deliberately contains no CLI entry-point code.  Keeping engine
+verification separate lets the importable facade reuse it without importing
+``deepbom.__main__`` before ``python -m deepbom`` executes that module.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import platform
+import sys
+from pathlib import Path
+from typing import Optional
+
+from . import __version__
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(4 * 1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _strict_json(path: Path) -> dict:
+    def reject_duplicates(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"duplicate JSON key {key!r}")
+            result[key] = value
+        return result
+
+    with path.open("r", encoding="utf-8") as stream:
+        document = json.load(stream, object_pairs_hook=reject_duplicates)
+    if not isinstance(document, dict):
+        raise ValueError("engine manifest must be a JSON object")
+    return document
+
+
+def _runtime_identity() -> tuple[str, str]:
+    system = {"win32": "win32", "linux": "linux", "darwin": "darwin"}.get(sys.platform)
+    machine = platform.machine().lower()
+    architecture = {
+        "amd64": "x64", "x86_64": "x64", "arm64": "arm64", "aarch64": "arm64"
+    }.get(machine)
+    if not system or not architecture:
+        raise RuntimeError(f"Unsupported Python platform: {sys.platform}/{machine or 'unknown'}")
+    return system, architecture
+
+
+def _verified_engine() -> tuple[Path, Optional[Path]]:
+    override = os.environ.get("DEEPBOM_ENGINE", "").strip()
+    if override:
+        candidate = Path(override).expanduser().resolve()
+        expected = os.environ.get("DEEPBOM_ENGINE_SHA256", "").strip().lower()
+        if len(expected) != 64 or any(char not in "0123456789abcdef" for char in expected):
+            raise RuntimeError("DEEPBOM_ENGINE requires a 64-character DEEPBOM_ENGINE_SHA256 binding.")
+        if not candidate.is_file() or _sha256(candidate) != expected:
+            raise RuntimeError("The supplied DEEPBOM engine does not match DEEPBOM_ENGINE_SHA256.")
+        asset_root = Path(os.environ.get("DEEPBOM_RUNTIME_ASSET_DIR", candidate.parent / "pkg")).expanduser().resolve()
+        return candidate, asset_root
+
+    engine_root = Path(__file__).resolve().parent / "_engine"
+    manifest_path = engine_root / "manifest.json"
+    if not manifest_path.is_file():
+        raise RuntimeError("The packaged DEEPBOM engine manifest is unavailable.")
+    try:
+        manifest = _strict_json(manifest_path)
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"The packaged DEEPBOM engine manifest is invalid: {error}") from error
+    system, architecture = _runtime_identity()
+    version_contract = manifest.get("version_contract")
+    if (
+        manifest.get("schema") != "deepbom.packaged_engine.v1"
+        or not isinstance(version_contract, dict)
+        or version_contract.get("python_version") != __version__
+    ):
+        raise RuntimeError("The packaged DEEPBOM engine manifest has an incompatible schema or version.")
+    if manifest.get("platform") != system or manifest.get("arch") != architecture:
+        raise RuntimeError(
+            f"The packaged DEEPBOM engine targets {manifest.get('platform')}/{manifest.get('arch')}, "
+            f"not {system}/{architecture}."
+        )
+    executable = manifest.get("executable")
+    wasm = manifest.get("tflite_wasm")
+    self_test = manifest.get("self_test")
+    if not isinstance(executable, dict) or not isinstance(wasm, dict) or not isinstance(self_test, dict):
+        raise RuntimeError("The packaged DEEPBOM engine manifest is missing artifact records.")
+    filename = "deepbom-core.exe" if os.name == "nt" else "deepbom-core"
+    if executable.get("filename") != filename or executable.get("path") != filename:
+        raise RuntimeError("The packaged DEEPBOM executable identity is invalid.")
+    if wasm.get("path") != "pkg/tflite_wasm_audit_bg.wasm":
+        raise RuntimeError("The packaged DEEPBOM TFLite WASM identity is invalid.")
+    if self_test.get("path") != "deepbom-self-test.onnx":
+        raise RuntimeError("The packaged DEEPBOM self-test identity is invalid.")
+    candidate = engine_root / filename
+    wasm_path = engine_root / "pkg" / "tflite_wasm_audit_bg.wasm"
+    self_test_path = engine_root / "deepbom-self-test.onnx"
+    for label, artifact, record in (
+        ("engine", candidate, executable),
+        ("TFLite WASM", wasm_path, wasm),
+        ("self-test probe", self_test_path, self_test),
+    ):
+        if not artifact.is_file() or artifact.stat().st_size != record.get("byte_length"):
+            raise RuntimeError(f"The packaged DEEPBOM {label} size does not match its manifest.")
+        if _sha256(artifact) != record.get("sha256"):
+            raise RuntimeError(f"The packaged DEEPBOM {label} failed its SHA-256 check.")
+    return candidate, wasm_path.parent

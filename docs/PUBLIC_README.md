@@ -27,10 +27,10 @@ is documented separately below.
 Install the repository-local Agent Skill after previewing the managed files:
 
 ```bash
-npx -y deepbom@1.96.14 integrate codex
-npx -y deepbom@1.96.14 integrate codex --apply
-npx -y deepbom@1.96.14 integrate claude-code
-npx -y deepbom@1.96.14 integrate claude-code --apply
+npx -y deepbom@1.96.15 integrate codex
+npx -y deepbom@1.96.15 integrate codex --apply
+npx -y deepbom@1.96.15 integrate claude-code
+npx -y deepbom@1.96.15 integrate claude-code --apply
 ```
 
 The Skill lets a local agent select the pinned `npx` command for a supported
@@ -42,7 +42,7 @@ For persistent tool-call access, run the same local analyzer as an MCP server
 over stdio:
 
 ```bash
-npx -y deepbom@1.96.14 mcp
+npx -y deepbom@1.96.15 mcp
 ```
 
 It exposes `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
@@ -52,7 +52,7 @@ formats and large-model scan depth are explicit. Local paths are restricted to
 the launch directory unless `DEEPBOM_MCP_ALLOWED_ROOTS` is configured.
 Agent-facing usage guidance is in [the DEEPBOM skill](skills/deepbom/SKILL.md).
 Claude Desktop users can instead install the version-matched
-`deepbom-1.96.14.mcpb` asset from the corresponding GitHub Release. The bundle
+`deepbom-1.96.15.mcpb` asset from the corresponding GitHub Release. The bundle
 contains the same CLI and WASM bytes as the npm channel and asks the user to
 select the only local directory it may read.
 

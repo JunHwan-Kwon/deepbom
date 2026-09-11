@@ -366,7 +366,8 @@ export function quantizationScopeSummary(analysis) {
 export function quantizationStatusTone(status) {
   const id = status?.classification || "";
   if (id === "full_integer" || id === "integer_internal_float_io") return "good";
-  if (id === "mixed_quantization" || id === "dynamic_range_or_weight_only" || id === "qdq_signals_only" || id === "quantization_signals_partial_mac_assessment") return "warn";
+  if (["mixed_quantization", "dynamic_range_or_weight_only", "qdq_signals_only", "quantization_signals_partial_mac_assessment",
+    "static_qdq_representation", "dynamic_qdq_representation", "weight_only_qdq_representation", "qdq_representation_parameters_unresolved"].includes(id)) return "warn";
   if (id === "not_quantized_float") return "neutral";
   return "neutral";
 }

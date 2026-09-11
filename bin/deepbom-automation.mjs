@@ -28,6 +28,7 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
     commands: [
       { name: "audit", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },
       { name: "gguf", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },
+      { name: "batch", input_count: 1, outputs: ["summary", "deepbom.batch_result.v1"], manifest_schema: "deepbom.batch_manifest.v1" },
       { name: "verify", input_count: 1, outputs: ["summary", "deepbom.cli_interface_contract_verification.v1"] },
       { name: "diff", input_count: 2, outputs: ["summary", "deepbom.semantic_artifact_diff.v1"], supported_formats: ["tflite", "onnx", "coreml", "gguf", "safetensors", "executorch"], matching_format_required: true },
       { name: "explore", input_count: 1, outputs: ["summary", "deepbom.redesign_pareto.v1"] },
@@ -68,6 +69,13 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
         schema: "deepbom.tensor_table.v1",
         default_scan: "structure",
         excludes: ["decoded_tensor_values", "tensor_numerical_integrity_ledgers"],
+      },
+      tensor_encoding_inventory: {
+        invocation: "deepbom audit <artifact> --encoding-inventory --compact",
+        schema: "deepbom.tensor_encoding_inventory.v1",
+        supported_formats: ["gguf", "safetensors", "onnx", "tflite"],
+        default_scan_for_range_read_containers: "structure",
+        evidence_scope: "serialized_tensor_encoding_only",
       },
     },
     provenance_inputs: {

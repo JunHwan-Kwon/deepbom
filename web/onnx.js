@@ -399,7 +399,7 @@ export function analyzeOnnxModel(bytes, filename, targetProfile = null, options 
     op.row_working_set_ratio_status = op.row_working_set_status !== "assessed"
       ? op.row_working_set_status : Number(applicableTargetProfile?.l1_data_bytes || 0) > 0 ? "assessed" : "not_assessed_target_l1_unavailable";
   }
-  const quantizationStatus = classifyOnnxQuantization(ops, tensors, inputs, outputs, quantizedTensors);
+  const quantizationStatus = classifyOnnxQuantization(ops, tensors, inputs, outputs, quantizedTensors, onnxQuantizationBinding);
   const stages = buildStages(ops);
   const rooflineCsv = buildRooflineCsv(ops);
   const stageMermaid = buildStageMermaid(stages);
@@ -3697,7 +3697,7 @@ function canonicalOnnxFloatText(value) {
 }
 
 function onnxOpHasQuantSignal(node, inputTensors, outputTensors) {
-  if (isStandardOnnxNode(node) && ["QuantizeLinear", "DequantizeLinear", "QLinearConv", "QLinearMatMul", "MatMulInteger", "ConvInteger"].includes(node.opType)) {
+  if (isStandardOnnxNode(node) && ["QuantizeLinear", "DequantizeLinear", "DynamicQuantizeLinear", "QLinearConv", "QLinearMatMul", "MatMulInteger", "ConvInteger"].includes(node.opType)) {
     return true;
   }
   return [...inputTensors, ...outputTensors].some((tensor) => isDenseTensorValue(tensor) && ["INT8", "UINT8"].includes(tensor?.dtype));
@@ -3727,7 +3727,7 @@ function classifyOnnxOpQuantization(node, inputTensors, outputTensors) {
   };
   const computeLike = ["Conv", "Gemm", "MatMul", "QLinearConv", "QLinearMatMul", "MatMulInteger", "ConvInteger"].includes(node.opType);
   let state = "none";
-  if (node.opType === "QuantizeLinear" || node.opType === "DequantizeLinear") {
+  if (["QuantizeLinear", "DequantizeLinear", "DynamicQuantizeLinear"].includes(node.opType)) {
     state = "quant_boundary";
   } else if (["QLinearConv", "QLinearMatMul", "MatMulInteger", "ConvInteger"].includes(node.opType)) {
     state = "quantized_compute";
@@ -4252,7 +4252,7 @@ function buildMarkdown(filename, model, graph, ops, tensors, inputs, totalMacs, 
   return `${lines.join("\n")}\n`;
 }
 
-function classifyOnnxQuantization(ops, tensors, inputs, outputs, quantizedTensors) {
+function classifyOnnxQuantization(ops, tensors, inputs, outputs, quantizedTensors, bindingEvidence) {
   const denseTensors = tensors.filter(isDenseTensorValue);
   const nonDenseValues = tensors.length - denseTensors.length;
   const int8Tensors = denseTensors.filter((tensor) => tensor.dtype === "INT8").length;
@@ -4265,6 +4265,7 @@ function classifyOnnxQuantization(ops, tensors, inputs, outputs, quantizedTensor
   const anyFloatIo = [...inputs, ...outputs].some((tensor) => isFloatDtype(tensor.dtype));
   const quantizeOps = ops.filter((op) => op.standard_domain && op.name === "QuantizeLinear").length;
   const dequantizeOps = ops.filter((op) => op.standard_domain && op.name === "DequantizeLinear").length;
+  const dynamicQuantizeOps = ops.filter((op) => op.standard_domain && op.name === "DynamicQuantizeLinear").length;
   const computeOps = ops.filter((op) => op.standard_domain && ["Conv", "Gemm", "MatMul", "QLinearConv", "QLinearMatMul", "MatMulInteger", "ConvInteger"].includes(op.name));
   const quantizedComputeOps = computeOps.filter((op) => op.quantized_compute_path).length;
   const assessedComputeOps = computeOps.filter((op) => op.macs_status === "assessed");
@@ -4276,7 +4277,8 @@ function classifyOnnxQuantization(ops, tensors, inputs, outputs, quantizedTensor
   const quantizedComputeMacPercent = macCoverageComplete && totalMacs != null && quantizedComputeMacs != null && totalMacs > 0n
     ? exactNonnegativeRatio(quantizedComputeMacs, totalMacs)
     : null;
-  const hasIntegerSignal = quantizedTensors > 0 || int8Tensors > 0 || uint8Tensors > 0 || quantizeOps > 0 || dequantizeOps > 0;
+  const representation = classifyOnnxQuantizationRepresentation(ops, bindingEvidence);
+  const hasIntegerSignal = quantizedTensors > 0 || int8Tensors > 0 || uint8Tensors > 0 || quantizeOps > 0 || dequantizeOps > 0 || dynamicQuantizeOps > 0;
 
   let classification = "not_quantized_float";
   let label = "Not quantized";
@@ -4299,6 +4301,22 @@ function classifyOnnxQuantization(ops, tensors, inputs, outputs, quantizedTensor
     classification = "mixed_quantization";
     label = "Mixed quantization";
     summary = "Quantized and floating-point compute regions are both present.";
+  } else if (representation.kind === "static_qdq") {
+    classification = "static_qdq_representation";
+    label = "Static QDQ representation";
+    summary = "Static QDQ parameters are serialized and bound; runtime fusion and the executed integer compute path are not asserted.";
+  } else if (representation.kind === "dynamic_qdq") {
+    classification = "dynamic_qdq_representation";
+    label = "Dynamic QDQ representation";
+    summary = "Dynamic quantization syntax is serialized; runtime parameter values and the executed integer compute path are not asserted.";
+  } else if (representation.kind === "weight_only_qdq") {
+    classification = "weight_only_qdq_representation";
+    label = "Weight-only QDQ representation";
+    summary = "Static quantized weights are dequantized at graph boundaries; runtime fusion and the executed integer compute path are not asserted.";
+  } else if (representation.kind === "qdq_parameters_unresolved") {
+    classification = "qdq_representation_parameters_unresolved";
+    label = "QDQ representation; parameters unresolved";
+    summary = "QDQ syntax is serialized, but one or more numerical parameter bindings require runtime or external evidence.";
   } else if (hasIntegerSignal) {
     classification = quantizedTensors || int8Tensors || uint8Tensors ? "dynamic_range_or_weight_only" : "qdq_signals_only";
     label = quantizedTensors || int8Tensors || uint8Tensors ? "Weight-only or dynamic-range quantization" : "Q/DQ signals only";
@@ -4311,7 +4329,12 @@ function classifyOnnxQuantization(ops, tensors, inputs, outputs, quantizedTensor
     classification,
     label,
     summary,
-    detail: `Quantized dense-tensor signals: ${quantizedTensors}/${denseTensors.length} (${formatPercentPlain(quantizedTensorPercent)}); ${nonDenseValues} non-dense value(s) excluded from the tensor denominator. Quantized compute MACs: ${quantizedComputeMacPercent == null ? "N/A (MAC coverage incomplete)" : formatPercentPlain(quantizedComputeMacPercent)} across ${quantizedComputeOps}/${computeOps.length} compute ops. I/O dtype/kind contract: inputs [${inputDtypes.join(" / ") || "-"}], outputs [${outputDtypes.join(" / ") || "-"}]. Q/DQ ops: QuantizeLinear=${quantizeOps} / DequantizeLinear=${dequantizeOps}.`,
+    detail: `Quantized dense-tensor signals: ${quantizedTensors}/${denseTensors.length} (${formatPercentPlain(quantizedTensorPercent)}); ${nonDenseValues} non-dense value(s) excluded from the tensor denominator. Explicit serialized integer-compute MACs: ${quantizedComputeMacPercent == null ? "N/A (MAC coverage incomplete)" : formatPercentPlain(quantizedComputeMacPercent)} across ${quantizedComputeOps}/${computeOps.length} compute ops. I/O dtype/kind contract: inputs [${inputDtypes.join(" / ") || "-"}], outputs [${outputDtypes.join(" / ") || "-"}]. Q/DQ ops: QuantizeLinear=${quantizeOps} / DequantizeLinear=${dequantizeOps} / DynamicQuantizeLinear=${dynamicQuantizeOps}.`,
+    representation: representation.kind,
+    representation_evidence: representation,
+    compute_metric_scope: "Explicit serialized ONNX integer compute operators only; QDQ-wrapped floating-point operators are not counted as integer compute.",
+    runtime_fusion_status: "not_asserted_requires_selected_runtime_and_execution_provider",
+    executed_integer_compute_path_status: "not_asserted_static_artifact_only",
     quantized_tensor_percent: quantizedTensorPercent,
     quantized_compute_mac_percent: quantizedComputeMacPercent,
     quantized_compute_ops: quantizedComputeOps,
@@ -4320,6 +4343,7 @@ function classifyOnnxQuantization(ops, tensors, inputs, outputs, quantizedTensor
     mac_coverage_complete: macCoverageComplete,
     quantize_ops: quantizeOps,
     dequantize_ops: dequantizeOps,
+    dynamic_quantize_ops: dynamicQuantizeOps,
     int8_tensors: int8Tensors,
     uint8_tensors: uint8Tensors,
     float_tensors: floatTensors,
@@ -4329,6 +4353,36 @@ function classifyOnnxQuantization(ops, tensors, inputs, outputs, quantizedTensor
     output_dtypes: outputDtypes,
     op_state_counts: opStateCounts,
     full_integer: fullInteger,
+  };
+}
+
+function classifyOnnxQuantizationRepresentation(ops, bindingEvidence) {
+  const standardNames = ops.filter((op) => op.standard_domain).map((op) => op.name);
+  const qoperatorCount = standardNames.filter((name) => ["QLinearConv", "QLinearMatMul", "MatMulInteger", "ConvInteger"].includes(name)).length;
+  const quantizeCount = standardNames.filter((name) => name === "QuantizeLinear").length;
+  const dequantizeCount = standardNames.filter((name) => name === "DequantizeLinear").length;
+  const dynamicCount = standardNames.filter((name) => name === "DynamicQuantizeLinear").length;
+  const qdqBindings = (bindingEvidence?.bindings || []).filter((row) => row.binding_source === "operator_quantization_contract"
+    && ["QuantizeLinear", "DequantizeLinear"].includes(row.op_name));
+  const qdqBindingStatus = !qdqBindings.length ? "not_available"
+    : qdqBindings.every((row) => row.status === "pass") ? "all_serialized_parameters_bound"
+      : qdqBindings.some((row) => row.status === "fail") ? "invalid"
+        : "runtime_or_external_parameters_unresolved";
+  let kind = "none";
+  if (qoperatorCount > 0 && quantizeCount + dequantizeCount + dynamicCount > 0) kind = "mixed";
+  else if (qoperatorCount > 0) kind = "qoperator";
+  else if (dynamicCount > 0) kind = "dynamic_qdq";
+  else if (quantizeCount === 0 && dequantizeCount > 0 && qdqBindingStatus === "all_serialized_parameters_bound") kind = "weight_only_qdq";
+  else if (quantizeCount + dequantizeCount > 0 && qdqBindingStatus === "all_serialized_parameters_bound") kind = "static_qdq";
+  else if (quantizeCount + dequantizeCount > 0) kind = "qdq_parameters_unresolved";
+  return {
+    kind,
+    qoperator_compute_op_count: qoperatorCount,
+    quantize_linear_op_count: quantizeCount,
+    dequantize_linear_op_count: dequantizeCount,
+    dynamic_quantize_linear_op_count: dynamicCount,
+    qdq_parameter_binding_status: qdqBindingStatus,
+    boundary: "Serialized ONNX representation only. Runtime graph optimization, execution-provider fusion, kernel selection, and executed integer arithmetic require runtime-bound evidence.",
   };
 }
 

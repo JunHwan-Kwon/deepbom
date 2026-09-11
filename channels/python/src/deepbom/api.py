@@ -12,10 +12,11 @@ import math
 import os
 import subprocess
 import tempfile
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
-from .__main__ import _verified_engine
+from ._engine import _verified_engine
 
 DEFAULT_TIMEOUT_SECONDS = 300.0
 DEFAULT_MAX_OUTPUT_BYTES = 64 * 1024 * 1024
@@ -57,28 +58,42 @@ def capabilities(*, timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
     return _invoke_json(["capabilities", "--compact"], timeout_seconds, max_output_bytes)
 
 
-def audit(path: os.PathLike[str] | str, *, output: str = "envelope",
+def audit(path: os.PathLike[str] | str, *, output: Optional[str] = None,
           scan: str = "auto", sections: Optional[Iterable[str]] = None,
+          gate: Optional[str] = None, policy: Optional[str] = None,
           expected_sha256: Optional[str] = None,
           timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
           max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> dict[str, Any]:
     """Audit one artifact and return a parsed JSON document.
 
     ``output`` is ``analysis``, ``envelope``, ``cyclonedx``, or ``sarif``.
-    Section selection is available only with ``analysis`` output.
+    Omitting it selects ``analysis`` when ``sections`` are requested and the
+    canonical ``envelope`` otherwise. ``gate`` accepts ``defects``; ``policy``
+    accepts the built-in ``engineering`` or ``regulatory`` profile. The two
+    policy sources are mutually exclusive.
     """
-    output = _choice(output, "output", {"analysis", "envelope", "cyclonedx", "sarif"})
     scan = _choice(scan, "scan", {"auto", "structure", "integrity", "full"})
-    argv = ["audit", _path_text(path), "--scan", scan]
     section_values = _sections(sections)
-    if section_values and output != "analysis":
+    resolved_output = "analysis" if output is None and section_values else "envelope" if output is None else _choice(
+        output, "output", {"analysis", "envelope", "cyclonedx", "sarif"}
+    )
+    if section_values and resolved_output != "analysis":
         raise ValueError("sections require output='analysis'")
+    gate_value = None if gate is None else _choice(gate, "gate", {"defects"})
+    policy_value = None if policy is None else _choice(policy, "policy", {"engineering", "regulatory"})
+    if gate_value and policy_value:
+        raise ValueError("gate and policy are mutually exclusive")
+    argv = ["audit", _path_text(path), "--scan", scan]
     if section_values:
         argv.extend(["--section", ",".join(section_values)])
-    if output == "analysis":
+    if resolved_output == "analysis":
         argv.append("--compact")
     else:
-        argv.extend(["--output-format", output, "--compact"])
+        argv.extend(["--output-format", resolved_output, "--compact"])
+    if gate_value:
+        argv.extend(["--gate", gate_value])
+    if policy_value:
+        argv.extend(["--policy", policy_value])
     if expected_sha256 is not None:
         argv.extend(["--expected-sha256", _sha256_text(expected_sha256)])
     return _invoke_json(argv, timeout_seconds, max_output_bytes)
@@ -87,7 +102,12 @@ def audit(path: os.PathLike[str] | str, *, output: str = "envelope",
 def tensors(path: os.PathLike[str] | str, *, expected_sha256: Optional[str] = None,
             timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
             max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> list[dict[str, Any]]:
-    """Return the bounded GGUF tensor table as a list of dictionaries."""
+    """Return Python-native rows from the bounded GGUF tensor table.
+
+    Exact counts are converted to :class:`int`; exact decimal ratios are
+    converted to :class:`~decimal.Decimal`. Use :func:`tensor_inventory` when
+    the raw JSON-compatible ``deepbom.tensor_table.v1`` document is required.
+    """
     document = tensor_inventory(
         path,
         expected_sha256=expected_sha256,
@@ -97,7 +117,24 @@ def tensors(path: os.PathLike[str] | str, *, expected_sha256: Optional[str] = No
     rows = document.get("tensors")
     if document.get("schema") != "deepbom.tensor_table.v1" or not isinstance(rows, list):
         raise DeepBomInvocationError("The engine returned an incompatible tensor-table document.")
-    return rows
+    return [_python_tensor_row(row) for row in rows]
+
+
+def _python_tensor_row(row: Any) -> dict[str, Any]:
+    if not isinstance(row, dict):
+        raise DeepBomInvocationError("The engine returned a non-object tensor-table row.")
+    result = dict(row)
+    if isinstance(result.get("element_count"), str):
+        try:
+            result["element_count"] = int(result["element_count"])
+        except ValueError as error:
+            raise DeepBomInvocationError("The engine returned an invalid exact tensor element count.") from error
+    if isinstance(result.get("effective_bits_per_element"), str):
+        try:
+            result["effective_bits_per_element"] = Decimal(result["effective_bits_per_element"])
+        except InvalidOperation as error:
+            raise DeepBomInvocationError("The engine returned an invalid exact tensor bit ratio.") from error
+    return result
 
 
 def tensor_inventory(path: os.PathLike[str] | str, *, expected_sha256: Optional[str] = None,
