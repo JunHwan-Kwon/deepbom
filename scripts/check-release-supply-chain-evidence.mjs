@@ -5,11 +5,13 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 const root = process.cwd();
+const packageDocument = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
 const scratch = path.join(root, ".local-validation", "release-supply-chain");
 const release = path.join(scratch, "release");
 const sbomPath = path.join(release, "deepbom-self-sbom.cdx.json");
 const provenancePath = path.join(release, "deepbom-build-provenance.intoto.jsonl");
 const subjectPath = path.join(release, "deepbom-test-asset.bin");
+const attestationStatusPath = path.join(release, "deepbom-github-attestation-status.json");
 await rm(scratch, { recursive: true, force: true });
 await mkdir(release, { recursive: true });
 await writeFile(subjectPath, Buffer.from("deepbom-release-subject\n"));
@@ -42,4 +44,32 @@ assert.deepEqual(statement.subject, [{
 }]);
 assert.equal(statement.predicate.buildDefinition.internalParameters.source_commit, commit);
 assert.equal(statement.predicate.runDetails.metadata.invocationId, "local-untrusted-build");
-console.log("Release self-SBOM and unsigned local provenance contracts passed; identity-backed release attestation remains a workflow responsibility.");
+await writeFile(attestationStatusPath, `${JSON.stringify({
+  schema: "deepbom.github_attestation_status.v1",
+  status: "not_produced",
+  reason: "github_attestations_unavailable_for_user_owned_private_repository",
+  release_version: packageDocument.version,
+  source_commit: commit,
+  replacement_evidence: ["deepbom-build-provenance.intoto.jsonl", "deepbom-self-sbom.cdx.json", "SHA256SUMS"],
+  interpretation_boundary: "The bundled provenance record is unsigned and is not an identity-backed GitHub artifact attestation.",
+}, null, 2)}\n`);
+const fallback = spawnSync(process.execPath, [
+  "scripts/verify-published-local-provenance.mjs",
+  "--release-dir", release,
+  "--artifact", path.basename(subjectPath),
+  "--version", packageDocument.version,
+  "--commit", commit,
+], { cwd: root, encoding: "utf8" });
+assert.equal(fallback.status, 0, `${fallback.stdout}\n${fallback.stderr}`);
+
+await writeFile(subjectPath, Buffer.from("tampered-release-subject\n"));
+const tamperedFallback = spawnSync(process.execPath, [
+  "scripts/verify-published-local-provenance.mjs",
+  "--release-dir", release,
+  "--artifact", path.basename(subjectPath),
+  "--version", packageDocument.version,
+  "--commit", commit,
+], { cwd: root, encoding: "utf8" });
+assert.notEqual(tamperedFallback.status, 0, "Local provenance fallback must reject a changed subject.");
+
+console.log("Release self-SBOM and unsigned local provenance fallback contracts passed; identity-backed release attestation remains conditional on repository support.");

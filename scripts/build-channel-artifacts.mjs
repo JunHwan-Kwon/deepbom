@@ -84,7 +84,7 @@ await writeFile(path.join(npmRoot, "package.json"), `${JSON.stringify({
   bugs: { url: "https://github.com/JunHwan-Kwon/deepbom/issues" },
   author: "Jun-Hwan Kwon",
   publishConfig: { access: "public" },
-  keywords: ["tflite", "onnx", "gguf", "safetensors", "coreml", "executorch", "tensorrt", "quantization", "on-device", "ml-bom", "cyclonedx", "sarif", "static-analysis", "agent-skills", "model-context-protocol"],
+  keywords: ["tflite", "onnx", "gguf", "safetensors", "coreml", "executorch", "tensorrt", "quantization", "on-device", "ml-bom", "cyclonedx", "sarif", "static-analysis", "agent-skills", "model-context-protocol", "mcp", "chatgpt"],
 }, null, 2)}\n`);
 await writeFile(path.join(npmRoot, "pkg", "release-manifest.json"), `${JSON.stringify({
   schema: "deepbom.npm_release.v1",

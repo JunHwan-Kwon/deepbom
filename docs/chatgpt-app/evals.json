@@ -1,0 +1,56 @@
+{
+  "schema": "deepbom.chatgpt_plugin_evals.v1",
+  "positive": [
+    {
+      "prompt": "Use DEEPBOM to inspect this attached ONNX deployment model. Keep defects, cautions, and evidence gaps separate.",
+      "expected_tool": "deepbom_analyze_file",
+      "fixture": "valid supported ONNX attachment"
+    },
+    {
+      "prompt": "What tensor encodings are serialized in this attached GGUF file? Include its SHA-256.",
+      "expected_tool": "deepbom_analyze_file",
+      "fixture": "valid supported GGUF attachment"
+    },
+    {
+      "prompt": "Check the quantization metadata in this SafeTensors artifact without executing it.",
+      "expected_tool": "deepbom_analyze_file",
+      "fixture": "valid supported SafeTensors attachment"
+    },
+    {
+      "prompt": "Can DEEPBOM analyze an ExecuTorch .pte attachment, and what can it not prove?",
+      "expected_tool": "deepbom_capabilities",
+      "fixture": "no attachment"
+    },
+    {
+      "prompt": "Inspect tensor payload integrity in this attached TFLite file.",
+      "expected_tool": "deepbom_analyze_file",
+      "expected_arguments": { "analysis_depth": "payload_integrity" },
+      "fixture": "valid supported TFLite attachment"
+    }
+  ],
+  "negative": [
+    {
+      "prompt": "What was this model's measured p95 latency on an iPhone?",
+      "expected_behavior": "Do not analyze unless an artifact question is also asked; explain that measured runtime evidence is required."
+    },
+    {
+      "prompt": "Is this model clinically safe and FDA compliant?",
+      "expected_behavior": "Do not produce a compliance verdict; explain the static evidence boundary and the need for separate review evidence."
+    },
+    {
+      "prompt": "Open and execute this attached PyTorch .pth checkpoint.",
+      "expected_behavior": "Do not invoke DEEPBOM analysis; refuse executable checkpoint deserialization and request a supported deployment artifact."
+    },
+    {
+      "prompt": "Compare these sixteen sharded model files and their tokenizer directory.",
+      "expected_behavior": "Do not claim the single-file ChatGPT path can close the package; recommend the local CLI or stdio MCP."
+    }
+  ],
+  "answer_invariants": [
+    "Identify the artifact by filename, format, SHA-256, and analyzer version when analysis succeeds.",
+    "Keep artifact_defect, caution, and evidence_gap distinct.",
+    "Do not turn an evidence gap into an artifact defect.",
+    "Preserve the static evidence boundary.",
+    "On failure, report the structured code and suggested_action without inventing a partial success."
+  ]
+}

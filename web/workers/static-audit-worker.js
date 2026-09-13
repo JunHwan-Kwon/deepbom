@@ -86,7 +86,9 @@ self.addEventListener("message", async ({ data }) => {
     if (operation === STATIC_AUDIT_OPERATION.TFLITE_ANALYZE) {
       status(id, "Decoding FlatBuffer graph, tensors, and numerical contracts");
       result = normalizeTfliteAnalysisContract(
-        tflite.analyze_tflite_for_target(requestModelBytes, requestFilename, payload.targetId),
+        payload.targetId
+          ? tflite.analyze_tflite_for_target(requestModelBytes, requestFilename, payload.targetId)
+          : tflite.analyze_tflite(requestModelBytes, requestFilename),
       );
     } else if (operation === STATIC_AUDIT_OPERATION.TFLITE_FRONTIER) {
       const count = JSON.parse(payload.targetIdsJson || "[]").length;

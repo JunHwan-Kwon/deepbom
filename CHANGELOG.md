@@ -4,6 +4,46 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.97.3 - 2026-09-13
+
+- Made the published-release provenance job check out the exact tagged source
+  before invoking the private-repository fallback verifier. A release-contract
+  test now requires that checkout and the verifier to remain in the same job.
+- Restricted registry publication to the public `JunHwan-Kwon/deepbom`
+  repository, preventing a private-source workflow from publishing release
+  assets that the public Cargo launcher cannot resolve.
+
+## 1.97.2 - 2026-09-13
+
+- Published the ChatGPT integration guide and MCP registry metadata at their
+  canonical production URLs, and added deployment-asset checks so the guide,
+  widget, icon, and version-bound server metadata cannot be omitted silently.
+- Preserved GitHub identity-backed artifact attestations where the repository
+  supports them. For user-owned private repositories, the release now records
+  the unavailable-attestation boundary explicitly and verifies the bundled
+  unsigned local provenance subject instead; npm and PyPI provenance remain
+  separately required and verified after registry publication.
+
+## 1.97.1 - 2026-09-13
+
+- Added a ChatGPT plugin path for one authorized model attachment. The public
+  MCP endpoint supplies a browser-sandbox analyzer and receives only a bounded
+  result; model bytes are not fetched or retained by the DEEPBOM service.
+  Local CLI and stdio MCP remain the documented path for confidential, large,
+  sharded, or external-data artifacts.
+- Added exact ChatGPT file-input metadata, public/private tool separation,
+  protocol negotiation, bounded request/result contracts, domain-verification
+  support, legal and support pages, evaluation prompts, and a real browser E2E
+  covering range reads, hashing, analysis, result publication, and recovery.
+- Registered cross-format MAC-summary fields with the serialized-container
+  metric owners so normalized GGUF, SafeTensors, Core ML, and ExecuTorch
+  results remain exportable through the Engineering Bundle.
+- Raised the handwritten runtime ceiling by 128 KiB, documentation by 60 KiB,
+  verification by 64 KiB, and development tooling by 64 KiB for the reviewed
+  ChatGPT MCP control plane, browser analyzer, submission documentation, and
+  their executable boundary tests. Per-file and generated-data ceilings are
+  unchanged.
+
 ## 1.97.0 - 2026-09-13
 
 - Added bounded CycloneDX 1.7 BOM-to-artifact reconciliation. Subject binding

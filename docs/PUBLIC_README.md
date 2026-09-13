@@ -32,10 +32,10 @@ is documented separately below.
 Install the repository-local Agent Skill after previewing the managed files:
 
 ```bash
-npx -y deepbom@1.97.0 integrate codex
-npx -y deepbom@1.97.0 integrate codex --apply
-npx -y deepbom@1.97.0 integrate claude-code
-npx -y deepbom@1.97.0 integrate claude-code --apply
+npx -y deepbom@1.97.3 integrate codex
+npx -y deepbom@1.97.3 integrate codex --apply
+npx -y deepbom@1.97.3 integrate claude-code
+npx -y deepbom@1.97.3 integrate claude-code --apply
 ```
 
 The Skill lets a local agent select the pinned `npx` command for a supported
@@ -47,7 +47,7 @@ For persistent tool-call access, run the same local analyzer as an MCP server
 over stdio:
 
 ```bash
-npx -y deepbom@1.97.0 mcp
+npx -y deepbom@1.97.3 mcp
 ```
 
 It exposes `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
@@ -57,9 +57,18 @@ formats and large-model scan depth are explicit. Local paths are restricted to
 the launch directory unless `DEEPBOM_MCP_ALLOWED_ROOTS` is configured.
 Agent-facing usage guidance is in [the DEEPBOM skill](skills/deepbom/SKILL.md).
 Claude Desktop users can instead install the version-matched
-`deepbom-1.97.0.mcpb` asset from the corresponding GitHub Release. The bundle
+`deepbom-1.97.3.mcpb` asset from the corresponding GitHub Release. The bundle
 contains the same CLI and WASM bytes as the npm channel and asks the user to
 select the only local directory it may read.
+
+For a single attachment in ChatGPT, connect the separately bounded Streamable
+HTTP endpoint at `https://deepbom.org/mcp`. Its browser component performs the
+analysis in the ChatGPT sandbox and returns a bounded, hash-bound result; the
+DEEPBOM service does not fetch or retain model bytes. This path is ready for
+developer-mode review, while public ChatGPT discovery remains subject to
+OpenAI review. See [the ChatGPT integration guide](https://deepbom.org/chatgpt/).
+Use the local CLI or stdio MCP for confidential or large artifacts, package and
+sidecar closure, complete exports, and repeated automation.
 
 Verified release channels expose the same analysis implementation:
 

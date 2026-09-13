@@ -15,6 +15,7 @@ import { privateModuleValidationCases } from "./private-wasm-modules.mjs";
 const { done, expect, expectDeepEqual, expectEqual } = createCheck("CI deploy contract check");
 const publicQualityWorkflow = readFileSync(".github/workflows/public-quality.yml", "utf8");
 const channelReleaseWorkflow = readFileSync(".github/workflows/release-channels.yml", "utf8");
+const publishedProvenanceJob = channelReleaseWorkflow.match(/\n  verify-published-attestation:\r?\n([\s\S]*?)\r?\n  publish-cargo:/)?.[1] || "";
 const cratesMaintenanceWorkflow = readFileSync(".github/workflows/crates-maintenance.yml", "utf8");
 const packageManifest = JSON.parse(readFileSync("package.json", "utf8"));
 const deliveryOperations = JSON.parse(readFileSync("config/delivery-operations.v1.json", "utf8"));
@@ -211,9 +212,13 @@ for (const snippet of [
   "node scripts/build-cargo-engine-release.mjs",
   "node scripts/build-release-supply-chain-evidence.mjs",
   "actions/attest@v4",
+  "github.event.repository.private == false",
+  "github.event.repository.private == true",
   "artifact-metadata: write",
   "sbom-path: release/deepbom-self-sbom.cdx.json",
   "gh attestation verify release/deepbom-core-linux-x64",
+  "node scripts/verify-published-local-provenance.mjs",
+  "github_attestations_unavailable_for_user_owned_private_repository",
   '--signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release-channels.yml"',
   "cargo +1.85.0 package --locked --manifest-path channels/cargo/Cargo.toml",
   "web/samples/mobilenet_v2_1.0_224_quant.tflite",
@@ -238,6 +243,15 @@ for (const identity of ["windows-x64", "windows-arm64", "linux-x64", "linux-arm6
 expect((channelReleaseWorkflow.match(/id-token:\s*write/g) || []).length === 3, "Only engine attestation plus npm and PyPI publishing should receive OIDC identity-token permission.");
 expect(!channelReleaseWorkflow.includes("NPM_TOKEN"), "npm Trusted Publishing must not retain a long-lived publication token.");
 expect(!channelReleaseWorkflow.includes("PYPI_API_TOKEN"), "PyPI Trusted Publishing must not retain a long-lived publication token.");
+expect(channelReleaseWorkflow.includes("release-boundary:")
+  && channelReleaseWorkflow.includes("needs: release-boundary")
+  && channelReleaseWorkflow.includes('test "$REPOSITORY_NAME" = "JunHwan-Kwon/deepbom"')
+  && channelReleaseWorkflow.includes('test "$REPOSITORY_PRIVATE" = "false"'),
+"Registry publication must fail before building unless it runs from the public source repository.");
+expect(publishedProvenanceJob.includes("actions/checkout@v5")
+  && publishedProvenanceJob.includes("persist-credentials: false")
+  && publishedProvenanceJob.includes("node scripts/verify-published-local-provenance.mjs"),
+"Published provenance verification must check out the pinned release source before invoking its bounded fallback verifier.");
 expect(!channelReleaseWorkflow.includes("--provenance=false"), "The package workflow must not permanently suppress provenance when the repository later becomes public.");
 expect(!/(?:npm_[A-Za-z0-9]{20,}|pypi-[A-Za-z0-9_-]{20,})/.test(channelReleaseWorkflow), "Registry credentials must be referenced from GitHub Secrets, never embedded in the workflow.");
 checkCratesMaintenanceContract();
@@ -502,8 +516,11 @@ function checkPublicDistributionCiContract() {
     "node scripts/build-cargo-engine-release.mjs",
     "node scripts/build-release-supply-chain-evidence.mjs",
     "actions/attest@v4",
+    "github.event.repository.private == false",
+    "github.event.repository.private == true",
     "sbom-path: release/deepbom-self-sbom.cdx.json",
     "gh attestation verify release/deepbom-core-linux-x64",
+    "node scripts/verify-published-local-provenance.mjs",
     "cargo +1.85.0 package --locked --manifest-path channels/cargo/Cargo.toml",
     "cargo publish --locked --manifest-path channels/cargo/Cargo.toml",
     "environment: crates-io",

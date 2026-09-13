@@ -16,8 +16,14 @@ assert.equal(server.version, packageDocument.version, "MCP server and npm packag
 assert.equal(server.repository?.source, "github");
 assert.equal(server.repository?.url, "https://github.com/JunHwan-Kwon/deepbom");
 assert.equal(server.websiteUrl, "https://deepbom.org");
+assert.deepEqual(server.icons, [{
+  src: "https://deepbom.org/web/chatgpt/deepbom-app-icon.svg",
+  mimeType: "image/svg+xml",
+  sizes: ["any"],
+}]);
 assert.ok(server.description.length <= 100, "Registry description exceeds the schema limit.");
-assert.deepEqual(server.remotes, undefined, "DEEPBOM exposes no hosted MCP endpoint.");
+assert.deepEqual(server.remotes, [{ type: "streamable-http", url: "https://deepbom.org/mcp" }],
+  "Registry metadata must expose the reviewed browser-local ChatGPT MCP endpoint.");
 assert.equal(server.packages?.length, 1, "Registry metadata must expose one canonical npm package.");
 
 const entry = server.packages[0];
@@ -39,4 +45,4 @@ assert.match(workflow, /a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635
 assert.match(workflow, /mcp-publisher login github-oidc/, "Registry publishing must authenticate without a stored token.");
 assert.match(workflow, /mcp-publisher publish server\.json/, "Registry workflow must publish the reviewed metadata file.");
 
-console.log("MCP Registry metadata check passed (namespace, npm ownership, version, stdio transport, positional subcommand, and OIDC workflow).");
+console.log("MCP Registry metadata check passed (namespace, remote and stdio transports, npm ownership, version, positional subcommand, and OIDC workflow).");

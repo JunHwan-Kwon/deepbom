@@ -32,8 +32,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  release-boundary:
+    name: Verify publication repository boundary
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Verify release identity and publication repository
+        env:
+          PUBLISH: ${{ inputs.publish }}
+          REPOSITORY_NAME: ${{ github.repository }}
+          REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+        shell: bash
+        run: |
+          node scripts/sync-version.mjs --validate-release "${{ inputs.expected_version }}"
+          if [[ "$PUBLISH" == "true" ]]; then
+            test "$REPOSITORY_NAME" = "JunHwan-Kwon/deepbom"
+            test "$REPOSITORY_PRIVATE" = "false"
+          fi
+
   build-wheel:
     name: Wheel ${{ matrix.id }}
+    needs: release-boundary
     strategy:
       fail-fast: false
       matrix:
@@ -199,9 +221,32 @@ jobs:
       - name: Verify release checksums
         working-directory: release
         run: sha256sum --check SHA256SUMS
+      - name: Record unavailable GitHub attestation boundary
+        if: github.event.repository.private == true
+        shell: bash
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            fs.writeFileSync("release/deepbom-github-attestation-status.json", JSON.stringify({
+              schema: "deepbom.github_attestation_status.v1",
+              status: "not_produced",
+              reason: "github_attestations_unavailable_for_user_owned_private_repository",
+              release_version: process.env.RELEASE_VERSION,
+              source_commit: process.env.GITHUB_SHA,
+              replacement_evidence: [
+                "deepbom-build-provenance.intoto.jsonl",
+                "deepbom-self-sbom.cdx.json",
+                "SHA256SUMS"
+              ],
+              interpretation_boundary: "The bundled provenance record is unsigned and is not an identity-backed GitHub artifact attestation. npm and PyPI publication provenance is verified separately after registry publication."
+            }, null, 2) + "\n");
+          '
+        env:
+          RELEASE_VERSION: ${{ inputs.expected_version }}
       - name: Build release self-SBOM and local provenance record
         run: node scripts/build-release-supply-chain-evidence.mjs --sbom release/deepbom-self-sbom.cdx.json --provenance release/deepbom-build-provenance.intoto.jsonl --subject-dir release --commit "$GITHUB_SHA"
       - name: Attest release build provenance
+        if: github.event.repository.private == false
         uses: actions/attest@v4
         with:
           subject-path: |
@@ -211,6 +256,7 @@ jobs:
             release/engine-matrix.v1.json
             release/SHA256SUMS
       - name: Attest release SBOM
+        if: github.event.repository.private == false
         uses: actions/attest@v4
         with:
           subject-path: release/deepbom-core-*
@@ -297,7 +343,7 @@ jobs:
           ($onnxOutput -join "`n") | ConvertFrom-Json | Out-Null
 
   verify-published-attestation:
-    name: Verify published release attestation
+    name: Verify published release provenance
     if: inputs.publish
     needs: publish-github-release
     runs-on: ubuntu-24.04
@@ -306,15 +352,28 @@ jobs:
       contents: read
       attestations: read
     steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - name: Download one immutable release engine
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: channels-v${{ inputs.expected_version }}
         run: gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'deepbom-core-linux-x64' --dir release
       - name: Verify identity-backed build provenance
+        if: github.event.repository.private == false
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh attestation verify release/deepbom-core-linux-x64 --repo "$GITHUB_REPOSITORY" --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release-channels.yml"
+      - name: Verify bounded local provenance fallback
+        if: github.event.repository.private == true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: channels-v${{ inputs.expected_version }}
+        shell: bash
+        run: |
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'deepbom-build-provenance.intoto.jsonl' --pattern 'deepbom-github-attestation-status.json' --dir release
+          node scripts/verify-published-local-provenance.mjs --release-dir release --artifact deepbom-core-linux-x64 --version "${{ inputs.expected_version }}" --commit "$GITHUB_SHA"
 
   publish-cargo:
     name: Publish Cargo bootstrap release

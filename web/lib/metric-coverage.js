@@ -1554,7 +1554,7 @@ const SPECS = [
       "executorch_container", "executorch_program", "executorch_flat_tensor", "executorch_sections_suppressed",
       "subgraphs", "operator_count", "tensor_count", "input_tensor_indices", "output_tensor_indices",
       "inputs", "outputs", "tensors", "ops", "histogram", "stages",
-      "total_macs", "total_macs_decimal", "total_ops", "mac_assessment", "tensor_liveness", "size_breakdown",
+      "total_macs", "total_macs_decimal", "mac_confidence", "total_ops", "mac_assessment", "tensor_liveness", "size_breakdown",
       "weight_integrity", "metadata_presence", "runtime_compat", "static_audit_timing",
       "xnnpack_assumption", "xnnpack_chains", "xnnpack_chain_breaks", "markdown",
       "findings", "recommendations", "suspects", "artifact_bundle", "artifact_set",
@@ -1605,7 +1605,7 @@ const SPECS = [
     keys: [
       "schema", "format", "filename", "file_size", "file_size_bytes", "model_sha256",
       "operator_count", "tensor_count", "quantized_tensors", "per_channel_tensors",
-      "per_tensor_tensors", "total_macs", "mac_assessment", "ops", "inputs", "outputs",
+      "per_tensor_tensors", "total_macs", "total_macs_decimal", "mac_confidence", "mac_assessment", "ops", "inputs", "outputs",
       "tensors", "tensor_inventory", "metadata_presence", "quantization_status", "weight_integrity",
       "format_extensions", "gguf", "safetensors", "static_audit_timing", "markdown",
       "findings", "recommendations", "suspects",
@@ -1628,7 +1628,7 @@ const SPECS = [
     keys: [
       "schema", "format", "filename", "file_size", "file_size_bytes", "model_sha256",
       "operator_count", "tensor_count", "quantized_tensors", "per_channel_tensors",
-      "per_tensor_tensors", "total_macs", "mac_assessment", "ops", "inputs", "outputs",
+      "per_tensor_tensors", "total_macs", "total_macs_decimal", "mac_confidence", "mac_assessment", "ops", "inputs", "outputs",
       "tensors", "tensor_inventory", "metadata_presence", "quantization_status",
       "format_extensions", "coreml", "histogram", "static_audit_timing", "markdown",
       "findings", "recommendations", "suspects",

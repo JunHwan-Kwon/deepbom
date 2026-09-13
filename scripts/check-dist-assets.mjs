@@ -10,6 +10,7 @@ import { inspectWasmFile } from "./wasm-binary-hardening.mjs";
 import { PUBLIC_SAMPLE_MODELS } from "../web/lib/sample-models.js";
 
 const distRoot = "dist";
+const packageDocument = JSON.parse(readFileSync("package.json", "utf8"));
 const distSwPath = path.join(distRoot, "web", "sw.js");
 const distBuildMetadataPath = path.join(distRoot, "web", "lib", "build-metadata.js");
 if (!existsSync(distBuildMetadataPath)) {
@@ -46,6 +47,12 @@ const deploymentExcludedFloatSample = path.join(distRoot, "web", "samples", "mob
 const deploymentExcludedSyntheticOnnx = path.join(distRoot, "web", "samples", "sample_cnn_float.onnx");
 const deploymentHardeningManifest = path.join(distRoot, "deployment-hardening.json");
 const frontendDeliveryManifest = path.join(distRoot, "frontend-delivery.json");
+const chatGptDeploymentFiles = [
+  path.join(distRoot, "chatgpt", "index.html"),
+  path.join(distRoot, "chatgpt", "deepbom-widget.js"),
+  path.join(distRoot, "chatgpt", "deepbom-app-icon.svg"),
+  path.join(distRoot, "server.json"),
+];
 const publicSampleModelPaths = new Set(PUBLIC_SAMPLE_MODELS
   .map((sample) => sample.path)
   .filter((samplePath) => samplePath.startsWith("samples/"))
@@ -129,6 +136,20 @@ if (existsSync(deploymentExcludedFloatSample)) {
   throw new Error("dist must exclude the internal FLOAT32 MobileNet fixture.");
 }
 if (existsSync(deploymentExcludedSyntheticOnnx)) throw new Error("dist must exclude the synthetic ONNX regression fixture.");
+const missingChatGptDeploymentFiles = chatGptDeploymentFiles.filter((filePath) => !existsSync(filePath));
+if (missingChatGptDeploymentFiles.length) {
+  throw new Error(`dist is missing ChatGPT discovery/runtime assets: ${missingChatGptDeploymentFiles.join(", ")}`);
+}
+const deployedChatGptPage = readFileSync(path.join(distRoot, "chatgpt", "index.html"), "utf8");
+if (!deployedChatGptPage.includes('rel="canonical" href="https://deepbom.org/chatgpt/"')
+  || !deployedChatGptPage.includes("https://deepbom.org/mcp")) {
+  throw new Error("dist ChatGPT guide must preserve its canonical URL and MCP endpoint.");
+}
+const deployedServerMetadata = JSON.parse(readFileSync(path.join(distRoot, "server.json"), "utf8"));
+if (deployedServerMetadata.version !== packageDocument.version
+  || !deployedServerMetadata.remotes?.some((remote) => remote.url === "https://deepbom.org/mcp")) {
+  throw new Error("dist server.json must identify the current release and public MCP endpoint.");
+}
 checkDeploymentHardening();
 checkFrontendDelivery();
 for (const brief of ["regulatory", "quality", "engineering"]) {

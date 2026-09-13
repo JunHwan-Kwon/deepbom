@@ -5,6 +5,7 @@ import { STATIC_AUDIT_OPERATION } from "../web/lib/static-audit-worker-protocol.
 const WASM_MODULE = "tflite_wasm_audit.js";
 const MAIN_THREAD_ALLOWED = new Set(["default", "runtime_guard", "target_profiles"]);
 const HEAVY_EXPORTS = new Set([
+  "analyze_tflite",
   "analyze_tflite_for_target",
   "compute_activation_haar",
   "compute_delegation_repair",

@@ -10,7 +10,7 @@ export function buildAgentCapabilities(cliCapabilities) {
     schema: AGENT_CAPABILITIES_SCHEMA,
     product: "DEEPBOM",
     version,
-    purpose: "Local evidence-bounded static analysis of serialized AI deployment artifacts.",
+    purpose: "Evidence-bounded static analysis of serialized AI deployment artifacts through local tools or the ChatGPT browser sandbox.",
     selection: {
       use_when: [
         "A supported serialized deployment artifact must be inspected without executing model code.",
@@ -64,8 +64,26 @@ export function buildAgentCapabilities(cliCapabilities) {
       install_preview: "deepbom integrate <codex|claude-code|generic>",
       install_apply: "deepbom integrate <codex|claude-code|generic> --apply",
     },
+    chatgpt_integration: {
+      status: "developer_mode_ready_public_listing_requires_openai_plugin_review",
+      endpoint: "https://deepbom.org/mcp",
+      transport: "streamable_http",
+      primary_tool: "deepbom_analyze_file",
+      input: "one ChatGPT-authorized attachment",
+      execution_location: "chatgpt_browser_sandbox",
+      result: "bounded hash-bound static evidence returned to the conversation",
+      transfer_boundary: "the DEEPBOM service does not fetch or retain model bytes",
+      use_local_instead_when: [
+        "the artifact or result fields are confidential",
+        "the artifact exceeds the browser or ChatGPT attachment boundary",
+        "the review needs package-directory, sharded-repository, or ONNX external-data closure",
+        "the workflow needs a complete evidence export or repeated automation",
+      ],
+    },
     discovery: {
       agent_page: "https://deepbom.org/for-agents/",
+      chatgpt_page: "https://deepbom.org/chatgpt/",
+      chatgpt_mcp: "https://deepbom.org/mcp",
       machine_contract: "https://deepbom.org/agent-capabilities.json",
       plain_text: "https://deepbom.org/llms.txt",
       skill_source: "https://github.com/JunHwan-Kwon/deepbom/tree/main/skills/deepbom",

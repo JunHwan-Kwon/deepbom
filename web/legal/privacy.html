@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy | DEEPBOM</title>
+  <meta name="description" content="How DEEPBOM handles model artifacts and analysis results." />
+  <link rel="canonical" href="https://deepbom.org/privacy" />
+  <link rel="stylesheet" href="/web/evaluate/evaluation.css" />
+</head>
+<body class="agent-guide">
+  <header class="brief-header"><a class="brand" href="/">DEEPBOM</a><nav class="brief-nav"><a href="/chatgpt/">ChatGPT</a><a href="/support">Support</a></nav></header>
+  <main class="brief-main">
+    <p class="eyebrow">Effective 2026-09-13</p>
+    <h1>Privacy and data handling</h1>
+    <section class="brief-section">
+      <h2>Core browser and local tools</h2>
+      <p>Files selected at deepbom.org and files read by the CLI or local MCP are analyzed on the user's device. The core audit does not upload model bytes, tensor values, inputs, outputs, or generated reports to the DEEPBOM service.</p>
+    </section>
+    <section class="brief-section">
+      <h2>ChatGPT integration</h2>
+      <p>A file attached to ChatGPT is already handled by ChatGPT under the user's OpenAI terms and settings. The DEEPBOM component obtains a temporary, plugin-authorized download URL and reads the attachment inside the ChatGPT browser sandbox. The DEEPBOM service does not fetch or retain the file. The component returns a bounded result to the conversation, which can contain the filename, file and evidence hashes, tensor or operator counts, encoding summaries, and findings.</p>
+      <p>Use the local CLI or local MCP instead when those result fields must not enter a ChatGPT conversation.</p>
+    </section>
+    <section class="brief-section">
+      <h2>Optional services</h2>
+      <p>Account, report-fingerprint registration, controlled research modules, and explicitly consented structural benchmark features are separate optional paths. Their screens identify what is sent before the user proceeds. Core artifact analysis does not require them.</p>
+    </section>
+    <section class="brief-section">
+      <h2>Contact</h2>
+      <p>Privacy or security questions can be reported through the repository contact path listed on the <a href="/support">support page</a>.</p>
+    </section>
+  </main>
+</body>
+</html>

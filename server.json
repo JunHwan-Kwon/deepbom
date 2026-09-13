@@ -2,18 +2,33 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.JunHwan-Kwon/deepbom",
   "title": "DEEPBOM",
-  "description": "Local static analysis and evidence generation for deployed AI model artifacts.",
+  "description": "Browser-local and CLI static evidence for deployed AI model artifacts.",
   "repository": {
     "url": "https://github.com/JunHwan-Kwon/deepbom",
     "source": "github"
   },
-  "version": "1.97.0",
+  "version": "1.97.3",
   "websiteUrl": "https://deepbom.org",
+  "icons": [
+    {
+      "src": "https://deepbom.org/web/chatgpt/deepbom-app-icon.svg",
+      "mimeType": "image/svg+xml",
+      "sizes": [
+        "any"
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://deepbom.org/mcp"
+    }
+  ],
   "packages": [
     {
       "registryType": "npm",
       "identifier": "deepbom",
-      "version": "1.97.0",
+      "version": "1.97.3",
       "packageArguments": [
         {
           "type": "positional",

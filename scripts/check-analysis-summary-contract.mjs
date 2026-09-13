@@ -6,6 +6,7 @@ import {
   MAC_CONFIDENCE_VALUES,
   normalizeAnalysisSummaryContract,
 } from "../web/lib/analysis-summary-contract.js";
+import { buildMetricCoverageManifest } from "../web/lib/metric-coverage.js";
 
 assert.deepEqual(MAC_CONFIDENCE_VALUES, ["exact", "symbolic", "partial", "not_applicable"]);
 
@@ -22,6 +23,13 @@ for (const row of [
   assert.equal(normalized.mac_confidence, row.expected);
   assert.equal(Object.hasOwn(normalized, "total_macs"), true);
   assert.equal(Object.hasOwn(normalized, "total_macs_decimal"), true);
+}
+
+for (const format of ["gguf", "safetensors", "coreml", "executorch"]) {
+  const normalized = normalizeAnalysisSummaryContract({ format });
+  const coverage = buildMetricCoverageManifest(normalized);
+  assert.deepEqual(coverage.unregistered_analysis_object_keys, [], `${format} summary keys must have metric ownership`);
+  assert.deepEqual(coverage.multiply_registered_analysis_object_keys, [], `${format} summary keys must have one owner`);
 }
 
 for (const [path, expected] of [

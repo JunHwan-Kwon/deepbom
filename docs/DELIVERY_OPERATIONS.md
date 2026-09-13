@@ -68,6 +68,18 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 | Local Windows 1.96.12 channel build | npm with MCP server, executable, Python wheel, Cargo launcher, and public/private boundary | 215.842 s |
 | Local Windows 1.96.12 platform smoke | installed Python and standalone TFLite/WASM plus ONNX execution parity | 181.819 s |
 | Local Windows 1.96.12 release-contract equivalence | installed npm across five formats and two package forms plus MCP, Python, standalone, Cargo, diff, self-test, and tamper contracts | 584.402 s |
+| Private web 1.97.1 preflight | 83 bounded checks including ChatGPT file-input/result-bridge contracts and main-thread exclusion for heavy TFLite WASM; no browser or full-corpus matrix | 146.925 s |
+| Local Windows 1.97.1 channel build | release-version npm, executable, Python wheel, Cargo launcher, Agent Skill, and public/private boundary | 69.811 s |
+| Local Windows 1.97.1 platform smoke | installed Python and standalone TFLite/WASM plus ONNX parity, typed Python values, and policy-gate exceptions | 178.427 s |
+| Local Windows 1.97.1 release-contract equivalence | installed npm across five formats and two package forms plus MCP, Agent Skill, Python, standalone, Cargo, verify/diff/explore, and tamper contracts | 518.668 s |
+| Private web 1.97.2 preflight | 83 bounded checks including ChatGPT contracts and the explicit private-repository attestation fallback; no browser or full-corpus matrix | 146.420 s |
+| Local Windows 1.97.2 channel build | release-version npm, executable, Python wheel, Cargo launcher, Agent Skill, and public/private boundary | 64.851 s |
+| Local Windows 1.97.2 platform smoke | installed Python and standalone TFLite/WASM plus ONNX parity, typed Python values, and policy-gate exceptions | 178.078 s |
+| Local Windows 1.97.2 release-contract equivalence | installed npm across five formats and two package forms plus MCP, Agent Skill, Python, standalone, Cargo, verify/diff/explore, and tamper contracts | 518.889 s |
+| Private web 1.97.3 preflight | 83 bounded checks including the checkout-bound published-provenance fallback; no browser or full-corpus matrix | 141.288 s |
+| Local Windows 1.97.3 channel build | release-version npm, executable, Python wheel, Cargo launcher, Agent Skill, and public/private boundary | 70.479 s |
+| Local Windows 1.97.3 platform smoke | installed Python and standalone TFLite/WASM plus ONNX parity, typed Python values, and policy-gate exceptions | 179.632 s |
+| Local Windows 1.97.3 release-contract equivalence | installed npm across five formats and two package forms plus MCP, Agent Skill, Python, standalone, Cargo, verify/diff/explore, and tamper contracts | 518.137 s |
 
 The 1.94.4 run is retained as timing and incident evidence. It is not a known-good
 quality baseline. A registry success is never treated as sufficient without a

@@ -56,14 +56,18 @@ for (const [condition, message] of [
   [!buildPages.includes('"    <loc>https://deepbom.org/web/</loc>"'), "generated sitemap does not index the duplicate /web/ shell"],
   [buildPages.includes("const today = new Date().toISOString().slice(0, 10)"), "generated sitemap receives the build date"],
 
-  // llms.txt is the only plain-text place an assistant learns that there is no
-  // hosted analysis endpoint. If that boundary or the finding vocabulary drops
-  // out of the generated file, an agent is free to invent an upload API.
+  // llms.txt is the plain-text place an assistant learns the execution and
+  // transfer boundaries. The remote endpoint is a control plane; local and
+  // browser paths perform analysis without uploading model bytes to DEEPBOM.
   [buildPages.includes('path.join(dist, "llms.txt")'), "build generates llms.txt at the domain root"],
   [buildPages.includes('path.join(dist, "agent-capabilities.json")'), "build generates the machine-readable agent capability contract"],
   [buildPages.includes('"# https://deepbom.org/llms.txt",'), "generated robots file points at llms.txt"],
   [buildPages.includes('"User-agent: OAI-SearchBot"'), "robots file explicitly permits OAI-SearchBot"],
-  [/there is no hosted analysis endpoint/.test(buildPages), "llms.txt states that no hosted analysis endpoint exists"],
+  [buildPages.includes("The remote MCP control plane serves tool metadata and validates the bounded")
+    && buildPages.includes("it does not fetch or retain model bytes"),
+    "llms.txt states the remote MCP control-plane and model-byte boundary"],
+  [buildPages.includes("Remote MCP endpoint: https://deepbom.org/mcp"),
+    "llms.txt publishes the stable ChatGPT Streamable HTTP endpoint"],
   [["deepbom_capabilities", "deepbom_audit", "deepbom_diff", "deepbom_explain_rule"].every((tool) => buildPages.includes(`\`${tool}\``)),
     "llms.txt lists all four local MCP tools"],
   [["artifact_defect", "caution", "evidence_gap"].every((kind) => buildPages.includes(`\`${kind}\``)),
@@ -77,8 +81,8 @@ for (const [condition, message] of [
   [rootNodes.some((node) => node["@type"] === "FAQPage" && Array.isArray(node.mainEntity) && node.mainEntity.length >= 4),
     "FAQ linked data carries at least four answered questions"],
   [agentPage.includes('rel="canonical" href="https://deepbom.org/for-agents/"'), "agent guide has a canonical URL"],
-  [agentPage.includes("there is no hosted DEEPBOM analysis endpoint") && agentPage.includes("without either cannot execute the audit"),
-    "agent guide states the no-server and no-tool execution boundaries"],
+  [agentPage.includes("there is no hosted DEEPBOM analysis endpoint") && agentPage.includes("browser-sandbox integration"),
+    "agent guide distinguishes local execution from the ChatGPT browser-sandbox path"],
   [agentPage.includes("integrate codex") && agentPage.includes("integrate claude-code") && agentPage.includes("--apply"),
     "agent guide documents preview-before-apply installation"],
   [agentPage.includes(`deepbom@${packageVersion}`) && !agentPage.includes("verified-version"),

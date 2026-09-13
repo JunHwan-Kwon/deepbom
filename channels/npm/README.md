@@ -7,10 +7,10 @@ For a local Codex or Claude Code project, preview and install the bundled Agent
 Skill without operating an analysis server:
 
 ```console
-npx -y deepbom@1.97.0 integrate codex
-npx -y deepbom@1.97.0 integrate codex --apply
-npx -y deepbom@1.97.0 integrate claude-code
-npx -y deepbom@1.97.0 integrate claude-code --apply
+npx -y deepbom@1.97.3 integrate codex
+npx -y deepbom@1.97.3 integrate codex --apply
+npx -y deepbom@1.97.3 integrate claude-code
+npx -y deepbom@1.97.3 integrate claude-code --apply
 ```
 
 ```console
@@ -28,11 +28,18 @@ npx deepbom explore model.tflite --target-profile target-profile.json
 npx deepbom audit model.pte --executorch-build deepbom.executorch-build.json --compact
 npx deepbom capabilities --format agent-json
 npx deepbom capabilities --format agent-text
-npx -y deepbom@1.97.0 mcp
+npx -y deepbom@1.97.3 mcp
 ```
 
-Claude Desktop can install the version-matched `deepbom-1.97.0.mcpb` asset
+Claude Desktop can install the version-matched `deepbom-1.97.3.mcpb` asset
 from the corresponding GitHub Release as a local desktop extension.
+
+ChatGPT developer-mode users can connect `https://deepbom.org/mcp` for one
+authorized attachment. Analysis runs in the ChatGPT browser sandbox; the
+DEEPBOM service receives only a bounded result and does not fetch or retain
+model bytes. Public ChatGPT discovery requires separate OpenAI review. Use the
+local package for confidential or large files, directories, shards, sidecars,
+complete exports, and repeat automation.
 
 The default output is a bounded human-readable summary. Use `--json` or
 `--compact` for the complete analysis document, `--format envelope` for the

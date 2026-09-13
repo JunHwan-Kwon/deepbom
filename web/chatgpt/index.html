@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Use DEEPBOM in ChatGPT</title>
+  <meta name="description" content="Analyze an attached AI deployment artifact with DEEPBOM inside ChatGPT while keeping model bytes out of the DEEPBOM service." />
+  <link rel="canonical" href="https://deepbom.org/chatgpt/" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://deepbom.org/chatgpt/" />
+  <meta property="og:title" content="Use DEEPBOM in ChatGPT" />
+  <meta property="og:description" content="Browser-local model artifact analysis with a bounded result returned to the conversation." />
+  <meta property="og:image" content="https://deepbom.org/web/og-image.png" />
+  <link rel="icon" href="/web/chatgpt/deepbom-app-icon.svg" type="image/svg+xml" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "DEEPBOM for ChatGPT",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Web",
+    "url": "https://deepbom.org/chatgpt/",
+    "image": "https://deepbom.org/web/chatgpt/deepbom-app-icon.svg",
+    "isAccessibleForFree": true,
+    "softwareRequirements": "ChatGPT developer mode or a reviewed ChatGPT plugin listing",
+    "author": { "@id": "https://deepbom.org/#author" }
+  }
+  </script>
+  <link rel="stylesheet" href="../evaluate/evaluation.css" />
+</head>
+<body class="agent-guide">
+  <header class="brief-header">
+    <a class="brand" href="/">DEEPBOM</a>
+    <nav class="brief-nav" aria-label="ChatGPT documentation">
+      <a href="/">Workspace</a>
+      <a aria-current="page" href="/chatgpt/">ChatGPT</a>
+      <a href="/for-agents/">Local agents</a>
+    </nav>
+  </header>
+  <main class="brief-main">
+    <p class="eyebrow">ChatGPT integration</p>
+    <h1>Attach a deployed model and ask for its static evidence.</h1>
+    <p class="lede">The ChatGPT integration opens DEEPBOM in a sandboxed browser component. It downloads the file already authorized in ChatGPT, analyzes it in that component, and returns a bounded, hash-bound result to the conversation.</p>
+
+    <section class="brief-section">
+      <h2>Connect during review</h2>
+      <ol>
+        <li>Enable developer mode in ChatGPT.</li>
+        <li>Add <code>https://deepbom.org/mcp</code> as a Streamable HTTP plugin endpoint.</li>
+        <li>Attach one supported deployment artifact and ask: <em>Use DEEPBOM to inspect this file. Keep defects, cautions, and evidence gaps separate.</em></li>
+      </ol>
+      <p>The endpoint is ready for private developer-mode testing. Public discovery in ChatGPT begins only after OpenAI plugin review and listing.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Ask in plain language</h2>
+      <pre><code>Use DEEPBOM to inspect this attached ONNX model.
+Keep artifact defects, cautions, and evidence gaps separate.
+
+What tensor encodings are present in this GGUF file?
+Include its SHA-256 and the static evidence boundary.
+
+Can this attached file establish runtime latency or accuracy?</code></pre>
+      <p>DEEPBOM should analyze a supported attachment for the first two prompts. For the third, it should explain that those outcomes require separate runtime or task evidence rather than inventing a static conclusion.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Choose the right execution path</h2>
+      <table class="fact-table">
+        <tbody>
+          <tr><th>ChatGPT attachment</th><td>Convenient single-file review. Analysis executes in the ChatGPT browser sandbox and a bounded result is returned to the conversation.</td></tr>
+          <tr><th>Local MCP or CLI</th><td>Use for confidential or large files, package directories, ONNX external data, sharded repositories, repeated automation, and complete exports.</td></tr>
+          <tr><th>DeepBOM service</th><td>The MCP control plane serves tool metadata and validates the bounded result. It does not fetch or retain model bytes.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="brief-section">
+      <h2>Evidence boundary</h2>
+      <p>DEEPBOM reports serialized-artifact observations and deterministic static derivations. It does not establish measured latency, energy, task accuracy, clinical validity, actual runtime placement, or regulatory compliance. <code>artifact_defect</code>, <code>caution</code>, and <code>evidence_gap</code> remain separate in the returned result.</p>
+      <p>Supported single-file inputs are TFLite, ONNX, GGUF, SafeTensors, Core ML <code>.mlmodel</code>, and ExecuTorch <code>.pte</code>/<code>.ptd</code>. Package and sidecar closure remain local-tool workflows.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Policies and support</h2>
+      <ul class="plain-list">
+        <li><a href="/privacy">Privacy and data handling</a></li>
+        <li><a href="/terms">Terms of use</a></li>
+        <li><a href="/support">Support and vulnerability reporting</a></li>
+        <li><a href="/llms.txt">Machine-readable product boundary</a></li>
+      </ul>
+    </section>
+  </main>
+  <footer class="brief-footer">DEEPBOM is an independent engineering tool. Static evidence supports review; it is not a compliance verdict.</footer>
+</body>
+</html>

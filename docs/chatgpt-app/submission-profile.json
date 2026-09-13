@@ -1,0 +1,29 @@
+{
+  "schema": "deepbom.chatgpt_plugin_submission.v1",
+  "name": "DEEPBOM",
+  "endpoint": "https://deepbom.org/mcp",
+  "transport": "streamable_http",
+  "authentication": "none",
+  "category": "Developer tools",
+  "short_description": "Static evidence for attached AI deployment artifacts.",
+  "description": "DEEPBOM inspects an attached TFLite, ONNX, GGUF, SafeTensors, Core ML, or ExecuTorch deployment artifact in the ChatGPT browser sandbox. It returns a hash-bound summary of serialized structure, tensor encodings, quantization evidence, and findings while keeping artifact defects, cautions, and evidence gaps separate.",
+  "privacy_url": "https://deepbom.org/privacy",
+  "terms_url": "https://deepbom.org/terms",
+  "support_url": "https://deepbom.org/support",
+  "documentation_url": "https://deepbom.org/chatgpt/",
+  "icon_url": "https://deepbom.org/web/chatgpt/deepbom-app-icon.svg",
+  "data_flow": {
+    "model_bytes": "downloaded from the ChatGPT-authorized file URL by the sandboxed widget; not fetched or retained by the DEEPBOM service",
+    "returned_to_conversation": [
+      "filename",
+      "artifact and evidence hashes",
+      "artifact format and byte length",
+      "bounded graph, storage, and quantization summary",
+      "bounded artifact defects, cautions, and evidence gaps",
+      "evidence and transfer boundaries"
+    ],
+    "server_persistence": "none for model bytes or submitted analysis results"
+  },
+  "evidence_boundary": "Static serialized-artifact evidence does not establish runtime placement, measured latency or energy, task accuracy, clinical validity, safety, or regulatory compliance.",
+  "listing_status": "not_submitted_or_approved_by_this_file"
+}

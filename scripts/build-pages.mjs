@@ -87,6 +87,16 @@ await appendServiceWorkerAssets(
   applicationBundle.outputFiles.map((file) => `./${path.relative(path.join(dist, "web"), file).replaceAll(path.sep, "/")}`),
 );
 await stampServiceWorkerBuild(path.join(dist, "web", "sw.js"), buildMetadata.bundleContentSha256);
+await bundleChatGptWidget();
+await copyFile(
+  path.join(root, "web", "chatgpt", "index.html"),
+  path.join(dist, "chatgpt", "index.html"),
+);
+await copyFile(
+  path.join(root, "web", "chatgpt", "deepbom-app-icon.svg"),
+  path.join(dist, "chatgpt", "deepbom-app-icon.svg"),
+);
+await copyFile(path.join(root, "server.json"), path.join(dist, "server.json"));
 
 await writeFile(path.join(dist, ".nojekyll"), "");
 await mkdir(path.join(dist, ".well-known"), { recursive: true });
@@ -114,6 +124,9 @@ await writeFile(path.join(dist, "verify.html"), await readFile(path.join(dist, "
 // Private-link gateway served at /test. It activates an expiring access grant,
 // then redirects into the single canonical Workbench instead of cloning it.
 await writeFile(path.join(dist, "test.html"), await readFile(path.join(dist, "web", "test.html"), "utf8"));
+for (const page of ["privacy", "terms", "support"]) {
+  await writeFile(path.join(dist, `${page}.html`), await readFile(path.join(dist, "web", "legal", `${page}.html`), "utf8"));
+}
 
 // SEO: robots.txt and sitemap.xml at domain root
 const today = new Date().toISOString().slice(0, 10);
@@ -147,9 +160,10 @@ await writeFile(path.join(dist, "llms.txt"), [
   "> keeps static derivations, target assumptions, and imported runtime",
   "> observations separate so each claim carries its own evidence class.",
   "",
-  "Analysis runs locally, in the reader's browser or CLI process. Artifact bytes",
-  "are not uploaded, and there is no hosted analysis endpoint to call. To analyse",
-  "a model on behalf of a user, run the CLI on their machine.",
+  "Analysis runs locally, in the reader's browser or CLI process. The ChatGPT",
+  "integration also analyzes an authorized attachment inside its browser sandbox.",
+  "The remote MCP control plane serves tool metadata and validates the bounded",
+  "result; it does not fetch or retain model bytes.",
   "",
   "## Command line",
   "",
@@ -172,7 +186,9 @@ await writeFile(path.join(dist, "llms.txt"), [
   "Model Context Protocol over stdio and exposes `deepbom_capabilities`,",
   "`deepbom_audit`, `deepbom_diff`, and `deepbom_explain_rule`. It runs locally",
   "on the same terms. A plain chat without shell or local MCP access cannot run",
-  "the analysis; it can only provide the pinned command.",
+  "local-file analysis. A connected DEEPBOM ChatGPT plugin can analyze one",
+  "authorized attachment in its browser sandbox and return a bounded result.",
+  "Remote MCP endpoint: https://deepbom.org/mcp",
   "",
   "Formats: .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd.",
   "Outputs: analysis JSON, evidence envelope, CycloneDX 1.7, SARIF 2.1.0.",
@@ -195,6 +211,7 @@ await writeFile(path.join(dist, "llms.txt"), [
   "",
   "- [Workspace](https://deepbom.org/): browser-local audit of one artifact",
   "- [AI agent setup](https://deepbom.org/for-agents/): local Agent Skill, npx, and stdio MCP paths",
+  "- [ChatGPT integration](https://deepbom.org/chatgpt/): attached-file analysis in the ChatGPT browser sandbox",
   "- [Regulatory brief](https://deepbom.org/evaluate/regulatory/): what the records can support in a controlled process, and where they stop",
   "- [Quality brief](https://deepbom.org/evaluate/quality/): validating an installed analyzer before relying on it",
   "- [Engineering brief](https://deepbom.org/evaluate/engineering/): architecture, CI entry point, and what it will not infer",
@@ -224,6 +241,20 @@ await writeFile(path.join(dist, "sitemap.xml"), [
   "    <changefreq>monthly</changefreq>",
   "    <priority>0.7</priority>",
   "  </url>",
+  "  <url>",
+  "    <loc>https://deepbom.org/chatgpt/</loc>",
+  `    <lastmod>${today}</lastmod>`,
+  "    <changefreq>monthly</changefreq>",
+  "    <priority>0.8</priority>",
+  "  </url>",
+  ...["privacy", "terms", "support"].flatMap((page) => [
+    "  <url>",
+    `    <loc>https://deepbom.org/${page}</loc>`,
+    `    <lastmod>${today}</lastmod>`,
+    "    <changefreq>yearly</changefreq>",
+    "    <priority>0.4</priority>",
+    "  </url>",
+  ]),
   "  <url>",
   "    <loc>https://deepbom.org/verify</loc>",
   `    <lastmod>${today}</lastmod>`,
@@ -301,6 +332,30 @@ async function bundleApplicationEntry() {
   if (!outputFiles.includes(entry)) throw new Error("esbuild did not emit dist/web/app.bundle.js.");
   await writeFile(path.join(dist, "web", "app.js"), 'import "./app.bundle.js";\n');
   return { outputFiles };
+}
+
+async function bundleChatGptWidget() {
+  const outdir = path.join(dist, "chatgpt");
+  await mkdir(outdir, { recursive: true });
+  const result = await build({
+    absWorkingDir: root,
+    entryPoints: ["web/chatgpt/deepbom-widget.js"],
+    outfile: path.join(outdir, "deepbom-widget.js"),
+    bundle: true,
+    charset: "ascii",
+    format: "esm",
+    legalComments: "none",
+    metafile: true,
+    minify: true,
+    platform: "browser",
+    sourcemap: false,
+    target: "es2022",
+    write: true,
+  });
+  const output = path.resolve(path.join(outdir, "deepbom-widget.js"));
+  if (!Object.keys(result.metafile.outputs).map((file) => path.resolve(root, file)).includes(output)) {
+    throw new Error("esbuild did not emit dist/chatgpt/deepbom-widget.js.");
+  }
 }
 
 async function appendServiceWorkerAssets(file, assets) {

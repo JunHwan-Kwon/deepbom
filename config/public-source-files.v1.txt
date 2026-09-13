@@ -148,6 +148,9 @@ docs/SUPPORT_MATRIX.md
 docs/TERMINOLOGY_AND_NUMERIC_CONTRACT.md
 docs/WASM_EXECUTION_BOUNDARY.md
 docs/ZENODO_RELEASE.md
+docs/chatgpt-app/README.md
+docs/chatgpt-app/evals.json
+docs/chatgpt-app/submission-profile.json
 docs/native-runtime-capture.md
 docs/schemas/deepbom-artifact-ir-v2.schema.json
 docs/schemas/deepbom-conversion-receipt-v1.schema.json
@@ -279,6 +282,9 @@ scripts/check-cargo-engine-release.mjs
 scripts/check-channel-equivalence.mjs
 scripts/check-channel-vitality-viewer.mjs
 scripts/check-channel-vitality.mjs
+scripts/check-chatgpt-app-metadata.mjs
+scripts/check-chatgpt-mcp.mjs
+scripts/check-chatgpt-widget.mjs
 scripts/check-ci-deploy-contract.mjs
 scripts/check-cli-automation.mjs
 scripts/check-cli-graph-export.mjs
@@ -604,6 +610,7 @@ scripts/verify-onnx-tfidf-source-pin.mjs
 scripts/verify-ort-native-capture.mjs
 scripts/verify-package.mjs
 scripts/verify-public-source-export.mjs
+scripts/verify-published-local-provenance.mjs
 scripts/verify-python-wheel-matrix.py
 scripts/verify-serialized-source-pins.mjs
 scripts/verify-supported-format-outputs.mjs
@@ -677,6 +684,9 @@ web/app.js
 web/auth-complete.html
 web/auth-complete.js
 web/bootstrap.js
+web/chatgpt/deepbom-app-icon.svg
+web/chatgpt/deepbom-widget.js
+web/chatgpt/index.html
 web/device-workspace.css
 web/evaluate/engineering/index.html
 web/evaluate/evaluation.css
@@ -689,6 +699,9 @@ web/explorer-question.css
 web/explorer-redesign.css
 web/for-agents/index.html
 web/index.html
+web/legal/privacy.html
+web/legal/support.html
+web/legal/terms.html
 web/lib/accelerator-binding.js
 web/lib/accelerator-profile-binding.js
 web/lib/accelerator-profile-switcher.js
