@@ -1,10 +1,11 @@
 {
   "schema": "deepbom.external_review_golden_boundary_manifest.v1",
+  "manifest_digest_canonicalization": "UTF-8 text with CRLF and CR normalized to LF before SHA-256",
   "boundaries": [
     {
       "id": "tflite_dynamic_and_transpose_conv",
       "manifest": "corpus/external-review/fixtures/manifest.json",
-      "manifest_sha256": "c33b9a9b92c8af2f45c519d5c99bb034c99e42cc5ef4512ef661c7c56c27d18b",
+      "manifest_sha256": "bc031f706c4f529c05f49e1e1ce7f301cd6a029859ca63802f3e2ad71528f5a9",
       "required_cases": [
         "space-to-batch-stale-shapes.tflite",
         "conv-16x8.tflite",
@@ -25,7 +26,7 @@
     {
       "id": "coreml_compressed_affine_contract",
       "manifest": "corpus/external-review/fixtures/coreml-affine-attributes.manifest.json",
-      "manifest_sha256": "04f8096ec7a7299b7de95dd86a10fe254beb5de3a332ba230fddc120ea6a1441",
+      "manifest_sha256": "3e177da3b4999860a7666bb1bbac79f9da052269a7bda5a459f822f27ae8905a",
       "required_cases": [
         "coreml-affine-attributes.mlpackage/Data/com.deepbom.fixture/model.mlmodel",
         "coreml-affine-missing-axis.mlmodel"

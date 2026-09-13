@@ -7,6 +7,11 @@ const packageJson = JSON.parse(await readFile("package.json", "utf8"));
 const tierSource = await readFile("scripts/check-tier.mjs", "utf8");
 
 assert.equal(ledger.schema, "deepbom.external_review_golden_boundary_manifest.v1");
+assert.equal(
+  ledger.manifest_digest_canonicalization,
+  "UTF-8 text with CRLF and CR normalized to LF before SHA-256",
+  "External-review manifest digest canonicalization drifted.",
+);
 assert.deepEqual(ledger.boundaries.map((row) => row.id), [
   "tflite_dynamic_and_transpose_conv",
   "gguf_f16_q4_q8_storage",
@@ -16,7 +21,8 @@ assert.deepEqual(ledger.boundaries.map((row) => row.id), [
 
 for (const boundary of ledger.boundaries) {
   const bytes = await readFile(boundary.manifest);
-  assert.equal(createHash("sha256").update(bytes).digest("hex"), boundary.manifest_sha256, `${boundary.id} manifest digest drifted.`);
+  const canonicalBytes = Buffer.from(bytes.toString("utf8").replace(/\r\n?/g, "\n"), "utf8");
+  assert.equal(createHash("sha256").update(canonicalBytes).digest("hex"), boundary.manifest_sha256, `${boundary.id} manifest digest drifted.`);
   const manifest = JSON.parse(bytes.toString("utf8"));
   const paths = new Set([
     ...(manifest.fixtures || []).map((row) => row.path),

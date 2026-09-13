@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "4ba21bb26e78c4e22e605ca99a4d365a8a139f58",
+  "source_commit": "7e5698d4fbec2ddf3d895a4b86c65b13a3a196b7",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1087,
@@ -447,8 +447,8 @@
     },
     {
       "path": "corpus/external-review/golden-boundary-manifest.v1.json",
-      "byte_length": 2119,
-      "sha256": "d66b941e7b5a678ba018a9463c2cb8678fbd0c6f2a75d6f099ca587e194f494e"
+      "byte_length": 2220,
+      "sha256": "53c67bfa4c7c2689ae5fc9d088c4d9056d294c3912abef0985ae4936b827fb35"
     },
     {
       "path": "corpus/external-review/measurement-oracles.v1.json",
@@ -1707,8 +1707,8 @@
     },
     {
       "path": "scripts/check-external-review-boundary-corpus.mjs",
-      "byte_length": 1807,
-      "sha256": "edc5b76b586164f55889e9f61d9615944cc770dafb72fe69d3f22fee16ecba25"
+      "byte_length": 2098,
+      "sha256": "0e90f738a632c8bbea731c76d125b1eeb8a02a04a023d5c450d7e92c05647f6d"
     },
     {
       "path": "scripts/check-external-review-coreml-correctness.mjs",
@@ -3768,7 +3768,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 84488,
-      "sha256": "fd2623aa7dce77b501404986cf37e7ff1502f3a236db8de0c79dfbefd8828529"
+      "sha256": "f0d22f11bcfcb23afcddaf0d368f5db46f3b8f2cc86b4b6f9ac89e2cef539c21"
     },
     {
       "path": "web/lib/bundle.js",
