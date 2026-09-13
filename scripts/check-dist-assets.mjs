@@ -53,6 +53,10 @@ const chatGptDeploymentFiles = [
   path.join(distRoot, "chatgpt", "deepbom-app-icon.svg"),
   path.join(distRoot, "server.json"),
 ];
+const portablePluginDeploymentFiles = [
+  path.join(distRoot, "plugin.json"),
+  path.join(distRoot, "mcp.json"),
+];
 const publicSampleModelPaths = new Set(PUBLIC_SAMPLE_MODELS
   .map((sample) => sample.path)
   .filter((samplePath) => samplePath.startsWith("samples/"))
@@ -139,6 +143,17 @@ if (existsSync(deploymentExcludedSyntheticOnnx)) throw new Error("dist must excl
 const missingChatGptDeploymentFiles = chatGptDeploymentFiles.filter((filePath) => !existsSync(filePath));
 if (missingChatGptDeploymentFiles.length) {
   throw new Error(`dist is missing ChatGPT discovery/runtime assets: ${missingChatGptDeploymentFiles.join(", ")}`);
+}
+const missingPortablePluginDeploymentFiles = portablePluginDeploymentFiles.filter((filePath) => !existsSync(filePath));
+if (missingPortablePluginDeploymentFiles.length) {
+  throw new Error(`dist is missing portable Agent Plugin manifests: ${missingPortablePluginDeploymentFiles.join(", ")}`);
+}
+const deployedPluginManifest = JSON.parse(readFileSync(path.join(distRoot, "plugin.json"), "utf8"));
+const deployedMcpManifest = JSON.parse(readFileSync(path.join(distRoot, "mcp.json"), "utf8"));
+if (deployedPluginManifest.name !== "deepbom"
+  || deployedPluginManifest.version !== packageDocument.version
+  || deployedMcpManifest.mcpServers?.["deepbom-artifact-evidence"]?.url !== "https://deepbom.org/mcp") {
+  throw new Error("dist portable Agent Plugin manifests must identify the current release and public MCP endpoint.");
 }
 const deployedChatGptPage = readFileSync(path.join(distRoot, "chatgpt", "index.html"), "utf8");
 if (!deployedChatGptPage.includes('rel="canonical" href="https://deepbom.org/chatgpt/"')

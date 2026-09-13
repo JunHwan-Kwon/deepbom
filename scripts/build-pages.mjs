@@ -116,6 +116,8 @@ await copyFile(
   path.join(root, "skills", "deepbom", "SKILL.md"),
   path.join(dist, "skills", "deepbom", "SKILL.md"),
 );
+await copyProjectFile("plugin.json");
+await copyProjectFile("mcp.json");
 const webIndexHtml = await readFile(path.join(dist, "web", "index.html"), "utf8");
 await writeFile(path.join(dist, "index.html"), shellHtml(webIndexHtml));
 await writeFile(path.join(dist, "medical.html"), shellHtml(webIndexHtml, "Medical Evidence Workspace / DEEPBOM"));

@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "10c89724c4cd4c5a22f4a7faaa539e2afe116646",
+  "source_commit": "c5841d0e2cff7786bc4d2cb267b9b84c115bc5d2",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1104,
@@ -1252,8 +1252,8 @@
     },
     {
       "path": "scripts/build-pages.mjs",
-      "byte_length": 24882,
-      "sha256": "8adf27596387c7a8ed427d90e339c2da4ea465b86ff80bb7c94c88234842f3a6"
+      "byte_length": 24955,
+      "sha256": "978da313aef41c63773ffe1858fb753601b78706e7153b89eaf57f4f36b278f1"
     },
     {
       "path": "scripts/build-public-multiformat-corpus-manifest.mjs",
@@ -1652,8 +1652,8 @@
     },
     {
       "path": "scripts/check-dist-assets.mjs",
-      "byte_length": 15583,
-      "sha256": "b9e433516573cc871fe7f1239dcfafacfa17ad87b0bf724c6bb5cca8519ba5e5"
+      "byte_length": 16525,
+      "sha256": "26b89840bb541a4579947e2f6657fa86328a2d7264612cae35338a247839a99a"
     },
     {
       "path": "scripts/check-dist-budget.mjs",
@@ -3853,7 +3853,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 85188,
-      "sha256": "9f156b5ba63f2358ccfd121a4e36e100e34f1a5defb86c8851ccb4fe747f4304"
+      "sha256": "b28b9b85c8007123975da22805db3de6883a4728aea7e6e332fd031c718406b9"
     },
     {
       "path": "web/lib/bundle.js",
