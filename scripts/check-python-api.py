@@ -24,12 +24,28 @@ def expect(condition: bool, message: str) -> None:
 expect(callable(deepbom.audit), "audit must be exported")
 expect(callable(deepbom.tensors), "tensors must be exported")
 expect(callable(deepbom.capabilities), "capabilities must be exported")
+expect(callable(deepbom.model_ir), "model_ir must be exported")
+expect(callable(deepbom.visualization_manifest), "visualization_manifest must be exported")
 
 with patch.object(api, "_invoke_json", return_value={"schema": "deepbom.artifact_evidence_envelope.v1"}) as invoke:
     result = deepbom.audit("model.gguf")
     expect(result["schema"].endswith("envelope.v1"), "audit must return the parsed document")
     expect(invoke.call_args.args[0] == ["audit", "model.gguf", "--scan", "auto", "--output-format", "envelope", "--compact"],
            "audit must build the canonical envelope invocation")
+
+with patch.object(api, "_invoke_json", return_value={
+    "schema": "deepbom.analysis_selection.v1",
+    "sections": {"model_ir": {"schema": "deepbom.model_ir.v1", "model_ir_sha256": "a" * 64}},
+}) as invoke:
+    document = deepbom.model_ir("model.onnx")
+    expect(document["schema"] == "deepbom.model_ir.v1", "model_ir must unwrap the selected section")
+    expect(invoke.call_args.args[0] == ["audit", "model.onnx", "--scan", "auto", "--section", "model_ir", "--compact"],
+           "model_ir must use the public bounded section contract")
+
+with patch.object(api, "_invoke_json", return_value={"schema": "deepbom.model_ir_visualization_manifest.v1"}) as invoke:
+    deepbom.visualization_manifest("model.onnx", views=["architecture-overview"], orientation="landscape")
+    expect(invoke.call_args.args[0] == ["visualize", "model.onnx", "--view", "architecture-overview", "--orientation", "landscape", "--output-format", "json", "--compact"],
+           "visualization_manifest must use the deterministic JSON projection")
 
 with patch.object(api, "_invoke_json", return_value={"schema": "deepbom.tensor_table.v1", "tensors": [{
     "name": "w", "element_count": "16", "effective_bits_per_element": "4.5", "byte_length": 9,
@@ -62,6 +78,8 @@ for callable_value in (
     lambda: deepbom.audit("model.gguf", gate="warnings"),
     lambda: deepbom.audit("model.gguf", policy="legal"),
     lambda: deepbom.audit("model.gguf", sections=["summary"], output="envelope"),
+    lambda: deepbom.visualization_manifest("model.onnx", views=["unknown"]),
+    lambda: deepbom.visualization_manifest("model.onnx", orientation="diagonal"),
 ):
     try:
         callable_value()

@@ -43,7 +43,7 @@ assert.deepEqual(portableInterface.defaultPrompt, compatibility.interface.defaul
 assert(portableInterface.defaultPrompt.length >= 3 && portableInterface.defaultPrompt.length <= 3);
 assert(portableInterface.defaultPrompt.every((prompt) => prompt.length <= 128));
 
-assert.match(skill, /serialized AI deployment artifacts/);
+assert.match(skill, /serialized AI model artifacts/);
 assert.match(skill, /does not access a package registry by default/);
 assert.match(skill, /ask before running/);
 assert.match(openaiSkill, /allow_implicit_invocation: true/);

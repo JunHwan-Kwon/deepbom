@@ -3,6 +3,7 @@ export const STATIC_AUDIT_OPERATION = Object.freeze({
   ARTIFACT_BUNDLE_ANALYZE: "artifact_bundle_analyze",
   METADATA_ANALYZE: "metadata_analyze",
   COREML_ANALYZE: "coreml_analyze",
+  SAFE_SOURCE_ANALYZE: "safe_source_analyze",
   ONNX_ANALYZE: "onnx_analyze",
   EXECUTORCH_ANALYZE: "executorch_analyze",
   TFLITE_ANALYZE: "tflite_analyze",
@@ -28,4 +29,5 @@ export const FILE_SCOPED_STATIC_AUDIT_OPERATIONS = Object.freeze(new Set([
   STATIC_AUDIT_OPERATION.ARTIFACT_BUNDLE_ANALYZE,
   STATIC_AUDIT_OPERATION.METADATA_ANALYZE,
   STATIC_AUDIT_OPERATION.COREML_ANALYZE,
+  STATIC_AUDIT_OPERATION.SAFE_SOURCE_ANALYZE,
 ]));

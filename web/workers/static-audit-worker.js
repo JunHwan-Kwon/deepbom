@@ -60,6 +60,11 @@ async function runFileScopedOperation(id, operation, payload) {
     status(id, "Range-decoding Core ML protobuf records");
     return readCoreMlModelFile(payload.file);
   }
+  if (operation === STATIC_AUDIT_OPERATION.SAFE_SOURCE_ANALYZE) {
+    const { readSafeSourceArtifactFile } = await import("../lib/safe-source-artifacts.js");
+    status(id, "Parsing bounded declarative structure without framework object construction");
+    return readSafeSourceArtifactFile(payload.file, payload.format, payload.file?.name || "model");
+  }
   return null;
 }
 

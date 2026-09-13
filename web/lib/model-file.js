@@ -11,7 +11,14 @@ export const MODEL_FORMAT_ADAPTERS = Object.freeze({
   safetensors: Object.freeze({ id: "safetensors", label: "SafeTensors", extensions: [".safetensors"], load: "declared_header", analyzer: "javascript_metadata", executable: false, capabilities: ["metadata_analysis", "artifact_export"] }),
   coreml: Object.freeze({ id: "coreml", label: "Core ML", extensions: [".mlmodel", ".mlpackage"], load: "file_or_package", analyzer: "javascript_metadata", executable: false, capabilities: ["metadata_analysis", "serialized_graph_analysis", "weight_encoding_analysis", "artifact_export"] }),
   executorch: Object.freeze({ id: "executorch", label: "ExecuTorch", extensions: [".pte", ".ptd"], load: "full_or_external_data", analyzer: "javascript", executable: false, capabilities: ["static_analysis", "serialized_graph_analysis", "artifact_export"] }),
-  pytorch_pickle: Object.freeze({ id: "pytorch_pickle", label: "PyTorch pickle", extensions: [".pt", ".pth", ".ckpt"], load: "rejected", analyzer: "none", executable: true, capabilities: [] }),
+  tensorflow_protobuf: Object.freeze({ id: "tensorflow_protobuf", label: "TensorFlow GraphDef / SavedModel protobuf", extensions: [".pb"], load: "full_bounded", analyzer: "javascript_safe_static", executable: false, capabilities: ["static_analysis", "serialized_graph_analysis", "safe_envelope", "artifact_export"] }),
+  graphdef: Object.freeze({ id: "graphdef", label: "TensorFlow GraphDef", extensions: [], load: "full_bounded", analyzer: "javascript_safe_static", executable: false, capabilities: ["static_analysis", "serialized_graph_analysis", "safe_envelope", "artifact_export"] }),
+  savedmodel: Object.freeze({ id: "savedmodel", label: "TensorFlow SavedModel protobuf", extensions: [], load: "full_bounded", analyzer: "javascript_safe_static", executable: false, capabilities: ["static_analysis", "serialized_graph_analysis", "safe_envelope", "artifact_export"] }),
+  hdf5: Object.freeze({ id: "hdf5", label: "HDF5 safe envelope", extensions: [".h5", ".hdf5"], load: "full_bounded", analyzer: "javascript_safe_envelope", executable: false, capabilities: ["metadata_analysis", "safe_envelope", "artifact_export"] }),
+  keras: Object.freeze({ id: "keras", label: "Keras archive bounded static preview", extensions: [".keras"], load: "full_bounded", analyzer: "javascript_safe_static", executable: false, capabilities: ["metadata_analysis", "serialized_graph_analysis", "safe_envelope", "artifact_export"] }),
+  pt2: Object.freeze({ id: "pt2", label: "PyTorch PT2 bounded static preview", extensions: [".pt2"], load: "full_bounded", analyzer: "javascript_safe_static", executable: false, capabilities: ["metadata_analysis", "serialized_graph_analysis", "safe_envelope", "artifact_export"] }),
+  pytorch_checkpoint: Object.freeze({ id: "pytorch_checkpoint", label: "PyTorch checkpoint safe envelope", extensions: [".pt", ".pth", ".ckpt"], load: "full_bounded", analyzer: "javascript_safe_envelope", executable: true, capabilities: ["metadata_analysis", "safe_envelope", "artifact_export"] }),
+  pytorch_pickle: Object.freeze({ id: "pytorch_pickle", label: "Legacy PyTorch unsafe pickle alias", extensions: [], load: "rejected", analyzer: "none", executable: true, capabilities: [] }),
   unsupported: Object.freeze({ id: "unsupported", label: "Unsupported", extensions: [], load: "rejected", analyzer: "none", executable: false, capabilities: [] }),
 });
 
@@ -206,6 +213,8 @@ export function detectModelFormat(filename, bytes) {
   if (bytes?.length >= 8 && ((bytes[4] === 0x45 && bytes[5] === 0x54 && bytes[6] === 0x31 && bytes[7] === 0x32)
     || (bytes[4] === 0x46 && bytes[5] === 0x54 && bytes[6] === 0x30 && bytes[7] === 0x31))) return "executorch";
   if (bytes?.length >= 4 && bytes[0] === 0x47 && bytes[1] === 0x47 && bytes[2] === 0x55 && bytes[3] === 0x46) return "gguf";
+  if (bytes?.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x48 && bytes[2] === 0x44 && bytes[3] === 0x46
+    && bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a) return "hdf5";
   if (looksLikeSafeTensorsHeader(bytes)) return "safetensors";
   if (bytes?.length >= 4 && bytes[0] === 0x08) return "onnx";
   return "unsupported";

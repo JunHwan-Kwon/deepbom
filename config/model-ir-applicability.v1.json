@@ -1,0 +1,29 @@
+{
+  "schema": "deepbom.model_ir_applicability.v1",
+  "model_ir_schema": "deepbom.model_ir.v1",
+  "requirements": {
+    "core_mandatory": [
+      "artifact", "artifact_set", "artifact_role", "format_profile", "profiles", "capabilities",
+      "evidence_vocabulary", "completeness", "loss_ledger", "interpretation_boundary", "model_ir_sha256"
+    ],
+    "serialized_program_profile": ["program.programs", "program.regions", "program.operations", "program.values", "program.ports", "program.relationships"],
+    "serialized_storage_profile": ["tensors_and_storage.storage_objects", "tensors_and_storage.storage_ranges"],
+    "quantization_profile": ["quantization.records"],
+    "runtime_observation_profile": ["observed_runtime.overlays"]
+  },
+  "formats": [
+    { "id": "onnx", "status": "implemented", "artifact_role": "deployment_artifact", "serialized_program": "applicable", "serialized_storage": "conditional", "architecture_basis": "serialized_graph", "execution_graph_claim": "serialized" },
+    { "id": "tflite", "status": "implemented", "artifact_role": "deployment_artifact", "serialized_program": "applicable", "serialized_storage": "conditional", "architecture_basis": "serialized_graph", "execution_graph_claim": "serialized" },
+    { "id": "coreml", "status": "implemented_preview", "artifact_role": "model_package", "serialized_program": "profile_dependent", "serialized_storage": "conditional", "architecture_basis": "serialized_graph_when_exposed", "execution_graph_claim": "profile_dependent" },
+    { "id": "executorch", "status": "implemented_preview", "artifact_role": "exported_program", "serialized_program": "pte_only", "serialized_storage": "conditional", "architecture_basis": "serialized_aot_program", "execution_graph_claim": "pte_serialized" },
+    { "id": "gguf", "status": "implemented", "artifact_role": "weight_container", "serialized_program": "not_applicable", "serialized_storage": "applicable", "architecture_basis": "serialized_metadata_and_tensor_namespace", "execution_graph_claim": "forbidden" },
+    { "id": "safetensors", "status": "implemented", "artifact_role": "weight_container", "serialized_program": "not_applicable", "serialized_storage": "applicable", "architecture_basis": "bound_config_and_tensor_namespace", "execution_graph_claim": "forbidden" },
+    { "id": "graphdef", "status": "implemented_preview_bounded", "artifact_role": "exported_program", "serialized_program": "applicable_nodes_data_and_control_dependencies", "serialized_storage": "tensor_content_only", "architecture_basis": "serialized_graph", "execution_graph_claim": "serialized_dependency_graph_not_runtime_schedule" },
+    { "id": "savedmodel", "status": "implemented_preview_bounded", "artifact_role": "model_package", "serialized_program": "first_metagraph_and_signature_def_contracts_materialized", "serialized_storage": "package_members_hash_bound_payload_semantics_not_materialized", "architecture_basis": "first_serialized_metagraph_signature_and_function_inventory", "execution_graph_claim": "first_metagraph_only" },
+    { "id": "hdf5", "status": "implemented_safe_envelope_only", "artifact_role": "training_checkpoint", "serialized_program": "not_assessable", "serialized_storage": "superblock_only_object_graph_not_materialized", "architecture_basis": "not_assessable", "execution_graph_claim": "forbidden" },
+    { "id": "keras", "status": "implemented_preview_bounded", "artifact_role": "model_package", "serialized_program": "sequential_or_explicit_config_graph", "serialized_storage": "archive_member_inventory_weights_not_materialized", "architecture_basis": "serialized_config_without_object_construction", "execution_graph_claim": "declarative_layer_dependencies_not_lowered_ops" },
+    { "id": "pt2", "status": "implemented_preview_bounded", "artifact_role": "exported_program", "serialized_program": "first_models_json_graph_only", "serialized_storage": "archive_member_inventory_payloads_not_deserialized", "architecture_basis": "serialized_exported_program_json", "execution_graph_claim": "declarative_dependencies_not_runtime_schedule" },
+    { "id": "pytorch_checkpoint", "status": "implemented_safe_envelope_only", "artifact_role": "training_checkpoint", "serialized_program": "not_assessable_without_unsafe_deserialization", "serialized_storage": "archive_and_storage_member_inventory_only", "architecture_basis": "not_assessable", "execution_graph_claim": "forbidden" }
+  ],
+  "interpretation_boundary": "Implemented preview means a bounded subset is projected through deepbom.artifact_ir.v2 into deepbom.model_ir.v1 with explicit loss records. Safe-envelope-only rows support identity and risk/container inventory, not a full model graph. No row establishes framework execution, runtime scheduling, model quality, regulatory approval, or standards conformance."
+}

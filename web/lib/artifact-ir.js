@@ -21,6 +21,8 @@ export function buildArtifactEvidenceIrUnchecked(analysis, artifact = {}, { runt
   const identity = artifactIdentity(analysis, artifact, format);
   const tensors = list(analysis.tensors);
   const graph = GRAPH_FORMATS.has(format)
+    && (format !== "pt2" || analysis?.pt2?.graph_materialized === true)
+    && (format !== "keras" || analysis?.keras?.graph_materialized === true)
     ? buildSerializedGraph(analysis, format, tensors)
     : notSerializedGraph(format);
   const storage = buildStorageTopology(analysis, format, tensors);

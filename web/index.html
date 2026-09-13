@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" data-analysis-depth="deep">
 <head>
-  <meta name="deepbom-release" content="1.97.4" />
+  <meta name="deepbom-release" content="1.98.0" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta id="themeColor" name="theme-color" content="#fffefa" />
@@ -50,7 +50,7 @@
           "applicationSubCategory": "Machine Learning Tool",
           "operatingSystem": "Web Browser",
           "url": "https://deepbom.org/",
-          "softwareVersion": "1.97.4",
+          "softwareVersion": "1.98.0",
           "identifier": "https://doi.org/10.5281/zenodo.21834508",
           "sameAs": [
             "https://github.com/JunHwan-Kwon/deepbom",
@@ -471,7 +471,7 @@
           <div class="upload-controls">
             <select id="targetSelect" hidden aria-hidden="true"></select>
             <label class="file-button file-button-formats artifact-picker">
-              <input id="fileInput" type="file" accept=".tflite,.onnx,.gguf,.safetensors,.mlmodel,.pte,.ptd,application/octet-stream" />
+              <input id="fileInput" type="file" accept=".tflite,.onnx,.gguf,.safetensors,.mlmodel,.pte,.ptd,.pb,.h5,.hdf5,.keras,.pt2,.pt,.pth,.ckpt,application/octet-stream" />
               <span>Select artifact</span>
               <small>(.tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd)</small>
             </label>
@@ -493,7 +493,7 @@
             </div>
             <details class="advanced-artifact-inputs">
               <summary>More input options</summary>
-              <label class="file-button file-button-formats package-picker" title="Select a Core ML .mlpackage or a SafeTensors repository directory with optional config, tokenizer, deployment, and DEEPBOM runtime sidecars">
+              <label class="file-button file-button-formats package-picker" title="Select a Core ML .mlpackage, a SafeTensors repository, or a TensorFlow SavedModel directory">
                 <input id="artifactBundleInput" type="file" multiple webkitdirectory directory />
                 <span>Select package</span>
                 <small>(.mlpackage or a sharded .safetensors repository)</small>
@@ -1882,6 +1882,7 @@
             <button id="graphZoomIn" type="button" title="Zoom in">+</button>
             <button id="graphFit" type="button">Fit</button>
             <button id="downloadGraphSvg" type="button">SVG</button>
+            <button id="downloadModelViews" type="button" title="Download hash-bound monochrome A4 SVG and 300-DPI PNG model views">Model views</button>
           </div>
           <span id="graphMapStatus"></span>
         </div>
@@ -2147,7 +2148,7 @@
     <!-- Search engine and AI crawler content — not shown to interactive users -->
     <footer class="seo-footer" aria-label="About DEEPBOM">
       <h2>About DEEPBOM</h2>
-      <p>DEEPBOM is a browser-native deployment artifact analyzer. TFLite receives deep graph, quantization, memory, and target-rule analysis; ONNX receives graph, tensor, shape, compatibility, and runtime-evidence analysis; GGUF and SafeTensors receive container, tensor, payload, and shard-contract analysis; Core ML receives model or package inspection and serialized graph evidence when present. The UI states the applicable depth for every run. Artifact files are analyzed locally and are not uploaded.</p>
+      <p>DEEPBOM is a browser-native deployment artifact analyzer. TFLite receives deep graph, quantization, memory, and target-rule analysis; ONNX receives graph, tensor, shape, compatibility, and runtime-evidence analysis; GGUF and SafeTensors receive container, tensor, payload, and shard-contract analysis; Core ML receives model or package inspection and serialized graph evidence when present. Bounded previews decode serialized GraphDef, first-MetaGraph SavedModel, Keras config, and PT2 JSON relationships without framework object construction; HDF5 and PyTorch checkpoints remain safe-envelope-only. The UI states the applicable depth for every run. Artifact files are analyzed locally and are not uploaded.</p>
       <h3>Key capabilities</h3>
       <ul>
         <li><strong>INT8 quantization audit:</strong> identifies static anomalies and contract discontinuities (per-channel scale/zero-point anomalies and serialized activation precision boundaries) that may increase the risk of numerical or task-level regression and warrant reference-data testing. Boundary-operator counts are not presented as runtime float-island counts.</li>

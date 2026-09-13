@@ -7,12 +7,20 @@ const FORMAT_MATURITY = Object.freeze([
   format("safetensors", "stable", "not_applicable", "stable_metadata_bound", "not_applicable", "SafeTensors serializes named tensor storage; graph and placement require a separately bound executable artifact."),
   format("coreml", "preview", "preview", "preview", "imported_evidence_only", "NeuralNetwork and ML Program evidence is supported; compressed and flexible contracts remain fixture-bounded."),
   format("executorch", "preview", "preview", "limited", "selected_build_required", "ET12/FT01 parsing is bounded; backend and operator completeness require selected-build evidence."),
+  format("graphdef", "preview", "preview", "tensor_content_only", "not_assessed", "GraphDef node, referenced data/control dependencies, and bounded Placeholder/Const tensor contracts are decoded without execution; explicit model I/O, arbitrary op output contracts, kernels, and runtime schedule are not claimed."),
+  format("savedmodel", "preview", "preview", "package_identity_only", "not_assessed", "The first serialized MetaGraph and SignatureDef tensor contracts are decoded. A selected directory is completely path/size/SHA-256 bound, while variable, asset, extra-MetaGraph, kernel, and runtime semantics remain explicitly incomplete."),
+  format("hdf5", "preview", "not_applicable", "not_assessed", "not_applicable", "Safe-envelope preview parses the HDF5 superblock only; no Keras objects, groups, datasets, links, tensor values, or graph are claimed."),
+  format("keras", "preview", "declarative_config_graph", "archive_identity_only", "not_applicable", "Bounded Sequential or explicit keras_history layer dependencies are projected from config.json without constructing Keras objects, lowering layers, or asserting runtime order."),
+  format("pt2", "preview", "declarative_json_graph", "archive_identity_only", "not_applicable", "The first bounded PT2 models/*.json dependency graph is projected without torch.export.load, pickle loading, native code, kernel, or runtime claims."),
+  format("pytorch_checkpoint", "preview", "not_applicable", "not_assessed", "not_applicable", "Safe-envelope preview inventories archive and pickle opcodes/globals without torch.load, object construction, imports, or executable-graph claims."),
 ]);
 
 const MACHINE_CONTRACTS = Object.freeze([
   machineContract("deepbom.cli_capabilities.v1", "stable", "Additive fields only within v1; removals or semantic changes require a new schema id."),
   machineContract("deepbom.artifact_evidence_envelope.v1", "stable", "Canonical cross-format automation envelope."),
   machineContract("deepbom.artifact_ir.v2", "stable", "Canonical artifact evidence identity, graph/storage topology, and overlay contract."),
+  machineContract("deepbom.model_ir.v1", "preview", "Format-neutral program, logical tensor, serialized storage, binding, quantization, architecture, and runtime-layer contract. Preview fields may change additively until migration gates pass; source binding to artifact_ir.v2 is mandatory."),
+  machineContract("deepbom.model_ir_visualization_manifest.v1", "preview", "Deterministic monochrome A4 projection of Model IR subjects. Canonical SVG and derivative PNG do not assert regulatory approval or standard conformance."),
   machineContract("deepbom.semantic_artifact_diff.v1", "stable", "Same-format graph, storage, and quantization-contract comparison derived from two Artifact IR documents."),
   machineContract("deepbom.review_summary.v1", "stable", "Structured source for bounded human summaries; rendered prose is not a machine API."),
   machineContract("sarif-2.1.0/deepbomFinding-v1", "stable", "Finding identity and artifact fingerprints are stable; additive SARIF properties are allowed."),

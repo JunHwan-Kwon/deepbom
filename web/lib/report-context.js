@@ -36,6 +36,7 @@ export function buildReportContext({
     generatedAt,
     artifactIrContext,
     artifactIr: artifactIrContext?.artifact_ir || null,
+    modelIr: artifactIrContext?.model_ir || null,
   };
 }
 
@@ -109,6 +110,7 @@ export function buildRawEvidenceContext({
     findingsContext,
     artifactIrContext,
     artifactIr: artifactIrContext?.artifact_ir || null,
+    modelIr: artifactIrContext?.model_ir || null,
   };
 }
 

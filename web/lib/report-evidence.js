@@ -30,6 +30,8 @@ import { buildRuntimeEvidenceSidecar } from "./runtime-evidence-sidecar.js";
 import { buildOnnxRuntimeShapeBinding } from "./onnx-runtime-shape-binding.js";
 import { buildSecurityPostureEvidence, collectRuntimeWarnings } from "./report-security-posture.js";
 import { resolveArtifactIrContext } from "./artifact-ir-context.js";
+import { buildModelIrFromArtifactIr } from "./model-ir.js";
+import { modelIrVisualizationFiles } from "./model-ir-visualization.js";
 
 export function buildStaticAnalysisExport(analysis) {
   const { _markdown, roofline_csv, core_isolation_csv, stage_mermaid, findings: _nativeFindings, recommendations: _nativeRecommendations, ...rest } = analysis || {};
@@ -1067,6 +1069,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
     artifactIr: rawEvidenceContext.artifactIr || reportContext.artifactIr || null,
     runtimeEvidence: rawEvidenceContext.runtimeEvidence || reportContext.runtimeEvidence || null,
   });
+  const modelIr = resolveReportModelIr(analysis, artifactIr, rawEvidenceContext, reportContext);
   const modelStructure = buildModelStructureEvidence(analysis, identity);
   const quantization = buildQuantizationEvidence(analysis, identity);
   const runtimeResults = buildRuntimeEvidence({ analysis, ...runtimeEvidence });
@@ -1087,6 +1090,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
     evidence: {
       static_analysis: staticAnalysis,
       ...(artifactIr ? { artifact_ir: artifactIr } : {}),
+      ...(modelIr ? { model_ir: modelIr } : {}),
       quantization,
       runtime_results: runtimeResults,
       execution_placement: executionPlacement,
@@ -1114,6 +1118,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
     evidence: {
       static_analysis: staticAnalysis,
       ...(artifactIr ? { artifact_ir: artifactIr } : {}),
+      ...(modelIr ? { model_ir: modelIr } : {}),
       model_structure: modelStructure,
       quantization,
       runtime_results: runtimeResults,
@@ -1149,6 +1154,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
     evidence: {
       static_analysis: staticAnalysis,
       ...(artifactIr ? { artifact_ir: artifactIr } : {}),
+      ...(modelIr ? { model_ir: modelIr } : {}),
       model_structure: modelStructure,
       quantization,
       runtime_results: runtimeResults,
@@ -1222,6 +1228,7 @@ export function buildRawDataArtifactFiles(analysis, {
   visualPngFiles = [],
 } = {}) {
   const artifactIr = resolveReportArtifactIr(analysis, rawEvidenceContext.identity || {}, rawEvidenceContext);
+  const modelIr = resolveReportModelIr(analysis, artifactIr, rawEvidenceContext);
   const files = [
     zipTextFile("static/raw_static_audit.md", analysis?._markdown || buildStaticAuditMarkdown(analysis, analysis?.model_sha256 || "") || ""),
     zipTextFile("static/roofline.csv", analysis?.roofline_csv || ""),
@@ -1229,6 +1236,7 @@ export function buildRawDataArtifactFiles(analysis, {
     zipTextFile("static/stage_graph.mmd", analysis?.stage_mermaid || ""),
     zipTextFile("static/static_analysis.json", jsonForDownload(buildStaticAnalysisExport(analysis))),
     ...(artifactIr ? [zipTextFile("static/artifact_ir.json", jsonForDownload(artifactIr))] : []),
+    ...(modelIr ? [zipTextFile("static/model_ir.json", jsonForDownload(modelIr))] : []),
     zipTextFile("static/arena_plan.csv", buildArenaPlanCsv(analysis)),
     zipTextFile("static/mlbom_cdx.json", jsonForDownload(mlBomDocument || {})),
     ...buildRawEvidenceFiles(analysis, rawEvidenceContext),
@@ -1243,6 +1251,10 @@ export function buildRawDataArtifactFiles(analysis, {
     files.push(zipTextFile("runtime/arena_reconciliation.csv", buildRuntimeArenaReconciliationCsv(runtimeAssignment)));
   }
   if (graphSvgText) files.push(zipTextFile("static/graph_neighborhood.svg", graphSvgText));
+  if (modelIr) {
+    const modelViews = modelIrVisualizationFiles(modelIr);
+    files.push(...modelViews.files.map((file) => zipTextFile(file.name, file.data)));
+  }
   const inputWitness = analysis?.input_counterexample?.witnesses?.[0];
   if (inputWitness) files.push(zipBinaryFile("static/input_counterexample_input.bin", buildInputWitnessTensor(inputWitness).bytes));
   const preprocessing = analysis?.preprocessing_realizability;
@@ -1275,4 +1287,16 @@ function resolveReportArtifactIr(analysis, identity = {}, evidenceContext = {}) 
     artifactIr: evidenceContext.artifactIr || null,
     runtimeEvidence,
   })?.artifact_ir || null;
+}
+
+function resolveReportModelIr(analysis, artifactIr, ...contexts) {
+  const supplied = contexts.map((context) => context?.artifactIrContext?.model_ir || context?.modelIr).find(Boolean)
+    || analysis?.model_ir || null;
+  if (supplied) {
+    if (!artifactIr || supplied.source_contract?.sha256 !== artifactIr.artifact_ir_sha256) {
+      throw new Error("Report Model IR is not bound to the report Artifact IR.");
+    }
+    return supplied;
+  }
+  return artifactIr ? buildModelIrFromArtifactIr(artifactIr) : null;
 }

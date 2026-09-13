@@ -98,6 +98,7 @@ export function createExportContractController({
         zipTextFile(exportSet.files.cyclonedx, jsonForDownload(exportSet.documents.cyclonedx_evidence)),
         zipTextFile(exportSet.files.artifactEnvelope, jsonForDownload(exportSet.documents.artifact_evidence_envelope)),
         zipTextFile(exportSet.files.artifactIr, jsonForDownload(exportSet.documents.artifact_ir)),
+        zipTextFile(exportSet.files.modelIr, jsonForDownload(exportSet.documents.model_ir)),
         zipTextFile(exportSet.files.interfaceContracts, jsonForDownload(exportSet.documents.interface_contract_ledger)),
         zipTextFile(exportSet.files.formulation, jsonForDownload(exportSet.documents.observed_formulation)),
         zipTextFile(exportSet.files.runtime, jsonForDownload(exportSet.documents.runtime_requirement_manifest)),

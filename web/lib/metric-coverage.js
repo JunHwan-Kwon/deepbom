@@ -1535,17 +1535,17 @@ function spec(id, label, {
 const SPECS = [
   spec("artifact.canonical_ir", "Canonical Artifact Evidence IR", {
     formats: ["tflite", "onnx", "coreml", "mlmodel", "gguf", "safetensors", "executorch", "pte", "ptd"],
-    keys: ["artifact_ir", "artifact_ir_consumer_view", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"],
+    keys: ["artifact_ir", "model_ir", "artifact_ir_consumer_view", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"],
     status: (analysis) => analysis?.artifact_ir?.schema === "deepbom.artifact_ir.v2"
       && /^[a-f0-9]{64}$/.test(String(analysis.artifact_ir?.artifact_ir_sha256 || ""))
       ? "assessed" : "not_assessed",
     evidenceClass: "OBSERVED/DERIVED",
-    pointers: ["/evidence/artifact_ir"],
+    pointers: ["/evidence/artifact_ir", "/evidence/model_ir"],
     report: (format) => ["gguf", "safetensors", "coreml", "executorch"].includes(format)
       ? "## Artifact Identity" : "## Artifact And Target",
     viewer: ["Overview", "Explorer", "Reports"],
-    exports: ["engineering_evidence.json", "static/artifact_ir.json", "static/static_analysis.json"],
-    method: "Validate one hash-bound deepbom.artifact_ir.v2 document and reuse its graph, storage, architecture, quantization, static-projection, and imported-runtime overlay identities across viewer and export surfaces without reconstructing it from a compatibility view.",
+    exports: ["engineering_evidence.json", "static/artifact_ir.json", "static/model_ir.json", "static/static_analysis.json"],
+    method: "Validate one hash-bound deepbom.artifact_ir.v2 document, derive one source-bound deepbom.model_ir.v1 projection with an explicit loss ledger, and reuse both identities across viewer and export surfaces without reconstructing them from a compatibility view.",
   }),
   spec("executorch.serialized_contract", "ExecuTorch ET12/FT01 serialized contract", {
     formats: ["executorch"],

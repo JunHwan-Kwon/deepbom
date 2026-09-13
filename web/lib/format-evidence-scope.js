@@ -2,6 +2,18 @@ import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { buildExecutionPlacementEvidence } from "./execution-placement-evidence.js";
 
 const FORMAT_SCOPES = Object.freeze({
+  generic: Object.freeze({
+    label: "Model artifact",
+    depth: "Bounded artifact evidence audit",
+    assessed: "Artifact identity and only the format facts explicitly exposed by the selected bounded adapter",
+    runtimeBoundary: "Execution graph, runtime order, placement, latency, quality, and safety remain unobserved unless the artifact or imported evidence explicitly establishes them",
+    nextProof: "Bind the executable deployment artifact, runtime identity, and representative task-output acceptance evidence required by the intended use",
+    stagedDescriptor: "bounded static artifact audit",
+    dashboardTitle: "Model Artifact Evidence",
+    dashboardCopy: "Observed serialized facts are separated from derived structure and unassessed runtime behavior.",
+    runLabel: "Run Bounded Static Audit",
+    completion: "Bounded static artifact audit complete",
+  }),
   tflite: Object.freeze({
     label: "TFLite",
     depth: "Deep graph and deployment-model audit",
@@ -74,11 +86,63 @@ const FORMAT_SCOPES = Object.freeze({
     runLabel: "Audit ExecuTorch Artifact",
     completion: "ExecuTorch static program audit run complete",
   }),
+  graphdef: safeGraphScope("TensorFlow GraphDef"),
+  savedmodel: safeGraphScope("TensorFlow SavedModel protobuf"),
+  tensorflow_protobuf: safeGraphScope("TensorFlow protobuf"),
+  hdf5: safeEnvelopeScope("HDF5"),
+  keras: safeDeclarativeGraphScope("Keras archive", "config.json layer order or explicit keras_history references"),
+  pt2: safeDeclarativeGraphScope("PyTorch PT2 archive", "the first bounded models/*.json ExportedProgram graph"),
+  pytorch_checkpoint: safeEnvelopeScope("PyTorch checkpoint"),
 });
+
+function safeGraphScope(label) {
+  return Object.freeze({
+    label,
+    depth: "Preview bounded serialized-graph audit",
+    assessed: "Serialized protobuf node identities and referenced data/control dependencies within the explicitly materialized graph scope",
+    runtimeBoundary: "Model I/O completeness, tensor shapes and types, kernels, execution schedule, placement, latency, quality, and safety are not inferred from the bounded preview",
+    nextProof: "Bind the complete package and a deployment/runtime contract before making execution or performance claims",
+    stagedDescriptor: "preview bounded serialized-graph audit",
+    dashboardTitle: `${label} Evidence`,
+    dashboardCopy: "Serialized node dependencies are shown without object construction or graph execution.",
+    runLabel: `Audit ${label}`,
+    completion: `${label} preview static audit complete`,
+  });
+}
+
+function safeEnvelopeScope(label) {
+  return Object.freeze({
+    label,
+    depth: "Preview safe-envelope audit",
+    assessed: "Container identity, bounded member or header facts, and explicitly readable declarative metadata",
+    runtimeBoundary: "No framework objects are constructed and no executable graph, calculation order, tensor semantics, runtime placement, latency, quality, or safety is claimed",
+    nextProof: "Use an exported deployment graph or a separately bound converter/runtime receipt for semantic and execution analysis",
+    stagedDescriptor: "preview safe-envelope and risk-inventory audit",
+    dashboardTitle: `${label} Safe Envelope`,
+    dashboardCopy: "The container is inspected without unsafe deserialization or framework object construction.",
+    runLabel: `Inspect ${label} Safely`,
+    completion: `${label} safe-envelope audit complete`,
+  });
+}
+
+function safeDeclarativeGraphScope(label, source) {
+  return Object.freeze({
+    label,
+    depth: "Preview bounded declarative-graph and safe-envelope audit",
+    assessed: `Archive identity and dependency relationships serialized by ${source}`,
+    runtimeBoundary: "Framework objects, payload pickles, custom code, lowering, kernels, runtime scheduling, placement, latency, quality, and safety are not executed or inferred",
+    nextProof: "Bind separately observed framework/runtime evidence when execution behavior is relevant",
+    stagedDescriptor: "preview bounded declarative-graph audit",
+    dashboardTitle: `${label} Evidence`,
+    dashboardCopy: "Serialized declarative dependencies are separated from framework execution and runtime behavior.",
+    runLabel: `Audit ${label}`,
+    completion: `${label} preview static audit complete`,
+  });
+}
 
 function normalizedFormat(format) {
   const value = String(format || "").toLowerCase();
-  return FORMAT_SCOPES[value] ? value : "tflite";
+  return FORMAT_SCOPES[value] ? value : "generic";
 }
 
 export function formatEvidenceScope(format, { analysis = null, runtimeEvidence = null } = {}) {
@@ -150,7 +214,8 @@ export function renderStagedArtifactContext(doc, format) {
 
 export function formatWorkflowApplicability(format, analysis = null) {
   const id = normalizedFormat(format || analysis?.format);
-  const graph = id === "tflite" || id === "onnx" || id === "executorch" && (artifactIrOperators(analysis) || []).length > 0 || id === "coreml" && (artifactIrOperators(analysis) || []).length > 0;
+  const graph = id === "tflite" || id === "onnx" || ["graphdef", "savedmodel", "tensorflow_protobuf", "keras", "pt2"].includes(id)
+    || id === "executorch" && (artifactIrOperators(analysis) || []).length > 0 || id === "coreml" && (artifactIrOperators(analysis) || []).length > 0;
   const runtime = id === "tflite" || id === "onnx";
   const tfliteResearch = id === "tflite";
   return {

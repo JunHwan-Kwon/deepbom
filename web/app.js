@@ -205,6 +205,7 @@ import { buildReviewSummary } from "./lib/review-summary.js";
 import { bindReviewSummaryActions, renderReviewSummary } from "./lib/review-summary-view.js";
 import { buildSingleFileArtifactSet } from "./lib/artifact-set.js";
 import { exportGraphVisualization } from "./lib/graph-export.js";
+import { buildBrowserModelIrVisualizationArchive } from "./lib/model-ir-browser-export.js";
 import {
   buildModelIdentity,
   detectModelFormat,
@@ -660,6 +661,7 @@ const {
   graphZoomIn,
   graphFit,
   downloadGraphSvg,
+  downloadModelViews,
   graphMapStatus,
   graphModeHint,
   graphMapSvg,
@@ -2293,6 +2295,9 @@ graphFit.addEventListener("click", () => fitGraphMap());
 downloadGraphSvg.addEventListener("click", () => {
   void downloadCurrentGraphSvg();
 });
+downloadModelViews?.addEventListener("click", () => {
+  void downloadCurrentModelViews();
+});
 
 graphMapSvg.addEventListener("pointerdown", (event) => {
   if (!graphViewBox) return;
@@ -3042,7 +3047,7 @@ function updateExportLockState() {
   const regulatoryAllowed = true;
   const deepBomAllowed = capabilities.deepbom;
   const rawLocked = !rawExportAllowed;
-  applyGatedExportLabels(downloadMarkdown, [downloadRawData, downloadCsv, downloadMermaid, downloadVisualPngs, downloadEngineeringBundle], false, rawLocked, currentAuthUser);
+  applyGatedExportLabels(downloadMarkdown, [downloadRawData, downloadCsv, downloadMermaid, downloadModelViews, downloadVisualPngs, downloadEngineeringBundle], false, rawLocked, currentAuthUser);
   syncPublicPrintButton(printPublicReport, { hasAnalysis: Boolean(current), reportTargetReady });
   syncPublicVerificationButton(downloadPublicVerificationManifest, { hasAnalysis: Boolean(current), reportTargetReady });
   const selectedEvidencePackageProfile = resolveEvidencePackageProfile(evidencePackageProfile?.value);
@@ -3063,7 +3068,7 @@ function updateExportLockState() {
   if (downloadReviewHtml) downloadReviewHtml.disabled = !current || !reportTargetReady;
   if (downloadEvidenceJson) downloadEvidenceJson.disabled = !current || !reportTargetReady;
   setAccountLockedButtons(
-    [downloadRawData, downloadCsv, downloadMermaid, downloadGraphSvg, downloadVisualPngs, downloadEngineeringBundle],
+    [downloadRawData, downloadCsv, downloadMermaid, downloadGraphSvg, downloadModelViews, downloadVisualPngs, downloadEngineeringBundle],
     rawLocked,
     rawLocked
       ? "Local export is unavailable."
@@ -3077,6 +3082,7 @@ function updateExportLockState() {
   if (downloadCsv) downloadCsv.disabled = rawArtifactDisabled || !exportAvailability.performanceDerivatives;
   if (downloadMermaid) downloadMermaid.disabled = rawArtifactDisabled || !exportAvailability.performanceDerivatives;
   if (downloadGraphSvg) downloadGraphSvg.disabled = rawArtifactDisabled || !exportAvailability.graph;
+  if (downloadModelViews) downloadModelViews.disabled = rawArtifactDisabled || !currentArtifactIrContext?.model_ir;
   downloadRawData.title = rawExportAllowed
     ? "Raw audit, ML-BOM, graphs, PNGs, and package integrity evidence."
     : "Local raw export is unavailable.";
@@ -3790,6 +3796,15 @@ async function analyzeFile(file) {
       current = parsed.analysis;
       currentModelBytes = parsed.retainedBytes;
       currentModelPayloadLoaded = false;
+    } else if (["tensorflow_protobuf", "hdf5", "keras", "pt2", "pytorch_checkpoint"].includes(format)) {
+      const parsed = await staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.SAFE_SOURCE_ANALYZE, {
+        file,
+        format,
+        onStatus: (phase) => auditProgressController.describe(phase),
+      });
+      current = parsed.analysis;
+      currentModelBytes = parsed.retainedBytes;
+      currentModelPayloadLoaded = false;
     } else {
       currentModelBytes = new Uint8Array(await file.arrayBuffer());
       currentModelPayloadLoaded = true;
@@ -4185,7 +4200,7 @@ async function analyzeLoadedModel(filename, targetOverride = "", { keepTab = fal
   }
   if (pendingRuntimeProfile) runtimeProfileModal.close();
   await nextPaint();
-  const metadataOnly = ["gguf", "safetensors", "coreml"].includes(format);
+  const metadataOnly = ["gguf", "safetensors", "coreml", "graphdef", "savedmodel", "hdf5", "keras", "pt2", "pytorch_checkpoint"].includes(format);
   const cachedAnalysis = metadataOnly ? null : targetAnalysisCache.get(cacheKey);
   if (cachedAnalysis && (!targetProfileApplicable || cachedAnalysis?.target_profile?.id === targetId)) {
     current = cachedAnalysis;
@@ -4665,6 +4680,22 @@ function canonicalGraphSvgText() {
   if (!graph) return graphSvgText(graphMapSvg);
   const view = currentGraphMode === "deploy" ? "placement" : "structure";
   return exportGraphVisualization(graph, { view, format: "svg" }).text;
+}
+
+async function downloadCurrentModelViews() {
+  const modelIr = currentArtifactIrContext?.model_ir;
+  if (!current || !modelIr || !downloadModelViews) return;
+  await withBusyButton(downloadModelViews, "Rendering", async () => {
+    try {
+      if (!(await ensureRawExportAllowed("Model views ZIP"))) return;
+      const archive = await buildBrowserModelIrVisualizationArchive(modelIr, { orientation: "portrait" });
+      downloadBlob(currentArtifactFilename("model_views.zip"), archive.blob);
+      setStatus("Model views downloaded", "ok");
+    } catch (error) {
+      console.error("[model-ir-visualization]", error);
+      setStatus("Model view export failed", "error");
+    }
+  }, updateExportLockState);
 }
 
 function currentReviewState() {

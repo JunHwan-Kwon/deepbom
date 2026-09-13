@@ -6,6 +6,8 @@ or a comparison with another artifact or an explicitly supplied BOM.
 
 Start with `deepbom.capabilities()`, then use `deepbom.audit(path)` for one
 artifact, `deepbom.tensors(path)` for a bounded GGUF tensor table,
+`deepbom.model_ir(path)` for the preview common IR,
+`deepbom.visualization_manifest(path)` for its deterministic document-view manifest,
 `deepbom.verify_bom(path, bom)` for CycloneDX 1.7 reconciliation, or
 `deepbom.diff(baseline, candidate)` for two same-format artifacts.
 

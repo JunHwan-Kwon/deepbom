@@ -349,12 +349,16 @@ function nativeOperatorLocator(format, scope, op) {
   if (format === "onnx") return { format, path: `ModelProto.graph.node[${op.index}]`, byte_range: null };
   if (format === "coreml" || format === "mlmodel") return { format: "coreml", path: `Model.primary.operations[${op.index}]`, byte_range: null };
   if (["executorch", "pte", "ptd"].includes(format)) return { format: "executorch", path: `Program.execution_plan[0].chains.instructions[${op.index}]`, byte_range: null };
+  if (format === "graphdef") return { format, path: `GraphDef.node[${op.index}]`, byte_range: null };
+  if (format === "savedmodel") return { format, path: `SavedModel.meta_graphs[0].graph_def.node[${op.index}]`, byte_range: null };
   return { format, path: `operators[${op.index}]`, byte_range: null };
 }
 
 function nativeValueLocator(format, scope, tensor, index) {
   if (format === "tflite") return { format, path: `SubGraph[${scope.native_index}].tensors[${index}]` };
   if (format === "onnx") return { format, path: `ModelProto.graph.value[name=${JSON.stringify(String(tensor.name || ""))}]` };
+  if (format === "graphdef") return { format, path: `GraphDef.endpoint[${JSON.stringify(String(tensor.name || ""))}]` };
+  if (format === "savedmodel") return { format, path: `SavedModel.meta_graphs[0].graph_def.endpoint[${JSON.stringify(String(tensor.name || ""))}]` };
   return { format, path: `values[${index}]` };
 }
 

@@ -2,7 +2,7 @@
   "schema": "deepbom.external_review_cyclonedx_consumer_compatibility.v1",
   "source": {
     "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_evidence.cdx.json",
-    "sha256": "db598abc21eb44583d916a5d497a9d4dfa8a363243117b9f411b12e4434099e1"
+    "sha256": "9aee78acdb021746222d072decfa9280be5bc4fbe3768235923ea2196c459ce2"
   },
   "expected": {
     "spec_version": "1.7",

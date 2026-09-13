@@ -25,9 +25,11 @@ bin/deepbom-input.mjs
 bin/deepbom-mcp.mjs
 bin/deepbom.mjs
 bin/graph-png-export.mjs
+bin/model-ir-png-export.mjs
 bin/nvidia-accelerator-collector.mjs
 bin/remote-artifact-closure.mjs
 bin/remote-artifact-resolver.mjs
+bin/store-zip.mjs
 build.rs
 channels/LICENSE
 channels/README.md
@@ -54,6 +56,9 @@ config/artifact-ir-consumer-policy.v1.json
 config/artifact-ir-import-policy.v2.json
 config/delivery-operations.v1.json
 config/finding-rule-registry-policy.v1.json
+config/model-ir-applicability.v1.json
+config/model-ir-import-policy.v1.json
+config/model-ir-upstream-sources.v1.json
 config/public-source-files.v1.txt
 corpus/README.md
 corpus/agent-native/agent-evaluation-cases.v1.json
@@ -138,6 +143,7 @@ docs/EXTERNAL_REVIEW_TRIAGE.md
 docs/KNOWN_ISSUES.md
 docs/MEASUREMENT_ORACLE_GATE.md
 docs/MODEL_FREE_BUG_REPORTING.md
+docs/MODEL_IR_V1.md
 docs/ONNX_CONTRACT_CONFLICT_CAPSULE.md
 docs/PRODUCT_DIRECTION.md
 docs/PROJECT_STATUS.md
@@ -162,6 +168,7 @@ docs/claude-app/submission-profile.json
 docs/native-runtime-capture.md
 docs/schemas/deepbom-artifact-ir-v2.schema.json
 docs/schemas/deepbom-conversion-receipt-v1.schema.json
+docs/schemas/deepbom-model-ir-v1.schema.json
 docs/schemas/deepbom-onnx-contract-conflict-capsule-v1.schema.json
 docs/zenodo-validation-metadata.json
 examples/expected-output/README.md
@@ -212,6 +219,7 @@ reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_artifact_ir.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_evidence.cdx.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_interface_contracts.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_missing_provenance_fields.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_model_ir.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_observed_formulation.cdx.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_runtime_requirements.json
 reference/cyclonedx/1.7/jsf-0.82.schema.json
@@ -299,6 +307,7 @@ scripts/check-ci-deploy-contract.mjs
 scripts/check-claude-app-metadata.mjs
 scripts/check-cli-automation.mjs
 scripts/check-cli-graph-export.mjs
+scripts/check-cli-model-ir-visualization.mjs
 scripts/check-cli.mjs
 scripts/check-contract-migration-viewer.mjs
 scripts/check-contract-migration.mjs
@@ -395,6 +404,10 @@ scripts/check-measurement-oracles.mjs
 scripts/check-metadata-model-adapters.mjs
 scripts/check-mlbom-conservation.mjs
 scripts/check-model-file-contract.mjs
+scripts/check-model-ir-import-boundary.mjs
+scripts/check-model-ir-source-contracts.mjs
+scripts/check-model-ir-visualization.mjs
+scripts/check-model-ir.mjs
 scripts/check-native-capture-pipeline.mjs
 scripts/check-no-main-thread-heavy-wasm.mjs
 scripts/check-numerical-abi-propagation-viewer.mjs
@@ -483,6 +496,7 @@ scripts/check-runtime-data-movement-evidence.mjs
 scripts/check-runtime-evidence-sidecar.mjs
 scripts/check-runtime-profile-adapter.mjs
 scripts/check-rust.mjs
+scripts/check-safe-source-artifacts.mjs
 scripts/check-safetensors-architecture-corpus.mjs
 scripts/check-safetensors-quantization-contract.mjs
 scripts/check-safetensors-quantization-corpus.mjs
@@ -615,6 +629,7 @@ scripts/verify-gguf-runtime-capture.mjs
 scripts/verify-interface-boundary-corpus.mjs
 scripts/verify-litert-interface-corpus.py
 scripts/verify-local.mjs
+scripts/verify-model-ir-preview-source-pins.mjs
 scripts/verify-native-capture.mjs
 scripts/verify-onnx-container-source-pin.mjs
 scripts/verify-onnx-controlflow-source-pin.mjs
@@ -868,6 +883,16 @@ web/lib/metric-coverage.js
 web/lib/modal-accessibility.js
 web/lib/model-file.js
 web/lib/model-glance.js
+web/lib/model-ir-browser-export.js
+web/lib/model-ir-generic-analysis.js
+web/lib/model-ir-visualization.js
+web/lib/model-ir.js
+web/lib/model-ir/internal/blocks.js
+web/lib/model-ir/internal/constants.js
+web/lib/model-ir/internal/native-facts.js
+web/lib/model-ir/internal/profiles.js
+web/lib/model-ir/internal/program.js
+web/lib/model-ir/internal/shared.js
 web/lib/node-edge-evidence-overlay.js
 web/lib/node-view.js
 web/lib/numerical-abi-propagation-viewer.js
@@ -1022,6 +1047,7 @@ web/lib/runtime-module-loader.js
 web/lib/runtime-profile-adapter.js
 web/lib/runtime-profile-modal.js
 web/lib/runtime.js
+web/lib/safe-source-artifacts.js
 web/lib/safetensors-quantization-contract.js
 web/lib/safetensors-quantization-export.js
 web/lib/safetensors-quantization-view.js

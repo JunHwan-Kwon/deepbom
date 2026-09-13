@@ -44,6 +44,7 @@
     "web/lib/runtime-memory.js",
     "web/lib/runtime-evidence-sidecar.js",
     "web/lib/runtime-profile-adapter.js",
+    "web/lib/safe-source-artifacts.js",
     "web/lib/tensor-numerical-integrity.js",
     "web/lib/tensorrt-static-preflight.js",
     "web/lib/tflite-accelerator-source-profiles.js",

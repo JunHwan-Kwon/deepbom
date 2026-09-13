@@ -9,7 +9,7 @@ const GAP_X = 54;
 const GAP_Y = 56;
 const MARGIN = 48;
 
-export function exportGraphVisualization(graph, { view = "structure", format = "svg", compact = false, artifactIr = null } = {}) {
+export function exportGraphVisualization(graph, { view = "structure", format = "svg", compact = false, artifactIr = null, modelIr = null } = {}) {
   const { projection, scene } = buildGraphVisualizationScene(graph, view);
   const manifestBody = {
     schema: VISUALIZATION_MANIFEST_SCHEMA,
@@ -30,8 +30,11 @@ export function exportGraphVisualization(graph, { view = "structure", format = "
   if (artifactIr && artifactIr.artifact_ir_sha256 !== graph.artifact_ir_sha256) {
     throw new Error("Visualization Artifact IR does not match the Graph IR projection.");
   }
+  if (modelIr && modelIr.source_contract?.sha256 !== graph.artifact_ir_sha256) {
+    throw new Error("Visualization Model IR does not match the Graph IR source contract.");
+  }
   if (format === "json") return {
-    text: `${JSON.stringify({ ...(artifactIr ? { artifact_ir: artifactIr } : {}), graph_ir: graph, visualization_manifest: manifest }, null, compact ? 0 : 2)}\n`,
+    text: `${JSON.stringify({ ...(artifactIr ? { artifact_ir: artifactIr } : {}), ...(modelIr ? { model_ir: modelIr } : {}), graph_ir: graph, visualization_manifest: manifest }, null, compact ? 0 : 2)}\n`,
     mediaType: "application/json",
     manifest,
   };

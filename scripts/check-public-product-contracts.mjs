@@ -8,7 +8,7 @@ import { resolveVersionContract } from "./version-contract.mjs";
 
 assert.equal(PUBLIC_PRODUCT_CONTRACTS.schema, "deepbom.public_product_contracts.v1");
 assert.deepEqual(PUBLIC_PRODUCT_CONTRACTS.format_maturity.map((row) => row.format),
-  ["tflite", "onnx", "gguf", "safetensors", "coreml", "executorch"]);
+  ["tflite", "onnx", "gguf", "safetensors", "coreml", "executorch", "graphdef", "savedmodel", "hdf5", "keras", "pt2", "pytorch_checkpoint"]);
 for (const row of PUBLIC_PRODUCT_CONTRACTS.format_maturity) {
   assert(MODEL_FORMAT_ADAPTERS[row.format], `Missing format adapter for ${row.format}`);
   assert.equal(modelFormatAdapter(row.format).maturity, row);
@@ -25,7 +25,7 @@ assert.equal(PUBLIC_PRODUCT_CONTRACTS.format_maturity.find((row) => row.format =
 
 const schemas = new Set(PUBLIC_PRODUCT_CONTRACTS.machine_contracts.map((row) => row.schema));
 assert.equal(schemas.size, PUBLIC_PRODUCT_CONTRACTS.machine_contracts.length);
-for (const required of ["deepbom.cli_capabilities.v1", "deepbom.artifact_evidence_envelope.v1", "deepbom.artifact_ir.v2", "deepbom.semantic_artifact_diff.v1", "cyclonedx-1.7-json"]) assert(schemas.has(required));
+for (const required of ["deepbom.cli_capabilities.v1", "deepbom.artifact_evidence_envelope.v1", "deepbom.artifact_ir.v2", "deepbom.model_ir.v1", "deepbom.model_ir_visualization_manifest.v1", "deepbom.semantic_artifact_diff.v1", "cyclonedx-1.7-json"]) assert(schemas.has(required));
 assert.equal([...schemas].some((value) => /2\.0|perspective/i.test(value)), false);
 
 const release = PUBLIC_PRODUCT_CONTRACTS.release_policy;
@@ -58,7 +58,7 @@ assert.doesNotMatch(`${publicReadme}\n${automation}`, /CycloneDX 2\.0|working gr
 assert.match(pythonMetadata, /^license = "Apache-2\.0"$/m);
 assert.doesNotMatch(pythonMetadata, /License :: OSI Approved/, "PEP 639 license expressions must not be combined with deprecated license classifiers.");
 
-console.log("Public product contracts verified: six format maturity rows, stable machine surfaces, and separate stable/prerelease release policy.");
+console.log(`Public product contracts verified: ${PUBLIC_PRODUCT_CONTRACTS.format_maturity.length} format maturity rows, stable machine surfaces, and separate stable/prerelease release policy.`);
 
 function pickVersion(contract) {
   return Object.fromEntries(["channel", "displayVersion", "pythonVersion", "npmDistTag", "publishable"].map((key) => [key, contract[key]]));

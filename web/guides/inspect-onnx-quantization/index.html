@@ -20,7 +20,7 @@
     <h1>Read the serialized quantization contract before inferring execution.</h1>
     <p class="lede">ONNX can serialize QDQ boundaries, QOperator compute nodes, and bound scale and zero-point tensors. Those facts do not by themselves prove runtime fusion or executed integer arithmetic.</p>
     <section class="brief-section"><h2>Reproduce the public fixture</h2>
-      <pre><code>npx -y deepbom@1.97.4 audit \
+      <pre><code>npx -y deepbom@1.98.0 audit \
   "./corpus/onnx-extension-contract-corpus/deepbom-static-per-axis-qdq.onnx" \
   --expected-sha256 c19f7155f030dc396aad04909b7429b8a4d6d1cb51fcd53a84e3c97ae9678d0e \
   --section quantization --json</code></pre>

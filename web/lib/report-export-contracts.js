@@ -48,6 +48,7 @@ export const DEPLOYMENT_CONTRACT_FILES = Object.freeze({
   cyclonedx: "deepbom_cyclonedx_evidence.cdx.json",
   artifactEnvelope: "deepbom_artifact_evidence_envelope.json",
   artifactIr: "deepbom_artifact_ir.json",
+  modelIr: "deepbom_model_ir.json",
   interfaceContracts: "deepbom_interface_contracts.json",
   formulation: "deepbom_observed_formulation.cdx.json",
   runtime: "deepbom_runtime_requirements.json",
@@ -993,7 +994,7 @@ function cycloneDxEnvelope(subject, generatedAt, options = {}, formulation = nul
 export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
   const generatedAt = options.generatedAt || new Date().toISOString();
   const irIdentity = artifactIdentity(analysis, options);
-  const artifactIr = SHA256_PATTERN.test(irIdentity.sha256) ? resolveArtifactIrContext(analysis, {
+  const resolvedIrContext = SHA256_PATTERN.test(irIdentity.sha256) ? resolveArtifactIrContext(analysis, {
     filename: irIdentity.name,
     format: irIdentity.format,
     sha256: irIdentity.sha256,
@@ -1003,7 +1004,9 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
     artifactIrContext: options.artifactIrContext || null,
     artifactIr: options.artifactIr || null,
     runtimeEvidence: options.runtimeEvidence || options.runtimeAssignmentEvidence || null,
-  })?.artifact_ir || null : null;
+  }) : null;
+  const artifactIr = resolvedIrContext?.artifact_ir || null;
+  const modelIr = options.modelIr || resolvedIrContext?.model_ir || null;
   const artifactEnvelope = options.artifactEvidenceEnvelope || buildArtifactEvidenceEnvelope(analysis, {
     ...options,
     generatedAt,
@@ -1012,17 +1015,20 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
   });
   const envelopeHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.artifactEnvelope);
   const artifactIrHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.artifactIr);
+  const modelIrHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.modelIr);
   const interfaceHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.interfaceContracts);
   const runtimeHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.runtime);
   const missingHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.missingFields);
   const formulationHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.formulation);
   const bundleMode = options.evidenceMode === "bundle" || Boolean(options.externalDocumentHashes);
   const artifactIrMemberAvailable = Boolean(options.artifactIr && artifactIrHash);
+  const modelIrMemberAvailable = Boolean(options.modelIr && modelIrHash);
   const references = bundleMode ? [
     ...optionalExternalReference(options, "engineeringEvidence", "evidence", "engineering_evidence.json", "External Engineering Bundle evidence ledger."),
     ...optionalExternalReference(options, "engineeringReport", "quality-metrics", "engineering_report.md", "External human-readable Engineering Report."),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.artifactEnvelope, bundleReferenceComment("Canonical artifact evidence envelope.", Boolean(envelopeHash)), envelopeHash),
     ...(artifactIrMemberAvailable ? [externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.artifactIr, bundleReferenceComment("Canonical Artifact Evidence IR with graph, storage, architecture, quantization, and overlay separation.", true), artifactIrHash)] : []),
+    ...(modelIrMemberAvailable ? [externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.modelIr, bundleReferenceComment("Preview Common Model IR with format-neutral program, logical tensor, storage, binding, quantization, and explicit loss ledgers.", true), modelIrHash)] : []),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.interfaceContracts, bundleReferenceComment("Canonical external tensor numerical-contract ledger.", Boolean(interfaceHash)), interfaceHash),
     externalReference("formulation", DEPLOYMENT_CONTRACT_FILES.formulation, bundleReferenceComment("Artifact-observed formulation and declaration comparison.", Boolean(formulationHash)), formulationHash),
     externalReference("configuration", DEPLOYMENT_CONTRACT_FILES.runtime, bundleReferenceComment("Machine-readable runtime requirement manifest.", Boolean(runtimeHash)), runtimeHash),
@@ -1041,6 +1047,9 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
     ["deepbom:artifactEvidenceEnvelopeSha256", artifactEnvelope.envelope_sha256],
     ["deepbom:artifactIrSchema", artifactIr?.schema],
     ["deepbom:artifactIrSha256", artifactIr?.artifact_ir_sha256],
+    ["deepbom:modelIrSchema", modelIrMemberAvailable ? modelIr?.schema : null],
+    ["deepbom:modelIrSha256", modelIrMemberAvailable ? modelIr?.model_ir_sha256 : null],
+    ["deepbom:modelIrLocation", modelIrMemberAvailable ? DEPLOYMENT_CONTRACT_FILES.modelIr : null],
     ["deepbom:model:serializedContractStatus", analysis?.onnx_contract_conflict?.status],
     ["deepbom:model:contractConflictCapsuleSha256", analysis?.onnx_contract_conflict?.capsule_sha256],
     ["deepbom:model:contractConflictRootCount", analysis?.onnx_contract_conflict?.summary?.unconditional_root_conflict_count],
@@ -2249,6 +2258,7 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
   });
   if (!artifactIrContext) throw new Error("Canonical Artifact Evidence IR could not be resolved for the deployment contract.");
   const artifactIr = artifactIrContext.artifact_ir;
+  const modelIr = artifactIrContext.model_ir;
   const canonicalInterfaceLedger = artifactEnvelope.interfaces || buildInterfaceQuantizationContractLedger(analysis);
   const contractShared = { ...shared, interfaceLedger: canonicalInterfaceLedger };
   const interfaceContracts = buildInterfaceContractLedgerDocument(analysis, contractShared);
@@ -2257,6 +2267,7 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
   const firstHashes = {
     [DEPLOYMENT_CONTRACT_FILES.artifactEnvelope]: jsonMemberSha256(artifactEnvelope),
     [DEPLOYMENT_CONTRACT_FILES.artifactIr]: jsonMemberSha256(artifactIr),
+    [DEPLOYMENT_CONTRACT_FILES.modelIr]: jsonMemberSha256(modelIr),
     [DEPLOYMENT_CONTRACT_FILES.interfaceContracts]: jsonMemberSha256(interfaceContracts),
     [DEPLOYMENT_CONTRACT_FILES.runtime]: jsonMemberSha256(runtime),
     [DEPLOYMENT_CONTRACT_FILES.missingFields]: jsonMemberSha256(missing),
@@ -2265,6 +2276,7 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
     ...shared,
     artifactEvidenceEnvelope: artifactEnvelope,
     artifactIr,
+    modelIr,
     externalDocumentHashes: firstHashes,
     evidenceMode: "bundle",
   });
@@ -2280,6 +2292,7 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
     cyclonedx_evidence: evidence,
     artifact_evidence_envelope: artifactEnvelope,
     artifact_ir: artifactIr,
+    model_ir: modelIr,
     interface_contract_ledger: interfaceContracts,
     observed_formulation: formulation,
     runtime_requirement_manifest: runtime,

@@ -359,6 +359,7 @@ export function bindAppElements(doc = document) {
     graphZoomIn: doc.getElementById("graphZoomIn"),
     graphFit: doc.getElementById("graphFit"),
     downloadGraphSvg: doc.getElementById("downloadGraphSvg"),
+    downloadModelViews: doc.getElementById("downloadModelViews"),
     graphMapStatus: doc.getElementById("graphMapStatus"),
     graphModeHint: doc.getElementById("graphModeHint"),
     graphMapSvg: doc.getElementById("graphMapSvg"),

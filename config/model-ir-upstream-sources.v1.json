@@ -1,0 +1,55 @@
+{
+  "schema": "deepbom.model_ir_upstream_sources.v1",
+  "policy": "Each semantic source is an official or upstream implementation repository fixed to an immutable commit. File-level SHA-256 and semantic-marker checks remain in the named verifier. Repository clones and downloaded source bytes are local build inputs and are not redistributed.",
+  "sources": [
+    { "id": "onnx", "repository": "onnx/onnx", "commit": "be2b5fde82d9c8874f3d19328bdfe3b6962dc67b", "authority": "upstream_format_and_operator_repository", "verifier": "scripts/verify-serialized-source-pins.mjs" },
+    { "id": "onnxruntime", "repository": "microsoft/onnxruntime", "commit": "8c546c37b43caaca1fa25db430dab94b901cf277", "authority": "upstream_runtime_implementation", "verifier": "scripts/generate-ort-rulepack.mjs" },
+    { "id": "tensorflow_tflite", "repository": "tensorflow/tensorflow", "commit": "87bbf65b8d23d3f06912b1b2183587e1884bc45c", "authority": "upstream_format_and_runtime_implementation", "verifier": "scripts/verify-serialized-source-pins.mjs" },
+    { "id": "llama_cpp_gguf", "repository": "ggml-org/llama.cpp", "commit": "7bd8282c37fcd9c4d7236106d664761a23318f18", "authority": "upstream_format_and_runtime_implementation", "verifier": "scripts/verify-serialized-source-pins.mjs" },
+    { "id": "safetensors", "repository": "huggingface/safetensors", "commit": "6eb4dc9a28ebce297606e0f4836bbf28839cacef", "authority": "upstream_format_implementation", "verifier": "scripts/verify-serialized-source-pins.mjs" },
+    { "id": "coremltools", "repository": "apple/coremltools", "commit": "428d4b2658dfc44194f27f4f36870751be402ff7", "authority": "upstream_format_tooling", "verifier": "scripts/verify-coreml-source-pins.mjs" },
+    { "id": "executorch", "repository": "pytorch/executorch", "commit": "e4d02f41f7909e8ed5bf4a14ffc520d733453d9f", "authority": "upstream_format_and_runtime_implementation", "verifier": "scripts/generate-executorch-operator-signatures.mjs" },
+    {
+      "id": "tensorflow_graphdef_savedmodel", "repository": "tensorflow/tensorflow", "commit": "87bbf65b8d23d3f06912b1b2183587e1884bc45c", "authority": "upstream_serialization_contract", "verifier": "scripts/verify-model-ir-preview-source-pins.mjs",
+      "files": [
+        { "path": "tensorflow/core/framework/graph.proto", "sha256": "149f2eed8bd89fe6f205849e77e5c0fff35884675a4244d1b800964fd30560d2", "markers": ["message GraphDef", "repeated NodeDef node"] },
+        { "path": "tensorflow/core/framework/node_def.proto", "sha256": "5f328f5f2de7a0c6e61ab5a937fb74dfbd90afe556f8a611ffd1b83836e43b9b", "markers": ["message NodeDef", "repeated string input"] },
+        { "path": "tensorflow/core/framework/attr_value.proto", "sha256": "c64e380b89561f05ec56e2cf37fc436862a0b503dbbc9f9feeaefb32ac2e0296", "markers": ["message AttrValue", "TensorProto tensor"] },
+        { "path": "tensorflow/core/framework/tensor.proto", "sha256": "10332f3a46b640a4ac5da1e3e231d71c99edf50bd06b9f268726b6c55769aeeb", "markers": ["message TensorProto", "bytes tensor_content"] },
+        { "path": "tensorflow/core/framework/tensor_shape.proto", "sha256": "a4612a712f36999e4d1c2f807a10f81026cc889449816583f5be9c3eba33fd5b", "markers": ["message TensorShapeProto", "repeated Dim dim"] },
+        { "path": "tensorflow/core/framework/types.proto", "sha256": "29989cf1982b8c9653fb14fb46218e119caae20db3597688186b2700cee25069", "markers": ["enum DataType", "DT_FLOAT"] },
+        { "path": "tensorflow/core/protobuf/saved_model.proto", "sha256": "252aa61c19eaf4879f15d7755fdfcc31c32200fb5422dd327c17ab7298bdce2e", "markers": ["message SavedModel", "repeated MetaGraphDef meta_graphs"] },
+        { "path": "tensorflow/core/protobuf/meta_graph.proto", "sha256": "8e26e4995329c27d00413b299f9cac3a847f3057023d196c13928c2895989b4e", "markers": ["message MetaGraphDef", "GraphDef graph_def"] }
+      ]
+    },
+    {
+      "id": "hdf5", "repository": "HDFGroup/hdf5", "commit": "7489f285bee1b597586ccd660228376890a00ab4", "authority": "upstream_format_implementation", "verifier": "scripts/verify-model-ir-preview-source-pins.mjs",
+      "files": [
+        { "path": "src/H5Fsuper.c", "sha256": "9aeb87421af8044ed83c3c3f85c7d12b59fd4e49eb8e5f7678b544a55e516b61", "markers": ["H5F__super_read", "superblock"] },
+        { "path": "src/H5Fsuper_cache.c", "sha256": "4d19148654eb2b7aeefaa5d643b9364c1276322295486b2c89edb431e4d67a7d", "markers": ["H5F__cache_superblock_deserialize", "HDF5_SUPERBLOCK_VERSION_LATEST"] }
+      ]
+    },
+    {
+      "id": "keras", "repository": "keras-team/keras", "commit": "d3d234b7baf2857d6e3d1c40091a279912782993", "authority": "upstream_serialization_implementation", "verifier": "scripts/verify-model-ir-preview-source-pins.mjs",
+      "files": [
+        { "path": "keras/src/saving/saving_lib.py", "sha256": "4ccfc26537a78f01f9f34ea27da8ee8aa30315eefdff1aede31e3e4ce9a67b54", "markers": ["_CONFIG_FILENAME = \"config.json\"", "_VARS_FNAME = \"model.weights\"", "_VARS_FNAME_H5 = f\"{_VARS_FNAME}.h5\""] },
+        { "path": "keras/src/saving/serialization_lib.py", "sha256": "3b89413075df83c4043ffed0088c9f5afe51b5a9c257f4f62b9e6b619a9c7492", "markers": ["def serialize_keras_object", "def deserialize_keras_object"] }
+      ]
+    },
+    {
+      "id": "pytorch", "repository": "pytorch/pytorch", "commit": "cf30153c4c131c8164ee7798e5022d810682e2cb", "authority": "upstream_operator_and_serialization_implementation", "verifier": "scripts/verify-model-ir-preview-source-pins.mjs",
+      "files": [
+        { "path": "torch/serialization.py", "sha256": "dc50434201b513a68f3bbb107e0f33a2f45596db31c055aaee1da0d02e75c492", "markers": ["def load(", "weights_only"] },
+        { "path": "torch/export/pt2_archive/_package.py", "sha256": "5d8de3c95f8b975c5bef62786b2d3784b6989f67b78a094befbb57fd64f9999b", "markers": ["ARCHIVE_FORMAT_PATH", "MODELS_DIR"] },
+        { "path": "torch/export/pt2_archive/constants.py", "sha256": "a9cc5a1f8c09cec848056f1c324d1a44707bbb511ba80c32e76d69765973875b", "markers": ["ARCHIVE_FORMAT_PATH", "ARCHIVE_VERSION_PATH"] },
+        { "path": "torch/_export/serde/schema.py", "sha256": "3daf43e1aa1763ff04de5b2d2632a38e0909552040c3a58db8fe70e86287ae56", "markers": ["class Graph", "class GraphModule"] },
+        { "path": "torch/csrc/export/pt2_archive_constants.h", "sha256": "5759147f4e68b70050184bdef5eeaa35e344cf67c252058f5ec95a7703f9bceb", "markers": ["DO(ARCHIVE_FORMAT_PATH, \"archive_format\")", "DO(MODELS_DIR, \"models/\")"] }
+      ]
+    }
+  ],
+  "non_authorities": [
+    "The source manifest is not an endorsement by an upstream project.",
+    "Runtime implementation registrations do not establish selected-build inclusion or actual runtime assignment.",
+    "DeepBOM-derived profiles are engineering projections and are not upstream format specifications."
+  ]
+}

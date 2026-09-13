@@ -1,0 +1,31 @@
+{
+  "schema": "deepbom.model_ir_import_policy.v1",
+  "source_roots": ["web", "bin", "scripts"],
+  "internal_module_prefix": "web/lib/model-ir/internal/",
+  "internal_module_importers": {
+    "web/lib/model-ir/internal/constants.js": [
+      "web/lib/model-ir.js",
+      "web/lib/model-ir/internal/program.js"
+    ],
+    "web/lib/model-ir/internal/shared.js": [
+      "web/lib/model-ir.js",
+      "web/lib/model-ir/internal/program.js",
+      "web/lib/model-ir/internal/profiles.js",
+      "web/lib/model-ir/internal/native-facts.js"
+    ],
+    "web/lib/model-ir/internal/program.js": ["web/lib/model-ir.js"],
+    "web/lib/model-ir/internal/blocks.js": [
+      "scripts/check-model-ir.mjs",
+      "web/lib/model-ir/internal/program.js"
+    ],
+    "web/lib/model-ir/internal/profiles.js": ["web/lib/model-ir.js"],
+    "web/lib/model-ir/internal/native-facts.js": ["web/lib/model-ir.js"]
+  },
+  "protected_symbols": {
+    "buildModelIrFromArtifactIr": [
+      "web/lib/model-ir.js",
+      "web/lib/artifact-ir-context.js",
+      "web/lib/report-evidence.js"
+    ]
+  }
+}

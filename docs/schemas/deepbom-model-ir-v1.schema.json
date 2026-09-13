@@ -1,0 +1,281 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-model-ir-v1.schema.json",
+  "title": "DEEPBOM Common Model IR v1",
+  "description": "A hash-bound, format-neutral projection of serialized model-program, logical-value, storage, binding, quantization, architecture, static-runtime, and observed-runtime evidence. It is engineering evidence and not a regulatory or standards-conformance verdict.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "method_version", "source_contract", "hash_contract", "artifact", "artifact_set", "artifact_role", "format_profile", "profiles", "capabilities", "evidence_vocabulary", "program", "tensors_and_storage", "weight_bindings", "quantization", "architecture", "static_runtime", "observed_runtime", "generic_analysis", "lineage", "completeness", "loss_ledger", "native_extensions", "interpretation_boundary", "model_ir_sha256"],
+  "properties": {
+    "schema": { "const": "deepbom.model_ir.v1" },
+    "method_version": { "const": "1.0.0" },
+    "source_contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "sha256", "projection_status", "native_fact_ledger"],
+      "properties": {
+        "schema": { "const": "deepbom.artifact_ir.v2" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "projection_status": { "const": "loss_accounted_compatibility_migration" },
+        "native_fact_ledger": { "$ref": "#/$defs/nativeFactLedger" }
+      }
+    },
+    "hash_contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["algorithm", "canonicalization", "source_encoding", "excluded_pointers"],
+      "properties": {
+        "algorithm": { "const": "SHA-256" },
+        "canonicalization": { "const": "RFC8785-JCS" },
+        "source_encoding": { "const": "UTF-8" },
+        "excluded_pointers": { "const": ["/model_ir_sha256"] }
+      }
+    },
+    "artifact": { "$ref": "#/$defs/artifact" },
+    "artifact_set": { "$ref": "#/$defs/artifactSet" },
+    "artifact_role": { "enum": ["deployment_artifact", "exported_program", "training_checkpoint", "weight_container", "runtime_bundle", "model_package", "evidence_sidecar"] },
+    "format_profile": { "$ref": "#/$defs/formatProfile" },
+    "profiles": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/profile" } },
+    "capabilities": { "$ref": "#/$defs/capabilities" },
+    "evidence_vocabulary": { "$ref": "#/$defs/evidenceVocabulary" },
+    "program": { "$ref": "#/$defs/programModel" },
+    "tensors_and_storage": { "$ref": "#/$defs/storageModel" },
+    "weight_bindings": { "$ref": "#/$defs/bindingLedger" },
+    "quantization": { "$ref": "#/$defs/quantizationLedger" },
+    "architecture": { "$ref": "#/$defs/architecture" },
+    "static_runtime": { "$ref": "#/$defs/staticRuntime" },
+    "observed_runtime": { "$ref": "#/$defs/observedRuntime" },
+    "generic_analysis": { "$ref": "#/$defs/genericAnalysis" },
+    "lineage": { "type": "object" },
+    "completeness": { "$ref": "#/$defs/completeness" },
+    "loss_ledger": { "$ref": "#/$defs/lossLedger" },
+    "native_extensions": { "$ref": "#/$defs/nativeExtensions" },
+    "interpretation_boundary": { "$ref": "#/$defs/nonEmpty" },
+    "model_ir_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "nonEmpty": { "type": "string", "minLength": 1, "maxLength": 4000 },
+    "nullableString": { "type": ["string", "null"] },
+    "reference": { "type": "string", "minLength": 1, "maxLength": 1200 },
+    "referenceArray": { "type": "array", "items": { "$ref": "#/$defs/reference" }, "uniqueItems": true },
+    "evidenceClass": { "enum": ["OBSERVED_SERIALIZED_ARTIFACT", "OBSERVED_RUNTIME", "DERIVED", "PREDICTED", "DECLARED_UNVERIFIED", "NOT_ASSESSABLE"] },
+    "exactInteger": {
+      "type": ["object", "null"],
+      "required": ["decimal", "number"], "additionalProperties": false,
+      "properties": { "decimal": { "type": "string", "pattern": "^[0-9]+$" }, "number": { "type": ["integer", "null"], "minimum": 0 } }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": true,
+      "required": ["filename", "format", "sha256", "byte_length", "artifact_set_sha256"],
+      "properties": {
+        "filename": { "$ref": "#/$defs/nonEmpty" }, "format": { "$ref": "#/$defs/nonEmpty" }, "sha256": { "$ref": "#/$defs/sha256" },
+        "byte_length": { "$ref": "#/$defs/exactInteger" }, "artifact_set_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }
+      }
+    },
+    "artifactSet": {
+      "type": "object", "additionalProperties": false, "required": ["status", "artifact_set_sha256", "member_refs"],
+      "properties": { "status": { "$ref": "#/$defs/nonEmpty" }, "artifact_set_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }, "member_refs": { "$ref": "#/$defs/referenceArray" } }
+    },
+    "formatProfile": {
+      "type": "object", "additionalProperties": false, "required": ["id", "native_schema", "applicability"],
+      "properties": { "id": { "$ref": "#/$defs/nonEmpty" }, "native_schema": { "$ref": "#/$defs/nonEmpty" }, "applicability": { "const": "applicable" } }
+    },
+    "profile": {
+      "type": "object", "additionalProperties": false, "required": ["id", "requirement", "applicability", "status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmpty" }, "requirement": { "enum": ["core_mandatory", "profile_mandatory", "optional_extension"] },
+        "applicability": { "enum": ["applicable", "not_applicable"] }, "status": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "capabilities": {
+      "type": "object", "additionalProperties": false,
+      "required": ["serialized_program_graph", "tensor_shapes", "serialized_storage", "weight_bindings", "quantization_contracts", "static_runtime_projection", "observed_runtime_overlay"],
+      "properties": {
+        "serialized_program_graph": { "type": "boolean" }, "tensor_shapes": { "type": "boolean" }, "serialized_storage": { "type": "boolean" },
+        "weight_bindings": { "type": "boolean" }, "quantization_contracts": { "type": "boolean" }, "static_runtime_projection": { "type": "boolean" }, "observed_runtime_overlay": { "type": "boolean" }
+      }
+    },
+    "evidenceVocabulary": {
+      "type": "object", "additionalProperties": false, "required": ["classes", "unknown_is_zero", "static_prediction_is_runtime_observation"],
+      "properties": {
+        "classes": { "type": "array", "items": { "$ref": "#/$defs/evidenceClass" }, "uniqueItems": true },
+        "unknown_is_zero": { "const": false }, "static_prediction_is_runtime_observation": { "const": false }
+      }
+    },
+    "programModel": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "executable_graph_status", "programs", "functions", "regions", "blocks", "operations", "values", "ports", "relationships", "orders", "completeness", "interpretation_boundary"],
+      "properties": {
+        "status": { "enum": ["serialized", "not_serialized"] }, "executable_graph_status": { "$ref": "#/$defs/nonEmpty" },
+        "programs": { "type": "array", "items": { "$ref": "#/$defs/program" } }, "functions": { "type": "array", "items": { "$ref": "#/$defs/function" } },
+        "regions": { "type": "array", "items": { "$ref": "#/$defs/region" } }, "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } },
+        "operations": { "type": "array", "items": { "$ref": "#/$defs/operation" } }, "values": { "type": "array", "items": { "$ref": "#/$defs/value" } },
+        "ports": { "type": "array", "items": { "$ref": "#/$defs/port" } }, "relationships": { "type": "array", "items": { "$ref": "#/$defs/relationship" } },
+        "orders": { "type": "object" }, "completeness": { "type": "object" }, "interpretation_boundary": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "program": {
+      "type": "object", "additionalProperties": false, "required": ["id", "entry_region_refs", "input_value_refs", "output_value_refs", "evidence_class"],
+      "properties": { "id": { "$ref": "#/$defs/reference" }, "entry_region_refs": { "$ref": "#/$defs/referenceArray" }, "input_value_refs": { "$ref": "#/$defs/referenceArray" }, "output_value_refs": { "$ref": "#/$defs/referenceArray" }, "evidence_class": { "$ref": "#/$defs/evidenceClass" } }
+    },
+    "function": {
+      "type": "object", "additionalProperties": false, "required": ["id", "region_ref", "name", "evidence_class"],
+      "properties": { "id": { "$ref": "#/$defs/reference" }, "region_ref": { "$ref": "#/$defs/reference" }, "name": { "$ref": "#/$defs/nonEmpty" }, "evidence_class": { "$ref": "#/$defs/evidenceClass" } }
+    },
+    "region": {
+      "type": "object", "additionalProperties": false, "required": ["id", "native_subject_ref", "kind", "name", "parent_region_ref", "source_order", "materialization_status", "invocation_semantics", "native_source", "evidence_class"],
+      "properties": {
+        "id": { "$ref": "#/$defs/reference" }, "native_subject_ref": { "$ref": "#/$defs/reference" }, "kind": { "$ref": "#/$defs/nonEmpty" }, "name": { "$ref": "#/$defs/nonEmpty" },
+        "parent_region_ref": { "$ref": "#/$defs/nullableString" }, "source_order": { "type": ["integer", "null"], "minimum": 0 }, "materialization_status": { "$ref": "#/$defs/nonEmpty" },
+        "invocation_semantics": { "$ref": "#/$defs/nonEmpty" }, "native_source": { "type": ["object", "null"] }, "evidence_class": { "$ref": "#/$defs/evidenceClass" }
+      }
+    },
+    "block": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "region_ref", "kind", "signature_sha256", "representation_signature_sha256", "repeat_index", "member_refs", "source_order_range", "display_order_range", "boundary_evidence", "grouping_rule_id", "grouping_rule_version", "evidence_class"],
+      "properties": {
+        "id": { "$ref": "#/$defs/reference" },
+        "region_ref": { "$ref": "#/$defs/reference" },
+        "kind": { "enum": ["head", "repeated_structure", "tail", "non_repeating_region", "rank_partition"] },
+        "signature_sha256": { "$ref": "#/$defs/sha256" },
+        "representation_signature_sha256": { "$ref": "#/$defs/sha256" },
+        "repeat_index": { "type": ["integer", "null"], "minimum": 0 },
+        "member_refs": { "$ref": "#/$defs/referenceArray" },
+        "source_order_range": { "type": "array", "prefixItems": [{ "type": "integer", "minimum": 0 }, { "type": "integer", "minimum": 0 }], "minItems": 2, "maxItems": 2 },
+        "display_order_range": { "type": "array", "prefixItems": [{ "type": "integer", "minimum": 0 }, { "type": "integer", "minimum": 0 }], "minItems": 2, "maxItems": 2 },
+        "boundary_evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmpty" }, "uniqueItems": true },
+        "grouping_rule_id": { "const": "deepbom.structural_block_partition.v1" },
+        "grouping_rule_version": { "const": "1.0.0" },
+        "evidence_class": { "const": "DERIVED" }
+      }
+    },
+    "operation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "native_subject_ref", "region_ref", "native_index", "kind", "native_op", "semantic_family", "name", "source_order", "dependency_order", "display_order", "runtime_order", "input_port_refs", "output_port_refs", "metrics", "quantization_summary", "native_source", "evidence_class"],
+      "properties": {
+        "id": { "$ref": "#/$defs/reference" }, "native_subject_ref": { "$ref": "#/$defs/reference" }, "region_ref": { "$ref": "#/$defs/reference" }, "native_index": { "type": "integer", "minimum": 0 },
+        "kind": { "const": "operation" }, "native_op": { "type": "object" }, "semantic_family": { "$ref": "#/$defs/nullableString" }, "name": { "$ref": "#/$defs/nullableString" },
+        "source_order": { "type": "integer", "minimum": 0 }, "dependency_order": { "type": ["integer", "null"], "minimum": 0 }, "display_order": { "type": ["integer", "null"], "minimum": 0 }, "runtime_order": { "type": ["integer", "null"], "minimum": 0 },
+        "input_port_refs": { "$ref": "#/$defs/referenceArray" }, "output_port_refs": { "$ref": "#/$defs/referenceArray" }, "metrics": { "type": "object" }, "quantization_summary": { "type": "object" }, "native_source": { "type": ["object", "null"] }, "evidence_class": { "$ref": "#/$defs/evidenceClass" }
+      }
+    },
+    "value": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "native_subject_ref", "region_ref", "native_index", "name", "kind", "dtype", "shape", "shape_signature", "roles", "logical_byte_length", "storage_refs", "native_source", "evidence_class"],
+      "properties": {
+        "id": { "$ref": "#/$defs/reference" }, "native_subject_ref": { "$ref": "#/$defs/reference" }, "region_ref": { "$ref": "#/$defs/reference" }, "native_index": { "type": "integer", "minimum": 0 },
+        "name": { "$ref": "#/$defs/nonEmpty" }, "kind": { "$ref": "#/$defs/nonEmpty" }, "dtype": { "$ref": "#/$defs/nonEmpty" }, "shape": { "type": "array" }, "shape_signature": { "type": ["array", "null"] },
+        "roles": { "type": "array", "items": { "type": "string" } }, "logical_byte_length": { "$ref": "#/$defs/exactInteger" }, "storage_refs": { "$ref": "#/$defs/referenceArray" }, "native_source": { "type": ["object", "null"] }, "evidence_class": { "$ref": "#/$defs/evidenceClass" }
+      }
+    },
+    "port": {
+      "type": "object", "additionalProperties": false, "required": ["id", "operation_ref", "direction", "position", "value_ref", "evidence_class"],
+      "properties": { "id": { "$ref": "#/$defs/reference" }, "operation_ref": { "$ref": "#/$defs/reference" }, "direction": { "enum": ["input", "output"] }, "position": { "type": "integer", "minimum": 0 }, "value_ref": { "$ref": "#/$defs/reference" }, "evidence_class": { "$ref": "#/$defs/evidenceClass" } }
+    },
+    "relationship": {
+      "type": "object", "additionalProperties": true,
+      "required": ["id", "kind", "from_ref", "to_ref", "value_ref", "native_relationship", "evidence_class"],
+      "properties": { "id": { "$ref": "#/$defs/reference" }, "kind": { "enum": ["data_dependency", "control_dependency", "call", "region_ownership", "state_dependency", "alias", "storage_binding", "parameter_binding"] }, "from_ref": { "$ref": "#/$defs/reference" }, "to_ref": { "$ref": "#/$defs/reference" }, "value_ref": { "$ref": "#/$defs/nullableString" }, "native_relationship": { "$ref": "#/$defs/nonEmpty" }, "evidence_class": { "$ref": "#/$defs/evidenceClass" } }
+    },
+    "storageModel": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "logical_values", "storage_objects", "storage_ranges", "external_storage", "aliases", "totals", "completeness", "interpretation_boundary"],
+      "properties": {
+        "status": { "$ref": "#/$defs/nonEmpty" }, "logical_values": { "type": "array", "items": { "type": "object" } }, "storage_objects": { "type": "array", "items": { "$ref": "#/$defs/storageObject" } },
+        "storage_ranges": { "type": "array", "items": { "type": "object" } }, "external_storage": { "type": "array", "items": { "type": "object" } }, "aliases": { "type": "array", "items": { "type": "object" } },
+        "totals": { "type": "object" }, "completeness": { "$ref": "#/$defs/nonEmpty" }, "interpretation_boundary": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "storageObject": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "native_subject_ref", "name", "dtype", "encoding", "shape", "dimension_order", "element_count", "serialized_byte_length", "logical_byte_length", "byte_range", "payload_sha256", "external_storage", "aliases", "quantization_ref", "native_source", "evidence_class"],
+      "properties": {
+        "id": { "$ref": "#/$defs/reference" }, "native_subject_ref": { "$ref": "#/$defs/reference" }, "name": { "$ref": "#/$defs/nonEmpty" }, "dtype": { "$ref": "#/$defs/nonEmpty" },
+        "encoding": { "type": "object" }, "shape": { "type": "array" }, "dimension_order": { "$ref": "#/$defs/nonEmpty" }, "element_count": { "$ref": "#/$defs/exactInteger" },
+        "serialized_byte_length": { "$ref": "#/$defs/exactInteger" }, "logical_byte_length": { "$ref": "#/$defs/exactInteger" }, "byte_range": { "type": "object" },
+        "payload_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }, "external_storage": { "type": "object" }, "aliases": { "type": "array" },
+        "quantization_ref": { "$ref": "#/$defs/nullableString" }, "native_source": { "type": "object" }, "evidence_class": { "$ref": "#/$defs/evidenceClass" }
+      }
+    },
+    "bindingLedger": {
+      "type": "object", "additionalProperties": false, "required": ["status", "bindings", "totals", "interpretation_boundary"],
+      "properties": { "status": { "$ref": "#/$defs/nonEmpty" }, "bindings": { "type": "array", "items": { "$ref": "#/$defs/binding" } }, "totals": { "type": "object" }, "interpretation_boundary": { "$ref": "#/$defs/nonEmpty" } }
+    },
+    "binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "operation_ref", "port_ref", "value_ref", "storage_ref", "parameter_role", "semantic_role", "binding_status", "binding_basis", "evidence_class"],
+      "properties": { "id": { "$ref": "#/$defs/reference" }, "operation_ref": { "$ref": "#/$defs/reference" }, "port_ref": { "$ref": "#/$defs/reference" }, "value_ref": { "$ref": "#/$defs/reference" }, "storage_ref": { "$ref": "#/$defs/reference" }, "parameter_role": { "$ref": "#/$defs/nonEmpty" }, "semantic_role": { "$ref": "#/$defs/nullableString" }, "binding_status": { "$ref": "#/$defs/nonEmpty" }, "binding_basis": { "$ref": "#/$defs/nonEmpty" }, "evidence_class": { "$ref": "#/$defs/evidenceClass" } }
+    },
+    "quantizationLedger": {
+      "type": "object", "additionalProperties": false, "required": ["status", "records", "totals", "interpretation_boundary"],
+      "properties": { "status": { "$ref": "#/$defs/nonEmpty" }, "records": { "type": "array", "items": { "type": "object" } }, "totals": { "type": "object" }, "interpretation_boundary": { "$ref": "#/$defs/nonEmpty" } }
+    },
+    "architecture": {
+      "type": "object", "additionalProperties": false, "required": ["status", "hierarchy", "relationships", "model_profiles", "profile_analysis", "totals", "unresolved_member_refs", "interpretation_boundary"],
+      "properties": { "status": { "$ref": "#/$defs/nonEmpty" }, "hierarchy": { "type": "array", "items": { "type": "object" } }, "relationships": { "type": "array", "items": { "type": "object" } }, "model_profiles": { "type": "array", "items": { "type": "object" } }, "profile_analysis": { "type": "object" }, "totals": { "type": "object" }, "unresolved_member_refs": { "$ref": "#/$defs/referenceArray" }, "interpretation_boundary": { "$ref": "#/$defs/nonEmpty" } }
+    },
+    "staticRuntime": {
+      "type": "object", "additionalProperties": false, "required": ["status", "projections", "completeness", "interpretation_boundary"],
+      "properties": { "status": { "$ref": "#/$defs/nonEmpty" }, "projections": { "type": "array", "items": { "type": "object" } }, "completeness": { "$ref": "#/$defs/nonEmpty" }, "interpretation_boundary": { "$ref": "#/$defs/nonEmpty" } }
+    },
+    "observedRuntime": {
+      "type": "object", "additionalProperties": false, "required": ["status", "overlays", "reconciliation_states", "interpretation_boundary"],
+      "properties": { "status": { "$ref": "#/$defs/nonEmpty" }, "overlays": { "type": "array", "items": { "type": "object" } }, "reconciliation_states": { "type": "array", "items": { "type": "string" } }, "interpretation_boundary": { "$ref": "#/$defs/nonEmpty" } }
+    },
+    "completeness": {
+      "type": "object", "additionalProperties": false, "required": ["profile_statuses", "loss_count", "unknown_is_zero"],
+      "properties": { "profile_statuses": { "type": "array", "items": { "type": "object" } }, "loss_count": { "type": "integer", "minimum": 0 }, "unknown_is_zero": { "const": false } }
+    },
+    "lossLedger": {
+      "type": "object", "additionalProperties": false, "required": ["status", "entries", "count"],
+      "properties": { "status": { "$ref": "#/$defs/nonEmpty" }, "entries": { "type": "array", "items": { "$ref": "#/$defs/loss" } }, "count": { "type": "integer", "minimum": 0 } }
+    },
+    "loss": {
+      "type": "object", "additionalProperties": false, "required": ["subject", "status", "explanation", "evidence_class"],
+      "properties": { "subject": { "$ref": "#/$defs/nonEmpty" }, "status": { "$ref": "#/$defs/nonEmpty" }, "explanation": { "$ref": "#/$defs/nonEmpty" }, "evidence_class": { "const": "NOT_ASSESSABLE" } }
+    },
+    "nativeExtensions": {
+      "type": "object", "additionalProperties": false, "required": ["status", "source_schema", "source_sha256", "embedded"],
+      "properties": { "status": { "const": "available_through_hash_bound_source_contract" }, "source_schema": { "const": "deepbom.artifact_ir.v2" }, "source_sha256": { "$ref": "#/$defs/sha256" }, "embedded": { "const": false } }
+    }
+    ,
+    "nativeFactLedger": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "status", "artifact_ir_sha256", "source_format", "facts", "interpretation_boundary", "ledger_sha256"],
+      "properties": {
+        "schema": { "const": "deepbom.model_ir_native_fact_ledger.v1" },
+        "status": { "enum": ["bounded_supplementary_facts_embedded", "no_supplementary_facts"] },
+        "artifact_ir_sha256": { "$ref": "#/$defs/sha256" },
+        "source_format": { "$ref": "#/$defs/nonEmpty" },
+        "facts": {
+          "type": "object", "additionalProperties": false,
+          "required": ["control_dependencies", "function_summaries", "savedmodel_meta_graphs"],
+          "properties": {
+            "control_dependencies": { "type": "array", "items": { "type": "object" } },
+            "function_summaries": { "type": "array", "items": { "type": "object" } },
+            "savedmodel_meta_graphs": { "type": "array", "items": { "type": "object" } }
+          }
+        },
+        "interpretation_boundary": { "$ref": "#/$defs/nonEmpty" },
+        "ledger_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+    ,
+    "genericAnalysis": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "pass_contract", "passes", "pass_count", "interpretation_boundary"],
+      "properties": {
+        "schema": { "const": "deepbom.model_ir_generic_analysis.v1" },
+        "pass_contract": { "type": "object" },
+        "passes": { "type": "array", "minItems": 5, "items": { "type": "object" } },
+        "pass_count": { "type": "integer", "minimum": 5 },
+        "interpretation_boundary": { "$ref": "#/$defs/nonEmpty" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "program": { "type": "object", "properties": { "status": { "const": "not_serialized" } } } } },
+      "then": { "properties": { "program": { "type": "object", "properties": { "programs": { "type": "array", "maxItems": 0 }, "regions": { "type": "array", "maxItems": 0 }, "operations": { "type": "array", "maxItems": 0 }, "values": { "type": "array", "maxItems": 0 }, "ports": { "type": "array", "maxItems": 0 }, "relationships": { "type": "array", "maxItems": 0 } } } } }
+    }
+  ]
+}

@@ -32,10 +32,10 @@ is documented separately below.
 Install the repository-local Agent Skill after previewing the managed files:
 
 ```bash
-npx -y deepbom@1.97.4 integrate codex
-npx -y deepbom@1.97.4 integrate codex --apply
-npx -y deepbom@1.97.4 integrate claude-code
-npx -y deepbom@1.97.4 integrate claude-code --apply
+npx -y deepbom@1.98.0 integrate codex
+npx -y deepbom@1.98.0 integrate codex --apply
+npx -y deepbom@1.98.0 integrate claude-code
+npx -y deepbom@1.98.0 integrate claude-code --apply
 ```
 
 The Skill lets a local agent select the pinned `npx` command for a supported
@@ -52,7 +52,7 @@ For persistent tool-call access, run the same local analyzer as an MCP server
 over stdio:
 
 ```bash
-npx -y deepbom@1.97.4 mcp
+npx -y deepbom@1.98.0 mcp
 ```
 
 It exposes `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
@@ -62,7 +62,7 @@ formats and large-model scan depth are explicit. Local paths are restricted to
 the launch directory unless `DEEPBOM_MCP_ALLOWED_ROOTS` is configured.
 Agent-facing usage guidance is in [the DEEPBOM skill](skills/deepbom/SKILL.md).
 Claude Desktop users can instead install the version-matched
-`deepbom-1.97.4.mcpb` asset from the corresponding GitHub Release. The bundle
+`deepbom-1.98.0.mcpb` asset from the corresponding GitHub Release. The bundle
 contains the same CLI and WASM bytes as the npm channel and asks the user to
 select the only local directory it may read.
 
@@ -106,6 +106,8 @@ deepbom capabilities --format agent-text
 deepbom explore model.tflite
 deepbom placement model.tflite --profiles xnnpack_cpu,tflite_coreml_delegate,litert_qualcomm_qnn
 deepbom graph model.onnx --format json --output artifact-graph.json
+deepbom audit model.onnx --section model_ir --compact
+deepbom visualize model.onnx --view all --orientation portrait -o model-views.zip
 deepbom audit model.onnx --conversion-receipt conversion-receipt.json --format cyclonedx
 ```
 
@@ -139,6 +141,16 @@ consumers. The v2 JSON Schema is published at
 and at `https://deepbom.org/schemas/deepbom-artifact-ir-v2.schema.json`.
 The conversion receipt schema is published at
 [`docs/schemas/deepbom-conversion-receipt-v1.schema.json`](docs/schemas/deepbom-conversion-receipt-v1.schema.json).
+
+The additive preview `deepbom.model_ir.v1` projects those frozen artifact facts
+into a format-neutral program, logical-value, storage, binding, quantization,
+architecture, and static/runtime evidence vocabulary. It preserves source,
+dependency, deterministic display, and observed runtime order as different
+fields. `visualize` consumes only this IR and creates deterministic monochrome
+ISO A4 SVG pages, 300-DPI black-and-white PNG derivatives, caption sidecars,
+and a Word insertion manifest. These are traceable engineering documents, not
+standard-conformance or regulatory-approval determinations. See
+[`docs/MODEL_IR_V1.md`](docs/MODEL_IR_V1.md).
 
 Public product output uses CycloneDX 1.7.
 
@@ -198,6 +210,9 @@ from `deepbom capabilities --compact` under `public_product_contracts`.
 | SafeTensors | Tensor-directory and sharding integrity, configuration-bound architecture contracts, AWQ/GPTQ/HQQ/compressed-tensors metadata, and bounded LLM memory scenarios |
 | Core ML | NeuralNetwork and ML Program serialized graphs, tensor/weight encodings, deployment floor, and imported compute-plan evidence boundaries |
 | ExecuTorch | Bounded ET12/FT01 plans, source-bound portable calls and processed payload identities, plus optional selected-build/backend/operator/binary attestation; execution remains external |
+| GraphDef / SavedModel | Bounded serialized nodes, data/control dependencies, first-MetaGraph SignatureDef tensor contracts, and hash-bound package membership; no graph execution |
+| Keras / PT2 | Bounded declarative config/JSON dependency graphs without object construction, pickle loading, lowering, native code, or runtime-order claims |
+| HDF5 / PyTorch checkpoint | Safe-envelope, archive, storage-member, and pickle-risk inventory only; no object graph or executable-model claim |
 
 Static compatibility does not establish observed execution-provider assignment,
 device latency, task accuracy, clinical validity, or release readiness. Runtime

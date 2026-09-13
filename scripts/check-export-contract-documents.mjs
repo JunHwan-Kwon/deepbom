@@ -211,8 +211,8 @@ const options = {
 const set = buildDeploymentContractDocuments(analysis, options);
 expectEqual(set.schema, "deepbom.deployment_contract_export_set.v1.5", "export-set schema");
 expectEqual(set.generated_at, GENERATED_AT, "stable generation timestamp");
-expectEqual(Object.keys(set.documents).length, 7, "document count");
-expectEqual(new Set(Object.values(set.files)).size, 7, "unique contract filenames");
+expectEqual(Object.keys(set.documents).length, 8, "document count");
+expectEqual(new Set(Object.values(set.files)).size, 8, "unique contract filenames");
 expectEqual(set.files.interfaceContracts, DEPLOYMENT_CONTRACT_FILES.interfaceContracts, "interface contract filename");
 expectEqual(set.files.runtime, DEPLOYMENT_CONTRACT_FILES.runtime, "runtime contract filename");
 expectEqual(JSON.stringify(set), JSON.stringify(buildDeploymentContractDocuments(analysis, options)), "deterministic export document set");
@@ -223,6 +223,7 @@ for (const [filename, digest] of Object.entries(set.integrity.member_sha256)) {
     cyclonedx: "cyclonedx_evidence",
     artifactEnvelope: "artifact_evidence_envelope",
     artifactIr: "artifact_ir",
+    modelIr: "model_ir",
     interfaceContracts: "interface_contract_ledger",
     formulation: "observed_formulation",
     runtime: "runtime_requirement_manifest",
@@ -234,9 +235,13 @@ for (const [filename, digest] of Object.entries(set.integrity.member_sha256)) {
 const cycloneDx = set.documents.cyclonedx_evidence;
 expectEqual(set.documents.artifact_ir.schema, "deepbom.artifact_ir.v2", "Artifact IR schema");
 expectEqual(set.documents.artifact_ir.artifact.sha256, SHA, "Artifact IR subject identity");
+expectEqual(set.documents.model_ir.schema, "deepbom.model_ir.v1", "Model IR schema");
+expectEqual(set.documents.model_ir.source_contract.sha256, set.documents.artifact_ir.artifact_ir_sha256, "Model IR source binding");
 assertCycloneDx17(cycloneDx, "evidence BOM");
 expectEqual(propertyMap(cycloneDx.metadata.component.properties).get("deepbom:model:artifactIrLocation"), DEPLOYMENT_CONTRACT_FILES.artifactIr, "packaged Artifact IR location");
 expect(cycloneDx.metadata.component.externalReferences.some((row) => row.url === DEPLOYMENT_CONTRACT_FILES.artifactIr && row.hashes?.[0]?.content === set.integrity.member_sha256[DEPLOYMENT_CONTRACT_FILES.artifactIr]), "packaged Artifact IR external reference and digest");
+expect(cycloneDx.metadata.component.externalReferences.some((row) => row.url === DEPLOYMENT_CONTRACT_FILES.modelIr && row.hashes?.[0]?.content === set.integrity.member_sha256[DEPLOYMENT_CONTRACT_FILES.modelIr]), "packaged Model IR external reference and digest");
+expectEqual(propertyMap(cycloneDx.properties).get("deepbom:modelIrSha256"), set.documents.model_ir.model_ir_sha256, "CycloneDX Model IR digest binding");
 expectEqual(cycloneDx.$schema, "http://cyclonedx.org/schema/bom-1.7.schema.json", "CycloneDX official schema identifier");
 expectEqual(cycloneDx.specVersion, "1.7", "CycloneDX specification version");
 expectEqual(cycloneDx.metadata.component.type, "machine-learning-model", "CycloneDX component type");
@@ -788,6 +793,7 @@ for (const [key, filename] of Object.entries(sampleSet.files)) {
     cyclonedx: "cyclonedx_evidence",
     artifactEnvelope: "artifact_evidence_envelope",
     artifactIr: "artifact_ir",
+    modelIr: "model_ir",
     interfaceContracts: "interface_contract_ledger",
     formulation: "observed_formulation",
     runtime: "runtime_requirement_manifest",
@@ -846,6 +852,8 @@ expect(
     && exportView.includes("exportSet.documents.artifact_evidence_envelope")
     && exportView.includes("exportSet.files.artifactIr")
     && exportView.includes("exportSet.documents.artifact_ir")
+    && exportView.includes("exportSet.files.modelIr")
+    && exportView.includes("exportSet.documents.model_ir")
     && exportView.includes("contract_set_integrity")
     && exportView.includes("analyzer_provenance"),
   "contract pack manifest should preserve document-set integrity and analyzer provenance.",

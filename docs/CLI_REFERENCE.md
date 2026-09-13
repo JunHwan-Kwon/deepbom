@@ -29,7 +29,8 @@ asset verification, and equivalence checks are documented in
 | `contract capture` | 1 | `summary`<br>`deepbom.artifact_derived_interface_baseline.v1` |
 | `diff` | 2 | `summary`<br>`markdown`<br>`deepbom.semantic_artifact_diff.v1`<br>`deepbom.tensor_encoding_diff.v1` |
 | `explore` | 1 | `summary`<br>`deepbom.redesign_pareto.v1` |
-| `graph` | 1 | `svg`<br>`png`<br>`html`<br>`mermaid`<br>`dot`<br>`deepbom.artifact_ir.v2`<br>`deepbom.graph_ir.v1`<br>`deepbom.visualization_manifest.v1` |
+| `graph` | 1 | `svg`<br>`png`<br>`html`<br>`mermaid`<br>`dot`<br>`deepbom.artifact_ir.v2`<br>`deepbom.model_ir.v1`<br>`deepbom.graph_ir.v1`<br>`deepbom.visualization_manifest.v1` |
+| `visualize` | 1 | `monochrome_a4_svg`<br>`black_white_300dpi_png`<br>`caption_sidecars`<br>`deepbom.model_ir_visualization_manifest.v1` |
 | `placement` | 1 | `deepbom.placement_comparison.v1` |
 | `accelerator collect nvidia` | none | `deepbom.accelerator_profile.v1` |
 | `explain-rule` | none | `deepbom.rule_explanation.v1`<br>`deepbom.rule_explanation_index.v1` |
@@ -37,9 +38,9 @@ asset verification, and equivalence checks are documented in
 | `capabilities` | none | `deepbom.cli_capabilities.v1` |
 | `integrate` | none | `deepbom.agent_integration.v1` |
 
-Standalone extensions: `.tflite`, `.onnx`, `.gguf`, `.safetensors`, `.mlmodel`, `.pte`, `.ptd`.
+Standalone extensions: `.tflite`, `.onnx`, `.gguf`, `.safetensors`, `.mlmodel`, `.pte`, `.ptd`, `.pb`, `.h5`, `.hdf5`, `.keras`, `.pt2`, `.pt`, `.pth`, `.ckpt`.
 
-Package contracts: `coreml_mlpackage`, `onnx_external_data`, `safetensors_sharded_repository`, `executorch_ptd`. Symbolic stdin is intentionally unsupported
+Package contracts: `coreml_mlpackage`, `onnx_external_data`, `safetensors_sharded_repository`, `executorch_ptd`, `tensorflow_savedmodel`. Symbolic stdin is intentionally unsupported
 because stable artifact identity, bounded range reads, and safe sidecar
 resolution require a regular file or package directory.
 
@@ -56,10 +57,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.97.4`:
+`1.98.0`:
 
 ```console
-DEEPBOM 1.97.4
+DEEPBOM 1.98.0
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -68,12 +69,15 @@ Usage:
   deepbom diff <baseline-artifact-or-package> <candidate-artifact-or-package> [options]
   deepbom explore <artifact.tflite> [options]
   deepbom graph <artifact> [options]
+  deepbom visualize <artifact> [options]
   deepbom accelerator collect nvidia [options]
   deepbom capabilities [--json|--compact]
 
 Supported inputs:
-  .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd
-  .mlpackage directories and sharded SafeTensors repository directories
+  Stable or existing: .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd
+  Preview static graph: GraphDef or saved_model.pb
+  Preview safe envelope: .h5, .hdf5, .keras, .pt2, .pt, .pth, .ckpt
+  Packages: .mlpackage directories and sharded SafeTensors repository directories
 
 Options:
   --target <id>          TFLite target profile (default: android_mid_a55)
@@ -116,8 +120,15 @@ Options:
   --version              Print version
   --help                 Show this help
 
+Safe-envelope boundary:
+  Keras, HDF5, PT2, and PyTorch checkpoint previews do not construct framework objects or claim an executable graph.
+
 Exit codes:
   0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding
+
+SavedModel package preview:
+  TensorFlow SavedModel directories are accepted with bounded member hashing and first-MetaGraph projection.
+  GraphDef, Keras config, and PT2 JSON expose serialized declarative relationships only; HDF5 and PyTorch checkpoints remain safe-envelope-only.
 
 GGUF quick inspection:
   --tensors              Emit a concise tensor table; add --json or --compact for deepbom.tensor_table.v1
@@ -213,6 +224,13 @@ Deterministic graph export:
   deepbom graph <artifact> --view structure --output-format svg -o graph.svg
   --view <kind>           structure, placement, quantization, or architecture
   --output-format <kind>  svg, png, html, mermaid, dot, or json for graph
+
+Regulatory-document model views:
+  deepbom visualize <artifact> --view all --orientation portrait -o model-views.zip
+  --view <ids>            all or comma-separated identity-boundary, architecture-overview, block-detail, exhaustive, static-runtime, observed-runtime
+  --orientation <kind>    portrait or landscape ISO A4
+  --output-format <kind>  bundle (SVG, captions, manifest) or json manifest
+  These monochrome, hash-bound engineering views do not assert regulatory approval or standard conformance.
 
 TensorRT optimized-engine option:
   --tensorrt-engine-inspector <json>

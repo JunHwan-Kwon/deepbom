@@ -7,6 +7,7 @@ import { buildSafeTensorsQuantizationContract } from "./safetensors-quantization
 import { buildOnDeviceLlmContract } from "./on-device-llm-contract.js";
 import { safeTensorsNumericalSourceEvidence } from "./tensor-numerical-integrity.js";
 import { sha256TextHex } from "./sha256-sync.js";
+import { analyzeTensorFlowProtobuf } from "./safe-source-artifacts.js";
 
 const MAX_BUNDLE_FILES = 20_000;
 const MAX_MANIFEST_BYTES = 16 * 1024 * 1024;
@@ -91,6 +92,18 @@ function safeTensorsPlan(entries) {
     tensorFile,
     root: slash < 0 ? "" : tensorPath.slice(0, slash + 1),
   };
+}
+
+function savedModelPlan(entries) {
+  const models = [...entries].filter(([candidate]) => /(^|\/)saved_model\.pb$/i.test(candidate));
+  if (!models.length) return null;
+  if (models.length !== 1) throw new Error("Package selection contains multiple saved_model.pb roots");
+  const [rootModelPath, rootFile] = models[0];
+  const slash = rootModelPath.lastIndexOf("/");
+  const root = slash < 0 ? "" : rootModelPath.slice(0, slash + 1);
+  const members = [...entries].filter(([candidate]) => candidate.startsWith(root));
+  if (members.length !== entries.size) throw new Error("SavedModel package selection contains files outside the saved_model.pb root");
+  return { kind: "tensorflow_savedmodel", format: "savedmodel", entries, rootModelPath, rootFile, root, displayName: root.replace(/\/$/, "") || "saved_model" };
 }
 
 async function resolveCoreMlPlan(plan) {
@@ -183,9 +196,11 @@ async function resolveSafeTensorsPlan(plan) {
 
 export async function inspectArtifactBundle(files) {
   const entries = bundleEntries(files);
-  const plan = coreMlPlan(entries) || safeTensorsPlan(entries);
-  if (!plan) throw new Error("Selection is neither a Core ML package nor a SafeTensors shard set");
-  return plan.kind === "coreml_package" ? resolveCoreMlPlan(plan) : resolveSafeTensorsPlan(plan);
+  const plan = coreMlPlan(entries) || savedModelPlan(entries) || safeTensorsPlan(entries);
+  if (!plan) throw new Error("Selection is neither a Core ML package, SavedModel directory, nor a SafeTensors shard set");
+  if (plan.kind === "coreml_package") return resolveCoreMlPlan(plan);
+  if (plan.kind === "tensorflow_savedmodel") return plan;
+  return resolveSafeTensorsPlan(plan);
 }
 
 async function hashRecords(rows, onProgress) {
@@ -369,6 +384,50 @@ async function analyzeCoreMlPackage(plan, onProgress) {
   return { analysis, retainedBytes: parsed.retainedBytes, payloadLoaded: false, rootFile: plan.rootFile };
 }
 
+async function analyzeSavedModelPackage(plan, onProgress) {
+  const rows = [...plan.entries].map(([memberPath, file]) => ({
+    path: memberPath,
+    file,
+    role: memberPath === plan.rootModelPath ? "saved_model_protobuf"
+      : /(^|\/)variables\/variables\.index$/i.test(memberPath) ? "variables_index"
+        : /(^|\/)variables\/variables\.data-/i.test(memberPath) ? "variables_data"
+          : /(^|\/)assets\//i.test(memberPath) ? "asset"
+            : /(^|\/)fingerprint\.pb$/i.test(memberPath) ? "fingerprint"
+              : "package_supporting_file",
+    required: true,
+  }));
+  const records = await hashRecords(rows, onProgress);
+  if (plan.rootFile.size > 1024 * 1024 * 1024) throw new Error("saved_model.pb exceeds the 1 GiB bounded protobuf parser limit");
+  const protobuf = new Uint8Array(await plan.rootFile.arrayBuffer());
+  const analysis = analyzeTensorFlowProtobuf(protobuf, "saved_model.pb");
+  const digest = bundleDigest(records);
+  const total = records.reduce((sum, row) => sum + row.byte_length, 0);
+  analysis.filename = plan.displayName;
+  analysis.file_size = total;
+  analysis.file_size_bytes = total;
+  analysis.model_sha256 = digest;
+  analysis.savedmodel = {
+    ...analysis.savedmodel,
+    package_closure_status: "selected_directory_complete_hash_bound",
+    selected_member_count: records.length,
+    variables_index_count: records.filter((row) => row.role === "variables_index").length,
+    variables_data_count: records.filter((row) => row.role === "variables_data").length,
+    asset_count: records.filter((row) => row.role === "asset").length,
+    fingerprint_count: records.filter((row) => row.role === "fingerprint").length,
+    interpretation_boundary: "The selected SavedModel directory is completely path/size/SHA-256 bound. The first serialized MetaGraph GraphDef and SignatureDef tensor contracts are materialized; other MetaGraphs are inventoried. Variable, asset, fingerprint, kernel, and runtime semantics are not inferred from package membership.",
+  };
+  analysis.format_extensions.savedmodel = analysis.savedmodel;
+  analysis.artifact_bundle = {
+    schema: "deepbom.artifact_bundle.savedmodel.v1",
+    kind: "tensorflow_savedmodel",
+    hash_basis: "sha256_of_canonical_path_size_digest_role_manifest",
+    bundle_sha256: digest,
+    root_model_path: plan.rootModelPath,
+    files: records.map((row) => bundleFileEvidence(row, "selected_directory_member_hash_verified")),
+  };
+  return { analysis, retainedBytes: protobuf, payloadLoaded: false, rootFile: plan.rootFile };
+}
+
 async function analyzeSafeTensorsShards(plan, onProgress, scanMode = "full") {
   const sidecarRows = Object.values(plan.llmSidecars || {}).filter((row) => row.role !== "architecture_config").map((row) => ({
     path: row.path, file: row.file, role: row.role, required: true,
@@ -518,5 +577,7 @@ async function analyzeSafeTensorsShards(plan, onProgress, scanMode = "full") {
 export async function readArtifactBundle(files, { onProgress, scanMode = "full" } = {}) {
   if (!["structure", "integrity", "full"].includes(scanMode)) throw new Error(`Unsupported artifact bundle scan mode ${scanMode}.`);
   const plan = await inspectArtifactBundle(files);
-  return plan.kind === "coreml_package" ? analyzeCoreMlPackage(plan, onProgress) : analyzeSafeTensorsShards(plan, onProgress, scanMode);
+  if (plan.kind === "coreml_package") return analyzeCoreMlPackage(plan, onProgress);
+  if (plan.kind === "tensorflow_savedmodel") return analyzeSavedModelPackage(plan, onProgress);
+  return analyzeSafeTensorsShards(plan, onProgress, scanMode);
 }

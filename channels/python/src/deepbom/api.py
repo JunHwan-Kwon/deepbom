@@ -103,6 +103,55 @@ def audit(path: os.PathLike[str] | str, *, output: Optional[str] = None,
     return _invoke_json(argv, timeout_seconds, max_output_bytes)
 
 
+def model_ir(path: os.PathLike[str] | str, *, scan: str = "auto",
+             expected_sha256: Optional[str] = None,
+             timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+             max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> dict[str, Any]:
+    """Return the preview ``deepbom.model_ir.v1`` projection.
+
+    The result remains static engineering evidence. It does not imply runtime
+    execution order, standards conformance, or regulatory acceptance.
+    """
+    selection = audit(
+        path,
+        scan=scan,
+        sections=["model_ir"],
+        expected_sha256=expected_sha256,
+        timeout_seconds=timeout_seconds,
+        max_output_bytes=max_output_bytes,
+    )
+    document = selection.get("sections", {}).get("model_ir")
+    if not isinstance(document, dict) or document.get("schema") != "deepbom.model_ir.v1":
+        raise DeepBomInvocationError("The engine returned an incompatible Model IR document.")
+    return document
+
+
+def visualization_manifest(path: os.PathLike[str] | str, *,
+                           views: Optional[Iterable[str]] = None,
+                           orientation: str = "portrait",
+                           timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+                           max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> dict[str, Any]:
+    """Return the deterministic Model IR visualization manifest as JSON.
+
+    SVG/PNG/Word bundle bytes are intentionally written by the CLI or Web
+    export surface; this facade returns the bounded manifest for automation.
+    """
+    allowed_views = {
+        "identity-boundary", "architecture-overview", "block-detail",
+        "exhaustive", "static-runtime", "observed-runtime",
+    }
+    view_values = _sections(views)
+    if any(value not in allowed_views for value in view_values):
+        raise ValueError(f"views must be selected from: {', '.join(sorted(allowed_views))}")
+    orientation_value = _choice(orientation, "orientation", {"portrait", "landscape"})
+    argv = ["visualize", _path_text(path), "--view", ",".join(view_values) if view_values else "all",
+            "--orientation", orientation_value, "--output-format", "json", "--compact"]
+    document = _invoke_json(argv, timeout_seconds, max_output_bytes)
+    if document.get("schema") != "deepbom.model_ir_visualization_manifest.v1":
+        raise DeepBomInvocationError("The engine returned an incompatible Model IR visualization manifest.")
+    return document
+
+
 def tensors(path: os.PathLike[str] | str, *, expected_sha256: Optional[str] = None,
             timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
             max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> list[dict[str, Any]]:

@@ -4,6 +4,42 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.98.0 - 2026-09-14
+
+- Add the bounded `deepbom.model_ir.v1` preview without replacing the stable
+  `deepbom.artifact_ir.v2` contract. The new hash-bound projection separates
+  serialized programs, partial dependency order, logical values, storage,
+  parameter bindings, quantization, reversible hierarchy, static-runtime
+  projections, observed-runtime overlays, applicability, completeness, and
+  explicit loss records.
+- Add format-neutral analysis passes and traceable Transformer, CNN,
+  encoder-decoder, and MoE profile projections. Native operation identities
+  remain preserved, model-name inference cannot create execution edges, and
+  graphless containers cannot be promoted to serialized execution graphs.
+- Project the existing ONNX, TFLite, Core ML, ExecuTorch, GGUF, and
+  SafeTensors evidence into Model IR, and add bounded no-execution previews for
+  TensorFlow GraphDef, first-MetaGraph SavedModel signatures, Keras declarative
+  configuration, and PT2 declarative JSON. HDF5 and legacy PyTorch checkpoints
+  intentionally remain safe-envelope inventories rather than full model
+  analyzers.
+- Add deterministic Model IR visualization bundles with canonical monochrome
+  A4 SVG pages, 300-DPI PNG derivatives, captions, cross-page references,
+  subject locators, conservation checks, and a Word insertion manifest. These
+  are engineering-evidence projections and do not claim regulatory approval or
+  standards conformance.
+- Expose Model IR and visualization-manifest access through CLI, browser,
+  Python, npm, Cargo, and MCP-backed channel contracts while retaining one
+  analyzer implementation and exact artifact/IR digests.
+- Pin and verify the official TensorFlow, HDF5, Keras, and PyTorch source files
+  used to bound the new preview adapters. Verification can use reviewed local
+  sparse clones or temporary immutable checkouts; upstream source bytes are
+  not redistributed.
+- Raise the reviewed handwritten-runtime source ceiling by 288 KiB,
+  verification by 64 KiB, development tooling by 32 KiB, and documentation by
+  16 KiB for the Common Model IR, bounded source adapters, visualization
+  pipeline, source-pin verifier, and their executable contracts. Generated
+  runtime-data and per-file ceilings are unchanged.
+
 ## 1.97.4 - 2026-09-13
 
 - Add a portable Agent Plugins package and a compatibility manifest that bind

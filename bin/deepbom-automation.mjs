@@ -33,8 +33,9 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       { name: "contract capture", input_count: 1, outputs: ["summary", "deepbom.artifact_derived_interface_baseline.v1"], production_approval_inferred: false },
       { name: "diff", input_count: 2, outputs: ["summary", "markdown", "deepbom.semantic_artifact_diff.v1", "deepbom.tensor_encoding_diff.v1"], supported_formats: ["tflite", "onnx", "coreml", "gguf", "safetensors", "executorch"], matching_format_required: true },
       { name: "explore", input_count: 1, outputs: ["summary", "deepbom.redesign_pareto.v1"] },
-        { name: "graph", input_count: 1, outputs: ["svg", "png", "html", "mermaid", "dot", "deepbom.artifact_ir.v2", "deepbom.graph_ir.v1", "deepbom.visualization_manifest.v1"] },
-        { name: "placement", input_count: 1, outputs: ["deepbom.placement_comparison.v1"] },
+      { name: "graph", input_count: 1, outputs: ["svg", "png", "html", "mermaid", "dot", "deepbom.artifact_ir.v2", "deepbom.model_ir.v1", "deepbom.graph_ir.v1", "deepbom.visualization_manifest.v1"] },
+      { name: "visualize", input_count: 1, outputs: ["monochrome_a4_svg", "black_white_300dpi_png", "caption_sidecars", "deepbom.model_ir_visualization_manifest.v1"], views: ["identity-boundary", "architecture-overview", "block-detail", "exhaustive", "static-runtime", "observed-runtime"], regulatory_conclusion_inferred: false },
+      { name: "placement", input_count: 1, outputs: ["deepbom.placement_comparison.v1"] },
       { name: "accelerator collect nvidia", input_count: 0, outputs: ["deepbom.accelerator_profile.v1"] },
       { name: "explain-rule", input_count: 0, optional_identifier_count: 1, outputs: ["deepbom.rule_explanation.v1", "deepbom.rule_explanation_index.v1"] },
       { name: "self-test", input_count: 0, outputs: ["deepbom.cli_self_test.v1"] },
@@ -42,8 +43,13 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       { name: "integrate", input_count: 0, outputs: ["deepbom.agent_integration.v1"], targets: ["codex", "claude-code", "generic"], writes_require_apply: true },
     ],
     inputs: {
-      standalone_extensions: [".tflite", ".onnx", ".gguf", ".safetensors", ".mlmodel", ".pte", ".ptd"],
-      package_kinds: ["coreml_mlpackage", "onnx_external_data", "safetensors_sharded_repository", "executorch_ptd"],
+      standalone_extensions: [".tflite", ".onnx", ".gguf", ".safetensors", ".mlmodel", ".pte", ".ptd", ".pb", ".h5", ".hdf5", ".keras", ".pt2", ".pt", ".pth", ".ckpt"],
+      package_kinds: ["coreml_mlpackage", "onnx_external_data", "safetensors_sharded_repository", "executorch_ptd", "tensorflow_savedmodel"],
+      preview_boundaries: {
+        static_graph: ["tensorflow_graphdef", "tensorflow_savedmodel_first_metagraph", "keras_declarative_config", "pt2_declarative_graph"],
+        safe_envelope_only: ["generic_hdf5", "pytorch_pt_pth_ckpt"],
+        arbitrary_framework_object_construction: false,
+      },
       remote_sources: {
         huggingface: "full_commit_required",
         gcs: "object_generation_required",
@@ -78,6 +84,13 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
         supported_formats: ["gguf", "safetensors", "onnx", "tflite"],
         default_scan_for_range_read_containers: "structure",
         evidence_scope: "serialized_tensor_encoding_only",
+      },
+      model_ir_document_views: {
+        invocation: "deepbom visualize <artifact> --view all --orientation portrait -o model-views.zip",
+        schema: "deepbom.model_ir_visualization_manifest.v1",
+        canonical_vector: "monochrome ISO A4 SVG with source subject references",
+        compatibility_raster: "300-DPI opaque black-white PNG",
+        boundary: "engineering evidence only; no standard-conformance or regulatory-approval claim",
       },
     },
     provenance_inputs: {

@@ -7,9 +7,9 @@
     "web/lib/public-cyclonedx-export.js"
   ],
   "counts": {
-    "total": 224,
+    "total": 227,
     "stable": 16,
-    "experimental": 208,
+    "experimental": 211,
     "deprecated": 0
   },
   "properties": [
@@ -1070,6 +1070,21 @@
     },
     {
       "name": "deepbom:modelCard:ioContractSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:modelIrLocation",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:modelIrSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:modelIrSha256",
       "status": "experimental",
       "reconciliation": "not_compared_by_default"
     },

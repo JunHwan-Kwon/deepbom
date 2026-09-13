@@ -69,6 +69,14 @@ if (npmCli) {
   await verifyInstalledAgentIntegration(npmCli, manifest.version);
   const npmSelfTest = json(runNpmExecutable(npmCli, ["self-test", "--compact"]).stdout);
   assert.equal(npmSelfTest.status, "pass", "installed npm executable self-test failed");
+  const canonicalModelIrSelection = json(run(process.execPath, ["bin/deepbom.mjs", "audit", fileCases[1].path, "--section", "model_ir", "--compact"]).stdout);
+  const npmModelIrSelection = json(run(process.execPath, [npmCli, "audit", fileCases[1].path, "--section", "model_ir", "--compact"]).stdout);
+  assert.deepEqual(npmModelIrSelection, canonicalModelIrSelection,
+    "installed npm Model IR projection diverged from canonical CLI");
+  const canonicalVisualization = json(run(process.execPath, ["bin/deepbom.mjs", "visualize", fileCases[1].path, "--view", "architecture-overview", "--output-format", "json", "--compact"]).stdout);
+  const npmVisualization = json(run(process.execPath, [npmCli, "visualize", fileCases[1].path, "--view", "architecture-overview", "--output-format", "json", "--compact"]).stdout);
+  assert.deepEqual(npmVisualization, canonicalVisualization,
+    "installed npm Model IR visualization manifest diverged from canonical CLI");
   const mcpFrames = exchangeMcp(process.execPath, [npmCli, "mcp"], [
     { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "channel-check", version: "0" } } },
     { jsonrpc: "2.0", method: "notifications/initialized" },
@@ -108,6 +116,13 @@ if (platformSmoke || releaseContract) {
     "installed Python tensors facade must expose native exact numeric types");
   assert.equal(json(run(python, ["-c", "import json, sys, deepbom; print(json.dumps(deepbom.audit(sys.argv[1], sections=['summary']), separators=(',', ':')))", fileCases[1].path]).stdout).schema,
     "deepbom.analysis_selection.v1", "installed Python sections must select analysis when output is omitted");
+  const pythonModelIr = json(run(python, ["-c", "import json, sys, deepbom; print(json.dumps(deepbom.model_ir(sys.argv[1]), separators=(',', ':')))", fileCases[1].path]).stdout);
+  const canonicalModelIr = json(run(process.execPath, ["bin/deepbom.mjs", "audit", fileCases[1].path, "--section", "model_ir", "--compact"]).stdout).sections.model_ir;
+  assert.deepEqual(pythonModelIr, canonicalModelIr, "installed Python Model IR facade diverged from canonical CLI");
+  const pythonVisualization = json(run(python, ["-c", "import json, sys, deepbom; print(json.dumps(deepbom.visualization_manifest(sys.argv[1], views=['architecture-overview']), separators=(',', ':')))", fileCases[1].path]).stdout);
+  const canonicalVisualization = json(run(process.execPath, ["bin/deepbom.mjs", "visualize", fileCases[1].path, "--view", "architecture-overview", "--output-format", "json", "--compact"]).stdout);
+  assert.deepEqual(pythonVisualization, canonicalVisualization,
+    "installed Python visualization manifest facade diverged from canonical CLI");
   assert.deepEqual(json(run(python, ["-c", [
     "import json, sys, deepbom",
     "try:",
@@ -220,6 +235,14 @@ if (platformSmoke) {
       DEEPBOM_ENGINE_SHA256: createHash("sha256").update(await readFile(engine)).digest("hex"),
       DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
     };
+    const cargoModelIr = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--section", "model_ir", "--compact"], cargoEnvironment);
+    assert.deepEqual(json(cargoModelIr.stdout),
+      json(run(process.execPath, ["bin/deepbom.mjs", "audit", cases[1].path, "--section", "model_ir", "--compact"]).stdout),
+      "Cargo Model IR projection diverged from canonical CLI");
+    const cargoVisualization = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "visualize", cases[1].path, "--view", "architecture-overview", "--output-format", "json", "--compact"], cargoEnvironment);
+    assert.deepEqual(json(cargoVisualization.stdout),
+      json(run(process.execPath, ["bin/deepbom.mjs", "visualize", cases[1].path, "--view", "architecture-overview", "--output-format", "json", "--compact"]).stdout),
+      "Cargo visualization manifest diverged from canonical CLI");
     verifyMcpToolCalls("Cargo launcher", "cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "mcp"], cases[1].path, cargoEnvironment);
     const unboundCargo = run(
       "cargo",

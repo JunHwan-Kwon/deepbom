@@ -20,7 +20,7 @@ const ADVERTISED = [];
 for (const adapter of Object.values(MODEL_FORMAT_ADAPTERS)) {
   for (const extension of adapter.extensions) ADVERTISED.push({ extension, expect: adapter.id });
 }
-record("inventory", "every advertised extension is enumerable", ADVERTISED.length === 11,
+record("inventory", "every advertised extension is enumerable", ADVERTISED.length === 16,
   `${ADVERTISED.length} extensions: ${ADVERTISED.map((e) => e.extension).join(" ")}`);
 
 for (const { extension, expect } of ADVERTISED) {
@@ -33,13 +33,22 @@ for (const { extension, expect } of ADVERTISED) {
 // ------------------------------------------------------------- gate policy --
 for (const extension of [".pt", ".pth", ".ckpt"]) {
   const gate = modelFormatGate(detectModelFormat(`weights${extension}`, new Uint8Array()));
-  record("gate", `${extension} is blocked as unsafe serialized code`, gate.blocked && gate.reason === "unsafe_serialized_code", JSON.stringify(gate));
+  record("gate", `${extension} is admitted only to the non-executing checkpoint safe envelope`, !gate.blocked
+    && gate.adapter.id === "pytorch_checkpoint"
+    && gate.adapter.analyzer === "javascript_safe_envelope"
+    && gate.adapter.executable === true, JSON.stringify(gate));
 }
 for (const extension of [".pte", ".ptd"]) {
   const gate = modelFormatGate(detectModelFormat(`model${extension}`, new Uint8Array()));
   record("gate", `${extension} is admitted to the bounded ExecuTorch analyzer`, !gate.blocked && gate.adapter.id === "executorch", JSON.stringify(gate));
 }
-for (const name of ["model.bin", "model.h5", "model.pb", "model.npz", "archive.zip", "noextension"]) {
+for (const [name, expectedAdapter] of [["model.h5", "hdf5"], ["model.pb", "tensorflow_protobuf"]]) {
+  const gate = modelFormatGate(detectModelFormat(name, new Uint8Array()));
+  record("gate", `${name} is admitted to a bounded non-executing preview`, !gate.blocked
+    && gate.adapter.id === expectedAdapter
+    && gate.adapter.executable === false, JSON.stringify(gate));
+}
+for (const name of ["model.bin", "model.npz", "archive.zip", "noextension"]) {
   const gate = modelFormatGate(detectModelFormat(name, new Uint8Array()));
   record("gate", `${name} (unknown, no magic) is blocked`, gate.blocked && gate.reason === "unsupported_format", JSON.stringify(gate));
 }
@@ -52,7 +61,10 @@ const TORCH_ZIP = Uint8Array.from([0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x0
 for (const [label, bytes] of [["raw pickle", PICKLE], ["torch zip", TORCH_ZIP]]) {
   for (const name of ["evil.pt", "evil.pth", "evil.ckpt"]) {
     const gate = modelFormatGate(detectModelFormat(name, bytes));
-    record("conflict", `${label} named ${name} stays blocked`, gate.blocked && gate.reason === "unsafe_serialized_code", JSON.stringify(gate));
+    record("conflict", `${label} named ${name} is confined to the non-executing checkpoint safe envelope`, !gate.blocked
+      && gate.adapter.id === "pytorch_checkpoint"
+      && gate.adapter.analyzer === "javascript_safe_envelope"
+      && gate.adapter.executable === true, JSON.stringify(gate));
   }
   // Renaming a pickle to a supported extension must never yield an analysis.
   for (const [name, run] of [
@@ -77,8 +89,8 @@ for (const [label, bytes] of [["raw pickle", PICKLE], ["torch zip", TORCH_ZIP]])
 // Double extensions: the real (last) extension must win.
 for (const [name, expect] of [
   ["model.pt.tflite", "tflite"],
-  ["model.tflite.pt", "pytorch_pickle"],
-  ["model.onnx.pth", "pytorch_pickle"],
+  ["model.tflite.pt", "pytorch_checkpoint"],
+  ["model.onnx.pth", "pytorch_checkpoint"],
   ["model.pth.onnx", "onnx"],
   ["model.safetensors.index.json", "unsupported"],
 ]) {

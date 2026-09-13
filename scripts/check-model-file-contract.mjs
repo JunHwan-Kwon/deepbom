@@ -58,7 +58,7 @@ for (const [actual, expected, label] of [
   [detectModelFormat("model.pte", new Uint8Array()), "executorch", "detect ExecuTorch filename"],
   [detectModelFormat("model.bin", new Uint8Array([0, 0, 0, 0, 0x45, 0x54, 0x31, 0x32])), "executorch", "detect ExecuTorch ET12 header"],
   [detectModelFormat("model.bin", new Uint8Array([0, 0, 0, 0, 0x46, 0x54, 0x30, 0x31])), "executorch", "detect ExecuTorch FT01 header"],
-  [detectModelFormat("model.pth", new Uint8Array()), "pytorch_pickle", "detect rejected PyTorch pickle filename"],
+  [detectModelFormat("model.pth", new Uint8Array()), "pytorch_checkpoint", "detect PyTorch checkpoint safe-envelope filename"],
   [detectModelFormat("model.bin", new Uint8Array([1, 2, 3, 4])), "unsupported", "unknown format must fail closed"],
 ]) {
   expectEqual(actual, expected, label);

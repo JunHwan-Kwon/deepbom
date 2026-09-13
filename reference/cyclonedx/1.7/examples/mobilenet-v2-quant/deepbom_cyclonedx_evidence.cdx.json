@@ -479,6 +479,17 @@
         },
         {
           "type": "evidence",
+          "url": "deepbom_model_ir.json",
+          "comment": "Preview Common Model IR with format-neutral program, logical tensor, storage, binding, quantization, and explicit loss ledgers. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "efa6db5c5d7274f569a4c6d8e65df44e8f33baa232aa994ae1024a78ac1c1191"
+            }
+          ]
+        },
+        {
+          "type": "evidence",
           "url": "deepbom_interface_contracts.json",
           "comment": "Canonical external tensor numerical-contract ledger. Relative URL resolves inside the Deployment Contract Pack. SHA-256 binds the downloaded JSON member bytes.",
           "hashes": [
@@ -800,6 +811,18 @@
     {
       "name": "deepbom:artifactIrSha256",
       "value": "88b850ade73779ee629696a077a418f84c6d2de808490c63f2b9be0e43c13b0a"
+    },
+    {
+      "name": "deepbom:modelIrSchema",
+      "value": "deepbom.model_ir.v1"
+    },
+    {
+      "name": "deepbom:modelIrSha256",
+      "value": "9c59d119460de974a03b4c1b876cc5e7365d0f57a0818574e0ce8f60afa95a9a"
+    },
+    {
+      "name": "deepbom:modelIrLocation",
+      "value": "deepbom_model_ir.json"
     },
     {
       "name": "deepbom:accelerator:bindingCount",

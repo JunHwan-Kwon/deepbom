@@ -8,7 +8,7 @@ is not claimed here as a tested Claude remote connector.
 
 ## Local installation review
 
-1. Download `deepbom-1.97.4.mcpb` from the `channels-v1.97.4` GitHub Release.
+1. Download `deepbom-1.98.0.mcpb` from the `channels-v1.98.0` GitHub Release.
 2. In Claude Desktop, open Settings, Extensions, Advanced settings, and Install
    Extension. Select a dedicated model directory as `allowed_root`.
 3. Start a new chat. Confirm that `deepbom_capabilities`, `deepbom_audit`,
