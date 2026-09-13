@@ -15,6 +15,12 @@ const expectedMembers = [
   "package.json",
   "pkg/release-manifest.json",
   "pkg/tflite_wasm_audit_bg.wasm",
+  "skills/deepbom/SKILL.md",
+  "skills/deepbom/agents/openai.yaml",
+  "skills/deepbom/references/capability-selection.md",
+  "skills/deepbom/references/evidence-semantics.md",
+  "skills/deepbom/references/failure-recovery.md",
+  "skills/deepbom/scripts/verify-deepbom.mjs",
 ];
 
 if (!existsSync(packageRoot)) {
