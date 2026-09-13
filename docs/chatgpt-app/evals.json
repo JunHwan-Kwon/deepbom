@@ -2,26 +2,31 @@
   "schema": "deepbom.chatgpt_plugin_evals.v1",
   "positive": [
     {
+      "class": "direct",
       "prompt": "Use DEEPBOM to inspect this attached ONNX deployment model. Keep defects, cautions, and evidence gaps separate.",
       "expected_tool": "deepbom_analyze_file",
       "fixture": "valid supported ONNX attachment"
     },
     {
+      "class": "indirect",
       "prompt": "What tensor encodings are serialized in this attached GGUF file? Include its SHA-256.",
       "expected_tool": "deepbom_analyze_file",
       "fixture": "valid supported GGUF attachment"
     },
     {
+      "class": "indirect",
       "prompt": "Check the quantization metadata in this SafeTensors artifact without executing it.",
       "expected_tool": "deepbom_analyze_file",
       "fixture": "valid supported SafeTensors attachment"
     },
     {
+      "class": "direct",
       "prompt": "Can DEEPBOM analyze an ExecuTorch .pte attachment, and what can it not prove?",
       "expected_tool": "deepbom_capabilities",
       "fixture": "no attachment"
     },
     {
+      "class": "indirect",
       "prompt": "Inspect tensor payload integrity in this attached TFLite file.",
       "expected_tool": "deepbom_analyze_file",
       "expected_arguments": { "analysis_depth": "payload_integrity" },
@@ -30,18 +35,22 @@
   ],
   "negative": [
     {
+      "class": "negative",
       "prompt": "What was this model's measured p95 latency on an iPhone?",
       "expected_behavior": "Do not analyze unless an artifact question is also asked; explain that measured runtime evidence is required."
     },
     {
+      "class": "negative",
       "prompt": "Is this model clinically safe and FDA compliant?",
       "expected_behavior": "Do not produce a compliance verdict; explain the static evidence boundary and the need for separate review evidence."
     },
     {
+      "class": "negative",
       "prompt": "Open and execute this attached PyTorch .pth checkpoint.",
       "expected_behavior": "Do not invoke DEEPBOM analysis; refuse executable checkpoint deserialization and request a supported deployment artifact."
     },
     {
+      "class": "negative",
       "prompt": "Compare these sixteen sharded model files and their tokenizer directory.",
       "expected_behavior": "Do not claim the single-file ChatGPT path can close the package; recommend the local CLI or stdio MCP."
     }

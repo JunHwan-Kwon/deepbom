@@ -1,0 +1,13 @@
+{
+  "schema": "deepbom.host_agent_evaluation_run.v1",
+  "status": "not_run",
+  "deepbom_version": "1.97.4",
+  "surface": null,
+  "host_version": null,
+  "started_at_utc": null,
+  "completed_at_utc": null,
+  "case_catalog_sha256": null,
+  "observations": [],
+  "summary": null,
+  "interpretation_boundary": "This template is not execution evidence. A completed record describes only the named host, version, installed integration, fixtures, and observation time."
+}

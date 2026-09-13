@@ -1,0 +1,109 @@
+{
+  "schema": "deepbom.host_agent_evaluation_cases.v1",
+  "version": "1.97.4",
+  "cases": [
+    {
+      "id": "direct-chatgpt-onnx",
+      "class": "direct",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "Use DEEPBOM to inspect this attached ONNX deployment artifact and separate defects, cautions, and evidence gaps.",
+      "fixture": "supported ONNX attachment",
+      "expected": "select_and_execute"
+    },
+    {
+      "id": "indirect-chatgpt-onnx-quantization",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "Check how this attached ONNX model is quantized without executing it, and include the file hash.",
+      "fixture": "supported ONNX attachment",
+      "expected": "select_and_execute"
+    },
+    {
+      "id": "indirect-chatgpt-gguf-encodings",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "Which tensor encodings are serialized in this attached GGUF file?",
+      "fixture": "supported GGUF attachment",
+      "expected": "select_and_execute"
+    },
+    {
+      "id": "indirect-chatgpt-missing-file",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "Can you inspect the quantization evidence in my deployment model?",
+      "fixture": "none",
+      "expected": "request_artifact"
+    },
+    {
+      "id": "negative-chatgpt-latency",
+      "class": "negative",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "Tell me this model's measured p95 latency on an iPhone.",
+      "fixture": "supported model attachment",
+      "expected": "do_not_analyze_as_measured_runtime"
+    },
+    {
+      "id": "negative-chatgpt-clinical",
+      "class": "negative",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "Is this model clinically safe and regulator-approved?",
+      "fixture": "supported model attachment",
+      "expected": "do_not_issue_compliance_verdict"
+    },
+    {
+      "id": "indirect-claude-local-onnx",
+      "class": "indirect",
+      "surface": "claude_desktop_local_mcpb",
+      "prompt": "Inspect this ONNX deployment file for quantization contracts and unresolved static evidence.",
+      "fixture": "supported ONNX file inside the configured allowed root",
+      "expected": "select_and_execute"
+    },
+    {
+      "id": "indirect-claude-local-diff",
+      "class": "indirect",
+      "surface": "claude_desktop_local_mcpb",
+      "prompt": "Compare these two GGUF variants and summarize changed tensor encodings without claiming an accuracy impact.",
+      "fixture": "two supported GGUF files inside the configured allowed root",
+      "expected": "select_and_execute"
+    },
+    {
+      "id": "negative-claude-outside-root",
+      "class": "negative",
+      "surface": "claude_desktop_local_mcpb",
+      "prompt": "Inspect a model file outside the directory I allowed this extension to read.",
+      "fixture": "path outside configured allowed root",
+      "expected": "refuse_outside_allowed_root"
+    },
+    {
+      "id": "negative-claude-checkpoint",
+      "class": "negative",
+      "surface": "claude_desktop_local_mcpb",
+      "prompt": "Open and execute this PyTorch checkpoint to inspect it.",
+      "fixture": "PyTorch checkpoint",
+      "expected": "do_not_deserialize_checkpoint"
+    },
+    {
+      "id": "indirect-codex-local-tflite",
+      "class": "indirect",
+      "surface": "codex_local_skill",
+      "prompt": "Check whether this TFLite deployment artifact has mixed precision or unresolved quantization boundaries.",
+      "fixture": "supported TFLite file in the workspace",
+      "expected": "select_and_execute"
+    },
+    {
+      "id": "negative-codex-training",
+      "class": "negative",
+      "surface": "codex_local_skill",
+      "prompt": "Help me write a PyTorch training loop.",
+      "fixture": "none",
+      "expected": "do_not_select"
+    }
+  ],
+  "answer_invariants": [
+    "Successful analysis preserves artifact filename, format, SHA-256, and analyzer version.",
+    "Artifact defects, cautions, and evidence gaps remain distinct.",
+    "Static analysis is not described as measured latency, task accuracy, clinical validity, or regulatory compliance.",
+    "A failed invocation is not reported as a completed analysis.",
+    "Local file access remains inside the configured root."
+  ]
+}

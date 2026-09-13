@@ -49,8 +49,10 @@ await rm(path.join(root, ...protectedDeepBomPackage, ".gitignore"), { force: tru
 await copyDir(path.join(root, "web"), path.join(dist, "web"));
 await copyDir(path.join(root, "web", "evaluate"), path.join(dist, "evaluate"));
 await copyDir(path.join(root, "web", "for-agents"), path.join(dist, "for-agents"));
+await copyDir(path.join(root, "web", "guides"), path.join(dist, "guides"));
 await rm(path.join(dist, "web", "evaluate"), { recursive: true, force: true });
 await rm(path.join(dist, "web", "for-agents"), { recursive: true, force: true });
+await rm(path.join(dist, "web", "guides"), { recursive: true, force: true });
 for (const file of deploymentExcludedWebFiles) {
   await rm(path.join(dist, "web", file), { force: true });
 }
@@ -167,6 +169,10 @@ await writeFile(path.join(dist, "llms.txt"), [
   "",
   "## Command line",
   "",
+  "Prefer a verified exact-version installation. The Agent Skill's",
+  "`scripts/verify-deepbom.mjs` checks local candidates without contacting a",
+  "registry. Its `--allow-download` fallback is explicit and may use npm.",
+  "",
   "```",
   `npx -y deepbom@${packageDocument.version} capabilities --format agent-json`,
   `npx -y deepbom@${packageDocument.version} self-test --compact`,
@@ -212,6 +218,7 @@ await writeFile(path.join(dist, "llms.txt"), [
   "- [Workspace](https://deepbom.org/): browser-local audit of one artifact",
   "- [AI agent setup](https://deepbom.org/for-agents/): local Agent Skill, npx, and stdio MCP paths",
   "- [ChatGPT integration](https://deepbom.org/chatgpt/): attached-file analysis in the ChatGPT browser sandbox",
+  "- [Inspection guides](https://deepbom.org/guides/): problem-focused ONNX, GGUF, and artifact-diff workflows",
   "- [Regulatory brief](https://deepbom.org/evaluate/regulatory/): what the records can support in a controlled process, and where they stop",
   "- [Quality brief](https://deepbom.org/evaluate/quality/): validating an installed analyzer before relying on it",
   "- [Engineering brief](https://deepbom.org/evaluate/engineering/): architecture, CI entry point, and what it will not infer",
@@ -247,6 +254,14 @@ await writeFile(path.join(dist, "sitemap.xml"), [
   "    <changefreq>monthly</changefreq>",
   "    <priority>0.8</priority>",
   "  </url>",
+  ...["", "inspect-onnx-quantization/", "inspect-gguf-tensor-encodings/", "compare-model-artifacts/"].flatMap((guide) => [
+    "  <url>",
+    `    <loc>https://deepbom.org/guides/${guide}</loc>`,
+    `    <lastmod>${today}</lastmod>`,
+    "    <changefreq>monthly</changefreq>",
+    "    <priority>0.7</priority>",
+    "  </url>",
+  ]),
   ...["privacy", "terms", "support"].flatMap((page) => [
     "  <url>",
     `    <loc>https://deepbom.org/${page}</loc>`,

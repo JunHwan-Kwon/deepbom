@@ -35,7 +35,10 @@ assert.equal(agentCapabilities.chatgpt_integration.execution_location, "chatgpt_
 assert.match(agentCapabilities.chatgpt_integration.transfer_boundary, /does not fetch or retain model bytes/);
 assert.equal(agentCapabilities.discovery.chatgpt_page, "https://deepbom.org/chatgpt/");
 assert.equal(agentCapabilities.outputs.cyclonedx.spec_version, "1.7");
-assert.match(agentCapabilities.invocation.discovery, new RegExp(`deepbom@${escapeRegExp(version)}`));
+assert.equal(agentCapabilities.invocation.discovery, "deepbom capabilities --format agent-json");
+assert.match(agentCapabilities.invocation.download_fallback, new RegExp(`deepbom@${escapeRegExp(version)}`));
+assert.equal(agentCapabilities.invocation.registry_download_default, "disabled_requires_explicit_allow_download");
+assert.equal(agentCapabilities.discovery.portable_plugin_manifest, "https://github.com/JunHwan-Kwon/deepbom/blob/main/plugin.json");
 assert.match(agentCapabilities.local_integrations.claude_desktop.release_asset, new RegExp(`channels-v${escapeRegExp(version)}/deepbom-${escapeRegExp(version)}\\.mcpb$`));
 assert.doesNotMatch(JSON.stringify(agentCapabilities), forbiddenProductText);
 
@@ -56,6 +59,30 @@ try {
     const status = await manageAgentIntegration({ action: "status", target, root: temporary, version });
     assert.equal(status.integrations[0].status, "current");
     assert.equal(status.integrations[0].installed_version, version);
+
+    if (target === "codex") {
+      const resolver = path.join(temporary, installed.destination, "scripts", "verify-deepbom.mjs");
+      const unavailable = spawnSync(process.execPath, [resolver], {
+        cwd: temporary,
+        encoding: "utf8",
+        env: { ...process.env, PATH: "", Path: "", DEEPBOM_BIN: "" },
+      });
+      assert.equal(unavailable.status, 3, unavailable.stderr || unavailable.stdout);
+      const unavailableDocument = JSON.parse(unavailable.stderr);
+      assert.equal(unavailableDocument.status, "unavailable");
+      assert.equal(unavailableDocument.registry_download_attempted, false);
+
+      const resolved = spawnSync(process.execPath, [resolver], {
+        cwd: temporary,
+        encoding: "utf8",
+        env: { ...process.env, DEEPBOM_BIN: cli },
+      });
+      assert.equal(resolved.status, 0, resolved.stderr || resolved.stdout);
+      const resolvedDocument = JSON.parse(resolved.stdout);
+      assert.equal(resolvedDocument.status, "pass");
+      assert.equal(resolvedDocument.source, "DEEPBOM_BIN");
+      assert.equal(resolvedDocument.network_used, false);
+    }
 
     const skillPath = path.join(temporary, installed.destination, "SKILL.md");
     const canonical = await readFile(skillPath, "utf8");

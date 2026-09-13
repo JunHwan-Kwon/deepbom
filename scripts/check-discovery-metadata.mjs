@@ -4,6 +4,13 @@ const html = readFileSync("web/index.html", "utf8");
 const manifest = JSON.parse(readFileSync("web/manifest.webmanifest", "utf8"));
 const buildPages = readFileSync("scripts/build-pages.mjs", "utf8");
 const agentPage = readFileSync("web/for-agents/index.html", "utf8");
+const guidePaths = [
+  "web/guides/index.html",
+  "web/guides/inspect-onnx-quantization/index.html",
+  "web/guides/inspect-gguf-tensor-encodings/index.html",
+  "web/guides/compare-model-artifacts/index.html",
+];
+const guidePages = guidePaths.map((file) => readFileSync(file, "utf8"));
 const packageVersion = JSON.parse(readFileSync("package.json", "utf8")).version;
 const errors = [];
 
@@ -48,9 +55,14 @@ for (const [condition, message] of [
   [!/(pricing|subscription|purchase|member exports|paid access|commercial tier)/i.test(html), "public shell contains no pricing or commercial access-tier language"],
   [html.includes("editable HTML engineering report") && !html.includes("Markdown engineering report"), "public metadata matches the editable HTML Engineering Report export"],
   [html.includes("p50/p90/p95/p99 statistics"), "public benchmark metadata lists every reported percentile"],
+  [html.includes("Optional browser-observed runtime benchmark") && html.includes("reported separately from CLI and artifact-only static evidence"),
+    "browser-observed benchmark metadata is separated from static agent and CLI evidence"],
   [buildPages.includes('"Sitemap: https://deepbom.org/sitemap.xml"'), "generated robots file advertises the canonical sitemap"],
   [buildPages.includes('"    <loc>https://deepbom.org/</loc>"') && buildPages.includes('"    <loc>https://deepbom.org/verify</loc>"'), "generated sitemap lists the canonical app and report verifier"],
   [buildPages.includes('"    <loc>https://deepbom.org/for-agents/</loc>"'), "generated sitemap lists the local agent guide"],
+  [buildPages.includes("https://deepbom.org/guides/${guide}")
+    && ["inspect-onnx-quantization/", "inspect-gguf-tensor-encodings/", "compare-model-artifacts/"].every((slug) => buildPages.includes(slug)),
+    "generated sitemap lists all problem-focused inspection guides"],
   [["regulatory", "quality", "engineering"].every((brief) => buildPages.includes(`"${brief}"`))
     && buildPages.includes("https://deepbom.org/evaluate/${brief}/"), "generated sitemap lists all evaluation briefs"],
   [!buildPages.includes('"    <loc>https://deepbom.org/web/</loc>"'), "generated sitemap does not index the duplicate /web/ shell"],
@@ -83,6 +95,8 @@ for (const [condition, message] of [
   [agentPage.includes('rel="canonical" href="https://deepbom.org/for-agents/"'), "agent guide has a canonical URL"],
   [agentPage.includes("there is no hosted DEEPBOM analysis endpoint") && agentPage.includes("browser-sandbox integration"),
     "agent guide distinguishes local execution from the ChatGPT browser-sandbox path"],
+  [agentPage.includes("browser-observed runtime benchmark") && agentPage.includes("must not describe static output as measured latency"),
+    "agent guide separates optional browser measurement from static analysis"],
   [agentPage.includes("integrate codex") && agentPage.includes("integrate claude-code") && agentPage.includes("--apply"),
     "agent guide documents preview-before-apply installation"],
   [agentPage.includes(`deepbom@${packageVersion}`) && !agentPage.includes("verified-version"),
@@ -91,6 +105,17 @@ for (const [condition, message] of [
     "agent guide links the version-matched local Claude Desktop extension"],
   [agentNodes.some((node) => node["@type"] === "TechArticle" && node.url === "https://deepbom.org/for-agents/"),
     "agent guide carries a citable TechArticle identity"],
+  [guidePages.every((page) => page.includes('rel="canonical" href="https://deepbom.org/guides/')),
+    "every problem guide has a canonical URL"],
+  [guidePages.every((page) => page.includes("application/ld+json")),
+    "every problem guide has linked data"],
+  [guidePages[1].includes("c19f7155f030dc396aad04909b7429b8a4d6d1cb51fcd53a84e3c97ae9678d0e")
+    && guidePages[1].includes("Runtime graph fusion"),
+    "ONNX guide binds its public fixture and preserves the runtime boundary"],
+  [guidePages[2].includes("does not redistribute or claim measurements for a third-party GGUF"),
+    "GGUF guide does not fabricate or redistribute third-party evidence"],
+  [guidePages[3].includes("does not establish clinical equivalence"),
+    "artifact-diff guide separates observed change from acceptance decisions"],
 
   // Each brief is a citable page in the sitemap, so it needs its own identity
   // and its own link back to the software and the author.

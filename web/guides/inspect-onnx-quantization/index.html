@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inspect ONNX Quantization Without Running the Model | DEEPBOM</title>
+  <meta name="description" content="Inspect ONNX QDQ and QOperator quantization, scale, zero point, granularity, axis, and evidence limits from serialized model bytes." />
+  <link rel="canonical" href="https://deepbom.org/guides/inspect-onnx-quantization/" />
+  <meta property="og:title" content="Inspect ONNX Quantization Without Running the Model" />
+  <meta property="og:description" content="A reproducible static check for ONNX quantization parameters and representation boundaries." />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"Inspect ONNX Quantization Without Running the Model","url":"https://deepbom.org/guides/inspect-onnx-quantization/","about":{"@id":"https://deepbom.org/#app"},"author":{"@id":"https://deepbom.org/#author"}}
+  </script>
+  <link rel="stylesheet" href="../../evaluate/evaluation.css" />
+</head>
+<body class="agent-guide">
+  <header class="brief-header"><a class="brand" href="/">DEEPBOM</a><nav class="brief-nav" aria-label="Guide"><a href="/guides/">Guides</a><a href="/for-agents/">AI agents</a><a href="https://github.com/JunHwan-Kwon/deepbom">Source</a></nav></header>
+  <main class="brief-main">
+    <p class="eyebrow">ONNX quantization inspection</p>
+    <h1>Read the serialized quantization contract before inferring execution.</h1>
+    <p class="lede">ONNX can serialize QDQ boundaries, QOperator compute nodes, and bound scale and zero-point tensors. Those facts do not by themselves prove runtime fusion or executed integer arithmetic.</p>
+    <section class="brief-section"><h2>Reproduce the public fixture</h2>
+      <pre><code>npx -y deepbom@1.97.4 audit \
+  "./corpus/onnx-extension-contract-corpus/deepbom-static-per-axis-qdq.onnx" \
+  --expected-sha256 c19f7155f030dc396aad04909b7429b8a4d6d1cb51fcd53a84e3c97ae9678d0e \
+  --section quantization --json</code></pre>
+      <p>The 289-byte source fixture is committed in the public repository. Release 1.97.4 classifies its representation as <code>static_qdq_representation</code>, binds one QuantizeLinear and one DequantizeLinear node, decodes scale values <code>[0.125, 0.25, 0.5]</code> and zero points <code>[128, 127, 126]</code>, and derives per-axis parameterization on axis 1.</p>
+    </section>
+    <section class="brief-section"><h2>Interpret the result</h2><table class="fact-table"><tbody>
+      <tr><th>Observed</th><td>Artifact bytes, initializer values, data types, shapes, and operator attributes.</td></tr>
+      <tr><th>Derived</th><td>Parameter binding, granularity, axis-cardinality consistency, and static representation classification.</td></tr>
+      <tr><th>Not asserted</th><td>Runtime graph fusion, execution-provider selection, kernel selection, and executed integer arithmetic.</td></tr>
+    </tbody></table></section>
+    <section class="brief-section"><h2>Use an assistant</h2><p>After connecting the DEEPBOM Skill or plugin, ask: <em>Check how this ONNX model is quantized without executing it, and include the file hash.</em> A successful answer should preserve the observed/derived boundary above.</p></section>
+  </main>
+  <footer class="brief-footer">The fixture demonstrates a parser and evidence contract; it is not a performance or model-quality benchmark.</footer>
+</body>
+</html>

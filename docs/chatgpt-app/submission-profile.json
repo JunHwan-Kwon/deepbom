@@ -1,6 +1,7 @@
 {
   "schema": "deepbom.chatgpt_plugin_submission.v1",
-  "name": "DEEPBOM",
+  "name": "DEEPBOM Artifact Evidence",
+  "package_manifest": "https://github.com/JunHwan-Kwon/deepbom/blob/main/plugin.json",
   "endpoint": "https://deepbom.org/mcp",
   "transport": "streamable_http",
   "authentication": "none",
@@ -25,5 +26,6 @@
     "server_persistence": "none for model bytes or submitted analysis results"
   },
   "evidence_boundary": "Static serialized-artifact evidence does not establish runtime placement, measured latency or energy, task accuracy, clinical validity, safety, or regulatory compliance.",
+  "identity_note": "The descriptive listing title distinguishes this AI deployment-artifact analyzer; this profile is not a trademark-clearance determination.",
   "listing_status": "not_submitted_or_approved_by_this_file"
 }

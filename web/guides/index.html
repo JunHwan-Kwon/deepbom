@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Model Artifact Inspection Guides | DEEPBOM</title>
+  <meta name="description" content="Reproducible, evidence-bounded ways to inspect ONNX quantization, GGUF tensor encodings, and changes between deployment artifacts." />
+  <link rel="canonical" href="https://deepbom.org/guides/" />
+  <meta property="og:title" content="AI Model Artifact Inspection Guides | DEEPBOM" />
+  <meta property="og:description" content="Problem-focused model inspection guides with exact commands and explicit evidence limits." />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"CollectionPage","name":"AI Model Artifact Inspection Guides","url":"https://deepbom.org/guides/","about":{"@id":"https://deepbom.org/#app"}}
+  </script>
+  <link rel="stylesheet" href="../evaluate/evaluation.css" />
+</head>
+<body class="agent-guide">
+  <header class="brief-header"><a class="brand" href="/">DEEPBOM</a><nav class="brief-nav" aria-label="Guides"><a href="/">Workspace</a><a aria-current="page" href="./">Guides</a><a href="/for-agents/">AI agents</a></nav></header>
+  <main class="brief-main">
+    <p class="eyebrow">Reproducible inspection guides</p>
+    <h1>Start with the model-file question, not the product name.</h1>
+    <p class="lede">Each guide identifies what can be observed from serialized artifact bytes, gives a pinned reproduction command, and states what still requires runtime, lineage, or task evidence.</p>
+    <section class="brief-section"><h2>Choose the question</h2><ul class="plain-list">
+      <li><a href="./inspect-onnx-quantization/">Inspect ONNX quantization without running the model</a></li>
+      <li><a href="./inspect-gguf-tensor-encodings/">Inspect mixed GGUF tensor encodings and storage</a></li>
+      <li><a href="./compare-model-artifacts/">Compare two deployment artifacts before release</a></li>
+    </ul></section>
+    <section class="brief-section"><h2>Common boundary</h2><p>These workflows report static artifact evidence. They do not establish measured latency, task accuracy, clinical validity, safety, regulatory compliance, or the execution provider and kernel selected at runtime.</p></section>
+  </main>
+  <footer class="brief-footer">Commands are pinned to a release; identify the analyzed artifact by SHA-256.</footer>
+</body>
+</html>

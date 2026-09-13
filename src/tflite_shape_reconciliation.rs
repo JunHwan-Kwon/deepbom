@@ -95,7 +95,7 @@ fn constant_i32_values(fb: &Fb<'_>, tensor: &TensorInfo) -> Option<Vec<i32>> {
     if tensor.dtype != "INT32"
         || !tensor.constant_buffer
         || tensor.buffer_data_length == 0
-        || tensor.buffer_data_length % 4 != 0
+        || !tensor.buffer_data_length.is_multiple_of(4)
     {
         return None;
     }

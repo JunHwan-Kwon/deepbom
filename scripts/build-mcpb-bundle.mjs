@@ -46,7 +46,7 @@ function buildManifest(version) {
     $schema: "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/main/schemas/mcpb-manifest-v0.4.schema.json",
     manifest_version: "0.4",
     name: "deepbom",
-    display_name: "DEEPBOM",
+    display_name: "DEEPBOM Artifact Evidence",
     version,
     description: "Local static analysis and evidence generation for deployed AI model artifacts.",
     long_description: "Analyze supported model artifacts on the local machine. Artifact bytes remain local. Results distinguish observed facts, deterministic derivations, predictions, and evidence gaps.",

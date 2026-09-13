@@ -250,7 +250,7 @@ dependencies = [
 
 [[package]]
 name = "tflite_wasm_audit"
-version = "1.97.3"
+version = "1.97.4"
 dependencies = [
  "js-sys",
  "miniz_oxide",

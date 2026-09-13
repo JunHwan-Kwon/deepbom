@@ -4,6 +4,26 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.97.4 - 2026-09-13
+
+- Add a portable Agent Plugins package and a compatibility manifest that bind
+  the public Skill to the existing ChatGPT Streamable HTTP MCP endpoint.
+- Make the bundled Skill verify exact local installations before offering an
+  explicit npm download fallback, with structured resolution evidence.
+- Add host-observed, brandless selection cases and blank recording templates
+  that distinguish deterministic CLI checks from real ChatGPT, Claude, and
+  Codex tool selection.
+- Add a bounded Claude Desktop MCPB review package and descriptive listing copy
+  without claiming submission, approval, or remote-connector compatibility.
+- Publish problem-focused ONNX quantization, GGUF tensor encoding, and artifact
+  comparison guides with reproducible commands and explicit static-evidence
+  limits.
+- Distinguish the optional browser-observed runtime benchmark from CLI and
+  assistant-driven static artifact analysis in discovery metadata.
+- Raise the reviewed documentation source ceiling from 480 KiB to 512 KiB for
+  the agent review packages and three substantive problem guides; executable
+  and generated-data ceilings are unchanged.
+
 ## 1.97.3 - 2026-09-13
 
 - Made the published-release provenance job check out the exact tagged source

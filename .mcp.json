@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "deepbom-artifact-evidence": {
+      "type": "http",
+      "url": "https://deepbom.org/mcp"
+    }
+  }
+}

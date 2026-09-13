@@ -32,10 +32,10 @@ is documented separately below.
 Install the repository-local Agent Skill after previewing the managed files:
 
 ```bash
-npx -y deepbom@1.97.3 integrate codex
-npx -y deepbom@1.97.3 integrate codex --apply
-npx -y deepbom@1.97.3 integrate claude-code
-npx -y deepbom@1.97.3 integrate claude-code --apply
+npx -y deepbom@1.97.4 integrate codex
+npx -y deepbom@1.97.4 integrate codex --apply
+npx -y deepbom@1.97.4 integrate claude-code
+npx -y deepbom@1.97.4 integrate claude-code --apply
 ```
 
 The Skill lets a local agent select the pinned `npx` command for a supported
@@ -43,11 +43,16 @@ deployment-artifact question. It does not create or call a hosted analysis
 server. See [the agent setup guide](https://deepbom.org/for-agents/) and the
 [machine-readable capability contract](https://deepbom.org/agent-capabilities.json).
 
+The installed Skill first checks `DEEPBOM_BIN`, its package-bundled analyzer,
+and an exact-version `deepbom` already on `PATH`. Its verifier does not contact
+npm unless `--allow-download` is explicitly supplied. This keeps a blocked
+registry lookup from being mistaken for a failed artifact analysis.
+
 For persistent tool-call access, run the same local analyzer as an MCP server
 over stdio:
 
 ```bash
-npx -y deepbom@1.97.3 mcp
+npx -y deepbom@1.97.4 mcp
 ```
 
 It exposes `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
@@ -57,7 +62,7 @@ formats and large-model scan depth are explicit. Local paths are restricted to
 the launch directory unless `DEEPBOM_MCP_ALLOWED_ROOTS` is configured.
 Agent-facing usage guidance is in [the DEEPBOM skill](skills/deepbom/SKILL.md).
 Claude Desktop users can instead install the version-matched
-`deepbom-1.97.3.mcpb` asset from the corresponding GitHub Release. The bundle
+`deepbom-1.97.4.mcpb` asset from the corresponding GitHub Release. The bundle
 contains the same CLI and WASM bytes as the npm channel and asks the user to
 select the only local directory it may read.
 
@@ -69,6 +74,16 @@ developer-mode review, while public ChatGPT discovery remains subject to
 OpenAI review. See [the ChatGPT integration guide](https://deepbom.org/chatgpt/).
 Use the local CLI or stdio MCP for confidential or large artifacts, package and
 sidecar closure, complete exports, and repeated automation.
+
+The repository root is also a portable Agent Plugins package: `plugin.json`
+identifies the Skill and `mcp.json` declares the bounded ChatGPT attachment
+endpoint. The compatibility manifest under `.codex-plugin/` carries the same
+identity for clients that have not moved to the portable format. These files
+prepare installation and review; they do not imply a public directory listing
+or platform approval.
+
+Account-owned ChatGPT, Claude, Codex, and search-indexing steps are kept in the
+[agent distribution operations checklist](docs/AGENT_DISTRIBUTION_OPERATIONS.md).
 
 Verified release channels expose the same analysis implementation:
 

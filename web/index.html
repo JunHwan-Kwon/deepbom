@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" data-analysis-depth="deep">
 <head>
-  <meta name="deepbom-release" content="1.97.3" />
+  <meta name="deepbom-release" content="1.97.4" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta id="themeColor" name="theme-color" content="#fffefa" />
@@ -45,12 +45,12 @@
           "@type": "SoftwareApplication",
           "@id": "https://deepbom.org/#app",
           "name": "DEEPBOM",
-          "alternateName": ["Deep BOM", "deepbom", "DEEPBOM analyzer"],
+          "alternateName": ["deepbom", "DEEPBOM Artifact Evidence"],
           "applicationCategory": "DeveloperApplication",
           "applicationSubCategory": "Machine Learning Tool",
           "operatingSystem": "Web Browser",
           "url": "https://deepbom.org/",
-          "softwareVersion": "1.97.3",
+          "softwareVersion": "1.97.4",
           "identifier": "https://doi.org/10.5281/zenodo.21834508",
           "sameAs": [
             "https://github.com/JunHwan-Kwon/deepbom",
@@ -80,7 +80,7 @@
             "Haar wavelet frequency decomposition — LL/LH/HL/HH energy per kernel",
             "Activation Haar decomposition — frequency signature of activation maps",
             "Artifact Viewer — sidebar layer list, filter spatial canvas, per-layer perturbation surface",
-            "Runtime benchmark — WASM, WebGPU, WebNN latency measurement",
+            "Optional browser-observed runtime benchmark — reported separately from static artifact evidence",
             "Engineering report export — editable HTML, JSON, CycloneDX ML-BOM",
             "Zero model upload — analysis remains in browser memory"
           ],
@@ -2157,11 +2157,17 @@
         <li><strong>Multi-projection geometry summary:</strong> K independently seeded 2D slices summarize directional variation around the artifact parameters. Raw directional λ_max CV is reported without converting it into a validated reliability or isotropy score; no 3D reconstruction is claimed.</li>
         <li><strong>Haar wavelet decomposition:</strong> LL/LH/HL/HH energy fractions describe the spatial-frequency composition of stored convolutional kernels and synthetic or observed activation maps. Sensitivity or robustness interpretation requires separate perturbation and output evidence.</li>
         <li><strong>Artifact Viewer:</strong> sidebar layer navigator with per-layer filter spatial visualization, on-demand per-layer perturbation surface, and L2-per-channel bar chart.</li>
-        <li><strong>Runtime benchmark:</strong> measures WASM, WebGPU, and WebNN inference latency with warmup isolation, p50/p90/p95/p99 statistics, explicit p99 sample-strength disclosure, and jitter.</li>
+        <li><strong>Optional browser-observed runtime benchmark:</strong> measures WASM, WebGPU, and WebNN inference latency with warmup isolation, p50/p90/p95/p99 statistics, explicit p99 sample-strength disclosure, and jitter. These browser observations are reported separately from CLI and artifact-only static evidence.</li>
         <li><strong>Engineering report export:</strong> editable HTML engineering report, raw JSON, roofline CSV, and ML-BOM in CycloneDX format.</li>
       </ul>
       <h3>How to cite</h3>
       <p>Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts [Computer software]. Zenodo concept DOI. <a href="https://doi.org/10.5281/zenodo.21834508" rel="noopener" target="_blank">https://doi.org/10.5281/zenodo.21834508</a>. The analyzed release version is recorded separately in every generated evidence document.</p>
+      <h3>Practical inspection guides</h3>
+      <ul>
+        <li><a href="/guides/inspect-onnx-quantization/">Inspect ONNX quantization without running the model</a></li>
+        <li><a href="/guides/inspect-gguf-tensor-encodings/">Inspect mixed GGUF tensor encodings and storage</a></li>
+        <li><a href="/guides/compare-model-artifacts/">Compare deployment artifacts before release</a></li>
+      </ul>
       <h3>Privacy and data handling</h3>
       <p>Analysis runs locally in the browser using Rust/WebAssembly and format-specific JavaScript runtimes. Artifact bytes, tensor values, inputs, outputs, and reports are never uploaded. De-identified structural telemetry is sent only after explicit opt-in and can be disabled at any time; structural patterns may still be distinctive. Synthetic Device Benchmark is a separate explicit queue path: a registered device agent receives a zero-weight reconstruction from consented structure metadata, not the original artifact or weights.</p>
       <h3>Technical implementation</h3>

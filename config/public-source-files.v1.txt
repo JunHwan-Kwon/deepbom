@@ -1,3 +1,4 @@
+.codex-plugin/plugin.json
 .gitattributes
 .github/actions/deepbom-audit/action.yml
 .github/workflows/crates-maintenance.yml
@@ -5,6 +6,7 @@
 .github/workflows/publish-mcp-registry.yml
 .github/workflows/release-channels.yml
 .gitignore
+.mcp.json
 .pre-commit-hooks.yaml
 .zenodo.json
 CHANGELOG.md
@@ -125,6 +127,7 @@ corpus/safetensors-quantization-contract-corpus/teeny-tiny-llama-460m-awq.config
 corpus/safetensors-quantization-contract-corpus/teeny-tiny-llama-460m-awq.quant_config.json
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.config.json
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.quantize_config.json
+docs/AGENT_DISTRIBUTION_OPERATIONS.md
 docs/CLI_AUTOMATION.md
 docs/CLI_REFERENCE.md
 docs/DEEPBOM_PROPERTY_TAXONOMY.md
@@ -148,9 +151,14 @@ docs/SUPPORT_MATRIX.md
 docs/TERMINOLOGY_AND_NUMERIC_CONTRACT.md
 docs/WASM_EXECUTION_BOUNDARY.md
 docs/ZENODO_RELEASE.md
+docs/agent-evaluation/README.md
+docs/agent-evaluation/host-evaluation-cases.v1.json
+docs/agent-evaluation/host-evaluation-run.template.json
 docs/chatgpt-app/README.md
 docs/chatgpt-app/evals.json
 docs/chatgpt-app/submission-profile.json
+docs/claude-app/README.md
+docs/claude-app/submission-profile.json
 docs/native-runtime-capture.md
 docs/schemas/deepbom-artifact-ir-v2.schema.json
 docs/schemas/deepbom-conversion-receipt-v1.schema.json
@@ -167,6 +175,7 @@ integrations/oci/README.md
 integrations/oci/build-attestation-predicate.mjs
 integrations/pipeline/evidence_hook.py
 integrations/pre-commit/audit-staged.mjs
+mcp.json
 native/capture-run.schema.json
 native/instrumentation/CMakeLists.txt
 native/instrumentation/deepbom_runtime_trace.cc
@@ -193,6 +202,7 @@ pkg/tflite_wasm_audit.js
 pkg/tflite_wasm_audit_bg.js
 pkg/tflite_wasm_audit_bg.wasm
 pkg/tflite_wasm_audit_bg.wasm.d.ts
+plugin.json
 reference/cyclonedx/1.7/README.md
 reference/cyclonedx/1.7/bom-1.7.schema.json
 reference/cyclonedx/1.7/cryptography-defs.schema.json
@@ -286,6 +296,7 @@ scripts/check-chatgpt-app-metadata.mjs
 scripts/check-chatgpt-mcp.mjs
 scripts/check-chatgpt-widget.mjs
 scripts/check-ci-deploy-contract.mjs
+scripts/check-claude-app-metadata.mjs
 scripts/check-cli-automation.mjs
 scripts/check-cli-graph-export.mjs
 scripts/check-cli.mjs
@@ -358,6 +369,7 @@ scripts/check-git-privacy.mjs
 scripts/check-google-legacy-corpus.mjs
 scripts/check-graph-topology.mjs
 scripts/check-hash-contract.mjs
+scripts/check-host-agent-evaluation.mjs
 scripts/check-html-entrypoints.mjs
 scripts/check-huggingface-community-corpus.mjs
 scripts/check-huggingface-space-contract.mjs
@@ -420,6 +432,7 @@ scripts/check-package-verifier.mjs
 scripts/check-parser-robustness-isolated.mjs
 scripts/check-parser-robustness.mjs
 scripts/check-placement-comparison.mjs
+scripts/check-plugin-package.mjs
 scripts/check-pre-interaction-shell.mjs
 scripts/check-preprocessing-consequence-viewer.mjs
 scripts/check-preprocessing-consequence.mjs
@@ -698,6 +711,10 @@ web/explorer-evidence.css
 web/explorer-question.css
 web/explorer-redesign.css
 web/for-agents/index.html
+web/guides/compare-model-artifacts/index.html
+web/guides/index.html
+web/guides/inspect-gguf-tensor-encodings/index.html
+web/guides/inspect-onnx-quantization/index.html
 web/index.html
 web/legal/privacy.html
 web/legal/support.html

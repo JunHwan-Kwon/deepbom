@@ -23,9 +23,13 @@ export function buildAgentCapabilities(cliCapabilities) {
     },
     invocation: {
       package: packageSpec,
-      discovery: `npx -y ${packageSpec} capabilities --format agent-json`,
-      self_test: `npx -y ${packageSpec} self-test --compact`,
-      audit_template: `npx -y ${packageSpec} audit \"<artifact>\" --summary`,
+      resolution_order: ["DEEPBOM_BIN", "bundled_npm_package", "exact_version_on_PATH", "authorized_npm_download"],
+      resolution_helper: "skills/deepbom/scripts/verify-deepbom.mjs",
+      registry_download_default: "disabled_requires_explicit_allow_download",
+      discovery: "deepbom capabilities --format agent-json",
+      self_test: "deepbom self-test --compact",
+      audit_template: "deepbom audit \"<artifact>\" --summary",
+      download_fallback: `npx -y ${packageSpec}`,
       detail_strategy: "Request one section, JSON Pointer, or evidence envelope only after reading the bounded summary.",
       default_output: cliCapabilities.default_audit_output,
     },
@@ -51,6 +55,7 @@ export function buildAgentCapabilities(cliCapabilities) {
       artifact_bytes_network_transfer: false,
       remote_inputs_require_immutable_identity: true,
       runtime_measurement_inferred: false,
+      optional_browser_runtime_measurement: "separate_web_workspace_path_not_part_of_static_cli_or_agent_audit",
     },
     local_integrations: {
       codex: { path: ".agents/skills/deepbom", automatic_matching: true },
@@ -58,7 +63,7 @@ export function buildAgentCapabilities(cliCapabilities) {
       claude_desktop: {
         distribution: "MCPB local desktop extension",
         release_asset: `https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v${version}/deepbom-${version}.mcpb`,
-        automatic_matching: false,
+        automatic_matching: "host_dependent_after_installation",
       },
       generic: { path: "skills/deepbom", automatic_matching: "host_dependent" },
       install_preview: "deepbom integrate <codex|claude-code|generic>",
@@ -87,6 +92,8 @@ export function buildAgentCapabilities(cliCapabilities) {
       machine_contract: "https://deepbom.org/agent-capabilities.json",
       plain_text: "https://deepbom.org/llms.txt",
       skill_source: "https://github.com/JunHwan-Kwon/deepbom/tree/main/skills/deepbom",
+      portable_plugin_manifest: "https://github.com/JunHwan-Kwon/deepbom/blob/main/plugin.json",
+      problem_guides: "https://deepbom.org/guides/",
       desktop_extension_release: `https://github.com/JunHwan-Kwon/deepbom/releases/tag/channels-v${version}`,
     },
   };

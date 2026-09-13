@@ -1,0 +1,42 @@
+{
+  "name": "deepbom",
+  "version": "1.97.4",
+  "description": "Inspect serialized AI deployment artifacts and report hash-bound static evidence, limitations, and reproducible checks.",
+  "author": {
+    "name": "Jun-Hwan Kwon",
+    "url": "https://github.com/JunHwan-Kwon"
+  },
+  "homepage": "https://deepbom.org/for-agents/",
+  "repository": "https://github.com/JunHwan-Kwon/deepbom",
+  "license": "Apache-2.0",
+  "keywords": [
+    "ai-model",
+    "artifact-evidence",
+    "gguf",
+    "onnx",
+    "quantization",
+    "safetensors",
+    "static-analysis"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "DEEPBOM Artifact Evidence",
+    "shortDescription": "Static evidence for deployed AI model files",
+    "longDescription": "Inspect supported AI deployment artifacts without executing model code. Results bind observations to the artifact hash and keep defects, cautions, evidence gaps, and static-analysis limits separate.",
+    "developerName": "Jun-Hwan Kwon",
+    "category": "Developer tools",
+    "capabilities": [
+      "Read"
+    ],
+    "websiteURL": "https://deepbom.org/for-agents/",
+    "privacyPolicyURL": "https://deepbom.org/privacy",
+    "termsOfServiceURL": "https://deepbom.org/terms",
+    "defaultPrompt": [
+      "Inspect this ONNX file's quantization evidence.",
+      "List the tensor encodings in this GGUF artifact.",
+      "Explain what changed between these model artifacts."
+    ],
+    "brandColor": "#111111"
+  }
+}

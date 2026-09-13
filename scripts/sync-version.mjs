@@ -27,6 +27,8 @@ await updateJson("server.json", (document) => {
   }
   return document;
 });
+await updateJson("plugin.json", (document) => ({ ...document, version: contract.npmVersion }));
+await updateJson(".codex-plugin/plugin.json", (document) => ({ ...document, version: contract.npmVersion }));
 await updateJson("pkg/package.json", (document) => ({ ...document, version: contract.npmVersion }));
 await updateJson("package-lock.json", (document) => {
   document.version = contract.npmVersion;
@@ -55,6 +57,24 @@ await updateRegex("web/for-agents/index.html", /deepbom@(?:&lt;verified-version&
   `deepbom@${contract.displayVersion}`);
 await updateRegex("web/for-agents/index.html", /(?:channels-v|deepbom-)\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g,
   (value) => `${value.startsWith("channels-v") ? "channels-v" : "deepbom-"}${contract.displayVersion}`);
+for (const relativePath of [
+  "web/guides/inspect-onnx-quantization/index.html",
+  "web/guides/inspect-gguf-tensor-encodings/index.html",
+  "web/guides/compare-model-artifacts/index.html",
+]) await updateRegex(relativePath, /deepbom@\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g, `deepbom@${contract.displayVersion}`);
+await updateJson("docs/agent-evaluation/host-evaluation-cases.v1.json", (document) => ({ ...document, version: contract.displayVersion }));
+await updateJson("docs/agent-evaluation/host-evaluation-run.template.json", (document) => ({ ...document, deepbom_version: contract.displayVersion }));
+await updateJson("docs/claude-app/submission-profile.json", (document) => ({
+  ...document,
+  version: contract.displayVersion,
+  release_asset: `https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v${contract.displayVersion}/deepbom-${contract.displayVersion}.mcpb`,
+}));
+await updateRegex("docs/claude-app/README.md", /(?:channels-v|deepbom-)\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g,
+  (value) => `${value.startsWith("channels-v") ? "channels-v" : "deepbom-"}${contract.displayVersion}`);
+await updateRegex("docs/AGENT_DISTRIBUTION_OPERATIONS.md", /(?:channels-v|deepbom@|deepbom-)\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g,
+  (value) => `${value.startsWith("channels-v") ? "channels-v" : value.startsWith("deepbom@") ? "deepbom@" : "deepbom-"}${contract.displayVersion}`);
+await updateRegex("docs/AGENT_DISTRIBUTION_OPERATIONS.md", /the \d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)? CLI/g,
+  `the ${contract.displayVersion} CLI`);
 for (const relativePath of ["docs/PUBLIC_README.md", "channels/npm/README.md"]) {
   await updateRegex(relativePath, /deepbom@\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g, `deepbom@${contract.displayVersion}`);
   await updateRegex(relativePath, /deepbom-\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?\.mcpb/g, `deepbom-${contract.displayVersion}.mcpb`);

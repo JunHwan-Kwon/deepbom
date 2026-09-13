@@ -5,14 +5,26 @@ description: Statically audit serialized AI deployment artifacts with the local 
 
 # Audit deployment artifacts with DEEPBOM
 
-Run DEEPBOM locally. Never upload artifact bytes or invent a hosted DEEPBOM endpoint.
+Run DEEPBOM locally for files in the workspace. Never upload artifact bytes or invent a hosted DEEPBOM endpoint. A separately connected ChatGPT integration may analyze one authorized attachment in its browser sandbox; that is a different execution boundary.
+
+## Resolve a verified runtime first
+
+Run `scripts/verify-deepbom.mjs` from this Skill directory before choosing an invocation. It checks, in order, `DEEPBOM_BIN`, the analyzer bundled with an npm installation, and an exact-version `deepbom` already on `PATH`. It does not access a package registry by default.
+
+If no exact local installation is available, ask before running:
+
+```bash
+node "<skill-root>/scripts/verify-deepbom.mjs" --allow-download
+```
+
+That explicit fallback may download `deepbom@1.97.4` through npm. Use the returned `invocation.command` and `invocation.prefix_args` for subsequent commands. Do not silently replace a version mismatch or network failure with an unverified executable.
 
 ## Start with discovery
 
-Use the release pinned by this skill:
+After resolving the exact release pinned by this Skill, discover its machine contract:
 
 ```bash
-npx -y deepbom@1.97.3 capabilities --format agent-json
+deepbom capabilities --format agent-json
 ```
 
 Treat that machine document as authoritative for commands, supported inputs, scan modes, targets, outputs, and exit codes. Read `references/capability-selection.md` when deciding whether the task belongs to DEEPBOM.
@@ -22,15 +34,15 @@ Treat that machine document as authoritative for commands, supported inputs, sca
 Start with the bounded human result:
 
 ```bash
-npx -y deepbom@1.97.3 audit "./model.onnx" --summary
+deepbom audit "./model.onnx" --summary
 ```
 
 Then request only the evidence needed by the question:
 
 ```bash
-npx -y deepbom@1.97.3 audit "./model.onnx" --section quantization --json
-npx -y deepbom@1.97.3 audit "./model.onnx" --pointer /mac_assessment --json
-npx -y deepbom@1.97.3 audit "./model.onnx" --output-format envelope
+deepbom audit "./model.onnx" --section quantization --json
+deepbom audit "./model.onnx" --pointer /mac_assessment --json
+deepbom audit "./model.onnx" --output-format envelope
 ```
 
 For a large GGUF or SafeTensors artifact, use `--scan structure` for inventory questions. Use `integrity` or `full` only when payload evidence is necessary.
@@ -38,15 +50,15 @@ For a large GGUF or SafeTensors artifact, use `--scan structure` for inventory q
 For a concise GGUF tensor table without nested numerical-integrity ledgers, use the bounded projection (it defaults to a structure scan):
 
 ```bash
-npx -y deepbom@1.97.3 gguf "./model.gguf" --tensors
-npx -y deepbom@1.97.3 gguf "./model.gguf" --tensors --compact
-npx -y deepbom@1.97.3 gguf "./model.gguf" --tensors --compact --tensor-offset 100 --tensor-limit 100
+deepbom gguf "./model.gguf" --tensors
+deepbom gguf "./model.gguf" --tensors --compact
+deepbom gguf "./model.gguf" --tensors --compact --tensor-offset 100 --tensor-limit 100
 ```
 
-Before relying on a newly fetched package, run:
+Before relying on any resolved installation, run:
 
 ```bash
-npx -y deepbom@1.97.3 self-test --compact
+deepbom self-test --compact
 ```
 
 ## Interpret the result
@@ -68,12 +80,12 @@ Never infer actual accelerator assignment, latency, energy, thermal behavior, ta
 ## Compare or explain
 
 ```bash
-npx -y deepbom@1.97.3 diff "./baseline.onnx" "./candidate.onnx" --summary
-npx -y deepbom@1.97.3 diff "./baseline.gguf" "./candidate.gguf" --tensors --render markdown
-npx -y deepbom@1.97.3 verify "./model.onnx" --bom "./supplied.cdx.json" --render markdown
-npx -y deepbom@1.97.3 contract capture "./model.onnx" -o "./baseline.interface-contract.json"
-npx -y deepbom@1.97.3 explain-rule <rule-id> --json
-npx -y deepbom@1.97.3 graph "./model.onnx" --view structure --format svg -o graph.svg
+deepbom diff "./baseline.onnx" "./candidate.onnx" --summary
+deepbom diff "./baseline.gguf" "./candidate.gguf" --tensors --render markdown
+deepbom verify "./model.onnx" --bom "./supplied.cdx.json" --render markdown
+deepbom contract capture "./model.onnx" -o "./baseline.interface-contract.json"
+deepbom explain-rule <rule-id> --json
+deepbom graph "./model.onnx" --view structure --format svg -o graph.svg
 ```
 
 Use matching serialized deployment formats for diff. Treat `verify --bom` as a reconciliation of the selected component with artifact-observable facts, not a complete BOM or compliance verdict. An automatically captured contract is an artifact-derived baseline until it is separately reviewed and approved. Do not deserialize `.pth`, `.pt`, or `.h5`; bind a conversion receipt to the deployed artifact instead.

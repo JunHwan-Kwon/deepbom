@@ -31,8 +31,11 @@ exports, or repeat automation.
 1. Deploy the exact reviewed source and confirm `/mcp` initialization,
    `tools/list`, widget resource loading, one successful attachment analysis,
    one structured failure, and the model-byte transfer boundary.
-2. Run the prompts in `evals.json`. Record observed tool selection and ensure
-   no negative prompt starts an artifact analysis.
+2. Run the prompts in `evals.json` and the shared brandless cases in
+   `../agent-evaluation/host-evaluation-cases.v1.json`. Copy the blank run
+   template to `.local-validation/agent-host-evaluation/`, record observed
+   tool selection and arguments, and ensure no negative prompt starts an
+   artifact analysis. The checked-in template is not execution evidence.
 3. Confirm the public privacy, terms, and support pages match the deployed data
    flow and that the listing identity belongs to the submitting account.
 4. When the submission portal issues a domain-verification token, configure it
@@ -44,6 +47,12 @@ exports, or repeat automation.
    approval.
 6. After approval, verify discovery by app name and by at least three generic
    artifact-analysis queries, then repeat one full attachment analysis.
+
+The root `plugin.json` and `mcp.json` also form a portable Agent Plugins
+package. They make the Skill and remote MCP identity reviewable together, but
+they do not replace endpoint registration, domain verification, or public
+submission. The descriptive listing title is `DEEPBOM Artifact Evidence`; this
+file makes no trademark-clearance claim.
 
 The submission itself is a manual account and attestation action. It must not
 be automated from a source checkout.
