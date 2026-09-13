@@ -45,11 +45,13 @@ jobs:
           package-manager-cache: true
       - name: Verify immutable public source boundary
         run: |
-          node scripts/verify-public-source-export.mjs .
+          node scripts/verify-public-source-export.mjs . --skip-executable-imports
           node scripts/check-git-privacy.mjs
           node scripts/check-ci-deploy-contract.mjs
       - name: Install pinned dependencies
         run: npm ci
+      - name: Verify executable public imports
+        run: node scripts/check-web-imports.mjs
       - name: Audit public dependency graph
         run: npm audit --audit-level=high
       - name: Verify CLI and browser-independent format analyzers

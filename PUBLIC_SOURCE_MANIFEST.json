@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "c171511990c2723235dd5f29d024f109aa24496e",
+  "source_commit": "4ba21bb26e78c4e22e605ca99a4d365a8a139f58",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1087,
@@ -22,8 +22,8 @@
     },
     {
       "path": ".github/workflows/public-quality.yml",
-      "byte_length": 1717,
-      "sha256": "05dafb33a403f70bb2b9f1d12bd121c0e3577e6c44b2c6a791d9c02bfad599f5"
+      "byte_length": 1838,
+      "sha256": "5cf235e91457e7d452ffaec285186eaf8febda20730db70c54c85d31a1f8a069"
     },
     {
       "path": ".github/workflows/publish-mcp-registry.yml",
@@ -1447,8 +1447,8 @@
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
-      "byte_length": 37024,
-      "sha256": "433ea19027945720ca9a78046c56f7fe3cd637d68bd330be289b236daec4b783"
+      "byte_length": 37349,
+      "sha256": "abf23f8c99431410731ba3270a9be218ffeae430750e64e6ca0ee5dab027296f"
     },
     {
       "path": "scripts/check-cli-automation.mjs",
@@ -3067,8 +3067,8 @@
     },
     {
       "path": "scripts/verify-public-source-export.mjs",
-      "byte_length": 8668,
-      "sha256": "d12b30a007c18208df4e8e3d758c3310e42f658735aa200ba08117aec3866006"
+      "byte_length": 9076,
+      "sha256": "05066f6334c61c981b4543a641f3998bf66418a7827540c1dff8ac3727e14147"
     },
     {
       "path": "scripts/verify-published-local-provenance.mjs",
@@ -3768,7 +3768,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 84488,
-      "sha256": "56296c5889066c712937794ebdba6f97f02f7bcdf69b00417bb949f396152faf"
+      "sha256": "fd2623aa7dce77b501404986cf37e7ff1502f3a236db8de0c79dfbefd8828529"
     },
     {
       "path": "web/lib/bundle.js",

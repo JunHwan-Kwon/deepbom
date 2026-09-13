@@ -464,7 +464,7 @@ function checkPublicDistributionCiContract() {
     "DEEPBOM_CHECK_TIMEOUT_MS: 120000",
     "npm ci",
     "npm audit --audit-level=high",
-    "node scripts/verify-public-source-export.mjs .",
+    "node scripts/verify-public-source-export.mjs . --skip-executable-imports",
     "node scripts/check-git-privacy.mjs",
     "node scripts/check-ci-deploy-contract.mjs",
     "npm run check:cli-docs",
@@ -472,13 +472,19 @@ function checkPublicDistributionCiContract() {
     "npm run check:external-review-ledger",
     "npm run check:external-review-defect-gate",
     "npm run check:formats:core",
+    "node scripts/check-web-imports.mjs",
   ]) {
     expect(publicQualityWorkflow.includes(snippet), `Public core quality should contain: ${snippet}`);
   }
   expect(
-    publicQualityWorkflow.indexOf("node scripts/verify-public-source-export.mjs .")
+    publicQualityWorkflow.indexOf("node scripts/verify-public-source-export.mjs . --skip-executable-imports")
       < publicQualityWorkflow.indexOf("run: npm ci"),
     "Public source bytes must be verified before npm postinstall regenerates local build metadata.",
+  );
+  expect(
+    publicQualityWorkflow.indexOf("run: npm ci")
+      < publicQualityWorkflow.indexOf("node scripts/check-web-imports.mjs"),
+    "Executable public imports must be checked after pinned dependencies are installed.",
   );
   for (const forbidden of [
     "actions/setup-python",

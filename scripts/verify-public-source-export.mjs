@@ -9,6 +9,10 @@ const root = process.cwd();
 const defaultExportRoot = existsSync(path.join(root, "PUBLIC_SOURCE_MANIFEST.json"))
   ? root : path.join(root, ".local-validation", "public-source");
 const exportRoot = path.resolve(process.argv[2] || defaultExportRoot);
+const options = new Set(process.argv.slice(3));
+for (const option of options) {
+  assert(option === "--skip-executable-imports", `Unknown public source verification option: ${option}`);
+}
 const manifestPath = path.join(exportRoot, "PUBLIC_SOURCE_MANIFEST.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 assert(manifest.schema === "deepbom.public_source_export.v1", "Unexpected public source manifest schema.");
@@ -106,13 +110,18 @@ assert(packageDocument.scripts?.["generate:cli-docs"] === "node scripts/generate
   "Public source CLI documentation generator script drifted.");
 assert(packageDocument.scripts?.["check:cli-docs"] === "node scripts/generate-cli-docs.mjs --check",
   "Public source CLI documentation check script drifted.");
-execFileSync(process.execPath, ["scripts/check-web-imports.mjs"], {
-  cwd: exportRoot,
-  encoding: "utf8",
-  stdio: ["ignore", "pipe", "pipe"],
-});
+if (!options.has("--skip-executable-imports")) {
+  execFileSync(process.execPath, ["scripts/check-web-imports.mjs"], {
+    cwd: exportRoot,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+}
 
-console.log(`Public source export verification passed (${declared.length} files; exact members, hashes, licenses, workflows, package scripts, private paths, and executable web imports checked).`);
+const importStatus = options.has("--skip-executable-imports")
+  ? "executable web imports deferred until pinned dependencies are installed"
+  : "executable web imports checked";
+console.log(`Public source export verification passed (${declared.length} files; exact members, hashes, licenses, workflows, package scripts, private paths; ${importStatus}).`);
 
 async function collectFiles(directory, rootDirectory = directory) {
   const files = [];
