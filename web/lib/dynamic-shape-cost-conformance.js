@@ -3,6 +3,7 @@ const TFLITE_SCHEMA = "deepbom.dynamic_shape_cost_contract.v2";
 import { isOnnxMacBearingOperation } from "./onnx-operation-cost.js";
 import { onnxDimensionExpressionDependencies, parseOnnxDimensionExpression } from "./onnx-dimension-expression.js";
 import { parseOnnxEinsumEquation } from "./onnx-einsum-contract.js";
+import { compactMlBomEvidencePointerValid } from "./report-conformance-common.js";
 import {
   divisibleGuard,
   equalityGuard,
@@ -904,8 +905,7 @@ function propertyValue(document, name) {
 }
 
 function compactEvidencePointerValid(document) {
-  return propertyValue(document, "deepbom:compatibility:detailLocation")
-    === "engineering_evidence.json#/evidence/static_analysis";
+  return compactMlBomEvidencePointerValid(document);
 }
 
 function findingRows(register) {

@@ -62,8 +62,8 @@ async function checkRealServerContract() {
     assert.match(auditTool.description, /an evidence_gap is not a defect/i);
     assert.match(auditTool.description, /never establishes executed accelerator assignment, latency, energy, accuracy, or device fit/);
     assert.match(tools.find((tool) => tool.name === "deepbom_diff").description, /same supported format/);
-    assert.equal(tools.find((tool) => tool.name === "deepbom_diff").outputSchema.properties.schema.const,
-      "deepbom.semantic_artifact_diff.v1");
+    assert.deepEqual(tools.find((tool) => tool.name === "deepbom_diff").outputSchema.properties.schema.enum,
+      ["deepbom.semantic_artifact_diff.v1", "deepbom.tensor_encoding_diff.v1"]);
 
     session.request(3, "tools/call", { name: "deepbom_capabilities", arguments: {} });
     const capabilityResult = (await session.response(3)).result;
@@ -194,6 +194,42 @@ async function checkRealServerContract() {
       arguments: { path: ggufPath, tensors: true, scan: "full" },
     });
     assert.match((await session.response(23)).result.content[0].text, /tensors accepts only the structure scan policy/);
+
+    session.request(24, "tools/call", {
+      name: "deepbom_audit",
+      arguments: { path: onnxPath, section: "summary" },
+    });
+    const selectedSection = (await session.response(24)).result.structuredContent;
+    assert.equal(selectedSection.schema, "deepbom.analysis_selection.v1");
+    assert.equal(selectedSection.sections.summary.schema, "deepbom.review_summary.v1");
+
+    session.request(25, "tools/call", {
+      name: "deepbom_explain_rule",
+      arguments: { rule: "EA-SER-0002" },
+    });
+    const findingExplanation = (await session.response(25)).result.structuredContent;
+    assert.equal(findingExplanation.schema, "deepbom.finding_rule_explanation.v1");
+    assert.equal(findingExplanation.rule_id, "EA-SER-0002");
+
+    session.request(26, "tools/call", {
+      name: "deepbom_diff",
+      arguments: { baseline: onnxPath, candidate: onnxPath },
+    });
+    const diff = (await session.response(26)).result.structuredContent;
+    assert.equal(diff.schema, "deepbom.semantic_artifact_diff.v1");
+    assert.equal(diff.semantic_diff_sha256.length, 64);
+
+    session.request(27, "tools/call", {
+      name: "deepbom_audit",
+      arguments: { path: ggufPath, tensors: true, tensor_limit: 1 },
+    });
+    const tensorPage = (await session.response(27)).result.structuredContent;
+    assert.equal(tensorPage.schema, "deepbom.tensor_table.v1");
+    assert.equal(tensorPage.returned_tensor_count, 1);
+    assert.equal(tensorPage.pagination.offset, 0);
+    assert.equal(tensorPage.pagination.limit, 1);
+    assert.equal(tensorPage.pagination.total, tensorPage.tensor_count);
+    assert.equal(tensorPage.pagination.complete, tensorPage.tensor_count <= 1);
   } finally {
     await session.close();
   }

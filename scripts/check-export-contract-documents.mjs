@@ -278,8 +278,10 @@ expectEqual(
   "CycloneDX current INT8 profile source",
 );
 expect(
-  JSON.parse(cdxProperties.get("deepbom:conformance:violationCodes")).includes("weight_granularity_per_tensor_expected_per_axis"),
-  "CycloneDX should expose the current-profile granularity violation.",
+  !cdxProperties.has("deepbom:conformance:violationCodes")
+    && set.documents.artifact_evidence_envelope.structured_details.conformance.violations
+      .some((row) => row.code === "weight_granularity_per_tensor_expected_per_axis"),
+  "Structured evidence should preserve the current-profile granularity violation without JSON-in-string properties.",
 );
 const modernAnalysis = structuredClone(analysis);
 modernAnalysis.per_channel_tensors = 2;
@@ -297,12 +299,11 @@ const modernProperties = propertyMap(
   buildCycloneDxEvidenceDocument(modernAnalysis, options).metadata.component.properties,
 );
 expectEqual(modernProperties.get("deepbom:conformance:status"), "conformant_for_assessed_operators", "modern per-axis INT8 profile conformance");
-expectEqual(
-  JSON.parse(cdxProperties.get("deepbom:preprocessing:exactContractIds")).join(","),
-  "raw_storage_rgb,artifact_affine_rgb",
-  "CycloneDX preprocessing contract candidates",
+expect(
+  !cdxProperties.has("deepbom:preprocessing:exactContractIds"),
+  "Structured preprocessing candidates must not be serialized into a scalar CycloneDX property.",
 );
-const activationPath = JSON.parse(cdxProperties.get("deepbom:model:activationPath"));
+const activationPath = set.documents.artifact_evidence_envelope.structured_details.activation_path;
 expectEqual(activationPath.all_operator_denominator, 3, "activation-path all-op denominator");
 expectEqual(activationPath.compute_scope.denominator, 2, "activation-path compute denominator");
 expectEqual(activationPath.compute_scope.quantized_operators, 2, "activation-path quantized compute count");
@@ -700,9 +701,9 @@ const publicCycloneDx = buildPublicCycloneDxDocuments(analysis, options);
 assertCycloneDx17(publicCycloneDx.documents.cyclonedx_evidence, "public standalone CycloneDX 1.7 builder");
 expectEqual(Object.keys(publicCycloneDx.documents).length, 1, "public product emits only the stable CycloneDX 1.7 document");
 const publicProperties = propertyMap(publicCycloneDx.documents.cyclonedx_evidence.metadata.component.properties);
-const publicLedger = JSON.parse(publicProperties.get("deepbom:model:interfaceContractLedger"));
-expectEqual(publicLedger.ledger_sha256, publicProperties.get("deepbom:model:interfaceContractLedgerSha256"), "public interface ledger binding");
-expectEqual(publicLedger.parameter_count, 2, "public external interface cardinality");
+const publicEvidence = decodeInlineEvidence(publicCycloneDx.documents.cyclonedx_evidence);
+expectEqual(publicEvidence.interfaces.ledger_sha256, publicProperties.get("deepbom:model:interfaceContractLedgerSha256"), "public interface ledger binding");
+expectEqual(publicEvidence.interfaces.parameter_count, 2, "public external interface cardinality");
 
 initSync({ module: readFileSync("pkg/tflite_wasm_audit_bg.wasm") });
 const sampleFilename = "mobilenet_v2_1.0_224_quant.tflite";
@@ -747,7 +748,7 @@ expectEqual(
 );
 expectEqual(sampleCdxProperties.get("deepbom:conformance:status"), "nonconformant", "actual sample current INT8-profile status");
 expectExactSet(
-  JSON.parse(sampleCdxProperties.get("deepbom:conformance:violationCodes")),
+  sampleSet.documents.artifact_evidence_envelope.structured_details.conformance.violations.map((row) => row.code),
   [
     "weight_dtype_expected_int8",
     "weight_granularity_per_tensor_expected_per_axis",
@@ -756,7 +757,7 @@ expectExactSet(
   "actual sample current INT8-profile violations",
 );
 expectExactSet(
-  JSON.parse(sampleCdxProperties.get("deepbom:preprocessing:exactContractIds")),
+  sampleSet.documents.artifact_evidence_envelope.structured_details.preprocessing.exact_contract_ids,
   ["raw_storage_rgb", "raw_storage_bgr", "artifact_affine_rgb", "center_128_div_128_rgb"],
   "actual sample exact preprocessing candidates",
 );
@@ -854,6 +855,12 @@ console.log("Export contract documents passed (official CycloneDX 1.7 schema, re
 
 function propertyMap(properties) {
   return new Map((properties || []).map((item) => [item.name, item.value]));
+}
+
+function decodeInlineEvidence(document) {
+  const item = (document?.declarations?.evidence || []).find((row) => row?.data?.[0]?.contents?.attachment?.encoding === "base64");
+  if (!item) throw new Error("Expected one inline base64 declarations.evidence attachment.");
+  return JSON.parse(Buffer.from(item.data[0].contents.attachment.content, "base64").toString("utf8"));
 }
 
 function field(document, id) {

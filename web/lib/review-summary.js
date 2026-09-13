@@ -165,6 +165,10 @@ function compactFindings(findings) {
     evidence_class: row.evidence_class,
     source_pointers: row.source_pointers || [],
     recommendation: row.recommendation || null,
+    ...(Number.isSafeInteger(row.affected_tensor_count) ? { affected_tensor_count: row.affected_tensor_count } : {}),
+    ...(Number.isSafeInteger(row.assessed_tensor_count) ? { assessed_tensor_count: row.assessed_tensor_count } : {}),
+    ...(Array.isArray(row.affected_tensors) ? { affected_tensors: row.affected_tensors } : {}),
+    ...(typeof row.affected_tensors_truncated === "boolean" ? { affected_tensors_truncated: row.affected_tensors_truncated } : {}),
   }));
 }
 

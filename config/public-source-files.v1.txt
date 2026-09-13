@@ -1,9 +1,11 @@
 .gitattributes
+.github/actions/deepbom-audit/action.yml
 .github/workflows/crates-maintenance.yml
 .github/workflows/public-quality.yml
 .github/workflows/publish-mcp-registry.yml
 .github/workflows/release-channels.yml
 .gitignore
+.pre-commit-hooks.yaml
 .zenodo.json
 CHANGELOG.md
 CITATION.cff
@@ -31,6 +33,8 @@ channels/cargo/Cargo.lock
 channels/cargo/Cargo.toml
 channels/cargo/README.md
 channels/cargo/src/main.rs
+channels/container/Dockerfile
+channels/container/README.md
 channels/huggingface/Dockerfile
 channels/huggingface/README.md
 channels/huggingface/nginx.conf
@@ -39,6 +43,7 @@ channels/python/README.md
 channels/python/pyproject.toml
 channels/python/requirements-build.txt
 channels/python/setup.py
+channels/python/src/deepbom/SKILL.md
 channels/python/src/deepbom/__init__.py
 channels/python/src/deepbom/__main__.py
 channels/python/src/deepbom/_engine.py
@@ -81,6 +86,7 @@ corpus/external-review/fixtures/transpose-conv-dynamic.tflite
 corpus/external-review/fixtures/transpose-conv-same-cropped.tflite
 corpus/external-review/fixtures/transpose-conv-valid.tflite
 corpus/external-review/golden-boundary-manifest.v1.json
+corpus/external-review/measurement-oracles.v1.json
 corpus/gguf-architecture-encoding-corpus.v1.json
 corpus/google_legacy/README.md
 corpus/google_legacy/conversion/README.md
@@ -121,9 +127,13 @@ corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.con
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.quantize_config.json
 docs/CLI_AUTOMATION.md
 docs/CLI_REFERENCE.md
+docs/DEEPBOM_PROPERTY_TAXONOMY.md
+docs/DEEPBOM_PROPERTY_TAXONOMY.v1.json
 docs/DELIVERY_OPERATIONS.md
+docs/DEPENDENCY_SECURITY.md
 docs/EXTERNAL_REVIEW_TRIAGE.md
 docs/KNOWN_ISSUES.md
+docs/MEASUREMENT_ORACLE_GATE.md
 docs/MODEL_FREE_BUG_REPORTING.md
 docs/ONNX_CONTRACT_CONFLICT_CAPSULE.md
 docs/PRODUCT_DIRECTION.md
@@ -135,6 +145,7 @@ docs/REPRESENTATIVE_DATASET_CAPTURE.md
 docs/REPRODUCIBILITY.md
 docs/SOFTWARE_RECORD.md
 docs/SUPPORT_MATRIX.md
+docs/TERMINOLOGY_AND_NUMERIC_CONTRACT.md
 docs/WASM_EXECUTION_BOUNDARY.md
 docs/ZENODO_RELEASE.md
 docs/native-runtime-capture.md
@@ -145,6 +156,14 @@ docs/zenodo-validation-metadata.json
 examples/expected-output/README.md
 examples/expected-output/gpu-partition-probe.expected.json
 examples/expected-output/gpu-partition-probe.human.txt
+integrations/README.md
+integrations/bom-authoring/deepbom-evidence-adapter.mjs
+integrations/bom-authoring/evidence-reference-template.json
+integrations/model-store/audit-manifest.mjs
+integrations/oci/README.md
+integrations/oci/build-attestation-predicate.mjs
+integrations/pipeline/evidence_hook.py
+integrations/pre-commit/audit-staged.mjs
 native/capture-run.schema.json
 native/instrumentation/CMakeLists.txt
 native/instrumentation/deepbom_runtime_trace.cc
@@ -217,6 +236,7 @@ scripts/build-onnx-extension-contract-corpus.mjs
 scripts/build-pages.mjs
 scripts/build-public-multiformat-corpus-manifest.mjs
 scripts/build-public-multiformat-residual-sweep.mjs
+scripts/build-release-supply-chain-evidence.mjs
 scripts/build-release.mjs
 scripts/build-residual-coverage-ledger.mjs
 scripts/build-safetensors-quantization-corpus.mjs
@@ -248,6 +268,7 @@ scripts/check-artifact-ir-import-boundary.mjs
 scripts/check-artifact-ir.mjs
 scripts/check-assert.mjs
 scripts/check-backend-placement-projection.mjs
+scripts/check-bom-artifact-reconciliation.mjs
 scripts/check-bootstrap-retry.mjs
 scripts/check-browser-delivery-boundary.mjs
 scripts/check-browser-import-contract.mjs
@@ -333,9 +354,11 @@ scripts/check-graph-topology.mjs
 scripts/check-hash-contract.mjs
 scripts/check-html-entrypoints.mjs
 scripts/check-huggingface-community-corpus.mjs
+scripts/check-huggingface-space-contract.mjs
 scripts/check-importmap-runtime-cache.mjs
 scripts/check-input-counterexample-viewer.mjs
 scripts/check-input-counterexample.mjs
+scripts/check-integration-kit.mjs
 scripts/check-interface-contract-comparison.mjs
 scripts/check-ir-stabilization-ui.mjs
 scripts/check-js.mjs
@@ -350,6 +373,7 @@ scripts/check-mcp-inspector.mjs
 scripts/check-mcp-registry-metadata.mjs
 scripts/check-mcp-server.mjs
 scripts/check-mcpb-bundle.mjs
+scripts/check-measurement-oracles.mjs
 scripts/check-metadata-model-adapters.mjs
 scripts/check-mlbom-conservation.mjs
 scripts/check-model-file-contract.mjs
@@ -400,6 +424,7 @@ scripts/check-private-wasm-contract.mjs
 scripts/check-private-wasm-registry.mjs
 scripts/check-product-guidance-contracts.mjs
 scripts/check-protected-selector-viewer.mjs
+scripts/check-public-adoption-boundary.mjs
 scripts/check-public-evidence-package.mjs
 scripts/check-public-key-signature.mjs
 scripts/check-public-model-corpus.mjs
@@ -416,6 +441,7 @@ scripts/check-quant-research-applicability.mjs
 scripts/check-quantization-lattice-viewer.mjs
 scripts/check-quantization-lattice.mjs
 scripts/check-regulatory-bundle-contract.mjs
+scripts/check-release-supply-chain-evidence.mjs
 scripts/check-remote-artifact-resolver.mjs
 scripts/check-requantization-fidelity-viewer.mjs
 scripts/check-requantization-fidelity.mjs
@@ -499,6 +525,7 @@ scripts/generate-accelerator-llm-samples.py
 scripts/generate-browser-target-profiles.mjs
 scripts/generate-cli-docs.mjs
 scripts/generate-cyclonedx-17-example.mjs
+scripts/generate-deepbom-property-taxonomy.mjs
 scripts/generate-executorch-operator-signatures.mjs
 scripts/generate-finding-rule-catalog.mjs
 scripts/generate-gguf-backend-contract.mjs
@@ -638,6 +665,9 @@ src/tflite_subgraphs.rs
 src/verified_flatbuffer.rs
 src/xnnpack_delegate.rs
 src/xnnpack_rulepack_generated.rs
+validation/qms/README.md
+validation/qms/create-record.mjs
+validation/qms/engineering-evidence-record.schema.json
 web/.well-known/deepbom-signing-keys.json
 web/NOTICE.txt
 web/admin.html
@@ -704,6 +734,7 @@ web/lib/auth-labels.js
 web/lib/auth-ui.js
 web/lib/backend-placement-projection.js
 web/lib/benchmark-ui.js
+web/lib/bom-artifact-reconciliation.js
 web/lib/browser-asset-url.js
 web/lib/bundle.js
 web/lib/calibration-validation-ledger.js
@@ -731,6 +762,7 @@ web/lib/cyclonedx-component-inventory.js
 web/lib/cyclonedx-component-metadata.js
 web/lib/cyclonedx-identity.js
 web/lib/decision-coverage.js
+web/lib/deepbom-property-taxonomy.js
 web/lib/deepbom-worker-client.js
 web/lib/delegation-repair.js
 web/lib/deployment-delta.js

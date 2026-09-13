@@ -1,0 +1,1137 @@
+{
+  "schema": "deepbom.property_taxonomy.v1",
+  "namespace": "deepbom",
+  "ownership": "DeepBOM vendor extension; no external registration or endorsement is claimed",
+  "source_files": [
+    "web/lib/report-export-contracts.js",
+    "web/lib/public-cyclonedx-export.js"
+  ],
+  "counts": {
+    "total": 224,
+    "stable": 16,
+    "experimental": 208,
+    "deprecated": 0
+  },
+  "properties": [
+    {
+      "name": "deepbom:accelerator:bindingCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:accelerator:bindingDetailPointer",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:analyzer:buildCommit",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:analyzer:buildSourceState",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:analyzer:buildVersion",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:analyzer:bundleContentHashMethod",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:analyzer:bundleContentSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:analyzer:rulepackSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:analyzer:rulepackVersion",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:analyzer:semanticVersion",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:artifactEvidenceEnvelopeSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:artifactEvidenceEnvelopeSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:artifactIrSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:artifactIrSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:bundle:relativeReferencePolicy",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:conformance:interpretationBoundary",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:conformance:legacyQu8Artifact",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:conformance:profile",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:conformance:profileScope",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:conformance:source",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:conformance:status",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:conformance:violationCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:contract:schema",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:documentAuthor:orcid",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:evidenceBoundary",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:file:byteLength",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:file:evidenceClass",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:file:required",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:file:role",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:file:verificationStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:finding:assessmentStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:finding:buildModeDependentChannels",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:finding:constantOutputChannels",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:finding:exactZeroKernelSlices",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:finding:highSeverityCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:finding:maxInt32UtilizationRatio",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:comparableFieldCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:comparisonStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:conversionMetadataStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:converterFamily",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:converterFamilyEvidenceClass",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:converterVersion",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:declaredInputAcceptedForm",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:declaredInputSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:declaredPayload",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:documentSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:evidenceClass",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:exportFramework",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:exportFrameworkEvidenceClass",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:exportFrameworkVersion",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:interpretationBoundary",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:kind",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:mismatchCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:mismatches",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:observedPayload",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:formulation:quantizationClassification",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:artifactByteIntegrityLedgerSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:artifactByteIntegritySchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:artifactByteIntegritySummarySha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:artifactIrLocation",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:artifactIrSchema",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:artifactIrSha256",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:completeAffineInterfaceCount",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:computeOperatorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:contractConflictBlockedMacRows",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:contractConflictCapsuleSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:contractConflictConditionalVariantCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:contractConflictRootCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:cpuCostTargetBindingSource",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:cpuCostTargetHostObserved",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:cpuCostTargetProfileId",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:cpuCostTargetProfileSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:fileSizeBytes",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:floatTensorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:format",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:fullIntegerQuantized",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:graphMacCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:graphOperatorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:graphTensorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:hashBasis",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:int8TensorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:interfaceContractLedgerSha256",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:interfaceContractSchema",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:invalidOrIncompleteInterfaceCount",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:llmArchitecture",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmArchitectureKind",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmChatTemplateSha256",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:llmChatTemplateStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioBatchSize",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioContextAssessment",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioContextLength",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioDeclaredCapacityBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioImageCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioImageTokenCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioMemoryFitClaim",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioMemoryStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioResidencyAssumption",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioStateStorageBits",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioStaticLowerBoundBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioTextTokenCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioTokensPerImage",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmCliScenarioTotalContextTokens",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmContextLength",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmContractSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmContractStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmEncodingInventorySha256",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:llmEncodingSignatureSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmEvidenceClass",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmEvidencePointer",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmExplicitTransformerOperatorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmExternalStateCandidateCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmKvElementsPerTokenPerBatch",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmLayerSerializedBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmLayerStorageSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmLayerStorageStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmMaximumStaticMemoryLowerBoundBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmMemoryFeasibilitySchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmMemoryFeasibilityStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmMemoryFitClaim",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmMinimumStaticMemoryLowerBoundBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmMoeActiveExpertsPerToken",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmMoeExpertCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmNonLayerSerializedBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmObservedLayerCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRecurrentStateElementsPerBatch",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRuntimeAcceleratorLayerCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRuntimeAccountedWorkingMemoryBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRuntimeAllocationAccountingStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRuntimeBindingStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRuntimeEvidenceClass",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRuntimeManifestSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRuntimeManifestSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRuntimePrimaryAllocatedAccountedBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRuntimePrimaryAllocatedLowerBoundBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRuntimePrimaryResidentLowerBoundBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRuntimeResidentStateBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmRuntimeWorkingMemoryCoverage",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmSerializedGraphSignatureSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmSerializedGraphStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmSerializedParameterCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmSerializedTensorBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmSerializedWeightFloorBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmStaticMemoryCapacityScope",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmStaticMemoryResidencyAssumption",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmStaticPoolCandidateCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmStaticPoolFitClaim",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmStaticPoolMaximumAcceleratorLayersNotDisproven",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmStaticPoolNotDisprovenCandidateCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmStaticPoolPlacementSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmStaticPoolPlacementStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmStaticPoolProfileSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmTensorEncodingAssignmentSha256",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:llmTokenizerStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:llmVocabularySize",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:medicalAiClaimBoundary",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:medicalAiDeclarationCoverage",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:medicalAiDeclarationSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:perAxisQuantizationPresent",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:perAxisTensorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:primaryInputScale",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:primaryInputZeroPoint",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:quantizationClassification",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:quantizationClassificationBasis",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:quantizedComputeMacRatio",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:quantizedComputeOperatorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:quantizedTensorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:schemaOrOpset",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:serializedContractStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:serializedDequantizeOperatorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:serializedQuantizeOperatorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:storageEncodingBasis",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:storageEncodingClassification",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:tensorDtypeInventorySha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tensorRtLlmArtifactBindingStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tensorRtLlmContextParallelSize",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tensorRtLlmContractSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tensorRtLlmContractSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tensorRtLlmContractStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tensorRtLlmEngineConfigSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tensorRtLlmLogicalKvBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tensorRtLlmPipelineParallelSize",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tensorRtLlmSourceArtifactSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tensorRtLlmTensorParallelSize",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tensorRtLlmWorldSize",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteControlFlowContractCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteControlFlowContractPartialCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteControlFlowReferenceCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tflitePrimaryOperatorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSerializedOperatorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSparseImplicitZeroElements",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSparseLogicalElements",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSparseSerializedValueBytes",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSparseStorageSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSparseStoredElements",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSparseTensorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSubgraphCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSubgraphDeepAnalysisSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSubgraphDeepAssessedCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSubgraphDeepPredictedDelegateCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSubgraphDeepPredictedFallbackCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSubgraphIntrinsicAssessedCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSubgraphIntrinsicCostSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSubgraphIntrinsicPartialCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:tfliteSubgraphInventorySchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:uint8TensorCount",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:model:unquantizedInterfaceCount",
+      "status": "stable",
+      "reconciliation": "artifact_observable_allowlist"
+    },
+    {
+      "name": "deepbom:model:versionBasis",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:modelCard:interfaceContractLedger",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:modelCard:interfaceContractLedgerSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:modelCard:ioContractSchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:preprocessing:assessmentStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:preprocessing:portfolioLedgerSha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:privacy",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:profile",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:review:policyMode",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:review:policySchema",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:review:policySha256",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:runtime:floorEvidenceClass",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:runtime:floorStatus",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:runtime:name",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:runtime:necessaryFloor",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    },
+    {
+      "name": "deepbom:runtime:requirementsManifest",
+      "status": "experimental",
+      "reconciliation": "not_compared_by_default"
+    }
+  ]
+}

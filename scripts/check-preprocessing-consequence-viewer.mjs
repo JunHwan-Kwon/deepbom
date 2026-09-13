@@ -274,10 +274,10 @@ function buildReportEvidence(evidence) {
     findingPassed: evidence.output_changed_candidate_count
       ? finding?.evidence_class === "MEASURED_SYNTHETIC" && finding?.technical_priority === "Medium"
       : !finding,
-    mlBomPassed: properties.get("deepbom:compatibility:detailLocation") === "engineering_evidence.json#/evidence/static_analysis"
+    mlBomPassed: properties.get("deepbom:compatibility:detailLocation") === "#/declarations/evidence/0/data/0/contents/attachment"
       && !properties.has("deepbom:runtime:preprocessingConsequenceSchema")
       && !properties.has("deepbom:runtime:preprocessingConsequencePortfolioLedgerSha256")
-      && (mlBom.metadata.component.externalReferences || []).some((item) => item.type === "evidence" && item.url === "engineering_evidence.json"),
+      && (mlBom.declarations?.evidence || []).some((item) => item?.data?.some((row) => row?.contents?.attachment?.content)),
     runtimePassed: runtimeResults.preprocessing_consequence_atlas?.portfolio_ledger_sha256 === evidence.portfolio_ledger_sha256
       && engineeringEvidence.evidence.runtime_results.preprocessing_consequence_atlas?.portfolio_ledger_sha256 === evidence.portfolio_ledger_sha256
       && report.includes("## Preprocessing Consequence Atlas (MEASURED_SYNTHETIC)")

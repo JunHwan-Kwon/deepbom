@@ -30,6 +30,7 @@ import {
 } from "./tflite-build-configuration-binding.js";
 import { tensorRtCycloneDxPropertyEntries } from "./tensorrt-cyclonedx-properties.js";
 import { resolveArtifactIrContext } from "./artifact-ir-context.js";
+import { normalizeJsonContractValue } from "./report-utils.js";
 
 const CYCLONEDX_SCHEMA = "http://cyclonedx.org/schema/bom-1.7.schema.json";
 const LITERT_INT8_SPEC = "https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec";
@@ -80,6 +81,15 @@ function property(name, value) {
 
 function properties(entries) {
   return entries.map(([name, value]) => property(name, value)).filter(Boolean);
+}
+
+function base64Utf8(value) {
+  const bytes = new TextEncoder().encode(String(value));
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, Math.min(bytes.length, offset + 0x8000)));
+  }
+  return btoa(binary);
 }
 
 function acceleratorBindingPropertyEntries(bindings) {
@@ -278,11 +288,7 @@ function tensorContract(parameter) {
 }
 
 function modelCardIo(contract) {
-  const shape = contract.shape.length ? `[${contract.shape.join(",")}]` : "shape=unbound";
-  const quant = contract.quantization === "none"
-    ? "unquantized"
-    : `${contract.quantization}; scale_count=${contract.scale_count}; zero_point_count=${contract.zero_point_count}${contract.scales?.length === 1 ? `; scale=${contract.scales[0]}` : ""}${contract.zero_points?.length === 1 ? `; zero_point=${contract.zero_points[0]}` : ""}`;
-  return { format: `${contract.dtype} ${shape}; ${quant}` };
+  return { format: "tensor" };
 }
 
 function runtimeFloor(analysis) {
@@ -679,6 +685,22 @@ function preprocessingContract(analysis) {
   };
 }
 
+function structuredArtifactDetails(analysis, options = {}) {
+  const summary = findingsSummary(analysis, options);
+  return normalizeJsonContractValue({
+    interface_contracts: {
+      input_contracts: analysis?.input_contracts || [],
+      output_tensors: analysis?.outputs || [],
+      boundary: "Serialized interface evidence only; source-data preprocessing and caller integration remain separately bound.",
+    },
+    tensor_dtype_inventory: quantizationSummary(analysis).tensor_dtype_inventory,
+    activation_path: quantizationSummary(analysis).activation_path,
+    findings: summary.high_severity_findings || [],
+    conformance: assessLiteRtInt8Conformance(analysis),
+    preprocessing: preprocessingContract(analysis),
+  });
+}
+
 function externalReference(type, url, comment, sha256 = "") {
   const digest = normalizedSha256(sha256);
   return {
@@ -742,14 +764,40 @@ function evidenceDeclarations(envelope, identity, generatedAt, options = {}) {
     reasoning: `Evidence class ${finding.evidence_class}; source class ${finding.source_evidence_class || "not declared"}. ${finding.interpretation || ""}`.trim(),
     evidence: [evidenceRef],
   }));
+  const bundleMode = options.evidenceMode === "bundle" || Boolean(options.externalDocumentHashes);
+  const inlineEvidence = {
+    schema: "deepbom.cyclonedx_inline_artifact_evidence.v1",
+    subject: {
+      "bom-ref": identity.component_bom_ref,
+      sha256: identity.sha256,
+    },
+    artifact_evidence_envelope: {
+      schema: envelope.schema,
+      sha256: envelope.envelope_sha256,
+    },
+    interface_contracts: envelope?.structured_details?.interface_contracts || { input_contracts: [], output_tensors: [] },
+    findings: (envelope?.findings || []).map((finding) => ({
+      id: finding.id,
+      kind: finding.kind,
+      evidence_class: finding.evidence_class,
+      source_evidence_class: finding.source_evidence_class || null,
+      source_pointers: finding.source_pointers || [],
+    })),
+    interpretation_boundary: "Compact artifact-observed evidence for standalone exchange. The full artifact evidence envelope remains separately hash-bound and is included only in a deployment contract bundle.",
+  };
+  const contents = bundleMode
+    ? { url: DEPLOYMENT_CONTRACT_FILES.artifactEnvelope }
+    : { attachment: { contentType: "application/json", encoding: "base64", content: base64Utf8(JSON.stringify(inlineEvidence)) } };
   return {
     claims,
     evidence: [{
       "bom-ref": evidenceRef,
-      description: "Hash-bound artifact evidence envelope produced by deterministic static analysis.",
+      description: bundleMode
+        ? "Hash-bound artifact evidence envelope produced by deterministic static analysis."
+        : "Compact hash-bound artifact observation produced by deterministic static analysis.",
       data: [{
         name: "Artifact Evidence Envelope",
-        contents: { url: DEPLOYMENT_CONTRACT_FILES.artifactEnvelope },
+        contents,
       }],
       created: generatedAt,
       author: { name: metadata.name },
@@ -782,6 +830,7 @@ function cycloneDxSubject(analysis, options = {}, externalReferences = []) {
   const preprocessing = preprocessingContract(analysis);
   const contentVersion = artifactContentVersion(identity.sha256, identity.declared_version);
   const llmContainer = ["gguf", "safetensors"].includes(identity.format) && analysis?.on_device_llm?.schema === "deepbom.on_device_llm_contract.v2";
+  const bundleMode = options.evidenceMode === "bundle" || Boolean(options.externalDocumentHashes);
   const quantizationEntries = llmContainer ? [
     ["deepbom:model:storageEncodingClassification", quantization.classification],
     ["deepbom:model:storageEncodingBasis", identity.format === "gguf"
@@ -789,7 +838,6 @@ function cycloneDxSubject(analysis, options = {}, externalReferences = []) {
       : "SafeTensors dtype, shape, and exact serialized ranges; no execution graph, affine activation contract, or Q/DQ placement is inferred."],
   ] : [
     ["deepbom:model:quantizationClassification", quantization.classification],
-    ["deepbom:model:activationPath", JSON.stringify(quantization.activation_path)],
     ["deepbom:model:fullIntegerQuantized", quantization.full_integer],
     ["deepbom:model:quantizationClassificationBasis", quantization.classification_basis],
     ["deepbom:model:int8TensorCount", quantization.int8_tensor_count],
@@ -807,6 +855,13 @@ function cycloneDxSubject(analysis, options = {}, externalReferences = []) {
     ...(contentVersion.version ? { version: contentVersion.version } : {}),
     "bom-ref": identity.component_bom_ref,
     ...(identity.sha256 ? { hashes: [{ alg: "SHA-256", content: identity.sha256 }] } : {}),
+    ...(identity.sha256 ? { evidence: { identity: [{
+      field: "hash",
+      confidence: 1,
+      concludedValue: `SHA-256:${identity.sha256}`,
+      methods: [{ technique: "binary-analysis", confidence: 1, value: "SHA-256 computed over the supplied serialized artifact bytes." }],
+      tools: [analyzerBomRef(options)],
+    }] } } : {}),
     modelCard: {
       "bom-ref": `${identity.component_bom_ref}:model-card`,
       modelParameters: {
@@ -815,7 +870,7 @@ function cycloneDxSubject(analysis, options = {}, externalReferences = []) {
       },
       properties: properties([
         ["deepbom:modelCard:ioContractSchema", "deepbom.tensor_io_contract.v1"],
-        ["deepbom:modelCard:interfaceContractLedger", DEPLOYMENT_CONTRACT_FILES.interfaceContracts],
+        ["deepbom:modelCard:interfaceContractLedger", bundleMode ? DEPLOYMENT_CONTRACT_FILES.interfaceContracts : null],
         ["deepbom:modelCard:interfaceContractLedgerSha256", interfaceLedger.ledger_sha256],
       ]),
     },
@@ -831,7 +886,6 @@ function cycloneDxSubject(analysis, options = {}, externalReferences = []) {
       ["deepbom:model:hashBasis", identity.hash_basis],
       ...quantizationEntries,
       ...safeTensorsQuantizationPropertyEntries(analysis),
-      ["deepbom:model:tensorDtypeInventory", JSON.stringify(quantization.tensor_dtype_inventory)],
       ...llmCycloneDxPropertyEntries(analysis),
       ...tensorRtCycloneDxPropertyEntries(analysis),
       ["deepbom:model:completeAffineInterfaceCount", interfaceLedger.quantized_parameter_count],
@@ -865,23 +919,20 @@ function cycloneDxSubject(analysis, options = {}, externalReferences = []) {
       ["deepbom:finding:buildModeDependentChannels", findings.build_mode_dependent_channels],
       ["deepbom:finding:maxInt32UtilizationRatio", findings.max_int32_utilization_ratio],
       ["deepbom:finding:highSeverityCount", findings.high_severity_count],
-      ["deepbom:finding:highSeverityFindings", findings.high_severity_findings ? JSON.stringify(findings.high_severity_findings) : null],
       ["deepbom:conformance:profile", conformance.profile],
       ["deepbom:conformance:profileScope", conformance.profile_scope],
       ["deepbom:conformance:status", conformance.status],
-      ["deepbom:conformance:violationCodes", JSON.stringify(conformance.violation_codes)],
       ["deepbom:conformance:violationCount", conformance.violation_count],
       ["deepbom:conformance:legacyQu8Artifact", conformance.legacy_qu8_artifact],
       ["deepbom:conformance:source", conformance.source],
       ["deepbom:conformance:interpretationBoundary", conformance.interpretation_boundary],
       ["deepbom:preprocessing:assessmentStatus", preprocessing.status],
-      ["deepbom:preprocessing:exactContractIds", JSON.stringify(preprocessing.exact_contract_ids)],
       ["deepbom:preprocessing:portfolioLedgerSha256", preprocessing.portfolio_ledger_sha256],
       ["deepbom:runtime:name", floor.runtime],
       ["deepbom:runtime:necessaryFloor", floor.minimum_version],
       ["deepbom:runtime:floorStatus", floor.status],
       ["deepbom:runtime:floorEvidenceClass", floor.evidence_class],
-      ["deepbom:runtime:requirementsManifest", DEPLOYMENT_CONTRACT_FILES.runtime],
+      ["deepbom:runtime:requirementsManifest", bundleMode ? DEPLOYMENT_CONTRACT_FILES.runtime : null],
       ["deepbom:analyzer:semanticVersion", metadata.semanticVersion],
       ["deepbom:analyzer:buildVersion", metadata.version],
       ["deepbom:analyzer:rulepackVersion", metadata.rulepackVersion],
@@ -957,6 +1008,7 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
     ...options,
     generatedAt,
     provenance: analyzerProvenance(options),
+    structuredDetails: structuredArtifactDetails(analysis, options),
   });
   const envelopeHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.artifactEnvelope);
   const artifactIrHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.artifactIr);
@@ -964,8 +1016,9 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
   const runtimeHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.runtime);
   const missingHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.missingFields);
   const formulationHash = siblingHash(options, DEPLOYMENT_CONTRACT_FILES.formulation);
+  const bundleMode = options.evidenceMode === "bundle" || Boolean(options.externalDocumentHashes);
   const artifactIrMemberAvailable = Boolean(options.artifactIr && artifactIrHash);
-  const references = [
+  const references = bundleMode ? [
     ...optionalExternalReference(options, "engineeringEvidence", "evidence", "engineering_evidence.json", "External Engineering Bundle evidence ledger."),
     ...optionalExternalReference(options, "engineeringReport", "quality-metrics", "engineering_report.md", "External human-readable Engineering Report."),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.artifactEnvelope, bundleReferenceComment("Canonical artifact evidence envelope.", Boolean(envelopeHash)), envelopeHash),
@@ -974,7 +1027,7 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
     externalReference("formulation", DEPLOYMENT_CONTRACT_FILES.formulation, bundleReferenceComment("Artifact-observed formulation and declaration comparison.", Boolean(formulationHash)), formulationHash),
     externalReference("configuration", DEPLOYMENT_CONTRACT_FILES.runtime, bundleReferenceComment("Machine-readable runtime requirement manifest.", Boolean(runtimeHash)), runtimeHash),
     externalReference("evidence", DEPLOYMENT_CONTRACT_FILES.missingFields, bundleReferenceComment("Machine-readable release-lineage field gap specification.", Boolean(missingHash)), missingHash),
-  ];
+  ] : [];
   const subject = cycloneDxSubject(analysis, {
     ...options,
     artifactEvidenceEnvelope: artifactEnvelope,
@@ -1004,7 +1057,7 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
     ["deepbom:evidenceBoundary", ["gguf", "safetensors"].includes(String(analysis?.format || "").toLowerCase())
       ? "Deployment artifact identity, exact tensor storage, declared LLM architecture fields, hash-bound selected repository sidecars, conditional state/compute scenarios, and lower-bound-only memory feasibility where complete. Runtime-private memory, complete allocation or assignment, prompt behavior, task accuracy, clinical validity or utility, safety/effectiveness, and release readiness remain separately bound."
       : "Deployment artifact identity, graph totals, complete internal tensor dtype inventory, graph-level quantization state, deterministic static derivations, and serialized external I/O contracts. Runtime assignment, source-data preprocessing, task accuracy, clinical performance, and release readiness remain separately bound."],
-    ["deepbom:bundle:relativeReferencePolicy", "Resolve relative externalReferences against the root of the Deployment Contract Pack."],
+    ["deepbom:bundle:relativeReferencePolicy", bundleMode ? "Resolve relative externalReferences against the root of the Deployment Contract Pack." : null],
   ]), {
     ...(components.length ? { components } : {}),
     dependencies: dependencyGraph(subject.identity.component_bom_ref, components),
@@ -2180,6 +2233,7 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
   const artifactEnvelope = buildArtifactEvidenceEnvelope(analysis, {
     ...shared,
     provenance: analyzerProvenance(shared),
+    structuredDetails: structuredArtifactDetails(analysis, shared),
   });
   const irIdentity = artifactIdentity(analysis, shared);
   const artifactIrContext = resolveArtifactIrContext(analysis, {
@@ -2212,6 +2266,7 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
     artifactEvidenceEnvelope: artifactEnvelope,
     artifactIr,
     externalDocumentHashes: firstHashes,
+    evidenceMode: "bundle",
   });
   const evidenceHash = jsonMemberSha256(evidence);
   const formulation = buildObservedFormulationDocument(analysis, {

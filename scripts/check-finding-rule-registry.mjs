@@ -56,6 +56,12 @@ for (const row of catalog) {
 
 const generated = execFileSync(process.execPath, ["scripts/generate-finding-rule-catalog.mjs", "--check"], { encoding: "utf8" });
 assert.match(generated, /119 rules/);
+for (const id of [...catalogIds, ...analysisRules]) {
+  const human = execFileSync(process.execPath, ["bin/deepbom.mjs", "explain-rule", id], { encoding: "utf8", maxBuffer: 4 * 1024 * 1024 });
+  assert.match(human, new RegExp(id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `${id} human renderer omitted the identifier.`);
+  const machine = JSON.parse(execFileSync(process.execPath, ["bin/deepbom.mjs", "explain-rule", id, "--compact"], { encoding: "utf8", maxBuffer: 4 * 1024 * 1024 }));
+  assert(["deepbom.finding_rule_explanation.v1", "deepbom.rule_explanation.v1"].includes(machine.schema), `${id} machine renderer returned an unsupported schema.`);
+}
 const webExplanation = await buildFindingEvidenceExplanation({
   id: "EA-CML-0001",
   title: "Core ML serialized constants contain non-finite values",

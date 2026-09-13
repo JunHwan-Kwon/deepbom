@@ -518,7 +518,7 @@ const parsedProperties = new Map([
   ...(parsedMlBom.metadata?.component?.properties || []),
 ].map((property) => [property.name, property.value]));
 expectEqual(parsedProperties.get("deepbom:compatibility:profile"), "deepbom.compact_mlbom_compatibility.v2", "compact ML-BOM profile");
-expectEqual(parsedProperties.get("deepbom:compatibility:detailLocation"), "engineering_evidence.json#/evidence/static_analysis", "compact ML-BOM detail pointer");
+expectEqual(parsedProperties.get("deepbom:compatibility:detailLocation"), "#/declarations/evidence/0/data/0/contents/attachment", "compact standalone ML-BOM detail pointer");
 for (const omittedProperty of [
   "deepbom:model:onnxLocalFunctionCalls",
   "deepbom:model:onnxControlFlowShapeNodes",
@@ -534,7 +534,8 @@ for (const omittedProperty of [
 ]) {
   expectEqual(parsedProperties.has(omittedProperty), false, `compact ML-BOM omits ${omittedProperty}`);
 }
-expectEqual((parsedMlBom.metadata.component.externalReferences || []).some((item) => item.type === "evidence" && item.url === "engineering_evidence.json"), true, "compact ML-BOM evidence reference");
+expectEqual((parsedMlBom.metadata.component.externalReferences || []).some((item) => item.url === "engineering_evidence.json"), false, "compact standalone ML-BOM has no dangling evidence reference");
+expectEqual((parsedMlBom.declarations?.evidence || []).some((item) => item?.data?.some((row) => row?.contents?.attachment?.content)), true, "compact standalone ML-BOM carries inline evidence");
 const parsedBundle = buildEngineeringBundleArtifactFiles(parsedFixture, {
   reportContext: { identity: { filename: parsedFixture.filename, format: "onnx" }, generatedAt: "2026-07-22T00:00:00.000Z" },
   rawEvidenceContext: { identity: { filename: parsedFixture.filename, format: "onnx" } },

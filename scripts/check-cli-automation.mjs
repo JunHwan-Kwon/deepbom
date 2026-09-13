@@ -257,6 +257,43 @@ assert.equal(regulatoryPolicy.blocking_finding_ids.includes("EA-LIM-0001"), true
 const engineeringRun = run(["audit", onnxPath, "--policy", "engineering", "--compact"]);
 assert.equal(engineeringRun.status, 0);
 
+const ggufPath = "corpus/external-review/fixtures/gguf-q4-0.gguf";
+const ggufCandidatePath = "corpus/external-review/fixtures/gguf-q8-0.gguf";
+const shorthandTensorTable = JSON.parse(run([ggufPath, "--tensors", "--compact", "--tensor-limit", "1"]).stdout);
+assert.equal(shorthandTensorTable.schema, "deepbom.tensor_table.v1");
+assert.equal(shorthandTensorTable.returned_tensor_count, 1);
+assert.equal(shorthandTensorTable.pagination.complete, true);
+assert.equal(shorthandTensorTable.shape_order, "gguf_ne_order_innermost_first");
+const tensorDiff = JSON.parse(run(["diff", ggufPath, ggufCandidatePath, "--tensors", "--compact"]).stdout);
+assert.equal(tensorDiff.schema, "deepbom.tensor_encoding_diff.v1");
+assert.deepEqual(tensorDiff.transition_histogram, [{ transition: "Q4_0 -> Q8_0", tensor_count: 1 }]);
+assert.match(tensorDiff.baseline.tensor_encoding_assignment_sha256, /^[a-f0-9]{64}$/);
+assert.match(tensorDiff.candidate.tensor_encoding_assignment_sha256, /^[a-f0-9]{64}$/);
+assert.match(run(["diff", ggufPath, ggufCandidatePath, "--tensors", "--render", "markdown"]).stdout, /\| Q4_0 -> Q8_0 \| 1 \|/);
+
+const typoRun = run(["audit", ggufPath, "--tensor"], { expectSuccess: false });
+assert.equal(typoRun.status, 1);
+assert.match(typoRun.stderr, /Did you mean --tensors\?/);
+const identityRun = run(["audit", ggufPath, "--expected-sha256", "0".repeat(64), "--compact", "--error-format", "json"], { expectSuccess: false });
+assert.equal(identityRun.status, 4);
+const identityError = JSON.parse(identityRun.stderr);
+assert.equal(identityError.code, "artifact_identity_mismatch");
+assert.equal(identityError.expected.sha256, "0".repeat(64));
+assert.equal(identityError.observed.sha256, shorthandTensorTable.artifact.sha256);
+
+const truncatedGgufPath = path.join(scratch, "truncated.gguf");
+const ggufBytes = await readFile(path.join(root, ggufPath));
+await writeFile(truncatedGgufPath, ggufBytes.subarray(0, ggufBytes.length - 1));
+for (const outputArgs of [
+  ["--summary"],
+  ["--output-format", "analysis", "--compact"],
+  ["--format", "envelope", "--compact"],
+]) {
+  const damaged = run(["audit", truncatedGgufPath, ...outputArgs], { expectSuccess: false });
+  assert.equal(damaged.status, 1, `Damaged GGUF must fail consistently for ${outputArgs.join(" ")}`);
+  assert.match(damaged.stderr, /payload range .* exceeds source length/);
+}
+
 const unchangedDelta = JSON.parse(run([
   "diff",
   "web/samples/mobilenet_v1_025_224_float.tflite",

@@ -41,17 +41,6 @@ const anonymousRawFormatter = await worker.fetch(
 );
 expect(anonymousRawFormatter.status === 200, "Anonymous users must receive the local raw-export formatter entrypoint.");
 
-for (const host of ["medbom.org", "www.medbom.org"]) {
-  let assetRequested = false;
-  const redirect = await worker.fetch(new Request(`https://${host}/for-agents/?source=medbom`), {
-    ASSETS: { fetch: async () => { assetRequested = true; return new Response("unexpected"); } },
-  });
-  expect(redirect.status === 308, `${host} must permanently redirect to the canonical product host.`);
-  expect(redirect.headers.get("location") === "https://deepbom.org/for-agents/?source=medbom",
-    `${host} must preserve the path and query while redirecting.`);
-  expect(assetRequested === false, `${host} redirect must not read static assets.`);
-}
-
 expect(config.name, "wrangler.jsonc must define a Worker name.");
 expect(config.workers_dev === false, "wrangler.jsonc must explicitly disable the workers.dev route.");
 expect(
@@ -64,7 +53,7 @@ for (const [pattern, zoneName] of [
   expect(config.routes.some((route) => route.pattern === pattern && route.zone_name === zoneName),
     `wrangler.jsonc must bind ${pattern} to ${zoneName}.`);
 }
-for (const hostname of ["deepbom.org", "medbom.org", "www.medbom.org"]) {
+for (const hostname of ["deepbom.org"]) {
   expect(config.routes.some((route) => route.pattern === hostname
     && route.custom_domain === true
     && route.zone_name === undefined
@@ -76,8 +65,8 @@ for (const invalidRoute of [
   {},
   { pattern: "", zone_name: "deepbom.org" },
   { pattern: "deepbom.org/*", zone_name: "" },
-  { pattern: "medbom.org/*", custom_domain: true },
-  { pattern: "medbom.org", custom_domain: true, zone_name: "medbom.org" },
+  { pattern: "other.example/*", custom_domain: true },
+  { pattern: "other.example", custom_domain: true, zone_name: "other.example" },
 ]) {
   let rejected = false;
   try {

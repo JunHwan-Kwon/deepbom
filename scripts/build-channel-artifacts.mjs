@@ -45,6 +45,7 @@ await mkdir(output, { recursive: true });
 const npmRoot = path.join(output, "npm", "package");
 await mkdir(path.join(npmRoot, "bin"), { recursive: true });
 await mkdir(path.join(npmRoot, "pkg"), { recursive: true });
+await mkdir(path.join(npmRoot, "skills", "deepbom"), { recursive: true });
 const npmBuildResult = await build({
   entryPoints: [path.join(root, "bin", "deepbom.mjs")],
   outfile: path.join(npmRoot, "bin", "deepbom.mjs"),
@@ -67,6 +68,7 @@ await copyFile(wasmSource, path.join(npmRoot, "pkg", "tflite_wasm_audit_bg.wasm"
 await copyFile(selfTestSource, path.join(npmRoot, "bin", "deepbom-self-test.onnx"));
 await copyFile(path.join(root, "channels", "npm", "README.md"), path.join(npmRoot, "README.md"));
 await copyFile(publicLicense, path.join(npmRoot, "LICENSE"));
+await cp(path.join(root, "skills", "deepbom"), path.join(npmRoot, "skills", "deepbom"), { recursive: true });
 await writeFile(path.join(npmRoot, "package.json"), `${JSON.stringify({
   name: "deepbom",
   version: packageDocument.version,
@@ -74,7 +76,7 @@ await writeFile(path.join(npmRoot, "package.json"), `${JSON.stringify({
   description: "Local multi-format deployment-artifact analysis for on-device AI models",
   type: "module",
   bin: { deepbom: "bin/deepbom.mjs" },
-  files: ["bin/", "pkg/", "README.md", "LICENSE"],
+  files: ["bin/", "pkg/", "skills/deepbom/", "README.md", "LICENSE"],
   engines: { node: ">=20" },
   license: "Apache-2.0",
   homepage: "https://deepbom.org",

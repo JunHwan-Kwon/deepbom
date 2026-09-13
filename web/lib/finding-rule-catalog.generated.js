@@ -22,7 +22,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-CHN-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2584
+      "line": 2599
     },
     "evidence_class_basis": "ESTIMATED",
     "relevance": "runtime performance verification input"
@@ -48,7 +48,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-CML-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 299
+      "line": 307
     },
     "evidence_class_basis": "OBSERVED",
     "relevance": "serialized numerical integrity; release gating"
@@ -74,7 +74,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-CML-0002.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 314
+      "line": 322
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "weight payload integrity; exporter verification"
@@ -100,7 +100,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-CML-0003.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 327
+      "line": 335
     },
     "evidence_class_basis": "OBSERVED/NOT_ASSESSABLE",
     "relevance": "analysis coverage; evidence completeness"
@@ -127,7 +127,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-DEL-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2403
+      "line": 2418
     },
     "evidence_class_basis": "PREDICTED",
     "relevance": "runtime compatibility; performance verification input"
@@ -153,7 +153,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-DEL-0002.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2480
+      "line": 2495
     },
     "evidence_class_basis": "PREDICTED",
     "relevance": "runtime compatibility; software architecture characterization"
@@ -179,7 +179,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-DEL-0003.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2500
+      "line": 2515
     },
     "evidence_class_basis": "DERIVED_FROM_OBSERVED_RUNTIME",
     "relevance": "runtime compatibility; delegation-rule validation; performance reproducibility"
@@ -209,7 +209,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-DEL-0004.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2437
+      "line": 2452
     },
     "evidence_class_basis": "PREDICTED",
     "relevance": "runtime build reproducibility; conditional delegate coverage"
@@ -237,7 +237,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-DYN-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 437
+      "line": 452
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "capacity planning; dynamic input contract; runtime reproducibility"
@@ -268,7 +268,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-GRF-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1775
+      "line": 1790
     },
     "evidence_class_basis": "OBSERVED/NOT_ASSESSABLE",
     "relevance": "analysis coverage; control-flow integrity; deployment verification"
@@ -298,7 +298,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-IOC-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 410
+      "line": 425
     },
     "evidence_class_basis": "OBSERVED",
     "relevance": "integration contract; deployment reproducibility"
@@ -324,7 +324,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-LIM-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2628
+      "line": 2643
     },
     "evidence_class_basis": "NOT_ASSESSABLE",
     "relevance": "technical documentation boundary; regulatory limitation statement"
@@ -351,8 +351,8 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "source_reference": {
       "path": "web/lib/report-findings.js",
       "lines": [
-        481,
-        493
+        496,
+        508
       ]
     },
     "evidence_class_basis": "DECLARED_UNVERIFIED OR NOT_ASSESSABLE",
@@ -391,7 +391,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-MEM-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2547
+      "line": 2562
     },
     "evidence_class_basis": "ESTIMATED",
     "relevance": "computational resource characterization"
@@ -420,7 +420,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-MEM-0002.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2525
+      "line": 2540
     },
     "evidence_class_basis": "DERIVED_FROM_OBSERVED_RUNTIME",
     "relevance": "runtime memory capacity; static-planner validation; deployment reproducibility"
@@ -446,7 +446,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1708
+      "line": 1723
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "runtime integration; custom operator provenance"
@@ -473,7 +473,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0002.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1722
+      "line": 1737
     },
     "evidence_class_basis": "OBSERVED",
     "relevance": "artifact integrity; deterministic runtime resolution"
@@ -499,7 +499,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0003.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1735
+      "line": 1750
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "execution-provider assignment; runtime reproducibility"
@@ -527,7 +527,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0004.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1694
+      "line": 1709
     },
     "evidence_class_basis": "OBSERVED/NOT_ASSESSABLE",
     "relevance": "artifact integrity; weight verification; reproducible packaging"
@@ -554,7 +554,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0005.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1759
+      "line": 1774
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "execution-provider compatibility; deployment planning; runtime verification"
@@ -581,7 +581,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0006.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1584
+      "line": 1599
     },
     "evidence_class_basis": "OBSERVED/DERIVED",
     "relevance": "artifact integrity; shape contract; downstream metric validity"
@@ -609,7 +609,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0007.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1640
+      "line": 1655
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "artifact integrity; opset legality; downstream metric validity"
@@ -638,7 +638,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0008.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1679
+      "line": 1694
     },
     "evidence_class_basis": "OBSERVED/NOT_ASSESSABLE",
     "relevance": "shape completeness; control flow; local functions; downstream metric validity"
@@ -665,7 +665,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0009.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1658
+      "line": 1673
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "artifact integrity; local functions; control flow; sequence mapping; downstream metric validity"
@@ -692,7 +692,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0010.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 685
+      "line": 700
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_OBSERVED",
     "relevance": "artifact integrity; value type system; downstream metric validity"
@@ -719,7 +719,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0011.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 700
+      "line": 715
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_OBSERVED",
     "relevance": "artifact integrity; sparse initializer storage; downstream metric validity"
@@ -746,7 +746,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0012.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 715
+      "line": 730
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "artifact integrity; ONNX value type system; runtime validity"
@@ -773,7 +773,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0013.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 730
+      "line": 745
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "artifact integrity; tensor/map value typing; classifier and feature-vector contracts; ONNX-ML runtime validity"
@@ -800,7 +800,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0014.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 745
+      "line": 760
     },
     "evidence_class_basis": "OBSERVED/DERIVED",
     "relevance": "classifier correctness; output information loss; application integration"
@@ -827,7 +827,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0015.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 760
+      "line": 775
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "feature-vector correctness; output column identity; application integration"
@@ -854,7 +854,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0016.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 775
+      "line": 790
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "categorical mapping correctness; label identity; application integration"
@@ -881,7 +881,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0017.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 790
+      "line": 805
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "feature-vector correctness; deterministic information loss; downstream input identity"
@@ -909,7 +909,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0018.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 805
+      "line": 820
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "numerical integrity; deterministic output collapse; runtime compatibility"
@@ -936,7 +936,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0019.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 820
+      "line": 835
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "runtime compatibility; execution-provider assignment; deployment validity"
@@ -964,7 +964,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0020.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 835
+      "line": 850
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "numerical integrity; undefined signed arithmetic; runtime validity"
@@ -992,7 +992,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0021.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 850
+      "line": 865
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "feature preprocessing semantics; sign behavior; application contract"
@@ -1020,7 +1020,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0022.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 865
+      "line": 880
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "numerical precision; feature identity; reference-output verification"
@@ -1048,7 +1048,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0023.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 880
+      "line": 895
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "numerical integrity; non-finite propagation; downstream runtime validity"
@@ -1077,7 +1077,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0024.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 895
+      "line": 910
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "runtime compatibility; attribute contract; deployment validity"
@@ -1105,7 +1105,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0025.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 910
+      "line": 925
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "numerical precision; feature identity; reference-output verification"
@@ -1134,7 +1134,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0026.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 925
+      "line": 940
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "numerical integrity; non-finite propagation; downstream runtime validity"
@@ -1163,7 +1163,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0027.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 940
+      "line": 955
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "runtime compatibility; missing-value contract; deployment validity"
@@ -1191,7 +1191,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0028.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 955
+      "line": 970
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "feature semantics; silent configuration loss; runtime portability"
@@ -1218,7 +1218,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0029.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 970
+      "line": 985
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "schema/runtime gap; execution-provider compatibility; session initialization"
@@ -1247,7 +1247,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0030.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 985
+      "line": 1000
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "numerical integrity; missing-value sanitization; downstream validity"
@@ -1276,7 +1276,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0031.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1000
+      "line": 1015
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "runtime compatibility; categorical feature contract; session initialization"
@@ -1304,7 +1304,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0032.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1015
+      "line": 1030
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "categorical feature identity; unreachable dimensions; downstream coefficient alignment"
@@ -1332,7 +1332,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0033.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1030
+      "line": 1045
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "preprocessing parity; unknown-category semantics; feature collision"
@@ -1360,7 +1360,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0034.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1045
+      "line": 1060
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "deterministic runtime failure; preprocessing contract; release blocking"
@@ -1387,7 +1387,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0035.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1060
+      "line": 1075
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "schema/runtime gap; execution-provider compatibility; session initialization"
@@ -1415,7 +1415,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0036.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1075
+      "line": 1090
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "attribute portability; boolean contract; runtime consistency"
@@ -1443,7 +1443,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0037.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1090
+      "line": 1105
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "numeric conversion integrity; undefined cast avoidance; categorical identity"
@@ -1471,7 +1471,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0038.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1105
+      "line": 1120
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "deterministic runtime failure; ONNX/ORT contract gap; release blocking"
@@ -1499,7 +1499,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0039.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1120
+      "line": 1135
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "parameter conservation; exporter correctness; hidden dead state"
@@ -1526,7 +1526,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0040.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1135
+      "line": 1150
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "schema/runtime gap; execution-provider compatibility; deterministic CPU failure"
@@ -1554,7 +1554,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0042.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1150
+      "line": 1165
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "score semantics; probability contract; numerical safety"
@@ -1582,7 +1582,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0043.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1165
+      "line": 1180
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "ignored operator intent; multiclass semantics; runtime parity"
@@ -1610,7 +1610,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0044.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1180
+      "line": 1195
     },
     "evidence_class_basis": "OBSERVED/DERIVED",
     "relevance": "label identity; output decoding; class-map integrity"
@@ -1638,7 +1638,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0045.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1195
+      "line": 1210
     },
     "evidence_class_basis": "OBSERVED/DERIVED",
     "relevance": "numerical integrity; decision stability; microkernel accumulation sensitivity"
@@ -1665,7 +1665,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0046.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1210
+      "line": 1225
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "schema/runtime compatibility; execution-provider resolution; categorical preprocessing"
@@ -1694,7 +1694,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0047.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1225
+      "line": 1240
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "deterministic output divergence; label identity; exporter integrity"
@@ -1722,7 +1722,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0048.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1240
+      "line": 1255
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "NaN semantics; version migration; preprocessing parity"
@@ -1749,7 +1749,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0049.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1255
+      "line": 1270
     },
     "evidence_class_basis": "OBSERVED/DERIVED",
     "relevance": "unknown-category policy; preprocessing contract; downstream interpretation"
@@ -1777,7 +1777,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0050.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1270
+      "line": 1285
     },
     "evidence_class_basis": "OBSERVED/DERIVED",
     "relevance": "numerical integrity; category identity; downstream safety"
@@ -1805,7 +1805,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0051.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1285
+      "line": 1300
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "deterministic runtime failure; exporter integrity; categorical preprocessing"
@@ -1834,7 +1834,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0052.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1300
+      "line": 1315
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "deterministic runtime failure; ONNX/ORT contract gap; release blocking"
@@ -1862,7 +1862,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0053.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1315
+      "line": 1330
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "schema/runtime divergence; output ABI; deterministic shape conflict"
@@ -1889,7 +1889,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0054.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1330
+      "line": 1345
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "schema/runtime gap; execution-provider compatibility; deterministic CPU failure"
@@ -1917,7 +1917,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0055.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1345
+      "line": 1360
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "silent semantic divergence; output interpretation; runtime parity"
@@ -1945,7 +1945,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0056.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1360
+      "line": 1375
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "parameter conservation; exporter correctness; hidden dead state"
@@ -1973,7 +1973,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0057.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1375
+      "line": 1390
     },
     "evidence_class_basis": "OBSERVED/DERIVED",
     "relevance": "numerical integrity; decision stability; microkernel and libm sensitivity"
@@ -2001,7 +2001,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0058.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1390
+      "line": 1405
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "output ABI; classification semantics; deterministic runtime behavior"
@@ -2031,7 +2031,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0059.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1405
+      "line": 1420
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "deterministic runtime failure; tree topology integrity; release blocking"
@@ -2059,7 +2059,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0060.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1420
+      "line": 1435
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "schema/runtime gap; execution-provider compatibility; session initialization"
@@ -2086,7 +2086,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0061.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1435
+      "line": 1450
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "operator lifecycle; exporter portability; runtime maintenance"
@@ -2114,7 +2114,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0062.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1450
+      "line": 1465
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "parameter conservation; exporter integrity; hidden dead state"
@@ -2142,7 +2142,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0063.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1465
+      "line": 1480
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "branch semantics; reference/runtime parity; test portability"
@@ -2171,7 +2171,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0064.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1480
+      "line": 1495
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "output ABI; classification semantics; deterministic runtime behavior"
@@ -2199,7 +2199,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0065.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1495
+      "line": 1510
     },
     "evidence_class_basis": "OBSERVED/DERIVED",
     "relevance": "numerical integrity; decision stability; runtime reduction sensitivity"
@@ -2228,7 +2228,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0066.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1510
+      "line": 1525
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "deterministic runtime failure; text feature ABI; release blocking"
@@ -2256,7 +2256,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0067.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1525
+      "line": 1540
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "feature semantics; reference contract divergence; model portability"
@@ -2284,7 +2284,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0068.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1540
+      "line": 1555
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "numerical ABI; runtime/reference parity; downstream classifier inputs"
@@ -2311,7 +2311,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0069.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1555
+      "line": 1570
     },
     "evidence_class_basis": "OBSERVED/DERIVED",
     "relevance": "feature ownership; dead state; exporter reproducibility"
@@ -2338,7 +2338,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0070.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1569
+      "line": 1584
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "evidence completeness; bounded analysis; denial-of-service resistance"
@@ -2366,7 +2366,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0071.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1599
+      "line": 1614
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "artifact integrity; operator semantics; downstream metric validity"
@@ -2394,7 +2394,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-ONX-0072.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1623
+      "line": 1638
     },
     "evidence_class_basis": "SOURCE_PINNED_AND_DERIVED",
     "relevance": "artifact integrity; conditional control flow; downstream metric validity"
@@ -2424,7 +2424,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-OUT-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 467
+      "line": 482
     },
     "evidence_class_basis": "OBSERVED",
     "relevance": "integration contract; result interpretation"
@@ -2450,7 +2450,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-PKG-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2567
+      "line": 2582
     },
     "evidence_class_basis": "ESTIMATED",
     "relevance": "runtime performance characterization; benchmark protocol"
@@ -2481,7 +2481,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-PROV-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 518
+      "line": 533
     },
     "evidence_class_basis": "OBSERVED",
     "relevance": "evidence reproducibility; audit traceability"
@@ -2509,7 +2509,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2387
+      "line": 2402
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "quantization verification support; software technical characterization"
@@ -2537,7 +2537,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0002.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2420
+      "line": 2435
     },
     "evidence_class_basis": "ESTIMATED",
     "relevance": "quantization deployment architecture; runtime performance characterization"
@@ -2565,7 +2565,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0100.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1892
+      "line": 1907
     },
     "evidence_class_basis": "HEURISTIC",
     "relevance": "quantization calibration integrity"
@@ -2592,7 +2592,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0101.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1962
+      "line": 1977
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "quantization configuration; converter lineage"
@@ -2619,7 +2619,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0102.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2001
+      "line": 2016
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "quantization numerical contract"
@@ -2646,7 +2646,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0103.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2026
+      "line": 2041
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "quantized residual arithmetic"
@@ -2681,7 +2681,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0104.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2304
+      "line": 2319
     },
     "evidence_class_basis": "invalid ? \"OBSERVED\" : \"DERIVED\"",
     "relevance": "quantization metadata integrity; converter lineage"
@@ -2717,7 +2717,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0105.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1981
+      "line": 1996
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "ONNX quantization numerical contract"
@@ -2745,7 +2745,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0106.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2337
+      "line": 2352
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "quantized integer arithmetic integrity; runtime accumulator contract"
@@ -2777,7 +2777,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0107.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2363
+      "line": 2378
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "quantized requantization integrity; runtime build reproducibility"
@@ -2807,7 +2807,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0108.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2053
+      "line": 2068
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "residual output quantization contract design"
@@ -2835,7 +2835,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0109.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2074
+      "line": 2089
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "residual output-contract local code-step geometry"
@@ -2863,7 +2863,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0110.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2094
+      "line": 2109
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "residual output-contract counterfactual distortion geometry"
@@ -2891,7 +2891,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0111.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2117
+      "line": 2132
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "quantized kernel reproducibility and runtime-build provenance"
@@ -2919,7 +2919,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0112.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2156
+      "line": 2171
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "quantized channel vitality and fixed-point projection collapse"
@@ -2947,7 +2947,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0113.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2178
+      "line": 2193
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "quantized bit-exact reproducibility and runtime-build provenance"
@@ -2975,7 +2975,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0114.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2221
+      "line": 2236
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "numerical ABI compatibility, output reproducibility, and cross-build validation planning"
@@ -3003,7 +3003,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0115.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2200
+      "line": 2215
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "constructive quantized numerical ABI counterexamples and cross-build reproducibility"
@@ -3031,7 +3031,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0116.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2242
+      "line": 2257
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "constructive model-input numerical ABI compatibility and cross-build release validation"
@@ -3059,7 +3059,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0117.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2272
+      "line": 2287
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "source-data contract reproducibility, numerical ABI replay, and integration validation"
@@ -3086,7 +3086,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0118.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1922
+      "line": 1937
     },
     "evidence_class_basis": "HEURISTIC",
     "relevance": "per-axis quantization range integrity; QAT calibration review"
@@ -3114,7 +3114,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-QNT-0119.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1945
+      "line": 1960
     },
     "evidence_class_basis": "DERIVED_WITH_REFERENCE_HEURISTIC",
     "relevance": "input numerical contract; calibration lineage; deployment reproducibility"
@@ -3140,7 +3140,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-RUN-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1792
+      "line": 1807
     },
     "evidence_class_basis": "NOT_ASSESSABLE",
     "relevance": "integration verification; deployment reproducibility"
@@ -3166,7 +3166,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-RUN-0002.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2602
+      "line": 2617
     },
     "evidence_class_basis": "MEASURED_SYNTHETIC",
     "relevance": "execution integrity; runtime compatibility"
@@ -3192,7 +3192,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-RUN-0003.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 452
+      "line": 467
     },
     "evidence_class_basis": "MEASURED_SYNTHETIC",
     "relevance": "input integration verification; browser-local numerical replay"
@@ -3219,14 +3219,14 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-SER-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 349
+      "line": 357
     },
     "evidence_class_basis": "OBSERVED/DERIVED",
     "relevance": "serialized numerical integrity; release gating"
   },
   "EA-SER-0002": {
     "finding_id": "EA-SER-0002",
-    "title": "Exact all-zero serialized tensor payloads detected",
+    "title": "One or more serialized tensor payloads are exactly all-zero",
     "category": "numerical_structure_review",
     "applicable_formats": [
       "gguf",
@@ -3246,7 +3246,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-SER-0002.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 367
+      "line": 376
     },
     "evidence_class_basis": "DERIVED",
     "relevance": "weight payload integrity; export verification"
@@ -3273,7 +3273,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-SER-0003.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 383
+      "line": 398
     },
     "evidence_class_basis": "OBSERVED/NOT_ASSESSABLE",
     "relevance": "analysis coverage; evidence completeness"
@@ -3299,7 +3299,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-SYN-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 2616
+      "line": 2631
     },
     "evidence_class_basis": "MEASURED_SYNTHETIC",
     "relevance": "numerical consistency; verification planning"
@@ -3330,7 +3330,7 @@ export const GENERATED_FINDING_RULES = Object.freeze({
     "method_reference": "deepbom.report_findings.EA-WGT-0001.v1",
     "source_reference": {
       "path": "web/lib/report-findings.js",
-      "line": 1864
+      "line": 1879
     },
     "evidence_class_basis": "exactConstantProofs.length ? \"DERIVED\" : \"OBSERVED\"",
     "relevance": "engineering evidence review"

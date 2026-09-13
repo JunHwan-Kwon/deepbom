@@ -127,9 +127,10 @@ export function compareInterfaceContracts(ledger, declarationSource, expectedArt
     }
   }
 
-  let status = "bound_exact_contract";
+  const artifactDerivedBaseline = parsed.source_kind === "artifact_derived_baseline";
+  let status = artifactDerivedBaseline ? "bound_exact_artifact_baseline" : "bound_exact_contract";
   const artifactHashMissing = Boolean(expectedArtifact && !declaredArtifact);
-  const implementationHashMissing = !normalizeSha256(declaration.implementation_sha256);
+  const implementationHashMissing = !artifactDerivedBaseline && !normalizeSha256(declaration.implementation_sha256);
   if (artifactHashMissing && implementationHashMissing) status = "partial_artifact_and_implementation_hash_missing";
   else if (artifactHashMissing) status = "partial_artifact_hash_missing";
   else if (implementationHashMissing) status = "partial_implementation_hash_missing";
@@ -185,7 +186,8 @@ export function parseProductionInterfaceContract(source) {
     valid: errors.length === 0,
     contract,
     errors,
-    source_kind: fromCycloneDx ? "cyclonedx_2_draft" : "deepbom_json",
+    source_kind: fromCycloneDx ? "cyclonedx_2_draft"
+      : value.schema === "deepbom.artifact_derived_interface_baseline.v1" ? "artifact_derived_baseline" : "deepbom_json",
   };
 }
 
@@ -194,7 +196,9 @@ function comparisonResult(status, expected, parsed, diffs, expectedArtifactSha25
   return {
     schema: "deepbom.interface_contract_comparison.v1",
     status,
-    evidence_class: mismatch ? "DERIVED_FROM_ARTIFACT_AND_DECLARATION" : status === "bound_exact_contract" ? "DECLARED_RELEASE_BINDING" : "NOT_ASSESSED",
+    evidence_class: mismatch ? "DERIVED_FROM_ARTIFACT_AND_DECLARATION"
+      : status === "bound_exact_contract" ? "DECLARED_RELEASE_BINDING"
+        : status === "bound_exact_artifact_baseline" ? "DERIVED_FROM_ARTIFACT_BASELINES" : "NOT_ASSESSED",
     expected_artifact_sha256: expectedArtifactSha256 || null,
     declared_artifact_sha256: parsed.contract?.artifact_sha256 || null,
     implementation_sha256: parsed.contract?.implementation_sha256 || null,
@@ -207,7 +211,7 @@ function comparisonResult(status, expected, parsed, diffs, expectedArtifactSha25
       valid: parsed.valid,
       errors: parsed.errors,
     },
-    gate_result: mismatch ? "block" : status === "bound_exact_contract" ? "pass" : "pending",
+    gate_result: mismatch ? "block" : ["bound_exact_contract", "bound_exact_artifact_baseline"].includes(status) ? "pass" : "pending",
     interpretation_boundary: "A mismatch is an observed deployment-configuration integrity contradiction. An absent declaration is unbound evidence, not a vulnerability or proof of incorrect inference.",
   };
 }

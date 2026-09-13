@@ -896,7 +896,7 @@ expectEqual(
 );
 for (const [name, value, label] of [
   ["deepbom:compatibility:profile", "deepbom.compact_mlbom_compatibility.v2", "compact compatibility profile"],
-  ["deepbom:compatibility:detailLocation", "engineering_evidence.json#/evidence/static_analysis", "single detailed-evidence pointer"],
+  ["deepbom:compatibility:detailLocation", "#/declarations/evidence/0/data/0/contents/attachment", "standalone inline-evidence pointer"],
   ["mlbom:model:format", "tflite", "artifact format"],
   ["mlbom:model:operatorCount", String(reportBoundaryAnalysis.operator_count), "operator count"],
   ["mlbom:model:tensorCount", String(reportBoundaryAnalysis.tensor_count), "tensor count"],
@@ -908,7 +908,16 @@ const compatibilityProjection = buildMlBomCompatibilityProjection(reportBoundary
 expect(compatibilityProjection.componentProperties.length <= 30 && compatibilityProjection.documentProperties.length <= 15, "ML-BOM compatibility projection should remain compact and bounded.");
 expectProperty(mlBom.properties, "ondevice:predictedNonDelegatedOps", "{}", "TFLite ML-BOM should include the predicted non-delegated op inventory.");
 expect(!mlBom.metadata.component.properties.some((item) => item.name === "deepbom:model:arenaCombinedBytes" || item.name === "deepbom:model:xnnpackSelectorEvidenceSchema"), "Detailed arena and selector ledgers should remain in structured companion evidence instead of the ML-BOM compatibility projection.");
-expect(mlBom.metadata.component.externalReferences.some((item) => item.type === "evidence" && item.url === "engineering_evidence.json"), "Compact ML-BOM should link its detailed structured evidence companion.");
+expect(!mlBom.metadata.component.externalReferences.some((item) => item.url === "engineering_evidence.json"), "Standalone ML-BOM must not emit a dangling relative evidence reference.");
+const mlBomInlineEvidence = JSON.parse(Buffer.from(
+  mlBom.declarations.evidence[0].data[0].contents.attachment.content,
+  "base64",
+).toString("utf8"));
+expectEqual(
+  JSON.stringify(mlBomInlineEvidence.interface_contracts.input_contracts),
+  JSON.stringify(reportBoundaryAnalysis.input_contracts),
+  "Standalone ML-BOM should preserve detailed structured input contracts in its standard evidence attachment.",
+);
 expect(!mlBom.properties.some((item) => item.name === "ondevice:delegateSuspects"), "ML-BOM should not use the ambiguous delegateSuspects property.");
 expect(!mlBom.properties.some((item) => item.name === "ondevice:staticSuspectOpFamilies"), "ML-BOM should not use the ambiguous staticSuspectOpFamilies property.");
 expectEqual(mlBom.metadata.authors[0]?.name, "DEEPBOM", "ML-BOM should use a non-personal package author.");

@@ -178,6 +178,11 @@ jobs:
     needs: build-wheel
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     steps:
       - uses: actions/checkout@v5
         with:
@@ -194,6 +199,22 @@ jobs:
       - name: Verify release checksums
         working-directory: release
         run: sha256sum --check SHA256SUMS
+      - name: Build release self-SBOM and local provenance record
+        run: node scripts/build-release-supply-chain-evidence.mjs --sbom release/deepbom-self-sbom.cdx.json --provenance release/deepbom-build-provenance.intoto.jsonl --subject-dir release --commit "$GITHUB_SHA"
+      - name: Attest release build provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            release/deepbom-core-*
+            release/tflite_wasm_audit_bg-*.wasm
+            release/deepbom-self-test-*.onnx
+            release/engine-matrix.v1.json
+            release/SHA256SUMS
+      - name: Attest release SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: release/deepbom-core-*
+          sbom-path: release/deepbom-self-sbom.cdx.json
       - name: Install declared Cargo MSRV
         run: rustup toolchain install 1.85.0 --profile minimal --no-self-update
       - name: Test and package the Cargo launcher
@@ -238,7 +259,7 @@ jobs:
   smoke-cargo-release:
     name: Smoke-test Cargo against published engines
     if: inputs.publish
-    needs: publish-github-release
+    needs: verify-published-attestation
     runs-on: windows-2025
     timeout-minutes: 15
     steps:
@@ -274,6 +295,26 @@ jobs:
           $onnxOutput = cargo +1.85.0 run --quiet --locked --manifest-path channels/cargo/Cargo.toml -- audit corpus/onnx-extension-contract-corpus/deepbom-static-per-axis-qdq.onnx --compact
           if ($LASTEXITCODE -ne 0) { throw "Remote engine ONNX execution failed." }
           ($onnxOutput -join "`n") | ConvertFrom-Json | Out-Null
+
+  verify-published-attestation:
+    name: Verify published release attestation
+    if: inputs.publish
+    needs: publish-github-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      attestations: read
+    steps:
+      - name: Download one immutable release engine
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: channels-v${{ inputs.expected_version }}
+        run: gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern 'deepbom-core-linux-x64' --dir release
+      - name: Verify identity-backed build provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh attestation verify release/deepbom-core-linux-x64 --repo "$GITHUB_REPOSITORY" --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release-channels.yml"
 
   publish-cargo:
     name: Publish Cargo bootstrap release
@@ -348,3 +389,76 @@ jobs:
           npm_tag=latest
           if [[ "${{ inputs.release_tier }}" == "prerelease" ]]; then npm_tag=next; fi
           npm publish ./dist/deepbom-${{ inputs.expected_version }}.tgz --access public --tag "$npm_tag"
+
+  verify-published-registries:
+    name: Verify npm and PyPI provenance readback
+    if: inputs.publish
+    needs: [publish-npm, publish-pypi]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.12.0
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Verify npm registry signatures and provenance
+        env:
+          RELEASE_VERSION: ${{ inputs.expected_version }}
+        shell: bash
+        run: |
+          for attempt in {1..18}; do
+            published="$(npm view "deepbom@${RELEASE_VERSION}" version 2>/dev/null || true)"
+            [[ "$published" == "$RELEASE_VERSION" ]] && break
+            sleep 10
+          done
+          [[ "$published" == "$RELEASE_VERSION" ]]
+          npm view "deepbom@${RELEASE_VERSION}" dist --json > npm-dist.json
+          node -e '
+            const fs = require("node:fs");
+            const dist = JSON.parse(fs.readFileSync("npm-dist.json", "utf8"));
+            if (dist?.attestations?.provenance?.predicateType !== "https://slsa.dev/provenance/v1") {
+              throw new Error("Published npm package has no SLSA provenance readback.");
+            }
+          '
+          mkdir npm-readback
+          cd npm-readback
+          npm init -y >/dev/null
+          npm install --ignore-scripts --save-exact "deepbom@${RELEASE_VERSION}"
+          npm audit signatures --json --include-attestations > ../npm-signature-readback.json
+      - name: Verify PyPI integrity records and one wheel cryptographically
+        env:
+          RELEASE_VERSION: ${{ inputs.expected_version }}
+          SOURCE_REPOSITORY: https://github.com/${{ github.repository }}
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check "pypi-attestations==0.0.30"
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.request
+
+          project = "deepbom"
+          version = os.environ["RELEASE_VERSION"]
+          headers = {"Accept": "application/vnd.pypi.integrity.v1+json"}
+          for attempt in range(18):
+              try:
+                  release = json.load(urllib.request.urlopen(f"https://pypi.org/pypi/{project}/{version}/json"))
+                  wheels = [row for row in release["urls"] if row["packagetype"] == "bdist_wheel"]
+                  if len(wheels) != 6:
+                      raise RuntimeError(f"expected six wheels, observed {len(wheels)}")
+                  for wheel in wheels:
+                      url = f"https://pypi.org/integrity/{project}/{version}/{wheel['filename']}/provenance"
+                      provenance = json.load(urllib.request.urlopen(urllib.request.Request(url, headers=headers)))
+                      if not provenance.get("attestation_bundles"):
+                          raise RuntimeError(f"missing provenance bundle for {wheel['filename']}")
+                  selected = next(row["url"] for row in wheels if "manylinux_2_28_x86_64" in row["filename"])
+                  open("pypi-wheel-url.txt", "w", encoding="utf-8").write(selected + "\n")
+                  break
+              except (OSError, KeyError, StopIteration, RuntimeError, urllib.error.HTTPError):
+                  if attempt == 17:
+                      raise
+                  time.sleep(10)
+          PY
+          pypi-attestations verify pypi --repository "$SOURCE_REPOSITORY" "$(cat pypi-wheel-url.txt)"

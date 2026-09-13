@@ -2,13 +2,13 @@
   "schema": "deepbom.external_review_cyclonedx_consumer_compatibility.v1",
   "source": {
     "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_evidence.cdx.json",
-    "sha256": "8284407fba33b824bbd25b29ade485f9fa2df42401e18b98e450012d4413d440"
+    "sha256": "db598abc21eb44583d916a5d497a9d4dfa8a363243117b9f411b12e4434099e1"
   },
   "expected": {
     "spec_version": "1.7",
     "root_bom_ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
     "root_type": "machine-learning-model",
-    "root_property_count": 73,
+    "root_property_count": 68,
     "components_array_count": 0,
     "schema_aware_visible_component_count": 1,
     "components_only_visible_component_count": 0

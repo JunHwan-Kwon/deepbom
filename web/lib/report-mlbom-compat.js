@@ -57,6 +57,7 @@ export function buildMlBomCompatibilityProjection(analysis, {
   targetId = "",
   serialNumber = "",
   runtimeAssignmentEvidence = null,
+  detailLocation = DETAIL_POINTER,
 } = {}) {
   const format = text(analysis?.format || "tflite").toLowerCase();
   const quant = modelQuantizationStatus(analysis);
@@ -77,7 +78,7 @@ export function buildMlBomCompatibilityProjection(analysis, {
 
   const componentProperties = compact([
     property("deepbom:compatibility:profile", "deepbom.compact_mlbom_compatibility.v2"),
-    property("deepbom:compatibility:detailLocation", DETAIL_POINTER),
+    property("deepbom:compatibility:detailLocation", detailLocation),
     property("mlbom:model:format", format),
     property("mlbom:model:schemaOrOpset", integrity.schema_or_opset),
     property("mlbom:model:fileSizeBytes", finite(fileSizeBytes)),

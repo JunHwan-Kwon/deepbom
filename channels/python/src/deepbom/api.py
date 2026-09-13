@@ -44,6 +44,10 @@ class DeepBomIncompleteBinding(DeepBomError):
     """Verification could not establish a complete release binding (exit 3)."""
 
 
+class DeepBomIdentityMismatch(DeepBomError):
+    """An independently supplied artifact SHA-256 did not match (exit 4)."""
+
+
 class DeepBomTimeout(DeepBomError):
     """The verified engine exceeded the caller's timeout."""
 
@@ -147,6 +151,48 @@ def tensor_inventory(path: os.PathLike[str] | str, *, expected_sha256: Optional[
     return _invoke_json(argv, timeout_seconds, max_output_bytes)
 
 
+def verify_bom(path: os.PathLike[str] | str, bom: os.PathLike[str] | str, *,
+               component_ref: Optional[str] = None,
+               timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+               max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> dict[str, Any]:
+    """Reconcile one CycloneDX 1.7 component with artifact-observable facts."""
+    argv = ["verify", _path_text(path), "--bom", _path_text(bom), "--compact"]
+    if component_ref is not None:
+        if not str(component_ref).strip():
+            raise ValueError("component_ref must be a non-empty bom-ref")
+        argv.extend(["--component-ref", str(component_ref).strip()])
+    return _invoke_json(argv, timeout_seconds, max_output_bytes)
+
+
+def verify_contract(path: os.PathLike[str] | str, contract: os.PathLike[str] | str, *,
+                    timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+                    max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> dict[str, Any]:
+    """Compare a serialized external interface with an explicit contract or artifact baseline."""
+    return _invoke_json(
+        ["verify", _path_text(path), "--contract", _path_text(contract), "--compact"],
+        timeout_seconds,
+        max_output_bytes,
+    )
+
+
+def capture_contract(path: os.PathLike[str] | str, *,
+                     timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+                     max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> dict[str, Any]:
+    """Capture an artifact-derived external-interface baseline; this is not an approved declaration."""
+    return _invoke_json(["contract", "capture", _path_text(path), "--compact"], timeout_seconds, max_output_bytes)
+
+
+def diff(baseline: os.PathLike[str] | str, candidate: os.PathLike[str] | str, *,
+         tensors_only: bool = False,
+         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+         max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> dict[str, Any]:
+    """Compare two same-format artifacts, optionally returning the tensor-encoding projection."""
+    argv = ["diff", _path_text(baseline), _path_text(candidate), "--compact"]
+    if tensors_only:
+        argv.append("--tensors")
+    return _invoke_json(argv, timeout_seconds, max_output_bytes)
+
+
 def _invoke_json(argv: list[str], timeout_seconds: float, max_output_bytes: int) -> dict[str, Any]:
     timeout = _positive_number(timeout_seconds, "timeout_seconds")
     output_limit = _positive_integer(max_output_bytes, "max_output_bytes")
@@ -195,6 +241,12 @@ def _invoke_json(argv: list[str], timeout_seconds: float, max_output_bytes: int)
             raise DeepBomIncompleteBinding(
                 diagnostic or "DEEPBOM could not establish a complete binding.",
                 exit_code=3,
+                document=document,
+            )
+        if completed.returncode == 4:
+            raise DeepBomIdentityMismatch(
+                diagnostic or "DEEPBOM observed an artifact identity mismatch.",
+                exit_code=4,
                 document=document,
             )
         raise DeepBomInvocationError(

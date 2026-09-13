@@ -1,0 +1,46 @@
+{
+  "schema": "deepbom.measurement_oracles.v1",
+  "reviewed_at": "2026-09-13",
+  "boundary": "Pinned, format-specific serialization facts only. No oracle asserts runtime fusion, task quality, lineage, safety, or regulatory conformity.",
+  "artifacts": [
+    {
+      "format": "gguf",
+      "path": "web/samples/tinymqa1m.Q4_0.gguf",
+      "sha256": "cb95a6e10f28b76a1dd71c15560dec5a5eee8943f591ef45d11c129786b22cff",
+      "primary_oracle": "GGUFReader plus GGML_QUANT_SIZES from the upstream GGUF implementation",
+      "expected": {
+        "tensor_count": 39,
+        "encoding_counts": { "Q4_0": 29, "Q8_0": 1, "F32": 9 },
+        "encoding_inventory_sha256": "ef3d83fc8e781b70545942caec69353aaf91549be334ce6dea31a902a618f062",
+        "tensor_encoding_assignment_sha256": "6358600126456f47bdc926a271602a87f75c807a06c2177494eb2dd60234429a"
+      }
+    },
+    {
+      "format": "onnx",
+      "path": "corpus/onnx-extension-contract-corpus/deepbom-static-per-axis-qdq.onnx",
+      "sha256": "c19f7155f030dc396aad04909b7429b8a4d6d1cb51fcd53a84e3c97ae9678d0e",
+      "primary_oracle": "ONNX TensorProto and node-attribute decoding",
+      "expected": {
+        "classification": "static_qdq_representation",
+        "binding_count": 2,
+        "binding_status": "pass",
+        "axis": 1,
+        "parameterization": "per_axis",
+        "scale_values": [0.125, 0.25, 0.5],
+        "zero_point_values": [128, 127, 126]
+      }
+    },
+    {
+      "format": "safetensors",
+      "path": "web/samples/nanofable-1m-fp16.safetensors",
+      "sha256": "a35fd03f52c12f4e78a246bec1927e9a169377fbb8905dc13165d285010e7a44",
+      "primary_oracle": "SafeTensors eight-byte header length and JSON tensor directory",
+      "expected": {
+        "tensor_count": 38,
+        "encoding_counts": { "F16": 38 },
+        "declared_tensor_bytes": 2754816,
+        "index_binding_status": "not_required_single_file"
+      }
+    }
+  ]
+}

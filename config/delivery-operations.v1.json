@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-11T12:17:24.539Z",
+  "recorded_at": "2026-09-13T04:14:29.808Z",
   "scope": "Public installation channels and private web delivery",
   "observations": [
     {
@@ -1649,6 +1649,84 @@
         "packaged_self_test_and_wasm_tamper_rejection"
       ],
       "qualification": "The installed npm package, MCP server, Agent Skill, Python facade, standalone engine, and Cargo launcher retained the release contract while packaged self-test and WASM tampering boundaries remained enforced."
+    },
+    {
+      "kind": "private_web_preflight_basis",
+      "version": "1.97.0",
+      "source_commit": "e3d03aab02f8c7cc41f6a67cc6bb9858a671f3de",
+      "platform": "windows-x64",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 149.116,
+      "check_count": 81,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "current_version_non_self_referential_basis",
+        "artifact_ir_and_stable_cyclonedx_1_7_contracts",
+        "bom_artifact_reconciliation_and_component_identity_contracts",
+        "measurement_oracles_and_cross_surface_mcp_contracts",
+        "release_supply_chain_and_public_adoption_boundaries",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy"
+      ],
+      "qualification": "All 81 non-self-referential deployment checks passed for the recorded clean source commit within the 240-second operations budget."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.97.0",
+      "source_commit": "e3d03aab02f8c7cc41f6a67cc6bb9858a671f3de",
+      "platform": "windows-x64",
+      "command": "npm run build:channels",
+      "elapsed_seconds": 63.442,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball_with_mcp_server_and_agent_skill",
+        "single_executable_engine",
+        "pep_639_python_wheel_with_policy_facade_and_native_types",
+        "cargo_launcher_source",
+        "manifest_bound_self_test_probe",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.97.0",
+      "source_commit": "e3d03aab02f8c7cc41f6a67cc6bb9858a671f3de",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 185.85,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "installed_python_capabilities_typed_tensors_and_policy_gate",
+        "manifest_bound_self_test_execution",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity",
+        "path_with_spaces_execution"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.97.0",
+      "source_commit": "e3d03aab02f8c7cc41f6a67cc6bb9858a671f3de",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 531.339,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_all_formats_and_package_forms",
+        "installed_npm_mcp_tool_call_equivalence",
+        "installed_npm_agent_integration_preview_apply_status_remove",
+        "installed_python_capabilities_typed_tensors_and_policy_gate",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "capability_envelope_sarif_policy_and_bom_reconciliation_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_self_test_and_wasm_tamper_rejection"
+      ],
+      "qualification": "The installed npm package, MCP server, Agent Skill, Python facade, standalone engine, and Cargo launcher retained the 1.97.0 release contract, including the repaired MCP call path and BOM reconciliation surfaces."
     }
   ],
   "budgets": {

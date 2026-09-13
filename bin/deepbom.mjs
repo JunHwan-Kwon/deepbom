@@ -22,6 +22,8 @@ import { buildInterfaceQuantizationContractLedger } from "../web/lib/quantizatio
 import { compareInterfaceContracts } from "../web/lib/interface-contract.js";
 import { canonicalJson } from "../web/lib/report-utils.js";
 import { buildMlBomDocument } from "../web/lib/report-mlbom.js";
+import { reconcileCycloneDx17Artifact } from "../web/lib/bom-artifact-reconciliation.js";
+import { ANALYZER_METADATA } from "../web/lib/report-metadata.js";
 import { buildArtifactEvidenceEnvelope, validateArtifactEvidenceEnvelope } from "../web/lib/artifact-evidence-envelope.js";
 import { buildReviewSummary } from "../web/lib/review-summary.js";
 import { explainRule, listRuleExplanations } from "../web/lib/rule-explanations.js";
@@ -71,6 +73,7 @@ import {
   evaluateDefectGate,
   evaluateFindingPolicy,
   evaluateGatePolicyProfile,
+  exitCodeForCliError,
   normalizeFailOn,
   outputExists,
   renderCliError,
@@ -95,7 +98,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.96.15";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.97.0";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 const EXPECTED_SELF_TEST_SHA256 = typeof __DEEPBOM_SELF_TEST_SHA256__ === "string" ? __DEEPBOM_SELF_TEST_SHA256__ : "";
 
@@ -107,6 +110,12 @@ async function main(argv) {
     validateCapabilitiesInvocation(parsed);
     await preflightOutputDestinations(parsed);
     const capabilities = buildCliCapabilities(VERSION, { defaultTarget: DEFAULT_TARGET, deltaTargets: DEFAULT_DELTA_TARGETS });
+    if (parsed.outputFormat === "agent-text") {
+      const text = buildAgentCapabilitiesText(capabilities);
+      if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, text, { noClobber: parsed.noClobber });
+      else process.stdout.write(text);
+      return;
+    }
     const document = parsed.outputFormat === "agent-json" ? buildAgentCapabilities(capabilities) : capabilities;
     return emitDocument(parsed, document, () => buildCapabilitiesSummary(capabilities));
   }
@@ -172,6 +181,9 @@ async function main(argv) {
     : await loadCliInput(inputPath);
   const filename = input.filename;
   const detectedFormat = input.kind === "file" ? detectModelFormat(filename, input.prefix) : "package";
+  if (parsed.tensorTable && detectedFormat !== "gguf") {
+    throw new Error("--tensors is valid only with the gguf command or a GGUF artifact shorthand.");
+  }
   let scanPolicy = resolveScanPolicy((parsed.tensorTable || parsed.encodingInventory) && !parsed.scanExplicit ? "structure" : parsed.scan, detectedFormat, input);
   if ((parsed.targetProfile || parsed.targetExplicit) && input.kind === "file" && detectedFormat !== "tflite") {
     throw new Error(`${parsed.targetProfile ? "--target-profile" : "--target"} applies only to TFLite artifacts, received ${detectedFormat}.`);
@@ -399,7 +411,8 @@ async function main(argv) {
   if (parsed.command === "graph") return runGraphCommand(parsed, artifactIrContext);
   if (parsed.command === "placement") return runPlacementCommand(parsed, analysisView, artifact);
 
-  if (parsed.command === "verify") return runVerifyCommand(parsed, analysisView, artifact);
+  if (parsed.command === "verify") return runVerifyCommand(parsed, analysisView, artifact, artifactIrContext);
+  if (parsed.command === "contract") return runContractCaptureCommand(parsed, analysisView, artifact);
   if (parsed.command === "explore") return runExploreCommand(parsed, analysisView, artifact, input, targetBinding.value);
 
   const generatedAt = resolveGenerationTimestamp(parsed.timestamp);
@@ -450,8 +463,9 @@ async function main(argv) {
     ? selectAnalysisOutput(completeDocument, parsed, reviewSummary, artifactIrContext)
     : completeDocument;
   await emitDocument(parsed, document, () => parsed.tensorTable
-    ? buildTensorTable(document)
-    : parsed.encodingInventory ? buildEncodingInventoryTable(document) : buildHumanSummary(reviewSummary));
+    ? (parsed.render === "markdown" ? buildTensorTableMarkdown(document) : buildTensorTable(document))
+    : parsed.encodingInventory ? buildEncodingInventoryTable(document)
+      : parsed.render === "markdown" ? buildAuditMarkdown(reviewSummary) : buildHumanSummary(reviewSummary));
   if (parsed.policyOutput) {
     await writeOutputAtomically(parsed.policyOutput, `${JSON.stringify(policyResult, null, parsed.compact ? 0 : 2)}\n`, { noClobber: parsed.noClobber });
   }
@@ -517,14 +531,26 @@ function validateInvocation(parsed) {
   }
   if (parsed.targetProfile && parsed.targetExplicit) throw new Error("--target and --target-profile are mutually exclusive.");
   if (parsed.contract && parsed.command !== "verify") throw new Error("--contract is valid only with the verify command.");
+  if (parsed.bom && parsed.command !== "verify") throw new Error("--bom is valid only with the verify command.");
+  if (parsed.componentRef && !parsed.bom) throw new Error("--component-ref requires --bom.");
   if (parsed.request && parsed.command !== "explore") throw new Error("--request is valid only with the explore command.");
   if ((parsed.sections.length || parsed.pointer || parsed.listSections) && !["audit", "gguf"].includes(parsed.command)) {
     throw new Error("--section, --pointer, and --list-sections are valid only with audit or gguf.");
   }
-  if (parsed.tensorTable && parsed.command !== "gguf") throw new Error("--tensors is valid only with the gguf command.");
+  if (parsed.tensorTable && !["audit", "gguf", "diff"].includes(parsed.command)) {
+    throw new Error("--tensors is valid only with audit, gguf, or diff.");
+  }
+  if ((parsed.tensorOffset > 0 || parsed.tensorLimit !== null) && !parsed.tensorTable) {
+    throw new Error("--tensor-offset and --tensor-limit require --tensors.");
+  }
   if (parsed.encodingInventory && !["audit", "gguf"].includes(parsed.command)) throw new Error("--encoding-inventory is valid only with audit or gguf.");
   if (parsed.view && parsed.command !== "graph") throw new Error("--view is valid only with the graph command.");
-  if (parsed.command === "verify" && !parsed.contract) throw new Error("The verify command requires --contract <json>.");
+  if (parsed.command === "verify" && Boolean(parsed.contract) === Boolean(parsed.bom)) {
+    throw new Error("The verify command requires exactly one of --contract <json> or --bom <CycloneDX-1.7.json>.");
+  }
+  if (parsed.command === "contract" && parsed.contractAction !== "capture") {
+    throw new Error("The contract command supports only: deepbom contract capture <artifact>.");
+  }
   if (parsed.command === "diff" && !parsed.candidate) throw new Error("The diff command requires baseline and candidate artifacts.");
   if (parsed.executorchBuild && parsed.command !== "audit") throw new Error("--executorch-build is valid only with the audit command.");
   if (parsed.scanExplicit && ["verify", "diff", "explore"].includes(parsed.command)) {
@@ -552,7 +578,7 @@ function validateInvocation(parsed) {
     throw new Error("--no-clobber cannot protect stdout; provide a file path with --output.");
   }
   if (parsed.policyOutput === "-") throw new Error("--policy-output requires a file path; use --output - for the primary document.");
-  if (parsed.timestamp && parsed.outputFormat === "analysis" && parsed.failOn === "none" && parsed.gate === "none" && !parsed.policyProfile) {
+  if (parsed.timestamp && parsed.command !== "contract" && parsed.outputFormat === "analysis" && parsed.failOn === "none" && parsed.gate === "none" && !parsed.policyProfile) {
     throw new Error("--timestamp applies only to envelope, CycloneDX, SARIF, or finding-policy evidence.");
   }
   if (["verify", "diff", "explore"].includes(parsed.command) && (parsed.failOn !== "none" || parsed.gate !== "none" || parsed.policyProfile || parsed.policyOutput)) {
@@ -900,7 +926,10 @@ async function runDiffCommand(parsed, targetBinding) {
     document = rehashSemanticDiff({ ...document, cli_target_profile_input: targetBinding.evidence });
   }
   validateSemanticArtifactDiff(document);
-  return emitDocument(parsed, document, () => buildDiffSummary(document));
+  const output = parsed.tensorTable ? buildTensorDiffProjection(document, baseline.analysis, candidate.analysis, parsed) : document;
+  return emitDocument(parsed, output, () => parsed.render === "markdown"
+    ? (parsed.tensorTable ? buildTensorDiffMarkdown(output) : buildDiffMarkdown(document))
+    : (parsed.tensorTable ? buildTensorDiffSummary(output) : buildDiffSummary(document)));
 }
 
 async function analyzeDiffArtifact(spec, parsed, targetBinding, { expectedSha256 = "" } = {}) {
@@ -971,7 +1000,7 @@ async function analyzeDiffArtifact(spec, parsed, targetBinding, { expectedSha256
     artifact_set_sha256: analysis.artifact_set?.artifact_set_sha256 || null,
   });
   if (!artifactIrContext) throw new Error(`Canonical Artifact Evidence IR could not be constructed for ${artifact.filename}.`);
-  return { source, input, format, artifactIrContext };
+  return { source, input, format, artifact, analysis, artifactIrContext };
 }
 
 function rehashSemanticDiff(document) {
@@ -1017,8 +1046,34 @@ function impactCategory(id, reasons) {
   return { id, required: reasons.length > 0, reasons: [...new Set(reasons)] };
 }
 
-async function runVerifyCommand(parsed, analysis, artifact) {
+async function runVerifyCommand(parsed, analysis, artifact, artifactIrContext) {
   assertCommandOutputFormat(parsed, "verify");
+  if (parsed.bom) {
+    const sidecar = await readJsonSidecar(parsed.bom, "cyclonedx_1_7_bom", MAX_JSON_SIDECAR_BYTES);
+    const expectedBom = buildMlBomDocument(analysis, {
+      hash: artifact.sha256,
+      fileSizeBytes: artifact.size,
+      timestamp: "1970-01-01T00:00:00.000Z",
+      artifactIr: artifactIrContext?.artifact_ir || null,
+      evidenceMode: "standalone",
+    });
+    const document = reconcileCycloneDx17Artifact({
+      bom: sidecar.document,
+      expectedBom,
+      artifact,
+      componentRef: parsed.componentRef,
+      bomSource: {
+        filename: sidecar.path,
+        byte_length: sidecar.byte_length,
+        sha256: sidecar.sha256,
+        duplicate_key_validation: "complete",
+      },
+    });
+    await emitDocument(parsed, document, () => parsed.render === "markdown"
+      ? buildBomReconciliationMarkdown(document) : buildBomReconciliationSummary(document));
+    process.exitCode = document.gate_result === "block" ? 2 : document.gate_result === "pending" ? 3 : 0;
+    return;
+  }
   const ledger = buildInterfaceQuantizationContractLedger(analysis);
   if (!Array.isArray(ledger.parameters) || ledger.parameters.length === 0) {
     throw new Error(`${artifact.format} does not expose a serialized external interface contract for verification.`);
@@ -1040,8 +1095,40 @@ async function runVerifyCommand(parsed, analysis, artifact) {
     comparison,
     interpretation_boundary: "This command compares serialized external tensor ABI facts with one supplied declaration. It does not establish preprocessing semantics that are absent from both sources, runtime assignment, inference correctness, task accuracy, clinical validity, or release readiness.",
   };
-  await emitDocument(parsed, document, () => buildVerifySummary(document));
+  await emitDocument(parsed, document, () => parsed.render === "markdown" ? buildVerifyMarkdown(document) : buildVerifySummary(document));
   process.exitCode = comparison.gate_result === "pass" ? 0 : comparison.gate_result === "block" ? 2 : 3;
+}
+
+async function runContractCaptureCommand(parsed, analysis, artifact) {
+  assertCommandOutputFormat(parsed, "contract capture");
+  const ledger = buildInterfaceQuantizationContractLedger(analysis);
+  if (!Array.isArray(ledger.parameters) || ledger.parameters.length === 0) {
+    throw new Error(`${artifact.format} does not expose a serialized external interface contract for capture.`);
+  }
+  const capturedAt = resolveGenerationTimestamp(parsed.timestamp) || new Date().toISOString();
+  const body = {
+    schema: "deepbom.artifact_derived_interface_baseline.v1",
+    source_kind: "artifact_derived_baseline",
+    captured_at: capturedAt,
+    artifact_sha256: artifact.sha256,
+    artifact: { filename: artifact.filename, format: artifact.format, byte_length: artifact.size },
+    analyzer: {
+      name: "DEEPBOM",
+      semantic_version: VERSION,
+      build_commit: ANALYZER_METADATA.buildCommit,
+      build_content_sha256: ANALYZER_METADATA.buildContentSha256,
+      rulepack_version: ANALYZER_METADATA.rulepackVersion,
+      rulepack_sha256: ANALYZER_METADATA.rulepackSha256,
+    },
+    interface_contract_ledger_sha256: ledger.ledger_sha256,
+    parameters: ledger.parameters,
+    interpretation_boundary: "This is an artifact-derived baseline for later serialized external-interface comparison. It is not an approved production declaration, implementation attestation, runtime contract, task-quality result, or release authorization.",
+  };
+  const document = {
+    ...body,
+    baseline_contract_sha256: createHash("sha256").update(canonicalJson(body)).digest("hex"),
+  };
+  return emitDocument(parsed, document, () => buildContractCaptureSummary(document));
 }
 
 async function runExploreCommand(parsed, analysis, artifact, input, target) {
@@ -1104,7 +1191,7 @@ async function initializeTfliteWasm() {
 }
 
 async function emitDocument(parsed, document, humanBuilder) {
-  const explicitHumanSummary = parsed.outputFormat === "summary";
+  const explicitHumanSummary = parsed.outputFormat === "summary" || parsed.render === "markdown";
   const machineReadable = !explicitHumanSummary && (parsed.json || parsed.compact || Boolean(parsed.output) || parsed.outputFormat !== "analysis"
     || parsed.sections?.length || parsed.pointer || parsed.listSections);
   const text = explicitHumanSummary || !machineReadable
@@ -1523,6 +1610,47 @@ function graphSummaryLine(graph = {}) {
   return `Graph: ${graph.operator_count ?? "unknown"} operators | ${graph.tensor_count ?? "unknown"} tensors | ${macs} (${graph.mac_confidence || "partial"})`;
 }
 
+function buildAuditMarkdown(summary) {
+  const findingRows = [
+    ...summary.findings.artifact_defects.map((row) => ["Artifact defect", row.id, row.title, row.evidence_class]),
+    ...summary.findings.cautions.map((row) => ["Caution", row.id, row.title, row.evidence_class]),
+    ...summary.findings.evidence_needed.map((row) => ["Evidence needed", row.id, row.title, row.evidence_class]),
+  ];
+  return [
+    "# DEEPBOM artifact audit",
+    "",
+    `- Artifact: \`${markdownEscape(summary.artifact.filename)}\``,
+    `- Format: ${String(summary.artifact.format || "unknown").toUpperCase()}`,
+    `- SHA-256: \`${summary.artifact.sha256}\``,
+    `- Artifact defects: **${summary.verdict.artifact_defect_count}**`,
+    `- Cautions: **${summary.verdict.caution_count}**`,
+    `- Evidence needed: **${summary.verdict.evidence_needed_count}**`,
+    "",
+    markdownTable(["Class", "ID", "Finding", "Evidence"], findingRows),
+    "",
+    `> ${summary.verdict.scope}`,
+    "",
+    `Reproduce: \`${markdownEscape(summary.reproduction.shell_command)}\``,
+    "",
+  ].join("\n");
+}
+
+function buildTensorTableMarkdown(document) {
+  return [
+    "# DEEPBOM tensor table",
+    "",
+    `- Artifact: \`${markdownEscape(document.artifact?.filename || "artifact")}\``,
+    `- Tensor count: ${document.tensor_count}`,
+    `- Assignment SHA-256: \`${document.tensor_encoding_assignment_sha256 || "not assessed"}\``,
+    "",
+    markdownTable(["Index", "Tensor", "Encoding", `Shape (${document.shape_order})`, "Elements", "Bits/element", "Bytes"],
+      document.tensors.map((row) => [row.index, row.name, row.encoding, `[${row.shape.join(", ")}]`, row.element_count, row.effective_bits_per_element, row.byte_length])),
+    "",
+    `> ${document.interpretation_boundary}`,
+    "",
+  ].join("\n");
+}
+
 function storageSummaryLine(storage) {
   if (!storage) return null;
   const encodings = storage.encodings.map((row) => `${row.dtype} ${row.tensor_count}`).join(", ") || "none declared";
@@ -1531,7 +1659,7 @@ function storageSummaryLine(storage) {
 }
 
 function selectAnalysisOutput(analysis, parsed, reviewSummary, artifactIrContext) {
-  if (parsed.tensorTable) return buildTensorTableProjection(analysis, reviewSummary);
+  if (parsed.tensorTable) return buildTensorTableProjection(analysis, reviewSummary, parsed);
   if (parsed.encodingInventory) return buildEncodingInventoryProjection(analysis, reviewSummary);
   if (parsed.listSections) return {
     schema: "deepbom.analysis_sections.v1",
@@ -1646,9 +1774,198 @@ function buildDiffSummary(delta) {
   return `${lines.join("\n")}\n`;
 }
 
-function buildTensorTableProjection(analysis, reviewSummary) {
+function buildDiffMarkdown(delta) {
+  const rows = (delta.change_impact?.categories || []).map((row) => [row.id, row.required ? "review" : "no change observed", row.reasons.join(", ")]);
+  return [
+    "# DEEPBOM semantic artifact diff",
+    "",
+    `- Baseline SHA-256: \`${delta.baseline.sha256}\``,
+    `- Candidate SHA-256: \`${delta.candidate.sha256}\``,
+    `- Format: ${delta.format}`,
+    `- Highest action: **${delta.change_impact?.highest_action || "not assessed"}**`,
+    "",
+    markdownTable(["Category", "Status", "Reasons"], rows),
+    "",
+    `> ${delta.interpretation_boundary}`,
+    "",
+  ].join("\n");
+}
+
+function buildTensorDiffProjection(delta, baselineAnalysis, candidateAnalysis, parsed = {}) {
+  const alignment = delta.storage_delta?.object_alignment || [];
+  const changed = alignment.filter((row) => row.status !== "unchanged").map((row) => {
+    const baselineEncoding = tensorEncoding(row.baseline);
+    const candidateEncoding = tensorEncoding(row.candidate);
+    return {
+      tensor: row.baseline?.name || row.candidate?.name || row.subject_key,
+      status: row.status,
+      baseline_encoding: baselineEncoding,
+      candidate_encoding: candidateEncoding,
+      baseline_shape: row.baseline?.shape || null,
+      candidate_shape: row.candidate?.shape || null,
+      baseline_byte_length_decimal: row.baseline?.serialized_byte_length_decimal ?? null,
+      candidate_byte_length_decimal: row.candidate?.serialized_byte_length_decimal ?? null,
+      changed_fields: row.changed_fields || [],
+    };
+  });
+  const histogram = new Map();
+  for (const row of changed) {
+    const key = `${tensorEncodingLabel(row.baseline_encoding)} -> ${tensorEncodingLabel(row.candidate_encoding)}`;
+    histogram.set(key, (histogram.get(key) || 0) + 1);
+  }
+  const assignmentHash = (analysis, side) => analysis?.on_device_llm?.storage?.tensor_encoding_assignment_sha256
+    || createHash("sha256").update(canonicalJson(alignment.map((row) => row[side]).filter(Boolean)
+      .map((row) => ({ name: row.name, dtype: tensorEncoding(row), shape: row.shape, byte_length: row.serialized_byte_length_decimal }))
+      .sort((a, b) => String(a.name).localeCompare(String(b.name))))).digest("hex");
+  const offset = Math.min(nonNegativeInteger(parsed.tensorOffset) ?? 0, changed.length);
+  const requestedLimit = positiveSafeIntegerOrNull(parsed.tensorLimit);
+  const end = requestedLimit === null ? changed.length : Math.min(changed.length, offset + requestedLimit);
+  const body = {
+    schema: "deepbom.tensor_encoding_diff.v1",
+    semantic_diff_sha256: delta.semantic_diff_sha256,
+    format: delta.format,
+    baseline: { ...delta.baseline, tensor_encoding_assignment_sha256: assignmentHash(baselineAnalysis, "baseline") },
+    candidate: { ...delta.candidate, tensor_encoding_assignment_sha256: assignmentHash(candidateAnalysis, "candidate") },
+    transition_histogram: [...histogram].sort(([left], [right]) => left.localeCompare(right)).map(([transition, tensor_count]) => ({ transition, tensor_count })),
+    changed_tensor_count: changed.length,
+    tensors: changed.slice(offset, end),
+    pagination: {
+      offset,
+      limit: requestedLimit,
+      total: changed.length,
+      complete: end >= changed.length,
+      next_offset: end < changed.length ? end : null,
+    },
+    interpretation_boundary: "Tensor rows compare serialized storage coordinates with the same names or canonical IDs. They do not prove training lineage, semantic layer identity, runtime precision, or task-quality impact.",
+  };
+  return { ...body, tensor_diff_sha256: createHash("sha256").update(canonicalJson(body)).digest("hex") };
+}
+
+function tensorEncoding(row) {
+  return row?.encoding || row?.dtype || null;
+}
+
+function tensorEncodingLabel(value) {
+  if (!value) return "absent";
+  if (typeof value === "string") return value;
+  return String(value.name || value.dtype || value.encoding || "unknown");
+}
+
+function buildTensorDiffSummary(document) {
+  const lines = [
+    `DEEPBOM ${VERSION} tensor encoding diff`,
+    `Baseline assignment: sha256:${document.baseline.tensor_encoding_assignment_sha256}`,
+    `Candidate assignment: sha256:${document.candidate.tensor_encoding_assignment_sha256}`,
+    `Changed tensors: ${document.changed_tensor_count}`,
+    ...document.transition_histogram.map((row) => `  - ${row.transition}: ${row.tensor_count}`),
+    `Evidence boundary: ${document.interpretation_boundary}`,
+    "",
+  ];
+  return lines.join("\n");
+}
+
+function buildTensorDiffMarkdown(document) {
+  return [
+    "# DEEPBOM tensor encoding diff",
+    "",
+    `- Baseline assignment SHA-256: \`${document.baseline.tensor_encoding_assignment_sha256}\``,
+    `- Candidate assignment SHA-256: \`${document.candidate.tensor_encoding_assignment_sha256}\``,
+    `- Changed tensors: **${document.changed_tensor_count}**`,
+    "",
+    markdownTable(["Transition", "Tensor count"], document.transition_histogram.map((row) => [row.transition, row.tensor_count])),
+    "",
+    markdownTable(["Tensor", "Status", "Baseline", "Candidate", "Changed fields"], document.tensors.map((row) => [
+      row.tensor, row.status, tensorEncodingLabel(row.baseline_encoding), tensorEncodingLabel(row.candidate_encoding), row.changed_fields.join(", "),
+    ])),
+    "",
+    `> ${document.interpretation_boundary}`,
+    "",
+  ].join("\n");
+}
+
+function buildVerifyMarkdown(document) {
+  const rows = document.comparison.mismatches.map((item) => [
+    item.parameter_id || "document", item.field, displayValue(item.expected), displayValue(item.declared),
+  ]);
+  return [
+    `# DEEPBOM external-interface verification`,
+    "",
+    `- Artifact: \`${markdownEscape(document.artifact.filename)}\``,
+    `- SHA-256: \`${document.artifact.sha256}\``,
+    `- Result: **${document.comparison.gate_result.toUpperCase()}** (${markdownEscape(document.comparison.status)})`,
+    "",
+    markdownTable(["Parameter", "Field", "Artifact", "Declaration"], rows),
+    "",
+    `> ${document.interpretation_boundary}`,
+    "",
+  ].join("\n");
+}
+
+function buildBomReconciliationSummary(document) {
+  const lines = [
+    `DEEPBOM ${VERSION} BOM-to-artifact reconciliation`,
+    `Artifact: ${document.artifact.filename} | sha256:${document.artifact.sha256}`,
+    `BOM: ${document.bom_source?.filename || "supplied document"}${document.bom_source?.sha256 ? ` | sha256:${document.bom_source.sha256}` : ""}`,
+    `Binding: ${document.binding.status}${document.subject?.bom_ref ? ` | ${document.subject.bom_ref}` : ""}`,
+    `Result: ${document.gate_result.toUpperCase()} | ${document.status}`,
+    `Fields: ${document.counts.match} match | ${document.counts.mismatch} mismatch | ${document.counts.absent_in_bom} absent | ${document.counts.not_assessable_from_artifact} not assessable | ${document.counts.unsupported_mapping} unsupported`,
+  ];
+  for (const item of document.comparisons.filter((row) => row.status !== "match").slice(0, 12)) {
+    lines.push(`  - ${item.status}: ${item.field}`);
+  }
+  if (document.comparisons.filter((row) => row.status !== "match").length > 12) lines.push("  - additional rows are available in JSON output");
+  lines.push(`Evidence boundary: ${document.interpretation_boundary}`);
+  lines.push("Exit codes: 0 no contradiction, 2 artifact contradiction, 3 ambiguous subject binding.");
+  return `${lines.join("\n")}\n`;
+}
+
+function buildBomReconciliationMarkdown(document) {
+  const rows = document.comparisons.map((item) => [
+    item.field, item.status, displayValue(item.artifact_observation), displayValue(item.bom_declaration), item.comparison_basis,
+  ]);
+  return [
+    "# DEEPBOM BOM-to-artifact reconciliation",
+    "",
+    `- Artifact: \`${markdownEscape(document.artifact.filename)}\``,
+    `- Artifact SHA-256: \`${document.artifact.sha256}\``,
+    `- Binding: **${markdownEscape(document.binding.status)}**`,
+    `- Result: **${document.gate_result.toUpperCase()}** (${markdownEscape(document.status)})`,
+    "",
+    markdownTable(["Field", "Status", "Artifact observation", "BOM declaration", "Basis"], rows),
+    "",
+    `> ${document.interpretation_boundary}`,
+    "",
+  ].join("\n");
+}
+
+function buildContractCaptureSummary(document) {
+  return [
+    `DEEPBOM ${VERSION} artifact-derived interface baseline`,
+    `Artifact: ${document.artifact.filename} | sha256:${document.artifact_sha256}`,
+    `Parameters: ${document.parameters.length}`,
+    `Ledger: sha256:${document.interface_contract_ledger_sha256}`,
+    `Baseline: sha256:${document.baseline_contract_sha256}`,
+    `Evidence boundary: ${document.interpretation_boundary}`,
+    "",
+  ].join("\n");
+}
+
+function markdownTable(headers, rows) {
+  const cell = (value) => markdownEscape(displayValue(value ?? "")).replaceAll("\n", "<br>");
+  return [
+    `| ${headers.map(cell).join(" | ")} |`,
+    `| ${headers.map(() => "---").join(" | ")} |`,
+    ...rows.map((row) => `| ${row.map(cell).join(" | ")} |`),
+  ].join("\n");
+}
+
+function markdownEscape(value) {
+  return String(value ?? "").replaceAll("|", "\\|").replaceAll("`", "\\`");
+}
+
+function buildTensorTableProjection(analysis, reviewSummary, parsed = {}) {
   const tensorDataOffset = nonNegativeInteger(analysis.gguf?.tensor_data_offset);
-  const tensors = (analysis.tensors || []).map((tensor) => {
+  const completeTensors = (analysis.tensors || []).map((tensor) => {
     const elementCount = exactTensorElementCount(tensor.shape);
     const byteLength = nonNegativeInteger(tensor.byte_length);
     const relativeStart = nonNegativeInteger(tensor.data_offset);
@@ -1670,11 +1987,23 @@ function buildTensorTableProjection(analysis, reviewSummary) {
       file_byte_end_exclusive: tensorDataOffset !== null && relativeEnd !== null ? tensorDataOffset + relativeEnd : null,
     };
   });
+  const offset = Math.min(nonNegativeInteger(parsed.tensorOffset) ?? 0, completeTensors.length);
+  const requestedLimit = positiveSafeIntegerOrNull(parsed.tensorLimit);
+  const end = requestedLimit === null ? completeTensors.length : Math.min(completeTensors.length, offset + requestedLimit);
+  const tensors = completeTensors.slice(offset, end);
   return {
     schema: "deepbom.tensor_table.v1",
     artifact: reviewSummary.artifact,
     scan_policy: analysis.cli_scan_policy || null,
-    tensor_count: tensors.length,
+    tensor_count: completeTensors.length,
+    returned_tensor_count: tensors.length,
+    pagination: {
+      offset,
+      limit: requestedLimit,
+      total: completeTensors.length,
+      complete: end >= completeTensors.length,
+      next_offset: end < completeTensors.length ? end : null,
+    },
     encoding_inventory: analysis.on_device_llm?.storage?.encoding_inventory || [],
     encoding_inventory_sha256: analysis.on_device_llm?.storage?.encoding_inventory_sha256 || null,
     encoding_inventory_signature_basis: analysis.on_device_llm?.storage?.encoding_inventory_signature_basis || null,
@@ -1687,6 +2016,10 @@ function buildTensorTableProjection(analysis, reviewSummary) {
     tensors,
     interpretation_boundary: "Observed serialized tensor directory and derived storage ratios only. The table does not establish the quantization recipe, calibration or importance-matrix use, lineage, runtime placement, or model quality.",
   };
+}
+
+function positiveSafeIntegerOrNull(value) {
+  return Number.isSafeInteger(value) && value > 0 ? value : null;
 }
 
 function exactTensorElementCount(shape) {
@@ -1882,6 +2215,19 @@ function buildCapabilitiesSummary(capabilities) {
   ].join("\n");
 }
 
+function buildAgentCapabilitiesText(capabilities) {
+  return [
+    `DEEPBOM ${capabilities.cli_version}: local static evidence for serialized AI deployment artifacts.`,
+    `Use: deepbom <artifact> for a bounded summary; add --tensors for GGUF tensor storage; use diff for two same-format artifacts; use verify with --contract or --bom for explicit reconciliation.`,
+    `Inputs: ${capabilities.inputs.standalone_extensions.join(", ")} plus supported package directories and immutable hash-bound remote sources.`,
+    "Start with summary, then request --section, --pointer, --tensors, or --encoding-inventory. Prefer --error-format json for recovery.",
+    "Do not use DEEPBOM to infer runtime assignment, latency, energy, model accuracy, safety, clinical validity, lineage, or regulatory conformity.",
+    "Local files are not uploaded. Remote access occurs only for explicit immutable remote inputs and may write a content-addressed cache.",
+    "Exit: 0 completed/no contradiction; 1 invocation or analysis failure; 2 configured policy or verification contradiction; 3 incomplete or ambiguous binding.",
+    "",
+  ].join("\n");
+}
+
 function buildAgentIntegrationSummary(document) {
   const rows = document.integrations || [document];
   const lines = [`DEEPBOM agent integration: ${document.action}`];
@@ -1906,6 +2252,18 @@ function buildSelfTestSummary(document) {
 function buildRuleExplanationSummary(document) {
   if (document.schema === "deepbom.rule_explanation_index.v1") {
     return ["Available rule explanations:", ...document.rules.map((row) => `  ${row.rule_id}  ${row.title}`), ""].join("\n");
+  }
+  if (document.schema === "deepbom.finding_rule_explanation.v1") {
+    return [
+      `${document.rule_id}: ${document.title}`,
+      `Kind: ${document.finding_kind || (document.possible_finding_kinds || []).join(", ")}`,
+      `Evidence: ${document.evidence_class_basis}`,
+      `Trigger: ${document.trigger_contract}`,
+      `Boundary: ${document.false_positive_boundary}`,
+      `Remediation: ${document.remediation}`,
+      `Implementation: ${document.source_reference?.path || "not recorded"}${document.source_reference?.line ? `:${document.source_reference.line}` : ""}`,
+      "",
+    ].join("\n");
   }
   return [
     `${document.rule_id}: ${document.title}`,
@@ -2038,7 +2396,8 @@ function parseArguments(argv) {
   const first = values[0] || "";
   if (["-h", "--help", "help"].includes(first)) return { help: true };
   if (["-v", "--version", "version"].includes(first)) return { version: true };
-  const command = ["audit", "gguf", "batch", "verify", "diff", "explore", "graph", "placement", "capabilities", "accelerator", "self-test", "explain-rule", "integrate", "mcp"].includes(first) ? values.shift() : "audit";
+  const command = ["audit", "gguf", "batch", "verify", "contract", "diff", "explore", "graph", "placement", "capabilities", "accelerator", "self-test", "explain-rule", "integrate", "mcp"].includes(first) ? values.shift() : "audit";
+  const contractAction = command === "contract" ? values.shift() || "" : "";
   const acceleratorAction = command === "accelerator" ? values.shift() || "" : "";
   const acceleratorProvider = command === "accelerator" ? values.shift() || "" : "";
   const integrationSelector = command === "integrate" ? values.shift() || "status" : "";
@@ -2048,6 +2407,7 @@ function parseArguments(argv) {
     : (values[0] && !values[0].startsWith("-") ? values.shift() : "");
   const parsed = {
     command,
+    contractAction,
     acceleratorAction,
     acceleratorProvider,
     integrationAction,
@@ -2058,6 +2418,8 @@ function parseArguments(argv) {
     targetExplicit: false,
     targetProfile: "",
     contract: "",
+    bom: "",
+    componentRef: "",
     request: "",
     view: command === "graph" ? "structure" : "",
     outputFormat: command === "graph" ? "svg" : "analysis",
@@ -2073,6 +2435,8 @@ function parseArguments(argv) {
     pointer: "",
     listSections: false,
     tensorTable: false,
+    tensorOffset: 0,
+    tensorLimit: null,
     encodingInventory: false,
     noClobber: false,
     errorFormat: "text",
@@ -2113,6 +2477,7 @@ function parseArguments(argv) {
     compact: false,
     summary: false,
     formatExplicit: false,
+    render: "",
     apply: false,
   };
   while (values.length) {
@@ -2123,6 +2488,12 @@ function parseArguments(argv) {
     }
     else if (token === "--target-profile") parsed.targetProfile = requiredValue(values, token);
     else if (token === "--contract") parsed.contract = requiredValue(values, token);
+    else if (token === "--bom") parsed.bom = requiredValue(values, token);
+    else if (token === "--component-ref") parsed.componentRef = requiredValue(values, token);
+    else if (token === "--render") {
+      parsed.render = requiredValue(values, token).toLowerCase();
+      if (parsed.render !== "markdown") throw new Error("--render currently supports markdown.");
+    }
     else if (token === "--request") parsed.request = requiredValue(values, token);
     else if (token === "--view") parsed.view = requiredValue(values, token).toLowerCase();
     else if (token === "--context") parsed.context = positiveInteger(requiredValue(values, token), token);
@@ -2187,6 +2558,8 @@ function parseArguments(argv) {
     else if (token === "--pointer") parsed.pointer = requiredValue(values, token);
     else if (token === "--list-sections") parsed.listSections = true;
     else if (token === "--tensors") parsed.tensorTable = true;
+    else if (token === "--tensor-offset") parsed.tensorOffset = parseNonNegativeInteger(requiredValue(values, token), token);
+    else if (token === "--tensor-limit") parsed.tensorLimit = positiveInteger(requiredValue(values, token), token);
     else if (token === "--encoding-inventory") parsed.encodingInventory = true;
     else if (token === "--list" && parsed.command === "explain-rule") parsed.listRules = true;
     else if (token === "--output" || token === "-o") parsed.output = requiredValue(values, token);
@@ -2219,7 +2592,7 @@ function parseArguments(argv) {
     }
     else if (token === "--help" || token === "-h") parsed.help = true;
     else if (token === "--version" || token === "-v") parsed.version = true;
-    else if (token.startsWith("-")) throw new Error(`Unknown option: ${token}`);
+    else if (token.startsWith("-")) throw new Error(unknownOptionMessage(token));
     else if (!parsed.input) parsed.input = token;
     else if (parsed.command === "diff" && !parsed.candidate) parsed.candidate = token;
     else throw new Error(`Unexpected positional argument: ${token}`);
@@ -2235,7 +2608,7 @@ function parseArguments(argv) {
   const outputFormats = parsed.command === "graph"
     ? new Set(["svg", "png", "html", "mermaid", "dot", "json"])
     : parsed.command === "capabilities"
-      ? new Set(["analysis", "agent-json"])
+      ? new Set(["analysis", "agent-json", "agent-text"])
       : new Set(["analysis", ...AUDIT_OUTPUT_FORMATS.filter((format) => !["json", "json-compact"].includes(format))]);
   if (!outputFormats.has(parsed.outputFormat)) {
     throw new Error(parsed.command === "graph"
@@ -2248,6 +2621,12 @@ function parseArguments(argv) {
   if (!new Set(["text", "json"]).has(parsed.errorFormat)) throw new Error("--error-format must be text or json.");
   if (parsed.apply && parsed.command !== "integrate") throw new Error("--apply is valid only with deepbom integrate.");
   if (parsed.json && parsed.compact) throw new Error("--json and --compact are mutually exclusive.");
+  if (parsed.render && !["audit", "gguf", "verify", "diff"].includes(parsed.command)) {
+    throw new Error("--render is valid only with audit, gguf, verify, or diff.");
+  }
+  if (parsed.render && (parsed.json || parsed.compact || parsed.outputFormat !== "analysis")) {
+    throw new Error("--render markdown cannot be combined with JSON, summary, CycloneDX, SARIF, envelope, or graph output formats.");
+  }
   const selectionCount = Number(parsed.sections.length > 0) + Number(Boolean(parsed.pointer))
     + Number(parsed.listSections) + Number(parsed.tensorTable) + Number(parsed.encodingInventory);
   if (selectionCount > 1) throw new Error("--tensors, --encoding-inventory, --section, --pointer, and --list-sections are mutually exclusive.");
@@ -2358,6 +2737,49 @@ function printHelp(command) {
   process.stdout.write("\nDeterministic graph export:\n  deepbom graph <artifact> --view structure --output-format svg -o graph.svg\n  --view <kind>           structure, placement, quantization, or architecture\n  --output-format <kind>  svg, png, html, mermaid, dot, or json for graph\n");
   process.stdout.write("\nTensorRT optimized-engine option:\n  --tensorrt-engine-inspector <json>\n                          Import identity-bound TensorRT optimized-engine inspector evidence\n");
   process.stdout.write("\nExecuTorch selected-build option:\n  --executorch-build <json>\n                          Bind backend/operator inventories and runtime binary digests to a PTE audit\n");
+  process.stdout.write("\nArtifact reconciliation and baseline capture:\n  deepbom verify <artifact> --bom <cyclonedx-1.7.json> [--component-ref <bom-ref>]\n  deepbom contract capture <artifact> [-o baseline.interface-contract.json]\n  deepbom diff <baseline> <candidate> --tensors\n  --render markdown      Render audit, diff, or verify results as Markdown\n");
+  process.stdout.write("\nAgent capability summary:\n  deepbom capabilities --format agent-text\n");
+  process.stdout.write("\nAdditional exit code:\n  4 independently supplied artifact SHA-256 mismatch\n");
+}
+
+const CLI_OPTION_SPELLINGS = Object.freeze([
+  "--accelerator-device", "--accelerator-profile", "--apply", "--batch", "--batch-output-dir",
+  "--bom", "--cache-dir", "--compact", "--component-ref", "--context", "--contract",
+  "--conversion-receipt", "--coreml-compute-plan", "--device", "--edgetpu-compiler-evidence",
+  "--encoding-inventory", "--error-format", "--executorch-build", "--expected-sha256", "--fail-on",
+  "--format", "--gate", "--help", "--images", "--include-device-identifiers", "--json",
+  "--list", "--list-sections", "--litert-qualcomm-evidence", "--llm-memory-profile", "--max-download-gib",
+  "--memory-mib", "--no-clobber", "--offline", "--output", "--output-format", "--pointer", "--policy",
+  "--policy-output", "--profiles", "--render", "--request", "--review-policy", "--scan", "--section",
+  "--state-bits", "--summary", "--target", "--target-profile", "--tensor-limit", "--tensor-offset",
+  "--tensors", "--tensorrt-engine-inspector", "--tensorrt-llm-binding", "--tensorrt-llm-config",
+  "--tensorrt-parser-evidence", "--tensorrt-profile", "--timestamp", "--tokens-per-image", "--version", "--view",
+]);
+
+function unknownOptionMessage(option) {
+  const candidate = CLI_OPTION_SPELLINGS
+    .map((known) => ({ known, distance: editDistance(option, known) }))
+    .sort((left, right) => left.distance - right.distance || left.known.localeCompare(right.known))[0];
+  const suggestion = candidate && candidate.distance <= Math.max(2, Math.floor(String(option).length / 3))
+    ? ` Did you mean ${candidate.known}?`
+    : "";
+  return `Unknown option: ${option}.${suggestion}`;
+}
+
+function editDistance(left, right) {
+  const a = String(left);
+  const b = String(right);
+  const row = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i += 1) {
+    let prior = row[0];
+    row[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const above = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prior + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prior = above;
+    }
+  }
+  return row[b.length];
 }
 
 function printGgufHelp() {
@@ -2367,5 +2789,5 @@ function printGgufHelp() {
 
 main(process.argv.slice(2)).catch((error) => {
   process.stderr.write(renderCliError(error));
-  process.exitCode = 1;
+  process.exitCode = exitCodeForCliError(error);
 });

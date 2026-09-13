@@ -1,8 +1,36 @@
-export function compactMlBomEvidencePointerValid(document) {
+export function compactMlBomEvidencePointerValid(document, expectedInputContracts = null) {
   const properties = [...(document?.metadata?.component?.properties || []), ...(document?.properties || [])];
   const pointer = properties.find((item) => item?.name === "deepbom:compatibility:detailLocation")?.value;
   const reference = (document?.metadata?.component?.externalReferences || []).find((item) => item?.url === "engineering_evidence.json");
-  return pointer === "engineering_evidence.json#/evidence/static_analysis" && reference?.type === "evidence";
+  if (pointer === "engineering_evidence.json#/evidence/static_analysis" && reference?.type === "evidence") return true;
+  const attachment = (document?.declarations?.evidence || [])
+    .flatMap((entry) => entry?.data || [])
+    .map((entry) => entry?.contents?.attachment)
+    .find((entry) => entry?.contentType === "application/json" && entry?.encoding === "base64" && entry?.content);
+  if (!attachment) return false;
+  try {
+    const bytes = Uint8Array.from(globalThis.atob(attachment.content), (character) => character.charCodeAt(0));
+    const envelope = JSON.parse(new TextDecoder().decode(bytes));
+    if (pointer !== "#/declarations/evidence/0/data/0/contents/attachment") return false;
+    const embedded = envelope?.interface_contracts?.input_contracts
+      || envelope?.structured_details?.interface_contracts?.input_contracts;
+    if (!Array.isArray(embedded)) return false;
+    return expectedInputContracts == null
+      || JSON.stringify(embedded) === JSON.stringify(normalizeEvidenceValue(expectedInputContracts));
+  } catch {
+    return false;
+  }
+}
+
+function normalizeEvidenceValue(value) {
+  if (value === undefined || value === null) return null;
+  if (typeof value === "bigint") return value.toString();
+  if (typeof value === "number" && !Number.isFinite(value)) return String(value);
+  if (Array.isArray(value)) return value.map(normalizeEvidenceValue);
+  if (typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, normalizeEvidenceValue(item)]));
+  }
+  return value;
 }
 
 export function formatIntegerForConformance(value) {

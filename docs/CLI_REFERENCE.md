@@ -25,8 +25,9 @@ asset verification, and equivalence checks are documented in
 | `audit` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
 | `gguf` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
 | `batch` | 1 | `summary`<br>`deepbom.batch_result.v1` |
-| `verify` | 1 | `summary`<br>`deepbom.cli_interface_contract_verification.v1` |
-| `diff` | 2 | `summary`<br>`deepbom.semantic_artifact_diff.v1` |
+| `verify` | 1 | `summary`<br>`markdown`<br>`deepbom.cli_interface_contract_verification.v1`<br>`deepbom.bom_artifact_reconciliation.v1` |
+| `contract capture` | 1 | `summary`<br>`deepbom.artifact_derived_interface_baseline.v1` |
+| `diff` | 2 | `summary`<br>`markdown`<br>`deepbom.semantic_artifact_diff.v1`<br>`deepbom.tensor_encoding_diff.v1` |
 | `explore` | 1 | `summary`<br>`deepbom.redesign_pareto.v1` |
 | `graph` | 1 | `svg`<br>`png`<br>`html`<br>`mermaid`<br>`dot`<br>`deepbom.artifact_ir.v2`<br>`deepbom.graph_ir.v1`<br>`deepbom.visualization_manifest.v1` |
 | `placement` | 1 | `deepbom.placement_comparison.v1` |
@@ -55,10 +56,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.96.15`:
+`1.97.0`:
 
 ```console
-DEEPBOM 1.96.15
+DEEPBOM 1.97.0
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -220,6 +221,18 @@ TensorRT optimized-engine option:
 ExecuTorch selected-build option:
   --executorch-build <json>
                           Bind backend/operator inventories and runtime binary digests to a PTE audit
+
+Artifact reconciliation and baseline capture:
+  deepbom verify <artifact> --bom <cyclonedx-1.7.json> [--component-ref <bom-ref>]
+  deepbom contract capture <artifact> [-o baseline.interface-contract.json]
+  deepbom diff <baseline> <candidate> --tensors
+  --render markdown      Render audit, diff, or verify results as Markdown
+
+Agent capability summary:
+  deepbom capabilities --format agent-text
+
+Additional exit code:
+  4 independently supplied artifact SHA-256 mismatch
 ```
 
 ## Evidence boundary

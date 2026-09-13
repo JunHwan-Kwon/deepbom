@@ -546,7 +546,7 @@ export function buildConformanceReport({
     if (!condition) failures.push({ id, severity, message, evidence_json_pointers: pointers });
   };
   const engineeringReportText = String(engineeringReport || "");
-  const compactMlBomEvidence = compactMlBomEvidencePointerValid(mlBomDocument);
+  const compactMlBomEvidence = compactMlBomEvidencePointerValid(mlBomDocument, staticAnalysis?.input_contracts || []);
 
   check("CF-SCHEMA-001", staticAnalysis?.schema === ANALYZER_METADATA.schemas.staticAnalysis, "Static-analysis schema does not match analyzer metadata.", ["/evidence/static_analysis/schema"]);
   check("CF-SCHEMA-002", quantization?.schema === ANALYZER_METADATA.schemas.quantizationEvidence, "Quantization-evidence schema does not match analyzer metadata.", ["/evidence/quantization/schema"]);

@@ -528,7 +528,7 @@ const mlBomNonDelegated = JSON.parse(sampleMlBom.properties.find((item) => item.
 expectEqual(JSON.stringify(Object.fromEntries(Object.entries(mlBomNonDelegated).sort(([a], [b]) => a.localeCompare(b)))), JSON.stringify(expectedNonDelegated), "ML-BOM predicted non-delegated ops should match the analyzer/report source of truth.");
 expectEqual(mlBomNonDelegated.AVERAGE_POOL_2D, 1, "ML-BOM should include the predicted AVERAGE_POOL_2D non-delegated op.");
 expectEqual(sampleMlBom.metadata.component.properties.find((item) => item.name === "deepbom:model:predictedPartitionBoundaryLogicalBytes")?.value, "64000", "ML-BOM should carry the graph-derived internal boundary payload in its compact summary.");
-expectEqual(sampleMlBom.metadata.component.properties.find((item) => item.name === "deepbom:compatibility:detailLocation")?.value, "engineering_evidence.json#/evidence/static_analysis", "ML-BOM should bind omitted detailed evidence to the canonical engineering-evidence pointer.");
+expectEqual(sampleMlBom.metadata.component.properties.find((item) => item.name === "deepbom:compatibility:detailLocation")?.value, "#/declarations/evidence/0/data/0/contents/attachment", "Standalone ML-BOM should bind compact structured evidence to its inline declaration attachment.");
 expect(!sampleMlBom.metadata.component.properties.some((item) => item.name === "deepbom:model:arenaCombinedBytes" || item.name === "deepbom:model:arenaInPlaceAliases"), "Compact ML-BOM should not duplicate the detailed ArenaPlanner ledger.");
 
 const sampleFindings = buildFindingsRegister(sampleTflite);
@@ -643,7 +643,11 @@ expect(sampleEngineeringReport.includes("No terminal ZIP end-of-central-director
 expect(sampleEngineeringReport.includes(protectedSelector.xnnpack_source_commit), "Engineering report should bind protected candidates to the pinned XNNPACK commit.");
 expectEqual(sampleEvidence.evidence?.static_analysis?.xnnpack_selector_assessment_status, "complete", "Structured evidence should retain the complete protected selector status.");
 expect(!sampleMlBom.metadata.component.properties.some((item) => item.name === "deepbom:model:xnnpackSelectorEvidenceAccess"), "Compact ML-BOM should not duplicate protected selector detail.");
-expect((sampleMlBom.metadata.component.externalReferences || []).some((item) => item.type === "evidence" && item.url === "engineering_evidence.json"), "Compact ML-BOM should link the protected selector and other detailed evidence through the canonical evidence document.");
+expect(!(sampleMlBom.metadata.component.externalReferences || []).some((item) => item.url === "engineering_evidence.json"), "Standalone ML-BOM should not emit a dangling engineering-evidence reference.");
+const sampleInlineEvidence = JSON.parse(Buffer.from(sampleMlBom.declarations.evidence[0].data[0].contents.attachment.content, "base64").toString("utf8"));
+expectEqual(sampleInlineEvidence.artifact_evidence_envelope.sha256.length, 64, "Standalone inline evidence should bind the omitted full envelope by SHA-256.");
+expectEqual(sampleInlineEvidence.interface_contracts.input_contracts.length, sampleTflite.input_contracts.length, "Standalone inline evidence should retain every serialized input contract.");
+expectEqual(sampleInlineEvidence.interface_contracts.input_contracts[0]?.schema, sampleTflite.input_contracts[0]?.schema, "Standalone inline evidence should retain the input-contract schema.");
 const sampleManifest = buildEngineeringBundleManifest({ analysis: sampleTflite, model: sampleIdentity, files: sampleBundleFiles, generatedAt: "2026-07-15T00:00:00.000Z" });
 const sampleManifestFile = { name: "manifest.json", data: JSON.stringify(sampleManifest, null, 2) };
 const samplePackageDigest = await buildCanonicalPackageDigest([...sampleBundleFiles, sampleManifestFile]);

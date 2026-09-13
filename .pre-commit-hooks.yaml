@@ -1,0 +1,8 @@
+- id: deepbom-artifact-audit
+  name: DeepBOM serialized artifact audit
+  description: Fail closed on artifact defects in staged supported model files.
+  entry: node integrations/pre-commit/audit-staged.mjs
+  language: system
+  files: '\.(tflite|onnx|gguf|safetensors|mlmodel|pte|ptd)$'
+  pass_filenames: true
+  require_serial: true

@@ -7,10 +7,10 @@ For a local Codex or Claude Code project, preview and install the bundled Agent
 Skill without operating an analysis server:
 
 ```console
-npx -y deepbom@1.96.15 integrate codex
-npx -y deepbom@1.96.15 integrate codex --apply
-npx -y deepbom@1.96.15 integrate claude-code
-npx -y deepbom@1.96.15 integrate claude-code --apply
+npx -y deepbom@1.97.0 integrate codex
+npx -y deepbom@1.97.0 integrate codex --apply
+npx -y deepbom@1.97.0 integrate claude-code
+npx -y deepbom@1.97.0 integrate claude-code --apply
 ```
 
 ```console
@@ -20,15 +20,18 @@ npx deepbom capabilities --compact
 npx deepbom gguf model.gguf --context 8192 --memory-mib 8192
 npx deepbom audit Model.mlpackage --compact
 npx deepbom audit safetensors-repository/ --compact
+npx deepbom verify model.onnx --bom supplied.cdx.json --render markdown
+npx deepbom contract capture model.onnx -o baseline.interface-contract.json
 npx deepbom verify model.tflite --contract production-interface.json
-npx deepbom diff baseline.tflite candidate.tflite
+npx deepbom diff baseline.gguf candidate.gguf --tensors --render markdown
 npx deepbom explore model.tflite --target-profile target-profile.json
 npx deepbom audit model.pte --executorch-build deepbom.executorch-build.json --compact
 npx deepbom capabilities --format agent-json
-npx -y deepbom@1.96.15 mcp
+npx deepbom capabilities --format agent-text
+npx -y deepbom@1.97.0 mcp
 ```
 
-Claude Desktop can install the version-matched `deepbom-1.96.15.mcpb` asset
+Claude Desktop can install the version-matched `deepbom-1.97.0.mcpb` asset
 from the corresponding GitHub Release as a local desktop extension.
 
 The default output is a bounded human-readable summary. Use `--json` or
@@ -37,7 +40,11 @@ canonical cross-format contract, `--format cyclonedx` for CycloneDX 1.7, or
 `--format sarif` for OASIS SARIF 2.1.0. `--policy-output` records a deterministic
 finding gate when `--fail-on` is selected.
 
-`verify` fails closed on interface contradictions, `diff` preserves the
+`verify --bom` reconciles an exactly selected CycloneDX 1.7 component with
+artifact-observable facts; publisher declarations remain not assessable from
+the file. `contract capture` creates an artifact-derived interface baseline,
+not an approved production contract. `verify --contract` fails closed on
+interface contradictions, `diff` preserves the
 canonical multi-target TFLite delta ledger, and `explore` exposes deterministic
 WASM Pareto candidates. These commands do not add a second analysis engine.
 

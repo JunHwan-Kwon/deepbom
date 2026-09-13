@@ -50,10 +50,13 @@ const capabilities = buildCliCapabilities("1.96.11", { defaultTarget: "android_m
 assert.deepEqual(capabilities.public_product_contracts, JSON.parse(JSON.stringify(PUBLIC_PRODUCT_CONTRACTS)));
 const publicReadme = await readFile("docs/PUBLIC_README.md", "utf8");
 const automation = await readFile("docs/CLI_AUTOMATION.md", "utf8");
+const pythonMetadata = await readFile("channels/python/pyproject.toml", "utf8");
 assert.match(publicReadme, /Format maturity/i);
 assert.match(automation, /Stable machine-readable contracts/i);
 assert.match(`${publicReadme}\n${automation}`, /metadata\.component[\s\S]*components\[\]/i);
 assert.doesNotMatch(`${publicReadme}\n${automation}`, /CycloneDX 2\.0|working group|pull request/i);
+assert.match(pythonMetadata, /^license = "Apache-2\.0"$/m);
+assert.doesNotMatch(pythonMetadata, /License :: OSI Approved/, "PEP 639 license expressions must not be combined with deprecated license classifiers.");
 
 console.log("Public product contracts verified: six format maturity rows, stable machine surfaces, and separate stable/prerelease release policy.");
 

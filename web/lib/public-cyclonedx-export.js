@@ -27,6 +27,7 @@ import {
 } from "./corpus-validation-provenance.js";
 import { tensorRtCycloneDxPropertyEntries } from "./tensorrt-cyclonedx-properties.js";
 import { validateArtifactEvidenceIr } from "./artifact-ir.js";
+import { buildArtifactEvidenceEnvelope } from "./artifact-evidence-envelope.js";
 
 const CYCLONEDX_17_SCHEMA = "http://cyclonedx.org/schema/bom-1.7.schema.json";
 const AUTHOR = Object.freeze({
@@ -73,6 +74,22 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
   const dtypeInventory = tensorDtypeInventory(analysis);
   const format = cleanText(analysis.format).toLowerCase() || "unknown";
   const llm = analysis.on_device_llm || null;
+  const artifactEnvelope = buildArtifactEvidenceEnvelope(analysis, {
+    hash: sha256,
+    fileSizeBytes: options.fileSizeBytes ?? analysis.file_size_bytes,
+    filename: name,
+    generatedAt,
+    provenance: {
+      analyzer: "DEEPBOM",
+      version: ANALYZER_SEMANTIC_VERSION,
+      build_commit: ANALYZER_BUILD_COMMIT,
+      build_content_sha256: ANALYZER_BUNDLE_CONTENT_SHA256,
+    },
+    structuredDetails: {
+      tensor_dtype_inventory: dtypeInventory,
+      activation_path: quantization.activation_path || null,
+    },
+  });
   const byteIntegrity = analysis.artifact_byte_integrity?.schema
     ? normalizeJsonContractValue(analysis.artifact_byte_integrity)
     : null;
@@ -212,6 +229,13 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
     ...(contentVersion.version ? { version: contentVersion.version } : {}),
     "bom-ref": bomRef,
     ...(sha256 ? { hashes: [{ alg: "SHA-256", content: sha256 }] } : {}),
+    ...(sha256 ? { evidence: { identity: [{
+      field: "hash",
+      confidence: 1,
+      concludedValue: `SHA-256:${sha256}`,
+      methods: [{ technique: "binary-analysis", confidence: 1, value: "SHA-256 computed over the supplied serialized artifact bytes." }],
+      tools: [analyzerBomRef("DEEPBOM", ANALYZER_SEMANTIC_VERSION, ANALYZER_BUILD_COMMIT)],
+    }] } } : {}),
     modelCard: {
       "bom-ref": `${bomRef}-model-card`,
       modelParameters: {
@@ -225,7 +249,9 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
       ["deepbom:model:versionBasis", contentVersion.basis],
       ["deepbom:model:fileSizeBytes", nonNegativeNumber(options.fileSizeBytes ?? analysis.file_size_bytes)],
       ["deepbom:model:hashBasis", cleanText(analysis.artifact_bundle?.hash_basis) || "artifact_file_bytes_sha256"],
-      ["deepbom:model:graphTotals", JSON.stringify(graphTotals)],
+      ["deepbom:model:graphOperatorCount", graphTotals.operator_count],
+      ["deepbom:model:graphTensorCount", graphTotals.tensor_count],
+      ["deepbom:model:graphMacCount", graphTotals.mac_count],
       ["deepbom:model:artifactIrSchema", artifactIr?.schema],
       ["deepbom:model:artifactIrSha256", artifactIr?.artifact_ir_sha256],
       ["deepbom:model:serializedContractStatus", analysis?.onnx_contract_conflict?.status],
@@ -235,15 +261,14 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
       ["deepbom:model:contractConflictBlockedMacRows", analysis?.onnx_contract_conflict?.summary?.blocked_mac_row_count],
       ...quantizationProperties,
       ...safeTensorsQuantizationPropertyEntries(analysis),
-      ["deepbom:model:tensorDtypeInventory", JSON.stringify(dtypeInventory)],
+      ["deepbom:model:tensorDtypeInventorySha256", sha256TextHex(canonicalJson(dtypeInventory))],
       ["deepbom:model:artifactByteIntegritySchema", byteIntegrity?.schema],
       ["deepbom:model:artifactByteIntegrityLedgerSha256", byteIntegritySha256],
-      ["deepbom:model:artifactByteIntegritySummary", byteIntegritySummary ? JSON.stringify(byteIntegritySummary) : null],
+      ["deepbom:model:artifactByteIntegritySummarySha256", byteIntegritySummary ? sha256TextHex(canonicalJson(byteIntegritySummary)) : null],
       ...llmProperties,
       ...tensorRtProperties,
       ["deepbom:model:interfaceContractSchema", ledger.schema],
       ["deepbom:model:interfaceContractLedgerSha256", ledger.ledger_sha256],
-      ["deepbom:model:interfaceContractLedger", JSON.stringify(ledger)],
       ["deepbom:model:completeAffineInterfaceCount", ledger.quantized_parameter_count],
       ["deepbom:model:unquantizedInterfaceCount", ledger.unquantized_parameter_count],
       ["deepbom:model:invalidOrIncompleteInterfaceCount", ledger.invalid_or_incomplete_parameter_count],
@@ -287,22 +312,40 @@ export function buildPublicCycloneDx17ArtifactContract(analysis = {}, options = 
       }],
       component,
     },
+    declarations: {
+      evidence: [{
+        "bom-ref": `${bomRef}:evidence:artifact-envelope`,
+        description: "Inline hash-bound artifact evidence envelope produced by deterministic static analysis.",
+        data: [{
+          name: "Artifact Evidence Envelope",
+          contents: { attachment: { contentType: "application/json", encoding: "base64", content: base64Utf8(JSON.stringify(artifactEnvelope)) } },
+        }],
+        created: generatedAt,
+        author: { name: "DEEPBOM" },
+      }],
+    },
     properties: compactProperties([
       ["deepbom:profile", "public-standalone-artifact-contract"],
       ["deepbom:documentAuthor:orcid", `https://orcid.org/${AUTHOR.orcid}`],
       ["deepbom:artifactIrSha256", artifactIr?.artifact_ir_sha256],
+      ["deepbom:artifactEvidenceEnvelopeSchema", artifactEnvelope.schema],
+      ["deepbom:artifactEvidenceEnvelopeSha256", artifactEnvelope.envelope_sha256],
       ["deepbom:privacy", "Generated locally in the browser; artifact bytes are not uploaded for this export."],
     ]),
   };
 }
 
 function modelCardParameter(parameter) {
-  const shape = parameter.shape?.length ? `[${parameter.shape.join(",")}]` : "shape=unbound";
-  const quantization = parameter.quantization || {};
-  const quant = quantization.status === "not_quantized"
-    ? "unquantized"
-    : `${String(quantization.granularity || "unknown").replaceAll("_", "-")}; scale_count=${quantization.scale_count || 0}; zero_point_count=${quantization.zero_point_count || 0}${quantization.scales?.length === 1 ? `; scale=${quantization.scales[0]}` : ""}${quantization.zero_points?.length === 1 ? `; zero_point=${quantization.zero_points[0]}` : ""}`;
-  return { format: `${parameter.dtype || "UNKNOWN"} ${shape}; ${quant}` };
+  return { format: "tensor" };
+}
+
+function base64Utf8(value) {
+  const bytes = new TextEncoder().encode(String(value));
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, Math.min(bytes.length, offset + 0x8000)));
+  }
+  return btoa(binary);
 }
 
 function tensorDtypeInventory(analysis) {

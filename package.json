@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "1.96.15",
+  "version": "1.97.0",
   "mcpName": "io.github.JunHwan-Kwon/deepbom",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
   "homepage": "https://deepbom.org",
@@ -83,6 +83,7 @@
     "build:channels": "node scripts/build-channel-artifacts.mjs",
     "build:channels:release": "node scripts/build-channel-artifacts.mjs --with-dist",
     "build:cargo-engine-release": "node scripts/build-cargo-engine-release.mjs",
+    "build:release-supply-chain": "node scripts/build-release-supply-chain-evidence.mjs",
     "generate:cli-docs": "node scripts/generate-cli-docs.mjs",
     "sync:version": "node scripts/sync-version.mjs",
     "check:version": "node scripts/sync-version.mjs --check",
@@ -118,9 +119,17 @@
     "check:external-review-boundary-corpus": "node scripts/check-external-review-boundary-corpus.mjs",
     "check:finding-rule-registry": "node scripts/check-finding-rule-registry.mjs",
     "generate:finding-rule-catalog": "node scripts/generate-finding-rule-catalog.mjs",
+    "generate:property-taxonomy": "node scripts/generate-deepbom-property-taxonomy.mjs",
+    "check:property-taxonomy": "node scripts/generate-deepbom-property-taxonomy.mjs --check",
     "check:public-product-contracts": "node scripts/check-public-product-contracts.mjs",
     "check:semantic-artifact-diff": "node scripts/check-semantic-artifact-diff.mjs",
     "check:cyclonedx-consumer-compatibility": "node scripts/check-cyclonedx-consumer-compatibility.mjs",
+    "check:bom-artifact-reconciliation": "node scripts/check-bom-artifact-reconciliation.mjs",
+    "check:release-supply-chain": "node scripts/check-release-supply-chain-evidence.mjs",
+    "check:integration-kit": "node scripts/check-integration-kit.mjs",
+    "check:measurement-oracles": "node scripts/check-measurement-oracles.mjs",
+    "check:huggingface-space": "node scripts/check-huggingface-space-contract.mjs",
+    "check:adoption-boundary": "node scripts/check-public-adoption-boundary.mjs",
     "check:analysis-summary-contract": "node scripts/check-analysis-summary-contract.mjs",
     "check:mcp-registry": "node scripts/check-mcp-registry-metadata.mjs",
     "check:mcp-server": "node scripts/check-mcp-server.mjs",
@@ -309,7 +318,7 @@
   },
   "devDependencies": {
     "acorn": "^8.15.0",
-    "adm-zip": "0.6.0",
+    "adm-zip": "0.6.1",
     "ajv": "8.20.0",
     "ajv-draft-04": "1.0.0",
     "ajv-formats": "3.0.1",
@@ -322,7 +331,7 @@
   },
   "overrides": {
     "onnxruntime-node": {
-      "adm-zip": "0.6.0"
+      "adm-zip": "0.6.1"
     }
   },
   "directories": {

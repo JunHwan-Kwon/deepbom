@@ -125,7 +125,7 @@ try {
         && engineeringReport.includes("TFLITE_ENABLE_NNAPI"),
       evidenceConformance: engineeringEvidence.evidence?.conformance_report?.status,
       mlBomHasEvidencePointer: mlBom.metadata.component.properties.some((item) => item.name === "deepbom:compatibility:profile" && item.value === "deepbom.compact_mlbom_compatibility.v2")
-        && mlBom.metadata.component.properties.some((item) => item.name === "deepbom:compatibility:detailLocation" && item.value === "engineering_evidence.json#/evidence/static_analysis"),
+        && mlBom.metadata.component.properties.some((item) => item.name === "deepbom:compatibility:detailLocation" && item.value === "#/declarations/evidence/0/data/0/contents/attachment"),
     };
   });
 

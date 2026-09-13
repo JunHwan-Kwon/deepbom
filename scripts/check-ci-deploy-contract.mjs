@@ -155,7 +155,7 @@ for (const snippet of [
   "Cloudflare deployment requires CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.",
   "No targets deployed",
   "Wrangler uploaded a version without activating a production target.",
-  'CLOUDFLARE_ZONE_NAMES: "deepbom.org medbom.org"',
+  'CLOUDFLARE_ZONE_NAMES: "deepbom.org"',
   "for zone_name in ${CLOUDFLARE_ZONE_NAMES}; do",
   'export CLOUDFLARE_ZONE_NAME="$zone_name"',
   '--data-urlencode "name=${CLOUDFLARE_ZONE_NAME}"',
@@ -203,8 +203,18 @@ for (const snippet of [
   "npm run check:public-package-boundary",
   "verify-python-wheel-matrix.py",
   "pypa/gh-action-pypi-publish@v1.14.2",
+  "pypi-attestations==0.0.30",
+  "npm audit signatures --json --include-attestations",
+  "https://pypi.org/integrity/",
+  "expected six wheels",
   "npm publish ./dist/deepbom-${{ inputs.expected_version }}.tgz --access public --tag \"$npm_tag\"",
   "node scripts/build-cargo-engine-release.mjs",
+  "node scripts/build-release-supply-chain-evidence.mjs",
+  "actions/attest@v4",
+  "artifact-metadata: write",
+  "sbom-path: release/deepbom-self-sbom.cdx.json",
+  "gh attestation verify release/deepbom-core-linux-x64",
+  '--signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release-channels.yml"',
   "cargo +1.85.0 package --locked --manifest-path channels/cargo/Cargo.toml",
   "web/samples/mobilenet_v2_1.0_224_quant.tflite",
   "Remote engine self-test evidence contract diverged.",
@@ -225,7 +235,7 @@ for (const snippet of [
 for (const identity of ["windows-x64", "windows-arm64", "linux-x64", "linux-arm64", "macos-x64", "macos-arm64"]) {
   expect(channelReleaseWorkflow.includes(`id: ${identity}`), `Channel release matrix should contain ${identity}.`);
 }
-expect((channelReleaseWorkflow.match(/id-token:\s*write/g) || []).length === 2, "Only the npm and PyPI publishing jobs should receive OIDC identity-token permission.");
+expect((channelReleaseWorkflow.match(/id-token:\s*write/g) || []).length === 3, "Only engine attestation plus npm and PyPI publishing should receive OIDC identity-token permission.");
 expect(!channelReleaseWorkflow.includes("NPM_TOKEN"), "npm Trusted Publishing must not retain a long-lived publication token.");
 expect(!channelReleaseWorkflow.includes("PYPI_API_TOKEN"), "PyPI Trusted Publishing must not retain a long-lived publication token.");
 expect(!channelReleaseWorkflow.includes("--provenance=false"), "The package workflow must not permanently suppress provenance when the repository later becomes public.");
@@ -490,6 +500,10 @@ function checkPublicDistributionCiContract() {
     "pypa/gh-action-pypi-publish@v1.14.2",
     "npm publish ./dist/deepbom-${{ inputs.expected_version }}.tgz --access public",
     "node scripts/build-cargo-engine-release.mjs",
+    "node scripts/build-release-supply-chain-evidence.mjs",
+    "actions/attest@v4",
+    "sbom-path: release/deepbom-self-sbom.cdx.json",
+    "gh attestation verify release/deepbom-core-linux-x64",
     "cargo +1.85.0 package --locked --manifest-path channels/cargo/Cargo.toml",
     "cargo publish --locked --manifest-path channels/cargo/Cargo.toml",
     "environment: crates-io",
@@ -505,8 +519,8 @@ function checkPublicDistributionCiContract() {
     expect(channelReleaseWorkflow.includes(`id: ${identity}`), `Channel release matrix should contain ${identity}.`);
   }
   expect(
-    (channelReleaseWorkflow.match(/id-token:\s*write/g) || []).length === 2,
-    "Only the npm and PyPI publishing jobs should receive OIDC identity-token permission.",
+    (channelReleaseWorkflow.match(/id-token:\s*write/g) || []).length === 3,
+    "Only engine attestation plus npm and PyPI publishing should receive OIDC identity-token permission.",
   );
   expect(!channelReleaseWorkflow.includes("NPM_TOKEN"), "npm Trusted Publishing must not retain a long-lived publication token.");
   expect(!channelReleaseWorkflow.includes("PYPI_API_TOKEN"), "PyPI Trusted Publishing must not retain a long-lived publication token.");

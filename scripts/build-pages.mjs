@@ -99,6 +99,11 @@ await copyFile(
   path.join(root, "docs", "schemas", "deepbom-artifact-ir-v2.schema.json"),
   path.join(dist, "schemas", "deepbom-artifact-ir-v2.schema.json"),
 );
+await mkdir(path.join(dist, "skills", "deepbom"), { recursive: true });
+await copyFile(
+  path.join(root, "skills", "deepbom", "SKILL.md"),
+  path.join(dist, "skills", "deepbom", "SKILL.md"),
+);
 const webIndexHtml = await readFile(path.join(dist, "web", "index.html"), "utf8");
 await writeFile(path.join(dist, "index.html"), shellHtml(webIndexHtml));
 await writeFile(path.join(dist, "medical.html"), shellHtml(webIndexHtml, "Medical Evidence Workspace / DEEPBOM"));
@@ -152,7 +157,15 @@ await writeFile(path.join(dist, "llms.txt"), [
   `npx -y deepbom@${packageDocument.version} capabilities --format agent-json`,
   `npx -y deepbom@${packageDocument.version} self-test --compact`,
   `npx -y deepbom@${packageDocument.version} audit model.tflite --summary`,
+  `npx -y deepbom@${packageDocument.version} verify model.onnx --bom supplied.cdx.json --render markdown`,
+  `npx -y deepbom@${packageDocument.version} contract capture model.onnx -o baseline.interface-contract.json`,
   `npx -y deepbom@${packageDocument.version} explain-rule <rule-id> --json`,
+  "```",
+  "",
+  "Python facade:",
+  "```python",
+  "from deepbom import audit, tensors, verify_bom, capture_contract",
+  "result = audit(\"model.onnx\")",
   "```",
   "",
   `For tool-call access instead of shell invocation, \`npx -y deepbom@${packageDocument.version} mcp\` speaks the`,
@@ -164,7 +177,8 @@ await writeFile(path.join(dist, "llms.txt"), [
   "Formats: .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd.",
   "Outputs: analysis JSON, evidence envelope, CycloneDX 1.7, SARIF 2.1.0.",
   "Exit codes: 0 pass, 1 invocation or analysis failure, 2 policy or verification",
-  "block, 3 incomplete verification binding.",
+  "block, 3 incomplete verification binding, 4 independently supplied artifact",
+  "SHA-256 mismatch.",
   "",
   "## Reading a result",
   "",
@@ -191,7 +205,7 @@ await writeFile(path.join(dist, "llms.txt"), [
   "- Source: https://github.com/JunHwan-Kwon/deepbom (Apache-2.0)",
   "- Record: https://doi.org/10.5281/zenodo.21834508",
   "- Author: Jun-Hwan Kwon, Ph.D. (ORCID 0000-0002-6464-3895)",
-  "- Agent skill file: https://github.com/JunHwan-Kwon/deepbom/blob/main/skills/deepbom/SKILL.md",
+  "- Agent skill file: https://deepbom.org/skills/deepbom/SKILL.md",
   `- Claude Desktop extension: https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v${packageDocument.version}/deepbom-${packageDocument.version}.mcpb`,
   "",
 ].join("\n"));

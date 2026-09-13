@@ -1,0 +1,59 @@
+name: DeepBOM artifact audit
+description: Produce bounded local evidence for one serialized AI deployment artifact.
+inputs:
+  artifact:
+    description: Repository-relative path to the artifact.
+    required: true
+  expected-sha256:
+    description: Optional independently reviewed SHA-256 identity.
+    required: false
+    default: ""
+  gate:
+    description: Optional finding gate (none or defects).
+    required: false
+    default: none
+  policy:
+    description: Optional policy profile (none, engineering, or regulatory).
+    required: false
+    default: none
+  output:
+    description: Evidence-envelope output path.
+    required: false
+    default: .deepbom/evidence.json
+outputs:
+  evidence-path:
+    description: Path of the generated evidence envelope.
+    value: ${{ steps.audit.outputs.evidence_path }}
+  artifact-sha256:
+    description: Observed artifact SHA-256.
+    value: ${{ steps.audit.outputs.artifact_sha256 }}
+  evidence-sha256:
+    description: Deterministic evidence-envelope SHA-256.
+    value: ${{ steps.audit.outputs.evidence_sha256 }}
+runs:
+  using: composite
+  steps:
+    - id: audit
+      name: Audit artifact and expose identities
+      shell: bash
+      env:
+        DEEPBOM_ACTION_ROOT: ${{ github.action_path }}/../../..
+        DEEPBOM_ARTIFACT: ${{ inputs.artifact }}
+        DEEPBOM_EXPECTED_SHA256: ${{ inputs.expected-sha256 }}
+        DEEPBOM_GATE: ${{ inputs.gate }}
+        DEEPBOM_POLICY: ${{ inputs.policy }}
+        DEEPBOM_OUTPUT: ${{ inputs.output }}
+      run: |
+        set -euo pipefail
+        mkdir -p "$(dirname "$DEEPBOM_OUTPUT")"
+        args=(audit "$DEEPBOM_ARTIFACT" --format envelope --compact --output "$DEEPBOM_OUTPUT")
+        if [[ -n "$DEEPBOM_EXPECTED_SHA256" ]]; then args+=(--expected-sha256 "$DEEPBOM_EXPECTED_SHA256"); fi
+        if [[ "$DEEPBOM_GATE" != "none" ]]; then args+=(--gate "$DEEPBOM_GATE"); fi
+        if [[ "$DEEPBOM_POLICY" != "none" ]]; then args+=(--policy "$DEEPBOM_POLICY"); fi
+        node "$DEEPBOM_ACTION_ROOT/bin/deepbom.mjs" "${args[@]}"
+        node - "$DEEPBOM_OUTPUT" "$GITHUB_OUTPUT" <<'NODE'
+        const fs = require("node:fs");
+        const [file, output] = process.argv.slice(2);
+        const document = JSON.parse(fs.readFileSync(file, "utf8"));
+        fs.appendFileSync(output, `evidence_path=${file}\nartifact_sha256=${document.identity.sha256}\nevidence_sha256=${document.envelope_sha256}\n`);
+        NODE

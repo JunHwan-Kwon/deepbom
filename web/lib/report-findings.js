@@ -184,6 +184,10 @@ export function finding({
   evidenceJsonPointers = null,
   methodVersion = "",
   confidence = "",
+  affectedTensorCount = null,
+  assessedTensorCount = null,
+  affectedTensors = null,
+  affectedTensorsTruncated = false,
 }) {
   return {
     finding_id: id,
@@ -201,6 +205,10 @@ export function finding({
     technical_priority: priority,
     affected_operator: op,
     affected_tensor: tensor,
+    ...(Number.isSafeInteger(affectedTensorCount) ? { affected_tensor_count: affectedTensorCount } : {}),
+    ...(Number.isSafeInteger(assessedTensorCount) ? { assessed_tensor_count: assessedTensorCount } : {}),
+    ...(Array.isArray(affectedTensors) ? { affected_tensors: affectedTensors } : {}),
+    ...(Array.isArray(affectedTensors) ? { affected_tensors_truncated: affectedTensorsTruncated === true } : {}),
     observation,
     interpretation,
     possible_effects: possibleEffectsForCategory(category),
@@ -364,20 +372,27 @@ export function buildFindingsRegister(analysis, {
     }
     const allZero = records.filter((row) => row.status === "assessed_full_payload" && row.all_zero);
     if (allZero.length) {
-      findings.push(finding({
+      const assessedCount = Number(serializedIntegrity.assessed_tensor_count || 0);
+      const allZeroFinding = finding({
         id: "EA-SER-0002",
         category: "numerical_structure_review",
-        title: "Exact all-zero serialized tensor payloads detected",
+        title: "One or more serialized tensor payloads are exactly all-zero",
         evidence: "DERIVED",
         priority: "Medium",
         op: "serialized tensor payload",
         tensor: allZero.slice(0, 8).map((row) => row.tensor_name).join(", "),
+        affectedTensorCount: allZero.length,
+        assessedTensorCount: assessedCount,
+        affectedTensors: allZero.slice(0, 64).map((row) => row.tensor_name),
+        affectedTensorsTruncated: allZero.length > 64,
         observation: `${formatNumber(allZero.length)}/${formatNumber(serializedIntegrity.assessed_tensor_count || 0)} fully decoded tensor payload(s) contain only exact zero values: ${allZero.slice(0, 8).map((row) => `${row.tensor_name} (${formatNumber(row.value_count || 0)} values)`).join("; ")}${allZero.length > 8 ? `; plus ${formatNumber(allZero.length - 8)} more` : ""}.`,
         interpretation: "Exact all-zero storage is deterministic evidence about the serialized tensor, but its functional effect cannot be inferred without an executable graph and consumer semantics.",
         recommendation: "Confirm that each all-zero tensor is intentional in the source checkpoint/export manifest; for executable models, join it to consumer operators and representative-output regression.",
         relevance: "weight payload integrity; export verification",
         evidenceJsonPointers: ["/evidence/static_analysis/tensor_numerical_integrity/tensor_records"],
-      }));
+      });
+      allZeroFinding.title = `${formatNumber(allZero.length)} of ${formatNumber(assessedCount)} assessed serialized tensor payloads are exactly all-zero`;
+      findings.push(allZeroFinding);
     }
     if (serializedIntegrity.status !== "assessed") {
       findings.push(finding({

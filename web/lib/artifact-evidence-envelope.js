@@ -266,6 +266,17 @@ function findingRows(analysis, options) {
     summary: text(finding.observation || finding.summary || finding.description || finding.detail),
     interpretation: text(finding.interpretation) || null,
     recommendation: text(finding.recommendation) || null,
+    ...(Number.isSafeInteger(finding.affected_tensor_count) ? { affected_tensor_count: finding.affected_tensor_count } : {}),
+    ...(Number.isSafeInteger(finding.assessed_tensor_count) ? { assessed_tensor_count: finding.assessed_tensor_count } : {}),
+    ...(Array.isArray(finding.affected_tensors)
+      ? { affected_tensors: finding.affected_tensors.map(text).filter(Boolean) } : {}),
+    ...(Array.isArray(finding.affected_tensors)
+      ? { affected_tensors_truncated: finding.affected_tensors_truncated === true } : {}),
+    ...(Number.isSafeInteger(finding.affected_tensor_count) ? { affected_tensor_count: finding.affected_tensor_count } : {}),
+    ...(Number.isSafeInteger(finding.assessed_tensor_count) ? { assessed_tensor_count: finding.assessed_tensor_count } : {}),
+    ...(Array.isArray(finding.affected_tensors) ? { affected_tensors: finding.affected_tensors.map(text).filter(Boolean) } : {}),
+    ...(Array.isArray(finding.affected_tensors)
+      ? { affected_tensors_truncated: finding.affected_tensors_truncated === true } : {}),
     source_pointers: unique([
       finding.evidence_json_pointer,
       ...(finding.evidence_json_pointers || []),
@@ -365,6 +376,7 @@ export function buildArtifactEvidenceEnvelope(analysis = {}, options = {}) {
     external_files: files,
     metadata: observedMetadata(analysis),
     findings,
+    ...(options.structuredDetails ? { structured_details: options.structuredDetails } : {}),
     format_extensions: { [format]: formatExtensionSummary(analysis, format) },
     provenance: options.provenance || null,
     evidence_boundary: "Serialized artifact facts and deterministic static derivations. Declarations and runtime measurements are accepted only through separately identified inputs.",

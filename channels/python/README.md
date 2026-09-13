@@ -9,7 +9,10 @@ An experimental typed facade invokes that same verified engine and converts its
 JSON and exit-code contracts into Python values and exceptions:
 
 ```python
-from deepbom import DeepBomPolicyBlocked, audit, capabilities, tensor_inventory, tensors
+from deepbom import (
+    DeepBomPolicyBlocked, audit, capabilities, capture_contract, diff,
+    tensor_inventory, tensors, verify_bom, verify_contract,
+)
 
 caps = capabilities()
 envelope = audit("model.gguf")
@@ -20,6 +23,10 @@ except DeepBomPolicyBlocked as blocked:
     gated = blocked.document
 rows = tensors("model.gguf")
 inventory = tensor_inventory("model.gguf")
+comparison = diff("baseline.gguf", "candidate.gguf", tensors=True)
+baseline = capture_contract("model.onnx")
+contract_result = verify_contract("candidate.onnx", "baseline.interface-contract.json")
+bom_result = verify_bom("model.onnx", "supplied.cdx.json")
 ```
 
 `audit()` defaults to the canonical envelope, or to analysis selection when
@@ -28,7 +35,8 @@ inventory = tensor_inventory("model.gguf")
 timeout and maximum-output-byte bounds. `gate` and `policy` are mutually exclusive.
 Exit 1 raises `DeepBomInvocationError`, exit 2
 raises `DeepBomPolicyBlocked`, and exit 3 raises
-`DeepBomIncompleteBinding`; policy exceptions retain any completed JSON result
+`DeepBomIncompleteBinding`; exit 4 raises `DeepBomIdentityMismatch`. Policy
+exceptions retain any completed JSON result
 as `.document`. `tensors()` converts exact counts to Python `int` and decimal
 ratios to `decimal.Decimal`; `tensor_inventory()` preserves the raw JSON document.
 The facade is experimental in 1.96.x, and the CLI schemas remain
@@ -42,6 +50,9 @@ deepbom capabilities --compact
 deepbom audit Model.mlpackage --compact
 deepbom audit safetensors-repository/ --compact
 deepbom audit model.pte --executorch-build deepbom.executorch-build.json --compact
+deepbom verify model.onnx --bom supplied.cdx.json --render markdown
+deepbom contract capture model.onnx -o baseline.interface-contract.json
+deepbom capabilities --format agent-text
 ```
 
 ONNX external data next to the model is discovered only from safe serialized

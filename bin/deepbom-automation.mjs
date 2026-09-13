@@ -29,8 +29,9 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       { name: "audit", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },
       { name: "gguf", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },
       { name: "batch", input_count: 1, outputs: ["summary", "deepbom.batch_result.v1"], manifest_schema: "deepbom.batch_manifest.v1" },
-      { name: "verify", input_count: 1, outputs: ["summary", "deepbom.cli_interface_contract_verification.v1"] },
-      { name: "diff", input_count: 2, outputs: ["summary", "deepbom.semantic_artifact_diff.v1"], supported_formats: ["tflite", "onnx", "coreml", "gguf", "safetensors", "executorch"], matching_format_required: true },
+      { name: "verify", input_count: 1, declaration_count: 1, declaration_kinds: ["artifact_derived_or_supplied_interface_contract", "cyclonedx_1_7_bom"], outputs: ["summary", "markdown", "deepbom.cli_interface_contract_verification.v1", "deepbom.bom_artifact_reconciliation.v1"] },
+      { name: "contract capture", input_count: 1, outputs: ["summary", "deepbom.artifact_derived_interface_baseline.v1"], production_approval_inferred: false },
+      { name: "diff", input_count: 2, outputs: ["summary", "markdown", "deepbom.semantic_artifact_diff.v1", "deepbom.tensor_encoding_diff.v1"], supported_formats: ["tflite", "onnx", "coreml", "gguf", "safetensors", "executorch"], matching_format_required: true },
       { name: "explore", input_count: 1, outputs: ["summary", "deepbom.redesign_pareto.v1"] },
         { name: "graph", input_count: 1, outputs: ["svg", "png", "html", "mermaid", "dot", "deepbom.artifact_ir.v2", "deepbom.graph_ir.v1", "deepbom.visualization_manifest.v1"] },
         { name: "placement", input_count: 1, outputs: ["deepbom.placement_comparison.v1"] },
@@ -67,6 +68,7 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       gguf_tensor_table: {
         invocation: "deepbom gguf <artifact.gguf> --tensors --compact",
         schema: "deepbom.tensor_table.v1",
+        pagination: "--tensor-offset <n> --tensor-limit <1..1000>",
         default_scan: "structure",
         excludes: ["decoded_tensor_values", "tensor_numerical_integrity_ledgers"],
       },
@@ -153,6 +155,7 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       "1": "invalid invocation, unreadable input, unsupported artifact, or analysis/output failure",
       "2": "verification contradiction or finding policy blocked",
       "3": "verification could not establish a complete release binding",
+      "4": "independently supplied artifact SHA-256 did not match the observed artifact",
     },
     privacy: {
       model_bytes_network_transfer: false,
@@ -350,15 +353,28 @@ export async function writeOutputAtomically(outputPath, text, { noClobber = fals
 }
 
 export function renderCliError(error, argv = process.argv.slice(2), environment = process.env) {
-  const message = error?.message || String(error);
+  const document = cliErrorDocument(error);
   const format = errorFormat(argv, environment);
-  const document = {
+  return format === "json" ? `${JSON.stringify(document)}\n` : `deepbom: ${document.message}\n`;
+}
+
+export function cliErrorDocument(error) {
+  const message = error?.message || String(error);
+  const code = classifyCliError(message);
+  const details = errorDetails(code, message);
+  return {
     schema: CLI_ERROR_SCHEMA,
-    code: classifyCliError(message),
+    code,
     message,
-    exit_code: 1,
+    exit_code: code === "artifact_identity_mismatch" ? 4 : 1,
+    expected: details.expected,
+    observed: details.observed,
+    suggested_action: details.suggested_action,
   };
-  return format === "json" ? `${JSON.stringify(document)}\n` : `deepbom: ${message}\n`;
+}
+
+export function exitCodeForCliError(error) {
+  return cliErrorDocument(error).exit_code;
 }
 
 function normalizeIsoTimestamp(value, label) {
@@ -400,12 +416,37 @@ function errorFormat(argv, environment) {
 }
 
 function classifyCliError(message) {
+  if (/Artifact SHA-256 mismatch: expected [a-f0-9]{64}, observed [a-f0-9]{64}/i.test(message)) return "artifact_identity_mismatch";
   if (/unknown option|unexpected positional|required|must be|mutually exclusive|valid only|does not accept/i.test(message)) return "invalid_invocation";
   if (/unsupported artifact format|no analyzer is registered|requires a .* artifact/i.test(message)) return "unsupported_artifact";
   if (/cannot read|unavailable|does not exist|not found|no such file or directory|must be a regular file or directory/i.test(message)) return "input_unavailable";
   if (/output already exists|EACCES|EPERM|ENOSPC/i.test(message)) return "output_failure";
   if (/invalid|mismatch|failed|unsafe|changed during analysis/i.test(message)) return "artifact_or_evidence_invalid";
   return "analysis_failure";
+}
+
+function errorDetails(code, message) {
+  const digestMismatch = message.match(/Artifact SHA-256 mismatch: expected ([a-f0-9]{64}), observed ([a-f0-9]{64})/i);
+  if (digestMismatch) return {
+    expected: { sha256: digestMismatch[1].toLowerCase() },
+    observed: { sha256: digestMismatch[2].toLowerCase() },
+    suggested_action: "Stop the pipeline and confirm the immutable artifact source or update the independently reviewed digest.",
+  };
+  const truncated = message.match(/payload range (\d+):(\d+) exceeds source length (\d+)/i);
+  if (truncated) return {
+    expected: { minimum_byte_length: Number(truncated[2]), payload_range: [Number(truncated[1]), Number(truncated[2])] },
+    observed: { byte_length: Number(truncated[3]) },
+    suggested_action: "The file is likely truncated or its tensor directory is corrupt. Reacquire it from an immutable source and verify its SHA-256 before retrying.",
+  };
+  const suggestions = {
+    invalid_invocation: "Correct the command arguments; run deepbom --help or deepbom capabilities --format agent-text before retrying.",
+    unsupported_artifact: "Supply one supported serialized deployment artifact or package directory and inspect deepbom capabilities for accepted formats.",
+    input_unavailable: "Confirm that the path exists and is readable, or use an explicitly immutable remote source with the required digest binding.",
+    output_failure: "Choose a writable output path, free sufficient space, and use --no-clobber only when replacement must be refused.",
+    artifact_or_evidence_invalid: "Treat the input as invalid or contradictory; inspect the complete message and reacquire or regenerate the affected evidence.",
+    analysis_failure: "Preserve the failing bytes and command, then rerun with --error-format json for a machine-readable diagnostic.",
+  };
+  return { expected: null, observed: null, suggested_action: suggestions[code] || suggestions.analysis_failure };
 }
 
 export async function outputExists(outputPath) {

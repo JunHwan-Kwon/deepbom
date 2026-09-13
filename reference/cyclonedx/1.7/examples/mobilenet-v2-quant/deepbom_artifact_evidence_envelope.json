@@ -992,6 +992,1504 @@
       "rule_id": "deepbom.report_findings.EA-LIM-0001.v1"
     }
   ],
+  "structured_details": {
+    "interface_contracts": {
+      "input_contracts": [
+        {
+          "schema": "deepbom.input_tensor_contract.v1",
+          "tensor_index": 171,
+          "name": "input",
+          "shape": [
+            1,
+            224,
+            224,
+            3
+          ],
+          "dtype": "UINT8",
+          "is_quantized": true,
+          "expected_range_low": -1,
+          "expected_range_high": 0.9921875,
+          "range_note": "UINT8 dequantized code domain [-1.000000000, 0.992187500] from scalar scale 0.007812500 and zero point 128",
+          "tensor_numerical_contract_status": "known_from_artifact_quantization_metadata",
+          "source_data_to_tensor_preprocessing_status": "not_embedded_in_artifact",
+          "layout": "NHWC",
+          "layout_status": "derived_nhwc_from_direct_consumer_semantics",
+          "layout_evidence_class": "DERIVED",
+          "layout_source_op_index": 0,
+          "layout_source_op_name": "CONV_2D",
+          "layout_reason": "Graph input T171 is activation input 0 of TFLite CONV_2D #000; the pinned operator tensor semantics require NHWC.",
+          "channel_axis": 3,
+          "channels": 3,
+          "risks": [
+            "Channel order (RGB vs BGR) cannot be determined from graph structure; a mismatch may silently degrade task performance."
+          ]
+        }
+      ],
+      "output_tensors": [
+        {
+          "index": 172,
+          "name": "output",
+          "shape": [
+            1,
+            1001
+          ],
+          "shape_signature": [],
+          "dtype": "UINT8",
+          "buffer_index": 135,
+          "buffer_data_offset": 0,
+          "buffer_data_length": 0,
+          "constant_buffer": false,
+          "sparse_storage": false,
+          "quant_scales": 1,
+          "quant_zero_points": 1,
+          "quantized_dimension": 0,
+          "scale_sample": [
+            0.09889253973960876
+          ],
+          "zero_point_sample": [
+            58
+          ],
+          "scale_min": 0.09889253973960876,
+          "scale_max": 0.09889253973960876,
+          "scale_ratio": 0,
+          "scale_mean": 0.09889253973960876,
+          "scale_stddev": 0,
+          "scale_cv": 0,
+          "zero_point_min": 58,
+          "zero_point_max": 58,
+          "zero_point_offset_max": 70,
+          "zero_point_status": "ok",
+          "zero_point_detail": "zero_point metadata is within expected UINT8 range.",
+          "scale_mode": "per-tensor",
+          "scale_ratio_meaningful": false,
+          "quant_risk": "none",
+          "buffer_hash": "",
+          "is_variable": false
+        }
+      ],
+      "boundary": "Serialized interface evidence only; source-data preprocessing and caller integration remain separately bound."
+    },
+    "tensor_dtype_inventory": {
+      "UINT8": 119,
+      "INT32": 54
+    },
+    "activation_path": {
+      "inventory_basis": "all_graph_operators",
+      "all_operator_denominator": 65,
+      "states": [
+        {
+          "state": "quantized_compute",
+          "operator_count": 64
+        },
+        {
+          "state": "quantized_data_movement",
+          "operator_count": 1
+        }
+      ],
+      "compute_scope": {
+        "basis": "MAC-bearing compute operators",
+        "denominator": 53,
+        "quantized_operators": 53,
+        "quantized_mac_ratio": 1
+      },
+      "explanation": "compute_ops counts MAC-bearing compute operators only; op_state_counts covers every graph operator, including zero-MAC data movement and quantization boundary ops. XNNPACK fallback/break counts are a delegate partition concept and can overlap with quantized_data_movement."
+    },
+    "findings": [
+      {
+        "finding_id": "EA-IOC-0001",
+        "title": "Preprocessing contract is not embedded",
+        "category": "integration",
+        "evidence_class": "OBSERVED"
+      },
+      {
+        "finding_id": "EA-LIN-0001",
+        "title": "Source checkpoint and conversion lineage were not provided",
+        "category": "lineage",
+        "evidence_class": "NOT_ASSESSABLE"
+      },
+      {
+        "finding_id": "EA-WGT-0001",
+        "title": "Exact-zero kernel slices converge with constant-output channel proof",
+        "category": "numerical_structure_review",
+        "evidence_class": "DERIVED"
+      },
+      {
+        "finding_id": "EA-QNT-0112",
+        "title": "Legal input-code domain cannot activate quantized output channels",
+        "category": "quantization_design_review",
+        "evidence_class": "DERIVED"
+      },
+      {
+        "finding_id": "EA-DEL-0004",
+        "title": "Required quantized XNNPACK build condition is not artifact-bound and conditional coverage collapses to zero",
+        "category": "delegate",
+        "evidence_class": "PREDICTED"
+      }
+    ],
+    "conformance": {
+      "profile": "litert_current_int8_operator_profile",
+      "profile_scope": "Current LiteRT INT8 CONV_2D and DEPTHWISE_CONV_2D weight contracts",
+      "status": "nonconformant",
+      "evidence_class": "OBSERVED_ARTIFACT_CONTRACT_VIOLATION",
+      "candidate_operator_count": 53,
+      "assessed_operator_count": 53,
+      "unassessed_operator_count": 0,
+      "violation_count": 159,
+      "violation_codes": [
+        "weight_dtype_expected_int8",
+        "weight_granularity_per_tensor_expected_per_axis",
+        "weight_zero_point_nonzero_expected_zero"
+      ],
+      "violations": [
+        {
+          "op_index": 0,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 2,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 0,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 2,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 0,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 2,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 122,
+          "observed_max": 122,
+          "expected": 0
+        },
+        {
+          "op_index": 1,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 13,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 1,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 13,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 1,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 13,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 165,
+          "observed_max": 165,
+          "expected": 0
+        },
+        {
+          "op_index": 2,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 16,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 2,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 16,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 2,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 16,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 140,
+          "observed_max": 140,
+          "expected": 0
+        },
+        {
+          "op_index": 3,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 22,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 3,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 22,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 3,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 22,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 127,
+          "observed_max": 127,
+          "expected": 0
+        },
+        {
+          "op_index": 4,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 19,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 4,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 19,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 4,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 19,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 109,
+          "observed_max": 109,
+          "expected": 0
+        },
+        {
+          "op_index": 5,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 25,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 5,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 25,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 5,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 25,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 156,
+          "observed_max": 156,
+          "expected": 0
+        },
+        {
+          "op_index": 6,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 99,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 6,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 99,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 6,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 99,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 144,
+          "observed_max": 144,
+          "expected": 0
+        },
+        {
+          "op_index": 7,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 96,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 7,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 96,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 7,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 96,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 52,
+          "observed_max": 52,
+          "expected": 0
+        },
+        {
+          "op_index": 8,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 102,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 8,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 102,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 8,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 102,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 122,
+          "observed_max": 122,
+          "expected": 0
+        },
+        {
+          "op_index": 10,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 108,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 10,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 108,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 10,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 108,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 104,
+          "observed_max": 104,
+          "expected": 0
+        },
+        {
+          "op_index": 11,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 105,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 11,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 105,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 11,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 105,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 143,
+          "observed_max": 143,
+          "expected": 0
+        },
+        {
+          "op_index": 12,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 111,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 12,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 111,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 12,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 111,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 111,
+          "observed_max": 111,
+          "expected": 0
+        },
+        {
+          "op_index": 13,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 118,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 13,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 118,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 13,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 118,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 128,
+          "observed_max": 128,
+          "expected": 0
+        },
+        {
+          "op_index": 14,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 115,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 14,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 115,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 14,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 115,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 118,
+          "observed_max": 118,
+          "expected": 0
+        },
+        {
+          "op_index": 15,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 121,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 15,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 121,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 15,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 121,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 146,
+          "observed_max": 146,
+          "expected": 0
+        },
+        {
+          "op_index": 17,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 128,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 17,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 128,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 17,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 128,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 135,
+          "observed_max": 135,
+          "expected": 0
+        },
+        {
+          "op_index": 18,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 125,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 18,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 125,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 18,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 125,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 95,
+          "observed_max": 95,
+          "expected": 0
+        },
+        {
+          "op_index": 19,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 131,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 19,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 131,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 19,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 131,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 128,
+          "observed_max": 128,
+          "expected": 0
+        },
+        {
+          "op_index": 21,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 137,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 21,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 137,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 21,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 137,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 127,
+          "observed_max": 127,
+          "expected": 0
+        },
+        {
+          "op_index": 22,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 134,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 22,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 134,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 22,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 134,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 127,
+          "observed_max": 127,
+          "expected": 0
+        },
+        {
+          "op_index": 23,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 140,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 23,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 140,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 23,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 140,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 147,
+          "observed_max": 147,
+          "expected": 0
+        },
+        {
+          "op_index": 24,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 147,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 24,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 147,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 24,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 147,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 125,
+          "observed_max": 125,
+          "expected": 0
+        },
+        {
+          "op_index": 25,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 144,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 25,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 144,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 25,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 144,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 110,
+          "observed_max": 110,
+          "expected": 0
+        },
+        {
+          "op_index": 26,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 150,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 26,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 150,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 26,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 150,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 124,
+          "observed_max": 124,
+          "expected": 0
+        },
+        {
+          "op_index": 28,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 157,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 28,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 157,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 28,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 157,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 134,
+          "observed_max": 134,
+          "expected": 0
+        },
+        {
+          "op_index": 29,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 154,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 29,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 154,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 29,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 154,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 133,
+          "observed_max": 133,
+          "expected": 0
+        },
+        {
+          "op_index": 30,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 160,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 30,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 160,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 30,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 160,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 125,
+          "observed_max": 125,
+          "expected": 0
+        },
+        {
+          "op_index": 32,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 167,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 32,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 167,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 32,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 167,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 127,
+          "observed_max": 127,
+          "expected": 0
+        },
+        {
+          "op_index": 33,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 164,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 33,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 164,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 33,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 164,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 155,
+          "observed_max": 155,
+          "expected": 0
+        },
+        {
+          "op_index": 34,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 170,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 34,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 170,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 34,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 170,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 144,
+          "observed_max": 144,
+          "expected": 0
+        },
+        {
+          "op_index": 36,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 31,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 36,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 31,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 36,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 31,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 131,
+          "observed_max": 131,
+          "expected": 0
+        },
+        {
+          "op_index": 37,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 28,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 37,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 28,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 37,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 28,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 143,
+          "observed_max": 143,
+          "expected": 0
+        },
+        {
+          "op_index": 38,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 34,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 38,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 34,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 38,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 34,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 129,
+          "observed_max": 129,
+          "expected": 0
+        },
+        {
+          "op_index": 39,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 41,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 39,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 41,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 39,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 41,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 134,
+          "observed_max": 134,
+          "expected": 0
+        },
+        {
+          "op_index": 40,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 38,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 40,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 38,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 40,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 38,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 66,
+          "observed_max": 66,
+          "expected": 0
+        },
+        {
+          "op_index": 41,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 44,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 41,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 44,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 41,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 44,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 136,
+          "observed_max": 136,
+          "expected": 0
+        },
+        {
+          "op_index": 43,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 51,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 43,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 51,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 43,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 51,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 138,
+          "observed_max": 138,
+          "expected": 0
+        },
+        {
+          "op_index": 44,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 48,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 44,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 48,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 44,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 48,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 159,
+          "observed_max": 159,
+          "expected": 0
+        },
+        {
+          "op_index": 45,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 54,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 45,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 54,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 45,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 54,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 154,
+          "observed_max": 154,
+          "expected": 0
+        },
+        {
+          "op_index": 47,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 60,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 47,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 60,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 47,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 60,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 123,
+          "observed_max": 123,
+          "expected": 0
+        },
+        {
+          "op_index": 48,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 57,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 48,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 57,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 48,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 57,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 92,
+          "observed_max": 92,
+          "expected": 0
+        },
+        {
+          "op_index": 49,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 63,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 49,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 63,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 49,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 63,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 140,
+          "observed_max": 140,
+          "expected": 0
+        },
+        {
+          "op_index": 50,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 70,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 50,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 70,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 50,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 70,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 135,
+          "observed_max": 135,
+          "expected": 0
+        },
+        {
+          "op_index": 51,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 67,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 51,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 67,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 51,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 67,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 147,
+          "observed_max": 147,
+          "expected": 0
+        },
+        {
+          "op_index": 52,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 73,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 52,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 73,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 52,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 73,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 139,
+          "observed_max": 139,
+          "expected": 0
+        },
+        {
+          "op_index": 54,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 80,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 54,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 80,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 54,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 80,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 127,
+          "observed_max": 127,
+          "expected": 0
+        },
+        {
+          "op_index": 55,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 77,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 55,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 77,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 55,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 77,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 102,
+          "observed_max": 102,
+          "expected": 0
+        },
+        {
+          "op_index": 56,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 83,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 56,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 83,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 56,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 83,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 131,
+          "observed_max": 131,
+          "expected": 0
+        },
+        {
+          "op_index": 58,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 89,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 58,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 89,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 58,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 89,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 135,
+          "observed_max": 135,
+          "expected": 0
+        },
+        {
+          "op_index": 59,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 86,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 59,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 86,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 59,
+          "op_name": "DEPTHWISE_CONV_2D",
+          "weight_tensor_index": 86,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 201,
+          "observed_max": 201,
+          "expected": 0
+        },
+        {
+          "op_index": 60,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 92,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 60,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 92,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 60,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 92,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 111,
+          "observed_max": 111,
+          "expected": 0
+        },
+        {
+          "op_index": 61,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 5,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 61,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 5,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 61,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 5,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 125,
+          "observed_max": 125,
+          "expected": 0
+        },
+        {
+          "op_index": 63,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 9,
+          "code": "weight_dtype_expected_int8",
+          "observed": "UINT8",
+          "expected": "INT8"
+        },
+        {
+          "op_index": 63,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 9,
+          "code": "weight_granularity_per_tensor_expected_per_axis",
+          "observed_scale_count": 1,
+          "expected": "per-axis"
+        },
+        {
+          "op_index": 63,
+          "op_name": "CONV_2D",
+          "weight_tensor_index": 9,
+          "code": "weight_zero_point_nonzero_expected_zero",
+          "observed_min": 113,
+          "observed_max": 113,
+          "expected": 0
+        }
+      ],
+      "legacy_qu8_artifact": true,
+      "source": "https://ai.google.dev/edge/litert/conversion/tensorflow/quantization/quantization_spec",
+      "interpretation_boundary": "A legacy UINT8 asymmetric artifact can remain executable through a separately enabled legacy QU8 runtime path while being nonconformant to the current LiteRT INT8 operator profile."
+    },
+    "preprocessing": {
+      "status": "assessed",
+      "evidence_class": "DERIVED",
+      "assessment_kind": "EXPLICIT_PREPROCESSING_COUNTERFACTUALS",
+      "candidate_count": 8,
+      "exact_contract_ids": [
+        "raw_storage_rgb",
+        "raw_storage_bgr",
+        "artifact_affine_rgb",
+        "center_128_div_128_rgb"
+      ],
+      "exact_candidate_count": 4,
+      "non_exact_candidate_count": 4,
+      "best_non_exact_contract_id": "unit_interval_rgb",
+      "best_non_exact_unrealizable_element_count": 18,
+      "portfolio_ledger_sha256": "35a1ca877c09dd440ed75e7cfbe1789c6b3693ea6572da5069cf6a01aadd5bb5",
+      "interpretation_boundary": "The eight rows are explicit counterfactual contracts, not observations of the production application. Exact realizability does not identify which contract, decoder, resize kernel, color management, or runtime build is deployed; non-exactness applies only to the named formula and channel order. Declared-output impact and task-level effect remain unmeasured."
+    }
+  },
   "format_extensions": {
     "tflite": {
       "schema_version": null,
@@ -2634,5 +4132,5 @@
     ]
   },
   "evidence_boundary": "Serialized artifact facts and deterministic static derivations. Declarations and runtime measurements are accepted only through separately identified inputs.",
-  "envelope_sha256": "7f0056d63def0a064b25c3d18d5207b535e1831d6997347c7c14c7c19cd51c90"
+  "envelope_sha256": "81c08fcec38de091bf1d16d6f7355be5de007695384bd3a511567af4af85c377"
 }

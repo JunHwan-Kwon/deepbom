@@ -4,6 +4,42 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.97.0 - 2026-09-13
+
+- Added bounded CycloneDX 1.7 BOM-to-artifact reconciliation. Subject binding
+  is exact by SHA-256 or explicit unique `bom-ref`; ambiguous identities fail
+  closed, and each comparison distinguishes matches, contradictions, absent
+  declarations, unsupported mappings, and facts not assessable from the
+  serialized artifact.
+- Added artifact-derived external-interface baseline capture through
+  `deepbom contract capture`. Captures bind the source artifact and analyzer
+  identities and explicitly remain unapproved baselines until a separate
+  review process adopts them.
+- Reworked standalone CycloneDX output to carry compact structured evidence in
+  `declarations.evidence`, bind the omitted full envelope by digest, and avoid
+  dangling relative references. Deployment bundles retain hash-bound sidecars;
+  identity evidence and model-card I/O fields are no longer overloaded with
+  unrelated tensor detail.
+- Restored all four single-executable-backed MCP calls, added true MCP
+  end-to-end and cross-channel equivalence gates, repaired text rendering for
+  every public explanation ID, and made invocation failures preserve their
+  exit status across output formats.
+- Added tensor-aware diff and Markdown projections, shorthand tensor tables,
+  bounded MCP result pages, structured recovery diagnostics, a compact agent
+  capability view, option suggestions, and explicit terminology, numeric-type,
+  and shape-order contracts.
+- Made partial all-zero findings identify the affected tensor count and names,
+  completed repository-side chat-template discovery, and retained conservative
+  static-QDQ wording without inferring a runtime-fused execution path.
+- Added independently computed GGUF, ONNX, and SafeTensors measurement-oracle
+  gates, a documented DeepBOM property taxonomy, and generic local integration
+  seams for Actions, pre-commit, containers, model stores, authoring pipelines,
+  OCI attestations, Python pipelines, and bounded engineering-review records.
+- Added a release self-SBOM, identity-backed release attestation and readback
+  workflow, digest-pinned demonstration containers, PyPI discovery metadata,
+  packaged Agent Skill content, and a public-adoption boundary test. `npm audit`
+  reports zero known vulnerabilities for this release dependency graph.
+
 ## 1.96.15 - 2026-09-11
 
 - Made the GGUF tensor-table assignment signature reproducible from the table

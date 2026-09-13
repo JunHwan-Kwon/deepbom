@@ -128,7 +128,7 @@ expect(residualFinding?.observation.includes("globally finest full-containment c
   && residualFinding?.recommendation.includes("not a claim that every one needs metadata replacement"), "Residual action should preserve exact direct-consumer migration evidence and keep the reachable structural radius distinct.");
 const mlBom = buildMlBomDocument(analysis, { hash: analysis.model_sha256, fileSizeBytes: bytes.byteLength, target: analysis.target_profile });
 const mlBomProperties = new Map((mlBom.metadata.component.properties || []).map((item) => [item.name, item.value]));
-expectEqual(mlBomProperties.get("deepbom:compatibility:detailLocation"), "engineering_evidence.json#/evidence/static_analysis", "Compact ML-BOM should bind omitted lattice detail to the canonical evidence ledger.");
+expectEqual(mlBomProperties.get("deepbom:compatibility:detailLocation"), "#/declarations/evidence/0/data/0/contents/attachment", "Compact standalone ML-BOM should bind omitted lattice detail to its inline evidence ledger.");
 expect(!mlBomProperties.has("deepbom:model:quantizationLatticeSchema")
   && !mlBomProperties.has("deepbom:model:residualContainmentDesignAdds"), "Compact ML-BOM should not duplicate the validated lattice ledger as compatibility properties.");
 

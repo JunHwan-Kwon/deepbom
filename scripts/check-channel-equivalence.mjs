@@ -92,6 +92,7 @@ if (npmCli) {
   assert.equal(mcpGguf.identity.format, "gguf", "installed npm MCP bounded GGUF scan failed");
   assert.equal(mcpGguf.identity.sha256, createHash("sha256").update(readFileSync(fileCases[2].path)).digest("hex"),
     "installed npm MCP GGUF identity diverged");
+  verifyMcpToolCalls("installed npm", process.execPath, [npmCli, "mcp"], fileCases[1].path);
 }
 if (platformSmoke || releaseContract) {
   assert.deepEqual(json(run(engine, capabilityArgs).stdout), canonicalCapabilities,
@@ -126,6 +127,8 @@ if (platformSmoke || releaseContract) {
     "standalone engine self-test failed");
   assert.equal(json(run(python, ["-m", "deepbom", "self-test", "--compact"]).stdout).status, "pass",
     "installed Python wheel self-test failed");
+  verifyMcpToolCalls("standalone engine", engine, ["mcp"], fileCases[1].path);
+  verifyMcpToolCalls("installed Python", python, ["-m", "deepbom", "mcp"], fileCases[1].path);
 }
 
 for (const [caseIndex, item] of cases.entries()) {
@@ -212,6 +215,12 @@ if (platformSmoke) {
       DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
     });
     assert.equal(json(cargoSelfTest.stdout).status, "pass", "Cargo launcher self-test failed");
+    const cargoEnvironment = {
+      DEEPBOM_ENGINE: engine,
+      DEEPBOM_ENGINE_SHA256: createHash("sha256").update(await readFile(engine)).digest("hex"),
+      DEEPBOM_RUNTIME_ASSET_DIR: path.join(path.dirname(engine), "pkg"),
+    };
+    verifyMcpToolCalls("Cargo launcher", "cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "mcp"], cases[1].path, cargoEnvironment);
     const unboundCargo = run(
       "cargo",
       ["run", "--quiet", "--manifest-path", cargoManifest, "--", "audit", cases[1].path, "--compact"],
@@ -382,11 +391,29 @@ function runNpmExecutable(npmCli, args, expectSuccess = true) {
   return run(invocation.command, invocation.args, {}, expectSuccess, installRoot);
 }
 
-function exchangeMcp(command, args, messages) {
+function verifyMcpToolCalls(label, command, args, artifact, environment = {}) {
+  const absoluteArtifact = path.resolve(artifact);
+  const frames = exchangeMcp(command, args, [
+    { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "channel-surface-check", version: "0" } } },
+    { jsonrpc: "2.0", method: "notifications/initialized" },
+    { jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "deepbom_capabilities", arguments: {} } },
+    { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "deepbom_audit", arguments: { path: absoluteArtifact, output_format: "envelope" } } },
+    { jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "deepbom_diff", arguments: { baseline: absoluteArtifact, candidate: absoluteArtifact } } },
+    { jsonrpc: "2.0", id: 5, method: "tools/call", params: { name: "deepbom_explain_rule", arguments: { rule: "EA-SER-0002" } } },
+  ], environment);
+  const byId = new Map(frames.map((frame) => [frame.id, frame]));
+  assert.equal(byId.get(1)?.result?.serverInfo?.name, "deepbom", `${label} MCP initialization failed`);
+  assert.equal(json(byId.get(2)?.result?.content?.[0]?.text).schema, "deepbom.cli_capabilities.v1", `${label} MCP capabilities failed`);
+  assert.equal(json(byId.get(3)?.result?.content?.[0]?.text).schema, "deepbom.artifact_evidence_envelope.v1", `${label} MCP audit failed`);
+  assert.equal(json(byId.get(4)?.result?.content?.[0]?.text).schema, "deepbom.semantic_artifact_diff.v1", `${label} MCP diff failed`);
+  assert.equal(json(byId.get(5)?.result?.content?.[0]?.text).rule_id, "EA-SER-0002", `${label} MCP explain failed`);
+}
+
+function exchangeMcp(command, args, messages, environment = {}) {
   const result = spawnSync(command, args, {
     cwd: root,
     encoding: "utf8",
-    env: process.env,
+    env: { ...process.env, ...environment },
     input: `${messages.map((message) => JSON.stringify(message)).join("\n")}\n`,
     maxBuffer: 256 * 1024 * 1024,
     timeout: mcpTimeoutMs,

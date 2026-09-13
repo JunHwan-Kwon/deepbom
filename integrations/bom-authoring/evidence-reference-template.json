@@ -1,0 +1,10 @@
+{
+  "schema": "deepbom.evidence_reference_template.v1",
+  "artifact_sha256": "<observed artifact SHA-256>",
+  "evidence_envelope_sha256": "<DeepBOM evidence envelope SHA-256>",
+  "evidence_location": "<immutable local, repository, or registry URI>",
+  "publisher_declarations": {
+    "status": "supplied_separately",
+    "boundary": "Publisher-authored facts are not synthesized from artifact bytes."
+  }
+}

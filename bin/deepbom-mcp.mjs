@@ -56,6 +56,8 @@ const TOOLS = Object.freeze([
         scan: { type: "string", enum: [...SCAN_MODES], description: "Bounded scan policy. structure avoids payload integrity work; integrity streams supported payload checks; full requests all supported static analysis." },
         section: { type: "string", description: "Emit only these analysis sections, comma-separated. Use list_sections first. Applies to json formats." },
         tensors: { type: "boolean", description: "For a GGUF artifact, return the bounded structure-only deepbom.tensor_table.v1 projection instead of the full tensor/numerical ledgers." },
+        tensor_offset: { type: "integer", minimum: 0, description: "Zero-based tensor row offset for a bounded tensor page; requires tensors=true." },
+        tensor_limit: { type: "integer", minimum: 1, maximum: 1000, description: "Maximum tensor rows to return; requires tensors=true. The result includes next_offset when more rows exist." },
         list_sections: { type: "boolean", description: "List selectable analysis sections instead of auditing." },
         pointer: { type: "string", description: "Emit one RFC 6901 JSON Pointer result, such as /operator_count." },
         target: { type: "string", description: "TFLite target profile id for cost-model binding; it is not host detection." },
@@ -86,11 +88,14 @@ const TOOLS = Object.freeze([
         cache_dir: { type: "string", description: "Content-addressed cache directory under the allowed roots." },
         offline: { type: "boolean", description: "Refuse network access and require verified cache receipts." },
         max_download_gib: { type: "integer", minimum: 1, maximum: 1024 },
+        tensors: { type: "boolean", description: "Return the tensor-encoding transition projection instead of the full semantic diff." },
+        tensor_offset: { type: "integer", minimum: 0, description: "Zero-based changed-tensor row offset; requires tensors=true." },
+        tensor_limit: { type: "integer", minimum: 1, maximum: 1000, description: "Maximum changed-tensor rows to return; requires tensors=true." },
       },
       required: ["baseline", "candidate"],
       additionalProperties: false,
     },
-    outputSchema: { type: "object", required: ["schema"], properties: { schema: { const: "deepbom.semantic_artifact_diff.v1" } }, additionalProperties: true },
+    outputSchema: { type: "object", required: ["schema"], properties: { schema: { enum: ["deepbom.semantic_artifact_diff.v1", "deepbom.tensor_encoding_diff.v1"] } }, additionalProperties: true },
     annotations: CACHE_WRITING_ANNOTATIONS,
   },
   {
@@ -103,7 +108,14 @@ const TOOLS = Object.freeze([
       required: ["rule"],
       additionalProperties: false,
     },
-    outputSchema: { type: "object", required: ["schema"], properties: { schema: { const: "deepbom.rule_explanation.v1" } }, additionalProperties: true },
+    outputSchema: {
+      type: "object",
+      required: ["schema"],
+      properties: {
+        schema: { enum: ["deepbom.rule_explanation.v1", "deepbom.finding_rule_explanation.v1"] },
+      },
+      additionalProperties: true,
+    },
     annotations: READ_ONLY_ANNOTATIONS,
   },
 ]);
@@ -278,12 +290,14 @@ function commandArguments(name, args, roots) {
     const argv = [args.tensors ? "gguf" : "audit", requiredArtifactSource(args.path, "path", roots, args.expected_sha256)];
     if (args.tensors) {
       argv.push("--tensors", "--compact");
+      if (Object.hasOwn(args, "tensor_offset")) argv.push("--tensor-offset", String(args.tensor_offset));
+      if (Object.hasOwn(args, "tensor_limit")) argv.push("--tensor-limit", String(args.tensor_limit));
     } else if (args.list_sections) {
       argv.push("--list-sections");
     } else if (Object.hasOwn(args, "pointer")) {
       argv.push("--pointer", String(args.pointer));
     } else {
-      const format = args.output_format || AUDIT_DEFAULT_OUTPUT_FORMAT;
+      const format = args.output_format || (args.section ? "json-compact" : AUDIT_DEFAULT_OUTPUT_FORMAT);
       argv.push("--output-format", format);
       if (args.section) argv.push("--section", String(args.section));
     }
@@ -302,6 +316,9 @@ function commandArguments(name, args, roots) {
       requiredArtifactSource(args.candidate, "candidate", roots),
       "--json",
     ];
+    if (args.tensors) argv.push("--tensors");
+    if (Object.hasOwn(args, "tensor_offset")) argv.push("--tensor-offset", String(args.tensor_offset));
+    if (Object.hasOwn(args, "tensor_limit")) argv.push("--tensor-limit", String(args.tensor_limit));
     if (args.target) argv.push("--target", String(args.target));
     appendRemoteControls(argv, args, roots);
     return argv;
@@ -320,8 +337,8 @@ function validateToolArguments(name, args) {
   if (!args || typeof args !== "object" || Array.isArray(args)) throw new Error("Tool arguments must be a JSON object.");
   const allowed = {
     deepbom_capabilities: [],
-    deepbom_audit: ["path", "output_format", "scan", "section", "tensors", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
-    deepbom_diff: ["baseline", "candidate", "target", "expected_sha256", "cache_dir", "offline", "max_download_gib"],
+    deepbom_audit: ["path", "output_format", "scan", "section", "tensors", "tensor_offset", "tensor_limit", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
+    deepbom_diff: ["baseline", "candidate", "target", "expected_sha256", "cache_dir", "offline", "max_download_gib", "tensors", "tensor_offset", "tensor_limit"],
     deepbom_explain_rule: ["rule"],
   }[name];
   if (!allowed) throw rpcError(-32602, `Unknown tool: ${name}`);
@@ -329,7 +346,8 @@ function validateToolArguments(name, args) {
   if (extra.length) throw new Error(`Undeclared tool argument${extra.length === 1 ? "" : "s"}: ${extra.sort().join(", ")}.`);
 
   const booleanFields = ["tensors", "list_sections", "offline"];
-  for (const key of allowed.filter((key) => !booleanFields.includes(key) && key !== "max_download_gib")) {
+  const integerFields = ["max_download_gib", "tensor_offset", "tensor_limit"];
+  for (const key of allowed.filter((key) => !booleanFields.includes(key) && !integerFields.includes(key))) {
     if (Object.hasOwn(args, key) && typeof args[key] !== "string") throw new Error(`The ${key} argument must be a string.`);
   }
   for (const key of booleanFields) {
@@ -337,6 +355,15 @@ function validateToolArguments(name, args) {
   }
   if (Object.hasOwn(args, "max_download_gib") && (!Number.isInteger(args.max_download_gib) || args.max_download_gib < 1 || args.max_download_gib > 1024)) {
     throw new Error("The max_download_gib argument must be an integer from 1 through 1024.");
+  }
+  if (Object.hasOwn(args, "tensor_offset") && (!Number.isInteger(args.tensor_offset) || args.tensor_offset < 0)) {
+    throw new Error("The tensor_offset argument must be a non-negative integer.");
+  }
+  if (Object.hasOwn(args, "tensor_limit") && (!Number.isInteger(args.tensor_limit) || args.tensor_limit < 1 || args.tensor_limit > 1000)) {
+    throw new Error("The tensor_limit argument must be an integer from 1 through 1000.");
+  }
+  if ((Object.hasOwn(args, "tensor_offset") || Object.hasOwn(args, "tensor_limit")) && args.tensors !== true) {
+    throw new Error("tensor_offset and tensor_limit require tensors=true.");
   }
   if (Object.hasOwn(args, "expected_sha256") && !/^[a-f0-9]{64}$/i.test(args.expected_sha256)) {
     throw new Error("The expected_sha256 argument must contain exactly 64 hexadecimal characters.");
@@ -362,7 +389,8 @@ function validateToolArguments(name, args) {
   if ((args.list_sections || Object.hasOwn(args, "pointer")) && Object.hasOwn(args, "output_format")) {
     throw new Error("output_format cannot be combined with list_sections or pointer.");
   }
-  if (Object.hasOwn(args, "section") && !["json", "json-compact"].includes(args.output_format || "")) {
+  if (Object.hasOwn(args, "section") && Object.hasOwn(args, "output_format")
+      && !["json", "json-compact"].includes(args.output_format)) {
     throw new Error("section requires output_format json or json-compact.");
   }
   if (Object.hasOwn(args, "output_format") && !AUDIT_OUTPUT_FORMATS.includes(args.output_format)) {
@@ -442,7 +470,9 @@ function pathContains(root, candidate) {
 function runCli(entry, argv, signal) {
   return new Promise((resolve, reject) => {
     if (signal.aborted) return reject(cancellationError("The MCP request was cancelled before execution."));
-    const child = spawn(process.execPath, [entry, ...argv], {
+    const nodeHost = /^node(?:\.exe)?$/i.test(path.basename(process.execPath));
+    const commandArguments = nodeHost ? [entry, ...argv] : argv;
+    const child = spawn(process.execPath, commandArguments, {
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
       env: { ...process.env, DEEPBOM_PROGRESS: "0" },

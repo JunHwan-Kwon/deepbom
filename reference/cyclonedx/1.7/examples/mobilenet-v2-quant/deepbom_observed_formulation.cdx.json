@@ -132,17 +132,36 @@
           "content": "f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d"
         }
       ],
+      "evidence": {
+        "identity": [
+          {
+            "field": "hash",
+            "confidence": 1,
+            "concludedValue": "SHA-256:f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d",
+            "methods": [
+              {
+                "technique": "binary-analysis",
+                "confidence": 1,
+                "value": "SHA-256 computed over the supplied serialized artifact bytes."
+              }
+            ],
+            "tools": [
+              "deepbom-analyzer-deepbom-1.95.0-077ceb7533cdaafe9389634f3c7d36ede346b2dd"
+            ]
+          }
+        ]
+      },
       "modelCard": {
         "bom-ref": "deepbom-model-sha256-f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d:model-card",
         "modelParameters": {
           "inputs": [
             {
-              "format": "UINT8 [1,224,224,3]; per-tensor; scale_count=1; zero_point_count=1; scale=0.0078125; zero_point=128"
+              "format": "tensor"
             }
           ],
           "outputs": [
             {
-              "format": "UINT8 [1,1001]; per-tensor; scale_count=1; zero_point_count=1; scale=0.09889253973960876; zero_point=58"
+              "format": "tensor"
             }
           ]
         },
@@ -191,10 +210,6 @@
           "value": "full_integer"
         },
         {
-          "name": "deepbom:model:activationPath",
-          "value": "{\"inventory_basis\":\"all_graph_operators\",\"all_operator_denominator\":65,\"states\":[{\"state\":\"quantized_compute\",\"operator_count\":64},{\"state\":\"quantized_data_movement\",\"operator_count\":1}],\"compute_scope\":{\"basis\":\"MAC-bearing compute operators\",\"denominator\":53,\"quantized_operators\":53,\"quantized_mac_ratio\":1},\"explanation\":\"compute_ops counts MAC-bearing compute operators only; op_state_counts covers every graph operator, including zero-MAC data movement and quantization boundary ops. XNNPACK fallback/break counts are a delegate partition concept and can overlap with quantized_data_movement.\"}"
-        },
-        {
           "name": "deepbom:model:fullIntegerQuantized",
           "value": "true"
         },
@@ -229,10 +244,6 @@
         {
           "name": "deepbom:model:perAxisQuantizationPresent",
           "value": "false"
-        },
-        {
-          "name": "deepbom:model:tensorDtypeInventory",
-          "value": "{\"UINT8\":119,\"INT32\":54}"
         },
         {
           "name": "deepbom:model:completeAffineInterfaceCount",
@@ -359,10 +370,6 @@
           "value": "5"
         },
         {
-          "name": "deepbom:finding:highSeverityFindings",
-          "value": "[{\"finding_id\":\"EA-IOC-0001\",\"title\":\"Preprocessing contract is not embedded\",\"category\":\"integration\",\"evidence_class\":\"OBSERVED\"},{\"finding_id\":\"EA-LIN-0001\",\"title\":\"Source checkpoint and conversion lineage were not provided\",\"category\":\"lineage\",\"evidence_class\":\"NOT_ASSESSABLE\"},{\"finding_id\":\"EA-WGT-0001\",\"title\":\"Exact-zero kernel slices converge with constant-output channel proof\",\"category\":\"numerical_structure_review\",\"evidence_class\":\"DERIVED\"},{\"finding_id\":\"EA-QNT-0112\",\"title\":\"Legal input-code domain cannot activate quantized output channels\",\"category\":\"quantization_design_review\",\"evidence_class\":\"DERIVED\"},{\"finding_id\":\"EA-DEL-0004\",\"title\":\"Required quantized XNNPACK build condition is not artifact-bound and conditional coverage collapses to zero\",\"category\":\"delegate\",\"evidence_class\":\"PREDICTED\"}]"
-        },
-        {
           "name": "deepbom:conformance:profile",
           "value": "litert_current_int8_operator_profile"
         },
@@ -373,10 +380,6 @@
         {
           "name": "deepbom:conformance:status",
           "value": "nonconformant"
-        },
-        {
-          "name": "deepbom:conformance:violationCodes",
-          "value": "[\"weight_dtype_expected_int8\",\"weight_granularity_per_tensor_expected_per_axis\",\"weight_zero_point_nonzero_expected_zero\"]"
         },
         {
           "name": "deepbom:conformance:violationCount",
@@ -397,10 +400,6 @@
         {
           "name": "deepbom:preprocessing:assessmentStatus",
           "value": "assessed"
-        },
-        {
-          "name": "deepbom:preprocessing:exactContractIds",
-          "value": "[\"raw_storage_rgb\",\"raw_storage_bgr\",\"artifact_affine_rgb\",\"center_128_div_128_rgb\"]"
         },
         {
           "name": "deepbom:preprocessing:portfolioLedgerSha256",
@@ -451,7 +450,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "4e94d8a599effffd2a4c949316b549f8f1fad54a84036b49b8d9492b40da7e72"
+              "content": "e498949c0fc4d13ec3186f8a0f86307b373be7d1d7045d7f66ef2871aa921ffb"
             }
           ]
         },

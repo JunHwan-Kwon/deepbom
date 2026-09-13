@@ -10,10 +10,16 @@ function mergeProperties(primary = [], compatibility = []) {
 }
 
 export function buildMlBomDocument(analysis, options = {}) {
-  const compatibility = buildMlBomCompatibilityProjection(analysis, options);
+  const evidenceMode = options.evidenceMode || "standalone";
+  const compatibility = buildMlBomCompatibilityProjection(analysis, {
+    ...options,
+    detailLocation: evidenceMode === "bundle"
+      ? "engineering_evidence.json#/evidence/static_analysis"
+      : "#/declarations/evidence/0/data/0/contents/attachment",
+  });
   const document = buildCycloneDxEvidenceDocument(analysis, {
     ...options,
-    engineeringEvidenceUrl: options.engineeringEvidenceUrl || "engineering_evidence.json",
+    evidenceMode,
     generatedAt: options.timestamp || new Date().toISOString(),
     runtimeEvidence: options.runtimeAssignmentEvidence || null,
     author: { name: "DEEPBOM", email: "", orcid: "" },

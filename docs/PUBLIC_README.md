@@ -4,6 +4,11 @@ DEEPBOM is a local static analyzer for deployed AI model artifacts. It audits
 serialized graph, tensor, quantization, memory, compatibility, and ML-BOM
 evidence without uploading model bytes.
 
+It is a multi-format artifact-evidence producer, an external-interface contract
+verifier, and a bounded BOM-to-artifact reconciliation tool. It is not an
+official reference implementation, a complete BOM validator, or a regulatory
+compliance verifier.
+
 The public source distribution covers TFLite, ONNX, GGUF, SafeTensors, Core ML,
 and bounded ExecuTorch artifacts. Findings distinguish observed and derived
 artifact facts from predicted compatibility, imported runtime evidence, and
@@ -27,10 +32,10 @@ is documented separately below.
 Install the repository-local Agent Skill after previewing the managed files:
 
 ```bash
-npx -y deepbom@1.96.15 integrate codex
-npx -y deepbom@1.96.15 integrate codex --apply
-npx -y deepbom@1.96.15 integrate claude-code
-npx -y deepbom@1.96.15 integrate claude-code --apply
+npx -y deepbom@1.97.0 integrate codex
+npx -y deepbom@1.97.0 integrate codex --apply
+npx -y deepbom@1.97.0 integrate claude-code
+npx -y deepbom@1.97.0 integrate claude-code --apply
 ```
 
 The Skill lets a local agent select the pinned `npx` command for a supported
@@ -42,7 +47,7 @@ For persistent tool-call access, run the same local analyzer as an MCP server
 over stdio:
 
 ```bash
-npx -y deepbom@1.96.15 mcp
+npx -y deepbom@1.97.0 mcp
 ```
 
 It exposes `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
@@ -52,7 +57,7 @@ formats and large-model scan depth are explicit. Local paths are restricted to
 the launch directory unless `DEEPBOM_MCP_ALLOWED_ROOTS` is configured.
 Agent-facing usage guidance is in [the DEEPBOM skill](skills/deepbom/SKILL.md).
 Claude Desktop users can instead install the version-matched
-`deepbom-1.96.15.mcpb` asset from the corresponding GitHub Release. The bundle
+`deepbom-1.97.0.mcpb` asset from the corresponding GitHub Release. The bundle
 contains the same CLI and WASM bytes as the npm channel and asks the user to
 select the only local directory it may read.
 
@@ -70,7 +75,10 @@ python -m pip install deepbom
 cargo install deepbom
 deepbom audit model.gguf --compact
 deepbom verify model.tflite --contract production-interface.json
-deepbom diff baseline.onnx candidate.onnx
+deepbom verify model.onnx --bom supplied.cdx.json --render markdown
+deepbom contract capture model.onnx -o baseline.interface-contract.json
+deepbom diff baseline.gguf candidate.gguf --tensors --render markdown
+deepbom capabilities --format agent-text
 deepbom explore model.tflite
 deepbom placement model.tflite --profiles xnnpack_cpu,tflite_coreml_delegate,litert_qualcomm_qnn
 deepbom graph model.onnx --format json --output artifact-graph.json

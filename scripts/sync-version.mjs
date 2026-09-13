@@ -39,6 +39,10 @@ await updateTomlVersion("channels/cargo/Cargo.toml", contract.cargoVersion);
 await updateCargoLock("channels/cargo/Cargo.lock", "deepbom", contract.cargoVersion);
 await updateTomlVersion("channels/python/pyproject.toml", contract.pythonVersion);
 await updateRegex("channels/python/src/deepbom/__init__.py", /^__version__\s*=\s*"[^"]+"/m, `__version__ = "${contract.pythonVersion}"`);
+await updateRegex("channels/container/Dockerfile", /^ARG DEEPBOM_VERSION=[^\r\n]+/m,
+  `ARG DEEPBOM_VERSION=${contract.displayVersion}`);
+await updateRegex("channels/container/README.md", /deepbom:\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g,
+  `deepbom:${contract.displayVersion}`);
 await updateRegex("bin/deepbom.mjs", /const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" \? __DEEPBOM_RELEASE_VERSION__ : "[^"]+";/,
   `const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "${contract.displayVersion}";`);
 await updateRegex("web/lib/app-config.js", /^export const ANALYZER_SEMANTIC_VERSION\s*=\s*"[^"]+";/m,
