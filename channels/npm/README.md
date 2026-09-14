@@ -7,10 +7,10 @@ For a local Codex or Claude Code project, preview and install the bundled Agent
 Skill without operating an analysis server:
 
 ```console
-npx -y deepbom@1.98.0 integrate codex
-npx -y deepbom@1.98.0 integrate codex --apply
-npx -y deepbom@1.98.0 integrate claude-code
-npx -y deepbom@1.98.0 integrate claude-code --apply
+npx -y deepbom@1.99.0 integrate codex
+npx -y deepbom@1.99.0 integrate codex --apply
+npx -y deepbom@1.99.0 integrate claude-code
+npx -y deepbom@1.99.0 integrate claude-code --apply
 ```
 
 ```console
@@ -28,10 +28,10 @@ npx deepbom explore model.tflite --target-profile target-profile.json
 npx deepbom audit model.pte --executorch-build deepbom.executorch-build.json --compact
 npx deepbom capabilities --format agent-json
 npx deepbom capabilities --format agent-text
-npx -y deepbom@1.98.0 mcp
+npx -y deepbom@1.99.0 mcp
 ```
 
-Claude Desktop can install the version-matched `deepbom-1.98.0.mcpb` asset
+Claude Desktop can install the version-matched `deepbom-1.99.0.mcpb` asset
 from the corresponding GitHub Release as a local desktop extension.
 
 ChatGPT developer-mode users can connect `https://deepbom.org/mcp` for one
@@ -40,6 +40,14 @@ DEEPBOM service receives only a bounded result and does not fetch or retain
 model bytes. Public ChatGPT discovery requires separate OpenAI review. Use the
 local package for confidential or large files, directories, shards, sidecars,
 complete exports, and repeat automation.
+
+On a Claude host that supports remote MCP Apps, private testers can add the
+separate `https://deepbom.org/mcp/claude` connector. It requires an explicit
+file selection inside the app and does not automatically access Claude
+attachments. The selected bytes stay in the browser sandbox; only a bounded
+result is returned to the conversation. Public Claude discovery remains
+subject to Anthropic review. Use the local package or MCPB when model-derived
+facts must not leave the computer.
 
 The default output is a bounded human-readable summary. Use `--json` or
 `--compact` for the complete analysis document, `--format envelope` for the

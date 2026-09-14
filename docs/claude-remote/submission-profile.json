@@ -1,0 +1,17 @@
+{
+  "schema": "deepbom.claude_remote_submission.v1",
+  "display_name": "DEEPBOM Artifact Evidence",
+  "delivery": "remote_mcp_app",
+  "version": "1.99.0",
+  "endpoint": "https://deepbom.org/mcp/claude",
+  "documentation_url": "https://deepbom.org/claude/",
+  "privacy_url": "https://deepbom.org/privacy",
+  "terms_url": "https://deepbom.org/terms",
+  "support_url": "https://deepbom.org/support",
+  "authentication": "none",
+  "automatic_attachment_access": false,
+  "model_byte_transfer": "The user selects one file in the MCP App; selected model bytes are analyzed in the browser sandbox and are not sent to the DEEPBOM service.",
+  "conversation_data": "A bounded static-analysis result is returned to the Claude conversation and can contain artifact and model metadata.",
+  "host_validation_status": "not_yet_observed_on_claude_hosts",
+  "listing_status": "not_submitted_or_approved_by_this_file"
+}

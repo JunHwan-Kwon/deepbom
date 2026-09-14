@@ -4,6 +4,33 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.99.0 - 2026-09-14
+
+- Add a separate Claude remote MCP App candidate at
+  `https://deepbom.org/mcp/claude`. It opens an explicit browser-sandbox file
+  picker, never claims automatic Claude attachment access, and returns only a
+  bounded static-evidence result to the conversation.
+- Keep the remote Claude path distinct from the local Claude Desktop MCPB.
+  Public documentation now states the different byte-transfer, result-transfer,
+  host-support, and confidentiality boundaries without claiming Anthropic
+  review or directory approval.
+- Add runtime titles and read-only, non-destructive annotations to the local MCP
+  tools, declare the MCPB privacy policy, limit its manifest to Windows and
+  macOS, and exercise all four packaged tools plus outside-root rejection with
+  the official MCP Inspector on both release runners.
+- Add a bounded MCP App browser client, result and diagnostic validation,
+  protocol/version negotiation, origin and frame limits, and executable bridge
+  round-trip tests. Selected model bytes remain in the app sandbox; the service
+  receives the bounded result rather than the artifact.
+- Expand brandless host-evaluation material to five positive and three negative
+  cases for both ChatGPT and the Claude remote path. These catalogs remain blank
+  test plans until real host runs are recorded by the publisher.
+- Pin the Cloudflare deployment CLI used by CI after validating the production
+  configuration against its packaged schema and dry-run output.
+- Raise the reviewed documentation ceiling by 8 KiB for the separate Claude
+  remote qualification boundary and account-owned OpenAI/Anthropic submission
+  runbooks; executable and generated-data ceilings are unchanged.
+
 ## 1.98.0 - 2026-09-14
 
 - Add the bounded `deepbom.model_ir.v1` preview without replacing the stable

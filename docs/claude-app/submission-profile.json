@@ -2,8 +2,8 @@
   "schema": "deepbom.claude_desktop_submission.v1",
   "display_name": "DEEPBOM Artifact Evidence",
   "delivery": "local_mcpb",
-  "version": "1.98.0",
-  "release_asset": "https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v1.98.0/deepbom-1.98.0.mcpb",
+  "version": "1.99.0",
+  "release_asset": "https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v1.99.0/deepbom-1.99.0.mcpb",
   "description": "Local static analysis and hash-bound evidence for supported serialized AI deployment artifacts.",
   "publisher": "Jun-Hwan Kwon",
   "homepage": "https://deepbom.org/for-agents/",
@@ -13,6 +13,6 @@
   "authentication": "none",
   "local_file_boundary": "The user selects one allowed directory. The extension must reject paths outside it.",
   "evidence_boundary": "Static serialized-artifact evidence does not establish measured runtime behavior, task accuracy, clinical validity, safety, or regulatory compliance.",
-  "remote_connector_status": "not_claimed_or_tested_for_claude_by_this_package",
+  "remote_connector_status": "separate_remote_candidate_documented_but_not_host_validated_by_this_package",
   "listing_status": "not_submitted_or_approved_by_this_file"
 }

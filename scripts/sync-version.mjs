@@ -64,6 +64,7 @@ for (const relativePath of [
 ]) await updateRegex(relativePath, /deepbom@\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g, `deepbom@${contract.displayVersion}`);
 await updateJson("docs/agent-evaluation/host-evaluation-cases.v1.json", (document) => ({ ...document, version: contract.displayVersion }));
 await updateJson("docs/agent-evaluation/host-evaluation-run.template.json", (document) => ({ ...document, deepbom_version: contract.displayVersion }));
+await updateJson("docs/claude-remote/submission-profile.json", (document) => ({ ...document, version: contract.displayVersion }));
 await updateJson("docs/claude-app/submission-profile.json", (document) => ({
   ...document,
   version: contract.displayVersion,

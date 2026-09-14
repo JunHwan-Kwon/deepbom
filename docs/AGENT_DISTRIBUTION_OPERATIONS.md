@@ -20,13 +20,28 @@ to have completed.
 5. Compare the successful attachment result with the same release's local CLI
    result for artifact SHA-256, format, analyzer version, and bounded summary.
 
-Before public submission, review `chatgpt-app/submission-profile.json`, policy
-pages, icon, and recorded host evaluation. When the OpenAI portal provides its
-domain challenge, set `OPENAI_APPS_CHALLENGE` as a Cloudflare Worker secret and
-verify the exact response at
-`https://deepbom.org/.well-known/openai-apps-challenge`. Submit the stable MCP
-endpoint through the current **With MCP** flow. Approval and public discovery
-must be recorded only after readback from the directory.
+Before public submission, the publisher must complete OpenAI identity
+verification and hold **Apps Management: Write** permission in the submitting
+Platform organization. Review `chatgpt-app/submission-profile.json`, policy
+pages, icon, and a real new-session host evaluation containing at least five
+positive and three negative cases. Do not submit the blank template as test
+evidence.
+
+When the OpenAI portal provides its domain challenge, enter it locally without
+putting the token in source control or chat history:
+
+```powershell
+$challenge = Read-Host "OpenAI domain challenge"
+$challenge | npx wrangler secret put OPENAI_APPS_CHALLENGE
+Remove-Variable challenge
+```
+
+Verify that the exact value, with no HTML or extra newline, is returned from
+`https://deepbom.org/.well-known/openai-apps-challenge`. In the plugin portal,
+choose **With MCP**, enter the stable `https://deepbom.org/mcp` endpoint, use
+**Scan Tools**, compare the detected public/private tool visibility and
+annotations with the prepared profile, then submit. Approval and public
+discovery must be recorded only after directory readback.
 
 The portable root `plugin.json` and `mcp.json` package the same public Skill and
 remote endpoint for Agent Plugins hosts. They are preparation artifacts, not a
@@ -34,29 +49,61 @@ substitute for MCP registration, review, or approval.
 
 ## Claude Desktop validation
 
-1. Download `deepbom-1.98.0.mcpb` from the `channels-v1.98.0` GitHub Release.
+1. Download `deepbom-1.99.0.mcpb` from the `channels-v1.99.0` GitHub Release.
 2. Install it in Claude Desktop and select a dedicated, non-sensitive model
    directory as the only allowed root.
 3. Confirm all four local MCP tools, execute the Claude indirect cases, and
    confirm that an outside-root path is rejected.
 4. Record real observations in a separate copy of the shared run template and
-   compare one MCP audit with the 1.98.0 CLI.
+   compare one MCP audit with the 1.99.0 CLI.
 5. Review the current Anthropic directory requirements and submit the MCPB
    manually if the publisher account is eligible.
 
-Do not describe `https://deepbom.org/mcp` as a tested Claude remote connector.
-Its current file-transfer and browser-component contract is specifically
-validated for the ChatGPT attachment path.
+The MCPB manifest deliberately lists only `darwin` and `win32`. Source and CI
+validate its manifest, packaged bytes, four runtime calls, annotations, and
+outside-root rejection. Those checks do not replace installation through the
+actual Claude Desktop UI. Record at least one Windows and one macOS installation
+and tool call before describing both platforms as host-validated.
+
+## Claude remote MCP App validation
+
+The candidate remote endpoint is `https://deepbom.org/mcp/claude`. Do not use
+the ChatGPT endpoint for this test. The Claude endpoint does not automatically
+read conversation attachments. Its first tool opens an MCP App in which the
+user explicitly selects one local file; analysis runs in that browser sandbox
+and only a bounded result is returned through the connector.
+
+1. Add `https://deepbom.org/mcp/claude` as a private custom connector in
+   Claude.ai. No DEEPBOM account or test credential is required.
+2. Confirm that the analyzer opens a file picker, does not claim automatic
+   attachment access, and accurately describes its local Desktop alternative.
+3. Use a non-confidential public fixture. Compare its SHA-256, format, analyzer
+   version, finding counts, and evidence boundary with the same release's CLI.
+4. Run the `claude_remote_browser_mcp_app` cases from the shared catalog in new
+   sessions. Record whether the tool was selected, the picker opened, analysis
+   completed, and the host accepted the returned model context.
+5. Repeat on Claude Desktop and mobile only where that host exposes the MCP App.
+   Treat a missing picker, unsupported UI capability, or failed context update
+   as a host-specific limitation, not as a passing result.
+6. Capture MCP Inspector results for all four endpoint tools and actual-host
+   screenshots only from real sessions. Never fabricate directory evidence.
+
+The remote result can contain hashes, model names, tensor names, architecture
+facts, and findings even though the original bytes are not sent to DEEPBOM.
+Use the local MCPB or CLI when those derived facts must remain on the computer.
+Submit to Anthropic only after the publisher has rechecked current directory
+requirements, privacy copy, screenshots, test evidence, and the account-owned
+submission form. Directory approval must be recorded only after readback.
 
 ## Codex and Claude Code local selection
 
 Preview, then apply the managed Skill:
 
 ```bash
-npx -y deepbom@1.98.0 integrate codex
-npx -y deepbom@1.98.0 integrate codex --apply
-npx -y deepbom@1.98.0 integrate claude-code
-npx -y deepbom@1.98.0 integrate claude-code --apply
+npx -y deepbom@1.99.0 integrate codex
+npx -y deepbom@1.99.0 integrate codex --apply
+npx -y deepbom@1.99.0 integrate claude-code
+npx -y deepbom@1.99.0 integrate claude-code --apply
 ```
 
 Open a new session and use the brandless cases. The Skill's verifier must prefer

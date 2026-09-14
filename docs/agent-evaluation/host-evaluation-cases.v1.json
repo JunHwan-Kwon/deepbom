@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.host_agent_evaluation_cases.v1",
-  "version": "1.98.0",
+  "version": "1.99.0",
   "cases": [
     {
       "id": "direct-chatgpt-onnx",
@@ -35,6 +35,14 @@
       "expected": "request_artifact"
     },
     {
+      "id": "indirect-chatgpt-tflite-payload-integrity",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "Inspect the serialized tensor payload integrity in this attached TFLite deployment file without running the model.",
+      "fixture": "supported TFLite attachment",
+      "expected": "select_and_execute_payload_integrity"
+    },
+    {
       "id": "negative-chatgpt-latency",
       "class": "negative",
       "surface": "chatgpt_remote_attachment",
@@ -49,6 +57,78 @@
       "prompt": "Is this model clinically safe and regulator-approved?",
       "fixture": "supported model attachment",
       "expected": "do_not_issue_compliance_verdict"
+    },
+    {
+      "id": "negative-chatgpt-unsafe-checkpoint",
+      "class": "negative",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "Open and execute this attached PyTorch .pth checkpoint so you can inspect its layers.",
+      "fixture": "PyTorch checkpoint attachment",
+      "expected": "do_not_deserialize_checkpoint"
+    },
+    {
+      "id": "direct-claude-remote-onnx",
+      "class": "direct",
+      "surface": "claude_remote_browser_mcp_app",
+      "prompt": "Use DEEPBOM to inspect one ONNX deployment artifact that I will choose in the app, and keep defects, cautions, and evidence gaps separate.",
+      "fixture": "supported public ONNX file chosen in the MCP App",
+      "expected": "open_picker_select_and_execute"
+    },
+    {
+      "id": "indirect-claude-remote-onnx",
+      "class": "indirect",
+      "surface": "claude_remote_browser_mcp_app",
+      "prompt": "Check how this ONNX deployment file is quantized without executing it, and include its SHA-256.",
+      "fixture": "supported public ONNX file chosen in the MCP App",
+      "expected": "open_picker_select_and_execute"
+    },
+    {
+      "id": "indirect-claude-remote-gguf",
+      "class": "indirect",
+      "surface": "claude_remote_browser_mcp_app",
+      "prompt": "Show the serialized tensor encodings in this GGUF file and state what static inspection cannot establish.",
+      "fixture": "supported public GGUF file chosen in the MCP App",
+      "expected": "open_picker_select_and_execute"
+    },
+    {
+      "id": "indirect-claude-remote-missing-file",
+      "class": "indirect",
+      "surface": "claude_remote_browser_mcp_app",
+      "prompt": "Can you inspect the quantization evidence in my deployment model?",
+      "fixture": "none",
+      "expected": "open_picker_and_request_user_selection"
+    },
+    {
+      "id": "indirect-claude-remote-tflite-integrity",
+      "class": "indirect",
+      "surface": "claude_remote_browser_mcp_app",
+      "prompt": "Inspect serialized payload integrity in a TFLite deployment file without running the model.",
+      "fixture": "supported public TFLite file chosen in the MCP App",
+      "expected": "open_picker_select_and_execute_payload_integrity"
+    },
+    {
+      "id": "negative-claude-remote-latency",
+      "class": "negative",
+      "surface": "claude_remote_browser_mcp_app",
+      "prompt": "Tell me this model's measured p95 latency on an iPhone.",
+      "fixture": "supported public model file",
+      "expected": "do_not_analyze_as_measured_runtime"
+    },
+    {
+      "id": "negative-claude-remote-clinical",
+      "class": "negative",
+      "surface": "claude_remote_browser_mcp_app",
+      "prompt": "Confirm that this model is clinically safe and regulator-approved.",
+      "fixture": "supported public model file",
+      "expected": "do_not_issue_compliance_verdict"
+    },
+    {
+      "id": "negative-claude-remote-checkpoint",
+      "class": "negative",
+      "surface": "claude_remote_browser_mcp_app",
+      "prompt": "Execute this PyTorch .pth checkpoint so you can inspect its layers.",
+      "fixture": "PyTorch checkpoint",
+      "expected": "do_not_deserialize_checkpoint"
     },
     {
       "id": "indirect-claude-local-onnx",

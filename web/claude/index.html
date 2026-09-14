@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Use DEEPBOM with Claude</title>
+  <meta name="description" content="Use DEEPBOM through a local Claude Desktop extension or a browser-local remote connector with explicit file selection." />
+  <link rel="canonical" href="https://deepbom.org/claude/" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://deepbom.org/claude/" />
+  <meta property="og:title" content="Use DEEPBOM with Claude" />
+  <meta property="og:description" content="Local and browser-local static evidence paths with explicit data boundaries." />
+  <meta property="og:image" content="https://deepbom.org/web/og-image.png" />
+  <link rel="icon" href="/claude/deepbom-app-icon.svg" type="image/svg+xml" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "DEEPBOM for Claude",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Web, macOS, Windows",
+    "url": "https://deepbom.org/claude/",
+    "isAccessibleForFree": true,
+    "author": { "@id": "https://deepbom.org/#author" }
+  }
+  </script>
+  <link rel="stylesheet" href="../evaluate/evaluation.css" />
+</head>
+<body class="agent-guide">
+  <header class="brief-header">
+    <a class="brand" href="/">DEEPBOM</a>
+    <nav class="brief-nav" aria-label="Claude documentation">
+      <a href="/">Workspace</a>
+      <a aria-current="page" href="/claude/">Claude</a>
+      <a href="/for-agents/">Local agents</a>
+    </nav>
+  </header>
+  <main class="brief-main">
+    <p class="eyebrow">Claude integration</p>
+    <h1>Choose a local or browser-local evidence path.</h1>
+    <p class="lede">DEEPBOM has two separate Claude delivery paths. The desktop extension runs the packaged analyzer on the user's computer. The remote MCP App requires the user to choose one file inside the app and returns only a bounded result to the conversation.</p>
+
+    <section class="brief-section">
+      <h2>Local Claude Desktop extension</h2>
+      <ol>
+        <li>Download the version-matched <code>.mcpb</code> asset from the DEEPBOM GitHub release.</li>
+        <li>Install it in Claude Desktop and select one dedicated model directory as <code>allowed_root</code>.</li>
+        <li>Ask Claude to inspect a supported artifact in that directory. Paths outside the selected root are rejected.</li>
+      </ol>
+      <p>This path is intended for confidential, large, sharded, or package artifacts. It is a local Desktop extension and is not a Claude.ai or mobile execution path.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Remote MCP App for host testing</h2>
+      <ol>
+        <li>Add <code>https://deepbom.org/mcp/claude</code> as a custom remote connector in a supported Claude host.</li>
+        <li>Ask to inspect a model artifact. The app opens a file picker; Claude attachments are not read automatically.</li>
+        <li>Choose one supported file and select Analyze. The browser sandbox returns a bounded, hash-bound static result.</li>
+      </ol>
+      <p>The endpoint is prepared for private host validation. This page does not claim Anthropic review, directory approval, or verified behavior on every Claude surface.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Data-flow boundary</h2>
+      <table class="fact-table">
+        <tbody>
+          <tr><th>Desktop MCPB</th><td>The packaged analyzer reads only paths under the directory selected during installation. It does not upload model bytes.</td></tr>
+          <tr><th>Remote MCP App</th><td>The user deliberately selects one file in the app. Analysis runs in the host's browser sandbox. DEEPBOM's service receives the bounded result, not the selected model bytes.</td></tr>
+          <tr><th>Conversation</th><td>The result can include file identity, tensor or graph summaries, findings, and evidence limits. Those facts may still be confidential.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="brief-section">
+      <h2>Evidence boundary</h2>
+      <p>DEEPBOM reports serialized-artifact observations and deterministic static derivations. It does not establish measured latency, energy, task accuracy, clinical validity, actual runtime placement, or regulatory compliance.</p>
+      <p>The browser-local path accepts one TFLite, ONNX, GGUF, SafeTensors, Core ML <code>.mlmodel</code>, or ExecuTorch <code>.pte</code>/<code>.ptd</code> file. Package and sidecar closure remain local-tool workflows.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Policies and support</h2>
+      <ul class="plain-list">
+        <li><a href="/privacy">Privacy and data handling</a></li>
+        <li><a href="/terms">Terms of use</a></li>
+        <li><a href="/support">Support and vulnerability reporting</a></li>
+        <li><a href="/llms.txt">Machine-readable product boundary</a></li>
+      </ul>
+    </section>
+  </main>
+  <footer class="brief-footer">DEEPBOM is an independent engineering tool. Static evidence supports review; it is not a compliance verdict.</footer>
+</body>
+</html>

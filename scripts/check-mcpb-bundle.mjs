@@ -23,6 +23,8 @@ assert.equal(manifest.version, releaseManifest.version);
 assert.equal(manifest.server.type, "node");
 assert.deepEqual(manifest.server.mcp_config.args, ["${__dirname}/server/bin/deepbom.mjs", "mcp"]);
 assert.equal(manifest.server.mcp_config.env.DEEPBOM_MCP_ALLOWED_ROOTS, "${user_config.allowed_root}");
+assert.deepEqual(manifest.privacy_policies, ["https://deepbom.org/privacy"]);
+assert.deepEqual(manifest.compatibility.platforms, ["darwin", "win32"]);
 assert.deepEqual(manifest.tools.map((tool) => tool.name), [
   "deepbom_capabilities",
   "deepbom_audit",
@@ -52,6 +54,11 @@ for (const relative of [
   assert.equal(sha256(bundleBytes), sha256(npmBytes), `MCPB member diverged from npm: ${relative}`);
 }
 assert.equal(sha256(await readFile(bundlePath)), releaseManifest.artifacts.mcpb.sha256);
+const bundledReadme = await readFile(path.join(packageRoot, "README.md"), "utf8");
+assert.match(bundledReadme, /^## Privacy Policy$/m);
+for (const phrase of ["does not collect telemetry", "third\\s+parties", "retention", "https://deepbom.org/privacy"]) {
+  assert.match(bundledReadme, new RegExp(phrase, "i"));
+}
 
 const selfTest = spawnSync(process.execPath, [path.join(packageRoot, "server", "bin", "deepbom.mjs"), "self-test", "--compact"], {
   cwd: root,
@@ -68,7 +75,7 @@ if (!process.argv.includes("--offline")) {
   assert.equal(validation.status, 0, `${validation.stdout}\n${validation.stderr}`);
 }
 
-console.log("MCPB bundle passed (official manifest validation, exact npm-member hashes, local self-test, and four-tool declaration).");
+console.log(`MCPB bundle passed (${process.argv.includes("--offline") ? "local manifest contract" : "official manifest validation"}, exact npm-member hashes, local self-test, and four-tool declaration).`);
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");

@@ -115,6 +115,11 @@ jobs:
         env:
           DEEPBOM_WHEEL_PLATFORM_TAG: ${{ matrix.wheel_tag }}
         run: npm run build:channels
+      - name: Verify Claude Desktop bundle runtime on Windows and macOS
+        if: runner.os == 'Windows' || runner.os == 'macOS'
+        run: |
+          npm run check:mcpb -- --offline
+          npm run check:mcp-inspector -- --entry .local-validation/channel-release/mcpb/package/server/bin/deepbom.mjs --fixture .local-validation/channel-release/mcpb/package/server/bin/deepbom-self-test.onnx --allowed-root .local-validation/channel-release/mcpb/package/server/bin
       - name: Verify public package boundary
         run: npm run check:public-package-boundary
       - name: Verify platform engine and wheel smoke

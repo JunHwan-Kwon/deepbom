@@ -165,6 +165,8 @@ docs/chatgpt-app/evals.json
 docs/chatgpt-app/submission-profile.json
 docs/claude-app/README.md
 docs/claude-app/submission-profile.json
+docs/claude-remote/README.md
+docs/claude-remote/submission-profile.json
 docs/native-runtime-capture.md
 docs/schemas/deepbom-artifact-ir-v2.schema.json
 docs/schemas/deepbom-conversion-receipt-v1.schema.json
@@ -305,6 +307,7 @@ scripts/check-chatgpt-mcp.mjs
 scripts/check-chatgpt-widget.mjs
 scripts/check-ci-deploy-contract.mjs
 scripts/check-claude-app-metadata.mjs
+scripts/check-claude-remote-mcp.mjs
 scripts/check-cli-automation.mjs
 scripts/check-cli-graph-export.mjs
 scripts/check-cli-model-ir-visualization.mjs
@@ -715,6 +718,8 @@ web/bootstrap.js
 web/chatgpt/deepbom-app-icon.svg
 web/chatgpt/deepbom-widget.js
 web/chatgpt/index.html
+web/claude/deepbom-widget.js
+web/claude/index.html
 web/device-workspace.css
 web/evaluate/engineering/index.html
 web/evaluate/evaluation.css
@@ -878,6 +883,7 @@ web/lib/llm-static-memory-placement.js
 web/lib/llm-token-budget-scenario.js
 web/lib/mac-coverage.js
 web/lib/markdown-report.js
+web/lib/mcp-app-client.js
 web/lib/metadata-model-adapters.js
 web/lib/metric-coverage.js
 web/lib/modal-accessibility.js

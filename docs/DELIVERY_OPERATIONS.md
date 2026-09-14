@@ -88,6 +88,10 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 | Local Windows 1.98.0 channel build | release-version npm, executable, Python wheel, Cargo launcher, Agent Skill, portable plugin, Common Model IR, and public/private boundary | 150.326 s |
 | Local Windows 1.98.0 platform smoke | installed Python and standalone parity plus typed values, policy gate, Model IR, visualization manifest, and path-with-spaces execution | 170.795 s |
 | Local Windows 1.98.0 release-contract equivalence | installed npm, MCP, Agent Skill, Python, standalone, Cargo, Model IR/visualization, verify/diff/explore, and tamper contracts | 494.550 s |
+| Private web 1.99.0 preflight | 85 bounded checks including ChatGPT and Claude remote MCP App contracts, Claude local MCPB metadata/privacy, Common Model IR, visualization, cache, privacy, and deployment contracts; no browser or full-corpus matrix | 169.822 s |
+| Local Windows 1.99.0 channel build | release-version npm, executable, Python wheel, Cargo launcher, Agent Skill, portable plugin, Claude Desktop MCPB, Common Model IR, and public/private boundary | 79.082 s |
+| Local Windows 1.99.0 platform smoke | installed Python and standalone parity plus typed values, policy gate, Model IR, visualization manifest, and path-with-spaces execution | 232.853 s |
+| Local Windows 1.99.0 release-contract equivalence | installed npm, MCP, Agent Skill, Python, standalone, Cargo, Model IR/visualization, verify/diff/explore, and tamper contracts; Claude host approval remains a separate external validation | 587.673 s |
 
 The 1.94.4 run is retained as timing and incident evidence. It is not a known-good
 quality baseline. A registry success is never treated as sufficient without a

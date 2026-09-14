@@ -20,7 +20,8 @@ export async function buildMcpbBundle({ npmPackageRoot, outputRoot, version }) {
     await writeFile(path.join(packageRoot, "server", relative), await readFile(path.join(npmPackageRoot, relative)));
   }
   await writeFile(path.join(packageRoot, "LICENSE"), await readFile(path.join(npmPackageRoot, "LICENSE")));
-  await writeFile(path.join(packageRoot, "README.md"), await readFile(path.join(npmPackageRoot, "README.md")));
+  const npmReadme = await readFile(path.join(npmPackageRoot, "README.md"), "utf8");
+  await writeFile(path.join(packageRoot, "README.md"), `${npmReadme.trimEnd()}\n\n${mcpbPrivacySection()}\n`);
 
   const manifest = buildManifest(version);
   await writeFile(path.join(packageRoot, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
@@ -56,6 +57,7 @@ function buildManifest(version) {
     documentation: "https://deepbom.org/for-agents/",
     support: "https://github.com/JunHwan-Kwon/deepbom/issues",
     license: "Apache-2.0",
+    privacy_policies: ["https://deepbom.org/privacy"],
     server: {
       type: "node",
       entry_point: "server/bin/deepbom.mjs",
@@ -84,10 +86,31 @@ function buildManifest(version) {
     keywords: ["model-context-protocol", "static-analysis", "tflite", "onnx", "gguf", "ml-bom"],
     compatibility: {
       claude_desktop: ">=1.0.0",
-      platforms: ["darwin", "win32", "linux"],
+      platforms: ["darwin", "win32"],
       runtimes: { node: ">=20" },
     },
   };
+}
+
+function mcpbPrivacySection() {
+  return [
+    "## Privacy Policy",
+    "",
+    "This desktop extension runs DEEPBOM on the user's computer. It reads only",
+    "artifact paths under the directory selected as `allowed_root`. Local artifact",
+    "bytes, filenames, tensor payloads, and analysis results are not uploaded by",
+    "the extension. A user may deliberately provide an immutable remote source to",
+    "a tool; in that case DEEPBOM downloads it into a content-addressed local cache",
+    "under an allowed root and does not send local artifacts to that source.",
+    "",
+    "The extension does not collect telemetry, share artifact data with third",
+    "parties, or retain data on a DEEPBOM service. Local files and caches remain",
+    "under the user's control and follow the user's own deletion and retention",
+    "practices. Tool results are returned to Claude and are then handled under the",
+    "user's Claude account and organization policies.",
+    "",
+    "Full policy and contact information: https://deepbom.org/privacy",
+  ].join("\n");
 }
 
 async function collectFiles(directory) {

@@ -98,6 +98,15 @@ await copyFile(
   path.join(root, "web", "chatgpt", "deepbom-app-icon.svg"),
   path.join(dist, "chatgpt", "deepbom-app-icon.svg"),
 );
+await bundleClaudeWidget();
+await copyFile(
+  path.join(root, "web", "claude", "index.html"),
+  path.join(dist, "claude", "index.html"),
+);
+await copyFile(
+  path.join(root, "web", "chatgpt", "deepbom-app-icon.svg"),
+  path.join(dist, "claude", "deepbom-app-icon.svg"),
+);
 await copyFile(path.join(root, "server.json"), path.join(dist, "server.json"));
 
 await writeFile(path.join(dist, ".nojekyll"), "");
@@ -166,6 +175,9 @@ await writeFile(path.join(dist, "llms.txt"), [
   "",
   "Analysis runs locally, in the reader's browser or CLI process. The ChatGPT",
   "integration also analyzes an authorized attachment inside its browser sandbox.",
+  "The separate Claude remote MCP App requires an explicit file selection inside",
+  "the app; it does not automatically read Claude attachments. The local Claude",
+  "Desktop extension is the preferred path for confidential, large, or package artifacts.",
   "The remote MCP control plane serves tool metadata and validates the bounded",
   "result; it does not fetch or retain model bytes.",
   "",
@@ -197,6 +209,7 @@ await writeFile(path.join(dist, "llms.txt"), [
   "local-file analysis. A connected DEEPBOM ChatGPT plugin can analyze one",
   "authorized attachment in its browser sandbox and return a bounded result.",
   "Remote MCP endpoint: https://deepbom.org/mcp",
+  "Claude remote host-test endpoint: https://deepbom.org/mcp/claude",
   "",
   "Formats: .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd.",
   "Outputs: analysis JSON, evidence envelope, CycloneDX 1.7, SARIF 2.1.0.",
@@ -220,6 +233,7 @@ await writeFile(path.join(dist, "llms.txt"), [
   "- [Workspace](https://deepbom.org/): browser-local audit of one artifact",
   "- [AI agent setup](https://deepbom.org/for-agents/): local Agent Skill, npx, and stdio MCP paths",
   "- [ChatGPT integration](https://deepbom.org/chatgpt/): attached-file analysis in the ChatGPT browser sandbox",
+  "- [Claude integration](https://deepbom.org/claude/): separate local Desktop and browser-local remote paths",
   "- [Inspection guides](https://deepbom.org/guides/): problem-focused ONNX, GGUF, and artifact-diff workflows",
   "- [Regulatory brief](https://deepbom.org/evaluate/regulatory/): what the records can support in a controlled process, and where they stop",
   "- [Quality brief](https://deepbom.org/evaluate/quality/): validating an installed analyzer before relying on it",
@@ -252,6 +266,12 @@ await writeFile(path.join(dist, "sitemap.xml"), [
   "  </url>",
   "  <url>",
   "    <loc>https://deepbom.org/chatgpt/</loc>",
+  `    <lastmod>${today}</lastmod>`,
+  "    <changefreq>monthly</changefreq>",
+  "    <priority>0.8</priority>",
+  "  </url>",
+  "  <url>",
+  "    <loc>https://deepbom.org/claude/</loc>",
   `    <lastmod>${today}</lastmod>`,
   "    <changefreq>monthly</changefreq>",
   "    <priority>0.8</priority>",
@@ -372,6 +392,30 @@ async function bundleChatGptWidget() {
   const output = path.resolve(path.join(outdir, "deepbom-widget.js"));
   if (!Object.keys(result.metafile.outputs).map((file) => path.resolve(root, file)).includes(output)) {
     throw new Error("esbuild did not emit dist/chatgpt/deepbom-widget.js.");
+  }
+}
+
+async function bundleClaudeWidget() {
+  const outdir = path.join(dist, "claude");
+  await mkdir(outdir, { recursive: true });
+  const result = await build({
+    absWorkingDir: root,
+    entryPoints: ["web/claude/deepbom-widget.js"],
+    outfile: path.join(outdir, "deepbom-widget.js"),
+    bundle: true,
+    charset: "ascii",
+    format: "esm",
+    legalComments: "none",
+    metafile: true,
+    minify: true,
+    platform: "browser",
+    sourcemap: false,
+    target: "es2022",
+    write: true,
+  });
+  const output = path.resolve(path.join(outdir, "deepbom-widget.js"));
+  if (!Object.keys(result.metafile.outputs).map((file) => path.resolve(root, file)).includes(output)) {
+    throw new Error("esbuild did not emit dist/claude/deepbom-widget.js.");
   }
 }
 

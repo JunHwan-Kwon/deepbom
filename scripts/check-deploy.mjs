@@ -16,6 +16,8 @@ const CHECKS = [
   "scripts/check-public-product-boundary.mjs",
   "scripts/check-chatgpt-mcp.mjs",
   "scripts/check-chatgpt-app-metadata.mjs",
+  "scripts/check-claude-app-metadata.mjs",
+  "scripts/check-claude-remote-mcp.mjs",
   "scripts/check-evaluation-briefs.mjs",
   "scripts/generate-browser-target-profiles.mjs --check",
   "scripts/check-browser-delivery-boundary.mjs",

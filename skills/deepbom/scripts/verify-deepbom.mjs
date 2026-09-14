@@ -6,7 +6,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-const VERSION = "1.98.0";
+const VERSION = "1.99.0";
 const allowDownload = process.argv.slice(2).includes("--allow-download");
 const attempts = [];
 const candidates = localCandidates();
