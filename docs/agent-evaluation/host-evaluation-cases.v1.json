@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.host_agent_evaluation_cases.v1",
-  "version": "1.99.0",
+  "version": "1.99.1",
   "cases": [
     {
       "id": "direct-chatgpt-onnx",

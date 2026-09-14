@@ -4,6 +4,13 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.99.1 - 2026-09-14
+
+- Pin npm 11.6.0 on Windows installation-channel runners before invoking the
+  official MCP Inspector. This avoids the reproducible npm 11.6.2
+  `ECOMPROMISED: Lock compromised` regression while leaving the tested
+  Inspector version and DEEPBOM runtime contract unchanged.
+
 ## 1.99.0 - 2026-09-14
 
 - Add a separate Claude remote MCP App candidate at

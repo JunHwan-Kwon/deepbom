@@ -17,7 +17,7 @@ If no exact local installation is available, ask before running:
 node "<skill-root>/scripts/verify-deepbom.mjs" --allow-download
 ```
 
-That explicit fallback may download `deepbom@1.99.0` through npm. Use the returned `invocation.command` and `invocation.prefix_args` for subsequent commands. Do not silently replace a version mismatch or network failure with an unverified executable.
+That explicit fallback may download `deepbom@1.99.1` through npm. Use the returned `invocation.command` and `invocation.prefix_args` for subsequent commands. Do not silently replace a version mismatch or network failure with an unverified executable.
 
 ## Start with discovery
 

@@ -21,6 +21,9 @@ const packageManifest = JSON.parse(readFileSync("package.json", "utf8"));
 const deliveryOperations = JSON.parse(readFileSync("config/delivery-operations.v1.json", "utf8"));
 const deployGateSource = readFileSync("scripts/check-deploy.mjs", "utf8");
 const deployGateCheckCount = [...deployGateSource.matchAll(/^\s+"scripts\/[^\"]+",?$/gm)].length;
+expect(channelReleaseWorkflow.includes("npm install --global npm@11.6.0 --ignore-scripts --no-audit --no-fund")
+  && channelReleaseWorkflow.includes("Expected npm 11.6.0 on the Windows release runner."),
+"Windows release runners must pin the npm version that avoids the npm-exec ECOMPROMISED regression.");
 expectEqual(deliveryOperations.schema, "deepbom.delivery_operations.v1", "delivery operations schema");
 expect(deliveryOperations.observations?.some((row) => row.run_id === 33050003944 && row.attempt === 2 && row.elapsed_seconds === 21),
   "Delivery operations must retain the measured failed-job-only Cargo retry.");

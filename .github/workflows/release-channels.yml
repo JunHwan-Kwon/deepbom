@@ -89,6 +89,12 @@ jobs:
           node-version: 24.12.0
           cache: npm
           package-manager-cache: true
+      - name: Pin npm for Windows npm-exec lock stability
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          npm install --global npm@11.6.0 --ignore-scripts --no-audit --no-fund
+          if ((npm --version) -ne '11.6.0') { throw 'Expected npm 11.6.0 on the Windows release runner.' }
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"

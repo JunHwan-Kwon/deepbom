@@ -1,7 +1,7 @@
 {
   "schema": "deepbom.host_agent_evaluation_run.v1",
   "status": "not_run",
-  "deepbom_version": "1.99.0",
+  "deepbom_version": "1.99.1",
   "surface": null,
   "host_version": null,
   "started_at_utc": null,

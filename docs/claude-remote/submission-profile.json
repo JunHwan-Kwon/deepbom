@@ -2,7 +2,7 @@
   "schema": "deepbom.claude_remote_submission.v1",
   "display_name": "DEEPBOM Artifact Evidence",
   "delivery": "remote_mcp_app",
-  "version": "1.99.0",
+  "version": "1.99.1",
   "endpoint": "https://deepbom.org/mcp/claude",
   "documentation_url": "https://deepbom.org/claude/",
   "privacy_url": "https://deepbom.org/privacy",

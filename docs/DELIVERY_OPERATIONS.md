@@ -92,6 +92,11 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 | Local Windows 1.99.0 channel build | release-version npm, executable, Python wheel, Cargo launcher, Agent Skill, portable plugin, Claude Desktop MCPB, Common Model IR, and public/private boundary | 79.082 s |
 | Local Windows 1.99.0 platform smoke | installed Python and standalone parity plus typed values, policy gate, Model IR, visualization manifest, and path-with-spaces execution | 232.853 s |
 | Local Windows 1.99.0 release-contract equivalence | installed npm, MCP, Agent Skill, Python, standalone, Cargo, Model IR/visualization, verify/diff/explore, and tamper contracts; Claude host approval remains a separate external validation | 587.673 s |
+| Public channels 1.99.0, attempts 1-2 | five platform jobs passed; Windows x64 failed before publication while npm 11.6.2 acquired the official MCP Inspector (`ECOMPROMISED`); all publication jobs skipped | failed before publication |
+| Private web 1.99.1 preflight | 85 bounded checks including the Windows npm-exec mitigation contract and the prior 1.99.0 product contracts; no browser or full-corpus matrix | 159.736 s |
+| Local Windows 1.99.1 channel build | release-version npm, executable, Python wheel, Cargo launcher, Agent Skill, portable plugin, Claude Desktop MCPB, Common Model IR, and public/private boundary | 68.408 s |
+| Local Windows 1.99.1 platform smoke | installed Python and standalone parity plus typed values, policy gate, Model IR, visualization manifest, and path-with-spaces execution | 225.218 s |
+| Local Windows 1.99.1 release-contract equivalence | installed npm, MCP, Agent Skill, Python, standalone, Cargo, Model IR/visualization, verify/diff/explore, and tamper contracts | 581.534 s |
 
 The 1.94.4 run is retained as timing and incident evidence. It is not a known-good
 quality baseline. A registry success is never treated as sufficient without a
