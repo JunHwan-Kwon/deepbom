@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { ANALYZER_SEMANTIC_VERSION } from "../web/lib/app-config.js";
+import { AGENT_CONTRACT, EVIDENCE_CONTRACT } from "../bin/deepbom-public-contract-versions.mjs";
 import { CHATGPT_MCP_CONTRACT } from "../worker/chatgpt-mcp.js";
 
 const page = await readFile("web/chatgpt/index.html", "utf8");
@@ -35,6 +36,9 @@ assert.equal(profile.schema, "deepbom.chatgpt_plugin_submission.v1");
 assert.equal(profile.name, "DEEPBOM Artifact Evidence");
 assert.equal(profile.package_manifest, "https://github.com/JunHwan-Kwon/deepbom/blob/main/plugin.json");
 assert.equal(profile.endpoint, "https://deepbom.org/mcp");
+assert.equal(profile.engine_version_at_validation, packageDocument.version);
+assert.deepEqual(profile.agent_contract, AGENT_CONTRACT);
+assert.deepEqual(profile.evidence_contract, EVIDENCE_CONTRACT);
 assert.equal(profile.listing_status, "not_submitted_or_approved_by_this_file");
 assert.equal(profile.icon_url, "https://deepbom.org/web/chatgpt/deepbom-app-icon.svg");
 assert.match(profile.data_flow.model_bytes, /not fetched or retained/);

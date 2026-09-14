@@ -8,6 +8,7 @@ import {
 import { privateModuleDistLeakNeedles } from "./private-wasm-modules.mjs";
 import { inspectWasmFile } from "./wasm-binary-hardening.mjs";
 import { PUBLIC_SAMPLE_MODELS } from "../web/lib/sample-models.js";
+import { AGENT_PLUGIN_VERSION } from "../bin/deepbom-public-contract-versions.mjs";
 
 const distRoot = "dist";
 const packageDocument = JSON.parse(readFileSync("package.json", "utf8"));
@@ -151,9 +152,9 @@ if (missingPortablePluginDeploymentFiles.length) {
 const deployedPluginManifest = JSON.parse(readFileSync(path.join(distRoot, "plugin.json"), "utf8"));
 const deployedMcpManifest = JSON.parse(readFileSync(path.join(distRoot, "mcp.json"), "utf8"));
 if (deployedPluginManifest.name !== "deepbom"
-  || deployedPluginManifest.version !== packageDocument.version
+  || deployedPluginManifest.version !== AGENT_PLUGIN_VERSION
   || deployedMcpManifest.mcpServers?.["deepbom-artifact-evidence"]?.url !== "https://deepbom.org/mcp") {
-  throw new Error("dist portable Agent Plugin manifests must identify the current release and public MCP endpoint.");
+  throw new Error("dist portable Agent Plugin manifests must identify the stable Agent contract and public MCP endpoint.");
 }
 const deployedChatGptPage = readFileSync(path.join(distRoot, "chatgpt", "index.html"), "utf8");
 if (!deployedChatGptPage.includes('rel="canonical" href="https://deepbom.org/chatgpt/"')

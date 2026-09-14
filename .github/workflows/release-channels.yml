@@ -48,6 +48,7 @@ jobs:
         shell: bash
         run: |
           node scripts/sync-version.mjs --validate-release "${{ inputs.expected_version }}"
+          node scripts/check-agent-contract-release.mjs
           if [[ "$PUBLISH" == "true" ]]; then
             test "$REPOSITORY_NAME" = "JunHwan-Kwon/deepbom"
             test "$REPOSITORY_PRIVATE" = "false"

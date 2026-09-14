@@ -9,10 +9,11 @@ import { buildAgentCapabilities } from "../bin/deepbom-agent-contract.mjs";
 import { manageAgentIntegration } from "../bin/deepbom-agent-integration.mjs";
 import { buildAgentSkillFiles } from "../bin/deepbom-agent-skill.mjs";
 import { buildCliCapabilities } from "../bin/deepbom-automation.mjs";
+import { AGENT_CONTRACT, EVIDENCE_CONTRACT } from "../bin/deepbom-public-contract-versions.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const version = JSON.parse(await readFile(path.join(root, "package.json"), "utf8")).version;
-const skillFiles = buildAgentSkillFiles(version);
+const skillFiles = buildAgentSkillFiles();
 const forbiddenProductText = /CycloneDX\s*2\.0|cyclonedx-20|WG activity|pullrequestreview-|(?:issues|pull)\/\d{2,}/i;
 
 for (const [relative, expected] of skillFiles) {
@@ -28,6 +29,8 @@ const cliCapabilities = buildCliCapabilities(version, {
 const agentCapabilities = buildAgentCapabilities(cliCapabilities);
 assert.equal(agentCapabilities.schema, "deepbom.agent_capabilities.v1");
 assert.equal(agentCapabilities.version, version);
+assert.deepEqual(agentCapabilities.agent_contract, AGENT_CONTRACT);
+assert.deepEqual(agentCapabilities.evidence_schema_contract, EVIDENCE_CONTRACT);
 assert.equal(agentCapabilities.execution_boundary.analysis_location, "local_process");
 assert.equal(agentCapabilities.execution_boundary.hosted_analysis_endpoint, false);
 assert.equal(agentCapabilities.chatgpt_integration.endpoint, "https://deepbom.org/mcp");
@@ -36,7 +39,7 @@ assert.match(agentCapabilities.chatgpt_integration.transfer_boundary, /does not 
 assert.equal(agentCapabilities.discovery.chatgpt_page, "https://deepbom.org/chatgpt/");
 assert.equal(agentCapabilities.outputs.cyclonedx.spec_version, "1.7");
 assert.equal(agentCapabilities.invocation.discovery, "deepbom capabilities --format agent-json");
-assert.match(agentCapabilities.invocation.download_fallback, new RegExp(`deepbom@${escapeRegExp(version)}`));
+assert.equal(agentCapabilities.invocation.download_fallback, "npx -y deepbom@latest");
 assert.equal(agentCapabilities.invocation.registry_download_default, "disabled_requires_explicit_allow_download");
 assert.equal(agentCapabilities.discovery.portable_plugin_manifest, "https://github.com/JunHwan-Kwon/deepbom/blob/main/plugin.json");
 assert.match(agentCapabilities.local_integrations.claude_desktop.release_asset, new RegExp(`channels-v${escapeRegExp(version)}/deepbom-${escapeRegExp(version)}\\.mcpb$`));
@@ -82,6 +85,9 @@ try {
       assert.equal(resolvedDocument.status, "pass");
       assert.equal(resolvedDocument.source, "DEEPBOM_BIN");
       assert.equal(resolvedDocument.network_used, false);
+      assert.equal(resolvedDocument.version, version);
+      assert.deepEqual(resolvedDocument.agent_contract, AGENT_CONTRACT);
+      assert.deepEqual(resolvedDocument.evidence_contract, EVIDENCE_CONTRACT);
     }
 
     const skillPath = path.join(temporary, installed.destination, "SKILL.md");

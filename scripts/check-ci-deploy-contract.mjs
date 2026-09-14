@@ -203,6 +203,7 @@ for (const snippet of [
   "actions/upload-artifact@v6",
   "actions/download-artifact@v6",
   "node-version: 24.12.0",
+  "node scripts/check-agent-contract-release.mjs",
   "npm run check:channels -- --no-build --platform-smoke",
   "npm run check:channels -- --no-build --release-contract",
   "npm run check:public-package-boundary",

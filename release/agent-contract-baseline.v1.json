@@ -1,0 +1,74 @@
+{
+  "schema": "deepbom.public_agent_contract_baseline.v1",
+  "review_state": {
+    "openai": "candidate_unsubmitted",
+    "claude_remote": "candidate_unsubmitted"
+  },
+  "captured_engine_version": "1.99.2",
+  "agent_contract": {
+    "id": "deepbom.agent_contract.v1",
+    "version": "1.0.0",
+    "compatibility": "backward_compatible_within_v1"
+  },
+  "evidence_contract": {
+    "id": "deepbom.artifact_evidence_envelope.v1",
+    "version": "1.0.0",
+    "compatibility": "additive_fields_only_within_v1",
+    "required_top_level_fields": [
+      "schema",
+      "generated_at",
+      "identity",
+      "artifact_set",
+      "conversion_receipt",
+      "cpu_cost_target_binding",
+      "accelerator_profile_binding",
+      "accelerator_bindings",
+      "policy_identity",
+      "capabilities",
+      "interfaces",
+      "graph",
+      "external_files",
+      "metadata",
+      "findings",
+      "format_extensions",
+      "provenance",
+      "evidence_boundary",
+      "envelope_sha256"
+    ],
+    "conditional_top_level_fields": [
+      "llm_token_budget_scenario",
+      "structured_details"
+    ],
+    "semantic_boundaries": [
+      "artifact_defects_cautions_and_evidence_gaps_remain_distinct",
+      "static_predictions_are_not_runtime_observations",
+      "unknown_and_not_assessable_are_not_coerced_to_absence_or_zero"
+    ]
+  },
+  "surfaces": {
+    "openai": {
+      "fingerprint": "e4bc4afc7eeb50b7e8dc02d8b26421664f311a51705c65aff993abc06b7c562c",
+      "sections": {
+        "endpoint": "65d495bd038797ad035c1c8d302f1c3d8cdb925acc605134d7a4ad72e1b2c066",
+        "mcp_metadata": "5985eb53b4a8a4cedf0c643698b7702c77528d6d60396a05e42af5f145e7f3c6",
+        "plugin_package": "3644d00ba26e45561b38c597462609ba6dd21a09ebfe33841cadcfce4d6ee833",
+        "privacy_and_transfer": "760b5b564ec9ce9964c359d51f7df4dea643b54876a42a8c2fd78419a90f1200"
+      }
+    },
+    "claude_remote": {
+      "fingerprint": "a0e52800451215d98f3ac766df0f64d5cdb6d1d9d8e59c2273d37f833daac023",
+      "sections": {
+        "endpoint": "1e6dba3d999068d978cdd39c1c2696c31f307985b8c9b1073177dea8a673754d",
+        "mcp_metadata": "7d1db448b831129a6cb9919c7d5c195e5acdf49ad07d0c15b1b456f2aa3dc108",
+        "listing_and_transfer": "0b0fc528e7c6f6d2635d96fc98b6c79f1ce23662ba4ba2b2eadef47e6f1b6c72"
+      }
+    },
+    "evidence": {
+      "fingerprint": "cd4331e169ed403f448b10c17954818a1b85894da6cd9f2ba3fb82be4a2811b7",
+      "sections": {
+        "identity": "db3ccf16e1b467fc2006cb236fd2ea63d5a2c9bd51318bf51ba220fd8ebea0e6"
+      }
+    }
+  },
+  "interpretation_boundary": "This baseline is a reviewed source snapshot and does not assert OpenAI or Anthropic approval. Replace it only as an explicit contract-change action; never during an ordinary engine version sync."
+}

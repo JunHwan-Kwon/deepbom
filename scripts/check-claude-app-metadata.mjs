@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { buildMcpbBundle } from "./build-mcpb-bundle.mjs";
+import { AGENT_CONTRACT, EVIDENCE_CONTRACT } from "../bin/deepbom-public-contract-versions.mjs";
 
 const packageDocument = JSON.parse(await readFile("package.json", "utf8"));
 const profile = JSON.parse(await readFile("docs/claude-app/submission-profile.json", "utf8"));
@@ -13,6 +14,8 @@ assert.equal(profile.schema, "deepbom.claude_desktop_submission.v1");
 assert.equal(profile.display_name, "DEEPBOM Artifact Evidence");
 assert.equal(profile.delivery, "local_mcpb");
 assert.equal(profile.version, packageDocument.version);
+assert.deepEqual(profile.agent_contract, AGENT_CONTRACT);
+assert.deepEqual(profile.evidence_contract, EVIDENCE_CONTRACT);
 assert.match(profile.release_asset, new RegExp(`channels-v${escapeRegExp(packageDocument.version)}/deepbom-${escapeRegExp(packageDocument.version)}\\.mcpb$`));
 assert.equal(profile.remote_connector_status, "separate_remote_candidate_documented_but_not_host_validated_by_this_package");
 assert.equal(profile.listing_status, "not_submitted_or_approved_by_this_file");
@@ -23,7 +26,10 @@ assert.match(readme, /account-owned submission form manually/);
 assert.match(readme, /## Privacy Policy/);
 assert.match(readme, /do not upload\s+model bytes/);
 assert.equal(remoteProfile.schema, "deepbom.claude_remote_submission.v1");
-assert.equal(remoteProfile.version, packageDocument.version);
+assert.equal(remoteProfile.version, AGENT_CONTRACT.version);
+assert.equal(remoteProfile.engine_version_at_validation, packageDocument.version);
+assert.deepEqual(remoteProfile.agent_contract, AGENT_CONTRACT);
+assert.deepEqual(remoteProfile.evidence_contract, EVIDENCE_CONTRACT);
 assert.equal(remoteProfile.endpoint, "https://deepbom.org/mcp/claude");
 assert.equal(remoteProfile.automatic_attachment_access, false);
 assert.equal(remoteProfile.host_validation_status, "not_yet_observed_on_claude_hosts");

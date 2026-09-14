@@ -1,3 +1,9 @@
+import {
+  AGENT_CONTRACT,
+  EVIDENCE_CONTRACT,
+  cloneContractIdentity,
+} from "./deepbom-public-contract-versions.mjs";
+
 export const AGENT_CAPABILITIES_SCHEMA = "deepbom.agent_capabilities.v1";
 
 export function buildAgentCapabilities(cliCapabilities) {
@@ -10,6 +16,8 @@ export function buildAgentCapabilities(cliCapabilities) {
     schema: AGENT_CAPABILITIES_SCHEMA,
     product: "DEEPBOM",
     version,
+    agent_contract: cloneContractIdentity(AGENT_CONTRACT),
+    evidence_schema_contract: cloneContractIdentity(EVIDENCE_CONTRACT),
     purpose: "Evidence-bounded static analysis of serialized AI deployment artifacts through local tools or the ChatGPT browser sandbox.",
     selection: {
       use_when: [
@@ -23,13 +31,14 @@ export function buildAgentCapabilities(cliCapabilities) {
     },
     invocation: {
       package: packageSpec,
-      resolution_order: ["DEEPBOM_BIN", "bundled_npm_package", "exact_version_on_PATH", "authorized_npm_download"],
+      compatible_registry_package: "deepbom@latest",
+      resolution_order: ["DEEPBOM_BIN", "bundled_npm_package", "compatible_agent_contract_on_PATH", "authorized_npm_download"],
       resolution_helper: "skills/deepbom/scripts/verify-deepbom.mjs",
       registry_download_default: "disabled_requires_explicit_allow_download",
       discovery: "deepbom capabilities --format agent-json",
       self_test: "deepbom self-test --compact",
       audit_template: "deepbom audit \"<artifact>\" --summary",
-      download_fallback: `npx -y ${packageSpec}`,
+      download_fallback: "npx -y deepbom@latest",
       detail_strategy: "Request one section, JSON Pointer, or evidence envelope only after reading the bounded summary.",
       default_output: cliCapabilities.default_audit_output,
     },

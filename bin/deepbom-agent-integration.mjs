@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { lstat, mkdir, readFile, rename, rm, rmdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { buildAgentSkillFiles } from "./deepbom-agent-skill.mjs";
+import { AGENT_CONTRACT, EVIDENCE_CONTRACT } from "./deepbom-public-contract-versions.mjs";
 
 export const AGENT_INTEGRATION_SCHEMA = "deepbom.agent_integration.v1";
 
@@ -17,7 +18,7 @@ export function agentIntegrationTargets() {
 
 export async function manageAgentIntegration({ action, target = null, apply = false, root = process.cwd(), version }) {
   const projectRoot = path.resolve(root);
-  const skillFiles = buildAgentSkillFiles(version);
+  const skillFiles = buildAgentSkillFiles();
   const targets = target ? [normalizeTarget(target)] : Object.keys(TARGETS);
   if (action === "status") {
     return {
@@ -70,6 +71,8 @@ async function installIntegration(projectRoot, skillFiles, target, version, appl
     owner: "deepbom",
     target,
     version,
+    agent_contract: AGENT_CONTRACT,
+    evidence_contract: EVIDENCE_CONTRACT,
     managed_files: records,
   };
   await writeAtomically(path.join(destination, MANIFEST_FILE), Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`));
@@ -143,6 +146,8 @@ async function inspectIntegration(projectRoot, skillFiles, target, version) {
     status: conflicts.length ? "conflict" : unchanged ? "current" : manifest ? "outdated" : "not_installed",
     installed_version: manifest?.version || null,
     available_version: version,
+    installed_agent_contract: manifest?.agent_contract || null,
+    available_agent_contract: AGENT_CONTRACT,
     conflicts,
     files,
   };

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { AGENT_CONTRACT, EVIDENCE_CONTRACT } from "../bin/deepbom-public-contract-versions.mjs";
 
 const packageDocument = JSON.parse(await readFile("package.json", "utf8"));
 const catalogBytes = await readFile("docs/agent-evaluation/host-evaluation-cases.v1.json");
@@ -10,7 +11,9 @@ const readme = await readFile("docs/agent-evaluation/README.md", "utf8");
 const operations = await readFile("docs/AGENT_DISTRIBUTION_OPERATIONS.md", "utf8");
 
 assert.equal(catalog.schema, "deepbom.host_agent_evaluation_cases.v1");
-assert.equal(catalog.version, packageDocument.version);
+assert.equal(catalog.version, AGENT_CONTRACT.version);
+assert.deepEqual(catalog.agent_contract, AGENT_CONTRACT);
+assert.deepEqual(catalog.evidence_contract, EVIDENCE_CONTRACT);
 assert(catalog.cases.length >= 12);
 assert.equal(new Set(catalog.cases.map((row) => row.id)).size, catalog.cases.length);
 assert.deepEqual(new Set(catalog.cases.map((row) => row.class)), new Set(["direct", "indirect", "negative"]));
@@ -29,7 +32,9 @@ assert(claudeRemoteCases.filter((row) => row.class === "negative").length >= 3, 
 
 assert.equal(template.schema, "deepbom.host_agent_evaluation_run.v1");
 assert.equal(template.status, "not_run");
-assert.equal(template.deepbom_version, packageDocument.version);
+assert.equal(template.deepbom_version, null, "Blank host evidence must record the engine version observed during the actual run.");
+assert.deepEqual(template.agent_contract, AGENT_CONTRACT);
+assert.deepEqual(template.evidence_contract, EVIDENCE_CONTRACT);
 assert.deepEqual(template.observations, []);
 assert.equal(template.case_catalog_sha256, null);
 assert.match(template.interpretation_boundary, /not execution evidence/);

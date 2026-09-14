@@ -2288,6 +2288,87 @@
         "packaged_self_test_and_wasm_tamper_rejection"
       ],
       "qualification": "The installed npm package, MCP server, Agent Skill, Python facade, standalone engine, and Cargo launcher retained the 1.99.1 release contract. The Windows npm pin changes release-tool acquisition only and does not alter analyzer semantics."
+    },
+    {
+      "kind": "private_web_preflight_basis",
+      "version": "1.99.2",
+      "source_commit": "0c27610baaa7502902552fe62bf30a4c6e298231",
+      "platform": "windows-x64",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 188.8,
+      "check_count": 86,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "current_version_non_self_referential_basis",
+        "stable_agent_and_evidence_contract_fingerprint",
+        "chatgpt_and_claude_remote_mcp_app_contracts",
+        "claude_local_mcpb_metadata_and_privacy_contracts",
+        "artifact_ir_common_model_ir_visualization_and_stable_cyclonedx_1_7_contracts",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy"
+      ],
+      "qualification": "All 86 non-self-referential deployment checks passed for the recorded source basis within the 240-second operations budget. The source classifier records an engine-only update with unchanged OpenAI and Claude remote surfaces. This is engineering release evidence, not platform approval, standards conformance, or a regulatory determination."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.99.2",
+      "source_commit": "0c27610baaa7502902552fe62bf30a4c6e298231",
+      "platform": "windows-x64",
+      "command": "npm run build:channels",
+      "elapsed_seconds": 36.1,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball_with_contract_compatible_agent_skill_and_remote_mcp_server",
+        "claude_desktop_mcpb_bundle_bound_to_engine_1_99_2",
+        "single_executable_engine",
+        "pep_639_python_wheel_with_model_ir_and_visualization_facades",
+        "cargo_launcher_source",
+        "manifest_bound_self_test_probe",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.99.2",
+      "source_commit": "0c27610baaa7502902552fe62bf30a4c6e298231",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 57.392,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "installed_python_capabilities_typed_tensors_policy_gate_model_ir_and_visualization_manifest",
+        "agent_and_evidence_contract_identity_parity",
+        "manifest_bound_self_test_execution",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity",
+        "path_with_spaces_execution"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.99.2",
+      "source_commit": "0c27610baaa7502902552fe62bf30a4c6e298231",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 163.22,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_supported_release_contract_cases",
+        "installed_npm_mcp_tool_call_equivalence",
+        "installed_npm_contract_compatible_agent_integration_preview_apply_status_remove",
+        "installed_model_ir_selection_and_visualization_equivalence",
+        "installed_python_capabilities_typed_tensors_policy_gate_model_ir_and_visualization_manifest",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "capability_envelope_sarif_policy_and_bom_reconciliation_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_self_test_and_wasm_tamper_rejection"
+      ],
+      "qualification": "The installed npm package, local MCP server, Python facade, standalone engine, and Cargo launcher retained equivalent analyzer results and failure behavior. The installed Skill remained Agent contract 1.0.0, resolved only a compatible engine, and recorded engine 1.99.2 in its integration receipt. Remote host approval remains a separate account-owned observation."
     }
   ],
   "budgets": {

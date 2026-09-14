@@ -9,19 +9,19 @@ Run DEEPBOM locally for files in the workspace. Never upload artifact bytes or i
 
 ## Resolve a verified runtime first
 
-Run `scripts/verify-deepbom.mjs` from this Skill directory before choosing an invocation. It checks, in order, `DEEPBOM_BIN`, the analyzer bundled with an npm installation, and an exact-version `deepbom` already on `PATH`. It does not access a package registry by default.
+Run `scripts/verify-deepbom.mjs` from this Skill directory before choosing an invocation. It checks, in order, `DEEPBOM_BIN`, the analyzer bundled with an npm installation, and a contract-compatible `deepbom` already on `PATH`. It does not access a package registry by default.
 
-If no exact local installation is available, ask before running:
+If no compatible local installation is available, ask before running:
 
 ```bash
 node "<skill-root>/scripts/verify-deepbom.mjs" --allow-download
 ```
 
-That explicit fallback may download `deepbom@1.99.1` through npm. Use the returned `invocation.command` and `invocation.prefix_args` for subsequent commands. Do not silently replace a version mismatch or network failure with an unverified executable.
+That explicit fallback may download `deepbom@latest` through npm. The resolver accepts it only when it declares Agent contract `deepbom.agent_contract.v1` version `1.0.0` and evidence contract `deepbom.artifact_evidence_envelope.v1` version `1.0.0`. Use the returned `invocation.command` and `invocation.prefix_args` for subsequent commands. Do not silently replace a contract mismatch or network failure with an unverified executable.
 
 ## Start with discovery
 
-After resolving the exact release pinned by this Skill, discover its machine contract:
+After resolving an engine compatible with the contract pinned by this Skill, discover its machine contract:
 
 ```bash
 deepbom capabilities --format agent-json

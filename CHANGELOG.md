@@ -4,6 +4,43 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.99.2 - 2026-09-14
+
+- Use the documented same-day stable-release interval exception for a P0
+  release-contract correctness fix: engine-only updates were incorrectly
+  coupled to the reviewed Agent surface. The bounded
+  `check-agent-contract-release` mutation suite proves that engine-only drift
+  preserves the reviewed fingerprint while OpenAI, Claude, and evidence
+  contract drift are classified separately. This record is a release-policy
+  exception, not evidence of platform approval.
+- Separate the frequently changing analyzer engine version from the stable
+  `deepbom.agent_contract.v1` and
+  `deepbom.artifact_evidence_envelope.v1` contract versions. Public plugin
+  manifests, host-evaluation cases, and Skill behavior no longer change merely
+  because an engine patch is released.
+- Make the public Skill resolve a local or explicitly downloaded engine by
+  declared Agent/evidence compatibility, then bind the exact observed engine
+  version with a self-test before analysis. Registry access remains opt-in.
+- Add a deterministic reviewed-surface fingerprint for OpenAI MCP metadata,
+  UI resource policy metadata, plugin and Skill contents, privacy/transfer
+  boundaries, the Claude remote surface, and the evidence-contract identity.
+  Ordinary engine releases now fail closed if any of those contracts drift.
+- Add release classification tests proving that an engine-only version change
+  does not request a new platform review, while OpenAI metadata, Claude remote
+  metadata, and evidence-contract mutations produce their distinct required
+  actions. Source checks continue to distinguish a prepared candidate from an
+  account-observed approval or listing.
+- Add the Agent contract gate to both the web deployment preflight and the
+  installation-channel publication boundary, with a public operations guide
+  for deliberate contract revisions.
+- Raise the reviewed documentation source ceiling by 8 KiB for the public
+  contract-versioning policy; executable and generated-data ceilings are
+  unchanged.
+- Raise the verification source ceiling by 32 KiB for the contract snapshot,
+  classification, mutation, and release-gate checks introduced in this release.
+- Raise the development-tooling source ceiling by 24 KiB for the deterministic
+  contract-snapshot builder; runtime and generated-data ceilings remain unchanged.
+
 ## 1.99.1 - 2026-09-14
 
 - Pin npm 11.6.0 on Windows installation-channel runners before invoking the

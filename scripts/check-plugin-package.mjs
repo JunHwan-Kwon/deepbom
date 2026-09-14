@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { AGENT_PLUGIN_VERSION } from "../bin/deepbom-public-contract-versions.mjs";
 
 const packageDocument = await json("package.json");
 const portable = await json("plugin.json");
@@ -12,7 +13,8 @@ const forbiddenStandardsText = /CycloneDX\s*2\.0|cyclonedx-20|WG activity|pullre
 
 assert.equal(portable.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
 assert.equal(portable.name, "deepbom");
-assert.equal(portable.version, packageDocument.version);
+assert.notEqual(portable.version, packageDocument.version, "Agent plugin version must not track the engine release version.");
+assert.equal(portable.version, AGENT_PLUGIN_VERSION);
 assert.equal(portable.license, "Apache-2.0");
 assert.equal(portable.repository, "https://github.com/JunHwan-Kwon/deepbom");
 assert.match(portable.description, /serialized AI deployment artifacts/);

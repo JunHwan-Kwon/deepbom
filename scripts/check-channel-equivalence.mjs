@@ -8,6 +8,7 @@ import process from "node:process";
 import { resolveNpmCommand } from "./run-utils.mjs";
 import { writeBuildMetadata } from "./write-build-metadata.mjs";
 import { buildInterfaceQuantizationContractLedger } from "../web/lib/quantization-contract-summary.js";
+import { AGENT_CONTRACT, EVIDENCE_CONTRACT } from "../bin/deepbom-public-contract-versions.mjs";
 
 const root = process.cwd();
 const releaseRoot = path.join(root, ".local-validation", "channel-release");
@@ -300,7 +301,13 @@ async function verifyInstalledAgentIntegration(npmCli, version) {
   assert.equal(installed.status, "installed");
   assert.equal(installed.applied, true);
   const skill = await readFile(path.join(directory, ".agents", "skills", "deepbom", "SKILL.md"), "utf8");
-  assert.match(skill, new RegExp(`deepbom@${version.replaceAll(".", "\\.")}`));
+  assert.match(skill, /deepbom@latest/);
+  assert.doesNotMatch(skill, new RegExp(`deepbom@${version.replaceAll(".", "\\.")}`),
+    "Installed Agent Skill must not track the engine release version.");
+  const integrationManifest = json(await readFile(path.join(directory, ".agents", "skills", "deepbom", ".deepbom-integration.json"), "utf8"));
+  assert.equal(integrationManifest.version, version, "Integration receipt must record the engine that installed the stable Skill.");
+  assert.deepEqual(integrationManifest.agent_contract, AGENT_CONTRACT);
+  assert.deepEqual(integrationManifest.evidence_contract, EVIDENCE_CONTRACT);
   const status = json(run(process.execPath, [npmCli, "integrate", "status", "codex", "--compact"], {}, true, directory).stdout);
   assert.equal(status.integrations[0].status, "current");
   const removal = json(run(process.execPath, [npmCli, "integrate", "remove", "codex", "--apply", "--compact"], {}, true, directory).stdout);

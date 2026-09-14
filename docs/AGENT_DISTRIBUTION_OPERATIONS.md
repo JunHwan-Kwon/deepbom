@@ -4,6 +4,11 @@ This checklist begins after a versioned release and website deployment pass.
 It covers account-owned platform actions that source automation must not claim
 to have completed.
 
+Before either deployment, run `npm run check:agent-contract-release`. A pass
+means the engine update preserves the fingerprinted Agent and evidence
+contracts; it is not an approval record. See `AGENT_CONTRACT_VERSIONING.md` for
+the deliberate contract-change path.
+
 ## ChatGPT developer-mode validation
 
 1. In ChatGPT developer mode, register `https://deepbom.org/mcp` as a
@@ -49,13 +54,13 @@ substitute for MCP registration, review, or approval.
 
 ## Claude Desktop validation
 
-1. Download `deepbom-1.99.1.mcpb` from the `channels-v1.99.1` GitHub Release.
+1. Download `deepbom-1.99.2.mcpb` from the `channels-v1.99.2` GitHub Release.
 2. Install it in Claude Desktop and select a dedicated, non-sensitive model
    directory as the only allowed root.
 3. Confirm all four local MCP tools, execute the Claude indirect cases, and
    confirm that an outside-root path is rejected.
 4. Record real observations in a separate copy of the shared run template and
-   compare one MCP audit with the 1.99.1 CLI.
+   compare one MCP audit with the 1.99.2 CLI.
 5. Review the current Anthropic directory requirements and submit the MCPB
    manually if the publisher account is eligible.
 
@@ -100,16 +105,16 @@ submission form. Directory approval must be recorded only after readback.
 Preview, then apply the managed Skill:
 
 ```bash
-npx -y deepbom@1.99.1 integrate codex
-npx -y deepbom@1.99.1 integrate codex --apply
-npx -y deepbom@1.99.1 integrate claude-code
-npx -y deepbom@1.99.1 integrate claude-code --apply
+npx -y deepbom@1.99.2 integrate codex
+npx -y deepbom@1.99.2 integrate codex --apply
+npx -y deepbom@1.99.2 integrate claude-code
+npx -y deepbom@1.99.2 integrate claude-code --apply
 ```
 
 Open a new session and use the brandless cases. The Skill's verifier must prefer
-an exact local installation and must not download a package unless
-`--allow-download` is explicitly authorized. Record false selections as well as
-successful selections.
+a contract-compatible local installation, record its exact observed engine
+version, and never download a package unless `--allow-download` is explicitly
+authorized. Record false selections as well as successful selections.
 
 ## Search discovery readback
 

@@ -1,12 +1,13 @@
+import {
+  AGENT_CONTRACT,
+  EVIDENCE_CONTRACT,
+} from "./deepbom-public-contract-versions.mjs";
+
 export const AGENT_SKILL_SCHEMA = "deepbom.agent_skill.v1";
 
-export function buildAgentSkillFiles(version) {
-  const release = String(version || "").trim();
-  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(release)) {
-    throw new Error("Agent skill generation requires an exact DEEPBOM version.");
-  }
+export function buildAgentSkillFiles() {
   const command = "deepbom";
-  const zeroInstallCommand = `npx -y deepbom@${release}`;
+  const zeroInstallCommand = "npx -y deepbom@latest";
   return new Map([
     ["SKILL.md", lines([
       "---",
@@ -20,19 +21,19 @@ export function buildAgentSkillFiles(version) {
       "",
       "## Resolve a verified runtime first",
       "",
-      "Run `scripts/verify-deepbom.mjs` from this Skill directory before choosing an invocation. It checks, in order, `DEEPBOM_BIN`, the analyzer bundled with an npm installation, and an exact-version `deepbom` already on `PATH`. It does not access a package registry by default.",
+      "Run `scripts/verify-deepbom.mjs` from this Skill directory before choosing an invocation. It checks, in order, `DEEPBOM_BIN`, the analyzer bundled with an npm installation, and a contract-compatible `deepbom` already on `PATH`. It does not access a package registry by default.",
       "",
-      "If no exact local installation is available, ask before running:",
+      "If no compatible local installation is available, ask before running:",
       "",
       "```bash",
       "node \"<skill-root>/scripts/verify-deepbom.mjs\" --allow-download",
       "```",
       "",
-      `That explicit fallback may download \`deepbom@${release}\` through npm. Use the returned \`invocation.command\` and \`invocation.prefix_args\` for subsequent commands. Do not silently replace a version mismatch or network failure with an unverified executable.`,
+      `That explicit fallback may download \`deepbom@latest\` through npm. The resolver accepts it only when it declares Agent contract \`${AGENT_CONTRACT.id}\` version \`${AGENT_CONTRACT.version}\` and evidence contract \`${EVIDENCE_CONTRACT.id}\` version \`${EVIDENCE_CONTRACT.version}\`. Use the returned \`invocation.command\` and \`invocation.prefix_args\` for subsequent commands. Do not silently replace a contract mismatch or network failure with an unverified executable.`,
       "",
       "## Start with discovery",
       "",
-      "After resolving the exact release pinned by this Skill, discover its machine contract:",
+      "After resolving an engine compatible with the contract pinned by this Skill, discover its machine contract:",
       "",
       "```bash",
       `${command} capabilities --format agent-json`,
@@ -159,8 +160,8 @@ export function buildAgentSkillFiles(version) {
       "4. For a large GGUF or SafeTensors file, retry with `--scan structure` when the question does not require payload integrity.",
       "5. For remote input, require an immutable identity: a full Hugging Face commit, GCS object generation, or HTTPS SHA-256 fragment.",
       "6. Do not raise download, response, or memory limits without explaining the cost and obtaining user approval.",
-      "7. If no shell, local MCP, or local file access exists, explain that actual analysis cannot run in that client and provide the pinned `npx` command.",
-      `8. Registry download is opt-in. Prefer a verified exact-version installation; use \`${zeroInstallCommand}\` only after network and installation permission is clear.`,
+      "7. If no shell, local MCP, or local file access exists, explain that actual analysis cannot run in that client and provide the contract-checked `npx` command.",
+      `8. Registry download is opt-in. Prefer a verified contract-compatible installation; use \`${zeroInstallCommand}\` only after network and installation permission is clear. Record the resolved engine version in the answer.`,
     ])],
     ["scripts/verify-deepbom.mjs", lines([
       "#!/usr/bin/env node",
@@ -171,30 +172,42 @@ export function buildAgentSkillFiles(version) {
       'import process from "node:process";',
       'import { fileURLToPath } from "node:url";',
       "",
-      `const VERSION = ${JSON.stringify(release)};`,
+      `const AGENT_CONTRACT = ${JSON.stringify(AGENT_CONTRACT)};`,
+      `const EVIDENCE_CONTRACT = ${JSON.stringify(EVIDENCE_CONTRACT)};`,
+      'const REGISTRY_PACKAGE = "deepbom@latest";',
       'const allowDownload = process.argv.slice(2).includes("--allow-download");',
       'const attempts = [];',
       'const candidates = localCandidates();',
-      'if (allowDownload) candidates.push({ source: "npm_exact_version", command: process.platform === "win32" ? "npx.cmd" : "npx", prefix_args: ["-y", `deepbom@${VERSION}`], network: true });',
+      'if (allowDownload) candidates.push({ source: "npm_contract_candidate", command: process.platform === "win32" ? "npx.cmd" : "npx", prefix_args: ["-y", REGISTRY_PACKAGE], network: true });',
       "",
       'for (const candidate of candidates) {',
       '  const versionRun = invoke(candidate, ["--version"]);',
-      '  if (versionRun.status !== 0 || versionRun.stdout.trim() !== VERSION) {',
-      '    attempts.push({ source: candidate.source, status: versionRun.status, observed_version: versionRun.stdout.trim() || null, error: bounded(versionRun.stderr) });',
+      '  const observedVersion = versionRun.stdout.trim();',
+      '  if (versionRun.status !== 0 || !/^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$/.test(observedVersion)) {',
+      '    attempts.push({ source: candidate.source, status: versionRun.status, observed_version: observedVersion || null, error: bounded(versionRun.stderr) });',
+      '    continue;',
+      '  }',
+      '  const capabilitiesRun = invoke(candidate, ["capabilities", "--format", "agent-json", "--compact"]);',
+      '  let capabilities;',
+      '  try { capabilities = JSON.parse(capabilitiesRun.stdout); } catch {}',
+      '  if (capabilitiesRun.status !== 0 || capabilities?.schema !== "deepbom.agent_capabilities.v1"',
+      '    || capabilities?.agent_contract?.id !== AGENT_CONTRACT.id || capabilities?.agent_contract?.version !== AGENT_CONTRACT.version',
+      '    || capabilities?.evidence_schema_contract?.id !== EVIDENCE_CONTRACT.id || capabilities?.evidence_schema_contract?.version !== EVIDENCE_CONTRACT.version) {',
+      '    attempts.push({ source: candidate.source, status: capabilitiesRun.status, observed_version: observedVersion, observed_agent_contract: capabilities?.agent_contract || null, observed_evidence_contract: capabilities?.evidence_schema_contract || null, error: bounded(capabilitiesRun.stderr || capabilitiesRun.stdout || "public contract mismatch") });',
       '    continue;',
       '  }',
       '  const selfTest = invoke(candidate, ["self-test", "--compact"]);',
       '  try {',
       '    const document = JSON.parse(selfTest.stdout);',
-      '    if (selfTest.status !== 0 || document.schema !== "deepbom.cli_self_test.v1" || document.status !== "pass" || document.version !== VERSION) throw new Error("self-test contract mismatch");',
-      '    process.stdout.write(`${JSON.stringify({ schema: "deepbom.skill_runtime_resolution.v1", version: VERSION, status: "pass", source: candidate.source, network_used: candidate.network, invocation: { command: candidate.command, prefix_args: candidate.prefix_args }, self_test: document })}\\n`);',
+      '    if (selfTest.status !== 0 || document.schema !== "deepbom.cli_self_test.v1" || document.status !== "pass" || document.version !== observedVersion || capabilities.version !== observedVersion) throw new Error("self-test or analyzer identity mismatch");',
+      '    process.stdout.write(`${JSON.stringify({ schema: "deepbom.skill_runtime_resolution.v1", version: observedVersion, agent_contract: AGENT_CONTRACT, evidence_contract: EVIDENCE_CONTRACT, status: "pass", source: candidate.source, network_used: candidate.network, invocation: { command: candidate.command, prefix_args: candidate.prefix_args }, self_test: document })}\\n`);',
       '    process.exit(0);',
       '  } catch (error) {',
-      '    attempts.push({ source: candidate.source, status: selfTest.status, error: bounded(selfTest.stderr || selfTest.stdout || error.message) });',
+      '    attempts.push({ source: candidate.source, status: selfTest.status, observed_version: observedVersion, error: bounded(selfTest.stderr || selfTest.stdout || error.message) });',
       '  }',
       '}',
       "",
-      'process.stderr.write(`${JSON.stringify({ schema: "deepbom.skill_runtime_resolution.v1", version: VERSION, status: "unavailable", registry_download_attempted: allowDownload, attempts, suggested_action: allowDownload ? "Review the recorded installation or network error; do not claim an analysis ran." : "Install the exact release or rerun with --allow-download only after registry access is authorized." })}\\n`);',
+      'process.stderr.write(`${JSON.stringify({ schema: "deepbom.skill_runtime_resolution.v1", agent_contract: AGENT_CONTRACT, evidence_contract: EVIDENCE_CONTRACT, status: "unavailable", registry_download_attempted: allowDownload, attempts, suggested_action: allowDownload ? "Review the recorded installation, compatibility, or network error; do not claim an analysis ran." : "Install a contract-compatible release or rerun with --allow-download only after registry access is authorized." })}\\n`);',
       'process.exit(3);',
       "",
       'function localCandidates() {',

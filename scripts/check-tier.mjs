@@ -30,6 +30,7 @@ const SMOKE = [
   "scripts/check-product-guidance-contracts.mjs",
   "scripts/check-agent-native.mjs",
   "scripts/check-agent-evaluation.mjs",
+  "scripts/check-agent-contract-release.mjs",
   "scripts/check-chatgpt-mcp.mjs",
   "scripts/check-chatgpt-app-metadata.mjs",
   "scripts/check-claude-remote-mcp.mjs",

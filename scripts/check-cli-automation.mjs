@@ -18,6 +18,7 @@ import {
   resolveGenerationTimestamp,
   writeOutputAtomically,
 } from "../bin/deepbom-automation.mjs";
+import { EVIDENCE_CONTRACT } from "../bin/deepbom-public-contract-versions.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const scratch = path.join(root, ".local-validation", "cli-automation");
@@ -169,6 +170,9 @@ const envelopeRun = run(["audit", onnxPath, "--format", "envelope", "--compact"]
 });
 const envelope = JSON.parse(envelopeRun.stdout);
 assert.equal(envelope.schema, "deepbom.artifact_evidence_envelope.v1");
+for (const field of EVIDENCE_CONTRACT.required_top_level_fields) {
+  assert.equal(Object.hasOwn(envelope, field), true, `Evidence envelope is missing required v1 field: ${field}`);
+}
 assert.equal(envelope.generated_at, "1970-01-01T00:00:00.000Z");
 assert.match(envelope.envelope_sha256, /^[a-f0-9]{64}$/);
 assert.equal(envelope.findings.every((finding) => ["artifact_defect", "caution", "evidence_gap"].includes(finding.finding_kind)), true);

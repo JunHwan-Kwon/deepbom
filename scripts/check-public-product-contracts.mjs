@@ -25,10 +25,13 @@ assert.equal(PUBLIC_PRODUCT_CONTRACTS.format_maturity.find((row) => row.format =
 
 const schemas = new Set(PUBLIC_PRODUCT_CONTRACTS.machine_contracts.map((row) => row.schema));
 assert.equal(schemas.size, PUBLIC_PRODUCT_CONTRACTS.machine_contracts.length);
-for (const required of ["deepbom.cli_capabilities.v1", "deepbom.artifact_evidence_envelope.v1", "deepbom.artifact_ir.v2", "deepbom.model_ir.v1", "deepbom.model_ir_visualization_manifest.v1", "deepbom.semantic_artifact_diff.v1", "cyclonedx-1.7-json"]) assert(schemas.has(required));
+for (const required of ["deepbom.agent_contract.v1", "deepbom.cli_capabilities.v1", "deepbom.artifact_evidence_envelope.v1", "deepbom.artifact_ir.v2", "deepbom.model_ir.v1", "deepbom.model_ir_visualization_manifest.v1", "deepbom.semantic_artifact_diff.v1", "cyclonedx-1.7-json"]) assert(schemas.has(required));
 assert.equal([...schemas].some((value) => /2\.0|perspective/i.test(value)), false);
 
 const release = PUBLIC_PRODUCT_CONTRACTS.release_policy;
+assert.match(release.version_axes.engine, /release\/version\.json/);
+assert.match(release.version_axes.agent_contract, /agent_contract\.v1@1\.0\.0/);
+assert.match(release.version_axes.evidence_contract, /artifact_evidence_envelope\.v1@1\.0\.0/);
 assert.equal(release.stable_channel.npm_dist_tag, "latest");
 assert.equal(release.prerelease_channel.npm_dist_tag, "next");
 assert.equal(release.development_channel.publishable, false);

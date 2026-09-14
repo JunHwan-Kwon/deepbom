@@ -23,6 +23,7 @@ bin/deepbom-agent-skill.mjs
 bin/deepbom-automation.mjs
 bin/deepbom-input.mjs
 bin/deepbom-mcp.mjs
+bin/deepbom-public-contract-versions.mjs
 bin/deepbom.mjs
 bin/graph-png-export.mjs
 bin/model-ir-png-export.mjs
@@ -132,6 +133,7 @@ corpus/safetensors-quantization-contract-corpus/teeny-tiny-llama-460m-awq.config
 corpus/safetensors-quantization-contract-corpus/teeny-tiny-llama-460m-awq.quant_config.json
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.config.json
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.quantize_config.json
+docs/AGENT_CONTRACT_VERSIONING.md
 docs/AGENT_DISTRIBUTION_OPERATIONS.md
 docs/CLI_AUTOMATION.md
 docs/CLI_REFERENCE.md
@@ -244,8 +246,10 @@ reference/xnnpack-readme/README-v2.20.0.md
 reference/xnnpack-readme/README-v2.21.0.md
 reference/xnnpack-readme/rule-manifest-v2.21.0.json
 reference/xnnpack-readme/version-diff.json
+release/agent-contract-baseline.v1.json
 release/version.json
 requirements-onnx-corpus.txt
+scripts/agent-contract-snapshot.mjs
 scripts/benchmark-streaming-wasm-candidates.mjs
 scripts/bootstrap-instrumented-runtime.mjs
 scripts/browser-launch.mjs
@@ -280,6 +284,7 @@ scripts/check-accumulator-reachability-viewer.mjs
 scripts/check-accumulator-reachability.mjs
 scripts/check-advanced-copy-contract.mjs
 scripts/check-affine-interface-mismatch.py
+scripts/check-agent-contract-release.mjs
 scripts/check-agent-evaluation.mjs
 scripts/check-agent-native.mjs
 scripts/check-all.mjs

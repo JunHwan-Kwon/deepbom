@@ -32,27 +32,30 @@ is documented separately below.
 Install the repository-local Agent Skill after previewing the managed files:
 
 ```bash
-npx -y deepbom@1.99.1 integrate codex
-npx -y deepbom@1.99.1 integrate codex --apply
-npx -y deepbom@1.99.1 integrate claude-code
-npx -y deepbom@1.99.1 integrate claude-code --apply
+npx -y deepbom@1.99.2 integrate codex
+npx -y deepbom@1.99.2 integrate codex --apply
+npx -y deepbom@1.99.2 integrate claude-code
+npx -y deepbom@1.99.2 integrate claude-code --apply
 ```
 
-The Skill lets a local agent select the pinned `npx` command for a supported
-deployment-artifact question. It does not create or call a hosted analysis
-server. See [the agent setup guide](https://deepbom.org/for-agents/) and the
-[machine-readable capability contract](https://deepbom.org/agent-capabilities.json).
+The Skill lets a local agent select a contract-compatible analyzer for a
+supported deployment-artifact question. It does not create or call a hosted
+analysis server. See [the agent setup guide](https://deepbom.org/for-agents/),
+the [machine-readable capability contract](https://deepbom.org/agent-capabilities.json),
+and the [independent engine/Agent/evidence version policy](docs/AGENT_CONTRACT_VERSIONING.md).
 
 The installed Skill first checks `DEEPBOM_BIN`, its package-bundled analyzer,
-and an exact-version `deepbom` already on `PATH`. Its verifier does not contact
-npm unless `--allow-download` is explicitly supplied. This keeps a blocked
-registry lookup from being mistaken for a failed artifact analysis.
+and a `deepbom` already on `PATH`. It accepts a runtime only after the declared
+`deepbom.agent_contract.v1` and evidence contract match and its self-test binds
+the exact observed engine version. The verifier does not contact npm unless
+`--allow-download` is explicitly supplied. This keeps a blocked registry lookup
+from being mistaken for a failed artifact analysis.
 
 For persistent tool-call access, run the same local analyzer as an MCP server
 over stdio:
 
 ```bash
-npx -y deepbom@1.99.1 mcp
+npx -y deepbom@1.99.2 mcp
 ```
 
 It exposes `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
@@ -62,7 +65,7 @@ formats and large-model scan depth are explicit. Local paths are restricted to
 the launch directory unless `DEEPBOM_MCP_ALLOWED_ROOTS` is configured.
 Agent-facing usage guidance is in [the DEEPBOM skill](skills/deepbom/SKILL.md).
 Claude Desktop users can instead install the version-matched
-`deepbom-1.99.1.mcpb` asset from the corresponding GitHub Release. The bundle
+`deepbom-1.99.2.mcpb` asset from the corresponding GitHub Release. The bundle
 contains the same CLI and WASM bytes as the npm channel and asks the user to
 select the only local directory it may read.
 

@@ -4,6 +4,11 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { readVersionContract } from "./version-contract.mjs";
 import { buildAgentSkillFiles } from "../bin/deepbom-agent-skill.mjs";
+import {
+  AGENT_CONTRACT,
+  AGENT_PLUGIN_VERSION,
+  EVIDENCE_CONTRACT,
+} from "../bin/deepbom-public-contract-versions.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -27,8 +32,8 @@ await updateJson("server.json", (document) => {
   }
   return document;
 });
-await updateJson("plugin.json", (document) => ({ ...document, version: contract.npmVersion }));
-await updateJson(".codex-plugin/plugin.json", (document) => ({ ...document, version: contract.npmVersion }));
+await updateJson("plugin.json", (document) => ({ ...document, version: AGENT_PLUGIN_VERSION }));
+await updateJson(".codex-plugin/plugin.json", (document) => ({ ...document, version: AGENT_PLUGIN_VERSION }));
 await updateJson("pkg/package.json", (document) => ({ ...document, version: contract.npmVersion }));
 await updateJson("package-lock.json", (document) => {
   document.version = contract.npmVersion;
@@ -62,12 +67,35 @@ for (const relativePath of [
   "web/guides/inspect-gguf-tensor-encodings/index.html",
   "web/guides/compare-model-artifacts/index.html",
 ]) await updateRegex(relativePath, /deepbom@\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g, `deepbom@${contract.displayVersion}`);
-await updateJson("docs/agent-evaluation/host-evaluation-cases.v1.json", (document) => ({ ...document, version: contract.displayVersion }));
-await updateJson("docs/agent-evaluation/host-evaluation-run.template.json", (document) => ({ ...document, deepbom_version: contract.displayVersion }));
-await updateJson("docs/claude-remote/submission-profile.json", (document) => ({ ...document, version: contract.displayVersion }));
+await updateJson("docs/chatgpt-app/submission-profile.json", (document) => ({
+  ...document,
+  agent_contract: AGENT_CONTRACT,
+  evidence_contract: EVIDENCE_CONTRACT,
+  engine_version_at_validation: contract.displayVersion,
+}));
+await updateJson("docs/agent-evaluation/host-evaluation-cases.v1.json", (document) => ({
+  ...document,
+  version: AGENT_CONTRACT.version,
+  agent_contract: AGENT_CONTRACT,
+  evidence_contract: EVIDENCE_CONTRACT,
+}));
+await updateJson("docs/agent-evaluation/host-evaluation-run.template.json", (document) => ({
+  ...document,
+  agent_contract: AGENT_CONTRACT,
+  evidence_contract: EVIDENCE_CONTRACT,
+}));
+await updateJson("docs/claude-remote/submission-profile.json", (document) => ({
+  ...document,
+  version: AGENT_CONTRACT.version,
+  agent_contract: AGENT_CONTRACT,
+  evidence_contract: EVIDENCE_CONTRACT,
+  engine_version_at_validation: contract.displayVersion,
+}));
 await updateJson("docs/claude-app/submission-profile.json", (document) => ({
   ...document,
   version: contract.displayVersion,
+  agent_contract: AGENT_CONTRACT,
+  evidence_contract: EVIDENCE_CONTRACT,
   release_asset: `https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v${contract.displayVersion}/deepbom-${contract.displayVersion}.mcpb`,
 }));
 await updateRegex("docs/claude-app/README.md", /(?:channels-v|deepbom-)\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g,
@@ -82,7 +110,7 @@ for (const relativePath of ["docs/PUBLIC_README.md", "channels/npm/README.md"]) 
 }
 await updateRegex("examples/expected-output/gpu-partition-probe.human.txt", /^DEEPBOM\s+\S+\s+deployment-artifact audit/m,
   `DEEPBOM ${contract.displayVersion} deployment-artifact audit`);
-for (const [relativePath, content] of buildAgentSkillFiles(contract.displayVersion)) {
+for (const [relativePath, content] of buildAgentSkillFiles()) {
   updates.set(`skills/deepbom/${relativePath}`, content);
 }
 

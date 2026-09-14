@@ -14,6 +14,7 @@ const CHECKS = [
   "scripts/check-dom-contract.mjs",
   "scripts/check-workflow-contract.mjs",
   "scripts/check-public-product-boundary.mjs",
+  "scripts/check-agent-contract-release.mjs",
   "scripts/check-chatgpt-mcp.mjs",
   "scripts/check-chatgpt-app-metadata.mjs",
   "scripts/check-claude-app-metadata.mjs",
