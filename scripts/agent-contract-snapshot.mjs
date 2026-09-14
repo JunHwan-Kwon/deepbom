@@ -1,15 +1,14 @@
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 import {
   AGENT_CONTRACT,
   EVIDENCE_CONTRACT,
   cloneContractIdentity,
 } from "../bin/deepbom-public-contract-versions.mjs";
-import { routeChatGptMcp } from "../worker/chatgpt-mcp.js";
-import { routeClaudeMcp } from "../worker/claude-mcp.js";
-
 const PROTOCOL_VERSION = "2025-11-25";
 const SKILL_FILES = Object.freeze([
   "skills/deepbom/SKILL.md",
@@ -20,12 +19,11 @@ const SKILL_FILES = Object.freeze([
   "skills/deepbom/scripts/verify-deepbom.mjs",
 ]);
 
-export async function buildAgentContractSnapshot({ root = process.cwd() } = {}) {
+export async function buildAgentContractSnapshot({ root = process.cwd(), remoteMcpMode = "auto" } = {}) {
   const packageDocument = await json(path.join(root, "package.json"));
   const chatGptProfile = await json(path.join(root, "docs/chatgpt-app/submission-profile.json"));
   const claudeProfile = await json(path.join(root, "docs/claude-remote/submission-profile.json"));
-  const openAiMcp = await remoteMcpMaterial(routeChatGptMcp, chatGptProfile.endpoint);
-  const claudeMcp = await remoteMcpMaterial(routeClaudeMcp, claudeProfile.endpoint);
+  const remoteMcp = await resolveRemoteMcpSections({ root, remoteMcpMode, chatGptProfile, claudeProfile });
   const pluginPackage = {
     portable_manifest: await json(path.join(root, "plugin.json")),
     portable_mcp: await json(path.join(root, "mcp.json")),
@@ -62,17 +60,15 @@ export async function buildAgentContractSnapshot({ root = process.cwd() } = {}) 
     compatibility_boundary: "Additive fields may be introduced within v1; removals or semantic changes require a new evidence schema id and contract version.",
   };
 
-  const openAiSections = sectionHashes({
+  const openAiSections = sectionHashesWithPinnedSection({
     endpoint: endpointIdentity(chatGptProfile.endpoint),
-    mcp_metadata: openAiMcp,
     plugin_package: pluginPackage,
     privacy_and_transfer: openAiPrivacy,
-  });
-  const claudeSections = sectionHashes({
+  }, "mcp_metadata", remoteMcp.openai);
+  const claudeSections = sectionHashesWithPinnedSection({
     endpoint: endpointIdentity(claudeProfile.endpoint),
-    mcp_metadata: claudeMcp,
     listing_and_transfer: claudeListing,
-  });
+  }, "mcp_metadata", remoteMcp.claude);
   const evidenceSections = sectionHashes({ identity: evidenceIdentity });
 
   return {
@@ -85,7 +81,42 @@ export async function buildAgentContractSnapshot({ root = process.cwd() } = {}) 
       claude_remote: claudeSections,
       evidence: evidenceSections,
     },
-    interpretation_boundary: "Fingerprints cover reviewed metadata, schemas, annotations, instructions, UI resource identity and policy metadata, plugin Skill content, and declared transfer boundaries. They intentionally exclude analyzer version values, live analysis results, and backward-compatible UI content served at an unchanged resource URI.",
+    interpretation_boundary: remoteMcp.interpretation_boundary,
+  };
+}
+
+async function resolveRemoteMcpSections({ root, remoteMcpMode, chatGptProfile, claudeProfile }) {
+  if (!["auto", "live", "baseline"].includes(remoteMcpMode)) {
+    throw new Error(`Unsupported remote MCP snapshot mode: ${remoteMcpMode}`);
+  }
+  const chatGptModulePath = path.join(root, "worker", "chatgpt-mcp.js");
+  const claudeModulePath = path.join(root, "worker", "claude-mcp.js");
+  const liveAvailable = existsSync(chatGptModulePath) && existsSync(claudeModulePath);
+  if (remoteMcpMode === "live" && !liveAvailable) {
+    throw new Error("Live remote MCP contract capture requires the private worker implementations.");
+  }
+  if (remoteMcpMode === "live" || (remoteMcpMode === "auto" && liveAvailable)) {
+    const [{ routeChatGptMcp }, { routeClaudeMcp }] = await Promise.all([
+      import(pathToFileURL(chatGptModulePath).href),
+      import(pathToFileURL(claudeModulePath).href),
+    ]);
+    return {
+      openai: { material: await remoteMcpMaterial(routeChatGptMcp, chatGptProfile.endpoint) },
+      claude: { material: await remoteMcpMaterial(routeClaudeMcp, claudeProfile.endpoint) },
+      interpretation_boundary: "Fingerprints cover live reviewed MCP metadata, schemas, annotations, instructions, UI resource identity and policy metadata, plugin Skill content, and declared transfer boundaries. They intentionally exclude analyzer version values, live analysis results, and backward-compatible UI content served at an unchanged resource URI.",
+    };
+  }
+
+  const baseline = await json(path.join(root, "release", "agent-contract-baseline.v1.json"));
+  const openAiHash = baseline?.surfaces?.openai?.sections?.mcp_metadata;
+  const claudeHash = baseline?.surfaces?.claude_remote?.sections?.mcp_metadata;
+  if (!isSha256(openAiHash) || !isSha256(claudeHash)) {
+    throw new Error("The public export requires pinned remote MCP metadata hashes in the reviewed Agent contract baseline.");
+  }
+  return {
+    openai: { hash: openAiHash },
+    claude: { hash: claudeHash },
+    interpretation_boundary: "The public source export recomputes every exported Agent surface and verifies remote MCP metadata against hashes captured from the private live-route release gate. It cannot execute the intentionally non-exported worker implementations and does not represent platform approval.",
   };
 }
 
@@ -128,6 +159,19 @@ export function classifyAgentContractChange(current, baseline) {
 function sectionHashes(materials) {
   const sections = Object.fromEntries(Object.entries(materials).map(([name, value]) => [name, fingerprint(value)]));
   return { fingerprint: fingerprint(sections), sections };
+}
+
+function sectionHashesWithPinnedSection(materials, name, pinned) {
+  const result = sectionHashes(materials);
+  const hash = pinned?.hash || fingerprint(pinned?.material);
+  if (!isSha256(hash)) throw new Error(`Invalid ${name} contract hash.`);
+  result.sections[name] = hash;
+  result.fingerprint = fingerprint(result.sections);
+  return result;
+}
+
+function isSha256(value) {
+  return typeof value === "string" && /^[0-9a-f]{64}$/.test(value);
 }
 
 async function remoteMcpMaterial(route, endpoint) {

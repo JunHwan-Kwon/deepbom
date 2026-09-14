@@ -33,6 +33,11 @@ All notable archival releases of DEEPBOM are documented here.
 - Add the Agent contract gate to both the web deployment preflight and the
   installation-channel publication boundary, with a public operations guide
   for deliberate contract revisions.
+- Keep the publication-repository gate executable without exporting the
+  private remote-MCP worker implementations: private release validation
+  captures live metadata, while the exact public export recomputes its public
+  Skill, manifest, policy, endpoint, and listing surfaces against the pinned
+  live-metadata hashes.
 - Raise the reviewed documentation source ceiling by 8 KiB for the public
   contract-versioning policy; executable and generated-data ceilings are
   unchanged.

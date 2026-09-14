@@ -45,6 +45,9 @@ assert(["candidate_unsubmitted", "approved"].includes(baseline.review_state?.ope
 assert(["candidate_unsubmitted", "listed"].includes(baseline.review_state?.claude_remote));
 
 const classification = classifyAgentContractChange(current, baseline);
+const publicExportEquivalent = await buildAgentContractSnapshot({ root, remoteMcpMode: "baseline" });
+assert.deepEqual(classifyAgentContractChange(publicExportEquivalent, baseline).changed_sections, [],
+  "The public-export Agent gate must reproduce the live-route contract classification from pinned MCP metadata hashes.");
 const engineOnlyMutation = classifyAgentContractChange({ ...current, engine_version: "9.9.9" }, baseline);
 assert.deepEqual(engineOnlyMutation.changed_sections, [], "Engine version alone must not change the reviewed Agent contract fingerprint.");
 const openAiMutation = structuredClone(current);

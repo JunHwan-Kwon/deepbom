@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "53724545175227695cc329384011719391a72971",
+  "source_commit": "fa3dbc17e6fd7f0e28eafb16c81348577929802f",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1141,
@@ -62,8 +62,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 53989,
-      "sha256": "dcb99d9beb9bb35dd00fab9641f9c253e6173cf1c5218b37e4df0badc6ae1bf9"
+      "byte_length": 54312,
+      "sha256": "834b88478f9b0aa4243a4fe9a6f8d8bf3539a8ed4f1547222d3fb4b98a6bcbdd"
     },
     {
       "path": "CITATION.cff",
@@ -1267,8 +1267,8 @@
     },
     {
       "path": "scripts/agent-contract-snapshot.mjs",
-      "byte_length": 8792,
-      "sha256": "9f9f9cfa5759ae7391c28e7ef2f93861c81ab95c9ea15a92791a12604f0580b3"
+      "byte_length": 11225,
+      "sha256": "15404d5de9d92fda82456fd6c8634ae1c1e31cde2e661633559be36383ef1351"
     },
     {
       "path": "scripts/benchmark-streaming-wasm-candidates.mjs",
@@ -1442,8 +1442,8 @@
     },
     {
       "path": "scripts/check-agent-contract-release.mjs",
-      "byte_length": 4288,
-      "sha256": "7628d2eb437c0c16e11ebf1c4f77ed80dff895c550d9d02d766de3601da0ccad"
+      "byte_length": 4613,
+      "sha256": "59916fb277db1c55cad5b487d8ce2863332ed573b138b198ade25607d3b4cf9b"
     },
     {
       "path": "scripts/check-agent-evaluation.mjs",
@@ -3978,7 +3978,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 87520,
-      "sha256": "82ea15af6e805bc9c98926d89b29bf8371cf281ac866fb18888620b1e5d82825"
+      "sha256": "f9a6ff067dcf7f1b5e795ce3d03e84eab75f7d09402053bec39797c1679dd94d"
     },
     {
       "path": "web/lib/bundle.js",
