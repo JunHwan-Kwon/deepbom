@@ -4,6 +4,12 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Raise the reviewed documentation source ceiling by 16 KiB for the official
+  ChatGPT submission import, portal values, demo protocol, icons, and explicit
+  plugin privacy disclosures. Raise the development-tooling ceiling by 24 KiB
+  for the corresponding schema and asset checks; runtime and generated-data
+  ceilings are unchanged.
+
 ## 1.99.2 - 2026-09-14
 
 - Use the documented same-day stable-release interval exception for a P0
