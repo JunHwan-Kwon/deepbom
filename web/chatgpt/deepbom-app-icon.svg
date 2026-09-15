@@ -1,14 +1,73 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">DEEPBOM</title>
-  <desc id="desc">A layered deployment artifact opened to a traceable evidence core.</desc>
+  <desc id="desc">A neural network revealed through a static X-ray window inside a deployment artifact.</desc>
   <defs>
     <linearGradient id="background" x1="64" y1="28" x2="452" y2="484" gradientUnits="userSpaceOnUse">
       <stop stop-color="#177565"/>
       <stop offset="1" stop-color="#084b42"/>
     </linearGradient>
+    <linearGradient id="surface" x1="98" y1="140" x2="368" y2="356" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f7faf8" stop-opacity="0.24"/>
+      <stop offset="0.48" stop-color="#c5eee2" stop-opacity="0.11"/>
+      <stop offset="1" stop-color="#91ddc8" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="scan" x1="204" y1="0" x2="316" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#91ddc8" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#b9f2e2" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#91ddc8" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="scan-line" x1="0" y1="106" x2="0" y2="406" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d6f7ed" stop-opacity="0.88"/>
+      <stop offset="0.14" stop-color="#b9f2e2" stop-opacity="0.5"/>
+      <stop offset="0.5" stop-color="#f7faf8" stop-opacity="0.72"/>
+      <stop offset="0.86" stop-color="#b9f2e2" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#d6f7ed" stop-opacity="0.88"/>
+    </linearGradient>
+    <linearGradient id="reveal-mask" x1="126" y1="0" x2="386" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000"/>
+      <stop offset="0.34" stop-color="#111"/>
+      <stop offset="0.58" stop-color="#e8e8e8"/>
+      <stop offset="0.72" stop-color="#fff"/>
+      <stop offset="1" stop-color="#fff"/>
+    </linearGradient>
+    <clipPath id="artifact-window">
+      <rect x="94" y="124" width="324" height="264" rx="60"/>
+    </clipPath>
+    <mask id="xray-reveal" maskUnits="userSpaceOnUse" x="94" y="124" width="324" height="264">
+      <rect x="94" y="124" width="324" height="264" fill="url(#reveal-mask)"/>
+    </mask>
   </defs>
   <path fill="url(#background)" d="M112 0h288c76 0 112 36 112 112v288c0 76-36 112-112 112H112C36 512 0 476 0 400V112C0 36 36 0 112 0Z"/>
-  <path fill="#f7faf8" fill-rule="evenodd" d="M256 88c12 0 22 5 31 14l123 123c17 17 17 45 0 62L287 410c-17 17-45 17-62 0L102 287c-17-17-17-45 0-62l123-123c9-9 19-14 31-14Zm0 69c-7 0-13 3-18 8l-73 73c-10 10-10 26 0 36l73 73c10 10 26 10 36 0l73-73c10-10 10-26 0-36l-73-73c-5-5-11-8-18-8Z"/>
-  <path fill="#91ddc8" fill-rule="evenodd" d="M256 181c7 0 13 3 18 8l49 49c10 10 10 26 0 36l-49 49c-10 10-26 10-36 0l-49-49c-10-10-10-26 0-36l49-49c5-5 11-8 18-8Zm0 41c-4 0-7 1-10 4l-20 20c-6 6-6 14 0 20l20 20c6 6 14 6 20 0l20-20c6-6 6-14 0-20l-20-20c-3-3-6-4-10-4Z"/>
-  <path fill="#f7faf8" d="m256 238 18 18-18 18-18-18 18-18Z"/>
+  <rect x="82" y="112" width="348" height="288" rx="72" fill="#f7faf8" fill-opacity="0.08" stroke="#f7faf8" stroke-width="24"/>
+  <g clip-path="url(#artifact-window)" opacity="0.3">
+    <g fill="none" stroke="#dff6ef" stroke-width="12" stroke-linecap="round">
+      <path d="m158 205 98-28M158 205l98 51M158 307l98-51M158 307l98 28"/>
+      <path d="m256 177 98 28M256 256l98-51M256 256l98 51M256 335l98-28"/>
+    </g>
+    <g fill="#f7faf8">
+      <circle cx="158" cy="205" r="19"/><circle cx="158" cy="307" r="19"/>
+      <circle cx="256" cy="177" r="20"/><circle cx="256" cy="256" r="20"/><circle cx="256" cy="335" r="20"/>
+      <circle cx="354" cy="205" r="19"/><circle cx="354" cy="307" r="19"/>
+    </g>
+  </g>
+  <rect x="94" y="124" width="324" height="264" rx="60" fill="url(#surface)"/>
+  <rect x="204" y="124" width="112" height="264" fill="url(#scan)" clip-path="url(#artifact-window)"/>
+  <path d="M256 106v300" fill="none" stroke="url(#scan-line)" stroke-width="6" stroke-linecap="round"/>
+  <g mask="url(#xray-reveal)">
+    <g fill="none" stroke="#91ddc8" stroke-width="12" stroke-linecap="round" stroke-opacity="0.96">
+      <path d="m158 205 98-28M158 205l98 51M158 307l98-51M158 307l98 28"/>
+      <path d="m256 177 98 28M256 256l98-51M256 256l98 51M256 335l98-28"/>
+    </g>
+    <g fill="#f7faf8">
+      <circle cx="158" cy="205" r="19"/>
+      <circle cx="158" cy="307" r="19"/>
+      <circle cx="354" cy="205" r="19"/>
+      <circle cx="354" cy="307" r="19"/>
+    </g>
+    <g fill="#91ddc8" stroke="#f7faf8" stroke-width="8">
+      <circle cx="256" cy="177" r="20"/>
+      <circle cx="256" cy="256" r="20"/>
+      <circle cx="256" cy="335" r="20"/>
+    </g>
+  </g>
 </svg>
