@@ -1,10 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">DEEPBOM</title>
-  <desc id="desc">A monochrome square mark formed by a model artifact frame and three evidence layers.</desc>
-  <rect width="512" height="512" rx="92" fill="#111"/>
-  <rect x="112" y="82" width="288" height="348" rx="36" fill="#fff"/>
-  <path d="M176 166h160M176 256h160M176 346h160" fill="none" stroke="#111" stroke-width="30" stroke-linecap="round"/>
-  <circle cx="176" cy="166" r="24" fill="#111"/>
-  <circle cx="336" cy="256" r="24" fill="#111"/>
-  <circle cx="176" cy="346" r="24" fill="#111"/>
+  <desc id="desc">A D-shaped artifact frame containing three serialized tensor layers.</desc>
+  <rect width="512" height="512" rx="104" fill="#0d6654"/>
+  <path fill="#f7faf8" fill-rule="evenodd" d="M132 104h116c94 0 156 62 156 152s-62 152-156 152H132V104Zm72 70v164h39c54 0 88-32 88-82s-34-82-88-82h-39Z"/>
+  <rect x="224" y="204" width="72" height="18" rx="9" fill="#9edbc9"/>
+  <rect x="224" y="247" width="88" height="18" rx="9" fill="#9edbc9"/>
+  <rect x="224" y="290" width="60" height="18" rx="9" fill="#9edbc9"/>
 </svg>

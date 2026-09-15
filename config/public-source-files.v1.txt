@@ -260,6 +260,7 @@ scripts/bootstrap-instrumented-runtime.mjs
 scripts/browser-launch.mjs
 scripts/build-cargo-engine-release.mjs
 scripts/build-channel-artifacts.mjs
+scripts/build-chatgpt-app-icons.mjs
 scripts/build-coreml-legacy-quantization-corpus.mjs
 scripts/build-cyclonedx-generalization-evidence.mjs
 scripts/build-mcpb-bundle.mjs

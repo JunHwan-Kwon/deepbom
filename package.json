@@ -24,6 +24,7 @@
     "patch:litert": "node scripts/patch-litert-int8.mjs",
     "build:wasm": "node scripts/build-wasm.mjs main",
     "build:deepbom": "node scripts/build-wasm.mjs deepbom",
+    "build:chatgpt-icons": "node scripts/build-chatgpt-app-icons.mjs",
     "build:native-collector": "cargo build --release --manifest-path native/runtime_collector/Cargo.toml",
     "build:native-probe": "cargo build --release --manifest-path native/runtime_probe/Cargo.toml",
     "build:tensorrt-collector": "node scripts/build-tensorrt-collector.mjs",
