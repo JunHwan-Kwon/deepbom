@@ -1,9 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">DEEPBOM</title>
-  <desc id="desc">A D-shaped artifact frame containing three serialized tensor layers.</desc>
-  <rect width="512" height="512" rx="104" fill="#0d6654"/>
-  <path fill="#f7faf8" fill-rule="evenodd" d="M132 104h116c94 0 156 62 156 152s-62 152-156 152H132V104Zm72 70v164h39c54 0 88-32 88-82s-34-82-88-82h-39Z"/>
-  <rect x="224" y="204" width="72" height="18" rx="9" fill="#9edbc9"/>
-  <rect x="224" y="247" width="88" height="18" rx="9" fill="#9edbc9"/>
-  <rect x="224" y="290" width="60" height="18" rx="9" fill="#9edbc9"/>
+  <desc id="desc">Nested D-shaped artifact boundaries expressing depth, identity, and traceable model evidence.</desc>
+  <defs>
+    <linearGradient id="background" x1="64" y1="28" x2="452" y2="484" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#177565"/>
+      <stop offset="1" stop-color="#084b42"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#background)" d="M112 0h288c76 0 112 36 112 112v288c0 76-36 112-112 112H112C36 512 0 476 0 400V112C0 36 36 0 112 0Z"/>
+  <path fill="#f7faf8" fill-rule="evenodd" d="M124 102h124c93 0 158 63 158 154s-65 154-158 154H124V102Zm70 68v172h50c54 0 92-34 92-86s-38-86-92-86h-50Z"/>
+  <path fill="#91ddc8" fill-rule="evenodd" d="M212 192h35c39 0 68 26 68 64s-29 64-68 64h-35V192Zm32 31v66h3c20 0 35-13 35-33s-15-33-35-33h-3Z"/>
 </svg>
