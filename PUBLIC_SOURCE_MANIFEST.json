@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "2440d9ca8f02db0e69ed1d6dc173f75961b1ddab",
+  "source_commit": "d06202d63e422ab6c1abb531f996554bacd5d316",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1146,
@@ -287,8 +287,8 @@
     },
     {
       "path": "chatgpt-app-submission.json",
-      "byte_length": 9875,
-      "sha256": "0b42582f74841bf702b860a780d857470145781f828fde4b17d4932d069e4274"
+      "byte_length": 9876,
+      "sha256": "502f06190df8481ea5fc3b14a490398dd4029cd7fbaa374c78e3d2406db7080b"
     },
     {
       "path": "config/artifact-ir-consumer-policy.v1.json",
@@ -1582,8 +1582,8 @@
     },
     {
       "path": "scripts/check-chatgpt-app-metadata.mjs",
-      "byte_length": 7394,
-      "sha256": "966fc203150aa721bb9ab78f35a885796dfa5d43ae7651a6f117768b15cab20f"
+      "byte_length": 7552,
+      "sha256": "5522bd39814971c09481c357f70f67ee99b88450fd7b8d319d5920eda7f8c711"
     },
     {
       "path": "scripts/check-chatgpt-mcp.mjs",
@@ -4003,7 +4003,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 87520,
-      "sha256": "3b9252dc697897f93e820999fb26d0ad685433bae8dac30ccde1453a7f4c2fa7"
+      "sha256": "cde6f7bbcd0bef81263ffef2df44ef06592f9f7b76e1ca820e192ce261429a5c"
     },
     {
       "path": "web/lib/bundle.js",

@@ -73,7 +73,9 @@ for (const tool of CHATGPT_MCP_CONTRACT.tools.slice(2)) {
   assert.equal(tool._meta["openai/visibility"], "private");
 }
 
-assert.equal(portalSubmission.$schema, "https://developers.openai.com/plugins/schemas/chatgpt-app-submission.v1.json");
+// The submission portal currently requires this legacy Apps SDK URI literally,
+// even though the public endpoint redirects to the Plugins schema endpoint.
+assert.equal(portalSubmission.$schema, "https://developers.openai.com/apps-sdk/schemas/chatgpt-app-submission.v1.json");
 assert.equal(portalSubmission.schema_version, 1);
 assert.equal(portalSubmission.app_info.display_name, profile.name);
 assert.equal(portalSubmission.app_info.subtitle, profile.short_description);
