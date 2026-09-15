@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">DEEPBOM</title>
-  <desc id="desc">Nested D-shaped artifact boundaries expressing depth, identity, and traceable model evidence.</desc>
+  <desc id="desc">A layered deployment artifact opened to a traceable evidence core.</desc>
   <defs>
     <linearGradient id="background" x1="64" y1="28" x2="452" y2="484" gradientUnits="userSpaceOnUse">
       <stop stop-color="#177565"/>
@@ -8,6 +8,7 @@
     </linearGradient>
   </defs>
   <path fill="url(#background)" d="M112 0h288c76 0 112 36 112 112v288c0 76-36 112-112 112H112C36 512 0 476 0 400V112C0 36 36 0 112 0Z"/>
-  <path fill="#f7faf8" fill-rule="evenodd" d="M124 102h124c93 0 158 63 158 154s-65 154-158 154H124V102Zm70 68v172h50c54 0 92-34 92-86s-38-86-92-86h-50Z"/>
-  <path fill="#91ddc8" fill-rule="evenodd" d="M212 192h35c39 0 68 26 68 64s-29 64-68 64h-35V192Zm32 31v66h3c20 0 35-13 35-33s-15-33-35-33h-3Z"/>
+  <path fill="#f7faf8" fill-rule="evenodd" d="M256 88c12 0 22 5 31 14l123 123c17 17 17 45 0 62L287 410c-17 17-45 17-62 0L102 287c-17-17-17-45 0-62l123-123c9-9 19-14 31-14Zm0 69c-7 0-13 3-18 8l-73 73c-10 10-10 26 0 36l73 73c10 10 26 10 36 0l73-73c10-10 10-26 0-36l-73-73c-5-5-11-8-18-8Z"/>
+  <path fill="#91ddc8" fill-rule="evenodd" d="M256 181c7 0 13 3 18 8l49 49c10 10 10 26 0 36l-49 49c-10 10-26 10-36 0l-49-49c-10-10-10-26 0-36l49-49c5-5 11-8 18-8Zm0 41c-4 0-7 1-10 4l-20 20c-6 6-6 14 0 20l20 20c6 6 14 6 20 0l20-20c6-6 6-14 0-20l-20-20c-3-3-6-4-10-4Z"/>
+  <path fill="#f7faf8" d="m256 238 18 18-18 18-18-18 18-18Z"/>
 </svg>

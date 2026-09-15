@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "4f63915fad8ebf00541e845bf8796454ca0a89a1",
+  "source_commit": "3cdd70ae5136961593ce8fc5315b0aecbdb8be6c",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1147,
@@ -852,13 +852,13 @@
     },
     {
       "path": "docs/chatgpt-app/assets/deepbom-composer-icon-128.png",
-      "byte_length": 9322,
-      "sha256": "007d5938323ec142e51ad0e491084e401e5247a272954bef7e9fe13c8f41d33b"
+      "byte_length": 10395,
+      "sha256": "a90e077efc5fb81364d0d998332498468ab7f18acae0544464382af4ff7ee9af"
     },
     {
       "path": "docs/chatgpt-app/assets/deepbom-directory-icon-512.png",
-      "byte_length": 97639,
-      "sha256": "76b7a64273dc2750ddc19997dfbe10c1474313e2a11cd454d0e64d128a9be243"
+      "byte_length": 96236,
+      "sha256": "fc473f06126793ec874d6523f5d1e495913bfaeb7dfe8bd1a11f6a003edd79b1"
     },
     {
       "path": "docs/chatgpt-app/evals.json",
@@ -3652,8 +3652,8 @@
     },
     {
       "path": "web/chatgpt/deepbom-app-icon.svg",
-      "byte_length": 926,
-      "sha256": "065e34a1c0f5d1e616dfb9a12c285c32bd5fee5016f7a9d59164fbf1c0db45d2"
+      "byte_length": 1220,
+      "sha256": "2c68d84197483c165551de9d564301c576e8706f8d401029d365bd52dd008d36"
     },
     {
       "path": "web/chatgpt/deepbom-widget.js",
@@ -4007,8 +4007,8 @@
     },
     {
       "path": "web/lib/build-metadata.js",
-      "byte_length": 87520,
-      "sha256": "fca84edc3ace590db091c9718e8f509af7f13fdee6408be842c1d2ddce0e26b5"
+      "byte_length": 87521,
+      "sha256": "0b4c2ff1fd267fe5034ff779ef7b1c06ccf6f145dbfa62a137aed032d194b5b7"
     },
     {
       "path": "web/lib/bundle.js",
