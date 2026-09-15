@@ -42,9 +42,12 @@ exports, or repeat automation.
    as the Cloudflare Worker secret `OPENAI_APPS_CHALLENGE`. Confirm that
    `https://deepbom.org/.well-known/openai-apps-challenge` returns only that
    token, with no JSON wrapper or newline.
-5. Submit `submission-profile.json` and the current brand asset through the
-   ChatGPT plugin submission portal. Do not claim public catalog availability before
-   approval.
+5. Upload the repository-root `chatgpt-app-submission.json`, the 512 px
+   directory icon, and the 128 px composer icon through the ChatGPT plugin
+   submission portal. `submission-profile.json` remains the fuller internal
+   preparation record; it is not the portal import format. Follow
+   `PORTAL_VALUES.md` for the remaining account-owned fields. Do not claim
+   public catalog availability before approval.
 6. After approval, verify discovery by app name and by at least three generic
    artifact-analysis queries, then repeat one full attachment analysis.
 

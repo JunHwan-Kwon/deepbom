@@ -53,6 +53,7 @@ channels/python/src/deepbom/__init__.py
 channels/python/src/deepbom/__main__.py
 channels/python/src/deepbom/_engine.py
 channels/python/src/deepbom/api.py
+chatgpt-app-submission.json
 config/artifact-ir-consumer-policy.v1.json
 config/artifact-ir-import-policy.v2.json
 config/delivery-operations.v1.json
@@ -162,7 +163,11 @@ docs/ZENODO_RELEASE.md
 docs/agent-evaluation/README.md
 docs/agent-evaluation/host-evaluation-cases.v1.json
 docs/agent-evaluation/host-evaluation-run.template.json
+docs/chatgpt-app/DEMO_RECORDING_SCRIPT.md
+docs/chatgpt-app/PORTAL_VALUES.md
 docs/chatgpt-app/README.md
+docs/chatgpt-app/assets/deepbom-composer-icon-128.png
+docs/chatgpt-app/assets/deepbom-directory-icon-512.png
 docs/chatgpt-app/evals.json
 docs/chatgpt-app/submission-profile.json
 docs/claude-app/README.md

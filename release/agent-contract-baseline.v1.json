@@ -47,20 +47,20 @@
   },
   "surfaces": {
     "openai": {
-      "fingerprint": "e4bc4afc7eeb50b7e8dc02d8b26421664f311a51705c65aff993abc06b7c562c",
+      "fingerprint": "9f0424930622f56c6db4c9faaa30a0ad540f34fd2fa52055ccdfe7be840c2e1b",
       "sections": {
         "endpoint": "65d495bd038797ad035c1c8d302f1c3d8cdb925acc605134d7a4ad72e1b2c066",
-        "mcp_metadata": "5985eb53b4a8a4cedf0c643698b7702c77528d6d60396a05e42af5f145e7f3c6",
-        "plugin_package": "3644d00ba26e45561b38c597462609ba6dd21a09ebfe33841cadcfce4d6ee833",
-        "privacy_and_transfer": "760b5b564ec9ce9964c359d51f7df4dea643b54876a42a8c2fd78419a90f1200"
+        "plugin_package": "55d14525bc296339af4852698bb032f87101575511a469489ba984ae28017cdf",
+        "privacy_and_transfer": "375bb30429f84e5fe556925f6d29b2446269d3741c7ddb0248b04a722d9efb01",
+        "mcp_metadata": "5985eb53b4a8a4cedf0c643698b7702c77528d6d60396a05e42af5f145e7f3c6"
       }
     },
     "claude_remote": {
       "fingerprint": "a0e52800451215d98f3ac766df0f64d5cdb6d1d9d8e59c2273d37f833daac023",
       "sections": {
         "endpoint": "1e6dba3d999068d978cdd39c1c2696c31f307985b8c9b1073177dea8a673754d",
-        "mcp_metadata": "7d1db448b831129a6cb9919c7d5c195e5acdf49ad07d0c15b1b456f2aa3dc108",
-        "listing_and_transfer": "0b0fc528e7c6f6d2635d96fc98b6c79f1ce23662ba4ba2b2eadef47e6f1b6c72"
+        "listing_and_transfer": "0b0fc528e7c6f6d2635d96fc98b6c79f1ce23662ba4ba2b2eadef47e6f1b6c72",
+        "mcp_metadata": "7d1db448b831129a6cb9919c7d5c195e5acdf49ad07d0c15b1b456f2aa3dc108"
       }
     },
     "evidence": {

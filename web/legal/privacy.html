@@ -11,7 +11,7 @@
 <body class="agent-guide">
   <header class="brief-header"><a class="brand" href="/">DEEPBOM</a><nav class="brief-nav"><a href="/chatgpt/">ChatGPT</a><a href="/support">Support</a></nav></header>
   <main class="brief-main">
-    <p class="eyebrow">Effective 2026-09-13</p>
+    <p class="eyebrow">Effective 2026-09-15</p>
     <h1>Privacy and data handling</h1>
     <section class="brief-section">
       <h2>Core browser and local tools</h2>
@@ -19,12 +19,30 @@
     </section>
     <section class="brief-section">
       <h2>ChatGPT integration</h2>
-      <p>A file attached to ChatGPT is already handled by ChatGPT under the user's OpenAI terms and settings. The DEEPBOM component obtains a temporary, plugin-authorized download URL and reads the attachment inside the ChatGPT browser sandbox. The DEEPBOM service does not fetch or retain the file. The component returns a bounded result to the conversation, which can contain the filename, file and evidence hashes, tensor or operator counts, encoding summaries, and findings.</p>
+      <p>A file attached to ChatGPT is already handled by ChatGPT under the user's OpenAI terms and settings. The DEEPBOM component obtains a temporary, plugin-authorized download URL and reads the attachment inside the ChatGPT browser sandbox. The DEEPBOM service does not fetch or retain the file. The component sends a bounded analysis result through the DEEPBOM MCP endpoint for schema validation and returns a bounded result to the conversation. That result can contain the filename, file and evidence hashes, artifact format and byte length, tensor or operator counts, encoding and quantization summaries, findings, and evidence boundaries. It does not contain model bytes or raw tensor values.</p>
       <p>Use the local CLI or local MCP instead when those result fields must not enter a ChatGPT conversation.</p>
     </section>
     <section class="brief-section">
-      <h2>Optional services</h2>
-      <p>Account, report-fingerprint registration, controlled research modules, and explicitly consented structural benchmark features are separate optional paths. Their screens identify what is sent before the user proceeds. Core artifact analysis does not require them.</p>
+      <h2>Data used and purposes</h2>
+      <p>The ChatGPT plugin does not require a DEEPBOM account and does not use advertising cookies or cross-site tracking. The MCP service processes the bounded result only to validate its documented structure and return it to the requesting conversation. Application code does not intentionally write attachment URLs, request bodies, filenames, artifact hashes, model facts, or analysis results to server logs.</p>
+      <p>Cloudflare hosts the public site and MCP endpoint and processes ordinary request and security metadata needed to deliver and protect the service, such as request time, method, path, response status, network and approximate location metadata, and provider-generated request or trace identifiers. DEEPBOM uses that operational metadata only for availability, abuse prevention, security investigation, and fault diagnosis.</p>
+    </section>
+    <section class="brief-section">
+      <h2>Sharing and sale</h2>
+      <p>DEEPBOM does not sell personal data or analysis results and does not share them for advertising. OpenAI processes the attachment, temporary download authorization, conversation, and returned result under the user's OpenAI terms and controls. Cloudflare processes the MCP request and operational metadata as the hosting and security provider. DEEPBOM does not disclose plugin data to other third parties except when required by law or necessary to investigate abuse or security incidents.</p>
+    </section>
+    <section class="brief-section">
+      <h2>Retention</h2>
+      <p>Model bytes are not stored by the DEEPBOM service. Bounded analysis results are held only for the request needed to validate and return them and are not written to the DEEPBOM database. Their retention in ChatGPT follows the user's OpenAI conversation and workspace settings.</p>
+      <p>Cloudflare Workers invocation logs and traces can retain request and response metadata and errors for no more than seven days under the configured Cloudflare plan. Aggregated service metrics that do not contain model bytes or analysis results may be retained for up to three months. DEEPBOM does not export these logs to a separate analytics or advertising provider.</p>
+    </section>
+    <section class="brief-section">
+      <h2>User choices and controls</h2>
+      <p>Users control whether to attach a file or invoke the plugin. They can avoid placing model-derived metadata in ChatGPT by using the local CLI or local MCP, remove the attachment or conversation using OpenAI's controls, and contact DEEPBOM through the support page for a privacy request. Because the plugin does not create a DEEPBOM account or persist its analysis result, DEEPBOM normally has no plugin-specific user record to retrieve or delete.</p>
+    </section>
+    <section class="brief-section">
+      <h2>Optional DEEPBOM website services</h2>
+      <p>Account, report-fingerprint registration, controlled research modules, and explicitly consented structural benchmark features on the separate DEEPBOM website are not used by the ChatGPT plugin. Their screens identify what is sent and the applicable control before the user proceeds. Core artifact analysis does not require them.</p>
     </section>
     <section class="brief-section">
       <h2>Contact</h2>

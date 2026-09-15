@@ -23,7 +23,7 @@
     "com.openai": {
       "interface": {
         "displayName": "DEEPBOM Artifact Evidence",
-        "shortDescription": "Static evidence for deployed AI model files",
+    "shortDescription": "Inspect AI model artifacts",
         "longDescription": "Inspect supported AI deployment artifacts without executing model code. Results bind observations to the artifact hash and keep defects, cautions, evidence gaps, and static-analysis limits separate.",
         "developerName": "Jun-Hwan Kwon",
         "category": "Developer tools",

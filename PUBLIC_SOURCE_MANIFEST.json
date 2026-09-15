@@ -1,14 +1,14 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "fa3dbc17e6fd7f0e28eafb16c81348577929802f",
+  "source_commit": "1b17116569f84814a246db4c5fe31055833fa848",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 1141,
+  "file_count": 1146,
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "byte_length": 1493,
-      "sha256": "16b3c80efe4304012f21370c7aa0e43d6f64a1d05212912a8fbe8a2cdd8ca4ce"
+      "byte_length": 1476,
+      "sha256": "ae30343deecd68dbfac9083d846f911c953c7dddf0f4642d82ff7cfba91518d2"
     },
     {
       "path": ".gitattributes",
@@ -286,6 +286,11 @@
       "sha256": "a093ae60433d15cea40f60ca48aa4bcde35acbdec5d64c32d0210ebfe317817a"
     },
     {
+      "path": "chatgpt-app-submission.json",
+      "byte_length": 9875,
+      "sha256": "0b42582f74841bf702b860a780d857470145781f828fde4b17d4932d069e4274"
+    },
+    {
       "path": "config/artifact-ir-consumer-policy.v1.json",
       "byte_length": 5357,
       "sha256": "e93f9bcf5707ae9cac6e7a24cc8aa949048bec79f59200cb5ff5bc863a174ffe"
@@ -322,8 +327,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 42340,
-      "sha256": "36f94213066bd29446e9c2a159bb3753ed76cff81d702e83e4b6ee41c886ef6c"
+      "byte_length": 42553,
+      "sha256": "ec04ecb9590cf64b27cb6f73fcf57f7308f0dbb15ba595b821e4fc71a30ce0a5"
     },
     {
       "path": "corpus/README.md",
@@ -831,9 +836,29 @@
       "sha256": "a0833e98003b9d47275013e71b81f8a6e24219ae0aa9108a19f444e6831c2858"
     },
     {
+      "path": "docs/chatgpt-app/DEMO_RECORDING_SCRIPT.md",
+      "byte_length": 1689,
+      "sha256": "83e4181d1325c70c7bdfb86ab72c1708fe906e271c7a65962361158c37182c14"
+    },
+    {
+      "path": "docs/chatgpt-app/PORTAL_VALUES.md",
+      "byte_length": 3399,
+      "sha256": "01106aaab22ebcffd4edb4c6b0726b28b8c418edd46dcefe11afdee93ee6dd87"
+    },
+    {
       "path": "docs/chatgpt-app/README.md",
-      "byte_length": 3029,
-      "sha256": "2c9916c229a387156a421e3f800bc1f6fa34ba7eeedaaa218b6fa220d7054f4b"
+      "byte_length": 3267,
+      "sha256": "c88aaee7174dbe676a420ad26227b377180bc122b168848ab1f2484bdef63ef5"
+    },
+    {
+      "path": "docs/chatgpt-app/assets/deepbom-composer-icon-128.png",
+      "byte_length": 2192,
+      "sha256": "e4e90e3edb2834d02be89216b4e9fcacc2e0b008a3dc5662e57e2ac6bcdb938d"
+    },
+    {
+      "path": "docs/chatgpt-app/assets/deepbom-directory-icon-512.png",
+      "byte_length": 11200,
+      "sha256": "79fdfc9a146f94911aedfce77bac669d5e68cb3abf3da117c4194fcb337abdd3"
     },
     {
       "path": "docs/chatgpt-app/evals.json",
@@ -842,8 +867,8 @@
     },
     {
       "path": "docs/chatgpt-app/submission-profile.json",
-      "byte_length": 3135,
-      "sha256": "97af7db8feca03f033954d68f227334574da1ccbb55824e1f1e9fb69242338e4"
+      "byte_length": 3276,
+      "sha256": "e4ee97971ac95e00bd8f3b5cf29026e2c51988411541afa98e3cdb74d7103adf"
     },
     {
       "path": "docs/claude-app/README.md",
@@ -1087,8 +1112,8 @@
     },
     {
       "path": "plugin.json",
-      "byte_length": 1636,
-      "sha256": "1131b76e9d74d6c125801d089247af001687187c2c9132884cd533c16b7e5a1a"
+      "byte_length": 1615,
+      "sha256": "cd898f24669817a2acf09556294f27e1e2439e33d1586c510957cdccea434fea"
     },
     {
       "path": "reference/cyclonedx/1.7/README.md",
@@ -1253,7 +1278,7 @@
     {
       "path": "release/agent-contract-baseline.v1.json",
       "byte_length": 2752,
-      "sha256": "e29cdae7cc8ad149c4d57b66488de951d3aa09825be495acadcd5ad6140f7e44"
+      "sha256": "b4001013af1a045ad8878583820380a7ba536bd2d0c2ba7e5eafdbfb43f9a0bd"
     },
     {
       "path": "release/version.json",
@@ -1557,8 +1582,8 @@
     },
     {
       "path": "scripts/check-chatgpt-app-metadata.mjs",
-      "byte_length": 4354,
-      "sha256": "c98e659f5bbbb6ce8cfa155349101d3234d9be9d07fe86cd48ac992f202a0a8e"
+      "byte_length": 7394,
+      "sha256": "966fc203150aa721bb9ab78f35a885796dfa5d43ae7651a6f117768b15cab20f"
     },
     {
       "path": "scripts/check-chatgpt-mcp.mjs",
@@ -3727,8 +3752,8 @@
     },
     {
       "path": "web/legal/privacy.html",
-      "byte_length": 2341,
-      "sha256": "89331b018e221b3c9e37ae487faf12e8d400ceabd8392108c0823c30afdc8cd2"
+      "byte_length": 5464,
+      "sha256": "1bf7d993dd31152b93ef702ed382dddcbc48577d4cc89d83984957c4262ac45e"
     },
     {
       "path": "web/legal/support.html",
@@ -3978,7 +4003,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 87520,
-      "sha256": "f9a6ff067dcf7f1b5e795ce3d03e84eab75f7d09402053bec39797c1679dd94d"
+      "sha256": "0001a5f5d70171cc803eaa9c34a1902bcc238b5405eb6761c1404b68b3c1fb80"
     },
     {
       "path": "web/lib/bundle.js",
