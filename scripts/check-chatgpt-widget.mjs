@@ -63,10 +63,11 @@ const server = createServer((request, response) => {
   assetRequests.push({ path: url.pathname, method: request.method });
   response.setHeader("access-control-allow-origin", "*");
   response.setHeader("cross-origin-resource-policy", "cross-origin");
-  if (["/host.html", "/sandbox.html"].includes(url.pathname)) {
+  if (["/host.html", "/sandbox.html", "/host-no-download.html", "/sandbox-no-download.html"].includes(url.pathname)) {
     response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-    const child = url.pathname === "/host.html" ? "/sandbox.html" : "/test.html";
-    response.end(`<!doctype html><iframe name="${child === "/test.html" ? "widget" : "sandbox"}" sandbox="allow-scripts allow-same-origin allow-downloads" src="${child}" style="width:900px;height:900px"></iframe>`);
+    const noDownloads = url.pathname.includes("no-download");
+    const child = url.pathname.startsWith("/host") ? (noDownloads ? "/sandbox-no-download.html" : "/sandbox.html") : "/test.html";
+    response.end(`<!doctype html><iframe name="${child === "/test.html" ? "widget" : "sandbox"}" sandbox="allow-scripts allow-same-origin${noDownloads ? "" : " allow-downloads"}" src="${child}" style="width:900px;height:900px"></iframe>`);
     return;
   }
   if (url.pathname === "/test.html") {
@@ -523,6 +524,115 @@ try {
   assert.match(failedWorker.args.error.suggested_action, /not evidence of a defective model/);
   await tflitePage.close();
 
+  // The host can omit allow-downloads. Exercise real blocked Blob downloads,
+  // then a host-owned HTTPS file download outside the restricted iframe.
+  const exportContext = await browser.newContext();
+  const exportPage = await exportContext.newPage();
+  const hostPage = await exportContext.newPage();
+  const uploadedFiles = new Map();
+  const hostDownloads = [];
+  const openedFiles = [];
+  const blockedDownloads = [];
+  exportPage.on("download", (download) => blockedDownloads.push(download));
+  await exportPage.route(fileUrl, (route, request) => fulfillAttachmentRoute(route, request, artifact, []));
+  await exportPage.exposeFunction("__uploadExport", ({ name, type, bytes, options }) => {
+    assert.equal(options.library, false);
+    const fileId = `file_export_${uploadedFiles.size + 1}`;
+    uploadedFiles.set(fileId, { name, type, bytes: Buffer.from(bytes) });
+    return { fileId };
+  });
+  await hostPage.route("https://files.oaiusercontent.com/exports/*", async (route) => {
+    const file = uploadedFiles.get(new URL(route.request().url()).pathname.split("/").at(-1));
+    assert(file);
+    await route.fulfill({ status: 200, headers: {
+      "content-type": file.type, "content-disposition": `attachment; filename="${file.name}"`,
+    }, body: file.bytes });
+  });
+  await exportPage.exposeFunction("__openExport", async (request) => {
+    openedFiles.push(request);
+    assert.equal(request.redirectUrl, false);
+    const downloadPromise = hostPage.waitForEvent("download");
+    await hostPage.goto(request.href).catch((error) => { assert.match(error.message, /Download is starting/); });
+    const download = await downloadPromise;
+    hostDownloads.push({ filename: download.suggestedFilename(), bytes: await readFile(await download.path()) });
+  });
+  await exportPage.addInitScript(({ fileUrl }) => {
+    window.__exportFollowUps = [];
+    window.openai = {
+      toolInput: { file: { file_id: "file_export_source", file_name: "sample_cnn_float.onnx", download_url: fileUrl } },
+      callTool: async (name, args) => ({ structuredContent: args.result }),
+      uploadFile: async (file, options) => window.__uploadExport({ name: file.name, type: file.type, bytes: [...new Uint8Array(await file.arrayBuffer())], options }),
+      getFileDownloadUrl: async ({ fileId }) => ({ downloadUrl: `https://files.oaiusercontent.com/exports/${fileId}` }),
+      openExternal: (request) => window.__openExport(request),
+      sendFollowUpMessage: async (message) => { window.__exportFollowUps.push(message); },
+    };
+  }, { fileUrl });
+  await exportPage.goto(`${origin}/host-no-download.html`, { waitUntil: "networkidle" });
+  const exportFrame = exportPage.frame({ name: "widget" });
+  await exportFrame.waitForFunction(() => document.querySelector("#status")?.textContent === "Static evidence ready");
+  for (const kind of ["cyclonedx", "spdx"]) {
+    await exportFrame.click(`[data-action="download-${kind}"]`);
+    const row = exportFrame.locator(".visual-downloads > div").last();
+    assert.equal(await row.locator('[data-action="save-file-chatgpt"]').count(), 1, "Blocked local downloads need a host file-save action");
+    assert.equal(uploadedFiles.size, hostDownloads.length, "Preparing a local export must not upload it");
+    await row.locator('[data-action="save-file-chatgpt"]').click();
+    await exportFrame.waitForFunction(() => document.querySelector(".visual-status")?.textContent.includes("ChatGPT file ready"));
+    const downloaded = hostDownloads.at(-1);
+    const document = JSON.parse(downloaded.bytes.toString());
+    if (kind === "cyclonedx") {
+      assertCycloneDx17(document);
+      assert(document.metadata.component.hashes.some((hash) => hash.content === expectedSha256));
+    } else {
+      assertSpdx23(document);
+      assert.equal(document.packages[0].checksums[0].checksumValue, expectedSha256);
+    }
+    assert.match(downloaded.filename, kind === "spdx" ? /spdx_2_3\.spdx\.json$/ : /cyclonedx_1_7\.cdx\.json$/);
+    assert.deepEqual(downloaded.bytes, [...uploadedFiles.values()].at(-1).bytes);
+  }
+  assert.equal(blockedDownloads.length, 0);
+  assert.equal(await exportFrame.evaluate(() => window.__exportFollowUps.length), 0);
+  // Retain an uploaded file ID across a failed URL request; retry must not
+  // upload another copy or expose an invented download URL.
+  await exportFrame.evaluate(() => {
+    window.__realDownloadUrl = window.openai.getFileDownloadUrl;
+    window.openai.getFileDownloadUrl = async () => { throw new Error("Download URL unavailable"); };
+  });
+  await exportFrame.click('[data-action="download-cyclonedx"]');
+  let fileRow = exportFrame.locator(".visual-downloads > div").last();
+  await fileRow.locator('[data-action="save-file-chatgpt"]').click();
+  await exportFrame.waitForFunction(() => document.querySelector(".visual-status.error")?.textContent.includes("Download URL unavailable"));
+  assert.equal(uploadedFiles.size, 3);
+  assert.equal(hostDownloads.length, 2);
+  assert.equal(await fileRow.locator('[data-action="send-file-link-chat"]').isVisible(), false);
+  await exportFrame.evaluate(() => { window.openai.getFileDownloadUrl = async () => ({ downloadUrl: "javascript:alert(1)" }); });
+  await fileRow.locator('[data-action="save-file-chatgpt"]').click();
+  await exportFrame.waitForFunction(() => document.querySelector(".visual-status.error")?.textContent.includes("HTTPS file download URL"));
+  assert.equal(openedFiles.length, 2);
+  await exportFrame.evaluate(() => { window.openai.getFileDownloadUrl = window.__realDownloadUrl; });
+  await fileRow.locator('[data-action="save-file-chatgpt"]').click();
+  await exportFrame.waitForFunction(() => document.querySelector(".visual-status")?.textContent.includes("ChatGPT file ready"));
+  assert.equal(uploadedFiles.size, 3);
+  assert.equal(hostDownloads.length, 3);
+  await exportFrame.locator('[data-action="send-file-link-chat"]').last().click();
+  await exportFrame.waitForFunction(() => window.__exportFollowUps.length === 1);
+  assert((await exportFrame.evaluate(() => window.__exportFollowUps[0].prompt)).includes(openedFiles.at(-1).href));
+  assert.equal(uploadedFiles.size, 3);
+  await exportFrame.evaluate(() => { window.openai.uploadFile = async () => { throw new Error("This file type is unavailable"); }; });
+  await exportFrame.click('[data-action="download-spdx"]');
+  fileRow = exportFrame.locator(".visual-downloads > div").last();
+  await fileRow.locator('[data-action="save-file-chatgpt"]').click();
+  await exportFrame.waitForFunction(() => document.querySelector(".visual-status.error")?.textContent.includes("This file type is unavailable"));
+  assert.equal(hostDownloads.length, 3);
+  assert.equal(await fileRow.locator('[data-action="send-file-link-chat"]').isVisible(), false);
+  await exportFrame.evaluate(() => { delete window.openai.uploadFile; });
+  await exportFrame.click('[data-action="download-spdx"]');
+  fileRow = exportFrame.locator(".visual-downloads > div").last();
+  assert.equal(await fileRow.locator('[data-action="save-file-chatgpt"]').isDisabled(), true);
+  assert.match(await fileRow.innerText(), /file saving is unavailable/);
+  await hostPage.close();
+  await exportPage.close();
+  await exportContext.close();
+
   const badPage = await browser.newPage();
   const badUrl = "https://chatgpt-files.example/unsupported.bin";
   const badBytes = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
@@ -556,7 +666,7 @@ try {
   await badPage.close();
   assert(!assetRequests.some((request) => request.path === "/workers/static-audit-worker.js"), "Never request the nonexistent unbundled worker path");
   assert(assetRequests.every((request) => ["GET", "HEAD"].includes(request.method)), "Model bytes must not be posted to the asset service");
-  console.log(`ChatGPT widget E2E passed (cross-origin assets: ${assetOrigin}, nested iframe with blob-only worker CSP, ONNX/TFLite evidence, analyzer delivery failure, file authorization, narrow-panel controls, SVG/PNG/ZIP downloads, schema-valid CycloneDX/SPDX files, image and download-URL handoff, optional URL failure, and reusable follow-ups).`);
+  console.log(`ChatGPT widget E2E passed (cross-origin assets: ${assetOrigin}, nested iframe with blob-only worker CSP, ONNX/TFLite evidence, analyzer delivery failure, file authorization, narrow-panel controls, SVG/PNG/ZIP downloads, schema-valid CycloneDX/SPDX files, blocked iframe download and host file handoff, upload/URL failures, safe retry, and reusable follow-ups).`);
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.close(resolve));

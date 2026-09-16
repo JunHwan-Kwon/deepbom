@@ -4,6 +4,16 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Add an explicit Save via ChatGPT action for prepared exports in hosted
+  widget revision 20260916.6. Use the host's file upload, temporary HTTPS
+  download URL, and external navigation APIs when iframe downloads are blocked.
+  Offer Send link to chat and retain file IDs across URL failures. Local export
+  preparation does not upload anything; the separate save action shares only
+  the generated export, never the original model. Keep unsupported host APIs and
+  upload failures visible instead of claiming a file was saved.
+- Raise the verification source ceiling by 16 KiB for sandbox-blocked download,
+  exact JSON file handoff, schema/hash, upload failure, and URL retry regressions.
+
 - Make hosted widget revision 20260916.5 work with `worker-src blob:` by
   downloading the self-contained classic Worker bundle before starting it.
   Bind WASM asset resolution to the deployment URL at build time, without a

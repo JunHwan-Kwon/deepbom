@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "8b2a488b87ab6d173d9de31caab5af9f3eaa941d",
+  "source_commit": "089fbafe93d3d7c833718ff9c0259a79aa46fcac",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1157,
@@ -62,8 +62,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 58728,
-      "sha256": "811deff66989be53b674eb1a27e007587c2fb8629719ed8385574baacc13028c"
+      "byte_length": 59421,
+      "sha256": "4ce25beadbf2c8fb104881404c657b162597b9f4a63536c716577f6315f0a58e"
     },
     {
       "path": "CITATION.cff",
@@ -1618,12 +1618,12 @@
     {
       "path": "scripts/check-chatgpt-mcp.mjs",
       "byte_length": 12685,
-      "sha256": "c54ae24b8cc656bdf93c0f9c48d36f9558335db587ba652ed03a783beb4f7a59"
+      "sha256": "33c49f985d77daf89b68f4dc4d87183c4f630f2bf4b9ffc5d0f1473a514118b5"
     },
     {
       "path": "scripts/check-chatgpt-widget.mjs",
-      "byte_length": 32091,
-      "sha256": "3a19b3327d03fc9ebc7d3574cf7f520fbe907a909b700be14ccd264b31e85ef8"
+      "byte_length": 39509,
+      "sha256": "eb849e0d8a5cd8d0afe7e08fb6ae6d20e679c42c7d23093c5efc61fd3faf584c"
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
@@ -2643,7 +2643,7 @@
     {
       "path": "scripts/check-source-budget.mjs",
       "byte_length": 10690,
-      "sha256": "259d14e00e13fea3e67b8f307850b716baf9c1d7f3eb26549db5fb7f1f68cb48"
+      "sha256": "e26064ba6f5f99e39625c915bccb829e9d7fe21c97ebd97ab7c1af0f81dcdf95"
     },
     {
       "path": "scripts/check-spdx-artifact-export.mjs",
@@ -3697,13 +3697,13 @@
     },
     {
       "path": "web/chatgpt/deepbom-widget.js",
-      "byte_length": 52538,
-      "sha256": "585983829046f26d2ca9c2baaaddc07a78b51a882c9cb092b206d6d052f4a2d8"
+      "byte_length": 55981,
+      "sha256": "105770342a2cae3334735f83897edafdf42ff9a545469580f7c2ec9c88bfda5b"
     },
     {
       "path": "web/chatgpt/index.html",
-      "byte_length": 6457,
-      "sha256": "74acf002b0c0f467503771d6fada4fb45c1ddaf13ffdb427331112506ddd27bd"
+      "byte_length": 6601,
+      "sha256": "50d0f31c73beab86e8072be9e42bb72a6479165a22297f1abba7d3c063ea7aa9"
     },
     {
       "path": "web/claude/deepbom-widget.js",
@@ -4048,7 +4048,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 87835,
-      "sha256": "4f8fe6ed122075570868ed367e7a7705e3343c54527138a001f2f08bc73e2bde"
+      "sha256": "40b80b511de3940f8ab9b358d6b0650fb11c1078ce592c155147960920bcc5e3"
     },
     {
       "path": "web/lib/bundle.js",
