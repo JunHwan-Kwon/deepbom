@@ -4,6 +4,14 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Fix hosted ChatGPT TFLite analysis in a different-origin sandbox by starting
+  a local Blob Worker that imports the deployed, CORS-enabled worker bundle.
+  Preserve deployment-relative WASM loading and verify cross-origin MobileNet
+  analysis with the actual production asset paths. Hosted widget revision
+  20260916.4 retains the 1.101.0 analyzer and CLI contracts.
+- Raise the deployment ceiling by 2 MiB for the self-contained ChatGPT worker
+  bundle; keep cross-origin access limited to the declared public runtime assets.
+
 ## 1.101.0 - 2026-09-16
 
 - Publish this coordinated web, CLI, and MCP release immediately at the

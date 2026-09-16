@@ -381,8 +381,11 @@ async function bundleChatGptWidget() {
   await mkdir(outdir, { recursive: true });
   const result = await build({
     absWorkingDir: root,
-    entryPoints: ["web/chatgpt/deepbom-widget.js"],
-    outfile: path.join(outdir, "deepbom-widget.js"),
+    entryPoints: {
+      "deepbom-widget": "web/chatgpt/deepbom-widget.js",
+      "static-audit-worker": "web/workers/static-audit-worker.js",
+    },
+    outdir,
     bundle: true,
     charset: "ascii",
     format: "esm",
@@ -394,9 +397,11 @@ async function bundleChatGptWidget() {
     target: "es2022",
     write: true,
   });
-  const output = path.resolve(path.join(outdir, "deepbom-widget.js"));
-  if (!Object.keys(result.metafile.outputs).map((file) => path.resolve(root, file)).includes(output)) {
-    throw new Error("esbuild did not emit dist/chatgpt/deepbom-widget.js.");
+  for (const name of ["deepbom-widget.js", "static-audit-worker.js"]) {
+    const output = path.resolve(path.join(outdir, name));
+    if (!Object.keys(result.metafile.outputs).map((file) => path.resolve(root, file)).includes(output)) {
+      throw new Error(`esbuild did not emit dist/chatgpt/${name}.`);
+    }
   }
 }
 
@@ -598,6 +603,7 @@ async function writeCloudflareStaticAssetHeaders() {
   ];
   const publicCrossOriginAssets = [
     "/chatgpt/deepbom-widget.js",
+    "/chatgpt/static-audit-worker.js",
     "/claude/deepbom-widget.js",
     "/pkg/tflite_wasm_audit_bg.wasm",
   ];

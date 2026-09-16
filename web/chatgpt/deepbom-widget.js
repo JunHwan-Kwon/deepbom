@@ -35,11 +35,30 @@ const VISUALIZATION_VIEW_LABELS = Object.freeze({
 });
 const root = document.getElementById("deepbom-chatgpt-root");
 const staticAuditWorkerClient = createStaticAuditWorkerClient({
-  createWorker: () => new Worker(
-    new URL("../workers/static-audit-worker.js", import.meta.url),
-    { type: "module", name: "deepbom-chatgpt-static-audit" },
-  ),
+  createWorker: createSandboxWorker,
 });
+
+function createSandboxWorker() {
+  const moduleUrl = new URL("./static-audit-worker.js", import.meta.url);
+  moduleUrl.search = new URL(import.meta.url).search;
+  // Worker entry points must share the host document's origin. Import the
+  // CORS-enabled module from a sandbox-owned Blob so its import.meta.url still
+  // resolves WASM assets against the deployment, not the ChatGPT sandbox.
+  const bootstrapUrl = URL.createObjectURL(new Blob([
+    `import ${JSON.stringify(moduleUrl.href)};`,
+  ], { type: "text/javascript" }));
+  const release = () => URL.revokeObjectURL(bootstrapUrl);
+  try {
+    const worker = new Worker(bootstrapUrl, { type: "module", name: "deepbom-chatgpt-static-audit" });
+    worker.addEventListener("message", release, { once: true });
+    worker.addEventListener("error", release, { once: true });
+    window.addEventListener("pagehide", release, { once: true });
+    return worker;
+  } catch (error) {
+    release();
+    throw error;
+  }
+}
 
 renderShell();
 void start().catch((error) => publishFailure(error));

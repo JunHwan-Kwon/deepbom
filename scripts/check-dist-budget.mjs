@@ -6,7 +6,7 @@ const dist = path.resolve("dist");
 // The public multi-format corpus accounts for 7.3 MiB of the deploy artifact.
 // Keep a small explicit ceiling above the measured release instead of requiring
 // deploy-time overrides that would make the budget non-reproducible.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 64);
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 66);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

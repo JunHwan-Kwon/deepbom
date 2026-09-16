@@ -52,6 +52,7 @@ const cloudflareStaticHeadersPath = path.join(distRoot, "_headers");
 const chatGptDeploymentFiles = [
   path.join(distRoot, "chatgpt", "index.html"),
   path.join(distRoot, "chatgpt", "deepbom-widget.js"),
+  path.join(distRoot, "chatgpt", "static-audit-worker.js"),
   path.join(distRoot, "chatgpt", "deepbom-app-icon.svg"),
   path.join(distRoot, "server.json"),
 ];
@@ -120,6 +121,7 @@ for (const requiredHeaderContract of [
   "X-Frame-Options: DENY",
   "Strict-Transport-Security: max-age=31536000; includeSubDomains",
   "/chatgpt/deepbom-widget.js",
+  "/chatgpt/static-audit-worker.js",
   "/claude/deepbom-widget.js",
   "/pkg/tflite_wasm_audit_bg.wasm",
   "Access-Control-Allow-Origin: *",

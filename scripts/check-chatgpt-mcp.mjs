@@ -59,7 +59,7 @@ const read = await rpc("resources/read", { uri: CHATGPT_MCP_CONTRACT.widgetUri }
 assert.equal(read.contents[0].mimeType, "text/html;profile=mcp-app");
 assert.match(read.contents[0].text, /deepbom-widget\.js/);
 assert.equal(CHATGPT_MCP_CONTRACT.widgetUri, "ui://deepbom/analyzer-v2.html");
-assert(read.contents[0].text.includes(`deepbom-widget.js?v=${ANALYZER_SEMANTIC_VERSION}-20260916.3`));
+assert(read.contents[0].text.includes(`deepbom-widget.js?v=${ANALYZER_SEMANTIC_VERSION}-20260916.4`));
 assert.equal(read.contents[0]._meta.ui.domain, "https://deepbom.org");
 assert.ok(read.contents[0]._meta.ui.csp.connectDomains.some((domain) => domain.includes("oaiusercontent")));
 assert.match(read.contents[0]._meta["openai/widgetDescription"], /format-neutral Model IR table/);
@@ -213,6 +213,13 @@ assert.match(worker, /OPENAI_APPS_CHALLENGE/);
 assert.match(worker, /cross-origin-resource-policy", "cross-origin"/);
 
 const workerModule = (await import("../worker/index.js")).default;
+for (const asset of ["/chatgpt/deepbom-widget.js", "/chatgpt/static-audit-worker.js", "/pkg/tflite_wasm_audit_bg.wasm"]) {
+  const response = await workerModule.fetch(new Request(`https://deepbom.org${asset}`), {
+    ASSETS: { fetch: async () => new Response("asset") },
+  });
+  assert.equal(response.headers.get("access-control-allow-origin"), "*");
+  assert.equal(response.headers.get("cross-origin-resource-policy"), "cross-origin");
+}
 const challenge = await workerModule.fetch(
   new Request("https://deepbom.org/.well-known/openai-apps-challenge"),
   { OPENAI_APPS_CHALLENGE: "openai-domain-verification-token" },

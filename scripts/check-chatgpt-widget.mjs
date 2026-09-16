@@ -50,16 +50,22 @@ await build({
   target: "es2022",
 });
 const [bundle, workerBundle, tfliteWasm] = await Promise.all([
-  readFile(bundlePath),
-  readFile(workerBundlePath),
-  readFile(path.join(root, "pkg", "tflite_wasm_audit_bg.wasm")),
+  readFile(process.env.DEEPBOM_WIDGET_DIST ? path.join(process.env.DEEPBOM_WIDGET_DIST, "chatgpt/deepbom-widget.js") : bundlePath),
+  readFile(process.env.DEEPBOM_WIDGET_DIST ? path.join(process.env.DEEPBOM_WIDGET_DIST, "chatgpt/static-audit-worker.js") : workerBundlePath),
+  readFile(path.join(process.env.DEEPBOM_WIDGET_DIST || root, "pkg", "tflite_wasm_audit_bg.wasm")),
 ]);
 const requests = [];
+const assetRequests = [];
+let assetOrigin;
 const server = createServer((request, response) => {
   const url = new URL(request.url || "/", "http://127.0.0.1");
+  assetRequests.push({ path: url.pathname, method: request.method });
+  response.setHeader("access-control-allow-origin", "*");
+  response.setHeader("cross-origin-resource-policy", "cross-origin");
   if (url.pathname === "/test.html") {
+    response.setHeader("content-security-policy", `default-src 'none'; script-src ${assetOrigin} 'wasm-unsafe-eval'; worker-src blob: ${assetOrigin}; connect-src ${assetOrigin} https://chatgpt-files.example; style-src 'unsafe-inline'; img-src data: blob:`);
     response.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
-    response.end(`<!doctype html><html><body><main id="deepbom-chatgpt-root"></main><script type="module" src="/chatgpt/deepbom-widget.js"></script></body></html>`);
+    response.end(`<!doctype html><html><body><main id="deepbom-chatgpt-root"></main><script type="module" src="${assetOrigin}/chatgpt/deepbom-widget.js?v=cross-origin-test"></script></body></html>`);
     return;
   }
   if (url.pathname === "/chatgpt/deepbom-widget.js") {
@@ -67,7 +73,7 @@ const server = createServer((request, response) => {
     response.end(bundle);
     return;
   }
-  if (url.pathname === "/workers/static-audit-worker.js") {
+  if (url.pathname === "/chatgpt/static-audit-worker.js") {
     response.writeHead(200, { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store" });
     response.end(workerBundle);
     return;
@@ -120,7 +126,9 @@ try {
   });
   const address = server.address();
   assert(address && typeof address === "object");
-  const origin = `http://127.0.0.1:${address.port}`;
+  const origin = `http://localhost:${address.port}`;
+  assetOrigin = process.env.DEEPBOM_WIDGET_ASSET_ORIGIN || `http://127.0.0.1:${address.port}`;
+  assert.notEqual(origin, assetOrigin, "The host document and deployed assets must have different origins");
   const fileUrl = "https://chatgpt-files.example/artifact.onnx";
   browser = await launchChromium(chromium);
   const page = await browser.newPage();
@@ -431,6 +439,13 @@ try {
   await metadataPage.close();
 
   const tflitePage = await browser.newPage();
+  const tfliteErrors = [];
+  tflitePage.on("pageerror", (error) => tfliteErrors.push(error.message));
+  tflitePage.on("console", (message) => { if (message.type() === "error") tfliteErrors.push(message.text()); });
+  const tfliteAssetRequests = [];
+  tflitePage.context().on("request", (request) => {
+    if (request.url().startsWith(`${assetOrigin}/`)) tfliteAssetRequests.push({ url: request.url(), method: request.method() });
+  });
   const tfliteUrl = "https://chatgpt-files.example/artifact.tflite";
   const tfliteRequests = [];
   await tflitePage.route(tfliteUrl, (route, request) => fulfillAttachmentRoute(route, request, tfliteArtifact, tfliteRequests));
@@ -455,7 +470,8 @@ try {
     };
   }, { tfliteUrl });
   await tflitePage.goto(`${origin}/test.html`, { waitUntil: "networkidle" });
-  await tflitePage.waitForFunction(() => document.querySelector("#status")?.textContent === "Static evidence ready", null, { timeout: 90_000 });
+  await tflitePage.waitForFunction(() => ["Static evidence ready", "Analysis could not be completed"].includes(document.querySelector("#status")?.textContent), null, { timeout: 90_000 });
+  assert.equal(await tflitePage.locator("#status").textContent(), "Static evidence ready", `${await tflitePage.locator("body").innerText()}\n${tfliteErrors.join("\n")}`);
   const tfliteObserved = await tflitePage.evaluate(() => ({
     calls: window.__deepbomToolCalls,
     followUps: window.__deepbomFollowUps,
@@ -469,9 +485,20 @@ try {
   assert.equal(tfliteResult.artifact.byte_length, tfliteArtifact.byteLength);
   assert.equal(tfliteResult.graph.operator_count, 65);
   assert.equal(tfliteResult.graph.tensor_count, 173);
+  assert.equal(tfliteResult.graph.total_macs, 300775552);
   assert.equal(tfliteObserved.followUps.length, 0);
   assert(tfliteRequests.some((row) => row.method === "HEAD"));
   assert(tfliteRequests.some((row) => row.range === "bytes=0-0"));
+  assert(tfliteAssetRequests.some((request) => new URL(request.url).pathname === "/chatgpt/static-audit-worker.js"));
+  assert(tfliteAssetRequests.some((request) => new URL(request.url).pathname === "/pkg/tflite_wasm_audit_bg.wasm"));
+  assert(tfliteAssetRequests.every((request) => ["GET", "HEAD"].includes(request.method)));
+  const tflitePngPromise = tflitePage.waitForEvent("download");
+  await tflitePage.click('[data-action="visual-download-png"]');
+  const tflitePng = await tflitePngPromise;
+  assert.deepEqual([...new Uint8Array(await readFile(await tflitePng.path())).slice(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  for (const action of ["download-spdx", "download-cyclonedx", "visual-download-svg", "visual-download-bundle"]) {
+    assert(await tflitePage.locator(`[data-action="${action}"]`).isVisible());
+  }
   await tflitePage.close();
 
   const badPage = await browser.newPage();
@@ -505,7 +532,9 @@ try {
   assert.equal(failed.calls[0].args.error.transfer_boundary, "model_bytes_not_sent_to_deepbom_service");
   assert.equal(failed.followUps.length, 1);
   await badPage.close();
-  console.log(`ChatGPT widget E2E passed (ONNX/TFLite evidence, file authorization, narrow-panel controls, SVG/PNG/ZIP downloads, schema-valid CycloneDX/SPDX files, image and download-URL handoff, optional URL failure, and reusable follow-ups).`);
+  assert(!assetRequests.some((request) => request.path === "/workers/static-audit-worker.js"), "Never request the nonexistent unbundled worker path");
+  assert(assetRequests.every((request) => ["GET", "HEAD"].includes(request.method)), "Model bytes must not be posted to the asset service");
+  console.log(`ChatGPT widget E2E passed (cross-origin assets: ${assetOrigin}, ONNX/TFLite evidence, file authorization, narrow-panel controls, SVG/PNG/ZIP downloads, schema-valid CycloneDX/SPDX files, image and download-URL handoff, optional URL failure, and reusable follow-ups).`);
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.close(resolve));
