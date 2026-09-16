@@ -42,7 +42,8 @@ await build({
   outfile: workerBundlePath,
   bundle: true,
   charset: "ascii",
-  format: "esm",
+  format: "iife",
+  define: { "import.meta.url": "globalThis.__deepbomWorkerModuleUrl" },
   legalComments: "none",
   minify: true,
   platform: "browser",
@@ -62,8 +63,14 @@ const server = createServer((request, response) => {
   assetRequests.push({ path: url.pathname, method: request.method });
   response.setHeader("access-control-allow-origin", "*");
   response.setHeader("cross-origin-resource-policy", "cross-origin");
+  if (["/host.html", "/sandbox.html"].includes(url.pathname)) {
+    response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+    const child = url.pathname === "/host.html" ? "/sandbox.html" : "/test.html";
+    response.end(`<!doctype html><iframe name="${child === "/test.html" ? "widget" : "sandbox"}" sandbox="allow-scripts allow-same-origin allow-downloads" src="${child}" style="width:900px;height:900px"></iframe>`);
+    return;
+  }
   if (url.pathname === "/test.html") {
-    response.setHeader("content-security-policy", `default-src 'none'; script-src ${assetOrigin} 'wasm-unsafe-eval'; worker-src blob: ${assetOrigin}; connect-src ${assetOrigin} https://chatgpt-files.example; style-src 'unsafe-inline'; img-src data: blob:`);
+    response.setHeader("content-security-policy", `default-src 'none'; script-src ${assetOrigin} 'wasm-unsafe-eval'; worker-src blob:; connect-src ${assetOrigin} https://chatgpt-files.example; style-src 'unsafe-inline'; img-src data: blob:`);
     response.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
     response.end(`<!doctype html><html><body><main id="deepbom-chatgpt-root"></main><script type="module" src="${assetOrigin}/chatgpt/deepbom-widget.js?v=cross-origin-test"></script></body></html>`);
     return;
@@ -469,10 +476,12 @@ try {
       async sendFollowUpMessage(message) { window.__deepbomFollowUps.push(message); },
     };
   }, { tfliteUrl });
-  await tflitePage.goto(`${origin}/test.html`, { waitUntil: "networkidle" });
-  await tflitePage.waitForFunction(() => ["Static evidence ready", "Analysis could not be completed"].includes(document.querySelector("#status")?.textContent), null, { timeout: 90_000 });
-  assert.equal(await tflitePage.locator("#status").textContent(), "Static evidence ready", `${await tflitePage.locator("body").innerText()}\n${tfliteErrors.join("\n")}`);
-  const tfliteObserved = await tflitePage.evaluate(() => ({
+  await tflitePage.goto(`${origin}/host.html`, { waitUntil: "networkidle" });
+  const tfliteFrame = tflitePage.frame({ name: "widget" });
+  assert(tfliteFrame?.parentFrame()?.parentFrame(), "Exercise the double iframe sandbox boundary");
+  await tfliteFrame.waitForFunction(() => ["Static evidence ready", "Analysis could not be completed"].includes(document.querySelector("#status")?.textContent), null, { timeout: 90_000 });
+  assert.equal(await tfliteFrame.locator("#status").textContent(), "Static evidence ready", `${await tfliteFrame.locator("body").innerText()}\n${tfliteErrors.join("\n")}`);
+  const tfliteObserved = await tfliteFrame.evaluate(() => ({
     calls: window.__deepbomToolCalls,
     followUps: window.__deepbomFollowUps,
     status: document.querySelector("#status")?.textContent,
@@ -493,12 +502,25 @@ try {
   assert(tfliteAssetRequests.some((request) => new URL(request.url).pathname === "/pkg/tflite_wasm_audit_bg.wasm"));
   assert(tfliteAssetRequests.every((request) => ["GET", "HEAD"].includes(request.method)));
   const tflitePngPromise = tflitePage.waitForEvent("download");
-  await tflitePage.click('[data-action="visual-download-png"]');
+  await tfliteFrame.click('[data-action="visual-download-png"]');
   const tflitePng = await tflitePngPromise;
   assert.deepEqual([...new Uint8Array(await readFile(await tflitePng.path())).slice(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   for (const action of ["download-spdx", "download-cyclonedx", "visual-download-svg", "visual-download-bundle"]) {
-    assert(await tflitePage.locator(`[data-action="${action}"]`).isVisible());
+    assert(await tfliteFrame.locator(`[data-action="${action}"]`).isVisible());
   }
+  // Analyzer delivery failure must be reported as such, without blaming or
+  // uploading the attachment and without publishing a successful result.
+  await tflitePage.route(`${assetOrigin}/chatgpt/static-audit-worker.js*`, (route) => route.fulfill({
+    status: 503, headers: { "access-control-allow-origin": "*", "content-type": "text/javascript" }, body: "unavailable",
+  }));
+  await tflitePage.reload({ waitUntil: "networkidle" });
+  const failedWorkerFrame = tflitePage.frame({ name: "widget" });
+  await failedWorkerFrame.waitForFunction(() => window.__deepbomToolCalls?.length === 1);
+  const failedWorker = await failedWorkerFrame.evaluate(() => window.__deepbomToolCalls[0]);
+  assert.equal(failedWorker.name, "deepbom_publish_error");
+  assert.equal(failedWorker.args.error.code, "analyzer_unavailable");
+  assert.match(failedWorker.args.error.message, /HTTP 503/);
+  assert.match(failedWorker.args.error.suggested_action, /not evidence of a defective model/);
   await tflitePage.close();
 
   const badPage = await browser.newPage();
@@ -534,7 +556,7 @@ try {
   await badPage.close();
   assert(!assetRequests.some((request) => request.path === "/workers/static-audit-worker.js"), "Never request the nonexistent unbundled worker path");
   assert(assetRequests.every((request) => ["GET", "HEAD"].includes(request.method)), "Model bytes must not be posted to the asset service");
-  console.log(`ChatGPT widget E2E passed (cross-origin assets: ${assetOrigin}, ONNX/TFLite evidence, file authorization, narrow-panel controls, SVG/PNG/ZIP downloads, schema-valid CycloneDX/SPDX files, image and download-URL handoff, optional URL failure, and reusable follow-ups).`);
+  console.log(`ChatGPT widget E2E passed (cross-origin assets: ${assetOrigin}, nested iframe with blob-only worker CSP, ONNX/TFLite evidence, analyzer delivery failure, file authorization, narrow-panel controls, SVG/PNG/ZIP downloads, schema-valid CycloneDX/SPDX files, image and download-URL handoff, optional URL failure, and reusable follow-ups).`);
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.close(resolve));

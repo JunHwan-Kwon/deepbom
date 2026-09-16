@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "f80f3dc4b964915d7803c023326bb25eb1be12cb",
+  "source_commit": "8b2a488b87ab6d173d9de31caab5af9f3eaa941d",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1157,
@@ -62,8 +62,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 58187,
-      "sha256": "c42ac3b087202a068228bda003cb3eb0e60257b25fe93f82337e02eea8d12774"
+      "byte_length": 58728,
+      "sha256": "811deff66989be53b674eb1a27e007587c2fb8629719ed8385574baacc13028c"
     },
     {
       "path": "CITATION.cff",
@@ -1377,8 +1377,8 @@
     },
     {
       "path": "scripts/build-pages.mjs",
-      "byte_length": 29073,
-      "sha256": "b824999a494bac4da803721ff43ef3523167c571f9580bc0376826453a1669d3"
+      "byte_length": 29693,
+      "sha256": "54d250a091e456e7ff0744fea619228746e6c565084f1568b361bda4e29d8b86"
     },
     {
       "path": "scripts/build-public-multiformat-corpus-manifest.mjs",
@@ -1617,13 +1617,13 @@
     },
     {
       "path": "scripts/check-chatgpt-mcp.mjs",
-      "byte_length": 12577,
-      "sha256": "f6e624625e13aca0b8d10f1ac65cd2d0eb1e921d3e1180442f36999f9c8a88ee"
+      "byte_length": 12685,
+      "sha256": "c54ae24b8cc656bdf93c0f9c48d36f9558335db587ba652ed03a783beb4f7a59"
     },
     {
       "path": "scripts/check-chatgpt-widget.mjs",
-      "byte_length": 30371,
-      "sha256": "8356525ee45c65cb97c0e62207970de1b7f72dbfcd89c57d8e97aec3f47af03b"
+      "byte_length": 32091,
+      "sha256": "3a19b3327d03fc9ebc7d3574cf7f520fbe907a909b700be14ccd264b31e85ef8"
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
@@ -3697,8 +3697,8 @@
     },
     {
       "path": "web/chatgpt/deepbom-widget.js",
-      "byte_length": 51316,
-      "sha256": "c9ec9e7b57a39005eba63bcbc53bb4c63f753be3f043902cdce2adf292802659"
+      "byte_length": 52538,
+      "sha256": "585983829046f26d2ca9c2baaaddc07a78b51a882c9cb092b206d6d052f4a2d8"
     },
     {
       "path": "web/chatgpt/index.html",
@@ -4048,7 +4048,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 87835,
-      "sha256": "96829ef88d8eb32f6e9eab1454caa4298b225a5328269b91d6bccb0ae2fe91ff"
+      "sha256": "4f8fe6ed122075570868ed367e7a7705e3343c54527138a001f2f08bc73e2bde"
     },
     {
       "path": "web/lib/bundle.js",

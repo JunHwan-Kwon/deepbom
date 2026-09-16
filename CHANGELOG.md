@@ -4,6 +4,14 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Make hosted widget revision 20260916.5 work with `worker-src blob:` by
+  downloading the self-contained classic Worker bundle before starting it.
+  Bind WASM asset resolution to the deployment URL at build time, without a
+  remote module import, runtime eval, or main-thread parser fallback. Exercise
+  the stricter CSP inside nested sandboxed iframes and report analyzer-loading
+  failures separately from attachment failures. Clarify that opening the panel
+  does not establish successful or ongoing analysis when the panel has failed.
+
 - Fix hosted ChatGPT TFLite analysis in a different-origin sandbox by starting
   a local Blob Worker that imports the deployed, CORS-enabled worker bundle.
   Preserve deployment-relative WASM loading and verify cross-origin MobileNet

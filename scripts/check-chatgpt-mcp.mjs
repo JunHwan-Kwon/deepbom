@@ -59,7 +59,7 @@ const read = await rpc("resources/read", { uri: CHATGPT_MCP_CONTRACT.widgetUri }
 assert.equal(read.contents[0].mimeType, "text/html;profile=mcp-app");
 assert.match(read.contents[0].text, /deepbom-widget\.js/);
 assert.equal(CHATGPT_MCP_CONTRACT.widgetUri, "ui://deepbom/analyzer-v2.html");
-assert(read.contents[0].text.includes(`deepbom-widget.js?v=${ANALYZER_SEMANTIC_VERSION}-20260916.4`));
+assert(read.contents[0].text.includes(`deepbom-widget.js?v=${ANALYZER_SEMANTIC_VERSION}-20260916.5`));
 assert.equal(read.contents[0]._meta.ui.domain, "https://deepbom.org");
 assert.ok(read.contents[0]._meta.ui.csp.connectDomains.some((domain) => domain.includes("oaiusercontent")));
 assert.match(read.contents[0]._meta["openai/widgetDescription"], /format-neutral Model IR table/);
@@ -85,7 +85,8 @@ assert.equal(started.structuredContent.status, "browser_analysis_started");
 assert.equal(started.structuredContent.analysis_depth, "structure");
 assert.match(started.structuredContent.privacy, /does not fetch or retain model bytes/);
 assert.equal(started._meta["openai/file"].download_url, file.download_url);
-assert.match(started.content[0].text, /expected two-stage state is not an analysis failure/);
+assert.match(started.content[0].text, /does not establish ongoing processing or successful analysis/);
+assert.match(started.content[0].text, /Analysis could not be completed, acknowledge the failure/);
 assert.match(started.content[0].text, /No artifact facts are available from this starting response/);
 assert.match(started.content[0].text, /user must select Report in chat once/);
 assert.match(started.content[0].text, /Do not substitute another parser/);

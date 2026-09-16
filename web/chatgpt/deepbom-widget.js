@@ -34,22 +34,36 @@ const VISUALIZATION_VIEW_LABELS = Object.freeze({
   "observed-runtime": "V5 Observed runtime overlay",
 });
 const root = document.getElementById("deepbom-chatgpt-root");
+const workerModuleUrl = new URL("./static-audit-worker.js", import.meta.url);
+workerModuleUrl.search = new URL(import.meta.url).search;
+let sandboxWorkerSource = null;
 const staticAuditWorkerClient = createStaticAuditWorkerClient({
   createWorker: createSandboxWorker,
 });
 
+async function prepareSandboxWorker() {
+  if (sandboxWorkerSource !== null) return;
+  setStatus("Loading isolated TFLite analyzer", "Downloading the DEEPBOM analyzer into this browser sandbox.");
+  const response = await fetch(workerModuleUrl, { credentials: "omit", signal: AbortSignal.timeout(30_000) });
+  if (!response.ok) throw new Error(`DEEPBOM analyzer download failed (HTTP ${response.status}).`);
+  if (!/javascript/i.test(response.headers.get("content-type") || "")) {
+    throw new Error("DEEPBOM analyzer download returned an unexpected content type.");
+  }
+  sandboxWorkerSource = await response.text();
+}
+
 function createSandboxWorker() {
-  const moduleUrl = new URL("./static-audit-worker.js", import.meta.url);
-  moduleUrl.search = new URL(import.meta.url).search;
-  // Worker entry points must share the host document's origin. Import the
-  // CORS-enabled module from a sandbox-owned Blob so its import.meta.url still
-  // resolves WASM assets against the deployment, not the ChatGPT sandbox.
+  if (sandboxWorkerSource === null) throw new Error("DEEPBOM analyzer is not loaded.");
+  // Fetch the complete bundle through connect-src before creating a local
+  // Worker. Remote module imports can still be blocked by worker-src blob:.
+  // The build replaces import.meta.url with this deployment URL for WASM.
   const bootstrapUrl = URL.createObjectURL(new Blob([
-    `import ${JSON.stringify(moduleUrl.href)};`,
+    `globalThis.__deepbomWorkerModuleUrl = ${JSON.stringify(workerModuleUrl.href)};\n`,
+    sandboxWorkerSource,
   ], { type: "text/javascript" }));
   const release = () => URL.revokeObjectURL(bootstrapUrl);
   try {
-    const worker = new Worker(bootstrapUrl, { type: "module", name: "deepbom-chatgpt-static-audit" });
+    const worker = new Worker(bootstrapUrl, { name: "deepbom-chatgpt-static-audit" });
     worker.addEventListener("message", release, { once: true });
     worker.addEventListener("error", release, { once: true });
     window.addEventListener("pagehide", release, { once: true });
@@ -160,6 +174,7 @@ async function analyzeRemoteArtifact(file, format, depth) {
   if (format === "onnx") return analyzeOnnxModel(bytes, file.name);
   if (format === "executorch") return analyzeExecuTorchModel(bytes, file.name);
   if (format === "tflite") {
+    await prepareSandboxWorker();
     return staticAuditWorkerClient.run(STATIC_AUDIT_OPERATION.TFLITE_ANALYZE, {
       bytes,
       filename: file.name,
@@ -887,6 +902,7 @@ function renderError(error) {
   setStatus("Analysis could not be completed", "The attachment was not interpreted as a successful result.");
   root.querySelector("#result").innerHTML = `<p class="detail error"></p>`;
   root.querySelector(".error").textContent = error?.message || String(error);
+  root.querySelector("#result").append(element("p", "detail", structuredFailure(error).suggested_action));
 }
 
 async function publishFailure(error) {
@@ -922,6 +938,9 @@ function structuredFailure(error) {
   } else if (/limited to|large file|byte ranges/i.test(message)) {
     code = "browser_limit";
     suggestedAction = "Use the local DEEPBOM CLI or local MCP for this artifact.";
+  } else if (/DEEPBOM analyzer|Static audit worker/i.test(message)) {
+    code = "analyzer_unavailable";
+    suggestedAction = "Reload the DEEPBOM panel and retry. If the host still blocks the analyzer, use the local DEEPBOM CLI or MCP. This is not evidence of a defective model file.";
   } else if (/download failed|range read failed|response length|safe byte length/i.test(message)) {
     code = "attachment_read_failed";
     suggestedAction = "Reattach the file and retry. If the attachment origin cannot provide a complete or ranged response, use the local DEEPBOM CLI or MCP.";

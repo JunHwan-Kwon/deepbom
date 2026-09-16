@@ -381,11 +381,8 @@ async function bundleChatGptWidget() {
   await mkdir(outdir, { recursive: true });
   const result = await build({
     absWorkingDir: root,
-    entryPoints: {
-      "deepbom-widget": "web/chatgpt/deepbom-widget.js",
-      "static-audit-worker": "web/workers/static-audit-worker.js",
-    },
-    outdir,
+    entryPoints: ["web/chatgpt/deepbom-widget.js"],
+    outfile: path.join(outdir, "deepbom-widget.js"),
     bundle: true,
     charset: "ascii",
     format: "esm",
@@ -397,9 +394,27 @@ async function bundleChatGptWidget() {
     target: "es2022",
     write: true,
   });
-  for (const name of ["deepbom-widget.js", "static-audit-worker.js"]) {
+  const workerResult = await build({
+    absWorkingDir: root,
+    entryPoints: ["web/workers/static-audit-worker.js"],
+    outfile: path.join(outdir, "static-audit-worker.js"),
+    bundle: true,
+    charset: "ascii",
+    format: "iife",
+    define: { "import.meta.url": "globalThis.__deepbomWorkerModuleUrl" },
+    legalComments: "none",
+    metafile: true,
+    minify: true,
+    platform: "browser",
+    sourcemap: false,
+    target: "es2022",
+  });
+  if (Object.values(workerResult.metafile.outputs).some((output) => output.imports.length)) {
+    throw new Error("The ChatGPT Worker bundle must not depend on external script imports.");
+  }
+  for (const [name, built] of [["deepbom-widget.js", result], ["static-audit-worker.js", workerResult]]) {
     const output = path.resolve(path.join(outdir, name));
-    if (!Object.keys(result.metafile.outputs).map((file) => path.resolve(root, file)).includes(output)) {
+    if (!Object.keys(built.metafile.outputs).map((file) => path.resolve(root, file)).includes(output)) {
       throw new Error(`esbuild did not emit dist/chatgpt/${name}.`);
     }
   }
