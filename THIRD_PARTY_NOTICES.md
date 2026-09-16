@@ -60,3 +60,12 @@ worked examples for machine-readable model evidence.
 
 DEEPBOM-authored example evidence remains covered by the repository license;
 upstream schema files retain their upstream license.
+
+## SPDX Schema
+
+`reference/spdx/2.3/spdx-schema.json` is the unmodified SPDX 2.3 JSON Schema,
+pinned with its upstream revision and digest in the accompanying schema lock.
+
+- Project: https://github.com/spdx/spdx-spec
+- Copyright: Linux Foundation and SPDX contributors
+- License: CC-BY-3.0, https://spdx.github.io/spdx-spec/v2.3/license/

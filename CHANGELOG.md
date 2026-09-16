@@ -4,6 +4,23 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.101.0 - 2026-09-16
+
+- Publish this coordinated web, CLI, and MCP release immediately at the
+  maintainer's request to restore accessible visualization file downloads.
+  This explicitly requested release precedes the usual stable-release interval.
+- Move ChatGPT visualization and file controls above long evidence tables and
+  report component height changes. Keep SVG, 300-DPI PNG, and Word-ready ZIP
+  Save links available after download requests. PNG handoff now requests an
+  inline image and a real ChatGPT-issued download link when available.
+- Add browser-local CycloneDX 1.7 and SPDX 2.3 JSON export buttons. Reuse the
+  existing CycloneDX artifact-evidence projection; represent SPDX artifacts as
+  FILE-purpose packages with measured SHA-256, explicit license unknowns, and
+  evidence annotations. Validate against pinned official schemas and exercise
+  actual file downloads, narrow-panel visibility, and optional URL failures.
+- Raise the reviewed development-tooling source ceiling by 8 KiB for the
+  pinned SPDX schema validator and this release's channel qualification records.
+
 ## 1.100.0 - 2026-09-16
 
 - Use the documented stable-release interval exception for a P0 public-tool

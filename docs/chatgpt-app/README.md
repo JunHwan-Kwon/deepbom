@@ -29,6 +29,24 @@ user action: it uploads only the selected derived page to the current ChatGPT
 conversation and makes that image visible to the model. It does not upload the
 model artifact to DEEPBOM.
 
+The file buttons appear above the visualization and before the evidence tables,
+including in narrow ChatGPT panels. `Download SVG`, `Download PNG`, and
+`Word-ready bundle` save actual files and retain a visible Save link for retry.
+`CycloneDX 1.7 JSON` exports the existing artifact-evidence document;
+`SPDX 2.3 JSON` exports a SHA-256-bound artifact inventory with DEEPBOM evidence
+annotations. SPDX uses FILE-purpose packages, leaves license/copyright fields
+as `NOASSERTION`, and does not infer a software dependency inventory or an SPDX
+3 AI profile. These downloads remain local to the browser.
+
+`Send PNG to chat` explicitly requests an inline image and a Download PNG link,
+using the temporary URL returned by ChatGPT for the uploaded derived image when
+available. If that optional URL API is unavailable, the image ID is still
+shared and the local PNG download remains available. A host accepting the
+follow-up request is not proof that it rendered a new response; the button
+stays usable. Hosts without image sharing show the disabled action and a local
+download alternative. The component reports height changes to supported hosts
+to avoid clipping controls.
+
 The same result now includes a bounded `deepbom.model_summary_conversation.v1`
 projection. ChatGPT can report native operation/storage rows, output contracts,
 predecessor references, bound serialized bytes/elements, and static MACs without

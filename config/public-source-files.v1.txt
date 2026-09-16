@@ -238,6 +238,9 @@ reference/cyclonedx/1.7/schema-lock.json
 reference/cyclonedx/1.7/spdx.schema.json
 reference/sarif/2.1.0/SOURCE.md
 reference/sarif/2.1.0/sarif-schema-2.1.0.json
+reference/spdx/2.3/README.md
+reference/spdx/2.3/schema-lock.json
+reference/spdx/2.3/spdx-schema.json
 reference/xnnpack-readme/INDEX.md
 reference/xnnpack-readme/README-v2.10.0.md
 reference/xnnpack-readme/README-v2.11.0.md
@@ -522,6 +525,7 @@ scripts/check-semantic-artifact-diff.mjs
 scripts/check-service-worker-lifecycle.mjs
 scripts/check-size-utils.mjs
 scripts/check-source-budget.mjs
+scripts/check-spdx-artifact-export.mjs
 scripts/check-static-audit-worker-client.mjs
 scripts/check-sw-assets.mjs
 scripts/check-sw-version.mjs
@@ -627,6 +631,7 @@ scripts/safetensors-architecture-corpus-lib.mjs
 scripts/sign-official-package-digest.mjs
 scripts/size-utils.mjs
 scripts/source-size-utils.mjs
+scripts/spdx-23-schema.mjs
 scripts/static-test-server.mjs
 scripts/sw-utils.mjs
 scripts/sweep-coreml-mlprogram-corpus.mjs
@@ -1081,6 +1086,7 @@ web/lib/service-worker.js
 web/lib/session-evidence.js
 web/lib/sha256-sync.js
 web/lib/signing-key-trust.js
+web/lib/spdx-artifact-export.js
 web/lib/static-audit-worker-client.js
 web/lib/static-audit-worker-protocol.js
 web/lib/status.js

@@ -28,6 +28,7 @@ const CHECKS = [
   "scripts/check-advanced-copy-contract.mjs",
   "scripts/check-regulatory-bundle-contract.mjs",
   "scripts/check-export-artifact-contract.mjs",
+  "scripts/check-spdx-artifact-export.mjs",
   "scripts/check-export-contract-documents.mjs",
   "scripts/check-conversion-receipt.mjs --no-browser",
   "scripts/check-artifact-ir.mjs",

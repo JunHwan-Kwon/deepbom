@@ -20,8 +20,8 @@
     <h1>Inspect the tensor assignment, not only the filename's quantization label.</h1>
     <p class="lede">A GGUF artifact can mix Q4, Q5, Q6, integer, and floating-point encodings. The useful evidence is the tensor-by-tensor assignment and its reproducible digest.</p>
     <section class="brief-section"><h2>Run a bounded inventory</h2>
-      <pre><code>npx -y deepbom@1.100.0 gguf "./model.gguf" --tensors
-npx -y deepbom@1.100.0 gguf "./model.gguf" --tensors --compact \
+      <pre><code>npx -y deepbom@1.101.0 gguf "./model.gguf" --tensors
+npx -y deepbom@1.101.0 gguf "./model.gguf" --tensors --compact \
   --tensor-offset 0 --tensor-limit 100</code></pre>
       <p>The table reports tensor name, serialized encoding, shape in GGUF <code>ne0</code>-first order, effective bits per element, and byte range. The assignment digest is computed from a documented normalized projection so another implementation can reproduce it.</p>
     </section>

@@ -8,6 +8,9 @@ import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { launchChromium } from "./browser-launch.mjs";
+import AdmZip from "adm-zip";
+import { assertCycloneDx17 } from "./cyclonedx-17-schema.mjs";
+import { assertSpdx23 } from "./spdx-23-schema.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const artifactPath = path.join(root, "web", "samples", "sample_cnn_float.onnx");
@@ -170,6 +173,7 @@ try {
     window.__deepbomFollowUpAttempts = 0;
     window.__deepbomUploads = [];
     window.__deepbomWidgetStates = [];
+    window.__deepbomHeights = [];
     window.openai = {
       toolInput: null,
       async callTool(name, args) {
@@ -192,6 +196,10 @@ try {
         return { fileId: `file_visual_${window.__deepbomUploads.length}` };
       },
       setWidgetState(state) { window.__deepbomWidgetStates.push(state); },
+      notifyIntrinsicHeight(height) { window.__deepbomHeights.push(height); },
+      async getFileDownloadUrl({ fileId }) {
+        return { downloadUrl: `https://files.oaiusercontent.com/${fileId}/visualization.png?signature=test` };
+      },
       async requestDisplayMode(request) { window.__deepbomDisplayMode = request; },
     };
     // Approval-gated ChatGPT tools can initialize the component bridge before
@@ -287,10 +295,49 @@ try {
   assert.match(observed.followUps[0].prompt, /Send PNG to chat/);
   assert.match(observed.followUps[0].prompt, /model_summary\.rows/);
   assert.match(observed.resultText, /button remains available so the completed result is never stranded/);
+  // Reproduce a narrow, height-limited host: every export control must appear
+  // before the preview, findings, and potentially very long model-summary table.
+  await page.setViewportSize({ width: 380, height: 640 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  for (const action of ["visual-download-svg", "visual-download-png", "visual-download-bundle", "download-cyclonedx", "download-spdx", "visual-send-chat"]) {
+    const box = await page.locator(`[data-action="${action}"]`).boundingBox();
+    assert(box && box.y >= 0 && box.y + box.height <= 640, `${action} is clipped below the host viewport`);
+    assert(box.x >= 0 && box.x + box.width <= 380, `${action} overflows the narrow widget`);
+  }
+  assert(await page.evaluate(() => window.__deepbomHeights.some((height) => Number.isFinite(height) && height > 0)));
+  if (process.env.DEEPBOM_WIDGET_SCREENSHOT) await page.screenshot({ path: process.env.DEEPBOM_WIDGET_SCREENSHOT });
   const svgDownloadPromise = page.waitForEvent("download");
   await page.click('[data-action="visual-download-svg"]');
   const svgDownload = await svgDownloadPromise;
   assert.match(svgDownload.suggestedFilename(), /architecture_overview_p001\.svg$/);
+  assert.match(await readFile(await svgDownload.path(), "utf8"), /<svg/);
+  const pngDownloadPromise = page.waitForEvent("download");
+  await page.click('[data-action="visual-download-png"]');
+  const pngDownload = await pngDownloadPromise;
+  const pngBytes = await readFile(await pngDownload.path());
+  assert.deepEqual([...pngBytes.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  const zipDownloadPromise = page.waitForEvent("download");
+  await page.click('[data-action="visual-download-bundle"]');
+  const zipDownload = await zipDownloadPromise;
+  const archive = new AdmZip(await readFile(await zipDownload.path()));
+  const names = archive.getEntries().map((entry) => entry.entryName);
+  assert(names.some((name) => name.endsWith(".svg")) && names.some((name) => name.endsWith(".png")));
+  assert(names.some((name) => /manifest.*\.json$/.test(name)));
+  for (const kind of ["cyclonedx", "spdx"]) {
+    const downloadPromise = page.waitForEvent("download");
+    await page.click(`[data-action="download-${kind}"]`);
+    const download = await downloadPromise;
+    const document = JSON.parse(await readFile(await download.path(), "utf8"));
+    if (kind === "cyclonedx") {
+      assertCycloneDx17(document);
+      assert(document.metadata.component.hashes.some((hash) => hash.alg === "SHA-256" && hash.content === expectedSha256));
+    } else {
+      assertSpdx23(document);
+      assert.equal(document.packages[0].checksums[0].checksumValue, expectedSha256);
+    }
+  }
+  assert.equal(await page.locator(".visual-downloads a[download]").count(), 5);
+  assert.equal(await page.evaluate(() => window.__deepbomUploads.length), 0, "Local exports must not upload files");
   await page.click('[data-action="visual-send-chat"]');
   try {
     await page.waitForFunction(() => window.__deepbomUploads?.length === 1 && window.__deepbomFollowUps?.length === 2, null, { timeout: 30_000 });
@@ -317,7 +364,21 @@ try {
   assert.equal(visualHandoff.state.modelContent.schema, "deepbom.chatgpt_visualization_state.v1");
   assert.equal(visualHandoff.state.modelContent.artifact_sha256, expectedSha256);
   assert.match(visualHandoff.followUp.prompt, /deterministic projection of Model IR/);
+  assert.match(visualHandoff.followUp.prompt, /Show the generated image inline/);
+  assert.match(visualHandoff.followUp.prompt, /clickable Download PNG link/);
+  assert.equal(visualHandoff.state.modelContent.visualization_file.download_url, "https://files.oaiusercontent.com/file_visual_1/visualization.png?signature=test");
+  assert(visualHandoff.followUp.prompt.includes(visualHandoff.state.modelContent.visualization_file.download_url));
   assert.match(visualHandoff.status, /attached to ChatGPT/);
+  // Optional download URL failure must not strand the already uploaded image
+  // or make the model invent a downloadable attachment.
+  await page.evaluate(() => { window.openai.getFileDownloadUrl = async () => { throw new Error("URL unavailable"); }; });
+  await page.click('[data-action="visual-send-chat"]');
+  await page.waitForFunction(() => window.__deepbomFollowUps.length === 3);
+  const withoutUrl = await page.evaluate(() => ({ state: window.__deepbomWidgetStates.at(-1), prompt: window.__deepbomFollowUps.at(-1).prompt }));
+  assert.deepEqual(withoutUrl.state.imageIds, ["file_visual_2"]);
+  assert.equal(withoutUrl.state.modelContent.visualization_file.download_url, undefined);
+  assert.match(withoutUrl.prompt, /No download URL was returned/);
+  assert.equal(await page.locator('[data-action="visual-send-chat"]').isEnabled(), true);
   assert(requests.some((row) => row.method === "HEAD"), "widget should attempt a non-body size probe");
   assert(requests.some((row) => row.range === "bytes=0-0"), "widget should fall back to a one-byte range request");
   assert(requests.filter((row) => row.range).length >= 3, "analysis should use explicit bounded range reads");
@@ -444,7 +505,7 @@ try {
   assert.equal(failed.calls[0].args.error.transfer_boundary, "model_bytes_not_sent_to_deepbom_service");
   assert.equal(failed.followUps.length, 1);
   await badPage.close();
-  console.log(`ChatGPT widget E2E passed (delayed file authorization, hidden MCP metadata fallback, ONNX and isolated-worker TFLite, independent SHA-256, complete evidence card, HEAD fallback, range reads, success/error bridges, and reusable user-initiated follow-ups).`);
+  console.log(`ChatGPT widget E2E passed (ONNX/TFLite evidence, file authorization, narrow-panel controls, SVG/PNG/ZIP downloads, schema-valid CycloneDX/SPDX files, image and download-URL handoff, optional URL failure, and reusable follow-ups).`);
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.close(resolve));

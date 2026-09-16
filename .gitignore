@@ -24,6 +24,8 @@ reference/*
 !reference/cyclonedx/**
 !reference/sarif/
 !reference/sarif/**
+!reference/spdx/
+!reference/spdx/**
 *.log
 *.tmp
 __pycache__/
