@@ -2,6 +2,7 @@ import { buildArtifactEvidenceIrUnchecked, validateArtifactEvidenceIr } from "./
 import { normalizeArtifactIrRuntimeOverlay } from "./artifact-ir-runtime.js";
 import { projectArtifactIrToCanonicalGraph } from "./graph-ir.js";
 import { buildModelIrFromArtifactIr, buildModelIrNativeFactLedger, validateModelIr } from "./model-ir.js";
+import { buildModelSummary, validateModelSummary } from "./model-summary.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 
@@ -42,15 +43,20 @@ export function resolveArtifactIrContext(analysis, artifact = {}, {
   if (artifactIrContext) {
     const validated = validateArtifactEvidenceIr(artifactIrContext.artifact_ir);
     const modelIr = artifactIrContext.model_ir ? validateModelIr(artifactIrContext.model_ir) : buildModelIrFromArtifactIr(validated);
+    const modelSummary = artifactIrContext.model_summary ? validateModelSummary(artifactIrContext.model_summary) : null;
     requireArtifactIdentity(validated, analysis, artifact);
     if (modelIr.source_contract.sha256 !== validated.artifact_ir_sha256) {
       throw new Error("Model IR context source binding is inconsistent.");
+    }
+    if (modelSummary && (modelSummary.source_contract.model_ir_sha256 !== modelIr.model_ir_sha256
+      || modelSummary.source_contract.artifact_sha256 !== validated.artifact.sha256)) {
+      throw new Error("Model Summary context source binding is inconsistent.");
     }
     if (validated.artifact_ir_sha256 !== artifactIrContext.graph_ir?.artifact_ir_sha256) {
       throw new Error("Artifact IR context graph binding is inconsistent.");
     }
     requireRuntimeIdentity(validated, runtimeEvidence, artifactIrContext.runtime_signature);
-    return artifactIrContext.model_ir ? artifactIrContext : contextFromArtifactIr(analysis, validated, {
+    return artifactIrContext.model_ir && artifactIrContext.model_summary ? artifactIrContext : contextFromArtifactIr(analysis, validated, {
       runtimeSignature: artifactIrContext.runtime_signature ?? (runtimeEvidence == null ? null : sha256TextHex(canonicalJson(runtimeEvidence))),
     });
   }
@@ -71,10 +77,12 @@ function contextFromArtifactIr(analysis, artifactIr, { runtimeSignature = null }
     nativeFactLedger: buildModelIrNativeFactLedger(analysis, artifactIr),
   });
   const graphIr = projectArtifactIrToCanonicalGraph(artifactIr);
-  const primaryView = buildPrimaryScopeAnalysisView(analysis, artifactIr, modelIr);
+  const modelSummary = buildModelSummary(modelIr);
+  const primaryView = buildPrimaryScopeAnalysisView(analysis, artifactIr, modelIr, modelSummary);
   return Object.freeze({
     artifact_ir: artifactIr,
     model_ir: modelIr,
+    model_summary: modelSummary,
     runtime_signature: runtimeSignature,
     graph_ir: graphIr,
     primary_view: primaryView,
@@ -114,7 +122,7 @@ function requireArtifactIdentity(artifactIr, analysis, artifact) {
   }
 }
 
-export function buildPrimaryScopeAnalysisView(analysis, artifactIr, modelIr = buildModelIrFromArtifactIr(artifactIr)) {
+export function buildPrimaryScopeAnalysisView(analysis, artifactIr, modelIr = buildModelIrFromArtifactIr(artifactIr), modelSummary = buildModelSummary(modelIr)) {
   const graphSerialized = artifactIr?.graph?.status === "serialized";
   const primaryScopeRef = graphSerialized ? artifactIr.graph.primary_scope_ref : null;
   const nativeOps = Array.isArray(analysis.ops) ? analysis.ops : [];
@@ -140,7 +148,7 @@ export function buildPrimaryScopeAnalysisView(analysis, artifactIr, modelIr = bu
     }))
     : nativeTensors;
   const view = {};
-  const canonicalKeys = new Set(["ops", "tensors", "artifact_ir", "model_ir", "artifact_ir_consumer_view", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"]);
+  const canonicalKeys = new Set(["ops", "tensors", "artifact_ir", "model_ir", "model_summary", "artifact_ir_consumer_view", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"]);
   const passthroughKeys = new Set([
     ...Object.keys(analysis),
     "_markdown",
@@ -166,6 +174,7 @@ export function buildPrimaryScopeAnalysisView(analysis, artifactIr, modelIr = bu
     tensors,
     artifact_ir: artifactIr,
     model_ir: modelIr,
+    model_summary: modelSummary,
     artifact_ir_consumer_view: true,
     artifact_ir_primary_scope_ref: primaryScopeRef,
     artifact_ir_nested_scope_count: graphSerialized

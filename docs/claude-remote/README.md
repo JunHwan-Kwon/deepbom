@@ -28,7 +28,9 @@ on a named Claude host until a real run has been recorded.
 The remote MCP App does not send selected model bytes to the DEEPBOM service.
 It does return a bounded analysis result to the Claude conversation. That result
 can contain model names, tensor names, hashes, architecture facts, findings, and
-evidence gaps. Use the local MCPB or CLI for confidential files when those
+evidence gaps. It also contains a row-bounded format-neutral Model IR summary;
+the app shows the complete local table and keeps serialized storage distinct
+from framework trainability and runtime order. Use the local MCPB or CLI for confidential files when those
 derived facts must not leave the computer.
 
 See https://deepbom.org/privacy for the public policy. No DEEPBOM account or

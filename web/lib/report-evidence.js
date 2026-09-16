@@ -31,6 +31,7 @@ import { buildOnnxRuntimeShapeBinding } from "./onnx-runtime-shape-binding.js";
 import { buildSecurityPostureEvidence, collectRuntimeWarnings } from "./report-security-posture.js";
 import { resolveArtifactIrContext } from "./artifact-ir-context.js";
 import { buildModelIrFromArtifactIr } from "./model-ir.js";
+import { buildModelSummary, validateModelSummary } from "./model-summary.js";
 import { modelIrVisualizationFiles } from "./model-ir-visualization.js";
 
 export function buildStaticAnalysisExport(analysis) {
@@ -1070,6 +1071,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
     runtimeEvidence: rawEvidenceContext.runtimeEvidence || reportContext.runtimeEvidence || null,
   });
   const modelIr = resolveReportModelIr(analysis, artifactIr, rawEvidenceContext, reportContext);
+  const modelSummary = resolveReportModelSummary(analysis, modelIr, rawEvidenceContext, reportContext);
   const modelStructure = buildModelStructureEvidence(analysis, identity);
   const quantization = buildQuantizationEvidence(analysis, identity);
   const runtimeResults = buildRuntimeEvidence({ analysis, ...runtimeEvidence });
@@ -1091,6 +1093,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
       static_analysis: staticAnalysis,
       ...(artifactIr ? { artifact_ir: artifactIr } : {}),
       ...(modelIr ? { model_ir: modelIr } : {}),
+      ...(modelSummary ? { model_summary: modelSummary } : {}),
       quantization,
       runtime_results: runtimeResults,
       execution_placement: executionPlacement,
@@ -1119,6 +1122,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
       static_analysis: staticAnalysis,
       ...(artifactIr ? { artifact_ir: artifactIr } : {}),
       ...(modelIr ? { model_ir: modelIr } : {}),
+      ...(modelSummary ? { model_summary: modelSummary } : {}),
       model_structure: modelStructure,
       quantization,
       runtime_results: runtimeResults,
@@ -1155,6 +1159,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
       static_analysis: staticAnalysis,
       ...(artifactIr ? { artifact_ir: artifactIr } : {}),
       ...(modelIr ? { model_ir: modelIr } : {}),
+      ...(modelSummary ? { model_summary: modelSummary } : {}),
       model_structure: modelStructure,
       quantization,
       runtime_results: runtimeResults,
@@ -1229,6 +1234,7 @@ export function buildRawDataArtifactFiles(analysis, {
 } = {}) {
   const artifactIr = resolveReportArtifactIr(analysis, rawEvidenceContext.identity || {}, rawEvidenceContext);
   const modelIr = resolveReportModelIr(analysis, artifactIr, rawEvidenceContext);
+  const modelSummary = resolveReportModelSummary(analysis, modelIr, rawEvidenceContext);
   const files = [
     zipTextFile("static/raw_static_audit.md", analysis?._markdown || buildStaticAuditMarkdown(analysis, analysis?.model_sha256 || "") || ""),
     zipTextFile("static/roofline.csv", analysis?.roofline_csv || ""),
@@ -1237,6 +1243,7 @@ export function buildRawDataArtifactFiles(analysis, {
     zipTextFile("static/static_analysis.json", jsonForDownload(buildStaticAnalysisExport(analysis))),
     ...(artifactIr ? [zipTextFile("static/artifact_ir.json", jsonForDownload(artifactIr))] : []),
     ...(modelIr ? [zipTextFile("static/model_ir.json", jsonForDownload(modelIr))] : []),
+    ...(modelSummary ? [zipTextFile("static/model_summary.json", jsonForDownload(modelSummary))] : []),
     zipTextFile("static/arena_plan.csv", buildArenaPlanCsv(analysis)),
     zipTextFile("static/mlbom_cdx.json", jsonForDownload(mlBomDocument || {})),
     ...buildRawEvidenceFiles(analysis, rawEvidenceContext),
@@ -1299,4 +1306,19 @@ function resolveReportModelIr(analysis, artifactIr, ...contexts) {
     return supplied;
   }
   return artifactIr ? buildModelIrFromArtifactIr(artifactIr) : null;
+}
+
+function resolveReportModelSummary(analysis, modelIr, ...contexts) {
+  if (!modelIr) return null;
+  const supplied = contexts.map((context) => context?.artifactIrContext?.model_summary || context?.modelSummary).find(Boolean)
+    || analysis?.model_summary || null;
+  if (supplied) {
+    const validated = validateModelSummary(supplied);
+    if (validated.source_contract?.model_ir_sha256 !== modelIr.model_ir_sha256
+      || validated.source_contract?.artifact_sha256 !== modelIr.artifact?.sha256) {
+      throw new Error("Report Model Summary is not bound to the report Model IR and artifact.");
+    }
+    return validated;
+  }
+  return buildModelSummary(modelIr);
 }

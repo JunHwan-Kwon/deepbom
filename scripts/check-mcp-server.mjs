@@ -241,6 +241,18 @@ async function checkRealServerContract() {
     assert.match(modelIrSelection.sections.model_ir.model_ir_sha256, /^[a-f0-9]{64}$/);
     assert.equal(modelIrSelection.sections.model_ir.artifact.sha256, envelope.identity.sha256,
       "MCP Model IR identity must remain bound to the same artifact as the canonical envelope");
+
+    session.request(29, "tools/call", {
+      name: "deepbom_audit",
+      arguments: { path: onnxPath, section: "model_summary" },
+    });
+    const modelSummarySelection = (await session.response(29)).result.structuredContent;
+    assert.equal(modelSummarySelection.schema, "deepbom.analysis_selection.v1");
+    assert.equal(modelSummarySelection.sections.model_summary.schema, "deepbom.model_summary.v1");
+    assert.equal(modelSummarySelection.sections.model_summary.source_contract.artifact_sha256, envelope.identity.sha256,
+      "MCP Model Summary identity must remain bound to the same artifact as the canonical envelope");
+    assert.equal(modelSummarySelection.sections.model_summary.trainability.trainable_parameter_count, null,
+      "MCP Model Summary must not infer framework trainability");
   } finally {
     await session.close();
   }

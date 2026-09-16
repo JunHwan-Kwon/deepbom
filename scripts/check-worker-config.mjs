@@ -100,14 +100,32 @@ expect(
 );
 
 const runWorkerFirst = new Set(config.assets?.run_worker_first || []);
-expect(runWorkerFirst.has("/*"), "wrangler.jsonc assets.run_worker_first must include /* so browser security headers cover static pages and assets.");
-expect(runWorkerFirst.size === 1, "The global /* Worker-first rule must not retain redundant narrower routes rejected by Wrangler.");
+const expectedWorkerFirst = new Set([
+  "/mcp*",
+  "/api/*",
+  "/.well-known/openai-apps-challenge",
+  "/web/protected/*",
+]);
+expect(
+  runWorkerFirst.size === expectedWorkerFirst.size
+    && [...expectedWorkerFirst].every((route) => runWorkerFirst.has(route)),
+  "wrangler.jsonc assets.run_worker_first must cover only dynamic and access-controlled routes.",
+);
+expect(!runWorkerFirst.has("/*"), "Public static assets must bypass Worker invocation accounting.");
 expect(!runWorkerFirst.has("/medical") && !runWorkerFirst.has("/medical/*"), "/medical should be served as a generated static shell, not Worker-first.");
 expect(!workerSource.includes("routeMedicalWorkspace"), "worker/index.js should not use Worker compute for the static /medical shell.");
 expect(
   buildSource.includes('path.join(dist, "test.html")')
     && buildSource.includes('"Disallow: /test"'),
   "/test must be assembled as a no-index static gateway rather than a duplicate Worker-rendered application.",
+);
+expect(
+  buildSource.includes("writeCloudflareStaticAssetHeaders")
+    && buildSource.includes('path.join(dist, "_headers")')
+    && buildSource.includes("Content-Security-Policy")
+    && buildSource.includes("Access-Control-Allow-Origin: *")
+    && buildSource.includes("Cache-Control: no-store, no-cache, must-revalidate, no-transform"),
+  "asset-first delivery must preserve browser hardening, MCP runtime CORS, and HTML no-store headers through dist/_headers.",
 );
 
 const d1Bindings = new Set((config.d1_databases || []).map((database) => database.binding));

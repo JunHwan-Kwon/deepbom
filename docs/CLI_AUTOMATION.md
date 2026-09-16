@@ -47,6 +47,20 @@ under `public_product_contracts.release_policy`.
 | `--format cyclonedx` | CycloneDX 1.7 JSON | ML-BOM and supply-chain tooling |
 | `--format sarif` | OASIS SARIF 2.1.0 Errata 01 | CI findings and security dashboards |
 
+For a common human and machine-readable structure table across formats, use:
+
+```console
+deepbom model-summary model.onnx
+deepbom model-summary model.gguf --level storage --format markdown
+deepbom audit model.tflite --section model_summary --compact
+```
+
+The JSON form is `deepbom.model_summary.v1`, a deterministic projection of the
+same hash-bound Common Model IR used by the document views. Program artifacts
+produce operation rows; graphless containers produce storage rows; safe
+envelopes report identity-only/not-assessable. Bound serialized values are not
+silently called trainable parameters, and display order is not execution order.
+
 In the CycloneDX 1.7 projection, the analyzed model is the BOM root at
 `metadata.component`; `components[]` contains additional inventory members.
 Consumers must inspect both locations and must not require the root to be

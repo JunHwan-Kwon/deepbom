@@ -3,7 +3,7 @@
   "positive": [
     {
       "class": "direct",
-      "prompt": "Use DEEPBOM to inspect this attached ONNX deployment model. Keep defects, cautions, and evidence gaps separate.",
+      "prompt": "Use DEEPBOM to inspect and visualize this attached ONNX deployment model. Keep defects, cautions, and evidence gaps separate.",
       "expected_tool": "deepbom_analyze_file",
       "fixture": "valid supported ONNX attachment"
     },
@@ -60,6 +60,7 @@
     "Keep artifact_defect, caution, and evidence_gap distinct.",
     "Do not turn an evidence gap into an artifact defect.",
     "Preserve the static evidence boundary.",
+    "Treat Model IR diagrams as traceable static projections and do not claim they are observed runtime graphs.",
     "On failure, report the structured code and suggested_action without inventing a partial success."
   ]
 }

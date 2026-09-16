@@ -25,7 +25,7 @@ assert.equal(PUBLIC_PRODUCT_CONTRACTS.format_maturity.find((row) => row.format =
 
 const schemas = new Set(PUBLIC_PRODUCT_CONTRACTS.machine_contracts.map((row) => row.schema));
 assert.equal(schemas.size, PUBLIC_PRODUCT_CONTRACTS.machine_contracts.length);
-for (const required of ["deepbom.agent_contract.v1", "deepbom.cli_capabilities.v1", "deepbom.artifact_evidence_envelope.v1", "deepbom.artifact_ir.v2", "deepbom.model_ir.v1", "deepbom.model_ir_visualization_manifest.v1", "deepbom.semantic_artifact_diff.v1", "cyclonedx-1.7-json"]) assert(schemas.has(required));
+for (const required of ["deepbom.agent_contract.v1", "deepbom.cli_capabilities.v1", "deepbom.artifact_evidence_envelope.v1", "deepbom.artifact_ir.v2", "deepbom.model_ir.v1", "deepbom.model_summary.v1", "deepbom.model_ir_visualization_manifest.v1", "deepbom.semantic_artifact_diff.v1", "cyclonedx-1.7-json"]) assert(schemas.has(required));
 assert.equal([...schemas].some((value) => /2\.0|perspective/i.test(value)), false);
 
 const release = PUBLIC_PRODUCT_CONTRACTS.release_policy;

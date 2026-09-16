@@ -141,12 +141,17 @@ try {
   for (const [name, content, format] of files) {
     const target = path.join(temp, name);
     await writeFile(target, content);
-    const result = spawnSync(process.execPath, ["bin/deepbom.mjs", target, "--section", "artifact_ir,model_ir", "--compact"], { encoding: "utf8", cwd: path.resolve(".") });
+    const result = spawnSync(process.execPath, ["bin/deepbom.mjs", target, "--section", "artifact_ir,model_ir,model_summary", "--compact"], { encoding: "utf8", cwd: path.resolve(".") });
     assert.equal(result.status, 0, `${name}: ${result.stderr}`);
     const document = JSON.parse(result.stdout);
     assert.equal(document.artifact.format, format);
     assert.equal(document.sections.artifact_ir.schema, "deepbom.artifact_ir.v2");
     assert.equal(document.sections.model_ir.schema, "deepbom.model_ir.v1");
+    assert.equal(document.sections.model_summary.schema, "deepbom.model_summary.v1");
+    const expectedSummaryLevel = ["graphdef", "savedmodel", "keras", "pt2"].includes(format) ? "operation" : "identity";
+    assert.equal(document.sections.model_summary.projection.selected_level, expectedSummaryLevel, `${format} model summary applicability`);
+    assert.equal(document.sections.model_summary.source_contract.model_ir_sha256, document.sections.model_ir.model_ir_sha256, `${format} model summary source binding`);
+    assert.equal(document.sections.model_summary.trainability.trainable_parameter_count, null, `${format} trainability must not be inferred`);
     if (format === "pt2") {
       assert.equal(document.sections.model_ir.program.status, "serialized");
       assert.equal(document.sections.model_ir.program.operations.length, 1);

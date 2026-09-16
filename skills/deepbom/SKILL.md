@@ -1,6 +1,6 @@
 ---
 name: deepbom
-description: Statically audit serialized AI model artifacts with the local DEEPBOM CLI. Use for TFLite, ONNX, Core ML, ExecuTorch, GGUF, or SafeTensors deployment review; bounded GraphDef, SavedModel, Keras-config, or PT2 declarative structure; HDF5 or PyTorch-checkpoint safe-envelope inspection; quantization, memory, diff, verification, graph, Model IR, monochrome document views, SARIF, or CycloneDX 1.7 output. Do not treat checkpoint envelopes as executable graphs or claim measured latency, task accuracy, safety, regulatory approval, standards conformance, or actual runtime placement without the required external evidence.
+description: Statically audit serialized AI model artifacts with the local DEEPBOM CLI. Use for TFLite, ONNX, Core ML, ExecuTorch, GGUF, or SafeTensors deployment review; bounded GraphDef, SavedModel, Keras-config, or PT2 declarative structure; HDF5 or PyTorch-checkpoint safe-envelope inspection; format-neutral model summaries, quantization, memory, diff, verification, graph, Model IR, monochrome document views, SARIF, or CycloneDX 1.7 output. Do not treat checkpoint envelopes as executable graphs or claim framework trainability, measured latency, task accuracy, safety, regulatory approval, standards conformance, or actual runtime placement without the required external evidence.
 ---
 
 # Audit deployment artifacts with DEEPBOM
@@ -87,10 +87,12 @@ deepbom contract capture "./model.onnx" -o "./baseline.interface-contract.json"
 deepbom explain-rule <rule-id> --json
 deepbom graph "./model.onnx" --view structure --format svg -o graph.svg
 deepbom audit "./model.onnx" --section model_ir --compact
+deepbom model-summary "./model.onnx" --format table
+deepbom model-summary "./model.gguf" --level storage --format markdown
 deepbom visualize "./model.onnx" --view all --orientation portrait -o model-views.zip
 ```
 
-Use matching serialized deployment formats for diff. Treat `verify --bom` as a reconciliation of the selected component with artifact-observable facts, not a complete BOM or compliance verdict. An automatically captured contract is an artifact-derived baseline until it is separately reviewed and approved. `model_ir` and `visualize` are preview engineering projections whose loss ledger and evidence classes must be preserved. Do not deserialize `.pth`, `.pt`, or `.h5`; use only the safe envelope and bind a conversion receipt to the deployed artifact when lineage is needed.
+Use matching serialized deployment formats for diff. Treat `verify --bom` as a reconciliation of the selected component with artifact-observable facts, not a complete BOM or compliance verdict. An automatically captured contract is an artifact-derived baseline until it is separately reviewed and approved. `model_ir`, `model-summary`, and `visualize` are preview engineering projections whose loss ledger and evidence classes must be preserved. Model-summary storage is not framework trainability, and display order is not runtime order. Do not deserialize `.pth`, `.pt`, or `.h5`; use only the safe envelope and bind a conversion receipt to the deployed artifact when lineage is needed.
 
 ## Handle failure
 

@@ -74,6 +74,10 @@ if (npmCli) {
   const npmModelIrSelection = json(run(process.execPath, [npmCli, "audit", fileCases[1].path, "--section", "model_ir", "--compact"]).stdout);
   assert.deepEqual(npmModelIrSelection, canonicalModelIrSelection,
     "installed npm Model IR projection diverged from canonical CLI");
+  const canonicalModelSummary = json(run(process.execPath, ["bin/deepbom.mjs", "model-summary", fileCases[1].path, "--format", "json-compact"]).stdout);
+  const npmModelSummary = json(run(process.execPath, [npmCli, "model-summary", fileCases[1].path, "--format", "json-compact"]).stdout);
+  assert.deepEqual(npmModelSummary, canonicalModelSummary,
+    "installed npm format-neutral Model Summary diverged from canonical CLI");
   const canonicalVisualization = json(run(process.execPath, ["bin/deepbom.mjs", "visualize", fileCases[1].path, "--view", "architecture-overview", "--output-format", "json", "--compact"]).stdout);
   const npmVisualization = json(run(process.execPath, [npmCli, "visualize", fileCases[1].path, "--view", "architecture-overview", "--output-format", "json", "--compact"]).stdout);
   assert.deepEqual(npmVisualization, canonicalVisualization,
@@ -240,6 +244,10 @@ if (platformSmoke) {
     assert.deepEqual(json(cargoModelIr.stdout),
       json(run(process.execPath, ["bin/deepbom.mjs", "audit", cases[1].path, "--section", "model_ir", "--compact"]).stdout),
       "Cargo Model IR projection diverged from canonical CLI");
+    const cargoModelSummary = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "model-summary", cases[1].path, "--format", "json-compact"], cargoEnvironment);
+    assert.deepEqual(json(cargoModelSummary.stdout),
+      json(run(process.execPath, ["bin/deepbom.mjs", "model-summary", cases[1].path, "--format", "json-compact"]).stdout),
+      "Cargo format-neutral Model Summary diverged from canonical CLI");
     const cargoVisualization = run("cargo", ["run", "--quiet", "--manifest-path", cargoManifest, "--", "visualize", cases[1].path, "--view", "architecture-overview", "--output-format", "json", "--compact"], cargoEnvironment);
     assert.deepEqual(json(cargoVisualization.stdout),
       json(run(process.execPath, ["bin/deepbom.mjs", "visualize", cases[1].path, "--view", "architecture-overview", "--output-format", "json", "--compact"]).stdout),

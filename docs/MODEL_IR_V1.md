@@ -52,6 +52,36 @@ GraphDef preserves serialized nodes, referenced data endpoints, control dependen
 
 `generic_analysis` contains interface, program topology, tensor/storage, quantization, and static-runtime summaries. These passes accept only Model IR sections, contain no format branch, and may not read native parser ledgers. Model-specific profile passes are separate and retain every assigned source subject. Structural blocks are deterministic, reversible partitions of serialized operations: a repeated contiguous signature is preferred; otherwise the region remains a non-repeating block or a deterministic rank partition for large graphs.
 
+## Format-neutral model summary
+
+`deepbom.model_summary.v1` is the single Keras-summary-like text and table
+projection. It is derived only from a validated Model IR document and is bound
+to both the Model IR and artifact SHA-256 values. `auto` selects serialized
+operation rows when a program is present, serialized storage rows for
+graphless weight containers, and an explicit identity-only/not-assessable
+result for safe envelopes that expose neither structure.
+
+The summary reports native operation type, output tensor contract, predecessor
+subjects, bound serialized storage, exact element and byte counts, static MACs
+where assessable, evidence class, completeness, and source identifiers. Block
+rows retain every member reference so they are reversible. Storage rows never
+gain synthetic graph edges.
+
+Unlike a framework-resident Keras model, a deployment artifact does not in
+general serialize trainable/non-trainable state. The projection therefore
+reports `trainable_parameter_count: null` and keeps constants, quantization
+tables, axes, and weights under serialized storage. Display order is a stable
+topological document order, not observed execution order. The public schema is
+[`docs/schemas/deepbom-model-summary-v1.schema.json`](schemas/deepbom-model-summary-v1.schema.json).
+
+CLI examples:
+
+```text
+deepbom model-summary model.onnx
+deepbom model-summary model.gguf --level storage --format markdown
+deepbom audit model.tflite --section model_summary --compact
+```
+
 ## Compatibility and migration
 
 During preview:

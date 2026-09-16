@@ -7,7 +7,7 @@ approval or publication record.
 ## Info
 
 - Directory icon: `assets/deepbom-directory-icon-512.png`
-- Composer icon: `assets/deepbom-composer-icon-128.png`
+- Composer icon: `assets/deepbom-composer-icon-256.png` (256 x 256 PNG, no more than 10 KB)
 - Name: `DEEPBOM Artifact Evidence`
 - Version: `1.0.0`
 - Subtitle: `Inspect AI model artifacts`

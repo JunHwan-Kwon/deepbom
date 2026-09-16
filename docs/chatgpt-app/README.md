@@ -10,7 +10,7 @@ no CycloneDX development-branch claims.
 - Authentication: none
 - Public tools: `deepbom_analyze_file`, `deepbom_capabilities`
 - Component-only tools: `deepbom_publish_analysis`, `deepbom_publish_error`
-- Widget resource: `ui://deepbom/analyzer.html`
+- Widget resource: `ui://deepbom/analyzer-v2.html`
 - Privacy: `https://deepbom.org/privacy`
 - Terms: `https://deepbom.org/terms`
 - Support: `https://deepbom.org/support`
@@ -21,6 +21,22 @@ sandbox. The remote DEEPBOM MCP endpoint serves the tool and widget contracts
 and validates a bounded result or error; it does not fetch or retain model
 bytes.
 
+The widget also renders deterministic, monochrome Model IR views from the same
+browser-local analysis. Users can download the selected canonical SVG, a
+300-DPI PNG derivative, or a Word-ready ZIP containing all six view levels,
+captions, hashes, and insertion metadata. `Send PNG to chat` is an explicit
+user action: it uploads only the selected derived page to the current ChatGPT
+conversation and makes that image visible to the model. It does not upload the
+model artifact to DEEPBOM.
+
+The same result now includes a bounded `deepbom.model_summary_conversation.v1`
+projection. ChatGPT can report native operation/storage rows, output contracts,
+predecessor references, bound serialized bytes/elements, and static MACs without
+reconstructing the graph itself. The widget shows the complete local
+`deepbom.model_summary.v1` table; the conversation projection is row-bounded and
+states when it is truncated. Neither form infers framework trainability or
+runtime order.
+
 Use the local CLI or stdio MCP when the artifact or returned metadata is
 confidential, when the artifact is too large for the browser path, or when the
 analysis requires a directory, shards, sidecars, ONNX external data, complete
@@ -30,7 +46,8 @@ exports, or repeat automation.
 
 1. Deploy the exact reviewed source and confirm `/mcp` initialization,
    `tools/list`, widget resource loading, one successful attachment analysis,
-   one structured failure, and the model-byte transfer boundary.
+   one deterministic SVG view, one user-initiated PNG handoff, one structured
+   failure, and the model-byte transfer boundary.
 2. Run the prompts in `evals.json` and the shared brandless cases in
    `../agent-evaluation/host-evaluation-cases.v1.json`. Copy the blank run
    template to `.local-validation/agent-host-evaluation/`, record observed

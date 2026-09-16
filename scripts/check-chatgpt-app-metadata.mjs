@@ -10,7 +10,7 @@ const terms = await readFile("web/legal/terms.html", "utf8");
 const support = await readFile("web/legal/support.html", "utf8");
 const icon = await readFile("web/chatgpt/deepbom-app-icon.svg", "utf8");
 const directoryIcon = await readFile("docs/chatgpt-app/assets/deepbom-directory-icon-512.png");
-const composerIcon = await readFile("docs/chatgpt-app/assets/deepbom-composer-icon-128.png");
+const composerIcon = await readFile("docs/chatgpt-app/assets/deepbom-composer-icon-256.png");
 const readme = await readFile("docs/chatgpt-app/README.md", "utf8");
 const profile = JSON.parse(await readFile("docs/chatgpt-app/submission-profile.json", "utf8"));
 const evals = JSON.parse(await readFile("docs/chatgpt-app/evals.json", "utf8"));
@@ -64,7 +64,7 @@ assert.doesNotMatch(`${readme}\n${JSON.stringify(profile)}\n${JSON.stringify(eva
 assert.match(icon, /^<svg/);
 assert.doesNotMatch(icon, /<script|javascript:|(?:href|xlink:href)=["']https?:/i, "App icon must remain a self-contained passive SVG.");
 assertPng(directoryIcon, 512, "directory icon");
-assertPng(composerIcon, 128, "composer icon");
+assertPng(composerIcon, 256, "composer icon", 10_000);
 
 const toolNames = CHATGPT_MCP_CONTRACT.tools.map((tool) => tool.name);
 assert.deepEqual(toolNames, ["deepbom_analyze_file", "deepbom_capabilities", "deepbom_publish_analysis", "deepbom_publish_error"]);
@@ -114,9 +114,9 @@ assert.doesNotMatch(JSON.stringify(portalSubmission), forbiddenStandardsText);
 
 console.log("ChatGPT app metadata passed (listing copy, legal/support pages, eval prompts, discovery boundary, and public/private tool visibility).\n");
 
-function assertPng(bytes, expectedSize, label) {
+function assertPng(bytes, expectedSize, label, maximumBytes = 5 * 1024 * 1024) {
   assert.deepEqual(bytes.subarray(0, 8), Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), `${label} is not PNG`);
   assert.equal(bytes.readUInt32BE(16), expectedSize, `${label} width mismatch`);
   assert.equal(bytes.readUInt32BE(20), expectedSize, `${label} height mismatch`);
-  assert(bytes.length <= 5 * 1024 * 1024, `${label} exceeds 5 MiB`);
+  assert(bytes.length <= maximumBytes, `${label} exceeds ${maximumBytes} bytes`);
 }

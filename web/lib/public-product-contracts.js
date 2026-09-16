@@ -21,6 +21,7 @@ const MACHINE_CONTRACTS = Object.freeze([
   machineContract("deepbom.artifact_evidence_envelope.v1", "stable", "Canonical cross-format automation envelope."),
   machineContract("deepbom.artifact_ir.v2", "stable", "Canonical artifact evidence identity, graph/storage topology, and overlay contract."),
   machineContract("deepbom.model_ir.v1", "preview", "Format-neutral program, logical tensor, serialized storage, binding, quantization, architecture, and runtime-layer contract. Preview fields may change additively until migration gates pass; source binding to artifact_ir.v2 is mandatory."),
+  machineContract("deepbom.model_summary.v1", "preview", "Deterministic table projection of Model IR operations, reversible structural groups, or serialized storage. It does not infer trainability or runtime order."),
   machineContract("deepbom.model_ir_visualization_manifest.v1", "preview", "Deterministic monochrome A4 projection of Model IR subjects. Canonical SVG and derivative PNG do not assert regulatory approval or standard conformance."),
   machineContract("deepbom.semantic_artifact_diff.v1", "stable", "Same-format graph, storage, and quantization-contract comparison derived from two Artifact IR documents."),
   machineContract("deepbom.review_summary.v1", "stable", "Structured source for bounded human summaries; rendered prose is not a machine API."),

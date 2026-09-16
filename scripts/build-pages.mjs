@@ -309,6 +309,11 @@ await writeFile(path.join(dist, "sitemap.xml"), [
   "</urlset>",
 ].join("\n") + "\n");
 
+// Public files are served asset-first so they do not consume Worker
+// invocations. Preserve the response hardening that used to be applied by the
+// catch-all Worker route through Cloudflare Static Assets' `_headers` file.
+await writeCloudflareStaticAssetHeaders();
+
 const customDomain = process.env.CUSTOM_DOMAIN?.trim();
 if (customDomain) {
   await writeFile(path.join(dist, "CNAME"), `${customDomain}\n`);
@@ -580,6 +585,53 @@ async function collectFiles(rootDir) {
     else if (entry.isFile()) files.push(file);
   }
   return files;
+}
+
+async function writeCloudflareStaticAssetHeaders() {
+  const commonSecurityHeaders = [
+    "  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://storage.googleapis.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; manifest-src 'self'",
+    "  X-Content-Type-Options: nosniff",
+    "  X-Frame-Options: DENY",
+    "  Referrer-Policy: strict-origin-when-cross-origin",
+    "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()",
+    "  Strict-Transport-Security: max-age=31536000; includeSubDomains",
+  ];
+  const publicCrossOriginAssets = [
+    "/chatgpt/deepbom-widget.js",
+    "/claude/deepbom-widget.js",
+    "/pkg/tflite_wasm_audit_bg.wasm",
+  ];
+  const htmlFiles = (await collectFiles(dist))
+    .filter((file) => path.extname(file).toLowerCase() === ".html")
+    .map((file) => canonicalAssetUrlForHtml(path.relative(dist, file).replaceAll(path.sep, "/")))
+    .sort();
+  const rules = [
+    "/*",
+    ...commonSecurityHeaders,
+    "",
+    ...publicCrossOriginAssets.flatMap((asset) => [
+      asset,
+      "  Access-Control-Allow-Origin: *",
+      "  Cross-Origin-Resource-Policy: cross-origin",
+      "",
+    ]),
+    ...htmlFiles.flatMap((asset) => [
+      asset,
+      "  Cache-Control: no-store, no-cache, must-revalidate, no-transform",
+      "",
+    ]),
+  ];
+  const ruleCount = 1 + publicCrossOriginAssets.length + htmlFiles.length;
+  if (ruleCount > 100) {
+    throw new Error(`Cloudflare static header rules exceed the 100-rule limit: ${ruleCount}.`);
+  }
+  await writeFile(path.join(dist, "_headers"), `${rules.join("\n").trimEnd()}\n`);
+}
+
+function canonicalAssetUrlForHtml(relativePath) {
+  if (relativePath === "index.html") return "/";
+  if (relativePath.endsWith("/index.html")) return `/${relativePath.slice(0, -"index.html".length)}`;
+  return `/${relativePath.slice(0, -".html".length)}`;
 }
 
 function stripSourceMapReference(source) {

@@ -4641,6 +4641,23 @@ button.runtime-timing-row:hover { background: var(--surface-hover); }
   cursor: pointer;
 }
 
+.model-summary-panel {
+  margin: 10px 0 14px;
+  border: 1px solid var(--border, #c9c9c9);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--panel, #fff);
+}
+
+.model-summary-panel summary { cursor: pointer; font-weight: 700; }
+.model-summary-panel pre {
+  max-height: 420px;
+  overflow: auto;
+  white-space: pre;
+  font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.model-summary-panel p { margin: 8px 0 0; font-size: 11px; color: var(--muted, #555); }
+
 .secondary-file-button input {
   position: absolute;
   opacity: 0;

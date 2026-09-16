@@ -43,7 +43,7 @@ const TOOLS = Object.freeze([
   {
     name: "deepbom_audit",
     title: "Audit a deployed model artifact",
-    description: "Audit one local or immutable remote model artifact and return local static evidence. Supported remote identities are hf:// with a full commit, gs:// with an object generation, and HTTPS with SHA-256. Remote bytes may be downloaded into a content-addressed local cache but are never uploaded by DEEPBOM. Findings distinguish artifact_defect, caution, and evidence_gap; an evidence_gap is not a defect. The result never establishes executed accelerator assignment, latency, energy, accuracy, or device fit.",
+    description: "Audit one local or immutable remote model artifact and return local static evidence. Request section=model_summary for the common operation/storage table derived from Model IR; it does not infer framework trainability or runtime order. Supported remote identities are hf:// with a full commit, gs:// with an object generation, and HTTPS with SHA-256. Remote bytes may be downloaded into a content-addressed local cache but are never uploaded by DEEPBOM. Findings distinguish artifact_defect, caution, and evidence_gap; an evidence_gap is not a defect. The result never establishes executed accelerator assignment, latency, energy, accuracy, or device fit.",
     inputSchema: {
       type: "object",
       properties: {
@@ -54,7 +54,7 @@ const TOOLS = Object.freeze([
           description: "summary is the bounded human-readable default. Request envelope for the canonical cross-format contract, json/json-compact for format-specific evidence, CycloneDX 1.7, or SARIF explicitly.",
         },
         scan: { type: "string", enum: [...SCAN_MODES], description: "Bounded scan policy. structure avoids payload integrity work; integrity streams supported payload checks; full requests all supported static analysis." },
-        section: { type: "string", description: "Emit only these analysis sections, comma-separated. Use list_sections first. Applies to json formats." },
+        section: { type: "string", description: "Emit only these analysis sections, comma-separated. Use list_sections first. model_summary returns deepbom.model_summary.v1. Applies to json formats." },
         tensors: { type: "boolean", description: "For a GGUF artifact, return the bounded structure-only deepbom.tensor_table.v1 projection instead of the full tensor/numerical ledgers." },
         tensor_offset: { type: "integer", minimum: 0, description: "Zero-based tensor row offset for a bounded tensor page; requires tensors=true." },
         tensor_limit: { type: "integer", minimum: 1, maximum: 1000, description: "Maximum tensor rows to return; requires tensors=true. The result includes next_offset when more rows exist." },

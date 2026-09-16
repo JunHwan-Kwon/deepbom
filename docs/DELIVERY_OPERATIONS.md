@@ -101,6 +101,10 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 | Local Windows 1.99.2 channel build | engine 1.99.2 packages with Agent/evidence contract 1.0.0, Claude Desktop MCPB, and public/private boundary | 36.100 s |
 | Local Windows 1.99.2 platform smoke | installed Python and standalone parity plus Agent/evidence identities, typed values, policy gate, Model IR, and path-with-spaces execution | 57.392 s |
 | Local Windows 1.99.2 release-contract equivalence | installed npm, local MCP, stable Agent Skill, Python, standalone, Cargo, Model IR/visualization, verify/diff/explore, and tamper contracts | 163.220 s |
+| Private web 1.100.0 preflight | 86 bounded checks including format-neutral Model Summary, ChatGPT/Claude projection contracts, browser PNG derivation, cache, privacy, and deployment contracts | 150.909 s |
+| Local Windows 1.100.0 channel build | npm, executable, Python wheel, Cargo launcher, Agent Skill, Claude Desktop MCPB, Model Summary, and public/private boundary | 29.699 s |
+| Local Windows 1.100.0 platform smoke | installed Python and standalone parity plus Agent/evidence identities, TFLite/WASM, ONNX, policy gate, and path-with-spaces execution | 50.031 s |
+| Local Windows 1.100.0 release-contract equivalence | installed npm and Cargo Model Summary parity plus MCP, Python, standalone, verify/diff/explore, visualization, and tamper contracts | 149.132 s |
 
 The 1.94.4 run is retained as timing and incident evidence. It is not a known-good
 quality baseline. A registry success is never treated as sufficient without a

@@ -48,6 +48,7 @@ const deploymentExcludedFloatSample = path.join(distRoot, "web", "samples", "mob
 const deploymentExcludedSyntheticOnnx = path.join(distRoot, "web", "samples", "sample_cnn_float.onnx");
 const deploymentHardeningManifest = path.join(distRoot, "deployment-hardening.json");
 const frontendDeliveryManifest = path.join(distRoot, "frontend-delivery.json");
+const cloudflareStaticHeadersPath = path.join(distRoot, "_headers");
 const chatGptDeploymentFiles = [
   path.join(distRoot, "chatgpt", "index.html"),
   path.join(distRoot, "chatgpt", "deepbom-widget.js"),
@@ -106,6 +107,28 @@ const protectedImplementationLeakNeedles = [
 
 if (!existsSync(distSwPath)) {
   throw new Error("dist/web/sw.js is missing. Run `npm run build:worker` before checking dist assets.");
+}
+
+if (!existsSync(cloudflareStaticHeadersPath)) {
+  throw new Error("dist/_headers is missing; asset-first delivery would drop browser security and MCP runtime CORS headers.");
+}
+const cloudflareStaticHeaders = readFileSync(cloudflareStaticHeadersPath, "utf8");
+for (const requiredHeaderContract of [
+  "/*",
+  "Content-Security-Policy: default-src 'self'",
+  "X-Content-Type-Options: nosniff",
+  "X-Frame-Options: DENY",
+  "Strict-Transport-Security: max-age=31536000; includeSubDomains",
+  "/chatgpt/deepbom-widget.js",
+  "/claude/deepbom-widget.js",
+  "/pkg/tflite_wasm_audit_bg.wasm",
+  "Access-Control-Allow-Origin: *",
+  "Cross-Origin-Resource-Policy: cross-origin",
+  "Cache-Control: no-store, no-cache, must-revalidate, no-transform",
+]) {
+  if (!cloudflareStaticHeaders.includes(requiredHeaderContract)) {
+    throw new Error(`dist/_headers is missing the static delivery contract: ${requiredHeaderContract}`);
+  }
 }
 
 const distSwSource = readFileSync(distSwPath, "utf8");

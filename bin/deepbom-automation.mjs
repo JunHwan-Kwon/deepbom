@@ -34,6 +34,7 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       { name: "diff", input_count: 2, outputs: ["summary", "markdown", "deepbom.semantic_artifact_diff.v1", "deepbom.tensor_encoding_diff.v1"], supported_formats: ["tflite", "onnx", "coreml", "gguf", "safetensors", "executorch"], matching_format_required: true },
       { name: "explore", input_count: 1, outputs: ["summary", "deepbom.redesign_pareto.v1"] },
       { name: "graph", input_count: 1, outputs: ["svg", "png", "html", "mermaid", "dot", "deepbom.artifact_ir.v2", "deepbom.model_ir.v1", "deepbom.graph_ir.v1", "deepbom.visualization_manifest.v1"] },
+      { name: "model-summary", input_count: 1, outputs: ["table", "markdown", "deepbom.model_summary.v1"], levels: ["auto", "operation", "block", "storage"], trainability_inferred: false, runtime_order_inferred: false },
       { name: "visualize", input_count: 1, outputs: ["monochrome_a4_svg", "black_white_300dpi_png", "caption_sidecars", "deepbom.model_ir_visualization_manifest.v1"], views: ["identity-boundary", "architecture-overview", "block-detail", "exhaustive", "static-runtime", "observed-runtime"], regulatory_conclusion_inferred: false },
       { name: "placement", input_count: 1, outputs: ["deepbom.placement_comparison.v1"] },
       { name: "accelerator collect nvidia", input_count: 0, outputs: ["deepbom.accelerator_profile.v1"] },
@@ -91,6 +92,12 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
         canonical_vector: "monochrome ISO A4 SVG with source subject references",
         compatibility_raster: "300-DPI opaque black-white PNG",
         boundary: "engineering evidence only; no standard-conformance or regulatory-approval claim",
+      },
+      format_neutral_model_summary: {
+        invocation: "deepbom model-summary <artifact> --level auto --format table",
+        schema: "deepbom.model_summary.v1",
+        levels: ["auto", "operation", "block", "storage"],
+        boundary: "serialized storage is not framework trainability; display order is not runtime order; unknown values are not zero-filled",
       },
     },
     provenance_inputs: {

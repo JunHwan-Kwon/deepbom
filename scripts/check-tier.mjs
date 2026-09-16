@@ -18,6 +18,7 @@ const SMOKE = [
   "scripts/check-finding-rule-registry.mjs",
   "scripts/generate-deepbom-property-taxonomy.mjs --check",
   "scripts/check-public-product-contracts.mjs",
+  "scripts/check-model-summary.mjs",
   "scripts/check-cyclonedx-consumer-compatibility.mjs",
   "scripts/check-bom-artifact-reconciliation.mjs",
   "scripts/check-release-supply-chain-evidence.mjs",

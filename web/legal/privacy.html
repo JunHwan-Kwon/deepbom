@@ -19,7 +19,8 @@
     </section>
     <section class="brief-section">
       <h2>ChatGPT integration</h2>
-      <p>A file attached to ChatGPT is already handled by ChatGPT under the user's OpenAI terms and settings. The DEEPBOM component obtains a temporary, plugin-authorized download URL and reads the attachment inside the ChatGPT browser sandbox. The DEEPBOM service does not fetch or retain the file. The component sends a bounded analysis result through the DEEPBOM MCP endpoint for schema validation and returns a bounded result to the conversation. That result can contain the filename, file and evidence hashes, artifact format and byte length, tensor or operator counts, encoding and quantization summaries, findings, and evidence boundaries. It does not contain model bytes or raw tensor values.</p>
+      <p>A file attached to ChatGPT is already handled by ChatGPT under the user's OpenAI terms and settings. The DEEPBOM component obtains a temporary, plugin-authorized download URL and reads the attachment inside the ChatGPT browser sandbox. The DEEPBOM service does not fetch or retain the file. The component sends a bounded analysis result through the DEEPBOM MCP endpoint for schema validation and returns a bounded result to the conversation. That result can contain the filename, file and evidence hashes, artifact format and byte length, bounded operation or storage names, dtypes and shapes, predecessor references, tensor or operator counts, encoding and quantization summaries, findings, and evidence boundaries. It does not contain model bytes or raw tensor values.</p>
+      <p>The component can also derive deterministic Model IR diagrams in the browser. SVG, PNG, caption, and Word-insertion files remain browser downloads unless the user explicitly selects <em>Send PNG to chat</em>. That action uploads only the selected derived PNG to the current ChatGPT conversation so the model can discuss it; it does not upload the model artifact to DEEPBOM. Retention and deletion of that derived image follow the user's OpenAI conversation and workspace controls.</p>
       <p>Use the local CLI or local MCP instead when those result fields must not enter a ChatGPT conversation.</p>
     </section>
     <section class="brief-section">
@@ -38,7 +39,7 @@
     </section>
     <section class="brief-section">
       <h2>User choices and controls</h2>
-      <p>Users control whether to attach a file or invoke the plugin. They can avoid placing model-derived metadata in ChatGPT by using the local CLI or local MCP, remove the attachment or conversation using OpenAI's controls, and contact DEEPBOM through the support page for a privacy request. Because the plugin does not create a DEEPBOM account or persist its analysis result, DEEPBOM normally has no plugin-specific user record to retrieve or delete.</p>
+      <p>Users control whether to attach a file, invoke the plugin, download a derived visualization, or send a derived PNG to the conversation. They can avoid placing model-derived metadata or images in ChatGPT by using the local CLI or local MCP, remove the attachment or conversation using OpenAI's controls, and contact DEEPBOM through the support page for a privacy request. Because the plugin does not create a DEEPBOM account or persist its analysis result, DEEPBOM normally has no plugin-specific user record to retrieve or delete.</p>
     </section>
     <section class="brief-section">
       <h2>Optional DEEPBOM website services</h2>

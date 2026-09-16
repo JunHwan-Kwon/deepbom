@@ -79,6 +79,7 @@ const validResult = {
   graph: { operator_count: 2, tensor_count: 3, total_macs: 64, mac_confidence: "exact" },
   storage: null,
   quantization: { classification: "static_qdq_representation", max_risk: "none" },
+  model_summary: boundedModelSummary(),
   findings: { artifact_defects: [], cautions: [], evidence_needed: [], truncated: false },
   evidence_boundary: "Static checks only.",
   transfer_boundary: "model_bytes_not_sent_to_deepbom_service",
@@ -87,6 +88,7 @@ const validResult = {
 const published = await rpc("tools/call", { name: "deepbom_publish_browser_analysis", arguments: { result: validResult } });
 assert.deepEqual(published.structuredContent, validResult);
 assert.match(published.content[0].text, /0 artifact defect\(s\), 1 caution\(s\), and 2 evidence gap\(s\)/);
+assert.match(published.content[0].text, /2 format-neutral operation summary row\(s\)/);
 
 const invalid = await rawRpc("tools/call", {
   name: "deepbom_publish_browser_analysis",
@@ -137,6 +139,7 @@ for (const contract of [
   "updateModelContext",
   "mcp_app_browser_sandbox",
   "model_bytes_not_sent_to_deepbom_service",
+  "renderModelSummaryTable",
 ]) assert.ok(widget.includes(contract), `Claude widget is missing ${contract}`);
 assert.doesNotMatch(widget, /window\.openai|getFileDownloadUrl|download_url/);
 assert.doesNotMatch(widget, /innerHTML\s*=\s*[^`]*error\?\.message/,
@@ -160,6 +163,23 @@ assert.match(worker, /routeClaudeMcp/);
 assert.match(worker, /\/claude\/deepbom-widget\.js/);
 
 console.log("Claude remote MCP checks passed (separate file-picker contract, MCP App resource, runtime annotations, bounded result bridge, and transfer boundary).\n");
+
+function boundedModelSummary() {
+  return {
+    schema: "deepbom.model_summary_conversation.v1",
+    model_summary_sha256: "c".repeat(64),
+    model_ir_sha256: "d".repeat(64),
+    selected_level: "operation",
+    status: "materialized",
+    ordering: { primary: "display_order", runtime_order_claim: false },
+    row_count: 2,
+    rows: [],
+    truncated: true,
+    totals: { operation_count: 2 },
+    trainability: { status: "not_assessable_from_serialized_deployment_artifact", trainable_parameter_count: null },
+    interpretation_boundary: "Static Model IR projection only.",
+  };
+}
 
 async function rpc(method, params = undefined) {
   const response = await rawRpc(method, params);

@@ -32,10 +32,10 @@ is documented separately below.
 Install the repository-local Agent Skill after previewing the managed files:
 
 ```bash
-npx -y deepbom@1.99.2 integrate codex
-npx -y deepbom@1.99.2 integrate codex --apply
-npx -y deepbom@1.99.2 integrate claude-code
-npx -y deepbom@1.99.2 integrate claude-code --apply
+npx -y deepbom@1.100.0 integrate codex
+npx -y deepbom@1.100.0 integrate codex --apply
+npx -y deepbom@1.100.0 integrate claude-code
+npx -y deepbom@1.100.0 integrate claude-code --apply
 ```
 
 The Skill lets a local agent select a contract-compatible analyzer for a
@@ -55,7 +55,7 @@ For persistent tool-call access, run the same local analyzer as an MCP server
 over stdio:
 
 ```bash
-npx -y deepbom@1.99.2 mcp
+npx -y deepbom@1.100.0 mcp
 ```
 
 It exposes `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
@@ -65,7 +65,7 @@ formats and large-model scan depth are explicit. Local paths are restricted to
 the launch directory unless `DEEPBOM_MCP_ALLOWED_ROOTS` is configured.
 Agent-facing usage guidance is in [the DEEPBOM skill](skills/deepbom/SKILL.md).
 Claude Desktop users can instead install the version-matched
-`deepbom-1.99.2.mcpb` asset from the corresponding GitHub Release. The bundle
+`deepbom-1.100.0.mcpb` asset from the corresponding GitHub Release. The bundle
 contains the same CLI and WASM bytes as the npm channel and asks the user to
 select the only local directory it may read.
 
@@ -119,6 +119,8 @@ deepbom placement model.tflite --profiles xnnpack_cpu,tflite_coreml_delegate,lit
 deepbom graph model.onnx --format json --output artifact-graph.json
 deepbom audit model.onnx --section model_ir --compact
 deepbom visualize model.onnx --view all --orientation portrait -o model-views.zip
+deepbom model-summary model.onnx --format table
+deepbom model-summary model.gguf --level storage --format markdown
 deepbom audit model.onnx --conversion-receipt conversion-receipt.json --format cyclonedx
 ```
 
@@ -162,6 +164,14 @@ ISO A4 SVG pages, 300-DPI black-and-white PNG derivatives, caption sidecars,
 and a Word insertion manifest. These are traceable engineering documents, not
 standard-conformance or regulatory-approval determinations. See
 [`docs/MODEL_IR_V1.md`](docs/MODEL_IR_V1.md).
+
+`model-summary` is the shared Keras-summary-like projection for every supported
+adapter. It emits operation rows when a serialized program exists, storage rows
+for graphless weight containers, and an explicit identity-only result for safe
+envelopes. It never relabels serialized constants as trainable parameters or a
+deterministic display order as observed runtime. JSON consumers can use
+`deepbom.model_summary.v1`, published in
+[`docs/schemas/deepbom-model-summary-v1.schema.json`](docs/schemas/deepbom-model-summary-v1.schema.json).
 
 Public product output uses CycloneDX 1.7.
 

@@ -30,6 +30,7 @@ asset verification, and equivalence checks are documented in
 | `diff` | 2 | `summary`<br>`markdown`<br>`deepbom.semantic_artifact_diff.v1`<br>`deepbom.tensor_encoding_diff.v1` |
 | `explore` | 1 | `summary`<br>`deepbom.redesign_pareto.v1` |
 | `graph` | 1 | `svg`<br>`png`<br>`html`<br>`mermaid`<br>`dot`<br>`deepbom.artifact_ir.v2`<br>`deepbom.model_ir.v1`<br>`deepbom.graph_ir.v1`<br>`deepbom.visualization_manifest.v1` |
+| `model-summary` | 1 | `table`<br>`markdown`<br>`deepbom.model_summary.v1` |
 | `visualize` | 1 | `monochrome_a4_svg`<br>`black_white_300dpi_png`<br>`caption_sidecars`<br>`deepbom.model_ir_visualization_manifest.v1` |
 | `placement` | 1 | `deepbom.placement_comparison.v1` |
 | `accelerator collect nvidia` | none | `deepbom.accelerator_profile.v1` |
@@ -57,10 +58,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.99.2`:
+`1.100.0`:
 
 ```console
-DEEPBOM 1.99.2
+DEEPBOM 1.100.0
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -125,6 +126,9 @@ Safe-envelope boundary:
 
 Exit codes:
   0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding
+
+Additional command:
+  deepbom model-summary <artifact> [--level auto|operation|block|storage] [--format table|markdown|json|json-compact]
 
 SavedModel package preview:
   TensorFlow SavedModel directories are accepted with bounded member hashing and first-MetaGraph projection.
@@ -231,6 +235,12 @@ Regulatory-document model views:
   --orientation <kind>    portrait or landscape ISO A4
   --output-format <kind>  bundle (SVG, captions, manifest) or json manifest
   These monochrome, hash-bound engineering views do not assert regulatory approval or standard conformance.
+
+Format-neutral Keras-style model summary:
+  deepbom model-summary <artifact> --level auto --format table
+  --level <kind>          auto, operation, block, or storage
+  --format <kind>         table, markdown, json, or json-compact
+  Rows are projections of deepbom.model_ir.v1; storage is not relabeled as trainable parameters and display order is not runtime order.
 
 TensorRT optimized-engine option:
   --tensorrt-engine-inspector <json>

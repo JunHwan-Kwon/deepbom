@@ -14,6 +14,7 @@ import { createStaticAuditWorkerClient } from "../lib/static-audit-worker-client
 import { STATIC_AUDIT_OPERATION } from "../lib/static-audit-worker-protocol.js";
 import { sha256FileHex } from "../lib/hash.js";
 import { ANALYZER_SEMANTIC_VERSION } from "../lib/app-config.js";
+import { compactModelSummaryForConversation, renderModelSummaryTable } from "../lib/model-summary.js";
 
 const FULL_FILE_LIMIT = 128 * 1024 * 1024;
 const RANGE_CHUNK_BYTES = 4 * 1024 * 1024;
@@ -113,7 +114,7 @@ async function analyzeSelectedFile(file) {
     const validation = validateArtifactEvidenceEnvelope(envelope);
     if (!validation.valid) throw new Error(`Evidence envelope validation failed: ${validation.errors.join(", ")}`);
     const summary = buildReviewSummary({ analysis: analysisView, envelope, artifactIrContext });
-    const result = compactForConversation(summary);
+    const result = compactForConversation(summary, artifactIrContext.model_summary);
 
     setStatus("Returning a bounded result", "Only the evidence summary is sent to Claude; the selected model bytes are not sent to the DEEPBOM service.");
     const published = await app.callServerTool({ name: "deepbom_publish_browser_analysis", arguments: { result } });
@@ -122,7 +123,7 @@ async function analyzeSelectedFile(file) {
       content: [{ type: "text", text: resultText(returned) }],
       structuredContent: returned,
     });
-    renderResult(result);
+    renderResult(result, artifactIrContext.model_summary);
   } catch (error) {
     await publishFailure(error, file);
   } finally {
@@ -156,7 +157,7 @@ async function analyzeArtifact(file, name, format, depth) {
   throw new Error(`No MCP App browser analyzer is registered for ${format}.`);
 }
 
-function compactForConversation(summary) {
+function compactForConversation(summary, modelSummary) {
   const clip = (rows) => (rows || []).slice(0, MAX_FINDINGS_PER_KIND).map((row) => ({
     id: String(row.id || ""),
     title: String(row.title || ""),
@@ -204,6 +205,7 @@ function compactForConversation(summary) {
       max_risk_op_index: summary.quantization.max_risk_op_index,
       max_risk_op_name: summary.quantization.max_risk_op_name,
     },
+    model_summary: compactModelSummaryForConversation(modelSummary),
     findings: {
       artifact_defects: clip(summary.findings.artifact_defects),
       cautions: clip(summary.findings.cautions),
@@ -224,7 +226,7 @@ function renderShell() {
     h2{font-size:16px;margin:0 0 8px}.status{font-weight:650;margin:0 0 5px}.detail,.privacy,.depth{font-size:13px;line-height:1.45;margin:0;color:color-mix(in srgb,CanvasText 72%,transparent)}
     .picker{display:flex;gap:8px;align-items:center;margin:14px 0}.picker input{min-width:0;flex:1}.picker button{border:1px solid CanvasText;border-radius:8px;padding:7px 12px;background:Canvas;color:CanvasText;font-weight:650}
     .privacy{border-top:1px solid color-mix(in srgb,CanvasText 15%,transparent);margin-top:12px;padding-top:10px}.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
-    .metric{border:1px solid color-mix(in srgb,CanvasText 14%,transparent);border-radius:10px;padding:8px}.metric b{display:block;font-size:18px}.metric span{font-size:11px}.error{color:#a02020;white-space:pre-wrap}
+    .metric{border:1px solid color-mix(in srgb,CanvasText 14%,transparent);border-radius:10px;padding:8px}.metric b{display:block;font-size:18px}.metric span{font-size:11px}.error{color:#a02020;white-space:pre-wrap}.model-summary{border-top:1px solid color-mix(in srgb,CanvasText 15%,transparent);margin-top:14px;padding-top:12px}.model-summary h3{font-size:13px;margin:0 0 7px}.model-summary pre{overflow:auto;max-height:360px;padding:9px;border:1px solid color-mix(in srgb,CanvasText 18%,transparent);border-radius:8px;font:10px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre}
   </style><section class="card"><h2>DEEPBOM</h2><p class="status" id="status">Connecting to the MCP App host</p><p class="detail" id="detail">No file has been read.</p>
   <div class="picker"><input id="file" type="file" accept=".tflite,.onnx,.gguf,.safetensors,.mlmodel,.pte,.ptd" disabled><button id="analyze" type="button" disabled>Analyze</button></div>
   <p class="depth" id="depth"></p><div id="result"></div><p class="privacy">You choose the file explicitly. Analysis runs in this browser sandbox; the DEEPBOM service receives the bounded result, not the selected model bytes.</p></section>`;
@@ -243,13 +245,14 @@ function setStatus(status, detail) {
   root.querySelector("#detail").textContent = detail || "";
 }
 
-function renderResult(result) {
+function renderResult(result, modelSummary) {
   setStatus("Static evidence ready", `${result.artifact.filename} · ${result.artifact.format.toUpperCase()} · sha256:${result.artifact.sha256.slice(0, 12)}…`);
   root.querySelector("#result").innerHTML = `<div class="metrics">
     <div class="metric"><b>${result.verdict.artifact_defect_count}</b><span>artifact defects</span></div>
     <div class="metric"><b>${result.verdict.caution_count}</b><span>cautions</span></div>
     <div class="metric"><b>${result.verdict.evidence_needed_count}</b><span>evidence gaps</span></div>
-  </div>`;
+  </div><section class="model-summary"><h3>Format-neutral model summary</h3><pre tabindex="0"></pre></section>`;
+  root.querySelector(".model-summary pre").textContent = renderModelSummaryTable(modelSummary);
 }
 
 function renderError(error, code = "analysis_failed") {

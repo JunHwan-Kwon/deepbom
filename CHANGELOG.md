@@ -4,6 +4,34 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.100.0 - 2026-09-16
+
+- Use the documented stable-release interval exception for a P0 public-tool
+  correctness failure: the advertised ChatGPT `Send PNG to chat` path could
+  fail in the host sandbox after the static audit had succeeded. The release
+  gate now exercises the complete render-to-upload handoff. The additive Model
+  Summary ships in the same corrected engine rather than publishing a second
+  immediate release.
+- Add `deepbom.model_summary.v1`, one deterministic Common Model IR projection
+  for operation, reversible block, storage, and identity-only views. The CLI,
+  browser workbench, local MCP, ChatGPT component, and Claude MCP App reuse the
+  same source-bound rows without inferring framework trainability or runtime
+  order. Publish the JSON Schema and cross-format regression coverage for
+  TFLite, ONNX, GGUF, SafeTensors, Core ML, ExecuTorch, GraphDef, SavedModel,
+  Keras, PT2, HDF5, and safe PyTorch checkpoint envelopes.
+- Fix ChatGPT visualization PNG export by rasterizing the validated render
+  model directly to an opaque monochrome canvas. This removes the sandbox-
+  dependent SVG Blob decode step while retaining canonical SVG as the source
+  and preserving the PNG derivation manifest.
+- Raise the reviewed handwritten-runtime ceiling by 32 KiB for the shared
+  Model Summary projection and sandbox-safe rasterizer, the documentation
+  ceiling by 16 KiB for its public schema and contracts, and the verification
+  ceiling by 16 KiB for cross-format, MCP, and browser handoff regressions.
+- Keep `Report in chat` explicitly user-initiated and reusable after the
+  browser-local audit completes. ChatGPT can acknowledge a component follow-up
+  request without rendering a new turn, so the widget no longer reports
+  delivery as complete or disables the only recovery control. The bounded
+  result prompt still identifies the Model IR SVG, PNG, and Word-ready exports.
 - Raise the reviewed documentation source ceiling by 16 KiB for the official
   ChatGPT submission import, portal values, demo protocol, icons, and explicit
   plugin privacy disclosures. Raise the development-tooling ceiling by 24 KiB

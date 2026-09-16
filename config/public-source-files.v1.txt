@@ -167,6 +167,7 @@ docs/chatgpt-app/DEMO_RECORDING_SCRIPT.md
 docs/chatgpt-app/PORTAL_VALUES.md
 docs/chatgpt-app/README.md
 docs/chatgpt-app/assets/deepbom-composer-icon-128.png
+docs/chatgpt-app/assets/deepbom-composer-icon-256.png
 docs/chatgpt-app/assets/deepbom-directory-icon-512.png
 docs/chatgpt-app/evals.json
 docs/chatgpt-app/submission-profile.json
@@ -178,6 +179,7 @@ docs/native-runtime-capture.md
 docs/schemas/deepbom-artifact-ir-v2.schema.json
 docs/schemas/deepbom-conversion-receipt-v1.schema.json
 docs/schemas/deepbom-model-ir-v1.schema.json
+docs/schemas/deepbom-model-summary-v1.schema.json
 docs/schemas/deepbom-onnx-contract-conflict-capsule-v1.schema.json
 docs/zenodo-validation-metadata.json
 examples/expected-output/README.md
@@ -422,6 +424,7 @@ scripts/check-model-ir-import-boundary.mjs
 scripts/check-model-ir-source-contracts.mjs
 scripts/check-model-ir-visualization.mjs
 scripts/check-model-ir.mjs
+scripts/check-model-summary.mjs
 scripts/check-native-capture-pipeline.mjs
 scripts/check-no-main-thread-heavy-wasm.mjs
 scripts/check-numerical-abi-propagation-viewer.mjs
@@ -910,6 +913,7 @@ web/lib/model-ir/internal/native-facts.js
 web/lib/model-ir/internal/profiles.js
 web/lib/model-ir/internal/program.js
 web/lib/model-ir/internal/shared.js
+web/lib/model-summary.js
 web/lib/node-edge-evidence-overlay.js
 web/lib/node-view.js
 web/lib/numerical-abi-propagation-viewer.js

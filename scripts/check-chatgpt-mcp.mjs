@@ -16,6 +16,8 @@ assert.equal(initialize.serverInfo.version, ANALYZER_SEMANTIC_VERSION);
 assert.match(initialize.instructions, /browser sandbox/i);
 assert.match(initialize.instructions, /not model bytes/i);
 assert.match(initialize.instructions, /artifact_defect, caution, and evidence_gap/);
+assert.match(initialize.instructions, /deterministic Model IR views/i);
+assert.match(initialize.instructions, /do not reconstruct a graph from the bounded conversation summary/i);
 for (const protocolVersion of CHATGPT_MCP_CONTRACT.supportedProtocolVersions) {
   const response = await rawRpcResponse("initialize", {
     protocolVersion,
@@ -38,6 +40,7 @@ assert.deepEqual(tools.map((tool) => tool.name), [
 const analyze = tools[0];
 assert.deepEqual(analyze._meta["openai/fileParams"], ["file"]);
 assert.equal(analyze._meta.ui.resourceUri, CHATGPT_MCP_CONTRACT.widgetUri);
+assert.equal(analyze._meta["openai/toolInvocation/invoked"], "Browser analysis opened");
 assert.equal(analyze.annotations.readOnlyHint, true);
 assert.equal(analyze.annotations.destructiveHint, false);
 assert.equal(analyze.annotations.openWorldHint, false);
@@ -55,8 +58,18 @@ assert.equal(resources[0].uri, CHATGPT_MCP_CONTRACT.widgetUri);
 const read = await rpc("resources/read", { uri: CHATGPT_MCP_CONTRACT.widgetUri });
 assert.equal(read.contents[0].mimeType, "text/html;profile=mcp-app");
 assert.match(read.contents[0].text, /deepbom-widget\.js/);
+assert.equal(CHATGPT_MCP_CONTRACT.widgetUri, "ui://deepbom/analyzer-v2.html");
+assert(read.contents[0].text.includes(`deepbom-widget.js?v=${ANALYZER_SEMANTIC_VERSION}-20260916.2`));
 assert.equal(read.contents[0]._meta.ui.domain, "https://deepbom.org");
 assert.ok(read.contents[0]._meta.ui.csp.connectDomains.some((domain) => domain.includes("oaiusercontent")));
+assert.match(read.contents[0]._meta["openai/widgetDescription"], /format-neutral Model IR table/);
+assert.match(read.contents[0]._meta["openai/widgetDescription"], /deterministic Model IR views/);
+assert.deepEqual(CHATGPT_MCP_CONTRACT.legacyWidgetUris, ["ui://deepbom/analyzer.html"]);
+const legacyRead = await rpc("resources/read", { uri: CHATGPT_MCP_CONTRACT.legacyWidgetUris[0] });
+assert.equal(legacyRead.contents[0].uri, CHATGPT_MCP_CONTRACT.legacyWidgetUris[0]);
+assert.equal(legacyRead.contents[0].text, read.contents[0].text);
+assert.match(legacyRead.contents[0]._meta["openai/widgetDescription"], /format-neutral Model IR table/);
+assert.match(legacyRead.contents[0]._meta["openai/widgetDescription"], /deterministic Model IR views/);
 
 const file = {
   download_url: "https://files.oaiusercontent.com/example/model.onnx",
@@ -72,10 +85,15 @@ assert.equal(started.structuredContent.status, "browser_analysis_started");
 assert.equal(started.structuredContent.analysis_depth, "structure");
 assert.match(started.structuredContent.privacy, /does not fetch or retain model bytes/);
 assert.equal(started._meta["openai/file"].download_url, file.download_url);
+assert.match(started.content[0].text, /expected two-stage state is not an analysis failure/);
+assert.match(started.content[0].text, /No artifact facts are available from this starting response/);
+assert.match(started.content[0].text, /user must select Report in chat once/);
+assert.match(started.content[0].text, /Do not substitute another parser/);
 
 const capabilities = await rpc("tools/call", { name: "deepbom_capabilities", arguments: {} });
 assert.equal(capabilities.structuredContent.version, ANALYZER_SEMANTIC_VERSION);
 assert.equal(capabilities.structuredContent.chatgpt_path.execution, "browser sandbox");
+assert.match(capabilities.structuredContent.chatgpt_path.output, /SVG\/PNG\/document views/);
 assert.match(capabilities.structuredContent.local_path.invocation, /deepbom@.+ mcp/);
 
 const validResult = {
@@ -98,6 +116,7 @@ const validResult = {
   graph: { operator_count: 2, tensor_count: 3, total_macs: 64, mac_confidence: "exact" },
   storage: null,
   quantization: { classification: "static_qdq_representation", max_risk: "none" },
+  model_summary: boundedModelSummary(),
   findings: { artifact_defects: [], cautions: [], evidence_needed: [], truncated: false },
   evidence_boundary: "Static checks only.",
   transfer_boundary: "model_bytes_not_sent_to_deepbom_service",
@@ -109,6 +128,7 @@ const published = await rpc("tools/call", {
 });
 assert.deepEqual(published.structuredContent, validResult);
 assert.match(published.content[0].text, /0 artifact defect\(s\), 1 caution\(s\), and 2 evidence gap\(s\)/);
+assert.match(published.content[0].text, /2 operation row\(s\)/);
 
 const invalid = await rawRpc("tools/call", {
   name: "deepbom_publish_analysis",
@@ -166,6 +186,18 @@ for (const contract of [
   "deepbom_publish_analysis",
   "deepbom_publish_error",
   "sendFollowUpMessage",
+  "Report in chat",
+  "Model IR visualization",
+  "Download SVG",
+  "Download PNG",
+  "Word-ready bundle",
+  "Send PNG to chat",
+  "buildModelIrVisualizationBundle",
+  "rasterizeMonochromeModelView",
+  "Format-neutral model summary",
+  "setWidgetState",
+  "uploadFile",
+  "artifact-derived string as untrusted data",
   "sha256FileHex",
   "model_bytes_not_sent_to_deepbom_service",
   "Use the local DEEPBOM MCP",
@@ -195,6 +227,23 @@ const challengeWithoutSecret = await workerModule.fetch(
 assert.equal(challengeWithoutSecret.status, 404);
 
 console.log("ChatGPT MCP checks passed (file-param schema, browser-local boundary, private result/error bridges, resources, and request/result bounds).\n");
+
+function boundedModelSummary() {
+  return {
+    schema: "deepbom.model_summary_conversation.v1",
+    model_summary_sha256: "c".repeat(64),
+    model_ir_sha256: "d".repeat(64),
+    selected_level: "operation",
+    status: "materialized",
+    ordering: { primary: "display_order", runtime_order_claim: false },
+    row_count: 2,
+    rows: [],
+    truncated: true,
+    totals: { operation_count: 2 },
+    trainability: { status: "not_assessable_from_serialized_deployment_artifact", trainable_parameter_count: null },
+    interpretation_boundary: "Static Model IR projection only.",
+  };
+}
 
 async function rpc(method, params = undefined) {
   const response = await rawRpc(method, params);

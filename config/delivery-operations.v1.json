@@ -2369,6 +2369,81 @@
         "packaged_self_test_and_wasm_tamper_rejection"
       ],
       "qualification": "The installed npm package, local MCP server, Python facade, standalone engine, and Cargo launcher retained equivalent analyzer results and failure behavior. The installed Skill remained Agent contract 1.0.0, resolved only a compatible engine, and recorded engine 1.99.2 in its integration receipt. Remote host approval remains a separate account-owned observation."
+    },
+    {
+      "kind": "private_web_preflight_basis",
+      "version": "1.100.0",
+      "source_commit": "b659a30a3a1e73c11053faf125b9ba8c106edbce",
+      "platform": "windows-x64",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 150.909,
+      "check_count": 86,
+      "conclusion": "success",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "format_neutral_model_summary_schema_digest_and_report_binding",
+        "chatgpt_and_claude_remote_model_summary_contracts",
+        "chatgpt_browser_png_direct_canvas_derivation",
+        "service_worker_cache_version_bound",
+        "public_private_boundary_and_git_privacy"
+      ],
+      "qualification": "All 86 non-self-referential deployment checks passed within the 240-second operations budget. This is engineering release evidence, not platform approval, standards conformance, or a regulatory determination."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.100.0",
+      "source_commit": "b659a30a3a1e73c11053faf125b9ba8c106edbce",
+      "platform": "windows-x64",
+      "command": "npm run build:channels",
+      "elapsed_seconds": 29.699,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball_with_format_neutral_model_summary",
+        "claude_desktop_mcpb_bundle",
+        "single_executable_engine",
+        "pep_639_python_wheel",
+        "cargo_launcher_source",
+        "public_private_source_boundary"
+      ]
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.100.0",
+      "source_commit": "b659a30a3a1e73c11053faf125b9ba8c106edbce",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --platform-smoke",
+      "elapsed_seconds": 50.031,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "agent_and_evidence_contract_identity_parity",
+        "manifest_bound_self_test_execution",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity",
+        "path_with_spaces_execution"
+      ]
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.100.0",
+      "source_commit": "b659a30a3a1e73c11053faf125b9ba8c106edbce",
+      "platform": "windows-x64",
+      "command": "npm run check:channels -- --no-build --release-contract",
+      "elapsed_seconds": 149.132,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_supported_release_contract_cases",
+        "installed_npm_and_cargo_model_summary_equivalence",
+        "installed_npm_mcp_tool_call_equivalence",
+        "installed_model_ir_selection_and_visualization_equivalence",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_self_test_and_wasm_tamper_rejection"
+      ],
+      "qualification": "The installed npm package and Cargo launcher reproduced the canonical deepbom.model_summary.v1 projection. The broader installed npm, MCP, Python, standalone, Cargo, verification, visualization, and tamper contracts also remained equivalent."
     }
   ],
   "budgets": {

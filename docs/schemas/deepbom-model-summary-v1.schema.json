@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-model-summary-v1.schema.json",
+  "title": "DEEPBOM Format-neutral Model Summary v1",
+  "description": "A deterministic, hash-bound tabular projection of deepbom.model_ir.v1. It reports serialized operations, reversible structural groups, or storage objects without inferring framework trainability or runtime order.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "method_version", "source_contract", "hash_contract", "artifact", "artifact_role", "projection", "columns", "rows", "totals", "coverage", "trainability", "loss_ledger", "interpretation_boundary", "model_summary_sha256"],
+  "properties": {
+    "schema": { "const": "deepbom.model_summary.v1" },
+    "method_version": { "const": "1.0.0" },
+    "source_contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "model_ir_sha256", "artifact_sha256"],
+      "properties": {
+        "schema": { "const": "deepbom.model_ir.v1" },
+        "model_ir_sha256": { "$ref": "#/$defs/sha256" },
+        "artifact_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "hash_contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["algorithm", "canonicalization", "source_encoding", "excluded_pointers"],
+      "properties": {
+        "algorithm": { "const": "SHA-256" },
+        "canonicalization": { "const": "RFC8785-JCS" },
+        "source_encoding": { "const": "UTF-8" },
+        "excluded_pointers": { "const": ["/model_summary_sha256"] }
+      }
+    },
+    "artifact": { "$ref": "#/$defs/artifact" },
+    "artifact_role": { "enum": ["deployment_artifact", "exported_program", "training_checkpoint", "weight_container", "runtime_bundle", "model_package", "evidence_sidecar"] },
+    "projection": { "$ref": "#/$defs/projection" },
+    "columns": { "$ref": "#/$defs/columns" },
+    "rows": { "type": "array", "items": { "$ref": "#/$defs/row" } },
+    "totals": { "$ref": "#/$defs/totals" },
+    "coverage": { "$ref": "#/$defs/coverage" },
+    "trainability": { "$ref": "#/$defs/trainability" },
+    "loss_ledger": { "type": "object" },
+    "interpretation_boundary": { "$ref": "#/$defs/nonEmpty" },
+    "model_summary_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "nonEmpty": { "type": "string", "minLength": 1 },
+    "nullableInteger": { "type": ["integer", "null"] },
+    "nullableString": { "type": ["string", "null"] },
+    "exactInteger": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["decimal", "number"],
+      "properties": {
+        "decimal": { "type": "string", "pattern": "^[0-9]+$" },
+        "number": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "assessedExactInteger": {
+      "type": "object", "additionalProperties": false,
+      "required": ["decimal", "number", "status", "assessed_count", "total_count"],
+      "properties": {
+        "decimal": { "type": "string", "pattern": "^[0-9]+$" },
+        "number": { "type": ["integer", "null"], "minimum": 0 },
+        "status": { "enum": ["complete", "partial", "not_assessable"] },
+        "assessed_count": { "type": "integer", "minimum": 0 },
+        "total_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": true,
+      "required": ["filename", "format", "sha256", "byte_length", "artifact_set_sha256"],
+      "properties": {
+        "filename": { "$ref": "#/$defs/nonEmpty" },
+        "format": { "$ref": "#/$defs/nonEmpty" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "byte_length": { "$ref": "#/$defs/exactInteger" },
+        "artifact_set_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }
+      }
+    },
+    "projection": {
+      "type": "object", "additionalProperties": false,
+      "required": ["requested_level", "selected_level", "status", "selection_basis", "ordering"],
+      "properties": {
+        "requested_level": { "enum": ["auto", "operation", "block", "storage"] },
+        "selected_level": { "enum": ["operation", "block", "storage", "identity"] },
+        "status": { "enum": ["materialized", "not_assessable_safe_envelope_only", "not_applicable_for_selected_level"] },
+        "selection_basis": { "$ref": "#/$defs/nonEmpty" },
+        "ordering": {
+          "type": "object", "additionalProperties": false,
+          "required": ["primary", "status", "runtime_order_claim", "explanation"],
+          "properties": {
+            "primary": { "$ref": "#/$defs/nonEmpty" },
+            "status": { "$ref": "#/$defs/nonEmpty" },
+            "runtime_order_claim": { "const": false },
+            "explanation": { "$ref": "#/$defs/nonEmpty" }
+          }
+        }
+      }
+    },
+    "columns": {
+      "type": "object", "additionalProperties": false,
+      "required": ["level", "fields", "shape_order", "exact_integer_representation", "missing_value_policy"],
+      "properties": {
+        "level": { "enum": ["operation", "block", "storage", "identity"] },
+        "fields": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/nonEmpty" }, "uniqueItems": true },
+        "shape_order": { "$ref": "#/$defs/nonEmpty" },
+        "exact_integer_representation": { "$ref": "#/$defs/nonEmpty" },
+        "missing_value_policy": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "order": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source", "dependency", "display", "runtime"],
+      "properties": {
+        "source": { "$ref": "#/$defs/nullableInteger" },
+        "dependency": { "$ref": "#/$defs/nullableInteger" },
+        "display": { "$ref": "#/$defs/nullableInteger" },
+        "runtime": { "$ref": "#/$defs/nullableInteger" }
+      }
+    },
+    "nativeType": {
+      "type": "object", "additionalProperties": false,
+      "required": ["domain", "name", "version"],
+      "properties": {
+        "domain": { "$ref": "#/$defs/nullableString" },
+        "name": { "$ref": "#/$defs/nonEmpty" },
+        "version": { "anyOf": [{ "type": "string" }, { "type": "integer" }, { "type": "null" }] }
+      }
+    },
+    "value": {
+      "type": "object", "additionalProperties": false,
+      "required": ["value_ref", "name", "dtype", "shape", "shape_signature", "roles"],
+      "properties": {
+        "value_ref": { "$ref": "#/$defs/nullableString" },
+        "name": { "$ref": "#/$defs/nullableString" },
+        "dtype": { "$ref": "#/$defs/nullableString" },
+        "shape": { "type": ["array", "null"], "items": { "anyOf": [{ "type": "integer" }, { "type": "string" }, { "type": "null" }] } },
+        "shape_signature": { "type": ["array", "null"], "items": { "anyOf": [{ "type": "integer" }, { "type": "string" }, { "type": "null" }] } },
+        "roles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+    "relationship": {
+      "type": "object", "additionalProperties": false,
+      "required": ["relationship_ref", "from_ref", "kind", "evidence_class"],
+      "properties": {
+        "relationship_ref": { "$ref": "#/$defs/nonEmpty" },
+        "from_ref": { "$ref": "#/$defs/nonEmpty" },
+        "kind": { "enum": ["data_dependency", "control_dependency", "state_dependency", "call"] },
+        "evidence_class": { "$ref": "#/$defs/evidenceClass" }
+      }
+    },
+    "storage": {
+      "type": "object", "additionalProperties": true,
+      "required": ["storage_ref", "status", "evidence_class"],
+      "properties": {
+        "storage_ref": { "$ref": "#/$defs/nonEmpty" },
+        "status": { "enum": ["resolved", "unresolved"] },
+        "name": { "$ref": "#/$defs/nullableString" },
+        "dtype": { "$ref": "#/$defs/nullableString" },
+        "shape": { "type": ["array", "null"], "items": { "anyOf": [{ "type": "integer" }, { "type": "string" }, { "type": "null" }] } },
+        "element_count": { "$ref": "#/$defs/exactInteger" },
+        "serialized_byte_length": { "$ref": "#/$defs/exactInteger" },
+        "parameter_classification": { "enum": ["serialized_bound_or_stored_value_not_trainability_claim"] },
+        "evidence_class": { "$ref": "#/$defs/evidenceClass" }
+      }
+    },
+    "aggregates": {
+      "type": "object", "additionalProperties": true,
+      "required": ["storage_object_count", "serialized_element_count", "serialized_byte_length"],
+      "properties": {
+        "storage_object_count": { "type": "integer", "minimum": 0 },
+        "serialized_element_count": { "$ref": "#/$defs/assessedExactInteger" },
+        "serialized_byte_length": { "$ref": "#/$defs/assessedExactInteger" }
+      }
+    },
+    "row": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "subject_ref", "kind", "order", "name", "native_type", "semantic_family", "outputs", "predecessor_relationships", "bound_storage", "aggregates", "metrics", "evidence_class", "completeness"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmpty" },
+        "subject_ref": { "$ref": "#/$defs/nonEmpty" },
+        "kind": { "enum": ["operation", "structural_block", "serialized_storage"] },
+        "order": { "$ref": "#/$defs/order" },
+        "name": { "$ref": "#/$defs/nonEmpty" },
+        "native_type": { "$ref": "#/$defs/nativeType" },
+        "semantic_family": { "$ref": "#/$defs/nullableString" },
+        "block_ref": { "$ref": "#/$defs/nullableString" },
+        "member_refs": { "type": "array", "items": { "$ref": "#/$defs/nonEmpty" }, "uniqueItems": true },
+        "inputs": { "type": "array", "items": { "$ref": "#/$defs/value" } },
+        "outputs": { "type": "array", "items": { "$ref": "#/$defs/value" } },
+        "predecessor_relationships": { "type": "array", "items": { "$ref": "#/$defs/relationship" } },
+        "bound_storage": { "type": "array", "items": { "$ref": "#/$defs/storage" } },
+        "aggregates": { "$ref": "#/$defs/aggregates" },
+        "metrics": { "type": ["object", "null"] },
+        "evidence_class": { "$ref": "#/$defs/evidenceClass" },
+        "completeness": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "totals": {
+      "type": "object", "additionalProperties": false,
+      "required": ["operation_count", "structural_block_count", "logical_value_count", "storage_object_count", "bound_storage_object_count", "unbound_storage_object_count", "unique_serialized_element_count", "unique_serialized_byte_length", "bound_serialized_element_count", "bound_serialized_byte_length", "quantization_record_count", "macs", "trainable_parameter_count"],
+      "properties": {
+        "operation_count": { "type": "integer", "minimum": 0 },
+        "structural_block_count": { "type": "integer", "minimum": 0 },
+        "logical_value_count": { "type": "integer", "minimum": 0 },
+        "storage_object_count": { "type": "integer", "minimum": 0 },
+        "bound_storage_object_count": { "type": "integer", "minimum": 0 },
+        "unbound_storage_object_count": { "type": "integer", "minimum": 0 },
+        "unique_serialized_element_count": { "$ref": "#/$defs/assessedExactInteger" },
+        "unique_serialized_byte_length": { "$ref": "#/$defs/assessedExactInteger" },
+        "bound_serialized_element_count": { "$ref": "#/$defs/assessedExactInteger" },
+        "bound_serialized_byte_length": { "$ref": "#/$defs/assessedExactInteger" },
+        "quantization_record_count": { "type": "integer", "minimum": 0 },
+        "macs": { "$ref": "#/$defs/assessedExactInteger" },
+        "trainable_parameter_count": { "type": "null" }
+      }
+    },
+    "coverage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["program", "storage", "bindings", "quantization", "loss_count", "unknown_is_zero"],
+      "properties": {
+        "program": { "type": "object" },
+        "storage": { "$ref": "#/$defs/nonEmpty" },
+        "bindings": { "$ref": "#/$defs/nonEmpty" },
+        "quantization": { "$ref": "#/$defs/nonEmpty" },
+        "loss_count": { "type": "integer", "minimum": 0 },
+        "unknown_is_zero": { "const": false }
+      }
+    },
+    "trainability": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "trainable_parameter_count", "non_trainable_parameter_count", "explanation"],
+      "properties": {
+        "status": { "const": "not_assessable_from_serialized_deployment_artifact" },
+        "trainable_parameter_count": { "type": "null" },
+        "non_trainable_parameter_count": { "type": "null" },
+        "explanation": { "$ref": "#/$defs/nonEmpty" }
+      }
+    },
+    "evidenceClass": { "enum": ["OBSERVED_SERIALIZED_ARTIFACT", "OBSERVED_RUNTIME", "DERIVED", "PREDICTED", "DECLARED_UNVERIFIED", "NOT_ASSESSABLE"] }
+  }
+}

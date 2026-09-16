@@ -11,7 +11,7 @@
   "authentication": "none",
   "automatic_attachment_access": false,
   "model_byte_transfer": "The user selects one file in the MCP App; selected model bytes are analyzed in the browser sandbox and are not sent to the DEEPBOM service.",
-  "conversation_data": "A bounded static-analysis result is returned to the Claude conversation and can contain artifact and model metadata.",
+  "conversation_data": "A bounded static-analysis result is returned to the Claude conversation and can contain artifact and model metadata plus a row-bounded format-neutral Model IR summary. It does not assert framework trainability or runtime order.",
   "host_validation_status": "not_yet_observed_on_claude_hosts",
   "listing_status": "not_submitted_or_approved_by_this_file",
   "agent_contract": {
@@ -54,5 +54,5 @@
       "unknown_and_not_assessable_are_not_coerced_to_absence_or_zero"
     ]
   },
-  "engine_version_at_validation": "1.99.2"
+  "engine_version_at_validation": "1.100.0"
 }

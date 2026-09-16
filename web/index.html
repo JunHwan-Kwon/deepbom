@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" data-analysis-depth="deep">
 <head>
-  <meta name="deepbom-release" content="1.99.2" />
+  <meta name="deepbom-release" content="1.100.0" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta id="themeColor" name="theme-color" content="#fffefa" />
@@ -50,7 +50,7 @@
           "applicationSubCategory": "Machine Learning Tool",
           "operatingSystem": "Web Browser",
           "url": "https://deepbom.org/",
-          "softwareVersion": "1.99.2",
+          "softwareVersion": "1.100.0",
           "identifier": "https://doi.org/10.5281/zenodo.21834508",
           "sameAs": [
             "https://github.com/JunHwan-Kwon/deepbom",
@@ -1882,10 +1882,16 @@
             <button id="graphZoomIn" type="button" title="Zoom in">+</button>
             <button id="graphFit" type="button">Fit</button>
             <button id="downloadGraphSvg" type="button">SVG</button>
+            <button id="showModelSummary" type="button" title="Show a format-neutral table projected from the Common Model IR">Model summary</button>
             <button id="downloadModelViews" type="button" title="Download hash-bound monochrome A4 SVG and 300-DPI PNG model views">Model views</button>
           </div>
           <span id="graphMapStatus"></span>
         </div>
+        <details id="modelSummaryPanel" class="model-summary-panel" hidden>
+          <summary>Format-neutral model summary</summary>
+          <pre id="modelSummaryText"></pre>
+          <p>Serialized storage is not relabeled as trainable parameters. Display order is deterministic, not runtime order.</p>
+        </details>
         <div class="op-filter-bar" id="opFilterBar">
           <span class="filter-label">Bound:</span>
           <button class="filter-chip active" type="button" data-filter-group="bound" data-filter-value="">All</button>

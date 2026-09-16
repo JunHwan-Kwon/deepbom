@@ -206,6 +206,7 @@ import { bindReviewSummaryActions, renderReviewSummary } from "./lib/review-summ
 import { buildSingleFileArtifactSet } from "./lib/artifact-set.js";
 import { exportGraphVisualization } from "./lib/graph-export.js";
 import { buildBrowserModelIrVisualizationArchive } from "./lib/model-ir-browser-export.js";
+import { buildModelSummary, renderModelSummaryTable } from "./lib/model-summary.js";
 import {
   buildModelIdentity,
   detectModelFormat,
@@ -662,6 +663,9 @@ const {
   graphFit,
   downloadGraphSvg,
   downloadModelViews,
+  showModelSummary,
+  modelSummaryPanel,
+  modelSummaryText,
   graphMapStatus,
   graphModeHint,
   graphMapSvg,
@@ -2298,6 +2302,14 @@ downloadGraphSvg.addEventListener("click", () => {
 downloadModelViews?.addEventListener("click", () => {
   void downloadCurrentModelViews();
 });
+showModelSummary?.addEventListener("click", () => {
+  if (!currentArtifactIrContext?.model_ir || !modelSummaryPanel || !modelSummaryText) return;
+  const summary = buildModelSummary(currentArtifactIrContext.model_ir);
+  modelSummaryText.textContent = renderModelSummaryTable(summary);
+  modelSummaryPanel.hidden = false;
+  modelSummaryPanel.open = true;
+  modelSummaryPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
 
 graphMapSvg.addEventListener("pointerdown", (event) => {
   if (!graphViewBox) return;
@@ -3083,6 +3095,8 @@ function updateExportLockState() {
   if (downloadMermaid) downloadMermaid.disabled = rawArtifactDisabled || !exportAvailability.performanceDerivatives;
   if (downloadGraphSvg) downloadGraphSvg.disabled = rawArtifactDisabled || !exportAvailability.graph;
   if (downloadModelViews) downloadModelViews.disabled = rawArtifactDisabled || !currentArtifactIrContext?.model_ir;
+  if (showModelSummary) showModelSummary.disabled = rawArtifactDisabled || !currentArtifactIrContext?.model_ir;
+  if (!current && modelSummaryPanel) modelSummaryPanel.hidden = true;
   downloadRawData.title = rawExportAllowed
     ? "Raw audit, ML-BOM, graphs, PNGs, and package integrity evidence."
     : "Local raw export is unavailable.";

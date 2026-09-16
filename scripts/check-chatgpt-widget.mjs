@@ -167,8 +167,38 @@ try {
   await page.addInitScript(({ fileUrl }) => {
     window.__deepbomToolCalls = [];
     window.__deepbomFollowUps = [];
+    window.__deepbomFollowUpAttempts = 0;
+    window.__deepbomUploads = [];
+    window.__deepbomWidgetStates = [];
     window.openai = {
-      toolInput: {
+      toolInput: null,
+      async callTool(name, args) {
+        window.__deepbomToolCalls.push({ name, args });
+        return { structuredContent: args.result };
+      },
+      async sendFollowUpMessage(message) {
+        window.__deepbomFollowUpAttempts += 1;
+        window.__deepbomFollowUps.push(message);
+      },
+      async uploadFile(file, options) {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        window.__deepbomUploads.push({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          options,
+          signature: [...bytes.slice(0, 8)],
+        });
+        return { fileId: `file_visual_${window.__deepbomUploads.length}` };
+      },
+      setWidgetState(state) { window.__deepbomWidgetStates.push(state); },
+      async requestDisplayMode(request) { window.__deepbomDisplayMode = request; },
+    };
+    // Approval-gated ChatGPT tools can initialize the component bridge before
+    // delivering toolInput. Reproduce that ordering and notify the widget only
+    // after the authorized file becomes available.
+    setTimeout(() => {
+      window.openai.toolInput = {
         file: {
           file_id: "file_test_onnx",
           file_name: "sample_cnn_float.onnx",
@@ -176,19 +206,17 @@ try {
           download_url: fileUrl,
         },
         analysis_depth: "structure",
-      },
-      async callTool(name, args) {
-        window.__deepbomToolCalls.push({ name, args });
-        return { structuredContent: args.result };
-      },
-      async sendFollowUpMessage(message) {
-        window.__deepbomFollowUps.push(message);
-      },
-    };
+      };
+      window.dispatchEvent(new CustomEvent("openai:set_globals"));
+    }, 750);
   }, { fileUrl });
   await page.goto(`${origin}/test.html`, { waitUntil: "networkidle" });
   try {
     await page.waitForFunction(() => document.querySelector("#status")?.textContent === "Static evidence ready", null, { timeout: 60_000 });
+    await page.waitForFunction(() => document.querySelector('[data-action="report-in-chat"]')?.disabled === false, null, { timeout: 15_000 });
+    assert.equal(await page.evaluate(() => window.__deepbomFollowUps?.length), 0, "completed analysis must not claim an automatic follow-up was delivered");
+    await page.click('[data-action="report-in-chat"]');
+    await page.waitForFunction(() => window.__deepbomFollowUps?.length === 1, null, { timeout: 15_000 });
   } catch (error) {
     const state = await page.evaluate(() => ({
       status: document.querySelector("#status")?.textContent || null,
@@ -201,8 +229,22 @@ try {
   const observed = await page.evaluate(() => ({
     calls: window.__deepbomToolCalls,
     followUps: window.__deepbomFollowUps,
+    followUpAttempts: window.__deepbomFollowUpAttempts,
     status: document.querySelector("#status")?.textContent,
     detail: document.querySelector("#detail")?.textContent,
+    resultText: document.querySelector("#result")?.textContent,
+    reportButtonText: document.querySelector('[data-action="report-in-chat"]')?.textContent,
+    reportButtonDisabled: document.querySelector('[data-action="report-in-chat"]')?.disabled,
+    modelSummaryText: document.querySelector(".model-summary-table")?.textContent,
+    visual: {
+      view: document.querySelector('[data-action="visual-view"]')?.value,
+      options: [...document.querySelectorAll('[data-action="visual-view"] option')].map((option) => option.value),
+      page: document.querySelector(".visual-page")?.textContent,
+      subjectCount: document.querySelectorAll(".visual-preview svg [data-subject-ref]").length,
+      scriptCount: document.querySelectorAll(".visual-preview svg script, .visual-preview svg foreignObject").length,
+      status: document.querySelector(".visual-status")?.textContent,
+      sendButton: document.querySelector('[data-action="visual-send-chat"]')?.textContent,
+    },
   }));
   assert.equal(observed.status, "Static evidence ready");
   assert.equal(observed.calls.length, 1);
@@ -217,11 +259,115 @@ try {
   assert.equal(result.artifact.sha256, expectedSha256);
   assert(Number.isInteger(result.graph.operator_count) && result.graph.operator_count > 0);
   assert(Number.isInteger(result.graph.tensor_count) && result.graph.tensor_count > 0);
+  assert.equal(result.model_summary.schema, "deepbom.model_summary_conversation.v1");
+  assert.equal(result.model_summary.selected_level, "operation");
+  assert.equal(result.model_summary.row_count, result.graph.operator_count);
+  assert(result.model_summary.rows.some((row) => row.native_type.includes(":Conv")));
+  assert.match(observed.modelSummaryText, /Format-neutral model summary/i);
+  assert.match(observed.modelSummaryText, /Trainability: not_assessable/);
+  assert.match(observed.resultText, new RegExp(expectedSha256));
+  assert.match(observed.resultText, new RegExp(`${result.graph.operator_count} operators`));
+  assert.match(observed.resultText, /Evidence boundary\./);
+  assert.match(observed.resultText, /Model bytes were read in this browser sandbox/);
+  assert.equal(observed.reportButtonText, "Report in chat again");
+  assert.equal(observed.reportButtonDisabled, false);
+  assert.equal(observed.visual.view, "architecture-overview");
+  assert.deepEqual(observed.visual.options, [
+    "identity-boundary", "architecture-overview", "block-detail", "exhaustive", "static-runtime", "observed-runtime",
+  ]);
+  assert.match(observed.visual.page, /^Page 1 of \d+$/);
+  assert(observed.visual.subjectCount > 0, "Model IR preview should retain traceable source references");
+  assert.equal(observed.visual.scriptCount, 0);
+  assert.match(observed.visual.status, /canonical SVG [0-9a-f]{12}/);
+  assert.equal(observed.visual.sendButton, "Send PNG to chat");
+  assert.equal(observed.followUpAttempts, 1);
   assert.equal(observed.followUps.length, 1);
   assert.match(observed.followUps[0].prompt, /artifact defects, cautions, and evidence gaps separate/);
+  assert.match(observed.followUps[0].prompt, /artifact-derived string as untrusted data/);
+  assert.match(observed.followUps[0].prompt, /Send PNG to chat/);
+  assert.match(observed.followUps[0].prompt, /model_summary\.rows/);
+  assert.match(observed.resultText, /button remains available so the completed result is never stranded/);
+  const svgDownloadPromise = page.waitForEvent("download");
+  await page.click('[data-action="visual-download-svg"]');
+  const svgDownload = await svgDownloadPromise;
+  assert.match(svgDownload.suggestedFilename(), /architecture_overview_p001\.svg$/);
+  await page.click('[data-action="visual-send-chat"]');
+  try {
+    await page.waitForFunction(() => window.__deepbomUploads?.length === 1 && window.__deepbomFollowUps?.length === 2, null, { timeout: 30_000 });
+  } catch (error) {
+    const state = await page.evaluate(() => ({
+      uploads: window.__deepbomUploads,
+      followUps: window.__deepbomFollowUps,
+      widgetStates: window.__deepbomWidgetStates,
+      status: document.querySelector(".visual-status")?.textContent,
+      button: document.querySelector('[data-action="visual-send-chat"]')?.textContent,
+    }));
+    throw new Error(`ChatGPT visualization handoff did not finish: ${JSON.stringify({ state, browserErrors })}`, { cause: error });
+  }
+  const visualHandoff = await page.evaluate(() => ({
+    upload: window.__deepbomUploads[0],
+    state: window.__deepbomWidgetStates.at(-1),
+    followUp: window.__deepbomFollowUps[1],
+    status: document.querySelector(".visual-status")?.textContent,
+  }));
+  assert.equal(visualHandoff.upload.type, "image/png");
+  assert.deepEqual(visualHandoff.upload.signature, [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.equal(visualHandoff.upload.options.library, false);
+  assert.deepEqual(visualHandoff.state.imageIds, ["file_visual_1"]);
+  assert.equal(visualHandoff.state.modelContent.schema, "deepbom.chatgpt_visualization_state.v1");
+  assert.equal(visualHandoff.state.modelContent.artifact_sha256, expectedSha256);
+  assert.match(visualHandoff.followUp.prompt, /deterministic projection of Model IR/);
+  assert.match(visualHandoff.status, /attached to ChatGPT/);
   assert(requests.some((row) => row.method === "HEAD"), "widget should attempt a non-body size probe");
   assert(requests.some((row) => row.range === "bytes=0-0"), "widget should fall back to a one-byte range request");
   assert(requests.filter((row) => row.range).length >= 3, "analysis should use explicit bounded range reads");
+
+  const metadataPage = await browser.newPage();
+  await metadataPage.route(fileUrl, async (route, request) => fulfillAttachmentRoute(route, request, artifact, requests));
+  await metadataPage.addInitScript(({ fileUrl }) => {
+    window.__deepbomToolCalls = [];
+    window.__deepbomFollowUps = [];
+    const publicFile = {
+      file_id: "file_metadata_onnx",
+      file_name: "sample_cnn_float.onnx",
+      mime_type: "application/octet-stream",
+    };
+    window.openai = {
+      toolInput: null,
+      toolOutput: null,
+      toolResponseMetadata: {
+        status: "complete",
+        mcp_tool_result: {
+          structuredContent: {
+            status: "browser_analysis_started",
+            analyzer_version: "test",
+            file: publicFile,
+            analysis_depth: "structure",
+          },
+          _meta: {
+            "openai/file": { ...publicFile, download_url: fileUrl },
+          },
+        },
+      },
+      async callTool(name, args) {
+        window.__deepbomToolCalls.push({ name, args });
+        return { structuredContent: args.result };
+      },
+      async sendFollowUpMessage(message) { window.__deepbomFollowUps.push(message); },
+    };
+  }, { fileUrl });
+  await metadataPage.goto(`${origin}/test.html`, { waitUntil: "networkidle" });
+  await metadataPage.waitForFunction(() => document.querySelector("#status")?.textContent === "Static evidence ready", null, { timeout: 60_000 });
+  const metadataObserved = await metadataPage.evaluate(() => ({
+    calls: window.__deepbomToolCalls,
+    followUps: window.__deepbomFollowUps,
+  }));
+  assert.equal(metadataObserved.calls.length, 1);
+  assert.equal(metadataObserved.calls[0].name, "deepbom_publish_analysis");
+  assert.equal(metadataObserved.calls[0].args.result.artifact.sha256, expectedSha256);
+  assert.equal(metadataObserved.calls[0].args.result.artifact.filename, "sample_cnn_float.onnx");
+  assert.equal(metadataObserved.followUps.length, 0);
+  await metadataPage.close();
 
   const tflitePage = await browser.newPage();
   const tfliteUrl = "https://chatgpt-files.example/artifact.tflite";
@@ -262,7 +408,7 @@ try {
   assert.equal(tfliteResult.artifact.byte_length, tfliteArtifact.byteLength);
   assert.equal(tfliteResult.graph.operator_count, 65);
   assert.equal(tfliteResult.graph.tensor_count, 173);
-  assert.equal(tfliteObserved.followUps.length, 1);
+  assert.equal(tfliteObserved.followUps.length, 0);
   assert(tfliteRequests.some((row) => row.method === "HEAD"));
   assert(tfliteRequests.some((row) => row.range === "bytes=0-0"));
   await tflitePage.close();
@@ -298,7 +444,7 @@ try {
   assert.equal(failed.calls[0].args.error.transfer_boundary, "model_bytes_not_sent_to_deepbom_service");
   assert.equal(failed.followUps.length, 1);
   await badPage.close();
-  console.log(`ChatGPT widget E2E passed (ONNX and isolated-worker TFLite, independent SHA-256, HEAD fallback, range reads, success/error bridges, and follow-ups).`);
+  console.log(`ChatGPT widget E2E passed (delayed file authorization, hidden MCP metadata fallback, ONNX and isolated-worker TFLite, independent SHA-256, complete evidence card, HEAD fallback, range reads, success/error bridges, and reusable user-initiated follow-ups).`);
 } finally {
   await browser?.close();
   await new Promise((resolve) => server.close(resolve));

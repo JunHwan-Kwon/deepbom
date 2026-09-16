@@ -53,6 +53,12 @@
     </section>
 
     <section class="brief-section">
+      <h2>Review a traceable model view</h2>
+      <p>After the bounded audit completes, the component renders six deterministic Model IR levels: identity and boundary, architecture overview, block detail, exhaustive graph or storage, static runtime projection, and observed runtime overlay. Every displayed subject remains linked to the same hash-bound IR used by the audit.</p>
+      <p>The selected page can be downloaded as canonical monochrome SVG or a 300-DPI black-and-white PNG. The Word-ready bundle contains all view pages, caption sidecars, page hashes, conservation results, and insertion metadata. A derived PNG enters the ChatGPT conversation only after the user selects <em>Send PNG to chat</em>; model bytes are not sent to the DEEPBOM service.</p>
+    </section>
+
+    <section class="brief-section">
       <h2>Ask in plain language</h2>
       <pre><code>Check how this attached ONNX model is quantized without executing it.
 Keep artifact defects, cautions, and evidence gaps separate.
@@ -68,7 +74,7 @@ Can this attached file establish runtime latency or accuracy?</code></pre>
       <h2>Choose the right execution path</h2>
       <table class="fact-table">
         <tbody>
-          <tr><th>ChatGPT attachment</th><td>Convenient single-file review. Analysis executes in the ChatGPT browser sandbox and a bounded result is returned to the conversation.</td></tr>
+          <tr><th>ChatGPT attachment</th><td>Convenient single-file review. Analysis and Model IR rendering execute in the ChatGPT browser sandbox; a bounded result is returned to the conversation, while visualization files are downloaded or explicitly attached by the user.</td></tr>
           <tr><th>Local MCP or CLI</th><td>Use for confidential or large files, package directories, ONNX external data, sharded repositories, repeated automation, and complete exports.</td></tr>
           <tr><th>DeepBOM service</th><td>The MCP control plane serves tool metadata and validates the bounded result. It does not fetch or retain model bytes.</td></tr>
         </tbody>

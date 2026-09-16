@@ -4,7 +4,7 @@
   "app_info": {
     "display_name": "DEEPBOM Artifact Evidence",
     "subtitle": "Inspect AI model artifacts",
-    "description": "Inspect attached AI model deployment files without executing model code. DEEPBOM reports artifact identity, serialized structure, tensor encodings, quantization evidence, and bounded findings for supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files. Results separate artifact defects, cautions, and evidence gaps, and state what static analysis cannot establish. Use the local CLI or local MCP instead for confidential, very large, sharded, or multi-file artifacts.",
+    "description": "Inspect attached AI model deployment files without executing model code. DEEPBOM reports artifact identity, a format-neutral Model IR table, serialized structure, tensor encodings, quantization evidence, and bounded findings for supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files. Its browser component also renders traceable monochrome Model IR views and provides SVG, PNG, and Word-ready downloads. Results separate artifact defects, cautions, and evidence gaps, and state what static analysis cannot establish. Use the local CLI or local MCP instead for confidential, very large, sharded, or multi-file artifacts.",
     "category": "DEVELOPER_TOOLS"
   },
   "tools": {
@@ -15,7 +15,7 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "The tool opens a browser-local analyzer and computes evidence from one ChatGPT-authorized attachment. It does not create, update, or delete remote records, and the DEEPBOM service does not retain model bytes or the returned result.",
+        "read_only_justification": "The tool opens a browser-local analyzer and computes evidence and deterministic Model IR views from one ChatGPT-authorized attachment. It does not create, update, or delete DEEPBOM records, and the DEEPBOM service does not retain model bytes or the returned result. A derived PNG is uploaded only when the user explicitly selects Send PNG to chat, and it remains part of the ChatGPT conversation rather than a DEEPBOM record.",
         "open_world_justification": "The tool is limited to the attachment explicitly authorized in the current ChatGPT conversation. It does not search the public internet or access arbitrary external entities; the browser component reads only the bounded temporary attachment URL supplied by ChatGPT.",
         "destructive_justification": "The tool performs static inspection only. It does not execute the model, modify the attachment, overwrite data, send messages, make purchases, or trigger irreversible actions."
       }
@@ -59,13 +59,13 @@
   },
   "test_cases": [
     {
-      "description": "Analyze a small ONNX deployment artifact and return a hash-bound static graph summary with explicit evidence limits.",
-      "user_prompt": "Inspect the attached ONNX deployment model. Report its SHA-256, serialized graph summary, and evidence limitations.",
+      "description": "Analyze a small ONNX deployment artifact, display a traceable Model IR view, and return a hash-bound format-neutral operation table and static graph summary with explicit evidence limits.",
+      "user_prompt": "Inspect the attached ONNX deployment model. Show its format-neutral model summary and Model IR visualization, and report its SHA-256, serialized graph summary, and evidence limitations.",
       "file_attachment_urls": [
         "https://raw.githubusercontent.com/JunHwan-Kwon/deepbom/d5bd6ab2e7b2e599ac4a82cf1deb7cfa4d7a8cac/web/samples/gpu_partition_probe.onnx"
       ],
       "tools_triggered": "deepbom_analyze_file -> deepbom_publish_analysis",
-      "expected_output": "A successful ONNX result for gpu_partition_probe.onnx with artifact SHA-256 82a2feef00eb6ab03d82f2b30cd17f4d826e2d8307cb059eccd6a0f3120059b2, analyzer version, serialized graph or storage facts, separated finding classes, and a statement that static inspection does not prove actual runtime placement or measured performance."
+      "expected_output": "A successful ONNX result for gpu_partition_probe.onnx with artifact SHA-256 82a2feef00eb6ab03d82f2b30cd17f4d826e2d8307cb059eccd6a0f3120059b2, analyzer version, a bounded operation summary including Conv, Relu, NonZero, Cast, and ReduceSum with source-bound output/storage facts, separated finding classes, a browser-local deterministic Model IR visualization with SVG/PNG/document exports, and a statement that static inspection does not prove framework trainability, actual runtime placement, or measured performance."
     },
     {
       "description": "Inspect a GGUF artifact and identify its serialized tensor encodings without treating the release label as the measured assignment.",

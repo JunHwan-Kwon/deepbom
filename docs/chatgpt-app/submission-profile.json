@@ -7,7 +7,7 @@
   "authentication": "none",
   "category": "Developer tools",
   "short_description": "Inspect AI model artifacts",
-  "description": "Inspect attached AI model deployment files without executing model code. DEEPBOM reports artifact identity, serialized structure, tensor encodings, quantization evidence, and bounded findings for supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files. Results separate artifact defects, cautions, and evidence gaps, and state what static analysis cannot establish. Use the local CLI or local MCP instead for confidential, very large, sharded, or multi-file artifacts.",
+  "description": "Inspect attached AI model deployment files without executing model code. DEEPBOM reports artifact identity, a format-neutral Model IR table, serialized structure, tensor encodings, quantization evidence, and bounded findings for supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files. Its browser component also renders traceable monochrome Model IR views and provides SVG, PNG, and Word-ready downloads. Results separate artifact defects, cautions, and evidence gaps, and state what static analysis cannot establish. Use the local CLI or local MCP instead for confidential, very large, sharded, or multi-file artifacts.",
   "privacy_url": "https://deepbom.org/privacy",
   "terms_url": "https://deepbom.org/terms",
   "support_url": "https://deepbom.org/support",
@@ -20,8 +20,10 @@
       "artifact and evidence hashes",
       "artifact format and byte length",
       "bounded graph, storage, and quantization summary",
+      "bounded format-neutral operation or storage rows with output contracts and source references",
       "bounded artifact defects, cautions, and evidence gaps",
-      "evidence and transfer boundaries"
+      "evidence and transfer boundaries",
+      "an explicitly user-selected derived visualization PNG when Send PNG to chat is used"
     ],
     "server_persistence": "none for model bytes or submitted analysis results"
   },
@@ -68,5 +70,5 @@
       "unknown_and_not_assessable_are_not_coerced_to_absence_or_zero"
     ]
   },
-  "engine_version_at_validation": "1.99.2"
+  "engine_version_at_validation": "1.100.0"
 }
