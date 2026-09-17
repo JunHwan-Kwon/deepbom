@@ -127,7 +127,8 @@ try {
     const artifact = path.join(root, "web/samples", filename);
     await frame.locator("#file").setInputFiles(artifact);
     await frame.locator("#analyze").click();
-    await frame.waitForFunction(() => document.querySelector("#status").textContent === "Static evidence ready" || document.querySelector(".error"), null, { timeout: 120_000 });
+    await frame.waitForFunction(() => !document.querySelector("#analyze").disabled
+      && (document.querySelector("#status").textContent === "Static evidence ready" || document.querySelector(".error")), null, { timeout: 120_000 });
     assert.equal(await frame.locator("#status").textContent(), "Static evidence ready", await frame.locator("#result").textContent());
     const result = published.at(-1).arguments.result;
     assert.equal(result.artifact.format, format);

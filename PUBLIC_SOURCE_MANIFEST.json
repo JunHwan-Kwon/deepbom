@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "c0f0b06d416fd1c2557f1e40f5fc2ab72ca2bd4a",
+  "source_commit": "fdf1f72e770a2b9bb7f8e686add5ed7261c82f06",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1169,
@@ -1667,8 +1667,8 @@
     },
     {
       "path": "scripts/check-claude-widget.mjs",
-      "byte_length": 9211,
-      "sha256": "b49097639a4091d36dcd99cedc1aa9ffb5654837eb8960edfda18d6d179a3940"
+      "byte_length": 9267,
+      "sha256": "ba9ca48bcad52d35a8759c9d45deba56a025202c41c9e754a510d3a10dc52149"
     },
     {
       "path": "scripts/check-cli-automation.mjs",
@@ -4098,7 +4098,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 88305,
-      "sha256": "de26b423d7092cb1caeb21542790054a244e2dd3e23a1c746319e46abe1e9290"
+      "sha256": "f8e311bb2bb32011256fb28c18013b72d800705675af9ad222105d7cdc89a3c5"
     },
     {
       "path": "web/lib/bundle.js",
