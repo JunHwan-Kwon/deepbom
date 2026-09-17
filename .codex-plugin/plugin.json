@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Inspect serialized AI deployment artifacts and report hash-bound static evidence, limitations, and reproducible checks.",
   "author": {
     "name": "Jun-Hwan Kwon",

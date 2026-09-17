@@ -134,6 +134,7 @@ corpus/safetensors-quantization-contract-corpus/teeny-tiny-llama-460m-awq.config
 corpus/safetensors-quantization-contract-corpus/teeny-tiny-llama-460m-awq.quant_config.json
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.config.json
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.quantize_config.json
+deepbom-artifact-evidence-skill.zip
 docs/AGENT_CONTRACT_VERSIONING.md
 docs/AGENT_DISTRIBUTION_OPERATIONS.md
 docs/CLI_AUTOMATION.md
@@ -166,11 +167,14 @@ docs/agent-evaluation/host-evaluation-run.template.json
 docs/chatgpt-app/DEMO_RECORDING_SCRIPT.md
 docs/chatgpt-app/PORTAL_VALUES.md
 docs/chatgpt-app/README.md
+docs/chatgpt-app/USAGE_METRICS.md
 docs/chatgpt-app/assets/deepbom-composer-icon-128.png
 docs/chatgpt-app/assets/deepbom-composer-icon-256.png
 docs/chatgpt-app/assets/deepbom-directory-icon-512.png
 docs/chatgpt-app/evals.json
+docs/chatgpt-app/skills/deepbom-artifact-evidence/SKILL.md
 docs/chatgpt-app/submission-profile.json
+docs/chatgpt-app/usage-review-change.json
 docs/claude-app/README.md
 docs/claude-app/submission-profile.json
 docs/claude-remote/README.md
@@ -543,6 +547,8 @@ scripts/check-tflite-sparse-storage.mjs
 scripts/check-tflite-subgraph-inventory.mjs
 scripts/check-tflite-worker-rpc.mjs
 scripts/check-tier.mjs
+scripts/check-usage-dashboard.mjs
+scripts/check-usage-metrics.mjs
 scripts/check-wasm-hardening.mjs
 scripts/check-web-imports.mjs
 scripts/check-worker-config.mjs
@@ -768,6 +774,7 @@ web/lib/accumulator-reachability-viewer.js
 web/lib/accumulator-reachability-worker.js
 web/lib/accumulator-reachability.js
 web/lib/admin-elements.js
+web/lib/admin-usage.js
 web/lib/analysis-depth-mode.js
 web/lib/analysis-summary-contract.js
 web/lib/analysis.js
@@ -810,6 +817,7 @@ web/lib/calibration-validation-ledger.js
 web/lib/calibration-validation-view.js
 web/lib/channel-vitality-worker.js
 web/lib/channel-vitality.js
+web/lib/chatgpt-usage.js
 web/lib/citation-ui.js
 web/lib/clipboard.js
 web/lib/contract-migration.js

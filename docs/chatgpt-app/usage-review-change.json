@@ -1,0 +1,86 @@
+{
+  "schema": "deepbom.usage_review_change.v1",
+  "status": "deployment_authorized_platform_review_candidate_unsubmitted",
+  "classification": {
+    "schema": "deepbom.agent_release_classification.v1",
+    "release_class": "public_contract_change",
+    "engine_version": "1.101.0",
+    "agent_contract": {
+      "id": "deepbom.agent_contract.v1",
+      "version": "1.0.0",
+      "compatibility": "backward_compatible_within_v1"
+    },
+    "evidence_contract": {
+      "id": "deepbom.artifact_evidence_envelope.v1",
+      "version": "1.0.0",
+      "compatibility": "additive_fields_only_within_v1",
+      "required_top_level_fields": [
+        "schema",
+        "generated_at",
+        "identity",
+        "artifact_set",
+        "conversion_receipt",
+        "cpu_cost_target_binding",
+        "accelerator_profile_binding",
+        "accelerator_bindings",
+        "policy_identity",
+        "capabilities",
+        "interfaces",
+        "graph",
+        "external_files",
+        "metadata",
+        "findings",
+        "format_extensions",
+        "provenance",
+        "evidence_boundary",
+        "envelope_sha256"
+      ],
+      "conditional_top_level_fields": [
+        "llm_token_budget_scenario",
+        "structured_details"
+      ],
+      "semantic_boundaries": [
+        "artifact_defects_cautions_and_evidence_gaps_remain_distinct",
+        "static_predictions_are_not_runtime_observations",
+        "unknown_and_not_assessable_are_not_coerced_to_absence_or_zero"
+      ]
+    },
+    "changed_sections": [
+      "openai.privacy_and_transfer"
+    ],
+    "openai": {
+      "review_required": true,
+      "action": "create_new_plugin_version_scan_review_and_publish"
+    },
+    "claude_remote": {
+      "resubmission_required": false,
+      "host_validation_required": false,
+      "action": "host_smoke_test_only"
+    },
+    "evidence": {
+      "contract_version_review_required": false,
+      "action": "no_contract_version_change"
+    },
+    "interpretation_boundary": "This is a source-contract classification, not platform approval evidence. Account-owned review, publication, listing, and host observations remain manual facts."
+  },
+  "changes": [
+    "Optional consented pseudonymous browser usage records",
+    "Daily aggregate operational counters without browser identifiers",
+    "Administrator-only usage summaries and aggregate CSV/JSON snapshots",
+    "Withdrawal, browser-record deletion, test exclusion and 90-day expiry"
+  ],
+  "validation": [
+    "SQLite collector and consent tests passed",
+    "Cross-origin ONNX/TFLite widget and export tests passed",
+    "Administrator authorization, dashboard, mobile and download tests passed",
+    "Cloudflare Worker deploy dry run passed"
+  ],
+  "next_steps": [
+    "Deploy engine 1.102.0 and publish CLI/MCP packages under the maintainer authorization",
+    "Update the account-owned OpenAI review with the Agent 1.0.1 privacy and usage collection candidate",
+    "Verify consent, test-event exclusion, and deletion against the deployed endpoint"
+  ],
+  "boundary": "This record preserves the detected change from the preceding baseline. It does not assert OpenAI approval or real adoption counts. Agent 1.0.1 is an explicit contract-change candidate; engine publication is separately verified.",
+  "release_version": "1.102.0",
+  "proposed_agent_contract_version": "1.0.1"
+}

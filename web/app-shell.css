@@ -2112,6 +2112,25 @@ body.privacy-locked .layout {
   margin-top: 18px;
 }
 
+#adminUsage .admin-section-head { flex-wrap: wrap; }
+#adminUsage .admin-bench-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+#adminUsage .admin-bench-controls select { width: auto; }
+#adminUsage .admin-bench-controls button { padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: var(--surface-elevated); cursor: pointer; }
+#adminUsage .admin-bench-controls button:disabled { opacity: 0.5; cursor: default; }
+#adminUsage .usage-chart { color: var(--accent, #146e62); margin: 24px 0; }
+#adminUsage .usage-chart svg { display: block; width: 100%; height: 180px; }
+#adminUsage .usage-chart p, #adminUsage .usage-note { color: var(--muted); font-size: 12px; line-height: 1.6; }
+#adminUsage .usage-tables { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+#adminUsage .table-wrap { overflow-x: auto; min-width: 0; }
+#adminUsage .table-wrap:nth-child(n+4) { grid-column: 1 / -1; }
+#adminUsage table { width: 100%; border-collapse: collapse; font-size: 12px; }
+#adminUsage caption { text-align: left; font-weight: 700; padding: 10px 0; }
+#adminUsage th, #adminUsage td { padding: 9px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+@media (max-width: 700px) {
+  #adminUsage .usage-tables { grid-template-columns: minmax(0, 1fr); }
+  #adminUsage .admin-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 .admin-board {
   min-width: 0;
   padding: 18px;

@@ -666,6 +666,38 @@ try {
   await badPage.close();
   assert(!assetRequests.some((request) => request.path === "/workers/static-audit-worker.js"), "Never request the nonexistent unbundled worker path");
   assert(assetRequests.every((request) => ["GET", "HEAD"].includes(request.method)), "Model bytes must not be posted to the asset service");
+  // Existing analysis/export actions must produce no optional usage requests
+  // until consent. Then only allowlisted dimensions may cross the boundary.
+  assert(!assetRequests.some((request) => request.path.startsWith('/api/usage/')));
+  const usageRequests = [];
+  await page.route(`${assetOrigin}/api/usage/**`, async (route, request) => {
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'POST', 'access-control-allow-headers': 'content-type' } }); return;
+    }
+    const pathname = new URL(request.url()).pathname;
+    const body = request.postDataJSON(); usageRequests.push({ pathname, body });
+    await route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' }, body: JSON.stringify(pathname.endsWith('/session') ? { token: 'test-session', expires_at: Date.now() + 86400000 } : { ok: true }) });
+  });
+  await page.locator('summary').filter({ hasText: 'Optional usage statistics' }).click();
+  await page.check('[data-action="usage-test"]');
+  await page.waitForFunction(() => !document.querySelector('[data-action="usage-consent"]').disabled);
+  assert.equal(usageRequests.length, 0, 'Selecting test mode alone does not enable collection');
+  await page.check('[data-action="usage-consent"]');
+  await page.waitForFunction(() => !document.querySelector('[data-action="usage-consent"]').disabled);
+  assert.equal(usageRequests[0].body.cohort, 'test');
+  assert.equal(usageRequests[0].body.identity_scope, 'browser');
+  const reportedEvents = usageRequests.filter((r) => r.pathname.endsWith('/events')).flatMap((r) => r.body.events);
+  assert(reportedEvents.some((e) => e.event === 'analysis_completed' && e.format === 'onnx'));
+  assert(reportedEvents.some((e) => e.event === 'export_prepared' && e.detail === 'cyclonedx'));
+  assert(reportedEvents.some((e) => e.event === 'export_prepared' && e.detail === 'spdx'));
+  for (const event of reportedEvents) assert.deepEqual(Object.keys(event).sort(), ['detail', 'event', 'format']);
+  assert(!JSON.stringify(usageRequests).includes(expectedSha256));
+  assert(!JSON.stringify(usageRequests).includes('sample_cnn_float'));
+  await page.click('[data-action="usage-forget"]');
+  await page.waitForFunction(() => !document.querySelector('[data-action="usage-consent"]').disabled);
+  assert.equal(usageRequests.at(-1).pathname, '/api/usage/forget');
+  assert.equal(await page.isChecked('[data-action="usage-consent"]'), false);
+  assert.equal(await page.locator('[data-action="usage-forget"]').isDisabled(), true);
   console.log(`ChatGPT widget E2E passed (cross-origin assets: ${assetOrigin}, nested iframe with blob-only worker CSP, ONNX/TFLite evidence, analyzer delivery failure, file authorization, narrow-panel controls, SVG/PNG/ZIP downloads, schema-valid CycloneDX/SPDX files, blocked iframe download and host file handoff, upload/URL failures, safe retry, and reusable follow-ups).`);
 } finally {
   await browser?.close();

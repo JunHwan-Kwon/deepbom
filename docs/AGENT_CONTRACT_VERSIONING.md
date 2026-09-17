@@ -5,7 +5,7 @@ DEEPBOM publishes three independent identities:
 | Identity | Current value | Changes when |
 | --- | --- | --- |
 | Engine release | `package.json` / `release/version.json` | Parser, analysis, performance, packaging, or other product code is released |
-| Public Agent contract | `deepbom.agent_contract.v1` / `1.0.0` | Reviewed tool metadata, schemas, annotations, instructions, UI resource identity or policy metadata, or the public Skill changes |
+| Public Agent contract | `deepbom.agent_contract.v1` / `1.0.1` | Reviewed tool metadata, schemas, annotations, instructions, UI resource identity or policy metadata, or the public Skill changes |
 | Evidence contract | `deepbom.artifact_evidence_envelope.v1` / `1.0.0` | A removal or semantic incompatibility changes the stable evidence envelope |
 
 An engine update may change `analyzer_version` and measured results while keeping

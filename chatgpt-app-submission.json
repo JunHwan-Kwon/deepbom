@@ -4,7 +4,7 @@
   "app_info": {
     "display_name": "DEEPBOM Artifact Evidence",
     "subtitle": "Inspect AI model artifacts",
-    "description": "Inspect attached AI model deployment files without executing model code. DEEPBOM reports artifact identity, a format-neutral Model IR table, serialized structure, tensor encodings, quantization evidence, and bounded findings for supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files. Its browser component also renders traceable monochrome Model IR views and provides SVG, PNG, and Word-ready downloads. Results separate artifact defects, cautions, and evidence gaps, and state what static analysis cannot establish. Use the local CLI or local MCP instead for confidential, very large, sharded, or multi-file artifacts.",
+    "description": "Inspect attached AI model deployment files without executing model code. DEEPBOM analyzes supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files in the browser and reports SHA-256, serialized structure, tensor encodings, quantization evidence, and static findings. Explore Model IR tables and visualizations, and export SVG, PNG, Word-ready bundles, CycloneDX 1.7 artifact evidence, or SPDX 2.3 artifact inventories. Use Send PNG to chat to share a selected visualization or Save via ChatGPT to obtain a download link for a generated file when supported by the host. These actions share the generated export, not the model file. Results separate artifact defects, cautions, and evidence gaps, and explain what static analysis cannot establish. Use the local CLI or local MCP for confidential, very large, sharded, or multi-file artifacts.",
     "category": "DEVELOPER_TOOLS"
   },
   "tools": {
@@ -15,7 +15,7 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "The tool opens a browser-local analyzer and computes evidence and deterministic Model IR views from one ChatGPT-authorized attachment. It does not create, update, or delete DEEPBOM records, and the DEEPBOM service does not retain model bytes or the returned result. A derived PNG is uploaded only when the user explicitly selects Send PNG to chat, and it remains part of the ChatGPT conversation rather than a DEEPBOM record.",
+        "read_only_justification": "The tool opens a browser-local analyzer for one authorized attachment without modifying the model, account, or conversation contents. The service does not retain model bytes or the bounded analysis result. Daily operational counters record only date, call type, format where available, and count. Separate explicit widget actions upload selected generated exports to ChatGPT; optional widget usage statistics use a separate endpoint only after consent, with withdrawal and deletion controls. These actions are not performed by this tool call.",
         "open_world_justification": "The tool is limited to the attachment explicitly authorized in the current ChatGPT conversation. It does not search the public internet or access arbitrary external entities; the browser component reads only the bounded temporary attachment URL supplied by ChatGPT.",
         "destructive_justification": "The tool performs static inspection only. It does not execute the model, modify the attachment, overwrite data, send messages, make purchases, or trigger irreversible actions."
       }
@@ -27,7 +27,7 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "The tool returns fixed capability and evidence-boundary metadata and accepts no arguments. It does not inspect a file or change state.",
+        "read_only_justification": "The tool returns fixed capability and evidence-boundary metadata and accepts no arguments. It does not inspect a file or modify user data. The service increments an aggregate daily operational call counter without a browser identifier.",
         "open_world_justification": "The response comes from the bounded DEEPBOM capability contract and does not query the public internet, user accounts, or third-party entities.",
         "destructive_justification": "The tool only reads static capability metadata and cannot alter, delete, publish, or otherwise affect user or external data."
       }
@@ -39,7 +39,7 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "The tool validates one bounded result produced inside the browser component and returns it to the same conversation. It does not persist the result or mutate any account, artifact, or external system.",
+        "read_only_justification": "The tool validates one bounded browser result and returns it to the same conversation without retaining the result or modifying the artifact or user account. The service increments daily operational report counts by supported format, without filenames, hashes, results, or browser identifiers.",
         "open_world_justification": "The tool receives only the bounded result from the current component interaction and does not contact public or open-ended external entities.",
         "destructive_justification": "Validation and return of a result have no delete, overwrite, publication, transaction, or other irreversible behavior."
       }
@@ -51,7 +51,7 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "The tool validates a bounded diagnostic generated by the browser component and returns a recovery action to the same conversation. It does not persist the diagnostic or change external state.",
+        "read_only_justification": "The tool validates a bounded browser diagnostic and returns a recovery action without retaining the diagnostic or modifying user data. The service increments a daily aggregate failure-report counter without diagnostic contents or browser identifiers.",
         "open_world_justification": "The tool handles only the diagnostic supplied by the current component and performs no internet search or third-party lookup.",
         "destructive_justification": "Returning an analysis error cannot modify or delete the attachment, user data, or any external resource."
       }
@@ -59,16 +59,16 @@
   },
   "test_cases": [
     {
-      "description": "Analyze a small ONNX deployment artifact, display a traceable Model IR view, and return a hash-bound format-neutral operation table and static graph summary with explicit evidence limits.",
+      "description": "Analyze a small ONNX deployment artifact, visualize its Model IR, and export its evidence. Setup: download gpu_partition_probe.onnx from https://raw.githubusercontent.com/JunHwan-Kwon/deepbom/d5bd6ab2e7b2e599ac4a82cf1deb7cfa4d7a8cac/web/samples/gpu_partition_probe.onnx and attach the downloaded file to a new ChatGPT conversation with this plugin enabled. Submit the user prompt below. When the widget shows Static evidence ready, select Report in chat. The browser component calls deepbom_publish_analysis; the assistant does not call that private tool directly. To test picture sharing, select Send PNG to chat. To test file export, choose an export button, then Save via ChatGPT if local downloading is blocked; use Send link to chat if no file opens. No DEEPBOM account is required.",
       "user_prompt": "Inspect the attached ONNX deployment model. Show its format-neutral model summary and Model IR visualization, and report its SHA-256, serialized graph summary, and evidence limitations.",
       "file_attachment_urls": [
         "https://raw.githubusercontent.com/JunHwan-Kwon/deepbom/d5bd6ab2e7b2e599ac4a82cf1deb7cfa4d7a8cac/web/samples/gpu_partition_probe.onnx"
       ],
       "tools_triggered": "deepbom_analyze_file -> deepbom_publish_analysis",
-      "expected_output": "A successful ONNX result for gpu_partition_probe.onnx with artifact SHA-256 82a2feef00eb6ab03d82f2b30cd17f4d826e2d8307cb059eccd6a0f3120059b2, analyzer version, a bounded operation summary including Conv, Relu, NonZero, Cast, and ReduceSum with source-bound output/storage facts, separated finding classes, a browser-local deterministic Model IR visualization with SVG/PNG/document exports, and a statement that static inspection does not prove framework trainability, actual runtime placement, or measured performance."
+      "expected_output": "A successful ONNX result for gpu_partition_probe.onnx with artifact SHA-256 82a2feef00eb6ab03d82f2b30cd17f4d826e2d8307cb059eccd6a0f3120059b2, analyzer version, a bounded operation summary including Conv, Relu, NonZero, Cast, and ReduceSum with source-bound output/storage facts, separated finding classes, and a browser-local deterministic Model IR visualization. The widget offers SVG, PNG, Word-ready bundle, CycloneDX 1.7 artifact-evidence JSON, and SPDX 2.3 artifact-inventory JSON exports. Sharing a generated file through Save via ChatGPT or Send PNG to chat requires a separate user action and host support; a visible preview alone is not a chat attachment. SPDX does not establish a complete software dependency inventory or known licenses. State that static inspection does not prove framework trainability, actual runtime placement, or measured performance."
     },
     {
-      "description": "Inspect a GGUF artifact and identify its serialized tensor encodings without treating the release label as the measured assignment.",
+      "description": "Inspect a GGUF artifact and identify its serialized tensor encodings without treating the release label as the measured assignment. Setup: download tinymqa1m.Q4_0.gguf from https://raw.githubusercontent.com/JunHwan-Kwon/deepbom/d5bd6ab2e7b2e599ac4a82cf1deb7cfa4d7a8cac/web/samples/tinymqa1m.Q4_0.gguf and attach the downloaded file to a new ChatGPT conversation with this plugin enabled. Submit the user prompt below, wait for Static evidence ready, and select Report in chat. The browser component calls deepbom_publish_analysis; the assistant does not call that private tool directly. No DEEPBOM account is required.",
       "user_prompt": "What tensor encodings are serialized in the attached GGUF file? Include its SHA-256 and the static-analysis boundary.",
       "file_attachment_urls": [
         "https://raw.githubusercontent.com/JunHwan-Kwon/deepbom/d5bd6ab2e7b2e599ac4a82cf1deb7cfa4d7a8cac/web/samples/tinymqa1m.Q4_0.gguf"
@@ -77,7 +77,7 @@
       "expected_output": "A successful GGUF result for tinymqa1m.Q4_0.gguf with artifact SHA-256 cb95a6e10f28b76a1dd71c15560dec5a5eee8943f591ef45d11c129786b22cff, analyzer version, tensor-encoding inventory or summary, bounded findings, and no claim about measured latency, accuracy, or runtime kernel selection."
     },
     {
-      "description": "Inspect a SafeTensors artifact for serialized storage and precision evidence without executing model code.",
+      "description": "Inspect a SafeTensors artifact for serialized storage and precision evidence without executing model code. Setup: download nanofable-1m-fp16.safetensors from https://raw.githubusercontent.com/JunHwan-Kwon/deepbom/d5bd6ab2e7b2e599ac4a82cf1deb7cfa4d7a8cac/web/samples/nanofable-1m-fp16.safetensors and attach the downloaded file to a new ChatGPT conversation with this plugin enabled. Submit the user prompt below, wait for Static evidence ready, and select Report in chat. The browser component calls deepbom_publish_analysis; the assistant does not call that private tool directly. No DEEPBOM account is required.",
       "user_prompt": "Check the serialized tensor precision and storage evidence in the attached SafeTensors artifact without executing it.",
       "file_attachment_urls": [
         "https://raw.githubusercontent.com/JunHwan-Kwon/deepbom/d5bd6ab2e7b2e599ac4a82cf1deb7cfa4d7a8cac/web/samples/nanofable-1m-fp16.safetensors"
@@ -86,13 +86,13 @@
       "expected_output": "A successful SafeTensors result for nanofable-1m-fp16.safetensors with artifact SHA-256 a35fd03f52c12f4e78a246bec1927e9a169377fbb8905dc13165d285010e7a44, analyzer version, serialized tensor dtype or storage facts, separated findings, and explicit limits for graph and runtime conclusions not contained in the artifact."
     },
     {
-      "description": "Run the deeper browser payload-integrity path on a public quantized TFLite deployment artifact.",
+      "description": "Run the deeper browser payload-integrity path on a public quantized TFLite deployment artifact. Setup: download mobilenet_v2_1.0_224_quant.tflite from https://raw.githubusercontent.com/JunHwan-Kwon/deepbom/d5bd6ab2e7b2e599ac4a82cf1deb7cfa4d7a8cac/web/samples/mobilenet_v2_1.0_224_quant.tflite and attach the downloaded file to a new ChatGPT conversation with this plugin enabled. Submit the user prompt below, wait for Static evidence ready, and select Report in chat. The browser component calls deepbom_publish_analysis; the assistant does not call that private tool directly. No DEEPBOM account is required.",
       "user_prompt": "Inspect tensor payload integrity in the attached TFLite deployment model and keep defects, cautions, and evidence gaps separate.",
       "file_attachment_urls": [
         "https://raw.githubusercontent.com/JunHwan-Kwon/deepbom/d5bd6ab2e7b2e599ac4a82cf1deb7cfa4d7a8cac/web/samples/mobilenet_v2_1.0_224_quant.tflite"
       ],
       "tools_triggered": "deepbom_analyze_file -> deepbom_publish_analysis",
-      "expected_output": "A successful TFLite result for mobilenet_v2_1.0_224_quant.tflite with artifact SHA-256 f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d, analysis_depth payload_integrity, analyzer version, bounded payload and quantization evidence, separated finding classes, and the static evidence boundary."
+      "expected_output": "The deepbom_analyze_file call uses analysis_depth payload_integrity, also echoed in the browser_analysis_started response. The completed analysis returns a successful TFLite result for mobilenet_v2_1.0_224_quant.tflite with artifact SHA-256 f08d447cde49b4e0446428aa921aff0a14ea589fa9c5817b31f83128e9a43c1d, analyzer version, bounded payload and quantization evidence, separated finding classes, and the static evidence boundary."
     },
     {
       "description": "Explain supported formats, processing location, and the boundary between the ChatGPT attachment path and local DEEPBOM without inspecting a file.",

@@ -52,6 +52,8 @@ const CHECKS = [
   "scripts/check-analysis-summary-contract.mjs",
   "scripts/check-mcp-registry-metadata.mjs",
   "scripts/check-chatgpt-mcp.mjs",
+  "scripts/check-usage-metrics.mjs",
+  "scripts/check-usage-dashboard.mjs",
   "scripts/check-chatgpt-widget.mjs",
   "scripts/check-spdx-artifact-export.mjs",
   "scripts/check-chatgpt-app-metadata.mjs",

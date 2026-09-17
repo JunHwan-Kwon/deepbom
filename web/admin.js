@@ -2,6 +2,7 @@ import { statusClass } from "./lib/auth-labels.js";
 import { canonicalAccessProfile, hasAccessProfile } from "./lib/access-policy.js";
 import { bindAdminElements } from "./lib/admin-elements.js";
 import { copyTextToClipboard } from "./lib/clipboard.js";
+import { createAdminUsage } from "./lib/admin-usage.js";
 
 const {
   adminStatus,
@@ -29,6 +30,7 @@ let requests = [];
 let users = [];
 let benchRuns = [];
 let modelStructures = [];
+const usageView = createAdminUsage(document.getElementById("adminUsage"), apiFetch);
 
 adminRefreshAll.addEventListener("click", loadAdminData);
 requestStatusFilter.addEventListener("change", renderRequests);
@@ -88,6 +90,7 @@ async function loadAdminData() {
   }
   loadBenchmarks();
   loadStructures();
+  void usageView.load();
 }
 
 async function createTestLink() {
@@ -459,6 +462,7 @@ async function saveUser(id, role, accessProfile, accessStatus, button) {
 }
 
 function renderBlocked(message) {
+  usageView.clear(message);
   adminMetrics.replaceChildren(metricCard("Access", "Blocked", message));
   adminRequestBoard.replaceChildren(empty(message));
   adminUserTable.replaceChildren(empty(message));

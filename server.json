@@ -7,7 +7,7 @@
     "url": "https://github.com/JunHwan-Kwon/deepbom",
     "source": "github"
   },
-  "version": "1.101.0",
+  "version": "1.102.0",
   "websiteUrl": "https://deepbom.org",
   "icons": [
     {
@@ -28,7 +28,7 @@
     {
       "registryType": "npm",
       "identifier": "deepbom",
-      "version": "1.101.0",
+      "version": "1.102.0",
       "packageArguments": [
         {
           "type": "positional",

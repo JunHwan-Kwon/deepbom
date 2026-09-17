@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-14T03:31:00.000Z",
+  "recorded_at": "2026-09-17T04:44:45.787273+00:00",
   "scope": "Public installation channels and private web delivery",
   "observations": [
     {
@@ -2518,6 +2518,84 @@
         "packaged_self_test_and_wasm_tamper_rejection"
       ],
       "qualification": "The installed npm package, local MCP, Python facade, standalone engine, and Cargo launcher retained canonical analysis and visualization parity. This release adds hosted ChatGPT file controls; it does not add a CLI SPDX output option or claim actual remote-host rendering from local tests."
+    },
+    {
+      "kind": "private_web_preflight_basis",
+      "version": "1.102.0",
+      "source_commit": "ccd54b07dcea46074569ddc242e52de48b93e0d0",
+      "platform": "linux-x64",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 166.478,
+      "check_count": 87,
+      "conclusion": "success",
+      "observed_at": "2026-09-17T04:40:10.014259+00:00",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "agent_1_0_1_privacy_change_candidate",
+        "model_and_evidence_contract_compatibility",
+        "service_worker_asset_coverage",
+        "public_private_source_boundary"
+      ],
+      "qualification": "All 87 non-self-referential checks passed. Separate SQLite and browser tests cover consent, deletion, administrator access, usage exports, and real ONNX/TFLite widget analysis. No platform approval is inferred."
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.102.0",
+      "source_commit": "ccd54b07dcea46074569ddc242e52de48b93e0d0",
+      "platform": "linux-x64",
+      "command": "node scripts/build-channel-artifacts.mjs",
+      "elapsed_seconds": 12.168,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball",
+        "claude_desktop_mcpb_bundle",
+        "single_executable_engine",
+        "pep_639_python_wheel",
+        "cargo_launcher_source",
+        "public_private_source_boundary"
+      ],
+      "observed_at": "2026-09-17T04:38:48.915665+00:00"
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.102.0",
+      "source_commit": "ccd54b07dcea46074569ddc242e52de48b93e0d0",
+      "platform": "linux-x64",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --platform-smoke",
+      "elapsed_seconds": 55.53,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "agent_and_evidence_contract_identity_parity",
+        "manifest_bound_self_test_execution",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity",
+        "path_with_spaces_execution"
+      ],
+      "observed_at": "2026-09-17T04:40:20.063872+00:00"
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.102.0",
+      "source_commit": "ccd54b07dcea46074569ddc242e52de48b93e0d0",
+      "platform": "linux-x64",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --release-contract",
+      "elapsed_seconds": 173.224,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_supported_release_contract_cases",
+        "installed_npm_and_cargo_model_summary_equivalence",
+        "installed_npm_mcp_tool_call_equivalence",
+        "installed_model_ir_selection_and_visualization_equivalence",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_self_test_and_wasm_tamper_rejection"
+      ],
+      "observed_at": "2026-09-17T04:43:42.608678+00:00",
+      "qualification": "Installed npm, local MCP, Python, standalone engine and Cargo retain analysis and visualization parity with Agent contract 1.0.1. This does not assert approval or real-host review of the new optional usage collection."
     }
   ],
   "budgets": {

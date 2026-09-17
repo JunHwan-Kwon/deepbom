@@ -21,6 +21,16 @@ sandbox. The remote DEEPBOM MCP endpoint serves the tool and widget contracts
 and validates a bounded result or error; it does not fetch or retain model
 bytes.
 
+Optional usage statistics are off by default. After explicit consent, a random
+browser key and allowlisted activity events support browser/revisit estimates,
+format counts, and export counts. The service stores a keyed hash of the key,
+never model contents, filenames, artifact hashes, or conversation text in the
+usage tables. Withdrawal, deletion, and a test-use exclusion control are in the
+widget. Operational MCP counts include all callers and have no browser key.
+See [USAGE_METRICS.md](USAGE_METRICS.md) for definitions, administrator access,
+retention, and deployment order. Review materials and the deployed privacy
+page must describe this collection before enabling it in production.
+
 The widget also renders deterministic, monochrome Model IR views from the same
 browser-local analysis. Users can download the selected canonical SVG, a
 300-DPI PNG derivative, or a Word-ready ZIP containing all six view levels,
@@ -31,12 +41,17 @@ model artifact to DEEPBOM.
 
 The file buttons appear above the visualization and before the evidence tables,
 including in narrow ChatGPT panels. `Download SVG`, `Download PNG`, and
-`Word-ready bundle` save actual files and retain a visible Save link for retry.
+`Word-ready bundle` prepare actual files and retain a visible `Local download`
+link for retry.
 `CycloneDX 1.7 JSON` exports the existing artifact-evidence document;
 `SPDX 2.3 JSON` exports a SHA-256-bound artifact inventory with DEEPBOM evidence
 annotations. SPDX uses FILE-purpose packages, leaves license/copyright fields
 as `NOASSERTION`, and does not infer a software dependency inventory or an SPDX
-3 AI profile. These downloads remain local to the browser.
+3 AI profile. These files are generated in the browser. When a host blocks local
+downloads, `Save via ChatGPT` explicitly uploads only the generated export to
+ChatGPT and opens its host-issued HTTPS download URL. `Send link to chat`
+requests a reply containing that URL. These actions require host file-sharing
+support and do not send the original model file to DEEPBOM.
 
 `Send PNG to chat` explicitly requests an inline image and a Download PNG link,
 using the temporary URL returned by ChatGPT for the uploaded derived image when
@@ -78,13 +93,19 @@ exports, or repeat automation.
    `https://deepbom.org/.well-known/openai-apps-challenge` returns only that
    token, with no JSON wrapper or newline.
 5. Upload the repository-root `chatgpt-app-submission.json`, the 512 px
-   directory icon, and the 128 px composer icon through the ChatGPT plugin
+   directory icon, and the 256 px composer icon through the ChatGPT plugin
    submission portal. `submission-profile.json` remains the fuller internal
    preparation record; it is not the portal import format. Follow
    `PORTAL_VALUES.md` for the remaining account-owned fields. Do not claim
    public catalog availability before approval.
 6. After approval, verify discovery by app name and by at least three generic
    artifact-analysis queries, then repeat one full attachment analysis.
+
+The optional portal skill is
+`skills/deepbom-artifact-evidence/SKILL.md` within this directory. Its workflow
+uses the ChatGPT attachment tools and widget. Upload its containing folder or
+the repository-root `deepbom-artifact-evidence-skill.zip` in the Skills tab.
+The repository-root `skills/deepbom/` remains the separate local CLI skill.
 
 The root `plugin.json` and `mcp.json` also form a portable Agent Plugins
 package. They make the Skill and remote MCP identity reviewable together, but

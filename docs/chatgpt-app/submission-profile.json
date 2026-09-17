@@ -7,7 +7,7 @@
   "authentication": "none",
   "category": "Developer tools",
   "short_description": "Inspect AI model artifacts",
-  "description": "Inspect attached AI model deployment files without executing model code. DEEPBOM reports artifact identity, a format-neutral Model IR table, serialized structure, tensor encodings, quantization evidence, and bounded findings for supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files. Its browser component also renders traceable monochrome Model IR views and provides SVG, PNG, and Word-ready downloads. Results separate artifact defects, cautions, and evidence gaps, and state what static analysis cannot establish. Use the local CLI or local MCP instead for confidential, very large, sharded, or multi-file artifacts.",
+  "description": "Inspect attached AI model deployment files without executing model code. DEEPBOM analyzes supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files in the browser and reports SHA-256, serialized structure, tensor encodings, quantization evidence, and static findings. Explore Model IR tables and visualizations, and export SVG, PNG, Word-ready bundles, CycloneDX 1.7 artifact evidence, or SPDX 2.3 artifact inventories. Use Send PNG to chat to share a selected visualization or Save via ChatGPT to obtain a download link for a generated file when supported by the host. These actions share the generated export, not the model file. Results separate artifact defects, cautions, and evidence gaps, and explain what static analysis cannot establish. Use the local CLI or local MCP for confidential, very large, sharded, or multi-file artifacts.",
   "privacy_url": "https://deepbom.org/privacy",
   "terms_url": "https://deepbom.org/terms",
   "support_url": "https://deepbom.org/support",
@@ -23,16 +23,18 @@
       "bounded format-neutral operation or storage rows with output contracts and source references",
       "bounded artifact defects, cautions, and evidence gaps",
       "evidence and transfer boundaries",
-      "an explicitly user-selected derived visualization PNG when Send PNG to chat is used"
+      "an explicitly user-selected derived visualization PNG when Send PNG to chat is used",
+      "a generated export uploaded to ChatGPT by an explicit Save via ChatGPT action, with a host-issued HTTPS download URL that Send link to chat can return to the conversation"
     ],
-    "server_persistence": "none for model bytes or submitted analysis results"
+    "server_persistence": "none for model bytes or submitted analysis results",
+    "usage_statistics": "Daily aggregate MCP counts without identifiers; separate opt-in widget event records with keyed-hash browser IDs for up to 90 days, followed by daily deletion. Withdrawal, browser-record deletion, test exclusion, and aggregate administrator exports are described at /privacy. No model contents, filenames, artifact hashes, or conversation text enter usage records."
   },
   "evidence_boundary": "Static serialized-artifact evidence does not establish runtime placement, measured latency or energy, task accuracy, clinical validity, safety, or regulatory compliance.",
   "identity_note": "The descriptive listing title distinguishes this AI deployment-artifact analyzer; this profile is not a trademark-clearance determination.",
   "listing_status": "not_submitted_or_approved_by_this_file",
   "agent_contract": {
     "id": "deepbom.agent_contract.v1",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "compatibility": "backward_compatible_within_v1"
   },
   "evidence_contract": {
@@ -70,5 +72,5 @@
       "unknown_and_not_assessable_are_not_coerced_to_absence_or_zero"
     ]
   },
-  "engine_version_at_validation": "1.101.0"
+  "engine_version_at_validation": "1.102.0"
 }

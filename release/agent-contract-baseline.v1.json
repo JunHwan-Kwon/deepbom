@@ -4,10 +4,10 @@
     "openai": "candidate_unsubmitted",
     "claude_remote": "candidate_unsubmitted"
   },
-  "captured_engine_version": "1.100.0",
+  "captured_engine_version": "1.102.0",
   "agent_contract": {
     "id": "deepbom.agent_contract.v1",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "compatibility": "backward_compatible_within_v1"
   },
   "evidence_contract": {
@@ -47,11 +47,11 @@
   },
   "surfaces": {
     "openai": {
-      "fingerprint": "615b4916d11817bc5f2592cfd23f6770290d44c2b9aa03ab044945b8786a130f",
+      "fingerprint": "11f00b3336e740fce6534192282f9bd387dd704b430188410cf4d8e540c91fd5",
       "sections": {
         "endpoint": "65d495bd038797ad035c1c8d302f1c3d8cdb925acc605134d7a4ad72e1b2c066",
-        "plugin_package": "22fa201effad8a05ffcda85a7ccbb720ba73a4bcaa13e163715d24ea7f9c84df",
-        "privacy_and_transfer": "ce6b3a7b429ce8cac5120f4d70f08fc4e8fc197620eeb1fd9e514ff368439cd6",
+        "plugin_package": "86d94e7ad5ad343d8d10cba8c432d9171363d6abbe0edc6a192877f206faa0b5",
+        "privacy_and_transfer": "30a87965b54659174ac8f217fa56b8e175bf5155681053ec4e97f965c14df08d",
         "mcp_metadata": "54abbdd984b44ad6858bb03190b16e593eaace4afa2f0185b73a4a054fb9f940"
       }
     },

@@ -19,6 +19,7 @@ import { createStaticAuditWorkerClient } from "../lib/static-audit-worker-client
 import { STATIC_AUDIT_OPERATION } from "../lib/static-audit-worker-protocol.js";
 import { sha256FileHex } from "../lib/hash.js";
 import { ANALYZER_SEMANTIC_VERSION } from "../lib/app-config.js";
+import { createChatGptUsage, mountUsageControls } from "../lib/chatgpt-usage.js";
 
 const FULL_FILE_LIMIT = 128 * 1024 * 1024;
 const RANGE_CHUNK_BYTES = 4 * 1024 * 1024;
@@ -34,6 +35,8 @@ const VISUALIZATION_VIEW_LABELS = Object.freeze({
   "observed-runtime": "V5 Observed runtime overlay",
 });
 const root = document.getElementById("deepbom-chatgpt-root");
+const usage = createChatGptUsage({ endpoint: new URL("/", import.meta.url) });
+let usageFormat = "unknown";
 const workerModuleUrl = new URL("./static-audit-worker.js", import.meta.url);
 workerModuleUrl.search = new URL(import.meta.url).search;
 let sandboxWorkerSource = null;
@@ -75,9 +78,11 @@ function createSandboxWorker() {
 }
 
 renderShell();
+mountUsageControls(root.querySelector(".card"), usage);
 void start().catch((error) => publishFailure(error));
 
 async function start() {
+  usage.track("analysis_started");
   const bridge = await waitForOpenAi();
   observeWidgetHeight(bridge);
   const { openai, input, supplied } = await waitForAuthorizedFile(bridge);
@@ -88,6 +93,7 @@ async function start() {
   const remote = await RemoteArtifactFile.open(file.download_url, file.file_name || "model");
   const prefix = new Uint8Array(await remote.slice(0, Math.min(remote.size, 64 * 1024)).arrayBuffer());
   const format = detectModelFormat(remote.name, prefix);
+  if (SUPPORTED_FORMATS.has(format)) usageFormat = format;
   if (!SUPPORTED_FORMATS.has(format)) {
     throw new Error(`Unsupported or unsafe serialized format: ${format}. Use TFLite, ONNX, GGUF, SafeTensors, Core ML .mlmodel, or ExecuTorch .pte/.ptd.`);
   }
@@ -137,6 +143,7 @@ async function start() {
   setStatus("Returning the bounded result", "Only the evidence summary below is sent to the conversation; model bytes remain outside the DEEPBOM service.");
   const published = await openai.callTool("deepbom_publish_analysis", { result });
   const returned = published?.structuredContent || result;
+  usage.track("analysis_completed", { format: usageFormat });
   const reportDelivery = createReportDelivery(openai, resultFollowUpPrompt(returned));
   renderResult(returned, openai, artifactIrContext.model_ir, artifactIrContext.model_summary, reportDelivery, {
     cyclonedx: () => buildPublicCycloneDx17ArtifactContract(analysisView, {
@@ -478,6 +485,7 @@ function renderResult(result, openai, modelIr = null, modelSummary = null, repor
       note.textContent = "Requesting a new ChatGPT response from the completed, bounded result.";
       try {
         await reportDelivery.send();
+        usage.track("report_requested", { format: usageFormat });
         markReportRequested(reportControl);
       } catch {
         button.disabled = false;
@@ -623,7 +631,7 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
   let uploadedImageIds = [];
   let uploadedDownload = null;
   const preparedDownloads = new Map();
-  const offerDownload = (filename, blob) => {
+  const offerDownload = (filename, blob, exportKind) => {
     const old = preparedDownloads.get(filename);
     if (old) { URL.revokeObjectURL(old.url); old.row.remove(); }
     const url = URL.createObjectURL(blob);
@@ -646,6 +654,7 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
         const uploaded = await openai.uploadFile(new File([blob], filename, { type: blob.type }), { library: false });
         record.fileId = String(uploaded?.fileId || uploaded?.file_id || "");
         if (!record.fileId) throw new Error("ChatGPT did not return a file ID for this export.");
+        usage.track("file_shared", { format: usageFormat, detail: exportKind });
       }
       const response = await openai.getFileDownloadUrl({ fileId: record.fileId });
       const href = String(response?.downloadUrl || response?.download_url || "");
@@ -670,6 +679,7 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
     if (!canSave) row.append(element("p", "detail", "ChatGPT file saving is unavailable in this session. Local download depends on the host's download permissions."));
     downloads.append(row);
     preparedDownloads.set(filename, record);
+    usage.track("export_prepared", { format: usageFormat, detail: exportKind });
     link.click();
     status.textContent = `${filename} prepared. If no local file appears, select Save via ChatGPT.`;
   };
@@ -720,6 +730,7 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
     status.classList.remove("error");
     status.textContent = `${page.view} page ${page.page_number}/${page.page_count} · canonical SVG ${page.sha256.slice(0, 12)}…${conservation}`;
     persistState();
+    usage.track("visualization_rendered", { format: usageFormat, detail: viewSelect.value });
   };
 
   const selectView = () => {
@@ -754,13 +765,14 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
     offerDownload(
       visualizationFilename(result.artifact.filename, page, "svg"),
       new Blob([page.svg], { type: "image/svg+xml;charset=utf-8" }),
+      "svg",
     );
   });
   downloadPng.addEventListener("click", () => runVisualAction(downloadPng, "Rendering PNG…", status, async () => {
     const page = currentPage();
     if (!page) throw new Error("No visualization page is selected.");
     const bytes = await rasterizeMonochromeModelView(page.svg, page.render_model, { dpi: 300 });
-    offerDownload(visualizationFilename(result.artifact.filename, page, "png"), new Blob([bytes], { type: "image/png" }));
+    offerDownload(visualizationFilename(result.artifact.filename, page, "png"), new Blob([bytes], { type: "image/png" }), "png");
     status.textContent = "300-DPI PNG prepared. If no local file appears, select Save via ChatGPT above.";
   }));
   downloadBundle.addEventListener("click", () => runVisualAction(downloadBundle, "Building bundle…", status, async () => {
@@ -768,7 +780,7 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
     if (archive.bundle.manifest.conservation.status !== "conserved") {
       throw new Error("The exhaustive visualization failed its Model IR conservation check.");
     }
-    offerDownload(artifactFilename(result.artifact.filename, "model_views_word_ready.zip"), archive.blob);
+    offerDownload(artifactFilename(result.artifact.filename, "model_views_word_ready.zip"), archive.blob, "word");
     status.textContent = `ZIP prepared: ${archive.bundle.pages.length} A4 pages with SVG, PNG, captions, hashes, and a Word insertion manifest. If no local file appears, select Save via ChatGPT above.`;
   }));
 
@@ -778,7 +790,7 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
   ]) {
     button.addEventListener("click", () => runVisualAction(button, "Preparing JSON…", status, async () => {
       const document = exports[key]();
-      offerDownload(artifactFilename(result.artifact.filename, suffix), new Blob([`${JSON.stringify(document, null, 2)}\n`], { type: "application/json" }));
+      offerDownload(artifactFilename(result.artifact.filename, suffix), new Blob([`${JSON.stringify(document, null, 2)}\n`], { type: "application/json" }), key);
       status.textContent = `${key === "spdx" ? "SPDX 2.3 artifact inventory" : "CycloneDX 1.7 artifact evidence"} prepared. If no local file appears, select Save via ChatGPT above. This shares the generated JSON, not the model file.`;
     }));
   }
@@ -791,6 +803,7 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
     const uploaded = await openai.uploadFile(new File([bytes], filename, { type: "image/png" }), { library: false });
     const fileId = String(uploaded?.fileId || uploaded?.file_id || "");
     if (!fileId) throw new Error("ChatGPT did not return a file ID for the generated visualization.");
+    usage.track("file_shared", { format: usageFormat, detail: "png" });
     uploadedImageIds = [fileId];
     uploadedDownload = { file_id: fileId, filename };
     // Image IDs make an image available to the model, but do not themselves
@@ -944,6 +957,7 @@ function renderError(error) {
 }
 
 async function publishFailure(error) {
+  usage.track("analysis_failed", { format: usageFormat });
   renderError(error);
   const failure = structuredFailure(error);
   try {

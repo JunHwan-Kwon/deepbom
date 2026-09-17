@@ -4,6 +4,28 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.102.0 - 2026-09-17
+
+- Publish the coordinated web, CLI, and MCP update at the maintainer's explicit
+  request. This requested release uses the stable-release interval exception.
+  Prepare Agent contract 1.0.1 for the optional usage/privacy change while
+  retaining evidence contract 1.0.0. Source validation and server deployment
+  do not assert OpenAI approval of this new contract candidate.
+
+- Add optional ChatGPT usage statistics with explicit browser consent, random
+  pseudonymous identifiers, UTC revisit estimates, test exclusion, withdrawal,
+  and deletion. Retain only allowlisted events and remove expired records daily.
+  Keep model files, names, hashes, and conversation text out of usage storage.
+- Add administrator-only 7/30/90-day dashboards, format/export counts, daily MCP
+  operational counts, and aggregate CSV/JSON evidence exports. Distinguish
+  consenting browser estimates from verified people and downloads. Update the
+  privacy notice and review preparation files; keep CLI contracts unchanged.
+- Raise handwritten runtime, verification, and documentation ceilings by 48,
+  32, and 16 KiB respectively for the collector, consent controls, administrator
+  dashboard, SQLite/browser regressions, and usage/review documentation. Add
+  8 KiB to development tooling for the associated checks, build metadata, and
+  measured release qualification records.
+
 - Add an explicit Save via ChatGPT action for prepared exports in hosted
   widget revision 20260916.6. Use the host's file upload, temporary HTTPS
   download URL, and external navigation APIs when iframe downloads are blocked.
