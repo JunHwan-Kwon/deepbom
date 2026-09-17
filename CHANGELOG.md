@@ -4,6 +4,11 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Qualify the Claude MCP App in a simulated cross-origin browser host. Load
+  TFLite's existing self-contained worker bundle through the deployment origin
+  and clear stale results before a new analysis. Keep engine 1.103.0 and the
+  existing tool contract; actual Claude account validation remains required.
+
 ## 1.103.0 - 2026-09-17
 
 - Publish the maintainer-requested channel usage update under the explicit

@@ -10,6 +10,48 @@ This directory contains submission preparation and blank host-test material.
 It is not proof of Anthropic review, approval, directory listing, or operation
 on a named Claude host until a real run has been recorded.
 
+## Connect with a personal Claude account
+
+1. Open Claude, then **Customize > Connectors > Add custom connector**.
+2. Name it **DEEPBOM Artifact Evidence** and enter
+   `https://deepbom.org/mcp/claude`. No DEEPBOM account, API key, or OAuth
+   credentials are required.
+3. Enable this connector in a new conversation and send:
+   **Use DEEPBOM to open the local model analyzer. I will choose an ONNX file
+   in the app. Do not use another parser or execute model code.**
+4. Allow the app to display if Claude asks. Select the file **inside the
+   DEEPBOM app**, then click **Analyze**. A conversation attachment alone does
+   not select a file for this connector.
+5. Wait for **Static evidence ready**, then send:
+   **Summarize the DEEPBOM result. Include the full SHA-256, serialized model
+   structure, quantization evidence, defects, cautions, and evidence gaps.
+   State what static analysis cannot establish.**
+
+The current Claude widget provides analysis and a text model-summary table.
+It does not yet provide the ChatGPT widget's diagram/export controls or
+consented usage statistics. Use the website or local CLI for diagram,
+CycloneDX, and SPDX exports; do not advertise those as Claude widget buttons.
+
+Run `npm run check:claude-widget` for the simulated cross-origin MCP App test.
+It exercises all four tools, ONNX and TFLite, identity checks, context delivery,
+missing selection, and unsafe-format rejection. This is a browser regression
+test, **not** evidence that a real Claude account or every host passed.
+
+## Public directory submission
+
+Personal custom-connector testing and public directory submission are separate.
+As checked on 2026-09-17, remote directory submissions require a Team or
+Enterprise organization and an owner or delegated submission role. A personal
+Free/Pro/Max account can still test a custom connector. Desktop MCPB submissions
+have a separate path; see `../claude-app/README.md`.
+
+`PORTAL_VALUES.md` contains draft listing copy and a real-host test checklist.
+It is not a portal-import file. Do not mark host tests complete or submit
+screenshots until those observations have been captured in Claude itself.
+
+Sources: [custom-connector testing](https://claude.com/docs/connectors/building/testing)
+and [directory submission](https://claude.com/docs/connectors/building/submission).
+
 ## Required host validation
 
 1. Add the endpoint as a private custom connector in Claude.ai.

@@ -177,6 +177,7 @@ docs/chatgpt-app/submission-profile.json
 docs/chatgpt-app/usage-review-change.json
 docs/claude-app/README.md
 docs/claude-app/submission-profile.json
+docs/claude-remote/PORTAL_VALUES.md
 docs/claude-remote/README.md
 docs/claude-remote/submission-profile.json
 docs/native-runtime-capture.md
@@ -328,6 +329,7 @@ scripts/check-chatgpt-widget.mjs
 scripts/check-ci-deploy-contract.mjs
 scripts/check-claude-app-metadata.mjs
 scripts/check-claude-remote-mcp.mjs
+scripts/check-claude-widget.mjs
 scripts/check-cli-automation.mjs
 scripts/check-cli-graph-export.mjs
 scripts/check-cli-model-ir-visualization.mjs

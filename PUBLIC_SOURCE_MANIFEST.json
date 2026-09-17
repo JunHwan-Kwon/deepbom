@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "4e3fcd273b0df26d8e0294c510da2ba008d4a4d9",
+  "source_commit": "c0f0b06d416fd1c2557f1e40f5fc2ab72ca2bd4a",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 1167,
+  "file_count": 1169,
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -62,8 +62,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 61967,
-      "sha256": "90a550f356b69cf78e4cac9d769575c6f5b22b60ecaf5eeada9604825a79b07f"
+      "byte_length": 62277,
+      "sha256": "04a3aaad6652724c04d691e0bab99621a24355967015fc059b7bacd21bd5377e"
     },
     {
       "path": "CITATION.cff",
@@ -327,8 +327,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 43283,
-      "sha256": "577bdad3ea85652c61fa57f92ffddbd8734eda5fcf68f0a48f664d8752860b74"
+      "byte_length": 43351,
+      "sha256": "e103f28a895a86a99be7429619cfd4b11d17015d424021b5a1ea5b7ddf491d3f"
     },
     {
       "path": "corpus/README.md",
@@ -906,9 +906,14 @@
       "sha256": "e59a029dafd9d3f97cefc486e0474de43fa0513c37144f6126c4e8b0cba714b1"
     },
     {
+      "path": "docs/claude-remote/PORTAL_VALUES.md",
+      "byte_length": 5027,
+      "sha256": "5865dc22ae9eb86272f173f87c3c8e5cb5933e954dad3434ca40dd2e63714b09"
+    },
+    {
       "path": "docs/claude-remote/README.md",
-      "byte_length": 1939,
-      "sha256": "c1dd78295948bc0d0e9ebcbeae3830bebda99824c86794ddf75394950a236918"
+      "byte_length": 4264,
+      "sha256": "388e6f2f82f01648f3878cf1fb6dc2fe296dc871d691b76d99504bb2e7b6d7da"
     },
     {
       "path": "docs/claude-remote/submission-profile.json",
@@ -1102,8 +1107,8 @@
     },
     {
       "path": "package.json",
-      "byte_length": 26495,
-      "sha256": "491b4fa7d9709e0b0d47bd16c21f67f94511e44ce5b775a82fed282880626038"
+      "byte_length": 26562,
+      "sha256": "aab4f81a2cb3c995af9f57dd29efda3db5a923c0d414461653440fe43b1dac0c"
     },
     {
       "path": "pkg/LICENSE",
@@ -1532,8 +1537,8 @@
     },
     {
       "path": "scripts/check-all.mjs",
-      "byte_length": 12650,
-      "sha256": "14531453fa13ade575372ef4d82518394f1c3d002e506d81710a67089183f41a"
+      "byte_length": 12687,
+      "sha256": "a2738ee5063ca3d604007d5d3fd7f75b3326b9b3325e59a0d6242bf46a53994e"
     },
     {
       "path": "scripts/check-analysis-invariants.mjs",
@@ -1659,6 +1664,11 @@
       "path": "scripts/check-claude-remote-mcp.mjs",
       "byte_length": 11536,
       "sha256": "276af8e385fc0eeaab8f4155930d58995bdedd769c29837566b29acf02059ab8"
+    },
+    {
+      "path": "scripts/check-claude-widget.mjs",
+      "byte_length": 9211,
+      "sha256": "b49097639a4091d36dcd99cedc1aa9ffb5654837eb8960edfda18d6d179a3940"
     },
     {
       "path": "scripts/check-cli-automation.mjs",
@@ -3742,13 +3752,13 @@
     },
     {
       "path": "web/claude/deepbom-widget.js",
-      "byte_length": 18281,
-      "sha256": "ed801071fde921ef7af805eb29eb931f10015f6e8c66164843e062c979cf51a5"
+      "byte_length": 19893,
+      "sha256": "2b357f2cf9dc116ab7fa4293cd716f7418af1414a0015eac8519b3a7f2ae032f"
     },
     {
       "path": "web/claude/index.html",
-      "byte_length": 5226,
-      "sha256": "46c47aa2dd7f21faaabaf61899cc12f8adc77639cfee68fcec4cd2f72de5ea6e"
+      "byte_length": 5728,
+      "sha256": "7be118c3f14d45ecf7593c023e19c9455e2ded81225f7cac132d5bcffeb6cbe7"
     },
     {
       "path": "web/device-workspace.css",
@@ -4088,7 +4098,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 88305,
-      "sha256": "ddf3d9ae446ed090390cd35bf3ba92206efbf6cae2f3e95c48d15049af2a272d"
+      "sha256": "de26b423d7092cb1caeb21542790054a244e2dd3e23a1c746319e46abe1e9290"
     },
     {
       "path": "web/lib/bundle.js",

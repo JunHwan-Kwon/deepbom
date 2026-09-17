@@ -63,6 +63,7 @@ const CHECKS = [
   "scripts/check-host-agent-evaluation.mjs",
   "scripts/check-claude-app-metadata.mjs",
   "scripts/check-claude-remote-mcp.mjs",
+  "scripts/check-claude-widget.mjs",
   "scripts/check-agent-native.mjs",
   "scripts/check-agent-evaluation.mjs",
   "scripts/check-public-product-boundary.mjs",

@@ -28,12 +28,42 @@ const app = new McpAppClient(
 let analysisDepth = "structure";
 let analyzing = false;
 
+// Reuse the self-contained worker bundle served to sandboxed MCP Apps.
+// location.origin belongs to the host sandbox, not to the DEEPBOM deployment.
+const workerModuleUrl = new URL("../chatgpt/static-audit-worker.js", import.meta.url);
+workerModuleUrl.search = new URL(import.meta.url).search;
+let sandboxWorkerSource = null;
 const staticAuditWorkerClient = createStaticAuditWorkerClient({
-  createWorker: () => new Worker(
-    new URL("/web/workers/static-audit-worker.js", location.origin),
-    { type: "module", name: "deepbom-claude-static-audit" },
-  ),
+  createWorker: () => {
+    if (sandboxWorkerSource === null) throw new Error("DEEPBOM analyzer is not loaded.");
+    const url = URL.createObjectURL(new Blob([
+      `globalThis.__deepbomWorkerModuleUrl = ${JSON.stringify(workerModuleUrl.href)};\n`,
+      sandboxWorkerSource,
+    ], { type: "text/javascript" }));
+    const release = () => URL.revokeObjectURL(url);
+    try {
+      const worker = new Worker(url, { name: "deepbom-claude-static-audit" });
+      worker.addEventListener("message", release, { once: true });
+      worker.addEventListener("error", release, { once: true });
+      window.addEventListener("pagehide", release, { once: true });
+      return worker;
+    } catch (error) {
+      release();
+      throw error;
+    }
+  },
 });
+
+async function prepareSandboxWorker() {
+  if (sandboxWorkerSource !== null) return;
+  setStatus("Loading isolated TFLite analyzer", "Downloading the DEEPBOM analyzer into this browser sandbox.");
+  const response = await fetch(workerModuleUrl, { credentials: "omit", signal: AbortSignal.timeout(30_000) });
+  if (!response.ok) throw new Error(`DEEPBOM analyzer download failed (HTTP ${response.status}).`);
+  if (!/javascript/i.test(response.headers.get("content-type") || "")) {
+    throw new Error("DEEPBOM analyzer download returned an unexpected content type.");
+  }
+  sandboxWorkerSource = await response.text();
+}
 
 app.ontoolinput = ({ arguments: args }) => {
   analysisDepth = args?.analysis_depth === "payload_integrity" ? "payload_integrity" : "structure";
@@ -67,6 +97,7 @@ root.querySelector("#analyze").addEventListener("click", () => {
 async function analyzeSelectedFile(file) {
   analyzing = true;
   root.querySelector("#analyze").disabled = true;
+  root.querySelector("#result").replaceChildren();
   try {
     const safeName = String(file.name || "model").split(/[\\/]/).pop().slice(0, 512) || "model";
     const prefix = new Uint8Array(await file.slice(0, Math.min(file.size, 64 * 1024)).arrayBuffer());
@@ -147,6 +178,7 @@ async function analyzeArtifact(file, name, format, depth) {
   if (format === "onnx") return analyzeOnnxModel(bytes, name);
   if (format === "executorch") return analyzeExecuTorchModel(bytes, name);
   if (format === "tflite") {
+    await prepareSandboxWorker();
     return staticAuditWorkerClient.run(STATIC_AUDIT_OPERATION.TFLITE_ANALYZE, {
       bytes,
       filename: name,

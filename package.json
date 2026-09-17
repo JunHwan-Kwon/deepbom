@@ -146,6 +146,7 @@
     "check:host-agent-evaluation": "node scripts/check-host-agent-evaluation.mjs",
     "check:claude-app-metadata": "node scripts/check-claude-app-metadata.mjs",
     "check:claude-remote-mcp": "node scripts/check-claude-remote-mcp.mjs",
+    "check:claude-widget": "node scripts/check-claude-widget.mjs",
     "check:mcp-inspector": "node scripts/check-mcp-inspector.mjs",
     "check:mcpb": "node scripts/check-mcpb-bundle.mjs",
     "check:agent-native": "node scripts/check-agent-native.mjs",

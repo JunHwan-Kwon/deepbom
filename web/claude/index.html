@@ -53,11 +53,13 @@
     <section class="brief-section">
       <h2>Remote MCP App for host testing</h2>
       <ol>
-        <li>Add <code>https://deepbom.org/mcp/claude</code> as a custom remote connector in a supported Claude host.</li>
+        <li>In Claude, open <strong>Customize &gt; Connectors &gt; Add custom connector</strong>. Enter <code>https://deepbom.org/mcp/claude</code>. No DEEPBOM account or API key is required.</li>
         <li>Ask to inspect a model artifact. The app opens a file picker; Claude attachments are not read automatically.</li>
         <li>Choose one supported file and select Analyze. The browser sandbox returns a bounded, hash-bound static result.</li>
       </ol>
       <p>The endpoint is prepared for private host validation. This page does not claim Anthropic review, directory approval, or verified behavior on every Claude surface.</p>
+      <p>Try: <q>Use DEEPBOM to open the local model analyzer. I will choose an ONNX file in the app.</q> After <strong>Static evidence ready</strong>, ask Claude to summarize the result.</p>
+      <p>This widget currently provides static analysis and a model-summary table. Diagram and CycloneDX/SPDX export controls are available in the website analyzer or local tools. Claude browser usage statistics are not collected.</p>
     </section>
 
     <section class="brief-section">
