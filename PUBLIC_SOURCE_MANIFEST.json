@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "a37438db862f6a3463ad2ba311367db01c859fc1",
+  "source_commit": "65b8309c97126a6602b05b684ceaad312b59dcf1",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1165,
@@ -62,8 +62,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 60805,
-      "sha256": "050d14145d98a4a4beb722842e89fa89e4087400b069c53bd7513153b90fbf6b"
+      "byte_length": 60960,
+      "sha256": "1a0399c519360824d110efd3b932a7fa9cf61090748dd04b5464a1099da0a5a5"
     },
     {
       "path": "CITATION.cff",
@@ -3687,13 +3687,13 @@
     },
     {
       "path": "web/admin.html",
-      "byte_length": 5062,
-      "sha256": "c82f73173c80f01d07aa3861a1c57d5e6813d4f039e6081ffb82afc9024038c0"
+      "byte_length": 5194,
+      "sha256": "fb115a1057e9841bf69a5c035fc44abce3bb430dd77feaf1c0be87601b13d7de"
     },
     {
       "path": "web/admin.js",
-      "byte_length": 19582,
-      "sha256": "0d88e333c053aa0b7a41da6638ad334ae7d3ba0689cdffad3d904c8d9444d260"
+      "byte_length": 19835,
+      "sha256": "a5ba57fed53487be1ac145c4b4bf1c27ed3b735847e7f4f7030f701b75edbc18"
     },
     {
       "path": "web/app-shell.css",
@@ -3887,8 +3887,8 @@
     },
     {
       "path": "web/lib/admin-elements.js",
-      "byte_length": 1120,
-      "sha256": "9f00dc7a18a5e18778d1f50f8faf6b8017a850669b79238fc18606c1319928fd"
+      "byte_length": 1172,
+      "sha256": "7d4ec292f2a1b15800d40e8192583a5090f1a8bde0c3ca8513fbd8588423263a"
     },
     {
       "path": "web/lib/admin-usage.js",
@@ -4083,7 +4083,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 88150,
-      "sha256": "a2b27e94394cc8e090ca982f80ff611a39b778d0e29fceee2f05b25a37a324a3"
+      "sha256": "f66d27f1514f3fb19d1640b61cd207334c96b52031e8b362bf29f8d654341547"
     },
     {
       "path": "web/lib/bundle.js",
@@ -5803,7 +5803,7 @@
     {
       "path": "web/sw.js",
       "byte_length": 16162,
-      "sha256": "0310a4700278e3a0641bd2ef80ff6c28a53e31f18dca1599b554877aa47caf56"
+      "sha256": "341c5973c713807ea719a63e4f8776f2bbd0bfbd05961d8b5e5e5d5a0775a943"
     },
     {
       "path": "web/test.html",

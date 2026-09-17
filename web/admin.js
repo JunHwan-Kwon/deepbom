@@ -7,6 +7,7 @@ import { createAdminUsage } from "./lib/admin-usage.js";
 const {
   adminStatus,
   adminIdentity,
+  adminSignIn,
   adminRefreshAll,
   adminMetrics,
   testLinkCreate,
@@ -47,15 +48,17 @@ async function initAdmin() {
   try {
     const session = await apiFetch("/api/auth/me");
     currentUser = session.user;
+    adminSignIn.hidden = currentUser?.role === "admin";
+    adminSignIn.textContent = currentUser ? "Switch Google account" : "Continue with Google";
     if (!currentUser) {
       setAdminStatus("Sign in required", "error");
-      adminIdentity.textContent = "Open the workbench and sign in with an admin account.";
+      adminIdentity.textContent = "Select Continue with Google above to sign in with your administrator account.";
       renderBlocked("Sign in is required to view the admin console.");
       return;
     }
     if (currentUser.role !== "admin") {
       setAdminStatus("Admin required", "error");
-      adminIdentity.textContent = `${currentUser.email} is signed in, but this page requires admin access.`;
+      adminIdentity.textContent = `${currentUser.email} is signed in, but this page requires admin access. Select Switch Google account to use your administrator account.`;
       renderBlocked("Admin access is required.");
       return;
     }

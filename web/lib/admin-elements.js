@@ -2,6 +2,7 @@ export function bindAdminElements(doc = document) {
   return {
     adminStatus: doc.getElementById("adminStatus"),
     adminIdentity: doc.getElementById("adminIdentity"),
+    adminSignIn: doc.getElementById("adminSignIn"),
     adminRefreshAll: doc.getElementById("adminRefreshAll"),
     adminMetrics: doc.getElementById("adminMetrics"),
     testLinkCreate: doc.getElementById("testLinkCreate"),

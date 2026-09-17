@@ -4,6 +4,9 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Add Google sign-in directly to the administrator console, returning to the
+  console after authentication and offering account switching to non-admins.
+
 ## 1.102.0 - 2026-09-17
 
 - Publish the coordinated web, CLI, and MCP update at the maintainer's explicit
