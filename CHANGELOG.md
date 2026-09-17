@@ -16,9 +16,9 @@ All notable archival releases of DEEPBOM are documented here.
 - Separate cached public npm download trends from opt-in analysis evidence.
   Preserve missing dates and provider outages rather than displaying zeros.
   CLI/local MCP execution remains offline with no new telemetry.
-- Raise runtime/verification budgets by 32 KiB, docs by 8 KiB and the app entry
-  budget by 2 KiB for channel summaries, bounded registry reads, browser controls,
-  and collector/dashboard/real-workbench regressions.
+- Raise runtime/verification budgets by 32 KiB, docs/development tooling by
+  8 KiB and the app entry by 2 KiB for channel summaries, bounded registry reads,
+  browser controls, regressions and recorded release qualification.
 
 - Add Google sign-in directly to the administrator console, returning to the
   console after authentication and offering account switching to non-admins.
