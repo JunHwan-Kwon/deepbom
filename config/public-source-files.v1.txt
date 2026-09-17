@@ -551,6 +551,7 @@ scripts/check-usage-dashboard.mjs
 scripts/check-usage-metrics.mjs
 scripts/check-wasm-hardening.mjs
 scripts/check-web-imports.mjs
+scripts/check-web-usage.mjs
 scripts/check-worker-config.mjs
 scripts/check-workflow-contract.mjs
 scripts/check-xnnpack-delegate-rulepack.mjs
@@ -1123,6 +1124,7 @@ web/lib/tflite-worker-rpc.js
 web/lib/theme-ui.js
 web/lib/transformer-architecture-projection.js
 web/lib/visual-export.js
+web/lib/web-usage.js
 web/lib/weight-hist.js
 web/lib/workflow-controller.js
 web/lib/workflow-copy.js

@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.host_agent_evaluation_cases.v1",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "agent_contract": {
     "id": "deepbom.agent_contract.v1",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "compatibility": "backward_compatible_within_v1"
   },
   "evidence_contract": {

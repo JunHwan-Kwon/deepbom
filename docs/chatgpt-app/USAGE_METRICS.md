@@ -1,47 +1,81 @@
-# ChatGPT usage evidence
+# Usage evidence by channel
 
-Administrators use `https://deepbom.org/web/admin.html` → **ChatGPT usage
-evidence**. The existing administrator login protects the dashboard and
-`GET /api/admin/usage?days=30&cohort=public`. No login is added for plugin users.
+Administrators use `https://deepbom.org/web/admin.html` → **Usage by channel**.
+The existing administrator login protects the dashboard,
+`GET /api/admin/usage?days=30&cohort=public&channel=all`, and
+`GET /api/admin/usage/downloads?days=30`. No login is added for analyzer users.
 
-Choose 7, 30, or 90 days (UTC), public use or declared tests, then export a daily
-CSV or a JSON evidence snapshot. JSON includes the measurement definitions and
-limitations. The dashboard contains no browser keys, session IDs, model names,
-model hashes, email addresses, or IP addresses. Historical use before deployment
-cannot be reconstructed. This collector covers the ChatGPT widget and `/mcp`,
-not CLI, local MCP, `/mcp/claude`, or the separate website analyzer.
+Choose 7, 30, or 90 UTC days, a channel, and public use or declared tests.
+Daily completed-analysis and weekly active/returning-browser charts use the
+same filters. CSV preserves channel and coverage; JSON also preserves metric
+definitions and the separately sourced npm snapshot. No browser keys, session
+IDs, model names/hashes, email addresses, or IP addresses appear in exports.
 
-## What the numbers mean
+## Channel coverage
+
+| Channel | Available measurement |
+| --- | --- |
+| ChatGPT | Consented widget analysis runs, feature use and browser estimates. |
+| Web | Consented website analysis runs, feature use and separate browser estimates. |
+| CLI | Execution is **not measured**. npm downloads are shown separately as distribution counts. |
+| Local MCP | Execution is **not measured**. The npm package is shared with the CLI. |
+| Claude | **Not measured** until instrumentation with its own stated consent scope is added. |
+
+Channel attribution is declared by the client; it is not authenticated proof of
+which host sent a request. Legacy records belong to the ChatGPT widget. Each
+measured channel has a recorded collection start. Earlier dates and unsupported
+channels show **Not measured**, never an invented zero. The first UTC date and
+today can be partial. Zero means no reports received, not no actual use.
+Combined-channel views sum analysis events but never display a combined unique
+browser or people count. A person may use more than one channel or device.
+
+## Metric definitions
 
 | Metric | Definition |
 | --- | --- |
-| MCP requests, errors, reports | Daily service counts for all callers, including bots, tests and retries; not unique analyses or people. |
-| Analysis started/completed/failed | Opt-in widget runs; the first terminal outcome wins. A completion means the widget received a published result. |
-| Terminal success rate | Completed / (completed + failed). Runs with no terminal event are excluded; it is not an overall completion rate. |
-| Format share | Completed opt-in reports by ONNX, TFLite, GGUF, SafeTensors, Core ML, or ExecuTorch. |
-| Visualization | Runs where a view was rendered, including the initial automatic view. Not proof a person viewed it. |
-| Prepared exports | Once per export type per widget run, for SVG, PNG, Word ZIP, CycloneDX or SPDX. Not confirmed file downloads. |
-| File handoffs | Runs where ChatGPT accepted a generated-file upload of the given type. Not confirmed downloads or rendered replies. |
-| Estimated active browsers | Distinct consenting persistent browser keys with an analysis start in the selected period. Not verified people/accounts. |
-| Returning browsers | Active in the selected period and observed on at least two UTC dates in the retained 90-day history. Same-day reloads alone do not qualify. |
+| Analysis started/completed/failed | One analysis run, deduplicated by event/detail. First terminal outcome wins. ChatGPT completion means its bounded result was published; Web completion means the workbench finished rendering its analysis. |
+| Unfinished | Started in the selected period with no terminal report received; may be running, abandoned or interrupted. It is not an automatic failure. |
+| Terminal success rate | Completed / (completed + failed). Excludes unfinished runs; not an overall completion rate. |
+| Format share | Completed opt-in analyses by supported artifact format, within the selected channel/cohort. |
+| Visualization | Runs that rendered the measured view. Initial automatic views count; not proof a person viewed it. |
+| Prepared exports | Once per export type per run after preparation succeeds; not confirmed downloads. ChatGPT supports SVG, PNG, Word ZIP, CycloneDX and SPDX. Web measures SVG, PNG ZIP, CycloneDX, Model Views ZIP and Evidence Package ZIP. Other web reports are outside this counter. |
+| File handoffs | Runs where ChatGPT accepted a generated-file upload. Not confirmed downloads or rendered replies. |
+| Estimated active browsers | Distinct consenting persistent browser keys with an analysis start in the period, within one channel. Not verified people/accounts. |
+| Returning browsers | Active in the period and observed on at least two UTC dates in retained 90-day history. Same-day reruns alone do not qualify. |
+| Weekly browsers | Distinct keys active in the Monday-based UTC week, within the selected dates. Returning means a visit has an earlier observed date; edge weeks can be partial. |
+| MCP service counters | `/mcp` requests/errors/reports from all callers, including tests, bots and retries. Independent of browser-channel/cohort filters. Not unique analyses or people. |
 
-The event/detail key is unique per widget run, so retries do not inflate it.
-Reloads are new runs. Storage partitioning, multiple devices, cleared storage,
-opt-outs, and forged clients affect estimates. With unavailable browser storage,
-runs can contribute consented event counts but not unique/revisit counts.
-These estimates cannot be extrapolated into total user counts without additional
-evidence. Public posts should say, for example, “N consenting browser instances
-and M completed opt-in analysis reports during [UTC dates].”
+Explicit reruns create new runs; delivery retries do not. A stale export that
+finishes after a new web analysis starts is excluded instead of being attributed
+to the new run. Storage partitioning, multiple devices, cleared storage, opt-outs
+and forged clients affect estimates. Runs without persistent storage contribute
+consented events but not unique/revisit counts. Do not extrapolate to total users.
 
-Mark your browser **This browser is for testing** before demo/reviewer tests.
-It moves this key's retained usage to the test cohort. Unmarked test/reviewer
-runs cannot be recognized automatically. Service counters always include tests.
+Mark **This browser is for testing** before demos and tests. This reclassifies the
+key's retained use. Unmarked tests cannot be detected automatically. Service and
+npm counters always include tests. An appropriate public claim is “N consenting
+browser instances and M completed opt-in analyses on Web during [UTC dates]”,
+with ChatGPT reported separately and the collection scope disclosed.
+
+## npm distribution counts
+
+The administrator dashboard reads the fixed public npm downloads API for
+`deepbom`. It requests the last 7/30/90 complete UTC days, excluding today, and
+caches the response for one hour. The source URL, retrieval time, missing-day
+count and daily values are included in JSON. Missing days stay unknown; provider
+failure shows unavailable while the usage dashboard remains usable.
+
+Downloads are neither unique installations, CLI executions nor people. They
+include automated/test traffic and local MCP package downloads. No test-cohort
+filter applies. PyPI, Cargo and GitHub are not included. Only the package name
+and date interval go to npm; no model, browser or account identifiers do. CLI and
+local MCP contain no new telemetry.
 
 ## Consent and retention
 
-Sharing is off by default. Opt-in covers the current widget run and subsequent
+Sharing is off by default. Opt-in covers the current analysis run and subsequent
 visits while the 90-day preference remains valid. No key is created or usage
-request sent before opt-in. A random 32-byte key is stored locally; the database
+request sent before opt-in. Consent and keys are separate for ChatGPT and Web. A random 32-byte key is stored locally; the database
 stores a domain-separated HMAC using `SESSION_SECRET`. No fingerprinting or
 host account ID is used. Tokens expire after 24 hours. Request bodies are bounded
 to 8 KiB and only documented dimensions are accepted.
@@ -63,40 +97,30 @@ must not be restored into active collection without reapplying deletion controls
 
 ## Rollout and rollback
 
-The maintainer requested coordinated deployment of engine 1.102.0 and the
-consented usage feature. Agent contract 1.0.1 is the deliberate privacy/transfer
-change candidate prepared under
-[`AGENT_CONTRACT_VERSIONING.md`](../AGENT_CONTRACT_VERSIONING.md). Its baseline
-records `candidate_unsubmitted`, not platform approval. The previous contract
-remains in Git history. Server deployment and registry publication do not update
-the account-owned OpenAI submission or establish its approval.
-The exact detected change and the completed verification are recorded in
-[`usage-review-change.json`](usage-review-change.json). The portal import draft
-is the repository-root `chatgpt-app-submission.json`; no automatic portal upload
-or compliance attestation has been performed.
+Engine **1.103.0** includes this channel extension. Agent contract **1.0.2** is
+the explicit updated privacy candidate under
+[`AGENT_CONTRACT_VERSIONING.md`](../AGENT_CONTRACT_VERSIONING.md). The baseline
+records `candidate_unsubmitted`, not platform approval. Deployment and registry
+publication do not update or approve the account-owned OpenAI submission.
+Historical and current changes are recorded in
+[`usage-review-change.json`](usage-review-change.json). The root
+`chatgpt-app-submission.json` remains a portal import draft.
 
-1. Run `npm run check:usage-metrics`, `npm run check:chatgpt-widget`,
-   `npm run check:chatgpt-app-metadata`, and `npm run check:worker-config` using Node 24.
-2. Before deploying, reconcile the updated privacy/data-flow description with
-   any pending plugin review. The repository files do not update the portal.
-3. For manual database maintenance, inspect pending migrations with
-   `npx wrangler@4.131.1 d1 migrations list deepbom_auth --remote`.
-   Apply the intended migration before enabling collection:
-   `npx wrangler@4.131.1 d1 migrations apply deepbom_auth --remote`.
-   This must include `0012_usage_metrics.sql`; review any earlier pending work.
-4. Deploy the Worker and rebuilt web assets together through the existing
-   Cloudflare deployment workflow. It executes the idempotent `0012` SQL file
-   before activation, without applying unrelated pending migrations.
-   `USAGE_METRICS_ENABLED=true`, `DB`,
-   `SESSION_SECRET`, the rate-limit binding, and the cleanup cron are required.
-5. In a new ChatGPT widget, verify that sharing starts off, opt into declared
-   test use, analyze once, export once, and inspect the test-cohort dashboard.
-   Verify that **Delete my usage** removes those events. Check anonymous admin
-   requests return 401 and ordinary members receive 403.
+1. Run `npm run check:usage-metrics`, `npm run check:usage-dashboard`,
+   `npm run check:web-usage`, `npm run check:chatgpt-widget`, and deployment checks.
+2. Reconcile the privacy candidate with the pending plugin review in the portal.
+   Repository files do not update that account-owned review automatically.
+3. Deploy through the existing Cloudflare workflow. It executes idempotent
+   `0012_usage_metrics.sql` and `0013_usage_channels.sql` before activating the
+   Worker and assets, without applying unrelated pending migrations.
+   `USAGE_METRICS_ENABLED=true`, `DB`, `SESSION_SECRET`, the rate-limit binding,
+   and the cleanup cron are required. Existing sessions remain readable.
+4. In ChatGPT and Web separately, verify default-off sharing, mark test use,
+   opt in, analyze/export, and verify the test dashboard and **Delete my usage**.
+   Anonymous administrator requests must return 401; ordinary members get 403.
 
-Set `USAGE_METRICS_ENABLED=false` to stop collection while retaining deletion
-access, historical administrator reads, and scheduled cleanup. Analysis and
-exports continue when collection is disabled or the database is unavailable.
-Do not delete tables to roll back. Existing artifacts and account tables are
-unchanged. No paid analytics vendor or OpenAI inference API is added; requests,
-D1 reads/writes, and retained data consume the existing Cloudflare quotas.
+Set `USAGE_METRICS_ENABLED=false` to stop collection while retaining deletion,
+historical administrator reads, and cleanup. Analysis/exports continue through
+collector outages. Do not delete tables to roll back. Existing account tables
+are unchanged. No paid analytics vendor or OpenAI inference API is added;
+requests, D1 work and storage consume existing Cloudflare quotas.

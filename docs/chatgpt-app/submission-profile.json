@@ -34,7 +34,7 @@
   "listing_status": "not_submitted_or_approved_by_this_file",
   "agent_contract": {
     "id": "deepbom.agent_contract.v1",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "compatibility": "backward_compatible_within_v1"
   },
   "evidence_contract": {
@@ -72,5 +72,5 @@
       "unknown_and_not_assessable_are_not_coerced_to_absence_or_zero"
     ]
   },
-  "engine_version_at_validation": "1.102.0"
+  "engine_version_at_validation": "1.103.0"
 }

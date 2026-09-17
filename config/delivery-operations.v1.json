@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-17T04:44:45.787273+00:00",
+  "recorded_at": "2026-09-17T07:28:00.585830+00:00",
   "scope": "Public installation channels and private web delivery",
   "observations": [
     {
@@ -2596,6 +2596,85 @@
       ],
       "observed_at": "2026-09-17T04:43:42.608678+00:00",
       "qualification": "Installed npm, local MCP, Python, standalone engine and Cargo retain analysis and visualization parity with Agent contract 1.0.1. This does not assert approval or real-host review of the new optional usage collection."
+    },
+    {
+      "kind": "private_web_preflight_basis",
+      "version": "1.103.0",
+      "source_commit": "0a1b88f802265dfbfdb040e369dbb0c6195951bd",
+      "platform": "linux-x64",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 161.125,
+      "check_count": 87,
+      "conclusion": "success",
+      "observed_at": "2026-09-17T07:26:39.667998+00:00",
+      "conditions": [
+        "bounded_non_browser_gate",
+        "agent_1_0_2_privacy_change_candidate",
+        "model_and_evidence_contract_compatibility",
+        "service_worker_asset_coverage",
+        "public_private_source_boundary"
+      ],
+      "qualification": "87 non-self-referential deployment checks passed; separate channel, legacy-history, consent, deletion, dashboard and real Web/ChatGPT browser checks passed. Follow-up strict channel-input validation is separately verified. No platform approval is inferred.",
+      "source_state": "working_tree_with_widget_revision_assertion_fix"
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.103.0",
+      "source_commit": "0a1b88f802265dfbfdb040e369dbb0c6195951bd",
+      "platform": "linux-x64",
+      "command": "node scripts/build-channel-artifacts.mjs",
+      "elapsed_seconds": 13.01,
+      "conclusion": "success",
+      "conditions": [
+        "single_source_version_materialization",
+        "npm_tarball",
+        "claude_desktop_mcpb_bundle",
+        "single_executable_engine",
+        "pep_639_python_wheel",
+        "cargo_launcher_source",
+        "public_private_source_boundary"
+      ],
+      "observed_at": "2026-09-17T07:23:05.223059+00:00"
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.103.0",
+      "source_commit": "0a1b88f802265dfbfdb040e369dbb0c6195951bd",
+      "platform": "linux-x64",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --platform-smoke",
+      "elapsed_seconds": 48.043,
+      "conclusion": "success",
+      "conditions": [
+        "native_standalone_engine",
+        "installed_python_wheel",
+        "agent_and_evidence_contract_identity_parity",
+        "manifest_bound_self_test_execution",
+        "tflite_wasm_execution_parity",
+        "onnx_execution_parity",
+        "path_with_spaces_execution"
+      ],
+      "observed_at": "2026-09-17T07:24:22.280180+00:00"
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.103.0",
+      "source_commit": "0a1b88f802265dfbfdb040e369dbb0c6195951bd",
+      "platform": "linux-x64",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --release-contract",
+      "elapsed_seconds": 174.311,
+      "conclusion": "success",
+      "conditions": [
+        "installed_npm_supported_release_contract_cases",
+        "installed_npm_and_cargo_model_summary_equivalence",
+        "installed_npm_mcp_tool_call_equivalence",
+        "installed_model_ir_selection_and_visualization_equivalence",
+        "standalone_and_python_tflite_onnx_execution_parity",
+        "verify_diff_explore_npm_parity",
+        "cargo_execution_and_unbound_engine_rejection",
+        "packaged_self_test_and_wasm_tamper_rejection"
+      ],
+      "observed_at": "2026-09-17T07:27:35.669520+00:00",
+      "qualification": "Installed npm, local MCP, Python, standalone engine and Cargo retain analysis and visualization parity with Agent contract 1.0.2. This does not assert approval or real-host review of the new optional usage collection."
     }
   ],
   "budgets": {

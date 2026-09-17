@@ -59,7 +59,7 @@ const read = await rpc("resources/read", { uri: CHATGPT_MCP_CONTRACT.widgetUri }
 assert.equal(read.contents[0].mimeType, "text/html;profile=mcp-app");
 assert.match(read.contents[0].text, /deepbom-widget\.js/);
 assert.equal(CHATGPT_MCP_CONTRACT.widgetUri, "ui://deepbom/analyzer-v2.html");
-assert(read.contents[0].text.includes(`deepbom-widget.js?v=${ANALYZER_SEMANTIC_VERSION}-20260917.1`));
+assert(read.contents[0].text.includes(`deepbom-widget.js?v=${ANALYZER_SEMANTIC_VERSION}-20260917.2`));
 assert.equal(read.contents[0]._meta.ui.domain, "https://deepbom.org");
 assert.ok(read.contents[0]._meta.ui.csp.connectDomains.some((domain) => domain.includes("oaiusercontent")));
 assert.match(read.contents[0]._meta["openai/widgetDescription"], /format-neutral Model IR table/);

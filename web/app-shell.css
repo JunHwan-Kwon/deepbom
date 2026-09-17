@@ -2022,6 +2022,11 @@ body.privacy-locked .layout {
   font-weight: 700;
 }
 
+.web-usage-controls { margin: 12px 0; padding: 12px 16px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.web-usage-controls summary { color: var(--ink); cursor: pointer; font-weight: 600; }
+.web-usage-controls input { width: auto; margin-right: 6px; }
+.web-usage-controls button { margin-top: 10px; }
+
 .admin-shell {
   width: min(1520px, 100%);
   margin: 0 auto;

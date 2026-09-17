@@ -27,6 +27,7 @@ import {
   WORKFLOW_ORDER,
 } from "./lib/app-config.js";
 import { copyTextToClipboard } from "./lib/clipboard.js";
+import { webUsage } from "./lib/web-usage.js";
 import {
   detectAppSurface,
   isMedicalSurface,
@@ -1593,7 +1594,10 @@ runAudit.addEventListener("click", async () => {
   await analyzeFile(pendingModelFile);
 });
 
+webUsage.mount(document.getElementById("webUsageControls"));
+
 const textExportOptions = {
+  observePreparation: webUsage.observeTextExport,
   getFilename: currentArtifactFilename,
   isReady: (artifact) => Boolean(
     current
@@ -1675,6 +1679,7 @@ const exportContractController = createExportContractController({
   getContext: () => ({ analysis: currentAnalysisView(), modelBytes: currentModelBytes, runtimeEvidence: runtimeAssignmentEvidence }),
   getDocuments: buildCurrentDeploymentContractDocuments,
   getPublicDocuments: buildCurrentPublicCycloneDxDocuments,
+  observeExportPreparation: webUsage.observeTextExport,
   getFilename: currentArtifactFilename,
   ensureAllowed: ensureRawExportAllowed,
   ensureHash: ensureModelHash,
@@ -1993,12 +1998,14 @@ function updateProductionInterfaceFinding(comparison) {
 
 downloadVisualPngs.addEventListener("click", async () => {
   if (!current) return;
+  const recordPrepared = webUsage.observeExport("png");
   if (!(await ensureRawExportAllowed("Visual PNGs"))) return;
   await withBusyButton(downloadVisualPngs, "Rendering", async () => {
     try {
       const files = await buildVisualPngFiles();
       const zip = createZipBlob(files);
       downloadBlob(currentArtifactFilename("deepbom_visuals.zip"), zip);
+      recordPrepared();
       setStatus("Visual PNGs downloaded", "ok");
     } catch (error) {
       console.error(error);
@@ -3753,6 +3760,7 @@ function syncFormatWorkflowVisibility(analysis = current) {
 }
 
 async function analyzeFile(file) {
+  webUsage.start(pendingModelInspection?.formatId || detectModelFormat(file.name));
   const auditStarted = performance.now();
   try {
     setStatus("Analyzing");
@@ -3865,6 +3873,7 @@ async function analyzeFile(file) {
     await nextPaint();
     await nextPaint();
     setStatus(scope.completion, "ok");
+    webUsage.complete(current?.format, Boolean(graphMapSvg.querySelector(".graph-node")));
     // Holding the run button in place left the verdict and the evidence panels
     // below the fold, so a completed audit looked like nothing had happened.
     // Move to the first result surface instead.
@@ -3873,6 +3882,7 @@ async function analyzeFile(file) {
       : auditWorkbench;
     auditResultTarget.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (error) {
+    webUsage.fail();
     console.error("[analyzeFile]", error);
     const errorMsg = error?.message || String(error) || "Unknown error";
     runAudit.disabled = !pendingModelFile;
@@ -4699,11 +4709,13 @@ function canonicalGraphSvgText() {
 async function downloadCurrentModelViews() {
   const modelIr = currentArtifactIrContext?.model_ir;
   if (!current || !modelIr || !downloadModelViews) return;
+  const recordPrepared = webUsage.observeExport("model_views");
   await withBusyButton(downloadModelViews, "Rendering", async () => {
     try {
       if (!(await ensureRawExportAllowed("Model views ZIP"))) return;
       const archive = await buildBrowserModelIrVisualizationArchive(modelIr, { orientation: "portrait" });
       downloadBlob(currentArtifactFilename("model_views.zip"), archive.blob);
+      recordPrepared();
       setStatus("Model views downloaded", "ok");
     } catch (error) {
       console.error("[model-ir-visualization]", error);
@@ -4843,6 +4855,7 @@ async function downloadEngineeringBundleZip() {
 
 async function downloadEvidencePackageProfileZip() {
   if (!current || !downloadPublicBundle) return;
+  const recordPrepared = webUsage.observeExport("evidence_package");
   await withBusyButton(downloadPublicBundle, "Preparing", async () => {
     try {
       const binding = reportTargetBinding();
@@ -4875,6 +4888,7 @@ async function downloadEvidencePackageProfileZip() {
       });
       await appendPublicKeySignature(files, `evidence_package_${profile.id}`);
       downloadBlob(currentArtifactFilename(`deepbom_${profile.id}_${evidenceLevel.id}_evidence_package.zip`), createZipBlob(files));
+      recordPrepared();
       setStatus(`${profile.label} / ${evidenceLevel.label} Evidence Package downloaded`, "ok");
     } catch (error) {
       console.error(error);

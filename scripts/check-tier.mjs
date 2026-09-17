@@ -113,6 +113,7 @@ const RELEASE = [
   "scripts/check-chatgpt-mcp.mjs",
   "scripts/check-chatgpt-widget.mjs",
   "scripts/check-usage-dashboard.mjs",
+  "scripts/check-web-usage.mjs",
   "scripts/check-chatgpt-app-metadata.mjs",
   "scripts/check-claude-remote-mcp.mjs",
   "scripts/check-mcp-registry-metadata.mjs",

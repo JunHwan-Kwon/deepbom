@@ -4,6 +4,22 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+## 1.103.0 - 2026-09-17
+
+- Publish the maintainer-requested channel usage update under the explicit
+  stable-release interval exception. Agent contract 1.0.2 is a review candidate
+  for the expanded website/privacy notice; evidence contract 1.0.0 is unchanged.
+- Add consented Web analysis usage alongside ChatGPT, channel/date filters,
+  weekly browser estimates, unfinished-run counts, and explicit unmeasured
+  coverage for Claude, CLI and local MCP. Keep legacy ChatGPT history and
+  channel-specific browser identities; never sum identities across channels.
+- Separate cached public npm download trends from opt-in analysis evidence.
+  Preserve missing dates and provider outages rather than displaying zeros.
+  CLI/local MCP execution remains offline with no new telemetry.
+- Raise runtime/verification budgets by 32 KiB, docs by 8 KiB and the app entry
+  budget by 2 KiB for channel summaries, bounded registry reads, browser controls,
+  and collector/dashboard/real-workbench regressions.
+
 - Add Google sign-in directly to the administrator console, returning to the
   console after authentication and offering account switching to non-admins.
 

@@ -1,6 +1,6 @@
 export const AGENT_CONTRACT = deepFreeze({
   id: "deepbom.agent_contract.v1",
-  version: "1.0.1",
+  version: "1.0.2",
   compatibility: "backward_compatible_within_v1",
 });
 

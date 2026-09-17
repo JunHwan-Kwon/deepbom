@@ -16,11 +16,14 @@ export async function downloadTextArtifact({
   isReady = () => true,
   ensureAllowed = async () => true,
   ensureHash = async () => {},
+  observePreparation = () => () => {},
 }) {
   if (!artifact || !buildText || !getFilename || !isReady(artifact)) return false;
+  const onPrepared = observePreparation();
   if (!(await ensureAllowed(artifact))) return false;
   if (artifact.ensureHash) await ensureHash();
   downloadText(getFilename(artifact.suffix), await buildText(), artifact.type);
+  onPrepared(artifact);
   return true;
 }
 

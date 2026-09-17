@@ -1,6 +1,6 @@
 # ChatGPT plugin portal values
 
-These values describe the `deepbom.agent_contract.v1` version `1.0.1` surface
+These values describe the `deepbom.agent_contract.v1` version `1.0.2` surface
 served from `https://deepbom.org/mcp`. They are submission preparation, not an
 approval or publication record.
 
@@ -9,7 +9,7 @@ approval or publication record.
 - Directory icon: `assets/deepbom-directory-icon-512.png`
 - Composer icon: `assets/deepbom-composer-icon-256.png` (256 x 256 PNG, no more than 10 KB)
 - Name: `DEEPBOM Artifact Evidence`
-- Version: `1.0.1` (new privacy/usage-statistics candidate; not an approval claim)
+- Version: `1.0.2` (new privacy/usage-statistics candidate; not an approval claim)
 - Subtitle: `Inspect AI model artifacts`
 - Category: `Developer Tools`
 - Website: `https://deepbom.org/`

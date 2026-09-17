@@ -28,6 +28,7 @@ export function createExportContractController({
   onStatus,
   onProductionContractChange,
   onProductionComparison,
+  observeExportPreparation,
 }) {
   let busy = false;
   let productionContractSource = null;
@@ -76,6 +77,7 @@ export function createExportContractController({
           isReady: () => ready(),
           ensureAllowed: publicExport ? async () => true : () => ensureAllowed(artifact.permissionLabel),
           ensureHash,
+          observePreparation: observeExportPreparation,
         });
       } catch (error) {
         console.error("[export-contract]", error);

@@ -82,5 +82,22 @@
   ],
   "boundary": "This record preserves the detected change from the preceding baseline. It does not assert OpenAI approval or real adoption counts. Agent 1.0.1 is an explicit contract-change candidate; engine publication is separately verified.",
   "release_version": "1.102.0",
-  "proposed_agent_contract_version": "1.0.1"
+  "proposed_agent_contract_version": "1.0.1",
+  "channel_update": {
+    "release_version": "1.103.0",
+    "proposed_agent_contract_version": "1.0.2",
+    "status": "deployment_authorized_platform_review_candidate_unsubmitted",
+    "changes": [
+      "Separate default-off Web consent and channel-scoped browser keys",
+      "Channel filters, daily analyses, weekly active/returning browsers, unfinished runs and explicit collection coverage",
+      "Public npm downloads presented separately from execution and people counts; no CLI/local MCP telemetry",
+      "Privacy description updated; account-owned platform review is not updated by deployment"
+    ],
+    "validation": [
+      "SQLite collector, channel attribution, legacy history, deduplication, deletion and outage tests passed",
+      "Dashboard channel filters, graphs, unknown coverage, CSV/JSON, authorization and mobile tests passed",
+      "Cross-origin ChatGPT widget, parser and export regression tests passed",
+      "Real Web GGUF analysis and CycloneDX download, default-off consent, separate keys, rerun/late-export attribution, deletion and collector outage tests passed"
+    ]
+  }
 }

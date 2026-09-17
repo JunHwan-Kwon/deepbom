@@ -58,10 +58,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.102.0`:
+`1.103.0`:
 
 ```console
-DEEPBOM 1.102.0
+DEEPBOM 1.103.0
 
 Usage:
   deepbom audit <artifact-or-package> [options]

@@ -2,8 +2,8 @@
   "schema": "deepbom.claude_desktop_submission.v1",
   "display_name": "DEEPBOM Artifact Evidence",
   "delivery": "local_mcpb",
-  "version": "1.102.0",
-  "release_asset": "https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v1.102.0/deepbom-1.102.0.mcpb",
+  "version": "1.103.0",
+  "release_asset": "https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v1.103.0/deepbom-1.103.0.mcpb",
   "description": "Local static analysis and hash-bound evidence for supported serialized AI deployment artifacts.",
   "publisher": "Jun-Hwan Kwon",
   "homepage": "https://deepbom.org/for-agents/",
@@ -17,7 +17,7 @@
   "listing_status": "not_submitted_or_approved_by_this_file",
   "agent_contract": {
     "id": "deepbom.agent_contract.v1",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "compatibility": "backward_compatible_within_v1"
   },
   "evidence_contract": {

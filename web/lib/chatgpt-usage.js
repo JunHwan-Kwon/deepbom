@@ -1,29 +1,29 @@
-const STORAGE_KEY = 'deepbom.chatgpt.usage.v1';
 const CONSENT_VERSION = '2026-09-17';
 const LIFETIME = 90 * 86400000;
 
 // No model object, filename, hash, attachment URL, or host user metadata enters
 // this module. Callers pass only an allowlisted event, format, and export/view.
-export function createChatGptUsage({ endpoint, fetcher = globalThis.fetch.bind(globalThis), storage, now = Date.now } = {}) {
+export function createChatGptUsage({ endpoint, fetcher = globalThis.fetch.bind(globalThis), storage, now = Date.now, channel = 'chatgpt' } = {}) {
+  if (!['chatgpt', 'web'].includes(channel)) throw new Error('Unsupported usage channel');
+  const storageKey = `deepbom.${channel}.usage.v1`;
   if (storage === undefined) { try { storage = globalThis.localStorage; } catch { storage = null; } }
   let preference = { enabled: false, cohort: 'public' };
   try {
-    const saved = JSON.parse(storage?.getItem(STORAGE_KEY) || 'null');
+    const saved = JSON.parse(storage?.getItem(storageKey) || 'null');
     if (saved?.version === CONSENT_VERSION && ['public', 'test'].includes(saved.cohort)) {
       preference.cohort = saved.cohort;
       if (saved.expires > now() && /^[A-Za-z0-9_-]{43}$/.test(saved.key || '')) preference = saved;
     }
   } catch { /* Storage access is optional. */ }
-  let session = null;
-  let busy = null;
+  const makeRun = () => ({ session: null, busy: null, events: new Map(), sent: new Set() });
+  let run = makeRun();
+  const active = new Set();
   let revision = 0;
   let persistent = false;
   let lastError = '';
   let listener = () => {};
-  const events = new Map();
-  const sent = new Set();
   const remember = () => {
-    try { storage?.setItem(STORAGE_KEY, JSON.stringify(preference)); return Boolean(storage && storage.getItem(STORAGE_KEY) === JSON.stringify(preference)); }
+    try { storage?.setItem(storageKey, JSON.stringify(preference)); return Boolean(storage && storage.getItem(storageKey) === JSON.stringify(preference)); }
     catch { return false; }
   };
   if (preference.enabled) persistent = remember();
@@ -36,37 +36,42 @@ export function createChatGptUsage({ endpoint, fetcher = globalThis.fetch.bind(g
     if (!response.ok) throw new Error('Usage statistics could not be saved. Analysis is unaffected.');
     return response.json();
   };
-  const flush = () => {
+  const flush = (target = run) => {
+    const { events, sent } = target;
     if (preference.enabled && preference.expires <= now()) {
       preference.enabled = false; revision += 1; remember(); listener();
     }
-    if (!preference.enabled || busy || !events.size) return busy || Promise.resolve();
+    if (!preference.enabled || target.busy || !events.size) return target.busy || Promise.resolve();
     const currentRevision = revision;
-    busy = (async () => {
+    target.busy = Promise.resolve().then(async () => {
       try {
-        if (!session) {
+        if (!target.session) {
           const started = await post('/api/usage/session', {
             visitor_key: preference.key, consent_version: CONSENT_VERSION,
-            cohort: preference.cohort, identity_scope: persistent ? 'browser' : 'session',
+            cohort: preference.cohort, identity_scope: persistent ? 'browser' : 'session', channel,
           });
           if (currentRevision !== revision || !preference.enabled) return;
-          session = started;
+          target.session = started;
         }
         while (preference.enabled && currentRevision === revision) {
           const pending = [...events].filter(([key]) => !sent.has(key)).slice(0, 20);
           if (!pending.length) break;
-          await post('/api/usage/events', { token: session.token, events: pending.map(([, event]) => event) });
+          await post('/api/usage/events', { token: target.session.token, events: pending.map(([, event]) => event) });
           if (currentRevision !== revision) return;
           for (const [key] of pending) sent.add(key);
         }
         lastError = '';
       } catch (error) { lastError = error.message; }
-      finally { busy = null; listener(); }
-    })();
-    return busy;
+      finally { active.delete(target.busy); target.busy = null; listener(); }
+    });
+    active.add(target.busy);
+    return target.busy;
   };
   const controls = {
+    storageKey,
+    beginRun() { run = makeRun(); },
     track(event, { format = 'unknown', detail = '' } = {}) {
+      const { events } = run;
       const key = `${event}:${detail}`;
       if (events.size >= 32 && !events.has(key)) return;
       events.set(key, { event, detail, format });
@@ -76,12 +81,12 @@ export function createChatGptUsage({ endpoint, fetcher = globalThis.fetch.bind(g
       revision += 1;
       // Finish an already-sent request before deleting or changing identity.
       if (!value) preference.enabled = false;
-      if (busy) await busy;
+      await Promise.all([...active]);
       preference.enabled = Boolean(value);
       if (value && (!preference.key || preference.expires <= now())) {
         preference.key = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
         preference.expires = now() + LIFETIME;
-        session = null; sent.clear();
+        run.session = null; run.sent.clear();
       }
       preference.version = CONSENT_VERSION;
       persistent = remember();
@@ -107,8 +112,8 @@ export function createChatGptUsage({ endpoint, fetcher = globalThis.fetch.bind(g
         catch { lastError = 'Sharing is off. Deletion failed; select Delete my usage again to retry.'; listener(); return false; }
       }
       preference = { enabled: false, cohort: preference.cohort };
-      session = null; sent.clear(); events.clear(); lastError = '';
-      try { storage?.removeItem(STORAGE_KEY); } catch { /* Optional storage. */ }
+      run = makeRun(); lastError = '';
+      try { storage?.removeItem(storageKey); } catch { /* Optional storage. */ }
       listener(); return true;
     },
     state() { return { enabled: preference.enabled, cohort: preference.cohort, persistent, hasHistory: Boolean(preference.key), error: lastError }; },
@@ -117,10 +122,10 @@ export function createChatGptUsage({ endpoint, fetcher = globalThis.fetch.bind(g
       if (saved?.enabled && saved.key === preference.key && saved.cohort === preference.cohort) return;
       revision += 1;
       preference = saved?.key === preference.key ? { ...saved, enabled: false } : { enabled: false, cohort: 'public' };
-      session = null; sent.clear(); listener();
+      run.session = null; run.sent.clear(); listener();
     },
     subscribe(callback) { listener = callback; callback(); },
-    flush,
+    flush: () => flush(),
   };
   return controls;
 }
@@ -130,7 +135,7 @@ export function mountUsageControls(container, usage) {
   section.className = 'privacy';
   const summary = document.createElement('summary'); summary.textContent = 'Optional usage statistics';
   const text = document.createElement('p');
-  text.textContent = 'Help measure DEEPBOM use by sharing event counts for this analysis and future visits. A random browser ID measures repeat visits. No model files, names, hashes, or conversation text are collected. Records expire after 90 days and are deleted by a daily cleanup; aggregate statistics may be published. Analysis works with sharing off.';
+  text.textContent = 'Help measure DEEPBOM use by sharing event counts for this analysis and future visits in this channel (ChatGPT or Web). A separate random browser ID measures repeat visits in each channel. No model files, names, hashes, or conversation text are collected. Records expire after 90 days and are deleted by a daily cleanup; aggregate statistics may be published. Analysis works with sharing off.';
   const allow = document.createElement('input'); allow.type = 'checkbox'; allow.dataset.action = 'usage-consent';
   const allowLabel = document.createElement('label'); allowLabel.append(allow, ' Share usage statistics');
   const test = document.createElement('input'); test.type = 'checkbox'; test.dataset.action = 'usage-test';
@@ -154,6 +159,6 @@ export function mountUsageControls(container, usage) {
   window.addEventListener('storage', (event) => {
     // Another panel may have withdrawn consent. Stop this panel immediately;
     // opting in again remains a deliberate local action.
-    if (event.key === STORAGE_KEY || event.key === null) usage.storageChanged(event.newValue);
+    if (event.key === usage.storageKey || event.key === null) usage.storageChanged(event.newValue);
   });
 }

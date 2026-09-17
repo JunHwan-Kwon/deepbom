@@ -17,7 +17,7 @@ If no compatible local installation is available, ask before running:
 node "<skill-root>/scripts/verify-deepbom.mjs" --allow-download
 ```
 
-That explicit fallback may download `deepbom@latest` through npm. The resolver accepts it only when it declares Agent contract `deepbom.agent_contract.v1` version `1.0.1` and evidence contract `deepbom.artifact_evidence_envelope.v1` version `1.0.0`. Use the returned `invocation.command` and `invocation.prefix_args` for subsequent commands. Do not silently replace a contract mismatch or network failure with an unverified executable.
+That explicit fallback may download `deepbom@latest` through npm. The resolver accepts it only when it declares Agent contract `deepbom.agent_contract.v1` version `1.0.2` and evidence contract `deepbom.artifact_evidence_envelope.v1` version `1.0.0`. Use the returned `invocation.command` and `invocation.prefix_args` for subsequent commands. Do not silently replace a contract mismatch or network failure with an unverified executable.
 
 ## Start with discovery
 

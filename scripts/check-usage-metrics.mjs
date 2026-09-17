@@ -5,6 +5,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { routeUsage, readUsageSummary, recordUsageService, pruneUsage, USAGE_CONSENT_VERSION } from '../worker/usage-metrics.js';
 import { createChatGptUsage } from '../web/lib/chatgpt-usage.js';
 import worker from '../worker/index.js';
+import { readPackageDownloads } from '../worker/usage-downloads.js';
 
 // D1-compatible adapter over real SQLite: transactions, uniqueness and cascading
 // deletion are exercised, rather than imitating the query results.
@@ -155,5 +156,77 @@ volatile.storageChanged(null); volatile.track('analysis_failed'); await volatile
 assert.equal(calls.length, beforeWithdrawal, 'Another panel deleting preferences stops this panel');
 const expired = createChatGptUsage({ endpoint: 'https://deepbom.org', fetcher, storage: { getItem: () => JSON.stringify({ enabled: true, key: key(), version: USAGE_CONSENT_VERSION, cohort: 'public', expires: today - 1 }) }, now: () => today });
 assert.equal(expired.state().enabled, false);
+
+// Channel attribution, legacy migration, browser separation and run identity.
+db.exec(readFileSync('migrations/0013_usage_channels.sql', 'utf8')); // Safe to rerun at every deployment.
+const sharedKey = key();
+const legacyToken = await session(sharedKey, today - DAY);
+const legacyId = JSON.parse(Buffer.from(legacyToken.split('.')[0], 'base64url')).id;
+db.prepare('DELETE FROM usage_session_channels WHERE session_id = ?').run(legacyId);
+await send(legacyToken, [event('analysis_started'), event('analysis_completed')], today - DAY);
+const modernToken = await session(sharedKey);
+await send(modernToken, [event('analysis_started'), event('analysis_completed')]);
+const webValues = new Map(), webCalls = [];
+const webStorage = { getItem: (k) => webValues.get(k) || null, setItem: (k, v) => webValues.set(k, v), removeItem: (k) => webValues.delete(k) };
+const webClient = createChatGptUsage({ channel: 'web', endpoint: 'https://deepbom.org', storage: webStorage, now: () => today,
+  fetcher: async (url, options) => { webCalls.push(JSON.parse(options.body)); return fetcher(url, options); },
+});
+assert.equal(webClient.storageKey, 'deepbom.web.usage.v1');
+webClient.beginRun(); webClient.track('analysis_started'); webClient.track('analysis_completed', { format: 'onnx' });
+assert.equal(webCalls.length, 0);
+await webClient.setEnabled(true);
+assert.equal(webCalls[0].channel, 'web');
+webClient.beginRun(); webClient.track('analysis_started'); webClient.track('analysis_failed'); await webClient.flush();
+webClient.beginRun(); webClient.track('analysis_started'); await webClient.flush();
+let byWeb = await readUsageSummary(env, { channel: 'web', days: 7 }, today);
+assert.equal(byWeb.totals.started, 3); assert.equal(byWeb.totals.completed, 1); assert.equal(byWeb.totals.failed, 1); assert.equal(byWeb.totals.unfinished, 1);
+assert.equal(byWeb.totals.unique_browsers, 1); assert.equal(byWeb.totals.returning_browsers, 0);
+assert.equal(byWeb.weekly_browsers[0].browsers, 1, 'Weekly unique browsers must not sum daily/run counts');
+assert(byWeb.events.every((r) => r.channel === 'web'));
+const allChannels = await readUsageSummary(env, { channel: 'all', days: 7 }, today);
+assert.equal(allChannels.totals.unique_browsers, null, 'No cross-channel people estimate');
+assert.equal(allChannels.totals.returning_browser_rate, null);
+assert.equal(allChannels.channels.find((c) => c.id === 'cli').totals, null);
+assert.equal((await readUsageSummary(env, { channel: 'claude' }, today)).totals, null);
+assert.equal((await readUsageSummary(env, { channel: 'chatgpt' }, today)).totals.returning_browsers, 1, 'Legacy and attributed ChatGPT sessions share one browser history');
+assert.equal((await call('session', { visitor_key: key(), consent_version: USAGE_CONSENT_VERSION, cohort: 'public', identity_scope: 'browser', channel: 'cli' })).status, 400);
+assert.equal((await call('session', null)).status, 400);
+for (const channel of [null, 1, {}, 'unknown']) assert.equal((await call('session', { visitor_key: key(), consent_version: USAGE_CONSENT_VERSION, cohort: 'public', identity_scope: 'browser', channel })).status, 400);
+await webClient.setCohort('test');
+assert.equal((await readUsageSummary(env, { channel: 'web' }, today)).totals.started, 0);
+assert.equal((await readUsageSummary(env, { channel: 'web', cohort: 'test' }, today)).totals.started, 3);
+await webClient.forget();
+assert.equal((await readUsageSummary(env, { channel: 'web', cohort: 'test' }, today)).totals.started, 0);
+assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
+assert((await readUsageSummary(env, { channel: 'chatgpt' }, today)).totals.completed > 0, 'Deleting web usage preserves unrelated ChatGPT history');
+
+// Slow delivery from a previous run cannot attach its outcome to the next run.
+let releaseRequest; const hold = new Promise((resolve) => { releaseRequest = resolve; }); let held = false;
+const slow = createChatGptUsage({ channel: 'web', endpoint: 'https://deepbom.org', storage: null, now: () => today, fetcher: async (url, options) => {
+  if (!held) { held = true; await hold; } return fetcher(url, options);
+} });
+await slow.setEnabled(true); slow.track('analysis_started'); slow.track('analysis_completed', { format: 'onnx' });
+await Promise.resolve(); slow.beginRun(); slow.track('analysis_started'); slow.track('analysis_failed');
+releaseRequest(); await slow.flush(); await slow.setEnabled(false);
+const slowStats = await readUsageSummary(env, { channel: 'web' }, today);
+assert.equal(slowStats.totals.completed, 1); assert.equal(slowStats.totals.failed, 1);
+await slow.forget();
+
+// Downloads stay separate, bounded, cached, and unavailable instead of zero.
+let fetched = 0, cached;
+const cache = { async match() { return cached?.clone(); }, async put(_key, value) { cached = value; } };
+const npmFetcher = async (url) => { fetched++; assert.match(url, /\/downloads\/range\/2026-09-10:2026-09-16\/deepbom$/); return Response.json({ package: 'deepbom', start: '2026-09-10', end: '2026-09-16', downloads: [{ day: '2026-09-10', downloads: 12 }, { day: '2026-09-16', downloads: 0 }] }); };
+const downloads = await readPackageDownloads(7, { now: today, cache, fetcher: npmFetcher });
+assert.equal(downloads.reported_total, 12); assert.equal(downloads.missing_days, 5); assert.equal(downloads.daily[1].downloads, null);
+await readPackageDownloads(7, { now: today, cache, fetcher: npmFetcher }); assert.equal(fetched, 1);
+await assert.rejects(readPackageDownloads(7, { now: today, cache: null, fetcher: async () => new Response('offline', { status: 503 }) }));
+await assert.rejects(readPackageDownloads(7, { now: today, cache: null, fetcher: async () => new Response('x'.repeat(32769)) }));
+for (const downloads of [[{ day: '2026-09-10', downloads: -1 }], [{ day: '2026-09-10', downloads: 1 }, { day: '2026-09-10', downloads: 2 }], [{ day: '2026-09-17', downloads: 2 }]]) {
+  await assert.rejects(readPackageDownloads(7, { now: today, cache: null, fetcher: async () => Response.json({ package: 'deepbom', start: '2026-09-10', end: '2026-09-16', downloads }) }));
+}
+await assert.rejects(readPackageDownloads(8, { now: today, cache: null, fetcher: npmFetcher }));
+assert.equal((await worker.fetch(new Request('https://deepbom.org/api/admin/usage/downloads?days=7'), env)).status, 401);
+const memberCookie = createHash('sha256').update('test-member').digest('hex'); assert(db.prepare('SELECT id_hash FROM sessions WHERE id_hash = ?').get(memberCookie));
+assert.equal((await worker.fetch(new Request('https://deepbom.org/api/admin/usage/downloads?days=7', { headers: { cookie: 'audit_session=test-member' } }), env)).status, 403);
 db.close();
 console.log('Usage metrics passed: consent, privacy allowlists, signed tokens, state ordering, deduplication, UTC revisits, test exclusion, deletion, retention, admin authorization, and telemetry outage isolation.');

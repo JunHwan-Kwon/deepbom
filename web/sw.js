@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v577";
+const CACHE_NAME = "tflite-wasm-static-audit-v578";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -85,6 +85,8 @@ const APP_ASSETS = [
   "./executorch.js",
   "./lib/admin-elements.js",
   "./lib/admin-usage.js",
+  "./lib/chatgpt-usage.js",
+  "./lib/web-usage.js",
   "./lib/app-config.js",
   "./lib/browser-asset-url.js",
   "./lib/target-profiles.generated.js",

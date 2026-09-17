@@ -7,15 +7,15 @@ import {
 } from "./source-size-utils.mjs";
 
 // Budget history belongs in git/CHANGELOG; this executable keeps only current policy.
-const handwrittenRuntimeBudgetKiB = Number(process.env.HANDWRITTEN_RUNTIME_SOURCE_BUDGET_KIB || process.env.SOURCE_BUDGET_KIB || 12368);
+const handwrittenRuntimeBudgetKiB = Number(process.env.HANDWRITTEN_RUNTIME_SOURCE_BUDGET_KIB || process.env.SOURCE_BUDGET_KIB || 12400);
 const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_BUDGET_KIB || 1728);
-const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 592);
-const verificationSourceBudgetKiB = Number(process.env.VERIFICATION_SOURCE_BUDGET_KIB || 3680);
+const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 600);
+const verificationSourceBudgetKiB = Number(process.env.VERIFICATION_SOURCE_BUDGET_KIB || 3712);
 const devToolingSourceBudgetKiB = Number(process.env.DEV_TOOLING_SOURCE_BUDGET_KIB || 1632);
 const nativeToolingSourceBudgetKiB = Number(process.env.NATIVE_TOOLING_SOURCE_BUDGET_KIB || 256);
 const corpusEvidenceSourceBudgetKiB = Number(process.env.CORPUS_EVIDENCE_SOURCE_BUDGET_KIB || 544);
 const runtimeFileBudgetKiB = Number(process.env.RUNTIME_SOURCE_FILE_BUDGET_KIB || 512);
-const appJsBudgetKiB = Number(process.env.APP_JS_BUDGET_KIB || 308);
+const appJsBudgetKiB = Number(process.env.APP_JS_BUDGET_KIB || 310);
 const stylesCssBudgetKiB = Number(process.env.STYLES_CSS_BUDGET_KIB || 280);
 const researchLabsCssBudgetKiB = Number(process.env.RESEARCH_LABS_CSS_BUDGET_KIB || 48);
 const appShellCssBudgetKiB = Number(process.env.APP_SHELL_CSS_BUDGET_KIB || 64);
