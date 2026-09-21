@@ -19,6 +19,15 @@ import { buildReviewState, buildSelfContainedReviewHtml } from "../web/lib/revie
 import { decodeFixtureBase64, EXECUTORCH_ADD_PTE_BASE64 } from "./fixtures/executorch-fixtures.mjs";
 
 const root = path.resolve(".");
+for (const cost of [null, 0]) {
+  const ir = getArtifactIrContext({ format: "onnx", filename: "cost.onnx", model_sha256: "c".repeat(64),
+    file_size_bytes: 1, tensors: [], total_macs: cost,
+    ops: [{ index: 0, name: "Custom", inputs: [], outputs: [], macs: cost, estimated_bytes: cost, topo_depth: cost }],
+  }).artifact_ir;
+  assert.equal(ir.graph.operators[0].metrics.macs?.decimal ?? null, cost == null ? null : "0", "unknown MACs and observed zero must stay distinct");
+  assert.equal(ir.graph.operators[0].metrics.logical_io_bytes?.decimal ?? null, cost == null ? null : "0", "unknown bytes must not become zero");
+  assert.equal(ir.graph.operators[0].topology.depth, cost, "unknown topology depth must not become zero");
+}
 const schema = JSON.parse(await readFile(path.join(root, "docs", "schemas", "deepbom-artifact-ir-v2.schema.json"), "utf8"));
 const validateSchema = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
 const cases = [
@@ -110,6 +119,27 @@ for (const format of ["gguf", "safetensors"]) {
   assert.equal(context.primary_view.artifact_ir_primary_scope_ref, null, `${format} graphless consumer primary scope`);
   assert.equal(context.primary_view.artifact_ir_nested_scope_count, 0, `${format} graphless consumer nested scope count`);
   assert.equal(Object.hasOwn(context.primary_view, "on_device_llm"), false, `${format} graphless consumer view must not invent an absent optional LLM contract`);
+
+  const withEmptyTensor = getArtifactIrContext({ ...analysis, tensors: [
+    { index: 0, name: "shared.empty", dtype: "F32", shape: [0], byte_length: 0, buffer_size: 0 },
+    { index: 1, name: "shared.weight", dtype: "F32", shape: [4], byte_length: 16, buffer_size: 16 },
+  ] });
+  const { storage_topology: storage, architecture_projection: architecture } = withEmptyTensor.artifact_ir;
+  assert.equal(storage.objects.length, 1, `${format} empty tensor must not become a payload object`);
+  assert.equal(architecture.nodes.reduce((sum, row) => sum + row.tensor_count, 0), 2, `${format} namespace count must retain empty tensors`);
+  assert.deepEqual(architecture.nodes.flatMap((row) => row.storage_object_refs), storage.objects.map((row) => row.id), `${format} namespace references must include only materialized payload objects`);
+  assert.deepEqual(validateArtifactEvidenceIr(withEmptyTensor.artifact_ir), withEmptyTensor.artifact_ir, `${format} empty tensor must not invalidate Artifact IR`);
+  const unknown = getArtifactIrContext({ ...analysis, tensors: [
+    { index: 0, name: "unknown.weight", dtype: "UNKNOWN", shape: [16, 32], byte_length: null },
+  ] }).artifact_ir;
+  assert.equal(unknown.architecture_projection.nodes[0].serialized_bytes, null, `${format} unavailable namespace bytes must not be zero`);
+  assert.deepEqual(unknown.architecture_projection.nodes[0].storage_object_refs, [], `${format} unavailable payload has no fabricated storage reference`);
+  assert.equal(validateSchema(unknown), true, formatAjvErrors(validateSchema.errors));
+  const unknownOffset = getArtifactIrContext({ ...analysis, tensors: [
+    { index: 0, name: "weight", dtype: "F32", shape: [4], byte_length: 16, buffer_data_offset: null, data_offset: null },
+  ] }).artifact_ir.storage_topology.objects[0].byte_range;
+  assert.equal(unknownOffset.start, null, `${format} an unavailable offset must not become byte zero`);
+  assert.equal(unknownOffset.status, "length_only");
 }
 
 const recursiveOnnx = runGraph("scripts/fixtures/onnx_recursive_scope.onnx");

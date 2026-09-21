@@ -1,0 +1,207 @@
+DEEPBOM 1.103.1
+
+Usage:
+  deepbom audit <artifact-or-package> [options]
+  deepbom gguf <artifact.gguf> [options]
+  deepbom verify <artifact> --contract <json> [options]
+  deepbom verify <artifact> --bom <cyclonedx-1.7.json> [--component-ref <bom-ref>]
+  deepbom contract capture <artifact> [-o baseline.interface-contract.json]
+  deepbom batch <manifest.json> --batch-output-dir <directory> [options]
+  deepbom diff <baseline-artifact-or-package> <candidate-artifact-or-package> [options]
+  deepbom explore <artifact.tflite> [options]
+  deepbom graph <artifact> [options]
+  deepbom visualize <artifact> [options]
+  deepbom accelerator collect nvidia [options]
+  deepbom capabilities [--json|--compact]
+
+Supported inputs:
+  Stable or existing: .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd
+  Preview static graph: GraphDef or saved_model.pb
+  Preview safe envelope: .h5, .hdf5, .keras, .pt2, .pt, .pth, .ckpt
+  Packages: .mlpackage directories and sharded SafeTensors repository directories
+
+Options:
+  --target <id>          TFLite target profile (default: android_mid_a55)
+  --target-profile <json>
+                          Bind a strict custom TFLite target profile (mutually exclusive with --target)
+  --contract <json>      Production external-interface contract for verify
+  --bom <json>           Reconcile CycloneDX 1.7 claims with the selected artifact
+  --component-ref <ref>  Explicitly select a BOM component; hash disagreements still block
+  --expected-sha256 <hex> Require the exact artifact digest before analysis
+  --summary             Compatibility alias for --output-format summary
+  --request <json>       Bound redesign request for explore
+  --external-data-dir <directory>
+                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory
+  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract
+  --images <count>       Declared image count; requires --tokens-per-image
+  --tokens-per-image <count>
+                          Declared projector output tokens per image; never inferred
+  --batch <count>        LLM scenario batch size (default: 1)
+  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)
+  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity
+  --tensorrt-profile <json>
+                          Bind an ONNX TensorRT native/ORT EP build profile
+  --tensorrt-parser-evidence <json>
+                          Import identity-bound TensorRT parser/build evidence
+  --tensorrt-llm-config <json>
+                          Assess a TensorRT-LLM engine config with SafeTensors
+  --tensorrt-llm-binding <json>
+                          Bind that config to model-source/component digests
+  --llm-memory-profile <json>
+                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools
+  --output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif
+  --section <names>      Emit selected analysis sections; use --list-sections to discover names
+  --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity
+  --list-sections        List selectable analysis sections for this artifact
+  --gate defects         Exit 2 only when an artifact_defect finding is present
+  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored
+  --fail-on <severity>   Compatibility severity gate: informational, low, medium, or high
+  --policy-output <path> Write the deterministic finding-gate decision JSON
+  --output, -o <path>    Atomically write the complete document; use - for stdout
+  --no-clobber           Refuse to replace an existing output or policy file
+  --error-format <kind>  text or json structured stderr (default: text)
+  --json                 Compatibility alias for --output-format json
+  --compact              Compatibility alias for --output-format json-compact
+  --version              Print version
+  --help                 Show this help
+
+Safe-envelope boundary:
+  Keras, HDF5, PT2, and PyTorch checkpoint previews do not construct framework objects or claim an executable graph.
+
+Exit codes:
+  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding; 4 expected SHA-256 mismatch
+
+Additional command:
+  deepbom model-summary <artifact> [--level auto|operation|block|storage] [--format table|markdown|json|json-compact]
+
+SavedModel package preview:
+  TensorFlow SavedModel directories are accepted with bounded member hashing and first-MetaGraph projection.
+  GraphDef, Keras config, and PT2 JSON expose serialized declarative relationships only; HDF5 and PyTorch checkpoints remain safe-envelope-only.
+
+GGUF quick inspection:
+  --tensors              Emit a concise tensor table; add --json or --compact for deepbom.tensor_table.v1
+
+Format-neutral tensor evidence:
+  --encoding-inventory   Emit serialized encoding counts, assignments, and reproducible hashes for GGUF, SafeTensors, ONNX, or TFLite
+
+Windows-safe batch audit:
+  deepbom batch <manifest.json> --batch-output-dir <directory> [--json|--compact]
+  Manifest: deepbom.batch_manifest.v1 with safe relative paths and required SHA-256 identities
+
+Built-in gate profiles:
+  --policy engineering  Block artifact defects; keep cautions and evidence gaps visible
+  --policy regulatory   Block artifact defects and unresolved evidence gaps; this is not a legal-compliance determination
+
+Human-readable audit output:
+  --output-format summary  Emit the bounded projection derived from deepbom.review_summary.v1
+  --summary                Compatibility alias for --output-format summary
+
+Installation and rule checks:
+  deepbom self-test [--json|--compact]
+  deepbom explain-rule <rule-id> [--json|--compact]
+  deepbom explain-rule --list
+
+Agent-native local use (no hosted analysis server):
+  deepbom capabilities --format agent-json
+  deepbom integrate codex                  Preview .agents/skills/deepbom
+  deepbom integrate claude-code            Preview .claude/skills/deepbom
+  deepbom integrate generic                Preview skills/deepbom
+  deepbom integrate <target> --apply       Write only managed Skill files
+  deepbom integrate status [target]        Inspect without changing files
+  deepbom integrate remove <target>        Preview managed-file removal
+  deepbom integrate remove <target> --apply  Remove only unchanged managed files
+
+Assistant tool access (Model Context Protocol over stdio, local process only):
+  deepbom mcp
+  Tools: deepbom_capabilities, deepbom_audit, deepbom_diff, deepbom_explain_rule
+  Audit default: bounded human summary; request envelope, section, or pointer for detail
+  Local paths: launch directory, or roots declared by DEEPBOM_MCP_ALLOWED_ROOTS
+
+NVIDIA accelerator binding:
+  --accelerator-profile <json>
+                          Bind an observed NVIDIA host profile without inferring selected-build or runtime assignment
+  --accelerator-device <index>
+                          Select one device when the bound profile contains multiple NVIDIA devices
+
+N-way placement comparison:
+  deepbom placement <artifact> [--profiles <id,id|all>] [--json|--compact]
+  --profiles <ids|all>   Compare selected independent profiles (default: all available profiles)
+
+Compiled accelerator evidence:
+  --coreml-compute-plan <json>
+                          Import an artifact- and compiled-model-bound MLComputePlan estimate; not executed placement
+  --edgetpu-compiler-evidence <json>
+                          Import an artifact/compiler/invocation/compiled-artifact-bound Edge TPU operation ledger
+  --litert-qualcomm-evidence <json>
+                          Import an artifact/source/compiler/QNN-plan-bound operation ledger
+
+Conversion provenance:
+  --conversion-receipt <json>
+                          Bind a self-hashed source/converter/environment receipt to the observed output artifact. Source .pt/.pth/.h5 files are identified by digest only and are never deserialized.
+
+NVIDIA accelerator observation:
+  deepbom accelerator collect nvidia [--device <index>] [--json|--compact]
+  --device <index>        Collect one NVIDIA device index (default: all devices)
+  --include-device-identifiers
+                          Include raw GPU UUID and PCI bus ID; hashes are always emitted
+
+Remote immutable artifact input:
+  hf://owner/repo@<40-hex-commit>/path
+  gs://bucket/object#generation=<generation>
+  https://host/path#sha256=<64-hex>
+  --expected-sha256 <hex> Add an independent content digest requirement
+  --cache-dir <directory> Use a content-addressed cache directory
+  --offline               Refuse network access and require a verified cache receipt
+  --max-download-gib <n>  Bound one remote download (default: 50, maximum: 1024)
+
+Bounded scan policy:
+  --scan <mode>           auto, structure, integrity, or full
+  GGUF/SafeTensors use range reads; auto selects structure above 10 GiB and streamed integrity above 2 GiB.
+  Monolithic TFLite/ONNX/ExecuTorch files above 1 GiB fail before full-file allocation.
+
+Repeat-review policy:
+  --review-policy <json> Bind required analysis coverage, finding threshold, and identity-scoped expiring exceptions
+  --policy-output <path> Write the deterministic policy decision JSON
+  --policy, --gate, --review-policy, and --fail-on are mutually exclusive policy sources.
+
+Output format selection:
+  --output-format <kind>  Preferred unambiguous spelling for --format
+  --format <kind>         Backward-compatible alias; retained for existing automation
+
+Deterministic graph export:
+  deepbom graph <artifact> --view structure --output-format svg -o graph.svg
+  --view <kind>           structure, placement, quantization, or architecture
+  --output-format <kind>  svg, png, html, mermaid, dot, or json for graph
+
+Regulatory-document model views:
+  deepbom visualize <artifact> --view all --orientation portrait -o model-views.zip
+  --view <ids>            all or comma-separated identity-boundary, architecture-overview, block-detail, exhaustive, static-runtime, observed-runtime
+  --orientation <kind>    portrait or landscape ISO A4
+  --output-format <kind>  bundle (SVG, captions, manifest) or json manifest
+  These monochrome, hash-bound engineering views do not assert regulatory approval or standard conformance.
+
+Format-neutral Keras-style model summary:
+  deepbom model-summary <artifact> --level auto --format table
+  --level <kind>          auto, operation, block, or storage
+  --format <kind>         table, markdown, json, or json-compact
+  Rows are projections of deepbom.model_ir.v1; storage is not relabeled as trainable parameters and display order is not runtime order.
+
+TensorRT optimized-engine option:
+  --tensorrt-engine-inspector <json>
+                          Import identity-bound TensorRT optimized-engine inspector evidence
+
+ExecuTorch selected-build option:
+  --executorch-build <json>
+                          Bind backend/operator inventories and runtime binary digests to a PTE audit
+
+Artifact reconciliation and baseline capture:
+  deepbom verify <artifact> --bom <cyclonedx-1.7.json> [--component-ref <bom-ref>]
+  deepbom contract capture <artifact> [-o baseline.interface-contract.json]
+  deepbom diff <baseline> <candidate> --tensors
+  --render markdown      Render audit, diff, or verify results as Markdown
+
+Agent capability summary:
+  deepbom capabilities --format agent-text
+
+Additional exit code:
+  4 independently supplied artifact SHA-256 mismatch

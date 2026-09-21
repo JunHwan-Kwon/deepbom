@@ -134,6 +134,15 @@ const ajv = new AjvDraft04({ allErrors: true, strict: false });
 addFormats(ajv);
 const validateSarif = ajv.compile(sarifSchema);
 assert.equal(validateSarif(sarif), true, JSON.stringify(validateSarif.errors));
+for (const kind of ["artifact_defect", "caution", "evidence_gap"]) {
+  const result = buildSarifDocument({ ...syntheticEnvelope, findings: [{ ...syntheticEnvelope.findings[0], finding_kind: kind }] }, { version });
+  const level = { artifact_defect: "error", caution: "warning", evidence_gap: "note" }[kind];
+  assert.equal(result.runs[0].results[0].level, level);
+  assert.equal(result.runs[0].tool.driver.rules[0].defaultConfiguration.level, level);
+  assert.equal(result.runs[0].results[0].properties.deepbomSeverity, "high", "source severity is preserved separately from SARIF level");
+  assert.equal(validateSarif(result), true, JSON.stringify(validateSarif.errors));
+}
+
 
 assert.equal(resolveGenerationTimestamp("2026-08-30T00:00:00Z"), "2026-08-30T00:00:00.000Z");
 assert.equal(resolveGenerationTimestamp("", { SOURCE_DATE_EPOCH: "0" }), "1970-01-01T00:00:00.000Z");
@@ -213,6 +222,10 @@ const sarifPath = path.join(scratch, "mnist.sarif");
 const sarifRun = run(["audit", onnxPath, "--format", "sarif", "--output", sarifPath]);
 assert.equal(sarifRun.stdout, "", "file output must keep stdout clean");
 const cliSarif = JSON.parse(await readFile(sarifPath, "utf8"));
+for (const result of cliSarif.runs[0].results) {
+  if (result.properties.deepbomFindingKind !== "artifact_defect") assert.notEqual(result.level, "error", result.ruleId);
+}
+
 assert.equal(validateSarif(cliSarif), true, JSON.stringify(validateSarif.errors));
 assert.equal(cliSarif.runs[0].results.length, envelope.findings.length);
 

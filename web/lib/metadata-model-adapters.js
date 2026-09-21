@@ -112,8 +112,8 @@ class Reader {
   i32() { this.need(4); const value = this.view.getInt32(this.offset, this.littleEndian); this.offset += 4; return value; }
   f32() { this.need(4); const value = this.view.getFloat32(this.offset, this.littleEndian); this.offset += 4; return value; }
   f64() { this.need(8); const value = this.view.getFloat64(this.offset, this.littleEndian); this.offset += 8; return value; }
-  u64() { return this.safeInteger(this.big64(false)); }
-  i64() { return this.safeInteger(this.big64(true)); }
+  u64(field = `Unsigned integer at byte ${this.offset}`) { return this.safeInteger(this.big64(false), field); }
+  i64(field = `Signed integer at byte ${this.offset}`) { return this.safeInteger(this.big64(true), field); }
   big64(signed) {
     this.need(8);
     const value = signed
@@ -122,8 +122,8 @@ class Reader {
     this.offset += 8;
     return value;
   }
-  safeInteger(value) {
-    if (value > BigInt(Number.MAX_SAFE_INTEGER) || value < BigInt(Number.MIN_SAFE_INTEGER)) throw new Error("64-bit value exceeds JavaScript exact integer range");
+  safeInteger(value, field) {
+    if (value > BigInt(Number.MAX_SAFE_INTEGER) || value < BigInt(Number.MIN_SAFE_INTEGER)) throw new Error(`${field} is ${value}; supported exact range is ${Number.MIN_SAFE_INTEGER} to ${Number.MAX_SAFE_INTEGER}.`);
     return Number(value);
   }
   string(maxLength = 65535) {
@@ -583,7 +583,7 @@ function ggufAnalysis(bytes, filename, fileSize) {
 function safeTensorsAnalysis(bytes, filename, fileSize) {
   if (bytes.length < 9) throw new NeedMoreData(9);
   const reader = new Reader(bytes, true);
-  const headerLength = reader.u64();
+  const headerLength = reader.u64("SafeTensors header length at byte 0");
   if (headerLength < 2 || headerLength > MAX_SAFE_TENSORS_HEADER) throw new Error(`SafeTensors header length ${headerLength} is outside the supported range`);
   const headerEnd = 8 + headerLength;
   if (bytes.length < headerEnd) throw new NeedMoreData(headerEnd);
@@ -609,6 +609,7 @@ function safeTensorsAnalysis(bytes, filename, fileSize) {
     if (!Array.isArray(offsets) || offsets.length !== 2 || offsets.some((offset) => !Number.isSafeInteger(offset) || offset < 0) || offsets[1] < offsets[0]) {
       throw new Error(`invalid SafeTensors offsets ${name}`);
     }
+    if (offsets[1] > payloadLength) throw new Error(`SafeTensors tensor ${JSON.stringify(name)} declares payload byte range [${offsets[0]}, ${offsets[1]}), but only ${payloadLength} payload bytes are available after the ${headerEnd}-byte header.`);
     const elements = shape.reduce((product, dimension) => product * BigInt(dimension), 1n);
     const expectedBits = elements * BigInt(bits);
     if (expectedBits % 8n !== 0n) throw new Error(`SafeTensors sub-byte tensor ${name} is not byte-aligned`);
@@ -622,7 +623,7 @@ function safeTensorsAnalysis(bytes, filename, fileSize) {
     if (tensor.data_offset !== cursor) throw new Error(`SafeTensors payload gap or overlap before ${tensor.name}`);
     cursor = tensor.data_end;
   }
-  if (cursor !== payloadLength) throw new Error(`SafeTensors payload coverage ${cursor}/${payloadLength}`);
+  if (cursor !== payloadLength) throw new Error(`SafeTensors tensor ranges cover ${cursor} of ${payloadLength} payload bytes; ${payloadLength - cursor} trailing bytes are not assigned to any tensor.`);
   const analysis = containerAnalysis("safetensors", filename, fileSize, tensors, {
     status: "assessed",
     metadata,
@@ -770,7 +771,7 @@ export async function readMetadataModelFile(file, format, { onProgress, scanMode
   if (normalized === "safetensors") {
     const prefix = new Uint8Array(await file.slice(0, 8).arrayBuffer());
     if (prefix.length < 8) throw new Error("truncated SafeTensors length prefix");
-    const headerLength = new Reader(prefix).u64();
+    const headerLength = new Reader(prefix).u64("SafeTensors header length at byte 0");
     if (headerLength > MAX_SAFE_TENSORS_HEADER) throw new Error(`SafeTensors header exceeds ${MAX_SAFE_TENSORS_HEADER} bytes`);
     const bytes = new Uint8Array(await file.slice(0, 8 + headerLength).arrayBuffer());
     const analysis = safeTensorsAnalysis(bytes, file.name, file.size);

@@ -9612,7 +9612,22 @@ tr.clickable-row:hover {
   }
 }
 
-.seo-footer { position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:normal;border:0 }
+/* Product information is readable by visitors and crawlers alike. */
+.product-about { width: min(1324px, calc(100% - 2rem)); margin: 1rem auto 0; padding: 2rem 0; border-top: 1px solid var(--line-strong); display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem 3rem; color: var(--ink-soft); font-size: .9rem; line-height: 1.6; }
+.product-about h2 { margin: .5rem 0 1rem; color: var(--ink); font: 500 1.8rem var(--display-serif, Georgia, serif); line-height: 1.15; }
+.product-about-kicker { margin: 0; color: var(--blue); font: 700 .65rem var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.product-about p { max-width: 76ch; overflow-wrap: anywhere; }
+.product-about a { color: var(--blue); text-underline-offset: 3px; }
+.product-about a:focus-visible, .product-about summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.product-about-links { display: flex; flex-wrap: wrap; gap: .1rem 1.25rem; }
+.product-about-links a { display: inline-flex; align-items: center; min-height: 44px; font-size: .8rem; }
+.product-about-question { border-bottom: 1px solid var(--line); }
+.product-about summary { min-height: 44px; padding: .65rem 0; cursor: pointer; color: var(--ink); font-weight: 600; }
+.product-about-question p { margin: 0 0 1.2rem; }
+.product-about-scope, .product-about-resources { grid-column: 1 / -1; border-top: 1px solid var(--line); padding-top: .5rem; }
+.product-about-scope li { max-width: 90ch; margin-bottom: .75rem; }
+@media (max-width: 720px) { .product-about { grid-template-columns: minmax(0, 1fr); gap: 1rem; } }
+@media print { .product-about { display: none; } }
 
 /* ── Explorer insight strips (Est-µs Pareto + XNNPACK segment map) ─────────── */
 .op-insight-strip { margin: 4px 0 6px; position: relative; }

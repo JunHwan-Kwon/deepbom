@@ -139,10 +139,12 @@ function buildStorageSummary(analysis, format) {
     container_kind: analysis?.artifact_bundle?.kind || `${format}_single_file`,
     tensor_count: Number.isSafeInteger(summary.tensor_count) ? summary.tensor_count : Number(analysis?.tensor_count || 0),
     declared_tensor_bytes: Number.isSafeInteger(summary.byte_length) ? summary.byte_length : Number(analysis?.tensor_inventory?.total_declared_tensor_bytes || 0),
+    unknown_byte_length_tensor_count: Number(summary.unknown_byte_length_tensor_count || 0),
     encodings: (summary.encodings || []).slice(0, 32).map((row) => ({
       dtype: row.dtype,
       tensor_count: row.tensor_count,
       byte_length: row.byte_length,
+      unknown_byte_length_tensor_count: Number(row.unknown_byte_length_tensor_count || 0),
     })),
     encoding_count: Number(summary.encoding_count || 0),
     shard_count: format === "safetensors" ? Number(safeTensors.shard_count || 1) : 1,

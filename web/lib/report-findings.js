@@ -345,6 +345,24 @@ export function buildFindingsRegister(analysis, {
       relevance: "analysis coverage; evidence completeness",
     }));
   }
+  const ggufStorage = analysis?.format === "gguf" ? analysis.gguf : null;
+  if (ggufStorage && (ggufStorage.invalid_tensor_cardinality_count > 0
+    || ggufStorage.invalid_tensor_offset_count > 0 || ggufStorage.overlapping_tensor_range_count > 0)) {
+    findings.push(finding({
+      id: "EA-GGF-0001",
+      category: "integrity",
+      findingKind: "artifact_defect",
+      title: "GGUF tensor descriptors violate the serialized storage layout",
+      evidence: "OBSERVED/DERIVED",
+      priority: "High",
+      op: "GGUF tensor directory",
+      observation: `${formatNumber(ggufStorage.invalid_tensor_cardinality_count || 0)} tensor row cardinality violation(s), ${formatNumber(ggufStorage.invalid_tensor_offset_count || 0)} invalid offset(s), and ${formatNumber(ggufStorage.overlapping_tensor_range_count || 0)} overlapping known range(s) were observed. Invalid offsets include ${formatNumber(ggufStorage.out_of_bounds_tensor_range_count || 0)} out-of-bounds range(s); these counts are not additive.`,
+      interpretation: "Declared row dimensions must satisfy the source-pinned GGML block size; offsets must satisfy alignment and file bounds. An unsupported encoding alone does not trigger this defect. Unassessable byte lengths remain unknown.",
+      recommendation: "Inspect the named GGUF tensor descriptors and the exporter or quantizer, regenerate the artifact, and repeat the storage-layout checks before runtime validation.",
+      relevance: "serialized storage integrity; release gating",
+      evidenceJsonPointers: ["/evidence/static_analysis/gguf", "/evidence/static_analysis/tensors"],
+    }));
+  }
   const serializedIntegrity = analysis?.tensor_numerical_integrity;
   if (serializedIntegrity) {
     const records = Array.isArray(serializedIntegrity.tensor_records) ? serializedIntegrity.tensor_records : [];
@@ -403,7 +421,7 @@ export function buildFindingsRegister(analysis, {
         priority: "Informational",
         op: "serialized tensor payload",
         observation: `${formatNumber(serializedIntegrity.assessed_tensor_count || 0)}/${formatNumber(serializedIntegrity.tensor_count || 0)} tensor payloads and ${formatNumber(serializedIntegrity.assessed_tensor_bytes || 0)}/${formatNumber(serializedIntegrity.declared_tensor_bytes || 0)} declared tensor bytes were numerically decoded. ${formatNumber(serializedIntegrity.unassessed_tensor_count || 0)} tensor(s) remain explicit: ${(serializedIntegrity.limitations || []).slice(0, 6).map((row) => `${row.tensor_name} ${row.dtype}: ${row.reason}`).join("; ") || "reason ledger unavailable"}.`,
-        interpretation: "Container byte ranges are still conserved; no numerical result is inferred for an encoding whose source semantics are not implemented.",
+        interpretation: "Byte-range conservation is reported separately; no numerical result is inferred for an encoding whose source semantics are not implemented or whose storage cardinality is invalid.",
         recommendation: "Use a source-pinned decoder for the listed encodings or convert to an assessed dtype before treating payload integrity as complete.",
         relevance: "analysis coverage; evidence completeness",
         evidenceJsonPointers: ["/evidence/static_analysis/tensor_numerical_integrity/limitations"],

@@ -372,14 +372,20 @@ async function runMobileVerifiedExample(page) {
       selectorDisplay: selector ? getComputedStyle(selector).display : "none",
       selectorFontSize: getComputedStyle(document.querySelector("#mobileAuditView")).fontSize,
       sampleColumns: getComputedStyle(document.querySelector(".sample-model-control")).gridTemplateColumns,
-      workbenchTop: workbench?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY,
+      // Completion scrolls the first verdict surface into view. The detailed
+      // workbench can legitimately follow a full-screen mobile summary.
+      firstResultTop: (() => {
+        const summary = document.querySelector("#reviewSummaryPanel");
+        const target = summary && !summary.hidden ? summary : workbench;
+        return target?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
+      })(),
       overflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
       scale: window.visualViewport?.scale || 1,
     };
   });
   if (!state.status.includes("audit run complete") || state.progress !== "100" || state.workflowHidden || state.workbenchHidden
     || state.selectorDisplay === "none" || state.selectorFontSize !== "16px" || state.sampleColumns.split(" ").length !== 1
-    || state.workbenchTop < -1 || state.workbenchTop > 844 || state.overflow > 1 || state.scale !== 1) {
+    || state.firstResultTop < -1 || state.firstResultTop > 844 || state.overflow > 1 || state.scale !== 1) {
     throw new Error(`Mobile verified example workflow is not directly reviewable: ${JSON.stringify(state)}`);
   }
 }

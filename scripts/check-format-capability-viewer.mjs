@@ -43,6 +43,7 @@ try {
         if (collapsedText.length > 260 || !collapsedText.toLowerCase().startsWith("evidence capability")) {
           throw new Error(`Capability summary is not compact for ${format}/${width}/${theme}: ${collapsedText}`);
         }
+        await clearPointerState(page, summary);
         const backgroundBefore = await summary.evaluate((node) => getComputedStyle(node).backgroundColor);
         await summary.hover();
         await page.waitForTimeout(150);
@@ -110,6 +111,7 @@ try {
         }
 
         const firstBadge = panel.locator(".capability-state").first();
+        await clearPointerState(page, firstBadge);
         const badgeBackground = await firstBadge.evaluate((node) => getComputedStyle(node).backgroundColor);
         await firstBadge.hover();
         await page.waitForTimeout(150);
@@ -156,6 +158,7 @@ async function verifyRuntimeButtons(page, mobile) {
     if (!(await control.isVisible()) || await control.isDisabled()) {
       throw new Error(`${id} should be an enabled GGUF capability action.`);
     }
+    await clearPointerState(page, control);
     const before = await control.evaluate((node) => ({
       background: getComputedStyle(node).backgroundColor,
       border: getComputedStyle(node).borderColor,
@@ -253,4 +256,14 @@ function mimeType(file) {
     ".json": "application/json; charset=utf-8",
     ".wasm": "application/wasm",
   })[path.extname(file).toLowerCase()] || "application/octet-stream";
+}
+
+// Rerendering or resizing can move a new control under the old pointer. Measure
+// the baseline only after removing both hover and keyboard focus styles.
+async function clearPointerState(page, locator) {
+  await page.mouse.move(0, 0);
+  await locator.evaluate(async (node) => {
+    node.blur();
+    await Promise.all(node.getAnimations().map((animation) => animation.finished.catch(() => {})));
+  });
 }

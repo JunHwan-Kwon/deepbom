@@ -1,5 +1,5 @@
 // Public DeepBOM vendor-property contract used by both export and reconciliation.
-// These names describe DeepBOM output only; they are not standard fields and do
+// These names (including the mlbom compatibility projection) describe DeepBOM output only; they are not standard fields and do
 // not imply registration or endorsement by any external standards body.
 
 export const DEEPBOM_PROPERTY_TAXONOMY_SCHEMA = "deepbom.property_taxonomy.v1";
@@ -21,6 +21,101 @@ export const DEEPBOM_RECONCILABLE_COMPONENT_PROPERTIES = Object.freeze([
   "deepbom:model:completeAffineInterfaceCount",
   "deepbom:model:unquantizedInterfaceCount",
   "deepbom:model:invalidOrIncompleteInterfaceCount",
+  "deepbom:model:schemaOrOpset",
+  "deepbom:model:versionBasis",
+  "deepbom:model:fullIntegerQuantized",
+  "deepbom:model:quantizationClassificationBasis",
+  "deepbom:model:int8TensorCount",
+  "deepbom:model:uint8TensorCount",
+  "deepbom:model:floatTensorCount",
+  "deepbom:model:serializedQuantizeOperatorCount",
+  "deepbom:model:serializedDequantizeOperatorCount",
+  "deepbom:model:perAxisTensorCount",
+  "deepbom:model:perAxisQuantizationPresent",
+  "deepbom:model:primaryInputScale",
+  "deepbom:model:primaryInputZeroPoint",
+  "deepbom:model:storageEncodingBasis",
+  "deepbom:model:serializedContractStatus",
+  "deepbom:model:contractConflictCapsuleSha256",
+  "deepbom:model:contractConflictRootCount",
+  "deepbom:model:contractConflictConditionalVariantCount",
+  "deepbom:model:contractConflictBlockedMacRows",
+  "deepbom:model:inputTensorContractCount",
+  "deepbom:model:inputLayoutDerivedCount",
+  "deepbom:model:inputLayoutUnassessedCount",
+  "deepbom:model:llmContractSchema",
+  "deepbom:model:llmContractStatus",
+  "deepbom:model:llmEvidenceClass",
+  "deepbom:model:llmArchitecture",
+  "deepbom:model:llmArchitectureKind",
+  "deepbom:model:llmSerializedGraphStatus",
+  "deepbom:model:llmSerializedGraphSignatureSha256",
+  "deepbom:model:llmExplicitTransformerOperatorCount",
+  "deepbom:model:llmExternalStateCandidateCount",
+  "deepbom:model:llmContextLength",
+  "deepbom:model:llmVocabularySize",
+  "deepbom:model:llmSerializedParameterCount",
+  "deepbom:model:llmSerializedTensorBytes",
+  "deepbom:model:llmEncodingSignatureSchema",
+  "deepbom:model:llmLayerStorageSchema",
+  "deepbom:model:llmLayerStorageStatus",
+  "deepbom:model:llmObservedLayerCount",
+  "deepbom:model:llmLayerSerializedBytes",
+  "deepbom:model:llmNonLayerSerializedBytes",
+  "deepbom:model:llmKvElementsPerTokenPerBatch",
+  "deepbom:model:llmRecurrentStateElementsPerBatch",
+  "deepbom:model:llmMoeExpertCount",
+  "deepbom:model:llmMoeActiveExpertsPerToken",
+  "deepbom:model:llmTokenizerStatus",
+  "deepbom:model:llmChatTemplateStatus",
+  "deepbom:model:tfliteSparseStorageSchema",
+  "deepbom:model:tfliteSparseTensorCount",
+  "deepbom:model:tfliteSparseLogicalElements",
+  "deepbom:model:tfliteSparseStoredElements",
+  "deepbom:model:tfliteSparseImplicitZeroElements",
+  "deepbom:model:tfliteSparseSerializedValueBytes",
+  "deepbom:model:tfliteSubgraphInventorySchema",
+  "deepbom:model:tfliteSubgraphCount",
+  "deepbom:model:tfliteSerializedOperatorCount",
+  "deepbom:model:tflitePrimaryOperatorCount",
+  "deepbom:model:tfliteControlFlowReferenceCount",
+  "deepbom:model:tfliteControlFlowContractCount",
+  "deepbom:model:tfliteControlFlowContractPartialCount",
+  "deepbom:model:tfliteSubgraphIntrinsicCostSchema",
+  "deepbom:model:tfliteSubgraphIntrinsicAssessedCount",
+  "deepbom:model:tfliteSubgraphIntrinsicPartialCount",
+  "mlbom:model:format",
+  "mlbom:model:schemaOrOpset",
+  "mlbom:model:fileSizeBytes",
+  "mlbom:model:operatorCount",
+  "mlbom:model:tensorCount",
+  "mlbom:model:totalMacs",
+  "mlbom:model:macAssessmentStatus",
+  "mlbom:model:macAssessmentReason",
+  "mlbom:model:macAssessedComputeOps",
+  "mlbom:model:macComputeOps",
+  "mlbom:model:quantizationClassification",
+  "mlbom:model:fullIntegerQuantized",
+  "mlbom:model:quantizedComputeMacRatio",
+  "mlbom:model:quantizedComputeMacAssessment",
+  "mlbom:model:quantizedComputeMacAssessmentReason",
+  "mlbom:model:quantizedComputeOperatorAssessment",
+  "mlbom:model:quantizedComputeOperatorAssessmentReason",
+  "mlbom:model:quantizedComputeOperators",
+  "mlbom:model:computeOperators",
+  "mlbom:model:quantizedComputeMacs",
+  "mlbom:model:computeMacs",
+  "deepbom:model:quantizedTensorCount",
+  "deepbom:model:quantizedComputeOperatorCount",
+  "deepbom:model:computeOperatorCount",
+  "deepbom:model:quantizedComputeMacRatio",
+  "deepbom:model:graphOperatorCount",
+  "deepbom:model:graphTensorCount",
+  "deepbom:model:graphMacCount",
+  "deepbom:model:tensorDtypeInventorySha256",
+  "deepbom:model:artifactByteIntegritySchema",
+  "deepbom:model:artifactByteIntegrityLedgerSha256",
+  "deepbom:model:artifactByteIntegritySummarySha256",
 ]);
 
 export const DEEPBOM_STRUCTURED_EVIDENCE_PROPERTIES = Object.freeze([
@@ -34,12 +129,31 @@ export const DEEPBOM_STRUCTURED_EVIDENCE_PROPERTIES = Object.freeze([
   "deepbom:model:interfaceContractLedger",
 ]);
 
-export function deepBomPropertyMap(properties) {
-  const result = new Map();
-  for (const row of properties || []) {
-    const name = String(row?.name || "");
-    if (!name || result.has(name)) continue;
-    result.set(name, String(row?.value ?? ""));
+// A value with one of these prefixes describes the export, selected analysis
+// configuration, provenance sidecar, or runtime evidence. The artifact alone
+// cannot authenticate that assertion, even when this verifier has a default.
+const DECLARATION_PREFIXES = Object.freeze([
+  "deepbom:analyzer:", "deepbom:compatibility:", "deepbom:runtime:",
+  "deepbom:finding:", "deepbom:conformance:", "deepbom:preprocessing:",
+  "mlbom:target:", "deepbom:model:tensorRt", "deepbom:model:accelerator",
+  "deepbom:model:conversion", "deepbom:model:artifactSet", "deepbom:model:artifactSource",
+  "deepbom:model:llmRuntime", "deepbom:model:llmMemory", "deepbom:model:llmStatic",
+  "deepbom:model:llmMinimumStatic", "deepbom:model:llmMaximumStatic",
+  "deepbom:model:llmCliScenario", "deepbom:model:medicalAi", "deepbom:model:predicted",
+  "deepbom:model:tfliteSubgraphDeep", "deepbom:model:packedWeightQuantization",
+  "deepbom:model:activationQuantization", "deepbom:model:quantizationShard",
+]);
+const DECLARATION_NAMES = new Set([
+  "deepbom:model:llmSerializedWeightFloorBytes", "deepbom:model:runtimeAssignmentStatus",
+  "deepbom:model:artifactIrLocation", "deepbom:model:llmEvidencePointer",
+  "deepbom:model:quantizationTensorCount", "deepbom:evidenceBoundary",
+]);
+const RECONCILABLE = new Set(DEEPBOM_RECONCILABLE_COMPONENT_PROPERTIES);
+
+export function componentPropertyReconciliationKind(name) {
+  if (RECONCILABLE.has(name)) return "artifact_observation";
+  if (DECLARATION_NAMES.has(name) || DECLARATION_PREFIXES.some((prefix) => name.startsWith(prefix))) {
+    return "context_or_publisher_declaration";
   }
-  return result;
+  return "unsupported_mapping";
 }

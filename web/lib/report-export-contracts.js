@@ -839,15 +839,15 @@ function cycloneDxSubject(analysis, options = {}, externalReferences = []) {
       : "SafeTensors dtype, shape, and exact serialized ranges; no execution graph, affine activation contract, or Q/DQ placement is inferred."],
   ] : [
     ["deepbom:model:quantizationClassification", quantization.classification],
-    ["deepbom:model:fullIntegerQuantized", quantization.full_integer],
+    ["deepbom:model:fullIntegerQuantized", typeof analysis?.quantization_status?.full_integer === "boolean" ? quantization.full_integer : null],
     ["deepbom:model:quantizationClassificationBasis", quantization.classification_basis],
-    ["deepbom:model:int8TensorCount", quantization.int8_tensor_count],
-    ["deepbom:model:uint8TensorCount", quantization.uint8_tensor_count],
-    ["deepbom:model:floatTensorCount", quantization.float_tensor_count],
-    ["deepbom:model:serializedQuantizeOperatorCount", quantization.serialized_quantize_operator_count],
-    ["deepbom:model:serializedDequantizeOperatorCount", quantization.serialized_dequantize_operator_count],
-    ["deepbom:model:perAxisTensorCount", quantization.per_axis_tensor_count],
-    ["deepbom:model:perAxisQuantizationPresent", quantization.per_axis_tensor_count > 0],
+    ["deepbom:model:int8TensorCount", analysis?.quantization_status?.int8_tensors == null ? null : quantization.int8_tensor_count],
+    ["deepbom:model:uint8TensorCount", analysis?.quantization_status?.uint8_tensors == null ? null : quantization.uint8_tensor_count],
+    ["deepbom:model:floatTensorCount", analysis?.quantization_status?.float_tensors == null ? null : quantization.float_tensor_count],
+    ["deepbom:model:serializedQuantizeOperatorCount", analysis?.quantization_status?.quantize_ops == null ? null : quantization.serialized_quantize_operator_count],
+    ["deepbom:model:serializedDequantizeOperatorCount", analysis?.quantization_status?.dequantize_ops == null ? null : quantization.serialized_dequantize_operator_count],
+    ["deepbom:model:perAxisTensorCount", analysis?.per_channel_tensors == null ? null : quantization.per_axis_tensor_count],
+    ["deepbom:model:perAxisQuantizationPresent", analysis?.per_channel_tensors == null ? null : quantization.per_axis_tensor_count > 0],
   ];
   const component = {
     type: "machine-learning-model",

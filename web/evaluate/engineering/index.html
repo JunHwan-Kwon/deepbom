@@ -58,13 +58,13 @@
         {
           "@type": "ListItem",
           "position": 1,
-          "name": "DEEPBOM",
-          "item": "https://deepbom.org/"
+          "name": "Evaluate",
+          "item": "https://deepbom.org/evaluate/"
         },
         {
           "@type": "ListItem",
           "position": 2,
-          "name": "Engineering evaluation brief",
+          "name": "Engineering",
           "item": "https://deepbom.org/evaluate/engineering/"
         }
       ]
@@ -77,13 +77,10 @@
 <body>
   <header class="brief-header">
     <a class="brand" href="/">DEEPBOM</a>
-    <nav class="brief-nav" aria-label="Evaluation briefs">
-      <a href="../regulatory/">Regulatory</a>
-      <a href="../quality/">Quality</a>
-      <a aria-current="page" href="./">Engineering</a>
-    </nav>
+    <nav class="brief-nav" aria-label="Main navigation"><a href="/">Workspace</a><a href="/get-started/">Get started</a><a href="/guides/">Guides</a><a href="/evaluate/" aria-current="location">Evaluate</a></nav>
   </header>
   <main class="brief-main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/evaluate/">Evaluate</a></li><li><span aria-current="page">Engineering</span></li></ol></nav>
     <p class="eyebrow">Engineering evaluation brief</p>
     <h1>Static deployment evidence with explicit limits.</h1>
     <p class="lede">DEEPBOM analyzes TFLite, ONNX, Core ML, GGUF, SafeTensors, and ExecuTorch artifacts without executing model code. Web and CLI outputs share the same Artifact Evidence IR.</p>
@@ -125,6 +122,7 @@ npx deepbom audit model.tflite --output-format sarif --gate defects</code></pre>
       <p>Run <code>npx deepbom self-test</code>, audit one controlled artifact, inspect the top-level defects/cautions/evidence-needed summary, then retain the full JSON or evidence package for review.</p>
       <p><a href="/">Open the browser workspace</a> or <a href="https://github.com/JunHwan-Kwon/deepbom">review the source and CI configuration</a>.</p>
     </section>
+    <nav class="brief-related" aria-label="Evaluation briefs"><a href="/evaluate/regulatory/">Regulatory</a><a href="/evaluate/quality/">Quality</a><a href="/evaluate/engineering/" aria-current="page">Engineering</a></nav>
   </main>
   <footer class="brief-footer">Static evidence complements runtime and process validation; it does not replace them.</footer>
 </body>

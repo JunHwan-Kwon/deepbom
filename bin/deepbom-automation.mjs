@@ -202,7 +202,7 @@ export function buildSarifDocument(envelope, { version, policyResult = null } = 
       help: {
         text: catalog?.remediation || finding.recommendation || finding.interpretation || "Review the hash-bound DEEPBOM evidence envelope.",
       },
-      defaultConfiguration: { level: sarifLevel(finding.severity) },
+      defaultConfiguration: { level: sarifLevel(finding) },
       properties: {
         category: finding.rule_id || null,
         deepbomEvidenceClass: finding.evidence_class || null,
@@ -226,7 +226,7 @@ export function buildSarifDocument(envelope, { version, policyResult = null } = 
   const results = findings.map((finding) => ({
     ruleId: finding.id,
     ruleIndex: ruleIndexById.get(finding.id),
-    level: sarifLevel(finding.severity),
+    level: sarifLevel(finding),
     message: { text: finding.summary || finding.title || finding.id },
     locations: [{ physicalLocation: { artifactLocation: { uri: artifactUri, index: 0 } } }],
     partialFingerprints: {
@@ -409,8 +409,12 @@ function normalizeFindingLevel(value) {
   return FINDING_LEVEL_RANK.has(normalized) ? normalized : "informational";
 }
 
-function sarifLevel(value) {
-  const severity = normalizeFindingLevel(value);
+function sarifLevel(finding) {
+  const severity = normalizeFindingLevel(finding.severity);
+  // Missing evidence is not an observed defect. Keep original severity/kind
+  // in SARIF properties so a consumer can apply its own evidence policy.
+  if (finding.finding_kind === "evidence_gap") return "note";
+  if (finding.finding_kind !== "artifact_defect") return ["high", "medium"].includes(severity) ? "warning" : "note";
   if (severity === "high") return "error";
   if (severity === "medium") return "warning";
   return "note";

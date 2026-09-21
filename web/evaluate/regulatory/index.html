@@ -58,13 +58,13 @@
         {
           "@type": "ListItem",
           "position": 1,
-          "name": "DEEPBOM",
-          "item": "https://deepbom.org/"
+          "name": "Evaluate",
+          "item": "https://deepbom.org/evaluate/"
         },
         {
           "@type": "ListItem",
           "position": 2,
-          "name": "Regulatory evaluation brief",
+          "name": "Regulatory",
           "item": "https://deepbom.org/evaluate/regulatory/"
         }
       ]
@@ -77,13 +77,10 @@
 <body>
   <header class="brief-header">
     <a class="brand" href="/">DEEPBOM</a>
-    <nav class="brief-nav" aria-label="Evaluation briefs">
-      <a aria-current="page" href="./">Regulatory</a>
-      <a href="../quality/">Quality</a>
-      <a href="../engineering/">Engineering</a>
-    </nav>
+    <nav class="brief-nav" aria-label="Main navigation"><a href="/">Workspace</a><a href="/get-started/">Get started</a><a href="/guides/">Guides</a><a href="/evaluate/" aria-current="location">Evaluate</a></nav>
   </header>
   <main class="brief-main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/evaluate/">Evaluate</a></li><li><span aria-current="page">Regulatory</span></li></ol></nav>
     <p class="eyebrow">Regulatory evaluation brief</p>
     <h1>Technical evidence for the artifact that is actually deployed.</h1>
     <p class="lede">DEEPBOM identifies a deployment artifact by hash, records its serialized contracts, and separates static derivations from target assumptions and imported runtime observations.</p>
@@ -122,6 +119,7 @@
       <p>Start with a verified sample in the browser, then preserve the analyzer version, artifact SHA-256, target identity, rulepack identity, and generated evidence package with the controlled review record.</p>
       <p><a href="/">Open the local artifact workspace</a></p>
     </section>
+    <nav class="brief-related" aria-label="Evaluation briefs"><a href="/evaluate/regulatory/" aria-current="page">Regulatory</a><a href="/evaluate/quality/">Quality</a><a href="/evaluate/engineering/">Engineering</a></nav>
   </main>
   <footer class="brief-footer">DEEPBOM is independently developed research software. Artifact analysis runs locally in the browser.</footer>
 </body>

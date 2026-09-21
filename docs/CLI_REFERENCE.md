@@ -58,15 +58,18 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.103.0`:
+`1.103.1`:
 
 ```console
-DEEPBOM 1.103.0
+DEEPBOM 1.103.1
 
 Usage:
   deepbom audit <artifact-or-package> [options]
   deepbom gguf <artifact.gguf> [options]
   deepbom verify <artifact> --contract <json> [options]
+  deepbom verify <artifact> --bom <cyclonedx-1.7.json> [--component-ref <bom-ref>]
+  deepbom contract capture <artifact> [-o baseline.interface-contract.json]
+  deepbom batch <manifest.json> --batch-output-dir <directory> [options]
   deepbom diff <baseline-artifact-or-package> <candidate-artifact-or-package> [options]
   deepbom explore <artifact.tflite> [options]
   deepbom graph <artifact> [options]
@@ -85,6 +88,10 @@ Options:
   --target-profile <json>
                           Bind a strict custom TFLite target profile (mutually exclusive with --target)
   --contract <json>      Production external-interface contract for verify
+  --bom <json>           Reconcile CycloneDX 1.7 claims with the selected artifact
+  --component-ref <ref>  Explicitly select a BOM component; hash disagreements still block
+  --expected-sha256 <hex> Require the exact artifact digest before analysis
+  --summary             Compatibility alias for --output-format summary
   --request <json>       Bound redesign request for explore
   --external-data-dir <directory>
                           Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory
@@ -125,7 +132,7 @@ Safe-envelope boundary:
   Keras, HDF5, PT2, and PyTorch checkpoint previews do not construct framework objects or claim an executable graph.
 
 Exit codes:
-  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding
+  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding; 4 expected SHA-256 mismatch
 
 Additional command:
   deepbom model-summary <artifact> [--level auto|operation|block|storage] [--format table|markdown|json|json-compact]

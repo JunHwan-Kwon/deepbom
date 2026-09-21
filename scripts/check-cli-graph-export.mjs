@@ -163,6 +163,14 @@ assert.match(formatConflict.stderr, /conflicts with an explicit non-JSON graph -
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+  await page.setContent(svgA.replace(/^<\?xml[^>]+>/, ""));
+  for (const [scheme, expectedFill] of [["light", "rgb(245, 242, 234)"], ["dark", "rgb(23, 27, 26)"]]) {
+    await page.emulateMedia({ colorScheme: scheme });
+    assert.equal(await page.locator(".background").evaluate((element) => getComputedStyle(element).fill), expectedFill);
+    assert.notEqual(await page.locator(".node .label").first().evaluate((element) => getComputedStyle(element).fill), expectedFill);
+  }
+  await page.emulateMedia({ colorScheme: "light" });
+
   await page.goto(pathToFileURL(htmlPath).href, { waitUntil: "load" });
   const initial = await page.locator("#scene").evaluate((node) => getComputedStyle(node).transform);
   await page.locator("#plus").click();

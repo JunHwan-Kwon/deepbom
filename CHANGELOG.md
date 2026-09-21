@@ -4,10 +4,50 @@ All notable archival releases of DEEPBOM are documented here.
 
 ## Unreleased
 
+- Add an eleven-chapter CLI Handbook and searchable command reference under
+  Guides. Generate the hosted reference and downloadable help from the same
+  executable as the Markdown reference, and reject drift during web builds.
+  Include copyable examples, print/PDF layouts, mobile navigation, and explicit
+  CLI-versus-Web SPDX availability. Reserve 64 KiB of runtime source and
+  16 KiB of development tooling for the documentation and generation path.
+
+- Add a public `/get-started/` hub for web, Windows/macOS/Linux Desktop,
+  CLI installers, and AI connections. Pin verified download/setup versions,
+  distinguish preview and review status, and expose the page in mobile and
+  desktop navigation. Include keyboard-accessible OS tabs, copyable commands,
+  and complete instructions without JavaScript. Reserve 40 KiB of handwritten
+  runtime source for this separate page and its navigation; analyzer and tool
+  contracts remain at their existing versions.
+
 - Qualify the Claude MCP App in a simulated cross-origin browser host. Load
   TFLite's existing self-contained worker bundle through the deployment origin
   and clear stale results before a new analysis. Keep engine 1.103.0 and the
   existing tool contract; actual Claude account validation remains required.
+
+## 1.103.1 - 2026-09-21
+
+- Reconcile quantization counts and every `mlbom:model:` property against fresh
+  artifact observations. Count every supplied property occurrence, including
+  unknown namespaces and duplicate names; reject hidden conflicting hashes.
+- Report `NO_CONTRADICTION` and explicit coverage instead of a blanket human
+  `PASS`. Keep exit-code compatibility and distinguish missing, mismatching,
+  and ambiguous subject hashes without inferring forgery from a mismatch.
+- Support both CLI and browser CycloneDX profiles. Preserve unavailable
+  quantization observations as unknown, rather than emitting false or zero.
+- Keep SARIF artifact defects, cautions, and evidence gaps distinct while
+  preserving original severity. Improve SafeTensors byte-range diagnostics.
+- Surface BOM verification, batch, summary, and hash-binding options near the
+  start of help; add automatic light/dark SVG rendering.
+- Expand the exact-name property taxonomy and reserve 24 KiB of documentation
+  budget for compatibility mappings and explicit reconciliation boundaries.
+- Retain empty or unassessed GGUF/SafeTensors tensors in namespace counts
+  without dangling payload references. Preserve unknown namespace byte totals,
+  offsets and exact integers as null, not zero; this corrects some derived
+  Artifact IR hashes without changing the artifact SHA-256. Regenerate older
+  IR-bound BOMs when adopting the corrected analysis.
+- Report known invalid GGUF block-row cardinalities, offsets and overlapping
+  ranges as artifact defects even in structure-only scans. Keep unsupported
+  encodings distinct and label incomplete human byte totals as known subtotals.
 
 ## 1.103.0 - 2026-09-17
 

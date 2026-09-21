@@ -1825,13 +1825,18 @@ textarea {
   .topbar-meta {
     grid-template-columns: 40px minmax(0, 1fr);
     grid-template-areas:
+      "navigation navigation"
       "theme status";
     gap: 7px 10px;
   }
 
-  .topbar-meta .evaluation-nav,
   .topbar-meta .auth-widget {
     display: none;
+  }
+
+  .topbar-meta .evaluation-nav {
+    display: flex;
+    grid-area: navigation;
   }
 
   .theme-toggle {

@@ -140,7 +140,10 @@ function storageCopy(summary) {
   const storage = summary.storage;
   if (!storage) return "";
   const encoded = storage.encodings.map((row) => `${row.dtype} ${row.tensor_count}`).join(", ") || "no dtype rows";
-  return `Serialized storage: ${storage.tensor_count} tensors, ${formatBytes(storage.declared_tensor_bytes)}, ${encoded}; integrity ${storage.numerical_integrity_status}.`;
+  const bytes = storage.unknown_byte_length_tensor_count > 0
+    ? `${formatBytes(storage.declared_tensor_bytes)} known subtotal; ${storage.unknown_byte_length_tensor_count} tensor byte length(s) unknown`
+    : formatBytes(storage.declared_tensor_bytes);
+  return `Serialized storage: ${storage.tensor_count} tensors, ${bytes}, ${encoded}; integrity ${storage.numerical_integrity_status}.`;
 }
 
 function formatBytes(value) {

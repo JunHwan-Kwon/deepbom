@@ -1,10 +1,15 @@
 import { buildTensorStorageSummary, parseMetadataModel } from "../web/lib/metadata-model-adapters.js";
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { Sha256Accumulator, sha256BytesHex } from "../web/lib/sha256-sync.js";
 import { buildDeploymentContractDocuments } from "../web/lib/report-export-contracts.js";
 import { buildEngineeringEvidenceDocument } from "../web/lib/report-evidence.js";
 import { assertCycloneDx17 } from "./cyclonedx-17-schema.mjs";
 import { scanSerializedTensorPayloads } from "../web/lib/tensor-numerical-integrity.js";
+import { buildFindingsRegister } from "../web/lib/report-findings.js";
 
 function expect(value, message) {
   if (!value) throw new Error(message);
@@ -62,6 +67,17 @@ const f4 = safetensors('{"w":{"dtype":"F4","shape":[2],"data_offsets":[0,1]}}', 
 expect(parseMetadataModel(f4.bytes, "f4.safetensors", f4.fileSize, "safetensors").tensors[0].byte_length === 1, "SafeTensors F4 byte cardinality");
 const misalignedF4 = safetensors('{"w":{"dtype":"F4","shape":[1],"data_offsets":[0,1]}}', 1);
 expectThrows(() => parseMetadataModel(misalignedF4.bytes, "misaligned-f4.safetensors", misalignedF4.fileSize, "safetensors"), "not byte-aligned", "SafeTensors sub-byte tensors fail closed when the reference implementation rejects their alignment");
+
+const beyondEnd = safetensors('{"w":{"dtype":"F32","shape":[1000000],"data_offsets":[0,4000000]}}', 16);
+expectThrows(() => parseMetadataModel(beyondEnd.bytes, "outside.safetensors", beyondEnd.fileSize, "safetensors"),
+  'tensor "w" declares payload byte range [0, 4000000), but only 16 payload bytes are available', "out-of-file offsets identify the tensor and available bytes");
+const trailing = safetensors('{"w":{"dtype":"U8","shape":[1],"data_offsets":[0,1]}}', 2);
+expectThrows(() => parseMetadataModel(trailing.bytes, "trailing.safetensors", trailing.fileSize, "safetensors"),
+  "1 trailing bytes are not assigned to any tensor", "unclaimed bytes are explained");
+const hugeHeader = new Uint8Array(9);
+new DataView(hugeHeader.buffer).setBigUint64(0, 2n ** 62n, true);
+expectThrows(() => parseMetadataModel(hugeHeader, "huge.safetensors", hugeHeader.length, "safetensors"),
+  "SafeTensors header length at byte 0 is 4611686018427387904", "oversized header error identifies exact field and integer");
 
 class Writer {
   constructor(littleEndian = true) { this.bytes = []; this.littleEndian = littleEndian; }
@@ -183,6 +199,29 @@ expect(invalidRowAnalysis.gguf.invalid_tensor_cardinality_count === 1
   && invalidRowStorage.status === "partial_unknown_serialized_byte_cardinality"
   && invalidRowStorage.effective_bits_per_element == null,
 "GGUF invalid block-row cardinality must remain an explicit partial assessment instead of entering a payload decoder");
+const invalidRowFinding = buildFindingsRegister(invalidRowAnalysis).find((row) => row.finding_id === "EA-GGF-0001");
+expect(invalidRowFinding?.finding_kind === "artifact_defect", "known invalid GGUF row cardinality must be a defect even without a payload scan");
+const unknownEncodingAnalysis = { ...invalidRowAnalysis, gguf: { ...invalidRowAnalysis.gguf,
+  invalid_tensor_cardinality_count: 0, invalid_tensor_offset_count: 0, overlapping_tensor_range_count: 0,
+  unsupported_ggml_type_count: 1 } };
+expect(!buildFindingsRegister(unknownEncodingAnalysis).some((row) => row.finding_id === "EA-GGF-0001"),
+  "unsupported GGUF encoding alone must not become an observed storage defect");
+const invalidStorageDirectory = await mkdtemp(path.join(tmpdir(), "deepbom-invalid-gguf-"));
+try {
+  const filename = path.join(invalidStorageDirectory, "invalid-row.gguf");
+  await writeFile(filename, invalidRowFile);
+  for (const scan of ["structure", "full"]) {
+    const result = spawnSync(process.execPath, ["bin/deepbom.mjs", "audit", filename,
+      "--scan", scan, "--gate", "defects", "--output-format", "sarif"], { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 });
+    expect(result.status === 2, `${scan}: invalid GGUF descriptors must block the defect gate: ${result.stderr}`);
+    const defect = JSON.parse(result.stdout).runs[0].results.find((row) => row.ruleId === "EA-GGF-0001");
+    expect(defect?.level === "error" && defect.properties.deepbomFindingKind === "artifact_defect", `${scan}: SARIF must expose the observed storage defect`);
+  }
+  const summary = spawnSync(process.execPath, ["bin/deepbom.mjs", "audit", filename, "--summary"], { encoding: "utf8" });
+  expect(summary.status === 0 && /known subtotal; 1 tensor byte length\(s\) unknown/.test(summary.stdout), "the human summary must not label unknown storage as an exact zero total");
+} finally {
+  await rm(invalidStorageDirectory, { recursive: true, force: true });
+}
 ggufAnalysis.model_sha256 = "d".repeat(64);
 const ggufEvidence = buildEngineeringEvidenceDocument(ggufAnalysis, {
   reportContext: { identity: { filename: ggufAnalysis.filename, format: "gguf", sha256: ggufAnalysis.model_sha256 } },

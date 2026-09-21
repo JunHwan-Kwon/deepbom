@@ -58,13 +58,13 @@
         {
           "@type": "ListItem",
           "position": 1,
-          "name": "DEEPBOM",
-          "item": "https://deepbom.org/"
+          "name": "Evaluate",
+          "item": "https://deepbom.org/evaluate/"
         },
         {
           "@type": "ListItem",
           "position": 2,
-          "name": "Quality evaluation brief",
+          "name": "Quality",
           "item": "https://deepbom.org/evaluate/quality/"
         }
       ]
@@ -77,13 +77,10 @@
 <body>
   <header class="brief-header">
     <a class="brand" href="/">DEEPBOM</a>
-    <nav class="brief-nav" aria-label="Evaluation briefs">
-      <a href="../regulatory/">Regulatory</a>
-      <a aria-current="page" href="./">Quality</a>
-      <a href="../engineering/">Engineering</a>
-    </nav>
+    <nav class="brief-nav" aria-label="Main navigation"><a href="/">Workspace</a><a href="/get-started/">Get started</a><a href="/guides/">Guides</a><a href="/evaluate/" aria-current="location">Evaluate</a></nav>
   </header>
   <main class="brief-main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/evaluate/">Evaluate</a></li><li><span aria-current="page">Quality</span></li></ol></nav>
     <p class="eyebrow">Quality evaluation brief</p>
     <h1>Validate the installed tool before relying on its evidence.</h1>
     <p class="lede">DEEPBOM records artifact, analyzer, rulepack, target, and evidence identities so an organization can reproduce a result and define its own acceptance criteria.</p>
@@ -119,6 +116,7 @@ npx deepbom audit path/to/model.tflite --gate defects</code></pre>
       </ul>
       <p><a href="/">Run a verified browser sample</a> or <a href="https://github.com/JunHwan-Kwon/deepbom">inspect the public source and checks</a>.</p>
     </section>
+    <nav class="brief-related" aria-label="Evaluation briefs"><a href="/evaluate/regulatory/">Regulatory</a><a href="/evaluate/quality/" aria-current="page">Quality</a><a href="/evaluate/engineering/">Engineering</a></nav>
   </main>
   <footer class="brief-footer">Quality acceptance remains the responsibility of the organization using the tool.</footer>
 </body>

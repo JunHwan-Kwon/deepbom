@@ -532,7 +532,9 @@ async function validateBrowserSelection(items) {
         }
         await page.waitForFunction(() => {
           const value = document.querySelector("#analysisPlanStatus")?.textContent || "";
-          return value.includes("audit run complete") || value.startsWith("Audit failed:");
+          return value.startsWith("Audit failed:") || (value.includes("audit run complete")
+            && document.querySelector("#status")?.textContent?.includes("audit run complete")
+            && document.querySelector("#auditProgress")?.getAttribute("aria-valuenow") === "100");
         }, null, { timeout: item.id === "tflite" ? 300_000 : 90_000 });
         const terminalStatus = await page.locator("#analysisPlanStatus").textContent();
         assert(terminalStatus.includes("audit run complete"), `${item.id} ${terminalStatus}`);
@@ -559,7 +561,7 @@ async function validateBrowserSelection(items) {
           placement_external_relation: [...document.querySelectorAll("#executionPlacementPanel .execution-placement-relation")].findIndex((node) => node.classList.contains("external")),
           placement_text: document.querySelector("#executionPlacementPanel")?.textContent || "",
         }));
-        assert(state.audit_status.includes("audit run complete") && state.global_status.includes("audit run complete"), `${item.id} did not reach rendered audit completion`);
+        assert(state.audit_status.includes("audit run complete") && state.global_status.includes("audit run complete"), `${item.id} did not reach rendered audit completion: ${JSON.stringify({ audit: state.audit_status, global: state.global_status, progress: state.progress })}`);
         assert(state.progress === "100", `${item.id} progress did not reach 100`);
         assert(state.viewport_overflow_px <= 1, `${item.id} viewer overflows the desktop viewport`);
         assert(state.artifact_binding_bytes !== "0 B", `${item.id} rendered a false zero artifact size`);

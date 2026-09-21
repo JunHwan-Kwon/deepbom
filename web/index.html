@@ -1,15 +1,14 @@
 <!doctype html>
 <html lang="en" data-analysis-depth="deep">
 <head>
-  <meta name="deepbom-release" content="1.103.0" />
+  <meta name="deepbom-release" content="1.103.1" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta id="themeColor" name="theme-color" content="#fffefa" />
 
     <!-- Primary SEO -->
-    <title>DEEPBOM | Deployment Artifact Evidence for On-Device AI</title>
-    <meta name="description" content="Inspect TFLite, ONNX, GGUF, SafeTensors, and Core ML deployment artifacts locally in the browser. Separate artifact facts, target-specific models, runtime evidence, and unproven claims." />
-    <meta name="keywords" content="TFLite analyzer, ONNX analyzer, GGUF inspector, SafeTensors inspector, Core ML analyzer, on-device AI, model audit, quantization analysis, INT8, WebAssembly, WASM, TensorFlow Lite, XNNPACK, roofline model, neural network inspector, edge inference, mobile AI" />
+    <title>DEEPBOM | Local AI Model Analyzer</title>
+    <meta name="description" content="Inspect ONNX, TFLite, GGUF, SafeTensors, Core ML and ExecuTorch model artifacts locally. Audit quantization, visualize structure and export hash-bound evidence." />
     <meta name="author" content="Jun-Hwan Kwon, Ph.D., Yonsei University College of Medicine" />
     <meta name="citation_title" content="DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts" />
     <meta name="citation_author" content="Kwon, Jun-Hwan" />
@@ -21,8 +20,8 @@
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://deepbom.org/" />
-    <meta property="og:title" content="DEEPBOM | Deployment Artifact Evidence for On-Device AI" />
-    <meta property="og:description" content="Inspect deployment artifacts locally and separate serialized facts, deterministic derivations, target models, imported runtime evidence, and what remains unproven." />
+    <meta property="og:title" content="DEEPBOM | Local AI Model Analyzer" />
+    <meta property="og:description" content="Inspect ONNX, TFLite, GGUF, SafeTensors, Core ML and ExecuTorch model artifacts locally. Audit quantization, visualize structure and export hash-bound evidence." />
     <meta property="og:site_name" content="DEEPBOM" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:image" content="https://deepbom.org/web/og-image.png" />
@@ -32,8 +31,8 @@
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="DEEPBOM | Deployment Artifact Evidence for On-Device AI" />
-    <meta name="twitter:description" content="Browser-local deployment artifact evidence for TFLite, ONNX, GGUF, SafeTensors, and Core ML with explicit claim boundaries." />
+    <meta name="twitter:title" content="DEEPBOM | Local AI Model Analyzer" />
+    <meta name="twitter:description" content="Inspect ONNX, TFLite, GGUF, SafeTensors, Core ML and ExecuTorch model artifacts locally. Audit quantization, visualize structure and export hash-bound evidence." />
     <meta name="twitter:image" content="https://deepbom.org/web/og-image.png" />
 
     <!-- Structured data: SoftwareApplication + FAQPage + WebSite -->
@@ -45,12 +44,16 @@
           "@type": "SoftwareApplication",
           "@id": "https://deepbom.org/#app",
           "name": "DEEPBOM",
-          "alternateName": ["deepbom", "DEEPBOM Artifact Evidence"],
+          "alternateName": [
+            "deepbom",
+            "DEEPBOM Artifact Evidence",
+            "DEEPBOM AI Model Analyzer"
+          ],
           "applicationCategory": "DeveloperApplication",
           "applicationSubCategory": "Machine Learning Tool",
           "operatingSystem": "Web Browser",
           "url": "https://deepbom.org/",
-          "softwareVersion": "1.103.0",
+          "softwareVersion": "1.103.1",
           "identifier": "https://doi.org/10.5281/zenodo.21834508",
           "sameAs": [
             "https://github.com/JunHwan-Kwon/deepbom",
@@ -62,7 +65,7 @@
           "datePublished": "2026-08-07",
           "screenshot": "https://deepbom.org/web/og-image.png",
           "citation": "Kwon, J. (2026). DEEPBOM: Browser-Native Static Analysis of On-Device Neural Network Deployment Artifacts [Computer software]. Zenodo concept DOI. https://doi.org/10.5281/zenodo.21834508",
-          "description": "Browser-local deployment artifact evidence for TFLite, ONNX, GGUF, SafeTensors, and Core ML. The analyzer separates serialized facts, deterministic derivations, target-specific models, imported runtime observations, and unassessed claims.",
+          "description": "Inspect ONNX, TFLite, GGUF, SafeTensors, Core ML and ExecuTorch model artifacts locally. Audit quantization, visualize structure and export hash-bound evidence.",
           "featureList": [
             "TFLite FlatBuffer static analysis",
             "ONNX model analysis",
@@ -92,7 +95,10 @@
             "affiliation": {
               "@type": "Organization",
               "name": "Anesthesia and Pain Research Institute, Yonsei University College of Medicine",
-              "address": { "@type": "PostalAddress", "addressCountry": "KR" }
+              "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "KR"
+              }
             },
             "identifier": {
               "@type": "PropertyValue",
@@ -105,7 +111,9 @@
             ],
             "url": "https://deepbom.org/"
           },
-          "creator": { "@id": "https://deepbom.org/#author" },
+          "creator": {
+            "@id": "https://deepbom.org/#author"
+          },
           "keywords": "TFLite, ONNX, GGUF, SafeTensors, Core ML, model analysis, INT8 quantization, on-device AI, WebAssembly, neural network, XNNPACK, roofline",
           "inLanguage": "en",
           "isAccessibleForFree": true
@@ -116,7 +124,10 @@
           "url": "https://deepbom.org/",
           "name": "DEEPBOM",
           "description": "Deployment artifact evidence for on-device AI, with format-specific analysis depth and explicit claim boundaries",
-          "publisher": { "@id": "https://deepbom.org/#author" }
+          "publisher": {
+            "@id": "https://deepbom.org/#author"
+          },
+          "alternateName": "DEEPBOM AI Model Analyzer"
         },
         {
           "@type": "FAQPage",
@@ -127,47 +138,31 @@
               "name": "What is DEEPBOM?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "DEEPBOM is a browser-local evidence analysis tool for TFLite, ONNX, GGUF, SafeTensors, and Core ML artifacts. It reports the exact analysis depth available for each format, and artifact bytes remain local."
+                "text": "DEEPBOM is a local AI model analyzer for ONNX, TFLite, GGUF, SafeTensors, Core ML and ExecuTorch deployment artifacts. It reports SHA-256 identity, serialized structure, tensor encodings, quantization evidence, defects, cautions and evidence gaps. Supported analysis depth depends on the format."
               }
             },
             {
               "@type": "Question",
-              "name": "Does DEEPBOM upload my model to a server?",
+              "name": "Does static analysis execute model code?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "No. Artifact files, weight payloads, tensor values, selected inputs, outputs, and reports remain in browser memory. Users may separately opt in to de-identified structural telemetry and may withdraw that consent; analysis does not require telemetry consent."
+                "text": "The static audit reads serialized model artifacts without executing model code. Optional browser runtime benchmarks are separate, explicit actions, and their measurements are reported separately from static evidence."
               }
             },
             {
               "@type": "Question",
-              "name": "What file formats does DEEPBOM support?",
+              "name": "Does the web analyzer upload my model?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "DEEPBOM provides deep deployment analysis for TFLite, graph and compatibility analysis for ONNX, container and tensor inspection for GGUF, checkpoint and shard inspection for SafeTensors, and model or package inspection for Core ML, including serialized graph evidence when present."
+                "text": "Static analysis in the web workspace runs on your device. The selected model bytes are not uploaded to DEEPBOM. Optional telemetry requires consent. AI assistant connections have separate data paths; an attachment shared with ChatGPT has already been shared with that host."
               }
             },
             {
               "@type": "Question",
-              "name": "What does DEEPBOM analyze in a TFLite or ONNX model?",
+              "name": "What can I export, and what does the evidence establish?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "DEEPBOM analyzes: (1) INT8 quantization contracts — holes, per-channel scale/zero-point distribution, and dequantize-requantize boundaries; (2) stored constant distributions — histogram, low-norm heuristics, and L2 norm per output channel where applicable; (3) synthetic-output perturbation geometry — 2D RMS output-drift slices using filter-normalized random directions, centered finite-difference projected-curvature descriptors, and a multi-projection directional summary; (4) frequency composition — Haar LL/LH/HL/HH energy for stored convolutional kernels and synthetic or observed activation maps; and (5) deployment evidence — static XNNPACK partition prediction, roofline modeling, and explicitly separate browser runtime measurements."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "How do I analyze a TFLite model with DEEPBOM?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "1. Open deepbom.org in your browser. 2. Select a supported artifact file or package; it stays local. 3. Review the displayed format-specific evidence scope. 4. Run the static artifact audit. 5. Export the hash-bound evidence, CycloneDX document, or public watermarked report."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "What are DEEPBOM's artifact perturbation observations?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "DEEPBOM evaluates a deterministic synthetic-input scalar functional: RMS output change between the unperturbed artifact and filter-normalized weight perturbations. It reports 2D output-drift grids, centered finite-difference projected-curvature descriptors, and raw directional λ_max variation across independently seeded slices. The input basis, seeds, radius, stencil, included constants, and INT8 dequantization policy are disclosed with the result. This is not training loss, a full-space Hessian, a 3D reconstruction, or evidence of generalization, accuracy, robustness, clinical performance, or release readiness."
+                "text": "The web workspace provides evidence JSON, CycloneDX and SPDX exports, plus supported SVG, PNG and model-view bundles. The available views depend on the artifact. Static evidence does not establish measured runtime performance, model accuracy, clinical validity or regulatory compliance."
               }
             }
           ]
@@ -245,13 +240,7 @@
         </address>
       </div>
       <div class="topbar-meta">
-        <nav class="evaluation-nav" aria-label="Evaluation briefs">
-          <span>Evaluate</span>
-          <a href="/evaluate/regulatory/">Regulatory</a>
-          <a href="/evaluate/quality/">Quality</a>
-          <a href="/evaluate/engineering/">Engineering</a>
-          <a href="/for-agents/">AI agents</a>
-        </nav>
+        <nav class="evaluation-nav" aria-label="Main navigation"><a href="/" aria-current="page">Workspace</a><a class="get-started-link" href="/get-started/">Get started</a><a class="guides-link" href="/guides/">Guides</a><a href="/evaluate/">Evaluate</a></nav>
         <button class="theme-toggle" id="themeToggle" type="button" aria-label="Use dark theme" title="Use dark theme">
           <span class="theme-toggle-icon" aria-hidden="true"></span>
           <span id="themeToggleLabel">Dark</span>
@@ -2152,10 +2141,27 @@
     <script type="module" src="./lib/citation-ui.js"></script>
     <script type="module" src="./bootstrap.js"></script>
 
-    <!-- Search engine and AI crawler content — not shown to interactive users -->
-    <footer class="seo-footer" aria-label="About DEEPBOM">
-      <h2>About DEEPBOM</h2>
-      <p>DEEPBOM is a browser-native deployment artifact analyzer. TFLite receives deep graph, quantization, memory, and target-rule analysis; ONNX receives graph, tensor, shape, compatibility, and runtime-evidence analysis; GGUF and SafeTensors receive container, tensor, payload, and shard-contract analysis; Core ML receives model or package inspection and serialized graph evidence when present. Bounded previews decode serialized GraphDef, first-MetaGraph SavedModel, Keras config, and PT2 JSON relationships without framework object construction; HDF5 and PyTorch checkpoints remain safe-envelope-only. The UI states the applicable depth for every run. Artifact files are analyzed locally and are not uploaded.</p>
+    <footer class="product-about" aria-labelledby="about-title">
+      <div class="product-about-intro">
+        <p class="product-about-kicker">About DEEPBOM</p>
+        <h2 id="about-title">Local AI model analysis, from file to evidence.</h2>
+        <p>Inspect ONNX graphs, TFLite quantization, GGUF tensor encodings, SafeTensors storage, and supported Core ML and ExecuTorch artifacts. Start with the browser analyzer above, or choose a desktop app, CLI, or AI connection.</p>
+        <nav class="product-about-links" aria-label="Learn model inspection">
+          <a href="/get-started/">Install or connect DEEPBOM</a>
+          <a href="/guides/cli/">CLI commands and examples</a>
+          <a href="/guides/inspect-onnx-quantization/">Inspect ONNX quantization</a>
+          <a href="/guides/inspect-gguf-tensor-encodings/">Read GGUF tensor encodings</a>
+          <a href="/guides/compare-model-artifacts/">Compare two model artifacts</a>
+        </nav>
+      </div>
+      <section class="product-about-faq" aria-label="Frequently asked questions">
+        <details class="product-about-question"><summary>What is DEEPBOM?</summary><p>DEEPBOM is a local AI model analyzer for ONNX, TFLite, GGUF, SafeTensors, Core ML and ExecuTorch deployment artifacts. It reports SHA-256 identity, serialized structure, tensor encodings, quantization evidence, defects, cautions and evidence gaps. Supported analysis depth depends on the format.</p></details>
+        <details class="product-about-question"><summary>Does static analysis execute model code?</summary><p>The static audit reads serialized model artifacts without executing model code. Optional browser runtime benchmarks are separate, explicit actions, and their measurements are reported separately from static evidence.</p></details>
+        <details class="product-about-question"><summary>Does the web analyzer upload my model?</summary><p>Static analysis in the web workspace runs on your device. The selected model bytes are not uploaded to DEEPBOM. Optional telemetry requires consent. AI assistant connections have separate data paths; an attachment shared with ChatGPT has already been shared with that host.</p></details>
+        <details class="product-about-question"><summary>What can I export, and what does the evidence establish?</summary><p>The web workspace provides evidence JSON, CycloneDX and SPDX exports, plus supported SVG, PNG and model-view bundles. The available views depend on the artifact. Static evidence does not establish measured runtime performance, model accuracy, clinical validity or regulatory compliance.</p></details>
+      </section>
+      <details class="product-about-scope">
+        <summary>Analysis capabilities, implementation and evidence limits</summary>
       <h3>Key capabilities</h3>
       <ul>
         <li><strong>INT8 quantization audit:</strong> identifies static anomalies and contract discontinuities (per-channel scale/zero-point anomalies and serialized activation precision boundaries) that may increase the risk of numerical or task-level regression and warrant reference-data testing. Boundary-operator counts are not presented as runtime float-island counts.</li>
@@ -2182,6 +2188,8 @@
       <p>The TFLite analysis core is written in Rust and compiled to WebAssembly via wasm-pack. ONNX graph parsing and static shape/MAC assessment are implemented in browser JavaScript, while ONNX inference uses ONNX Runtime Web's WebAssembly backend. Viewer rendering and local exports run in the browser. Optional research modules and saved requests use separate access controls; the core audit and local evidence exports do not require an account.</p>
       <h3>Research context</h3>
       <p>DEEPBOM is developed by Jun-Hwan Kwon, Ph.D., Research Assistant Professor at the Anesthesia and Pain Research Institute, Yonsei University College of Medicine, Republic of Korea. It supports structured characterization of deployment-relevant artifact properties, runtime assumptions, and target-specific engineering signals for medical and general on-device AI.</p>
+      </details>
+      <nav class="product-about-links product-about-resources" aria-label="Project information"><a href="https://github.com/JunHwan-Kwon/deepbom">Source code</a><a href="/evaluate/">Evaluation briefs</a><a href="/support">Support</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
     </footer>
   </body>
 </html>

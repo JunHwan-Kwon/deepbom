@@ -1,1152 +1,1698 @@
 {
   "schema": "deepbom.property_taxonomy.v1",
   "namespace": "deepbom",
+  "compatibility_namespaces": [
+    "mlbom"
+  ],
   "ownership": "DeepBOM vendor extension; no external registration or endorsement is claimed",
   "source_files": [
     "web/lib/report-export-contracts.js",
-    "web/lib/public-cyclonedx-export.js"
+    "web/lib/public-cyclonedx-export.js",
+    "web/lib/report-mlbom-compat.js",
+    "web/lib/safetensors-quantization-export.js",
+    "web/lib/tensorrt-cyclonedx-properties.js"
   ],
   "counts": {
-    "total": 227,
-    "stable": 16,
-    "experimental": 211,
+    "total": 335,
+    "stable": 111,
+    "experimental": 224,
     "deprecated": 0
   },
   "properties": [
     {
       "name": "deepbom:accelerator:bindingCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:accelerator:bindingDetailPointer",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:analyzer:buildCommit",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:analyzer:buildSourceState",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:analyzer:buildVersion",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:analyzer:bundleContentHashMethod",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:analyzer:bundleContentSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:analyzer:rulepackSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:analyzer:rulepackVersion",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:analyzer:semanticVersion",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:artifact:sourceLocator",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:artifactEvidenceEnvelopeSchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:artifactEvidenceEnvelopeSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:artifactIrSchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:artifactIrSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:bundle:relativeReferencePolicy",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:compatibility:detailLocation",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:compatibility:profile",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:conformance:interpretationBoundary",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:conformance:legacyQu8Artifact",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:conformance:profile",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:conformance:profileScope",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:conformance:source",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:conformance:status",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:conformance:violationCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:contract:schema",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:documentAuthor:orcid",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:evidenceBoundary",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:file:byteLength",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:file:evidenceClass",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:file:required",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:file:role",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:file:verificationStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:finding:assessmentStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:finding:buildModeDependentChannels",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:finding:constantOutputChannels",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:finding:exactZeroKernelSlices",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:finding:highSeverityCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:finding:maxInt32UtilizationRatio",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:formulation:comparableFieldCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:comparisonStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:conversionMetadataStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:converterFamily",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:converterFamilyEvidenceClass",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:converterVersion",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:declaredInputAcceptedForm",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:declaredInputSchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:declaredPayload",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:documentSchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:evidenceClass",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:exportFramework",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:exportFrameworkEvidenceClass",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:exportFrameworkVersion",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:interpretationBoundary",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:kind",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:mismatchCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:mismatches",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:observedPayload",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:formulation:quantizationClassification",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:model:acceleratorComputeCapability",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:acceleratorDeviceName",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:acceleratorPhysicalVramBytes",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:acceleratorProfileBindingSha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:acceleratorProfileSha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:acceleratorSelectedBuildStatus",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:activationQuantizationContractCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:activationQuantizationInvalidContractCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:artifactByteIntegrityLedgerSha256",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:artifactByteIntegritySchema",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:artifactByteIntegritySummarySha256",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:artifactIrLocation",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:artifactIrSchema",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:artifactIrSha256",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "deepbom:model:artifactSetSchema",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:artifactSetSha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:artifactSourceImmutability",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:artifactSourceKind",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:completeAffineInterfaceCount",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:computeOperatorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:contractConflictBlockedMacRows",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:contractConflictCapsuleSha256",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:contractConflictConditionalVariantCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:contractConflictRootCount",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "deepbom:model:conversionConverterName",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:conversionConverterVersion",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:conversionEnvironmentManifestSha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:conversionEvidenceClass",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:conversionOutputBindingEvidenceClass",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:conversionReceiptBindingSha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:conversionReceiptSha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:conversionReceiptStatus",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:conversionSourceArtifactCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:cpuCostTargetBindingSource",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:model:cpuCostTargetHostObserved",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:model:cpuCostTargetProfileId",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:model:cpuCostTargetProfileSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:model:fileSizeBytes",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:floatTensorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:format",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:fullIntegerQuantized",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:graphMacCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:graphOperatorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:graphTensorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:hashBasis",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "deepbom:model:inputLayoutDerivedCount",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "deepbom:model:inputLayoutUnassessedCount",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "deepbom:model:inputTensorContractCount",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:int8TensorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:interfaceContractLedgerSha256",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:interfaceContractSchema",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:invalidOrIncompleteInterfaceCount",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmArchitecture",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmArchitectureKind",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmChatTemplateSha256",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmChatTemplateStatus",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmCliScenarioBatchSize",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioContextAssessment",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioContextLength",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioDeclaredCapacityBytes",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioImageCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioImageTokenCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioMemoryFitClaim",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioMemoryStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioResidencyAssumption",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioSchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioStateStorageBits",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioStaticLowerBoundBytes",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioTextTokenCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioTokensPerImage",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmCliScenarioTotalContextTokens",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmContextLength",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmContractSchema",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmContractStatus",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmEncodingInventorySha256",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmEncodingSignatureSchema",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmEvidenceClass",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmEvidencePointer",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmExplicitTransformerOperatorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmExternalStateCandidateCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmKvElementsPerTokenPerBatch",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmLayerSerializedBytes",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmLayerStorageSchema",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmLayerStorageStatus",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmMaximumStaticMemoryLowerBoundBytes",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmMemoryFeasibilitySchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmMemoryFeasibilityStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmMemoryFitClaim",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmMinimumStaticMemoryLowerBoundBytes",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmMoeActiveExpertsPerToken",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmMoeExpertCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmNonLayerSerializedBytes",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmObservedLayerCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmRecurrentStateElementsPerBatch",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmRuntimeAcceleratorLayerCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmRuntimeAccountedWorkingMemoryBytes",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmRuntimeAllocationAccountingStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmRuntimeBindingStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmRuntimeEvidenceClass",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmRuntimeManifestSchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmRuntimeManifestSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmRuntimePrimaryAllocatedAccountedBytes",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmRuntimePrimaryAllocatedLowerBoundBytes",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmRuntimePrimaryResidentLowerBoundBytes",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmRuntimeResidentStateBytes",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmRuntimeWorkingMemoryCoverage",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmSerializedGraphSignatureSha256",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmSerializedGraphStatus",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmSerializedParameterCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmSerializedTensorBytes",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmSerializedWeightFloorBytes",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmStaticMemoryCapacityScope",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmStaticMemoryResidencyAssumption",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmStaticPoolCandidateCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmStaticPoolFitClaim",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmStaticPoolMaximumAcceleratorLayersNotDisproven",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmStaticPoolNotDisprovenCandidateCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmStaticPoolPlacementSchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmStaticPoolPlacementStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmStaticPoolProfileSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:llmTensorEncodingAssignmentSha256",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmTokenizerStatus",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:llmVocabularySize",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:medicalAiClaimBoundary",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:medicalAiDeclarationCoverage",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:medicalAiDeclarationSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:packedWeightQuantizationBits",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:packedWeightQuantizationConfigurationScope",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:packedWeightQuantizationContractSchema",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:packedWeightQuantizationEvidencePointer",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:packedWeightQuantizationGranularity",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:packedWeightQuantizationGroupSize",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:packedWeightQuantizationInvalidModuleCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:packedWeightQuantizationMethod",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:packedWeightQuantizationModuleCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:packedWeightQuantizationSourceCommit",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:packedWeightQuantizationSourceSha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:packedWeightQuantizationStatus",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:perAxisQuantizationPresent",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:perAxisTensorCount",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "deepbom:model:predictedPartitionBoundaryEdges",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:predictedPartitionBoundaryLogicalBytes",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:primaryInputScale",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:primaryInputZeroPoint",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:quantizationClassification",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:quantizationClassificationBasis",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "deepbom:model:quantizationShardBoundTensorCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:quantizationShardOwnershipStatus",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:quantizationTensorCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:quantizedComputeMacRatio",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:quantizedComputeOperatorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:quantizedTensorCount",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "deepbom:model:runtimeAssignmentStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:schemaOrOpset",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:serializedContractStatus",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:serializedDequantizeOperatorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:serializedQuantizeOperatorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:storageEncodingBasis",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:storageEncodingClassification",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tensorDtypeInventorySha256",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "deepbom:model:tensorRtArtifactEngineRelation",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtBuildProfileSha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtCollectorBinarySha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtCollectorGitCommit",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtCollectorGitState",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtCollectorSourceSetSha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtConditionallyEligibleOperatorCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtCudaVersion",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtDefiniteExclusionOperatorCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtDeviceIdentity",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtEngineBuildCaptureClass",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtEngineBuildInvocationSha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtEngineBuildToolBinarySha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtEngineByteLength",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtEngineInspectorEvidenceClass",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtEngineInspectorSchema",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtEngineInspectorStatus",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtEngineIoTensorCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtEngineLayerCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtEngineSha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtEngineSourceMappingStatus",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtEvidencePointer",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtExecutionPath",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtInspectorCanonicalJsonSha256",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtInspectorExecutionContextBound",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtInspectorProfilingVerbosity",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtInspectorSchemaGeneration",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tensorRtLlmArtifactBindingStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tensorRtLlmContextParallelSize",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tensorRtLlmContractSchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tensorRtLlmContractSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tensorRtLlmContractStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tensorRtLlmEngineConfigSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tensorRtLlmLogicalKvBytes",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tensorRtLlmPipelineParallelSize",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tensorRtLlmSourceArtifactSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tensorRtLlmTensorParallelSize",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tensorRtLlmWorldSize",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtMultiSourceMetadataLayerCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtOptimizationProfileCostScenarioCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtOptimizationProfileCostSchema",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtOptimizationProfileCostStatus",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtParserApiMethod",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtStaticPreflightEvidenceClass",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtStaticPreflightSchema",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtStaticPreflightStatus",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtTacticAnnotatedLayerCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtUnresolvedOperatorCount",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:model:tensorRtVersion",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tfliteControlFlowContractCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteControlFlowContractPartialCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteControlFlowReferenceCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tflitePrimaryOperatorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteSerializedOperatorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteSparseImplicitZeroElements",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteSparseLogicalElements",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteSparseSerializedValueBytes",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteSparseStorageSchema",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteSparseStoredElements",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteSparseTensorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteSubgraphCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteSubgraphDeepAnalysisSchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tfliteSubgraphDeepAssessedCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tfliteSubgraphDeepPredictedDelegateCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tfliteSubgraphDeepPredictedFallbackCount",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:model:tfliteSubgraphIntrinsicAssessedCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteSubgraphIntrinsicCostSchema",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteSubgraphIntrinsicPartialCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:tfliteSubgraphInventorySchema",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:uint8TensorCount",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:unquantizedInterfaceCount",
       "status": "stable",
-      "reconciliation": "artifact_observable_allowlist"
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:model:versionBasis",
-      "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "status": "stable",
+      "reconciliation": "artifact_observation"
     },
     {
       "name": "deepbom:modelCard:interfaceContractLedger",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:modelCard:interfaceContractLedgerSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:modelCard:ioContractSchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:modelIrLocation",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:modelIrSchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:modelIrSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:preprocessing:assessmentStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:preprocessing:portfolioLedgerSha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:privacy",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:profile",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:review:policyMode",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:review:policySchema",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:review:policySha256",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:runtime:floorEvidenceClass",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:runtime:floorStatus",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:runtime:name",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:runtime:necessaryFloor",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
     },
     {
       "name": "deepbom:runtime:requirementsManifest",
       "status": "experimental",
-      "reconciliation": "not_compared_by_default"
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "mlbom:model:computeMacs",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:computeOperators",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:fileSizeBytes",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:format",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:fullIntegerQuantized",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:macAssessedComputeOps",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:macAssessmentReason",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:macAssessmentStatus",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:macComputeOps",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:operatorCount",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:quantizationClassification",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:quantizedComputeMacAssessment",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:quantizedComputeMacAssessmentReason",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:quantizedComputeMacRatio",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:quantizedComputeMacs",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:quantizedComputeOperatorAssessment",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:quantizedComputeOperatorAssessmentReason",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:quantizedComputeOperators",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:schemaOrOpset",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:tensorCount",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:model:totalMacs",
+      "status": "stable",
+      "reconciliation": "artifact_observation"
+    },
+    {
+      "name": "mlbom:target:hardwareEvidenceClass",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "mlbom:target:id",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "mlbom:target:label",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "mlbom:target:performanceEvidenceClass",
+      "status": "experimental",
+      "reconciliation": "context_or_publisher_declaration"
     }
   ]
 }

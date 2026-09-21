@@ -29,19 +29,15 @@
   }
   </script>
   <link rel="stylesheet" href="../evaluate/evaluation.css" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Get started","item":"https://deepbom.org/get-started/"},{"@type":"ListItem","position":2,"name":"AI connections","item":"https://deepbom.org/get-started/#ai"},{"@type":"ListItem","position":3,"name":"Local AI agents","item":"https://deepbom.org/for-agents/"}]}</script>
 </head>
 <body class="agent-guide">
   <header class="brief-header">
     <a class="brand" href="/">DEEPBOM</a>
-    <nav class="brief-nav" aria-label="Agent documentation">
-      <a href="/">Workspace</a>
-      <a aria-current="page" href="./">AI agents</a>
-      <a href="/chatgpt/">ChatGPT</a>
-      <a href="/guides/">Guides</a>
-      <a href="https://github.com/JunHwan-Kwon/deepbom">Source</a>
-    </nav>
+    <nav class="brief-nav" aria-label="Main navigation"><a href="/">Workspace</a><a href="/get-started/" aria-current="location">Get started</a><a href="/guides/">Guides</a><a href="/evaluate/">Evaluate</a></nav>
   </header>
   <main class="brief-main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/get-started/">Get started</a></li><li><a href="/get-started/#ai">AI connections</a></li><li><span aria-current="page">Local AI agents</span></li></ol></nav>
     <p class="eyebrow">Local agent setup</p>
     <h1>Let the agent run the audit where the artifact already lives.</h1>
     <p class="lede">DEEPBOM provides an Agent Skill and a zero-install <code>npx</code> path for Codex, Claude Code, and compatible local agents. The model stays in the local process; there is no hosted DEEPBOM analysis endpoint.</p>
@@ -50,11 +46,11 @@
     <section class="brief-section">
       <h2>Install the local Skill</h2>
       <p>Preview the exact managed files first. Add <code>--apply</code> only after reviewing the result.</p>
-      <pre><code>npx -y deepbom@1.103.0 integrate codex
-npx -y deepbom@1.103.0 integrate codex --apply
+      <pre><code>npx -y deepbom@1.103.1 integrate codex
+npx -y deepbom@1.103.1 integrate codex --apply
 
-npx -y deepbom@1.103.0 integrate claude-code
-npx -y deepbom@1.103.0 integrate claude-code --apply</code></pre>
+npx -y deepbom@1.103.1 integrate claude-code
+npx -y deepbom@1.103.1 integrate claude-code --apply</code></pre>
       <p>The installer writes only the DEEPBOM Skill directory. It refuses to replace or remove files changed by the user.</p>
     </section>
 
@@ -78,9 +74,9 @@ and the exact reproduction command.</code></pre>
 
     <section class="brief-section">
       <h2>Run without installing a Skill</h2>
-      <pre><code>npx -y deepbom@1.103.0 capabilities --format agent-json
-npx -y deepbom@1.103.0 self-test --compact
-npx -y deepbom@1.103.0 audit "./model.onnx" --summary</code></pre>
+      <pre><code>npx -y deepbom@1.103.1 capabilities --format agent-json
+npx -y deepbom@1.103.1 self-test --compact
+npx -y deepbom@1.103.1 audit "./model.onnx" --summary</code></pre>
       <p>Start with the bounded summary. Request a section, JSON Pointer, or evidence envelope only when the question needs more detail.</p>
     </section>
 
@@ -88,14 +84,23 @@ npx -y deepbom@1.103.0 audit "./model.onnx" --summary</code></pre>
       <h2>Optional local MCP</h2>
       <table class="fact-table">
         <tbody>
-          <tr><th>Transport</th><td>Local stdio using <code>npx -y deepbom@1.103.0 mcp</code>.</td></tr>
+          <tr><th>Transport</th><td>Local stdio using <code>npx -y deepbom@1.103.1 mcp</code>.</td></tr>
           <tr><th>Tools</th><td><code>deepbom_capabilities</code>, <code>deepbom_audit</code>, <code>deepbom_diff</code>, and <code>deepbom_explain_rule</code>.</td></tr>
           <tr><th>Default response</th><td>Bounded human summary. Detailed evidence is explicit.</td></tr>
           <tr><th>File boundary</th><td>The launch directory or roots declared through <code>DEEPBOM_MCP_ALLOWED_ROOTS</code>.</td></tr>
         </tbody>
       </table>
-      <p>Claude Desktop can install the same local server as a single desktop extension. Download <a href="https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v1.103.0/deepbom-1.103.0.mcpb"><code>deepbom-1.103.0.mcpb</code></a>, then choose Settings, Extensions, Advanced settings, and Install Extension. Select the model directory the extension may read during installation.</p>
+      <p>Gemini CLI can install the bundled local analyzer with <code>gemini extensions install https://github.com/JunHwan-Kwon/deepbom-gemini</code>. Start Gemini in your model directory and use <code>/deepbom:inspect ./model.onnx</code>. See <a href="/get-started/#gemini-cli">Gemini CLI setup</a> for permissions, data flow, updates, and validation.</p>
+      <p>Claude Desktop can install the same local server as a single desktop extension. Download <a href="https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v1.103.1/deepbom-1.103.1.mcpb"><code>deepbom-1.103.1.mcpb</code></a>, then choose Settings, Extensions, Advanced settings, and Install Extension. Select the model directory the extension may read during installation.</p>
       <p>For private testing on a Claude host that supports remote MCP Apps, add <code>https://deepbom.org/mcp/claude</code> as a custom connector. This is a separate browser-local path: the user selects one file inside the app, Claude attachments are not read automatically, and only a bounded result is returned to the conversation. See the <a href="/claude/">Claude integration guide</a>. Public discovery remains subject to Anthropic review.</p>
+    </section>
+
+    <section class="brief-section">
+      <h2>Optional candidate review</h2>
+      <p><a href="https://github.com/JunHwan-Kwon/deepbom-review">DEEPBOM Review 0.1.0</a> is a separate local CLI and MCP package for single-file ONNX and TFLite candidates. An existing agent or Olive produces the candidate; DEEPBOM preserves the baseline/candidate analysis, semantic diff, fixed policy, external evaluation receipts, and an accept/reject/hold decision in a ZIP.</p>
+      <p>Olive rank records and completed MLflow runs can be imported with explicit model, dataset, evaluator and environment hashes. Missing or incomparable evidence stays unknown. These producer-declared measurements do not become DEEPBOM-executed benchmarks. Model bytes are optional; review commands do not train or deploy.</p>
+      <p>Use <code>deepbom_review_capabilities</code> before preparing a request. Keep criteria fixed across candidate revisions and retain each result. <a href="/get-started/#copilot">GitHub Copilot setup</a> includes configurations for Copilot CLI and VS Code. The package also emits Gemini CLI settings and can be called from any agent with local shell access.</p>
+      <a href="/get-started/#candidate-review">Review workflow, installation and adapter guides</a>
     </section>
 
     <section class="brief-section">

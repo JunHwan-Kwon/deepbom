@@ -3,28 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AI Model Artifact Inspection Guides | DEEPBOM</title>
-  <meta name="description" content="Reproducible, evidence-bounded ways to inspect ONNX quantization, GGUF tensor encodings, and changes between deployment artifacts." />
+  <title>Guides &amp; CLI Handbook | DEEPBOM</title>
+  <meta name="description" content="Learn DEEPBOM with the CLI Handbook, complete command reference, and practical guides to ONNX quantization, GGUF tensor encodings, and artifact comparison." />
   <link rel="canonical" href="https://deepbom.org/guides/" />
-  <meta property="og:title" content="AI Model Artifact Inspection Guides | DEEPBOM" />
-  <meta property="og:description" content="Problem-focused model inspection guides with exact commands and explicit evidence limits." />
+  <meta property="og:title" content="Guides &amp; CLI Handbook | DEEPBOM" />
+  <meta property="og:description" content="Step-by-step CLI workflows, complete command documentation, and focused model inspection guides." />
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"CollectionPage","name":"AI Model Artifact Inspection Guides","url":"https://deepbom.org/guides/","about":{"@id":"https://deepbom.org/#app"}}
+  {"@context":"https://schema.org","@type":"CollectionPage","name":"DEEPBOM Guides and CLI Handbook","url":"https://deepbom.org/guides/","about":{"@id":"https://deepbom.org/#app"}}
   </script>
   <link rel="stylesheet" href="../evaluate/evaluation.css" />
+  <link rel="stylesheet" href="./cli/book.css" />
 </head>
 <body class="agent-guide">
-  <header class="brief-header"><a class="brand" href="/">DEEPBOM</a><nav class="brief-nav" aria-label="Guides"><a href="/">Workspace</a><a aria-current="page" href="./">Guides</a><a href="/for-agents/">AI agents</a></nav></header>
+  <header class="brief-header"><a class="brand" href="/">DEEPBOM</a><nav class="brief-nav" aria-label="Main navigation"><a href="/">Workspace</a><a href="/get-started/">Get started</a><a href="/guides/" aria-current="page">Guides</a><a href="/evaluate/">Evaluate</a></nav></header>
   <main class="brief-main">
-    <p class="eyebrow">Reproducible inspection guides</p>
-    <h1>Start with the model-file question, not the product name.</h1>
-    <p class="lede">Each guide identifies what can be observed from serialized artifact bytes, gives a pinned reproduction command, and states what still requires runtime, lineage, or task evidence.</p>
+    <p class="eyebrow">Documentation &amp; practical guides</p>
+    <h1>Learn the tools.<br />Read the evidence.</h1>
+    <p class="lede">Start with the CLI Handbook for a complete command-line workflow, or choose a focused guide for your model-file question. Each path explains the evidence and its limits.</p>
+    <a class="handbook-card" href="./cli/"><p class="eyebrow">11 chapters / Command-line documentation</p><h2>CLI Handbook</h2><p>Install, audit, inspect tensors, export evidence and diagrams, compare models, automate checks, and connect local AI tools.</p><span>Read the handbook →</span></a>
+    <p><a href="./cli/reference/">Complete CLI command &amp; option reference</a> · generated from the executable, with command search and downloadable help.</p>
     <section class="brief-section"><h2>Choose the question</h2><ul class="plain-list">
       <li><a href="./inspect-onnx-quantization/">Inspect ONNX quantization without running the model</a></li>
       <li><a href="./inspect-gguf-tensor-encodings/">Inspect mixed GGUF tensor encodings and storage</a></li>
       <li><a href="./compare-model-artifacts/">Compare two deployment artifacts before release</a></li>
     </ul></section>
-    <section class="brief-section"><h2>Common boundary</h2><p>These workflows report static artifact evidence. They do not establish measured latency, task accuracy, clinical validity, safety, regulatory compliance, or the execution provider and kernel selected at runtime.</p></section>
+    <section class="brief-section"><h2>Candidate review with external evaluations</h2><p>The optional <a href="/get-started/#candidate-review">DEEPBOM Review preview</a> packages baseline/candidate evidence, fixed criteria, and hash-bound evaluation records. Use the <a href="https://github.com/JunHwan-Kwon/deepbom-review#first-review">CLI walkthrough</a> and the <a href="https://github.com/JunHwan-Kwon/deepbom-review#mlflow">MLflow</a> or <a href="https://github.com/JunHwan-Kwon/deepbom-review#microsoft-olive">Olive</a> adapter instructions. Imported measurements remain external evidence; the review tool does not execute them.</p></section>
+    <section class="brief-section"><h2>Common boundary</h2><p>Static inspection does not establish measured latency, task accuracy, clinical validity, safety, regulatory compliance, or the execution provider and kernel selected at runtime.</p></section>
   </main>
   <footer class="brief-footer">Commands are pinned to a release; identify the analyzed artifact by SHA-256.</footer>
 </body>

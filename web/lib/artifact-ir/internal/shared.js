@@ -59,13 +59,14 @@ export function optionalText(value) { const normalized = String(value ?? "").tri
 
 export function text(value, maximum) { const normalized = String(value ?? "").trim(); return normalized.length > 0 && normalized.length <= maximum; }
 
-export function nonNegativeInteger(value) { const number = Number(value); return Number.isSafeInteger(number) && number >= 0 ? number : null; }
+export function nonNegativeInteger(value) { if (value === null || value === undefined || value === "") return null; const number = Number(value); return Number.isSafeInteger(number) && number >= 0 ? number : null; }
 
 export function positiveInteger(value) { const number = Number(value); return Number.isSafeInteger(number) && number > 0 ? number : null; }
 
 export function optionalInteger(value) { if (value === null || value === undefined || value === "") return null; const number = Number(value); return Number.isSafeInteger(number) ? number : null; }
 
 export function exactInteger(value) {
+  if (value === null || value === undefined || value === "") return null;
   if (typeof value === "string" && /^\d+$/.test(value)) return exact(BigInt(value));
   if (typeof value === "bigint" && value >= 0n) return exact(value);
   if (Number.isSafeInteger(Number(value)) && Number(value) >= 0) return exact(BigInt(Number(value)));

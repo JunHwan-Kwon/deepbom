@@ -48,15 +48,20 @@ function namespaceGroups(tensors, format) {
   const groups = new Map();
   for (const [position, tensor] of tensors.entries()) {
     const label = String(tensor.name || "unnamed").split(".").slice(0, 2).join(".") || "unnamed";
-    if (!groups.has(label)) groups.set(label, { count: 0, bytes: 0n, members: [] });
+    if (!groups.has(label)) groups.set(label, { count: 0, bytes: 0n, complete: true, members: [] });
     const group = groups.get(label);
     group.count += 1;
-    group.bytes += BigInt(positiveStorageBytes(tensor, format));
-    group.members.push(storageId(tensorIndex(tensor, position)));
+    const bytes = BigInt(positiveStorageBytes(tensor, format));
+    group.bytes += bytes;
+    if (exactInteger(tensor.byte_length ?? tensor.buffer_data_length ?? tensor.initializer_available_bytes
+      ?? tensor.initializer_bytes ?? tensor.serialized_payload_bytes) == null) group.complete = false;
+    // Empty or unassessed tensors retain namespace membership without a
+    // fabricated payload object. An unassessed group's byte total stays unknown.
+    if (bytes > 0n) group.members.push(storageId(tensorIndex(tensor, position)));
   }
   return [...groups.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([label, group], index) => ({
     id: `architecture:namespace:${index}`, kind: "storage_namespace", native_index: index, label,
-    tensor_count: group.count, serialized_bytes: exact(group.bytes), storage_object_refs: group.members,
+    tensor_count: group.count, serialized_bytes: group.complete ? exact(group.bytes) : null, storage_object_refs: group.members,
   }));
 }
 

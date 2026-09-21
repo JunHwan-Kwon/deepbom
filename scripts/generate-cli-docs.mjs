@@ -1,17 +1,23 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { renderCliReferenceHtml } from "./cli-docs-html.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cli = path.join(root, "bin", "deepbom.mjs");
-const output = path.join(root, "docs", "CLI_REFERENCE.md");
 ensureGeneratedBuildMetadata();
 const packageDocument = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
 const help = runCli(["--help"]);
 const capabilities = JSON.parse(runCli(["capabilities", "--compact"]));
+const agentTextProbe = spawnSync(process.execPath, [cli, "capabilities", "--format", "agent-text"], {
+  cwd: root, encoding: "utf8", maxBuffer: 16 * 1024 * 1024,
+});
+assert(agentTextProbe.status === 0 || (agentTextProbe.status === 1
+  && agentTextProbe.stderr.includes("The capabilities command supports only --format agent-json.")),
+"Unexpected failure while checking the help's agent-text option.");
 
 assert(capabilities.schema === "deepbom.cli_capabilities.v1", "Unexpected CLI capability schema.");
 assert(capabilities.cli_version === packageDocument.version, "CLI capability version differs from package.json.");
@@ -23,16 +29,23 @@ for (const command of capabilities.commands) {
   assert(help.includes(command.name), `CLI help does not expose capability command: ${command.name}`);
 }
 
-const generated = renderReference(help, capabilities);
-if (process.argv.includes("--check")) {
-  const current = normalize(await readFile(output, "utf8"));
-  assert(current === generated,
-    "docs/CLI_REFERENCE.md is stale. Run `npm run generate:cli-docs` and commit the result.");
-  console.log(`CLI documentation is synchronized with DEEPBOM ${capabilities.cli_version}.`);
-} else {
-  await writeFile(output, generated, "utf8");
-  console.log(`Generated ${path.relative(root, output)} from DEEPBOM ${capabilities.cli_version}.`);
+const outputs = new Map([
+  ["docs/CLI_REFERENCE.md", renderReference(help, capabilities)],
+  ["web/guides/cli/reference/index.html", renderCliReferenceHtml(help, capabilities, { agentTextSupported: agentTextProbe.status === 0 })],
+  ["web/guides/cli/reference/help.txt", help],
+]);
+for (const [relativePath, generated] of outputs) {
+  const output = path.join(root, relativePath);
+  if (process.argv.includes("--check")) {
+    const current = existsSync(output) ? normalize(await readFile(output, "utf8")) : null;
+    assert(current === generated,
+      `${relativePath} is stale or missing. Run \`npm run generate:cli-docs\` and commit the result.`);
+  } else {
+    await mkdir(path.dirname(output), { recursive: true });
+    await writeFile(output, generated, "utf8");
+  }
 }
+console.log(`CLI documentation ${process.argv.includes("--check") ? "verified" : "generated"} for DEEPBOM ${capabilities.cli_version} (${outputs.size} files).`);
 
 function renderReference(helpText, document) {
   const commands = document.commands.map((command) => {

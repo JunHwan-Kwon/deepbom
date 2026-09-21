@@ -1,0 +1,72 @@
+.cli-book .brief-header, .cli-book .brief-footer, .book-layout { width: min(1200px, calc(100% - 3rem)); margin-inline: auto; }
+.book-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 3rem; align-items: start; padding-block: 2.8rem 4rem; }
+.book-sidebar { position: sticky; top: 1.5rem; padding-right: 1rem; border-right: 1px solid var(--line); max-height: calc(100vh - 3rem); overflow-y: auto; }
+.book-sidebar nav { display: grid; gap: .25rem; }
+.book-sidebar a { display: block; padding: .4rem .55rem; color: var(--ink-soft); text-decoration: none; font-size: .8rem; line-height: 1.45; border-left: 2px solid transparent; }
+.book-sidebar a:hover, .book-sidebar a[aria-current] { color: var(--accent); border-left-color: var(--accent); background: var(--surface-tint); }
+.book-sidebar .chapter-number { color: var(--muted); font: .67rem var(--mono); margin-right: .4rem; }
+.book-main { min-width: 0; }
+.book-main h1 { font-size: clamp(2.5rem, 5vw, 3.9rem); margin-top: .5rem; font-family: var(--display-serif); }
+.book-main h2 { font: 500 1.9rem/1.2 var(--display-serif); margin: .4rem 0 1.1rem; }
+.book-main h3 { font: 650 1rem/1.4 var(--ui-sans); margin-top: 1.7rem; }
+.book-main p, .book-main li { color: var(--ink-soft); font-size: .91rem; line-height: 1.75; }
+.book-main li + li { margin-top: .4rem; }
+.book-main section { border-top: 1px solid var(--line-strong); padding-top: 2rem; margin-top: 2.5rem; scroll-margin-top: 1.5rem; }
+.book-main .eyebrow { font-size: .65rem; line-height: 1.5; }
+.book-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-block: 1.5rem; }
+.book-actions a, .book-actions button { display: inline-flex; align-items: center; padding: .6rem .85rem; border: 1px solid var(--line-strong); border-radius: 4px; color: var(--ink); background: var(--surface); text-decoration: none; font: 600 .8rem var(--ui-sans); cursor: pointer; }
+.book-actions .primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+[hidden] { display: none !important; }
+.book-note { padding: .9rem 1.1rem; border-left: 3px solid var(--accent); background: var(--surface-tint); }
+.book-note p { margin: 0; }
+.book-code { position: relative; margin-block: 1rem; min-width: 0; }
+.book-code pre { margin: 0; padding: 2.4rem 1rem 1rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .79rem; }
+.book-copy { position: absolute; top: .35rem; right: .4rem; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); color: var(--ink-soft); font: .7rem var(--ui-sans); padding: .3rem .5rem; cursor: pointer; }
+.book-copy:hover { border-color: var(--accent); color: var(--accent); }
+.book-copy:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.book-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.book-table th, .book-table td { text-align: left; vertical-align: top; padding: .7rem .7rem .7rem 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.book-table th { font-weight: 650; color: var(--ink); }
+.book-table td { color: var(--ink-soft); }
+.book-table code { font-size: .8rem; }
+#troubleshooting .book-table th:first-child { width: 3rem; }
+.book-table caption { text-align: left; color: var(--muted); font-size: .75rem; padding-bottom: .6rem; }
+.command-search { margin-block: 1.5rem; }
+.command-search label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .5rem; }
+.command-search input { width: 100%; border: 1px solid var(--line-strong); border-radius: 4px; padding: .8rem; background: var(--surface); color: var(--ink); font: .9rem var(--ui-sans); }
+.command-search p { margin: .35rem 0 0; font-size: .75rem; color: var(--muted); }
+.book-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); font-size: .85rem; }
+.book-status { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); z-index: 10; background: var(--accent); color: var(--surface); border-radius: 4px; padding: .7rem 1rem; font-size: .8rem; max-width: calc(100% - 2rem); }
+.book-status:empty { display: none; }
+.book-skip { position: absolute; top: -5rem; left: 1rem; z-index: 20; background: var(--surface); padding: 1rem; }
+.book-skip:focus { top: .5rem; }
+.handbook-card { display: block; padding: 1.6rem; margin-top: 2rem; border: 1px solid var(--line-strong); background: var(--surface); text-decoration: none; }
+.handbook-card h2 { font: 500 1.8rem var(--display-serif); margin: .5rem 0; color: var(--ink); }
+.handbook-card p { color: var(--ink-soft); margin-bottom: 1.1rem; }
+.handbook-card span { color: var(--accent); font-size: .85rem; font-weight: 650; }
+.handbook-card:hover { border-color: var(--accent); }
+@media (max-width: 850px) {
+  .book-layout { grid-template-columns: 1fr; gap: 2rem; padding-top: 1.8rem; }
+  .book-sidebar { position: static; max-height: none; border-right: 0; padding-right: 0; padding-bottom: 1rem; border-bottom: 1px solid var(--line-strong); }
+  .book-sidebar nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .book-sidebar a { min-height: 44px; display: flex; align-items: center; }
+}
+@media (max-width: 480px) {
+  .cli-book .brief-header, .cli-book .brief-footer, .book-layout { width: calc(100% - 2rem); }
+  .book-table { font-size: .75rem; table-layout: fixed; }
+  .book-table code { font-size: .7rem; }
+  .book-table th, .book-table td { padding-right: .4rem; }
+  .book-code pre { font-size: .72rem; }
+}
+@media print {
+  :root { --bg: #fff; --surface: #fff; --surface-tint: #f5f5f5; --ink: #000; --ink-soft: #222; --muted: #444; --accent: #174438; --line: #ccc; --line-strong: #aaa; }
+  .brief-header, .book-sidebar, .book-actions, .book-copy, .book-status, .command-search, #command-empty, .book-footer, .book-skip { display: none !important; }
+  .book-layout { display: block; width: 100%; padding: 0; }
+  .book-main section { break-before: auto; }
+  h1, h2, h3 { break-after: avoid; }
+  .book-main section > .eyebrow { break-after: avoid; }
+  .book-code, tr { break-inside: avoid; }
+  .book-code pre { padding: .7rem; }
+  tr[hidden] { display: table-row !important; }
+  a { color: inherit; }
+}

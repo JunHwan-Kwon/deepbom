@@ -12,15 +12,17 @@
   {"@context":"https://schema.org","@type":"TechArticle","headline":"Inspect ONNX Quantization Without Running the Model","url":"https://deepbom.org/guides/inspect-onnx-quantization/","about":{"@id":"https://deepbom.org/#app"},"author":{"@id":"https://deepbom.org/#author"}}
   </script>
   <link rel="stylesheet" href="../../evaluate/evaluation.css" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Guides","item":"https://deepbom.org/guides/"},{"@type":"ListItem","position":2,"name":"ONNX quantization","item":"https://deepbom.org/guides/inspect-onnx-quantization/"}]}</script>
 </head>
 <body class="agent-guide">
-  <header class="brief-header"><a class="brand" href="/">DEEPBOM</a><nav class="brief-nav" aria-label="Guide"><a href="/guides/">Guides</a><a href="/for-agents/">AI agents</a><a href="https://github.com/JunHwan-Kwon/deepbom">Source</a></nav></header>
+  <header class="brief-header"><a class="brand" href="/">DEEPBOM</a><nav class="brief-nav" aria-label="Main navigation"><a href="/">Workspace</a><a href="/get-started/">Get started</a><a href="/guides/" aria-current="location">Guides</a><a href="/evaluate/">Evaluate</a></nav></header>
   <main class="brief-main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/guides/">Guides</a></li><li><span aria-current="page">ONNX quantization</span></li></ol></nav>
     <p class="eyebrow">ONNX quantization inspection</p>
-    <h1>Read the serialized quantization contract before inferring execution.</h1>
+    <h1>Inspect ONNX quantization without running the model.</h1>
     <p class="lede">ONNX can serialize QDQ boundaries, QOperator compute nodes, and bound scale and zero-point tensors. Those facts do not by themselves prove runtime fusion or executed integer arithmetic.</p>
     <section class="brief-section"><h2>Reproduce the public fixture</h2>
-      <pre><code>npx -y deepbom@1.103.0 audit \
+      <pre><code>npx -y deepbom@1.103.1 audit \
   "./corpus/onnx-extension-contract-corpus/deepbom-static-per-axis-qdq.onnx" \
   --expected-sha256 c19f7155f030dc396aad04909b7429b8a4d6d1cb51fcd53a84e3c97ae9678d0e \
   --section quantization --json</code></pre>

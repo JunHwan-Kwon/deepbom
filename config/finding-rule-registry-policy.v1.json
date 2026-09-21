@@ -2,8 +2,8 @@
   "schema": "deepbom.finding_rule_registry_policy.v1",
   "canonical_report_findings": {
     "producer": "web/lib/report-findings.js",
-    "count": 119,
-    "sorted_ids_sha256": "c70eb440025f4091e0cebb0dfc0342a1fe0f899df758f59b08ea8c90ddb8a8bf"
+    "count": 120,
+    "sorted_ids_sha256": "8124e706e2470d6f04ecd6eaaad09ba79803b313369b20a5704e2a20b0a0d332"
   },
   "auxiliary_ui_findings": [
     "EA-ABI-0001"

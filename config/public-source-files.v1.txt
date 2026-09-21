@@ -559,6 +559,7 @@ scripts/check-workflow-contract.mjs
 scripts/check-xnnpack-delegate-rulepack.mjs
 scripts/check-xnnpack-selector-evidence.mjs
 scripts/check-zenodo-release.mjs
+scripts/cli-docs-html.mjs
 scripts/compact-mlbom-assert.mjs
 scripts/coreml-legacy-quantization-corpus-lib.mjs
 scripts/coreml-mlprogram-corpus-lib.mjs
@@ -638,6 +639,7 @@ scripts/run-utils.mjs
 scripts/rust-source-utils.mjs
 scripts/safetensors-architecture-corpus-lib.mjs
 scripts/sign-official-package-digest.mjs
+scripts/sitemap-lastmod.mjs
 scripts/size-utils.mjs
 scripts/source-size-utils.mjs
 scripts/spdx-23-schema.mjs
@@ -751,6 +753,7 @@ web/claude/index.html
 web/device-workspace.css
 web/evaluate/engineering/index.html
 web/evaluate/evaluation.css
+web/evaluate/index.html
 web/evaluate/quality/index.html
 web/evaluate/regulatory/index.html
 web/execution-placement.css
@@ -759,6 +762,14 @@ web/explorer-evidence.css
 web/explorer-question.css
 web/explorer-redesign.css
 web/for-agents/index.html
+web/get-started/index.html
+web/get-started/setup.css
+web/get-started/setup.js
+web/guides/cli/book.css
+web/guides/cli/book.js
+web/guides/cli/index.html
+web/guides/cli/reference/help.txt
+web/guides/cli/reference/index.html
 web/guides/compare-model-artifacts/index.html
 web/guides/index.html
 web/guides/inspect-gguf-tensor-encodings/index.html

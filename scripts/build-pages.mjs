@@ -9,6 +9,8 @@ import { hardenWasmFile } from "./wasm-binary-hardening.mjs";
 import { writeBuildMetadata } from "./write-build-metadata.mjs";
 import { buildCliCapabilities } from "../bin/deepbom-automation.mjs";
 import { buildAgentCapabilities } from "../bin/deepbom-agent-contract.mjs";
+import { runNode } from "./run-utils.mjs";
+import { sitemapLastmod } from "./sitemap-lastmod.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
@@ -40,6 +42,7 @@ for (const relativePath of [
 ]) hardenWasmFile(path.join(root, relativePath));
 
 const buildMetadata = writeBuildMetadata();
+await runNode("scripts/generate-cli-docs.mjs", ["--check"]);
 
 await rm(dist, { recursive: true, force: true });
 await mkdir(dist, { recursive: true });
@@ -49,9 +52,11 @@ await rm(path.join(root, ...protectedDeepBomPackage, ".gitignore"), { force: tru
 await copyDir(path.join(root, "web"), path.join(dist, "web"));
 await copyDir(path.join(root, "web", "evaluate"), path.join(dist, "evaluate"));
 await copyDir(path.join(root, "web", "for-agents"), path.join(dist, "for-agents"));
+await copyDir(path.join(root, "web", "get-started"), path.join(dist, "get-started"));
 await copyDir(path.join(root, "web", "guides"), path.join(dist, "guides"));
 await rm(path.join(dist, "web", "evaluate"), { recursive: true, force: true });
 await rm(path.join(dist, "web", "for-agents"), { recursive: true, force: true });
+await rm(path.join(dist, "web", "get-started"), { recursive: true, force: true });
 await rm(path.join(dist, "web", "guides"), { recursive: true, force: true });
 for (const file of deploymentExcludedWebFiles) {
   await rm(path.join(dist, "web", file), { force: true });
@@ -142,7 +147,6 @@ for (const page of ["privacy", "terms", "support"]) {
 }
 
 // SEO: robots.txt and sitemap.xml at domain root
-const today = new Date().toISOString().slice(0, 10);
 const agentCapabilities = buildAgentCapabilities(buildCliCapabilities(packageDocument.version, {
   defaultTarget: "android_mid_a55",
   deltaTargets: ["android_mid_a55", "rpi4_a72", "x86_avx2", "wasm_simd"],
@@ -231,10 +235,14 @@ await writeFile(path.join(dist, "llms.txt"), [
   "## Pages",
   "",
   "- [Workspace](https://deepbom.org/): browser-local audit of one artifact",
+  "- [Downloads and setup](https://deepbom.org/get-started/): Windows, macOS, Linux, CLI installation, and AI connections with availability status",
+  "- [CLI Handbook](https://deepbom.org/guides/cli/): practical audit, export, visualization, diff, verification, CI, batch, and local MCP workflows",
+  "- [CLI command reference](https://deepbom.org/guides/cli/reference/): executable-generated command inventory, output contracts, and complete option help",
   "- [AI agent setup](https://deepbom.org/for-agents/): local Agent Skill, npx, and stdio MCP paths",
   "- [ChatGPT integration](https://deepbom.org/chatgpt/): attached-file analysis in the ChatGPT browser sandbox",
   "- [Claude integration](https://deepbom.org/claude/): separate local Desktop and browser-local remote paths",
   "- [Inspection guides](https://deepbom.org/guides/): problem-focused ONNX, GGUF, and artifact-diff workflows",
+  "- [Evaluate DEEPBOM](https://deepbom.org/evaluate/): choose an engineering, quality, or regulatory evaluation brief",
   "- [Regulatory brief](https://deepbom.org/evaluate/regulatory/): what the records can support in a controlled process, and where they stop",
   "- [Quality brief](https://deepbom.org/evaluate/quality/): validating an installed analyzer before relying on it",
   "- [Engineering brief](https://deepbom.org/evaluate/engineering/): architecture, CI entry point, and what it will not infer",
@@ -254,56 +262,48 @@ await writeFile(path.join(dist, "sitemap.xml"), [
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
   "  <url>",
   "    <loc>https://deepbom.org/</loc>",
-  `    <lastmod>${today}</lastmod>`,
-  "    <changefreq>weekly</changefreq>",
-  "    <priority>1.0</priority>",
+  ...sitemapLastmod("web/index.html", { cwd: root }),
+  "  </url>",
+  "  <url>",
+  "    <loc>https://deepbom.org/get-started/</loc>",
+  ...sitemapLastmod("web/get-started/index.html", { cwd: root }),
   "  </url>",
   "  <url>",
   "    <loc>https://deepbom.org/for-agents/</loc>",
-  `    <lastmod>${today}</lastmod>`,
-  "    <changefreq>monthly</changefreq>",
-  "    <priority>0.7</priority>",
+  ...sitemapLastmod("web/for-agents/index.html", { cwd: root }),
   "  </url>",
   "  <url>",
   "    <loc>https://deepbom.org/chatgpt/</loc>",
-  `    <lastmod>${today}</lastmod>`,
-  "    <changefreq>monthly</changefreq>",
-  "    <priority>0.8</priority>",
+  ...sitemapLastmod("web/chatgpt/index.html", { cwd: root }),
   "  </url>",
   "  <url>",
   "    <loc>https://deepbom.org/claude/</loc>",
-  `    <lastmod>${today}</lastmod>`,
-  "    <changefreq>monthly</changefreq>",
-  "    <priority>0.8</priority>",
+  ...sitemapLastmod("web/claude/index.html", { cwd: root }),
   "  </url>",
-  ...["", "inspect-onnx-quantization/", "inspect-gguf-tensor-encodings/", "compare-model-artifacts/"].flatMap((guide) => [
+  ...["", "cli/", "cli/reference/", "inspect-onnx-quantization/", "inspect-gguf-tensor-encodings/", "compare-model-artifacts/"].flatMap((guide) => [
     "  <url>",
     `    <loc>https://deepbom.org/guides/${guide}</loc>`,
-    `    <lastmod>${today}</lastmod>`,
-    "    <changefreq>monthly</changefreq>",
-    "    <priority>0.7</priority>",
+    ...sitemapLastmod(`web/guides/${guide}index.html`, { cwd: root }),
     "  </url>",
   ]),
   ...["privacy", "terms", "support"].flatMap((page) => [
     "  <url>",
     `    <loc>https://deepbom.org/${page}</loc>`,
-    `    <lastmod>${today}</lastmod>`,
-    "    <changefreq>yearly</changefreq>",
-    "    <priority>0.4</priority>",
+    ...sitemapLastmod(`web/legal/${page}.html`, { cwd: root }),
     "  </url>",
   ]),
   "  <url>",
   "    <loc>https://deepbom.org/verify</loc>",
-  `    <lastmod>${today}</lastmod>`,
-  "    <changefreq>monthly</changefreq>",
-  "    <priority>0.6</priority>",
+  ...sitemapLastmod("web/verify.html", { cwd: root }),
+  "  </url>",
+  "  <url>",
+  "    <loc>https://deepbom.org/evaluate/</loc>",
+  ...sitemapLastmod("web/evaluate/index.html", { cwd: root }),
   "  </url>",
   ...["regulatory", "quality", "engineering"].flatMap((brief) => [
     "  <url>",
     `    <loc>https://deepbom.org/evaluate/${brief}/</loc>`,
-    `    <lastmod>${today}</lastmod>`,
-    "    <changefreq>monthly</changefreq>",
-    "    <priority>0.7</priority>",
+    ...sitemapLastmod(`web/evaluate/${brief}/index.html`, { cwd: root }),
     "  </url>",
   ]),
   "</urlset>",
@@ -673,7 +673,7 @@ async function stampServiceWorkerBuild(file, buildContentSha256) {
   await writeFile(file, rewritten);
 }
 
-function shellHtml(indexHtml, title = "DEEPBOM | Deployment Artifact Evidence for On-Device AI") {
+function shellHtml(indexHtml, title = "DEEPBOM | Local AI Model Analyzer") {
   const withBase = indexHtml.includes("<base ")
     ? indexHtml
     : indexHtml.replace("<head>", '<head>\n    <base href="/web/" />');

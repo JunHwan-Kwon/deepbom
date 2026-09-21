@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CLI Handbook | DEEPBOM Guides</title>
+  <meta name="description" content="Learn DEEPBOM CLI commands with practical examples: audit models, inspect tensors, compare artifacts, export CycloneDX and diagrams, automate checks, and connect local AI tools." />
+  <link rel="canonical" href="https://deepbom.org/guides/cli/" />
+  <meta property="og:title" content="DEEPBOM CLI Handbook" />
+  <meta property="og:description" content="A practical command-line guide, from a first model audit to reproducible evidence and automation." />
+  <meta property="og:image" content="https://deepbom.org/web/og-image.png" />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"DEEPBOM CLI Handbook","url":"https://deepbom.org/guides/cli/","about":{"@id":"https://deepbom.org/#app"},"author":{"@id":"https://deepbom.org/#author"}}</script>
+  <link rel="icon" href="/chatgpt/deepbom-app-icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="../../evaluate/evaluation.css" />
+  <link rel="stylesheet" href="./book.css" />
+  <script type="module" src="./book.js"></script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Guides","item":"https://deepbom.org/guides/"},{"@type":"ListItem","position":2,"name":"CLI Handbook","item":"https://deepbom.org/guides/cli/"}]}</script>
+</head>
+<body class="cli-book">
+  <a class="book-skip" href="#main">Skip to handbook</a>
+  <header class="brief-header"><a class="brand" href="/">DEEPBOM</a><nav class="brief-nav" aria-label="Main navigation"><a href="/">Workspace</a><a href="/get-started/">Get started</a><a href="/guides/" aria-current="location">Guides</a><a href="/evaluate/">Evaluate</a></nav></header>
+  <div class="book-layout">
+    <aside class="book-sidebar"><p class="eyebrow">In this handbook</p><nav aria-label="Chapters">
+      <a href="#start"><span class="chapter-number">01</span>Install &amp; first audit</a>
+      <a href="#audit"><span class="chapter-number">02</span>Read an artifact</a>
+      <a href="#inspect"><span class="chapter-number">03</span>Structure &amp; tensors</a>
+      <a href="#export"><span class="chapter-number">04</span>Export evidence</a>
+      <a href="#visualize"><span class="chapter-number">05</span>Diagrams &amp; documents</a>
+      <a href="#compare"><span class="chapter-number">06</span>Compare &amp; verify</a>
+      <a href="#automation"><span class="chapter-number">07</span>CI &amp; batch processing</a>
+      <a href="#packages"><span class="chapter-number">08</span>Packages &amp; remote files</a>
+      <a href="#targets"><span class="chapter-number">09</span>Targets &amp; evidence</a>
+      <a href="#agents"><span class="chapter-number">10</span>Agents &amp; local MCP</a>
+      <a href="#troubleshooting"><span class="chapter-number">11</span>Exit codes &amp; recovery</a>
+      <a href="./reference/">All commands &amp; options →</a>
+    </nav></aside>
+    <main class="book-main" id="main">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/guides/">Guides</a></li><li><span aria-current="page">CLI Handbook</span></li></ol></nav>
+      <p class="eyebrow">CLI / <span data-cli-version>1.103.1</span></p>
+      <h1>CLI Handbook</h1>
+      <p class="lede">Inspect a model, understand its evidence, and save a reproducible result. Work through the chapters or jump directly to the command you need.</p>
+      <div class="book-actions"><a class="primary" href="#start">Run your first audit</a><a href="./reference/">Command reference</a><button type="button" data-print hidden>Print / Save as PDF</button></div>
+      <div class="book-note"><p>Examples use <code>deepbom</code> after installation and run in PowerShell, macOS, or Linux shells. Quote paths containing spaces. Replace example filenames with your files; each command is on one line so shell-specific continuation characters are unnecessary.</p></div>
+
+      <section id="start"><p class="eyebrow">01 / Getting started</p><h2>Install once. Inspect your first file.</h2>
+        <p>With Node.js 20 or newer, install the pinned release and verify the installation:</p>
+        <div class="book-code"><pre><code>npm install -g deepbom@1.103.1
+deepbom --version
+deepbom self-test --compact</code></pre></div>
+        <p>For Python, Cargo, standalone binaries, or a graphical application, see <a href="/get-started/#cli">installation methods</a>. To run without a global installation, replace <code>deepbom</code> with <code>npx -y deepbom@1.103.1</code>; its first run downloads the package.</p>
+        <p>Try the small <a href="/web/samples/mnist-8.onnx" download>MNIST ONNX sample</a> (26,454 bytes; <a href="https://github.com/JunHwan-Kwon/deepbom/blob/main/web/samples/README.md">source and license</a>). Open a terminal in its download directory:</p>
+        <div class="book-code"><pre><code>deepbom audit "./mnist-8.onnx" --summary --expected-sha256 2f06e72de813a8635c9bc0397ac447a601bdbfa7df4bebc278723b958831c9bf --offline</code></pre></div>
+        <p>The summary identifies the artifact by its full SHA-256 and separates artifact defects, cautions, and evidence gaps. <code>self-test</code> checks the installation; it does not validate the quality of your model.</p>
+      </section>
+
+      <section id="audit"><p class="eyebrow">02 / audit</p><h2>Choose the depth of static inspection.</h2>
+        <div class="book-code"><pre><code>deepbom audit "./model.onnx" --summary
+deepbom audit "./model.tflite" --summary
+deepbom audit "./model.gguf" --scan structure --summary
+deepbom audit "./weights.safetensors" --scan integrity --summary</code></pre></div>
+        <table class="book-table"><caption>Scan policy depends on the format.</caption><thead><tr><th scope="col">Mode</th><th scope="col">Meaning</th></tr></thead><tbody>
+          <tr><th scope="row"><code>auto</code></th><td>Default. Chooses the supported path from format and size; inspect the reported effective policy.</td></tr>
+          <tr><th scope="row"><code>structure</code></th><td>GGUF/SafeTensors header, tensor directory, and storage evidence. Numerical payload integrity is not assessed.</td></tr>
+          <tr><th scope="row"><code>integrity</code></th><td>Streams declared tensor payload ranges for supported GGUF/SafeTensors integrity checks.</td></tr>
+          <tr><th scope="row"><code>full</code></th><td>The format's complete static parser contract. This does not execute the model.</td></tr>
+        </tbody></table>
+        <p>Do not apply <code>--scan structure</code> indiscriminately: formats such as monolithic ONNX, TFLite, and ExecuTorch accept <code>auto</code> or <code>full</code>. Full SHA-256 calculation still reads the complete file, even when numerical payload checks are skipped.</p>
+        <p>Stable or existing deployment paths cover TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch. TensorFlow, Keras, HDF5, PT2, and PyTorch checkpoint support has preview boundaries. Safe-envelope inspection never constructs arbitrary framework objects or proves an executable graph.</p>
+      </section>
+
+      <section id="inspect"><p class="eyebrow">03 / model-summary · gguf · explain-rule</p><h2>Ask a smaller, precise question.</h2>
+        <h3>Model structure and serialized storage</h3>
+        <div class="book-code"><pre><code>deepbom model-summary "./model.onnx" --level operation --format table
+deepbom model-summary "./model.gguf" --level storage --format markdown
+deepbom gguf "./model.gguf" --tensors --tensor-offset 0 --tensor-limit 20
+deepbom audit "./weights.safetensors" --encoding-inventory --compact</code></pre></div>
+        <p>Model summaries project the hash-bound Model IR. Serialized storage counts are not trainable parameter counts; the display order is not a runtime schedule. Encoding inventory is supported for GGUF, SafeTensors, ONNX, and TFLite.</p>
+        <h3>Select a section or explain a finding</h3>
+        <div class="book-code"><pre><code>deepbom audit "./model.onnx" --list-sections
+deepbom audit "./model.onnx" --section quantization --json
+deepbom audit "./model.onnx" --section model_ir --compact
+deepbom explain-rule --list
+deepbom explain-rule EA-IOC-0001 --json</code></pre></div>
+        <p>Use section names reported for your artifact. <code>--pointer</code> can select a specific RFC 6901 JSON Pointer when you know the returned document's structure. Use a rule ID from your own findings when requesting an explanation.</p>
+      </section>
+
+      <section id="export"><p class="eyebrow">04 / Evidence files</p><h2>Save a report for its next consumer.</h2>
+        <div class="book-code"><pre><code>deepbom audit "./model.onnx" --output-format envelope -o "evidence.json" --no-clobber
+deepbom audit "./model.onnx" --output-format json -o "analysis.json"
+deepbom audit "./model.onnx" --output-format cyclonedx -o "model.cdx.json"
+deepbom audit "./model.onnx" --output-format sarif -o "model.sarif"
+deepbom audit "./model.onnx" --render markdown -o "review.md"</code></pre></div>
+        <table class="book-table"><thead><tr><th scope="col">Output</th><th scope="col">Use it for</th></tr></thead><tbody>
+          <tr><th scope="row"><code>summary</code></th><td>A bounded human review.</td></tr><tr><th scope="row"><code>envelope</code></th><td>The common, versioned cross-format automation contract.</td></tr><tr><th scope="row"><code>json</code> / <code>json-compact</code></th><td>Complete format-specific evidence; fields can evolve independently.</td></tr><tr><th scope="row"><code>cyclonedx</code></th><td>CycloneDX 1.7 ML-BOM. The primary model is at <code>metadata.component</code>.</td></tr><tr><th scope="row"><code>sarif</code></th><td>SARIF 2.1.0 findings for CI and engineering review.</td></tr>
+        </tbody></table>
+        <p><code>-o</code> writes a complete file atomically; <code>--no-clobber</code> refuses to replace an existing destination. Use <code>--output -</code> for stdout. To reproduce timestamped documents, supply a fixed <code>--timestamp</code> or <code>SOURCE_DATE_EPOCH</code>.</p>
+        <div class="book-code"><pre><code>deepbom audit "./model.onnx" --output-format cyclonedx --timestamp 2026-09-18T00:00:00Z -o "model.reproducible.cdx.json"</code></pre></div>
+        <div class="book-note"><p><strong>SPDX:</strong> the current CLI audit output formats do not include SPDX. Use the Web workspace or Desktop export controls for SPDX 2.3. Do not pass <code>--output-format spdx</code> to this CLI version.</p></div>
+      </section>
+
+      <section id="visualize"><p class="eyebrow">05 / graph · visualize</p><h2>Export a picture or a document bundle.</h2>
+        <div class="book-code"><pre><code>deepbom graph "./model.onnx" --view structure --output-format svg -o "graph.svg"
+deepbom graph "./model.onnx" --view structure --output-format png -o "graph.png"
+deepbom graph "./model.onnx" --view quantization --output-format html -o "graph.html"
+deepbom visualize "./model.onnx" --view all --orientation portrait -o "model-views.zip"</code></pre></div>
+        <p><code>graph</code> supports <code>structure</code>, <code>placement</code>, <code>quantization</code>, and <code>architecture</code> views, with SVG, PNG, HTML, Mermaid, DOT, or JSON output.</p>
+        <p><code>visualize</code> produces document-oriented Model IR pages with SVG, black-and-white 300-DPI PNG, captions, and an identity-bound manifest. Select <code>all</code> or comma-separated view IDs: <code>identity-boundary</code>, <code>architecture-overview</code>, <code>block-detail</code>, <code>exhaustive</code>, <code>static-runtime</code>, <code>observed-runtime</code>.</p>
+        <p>Views retain their evidence gaps and loss information. Asking for an observed-runtime view does not create a runtime trace. A document-oriented layout does not establish regulatory approval.</p>
+      </section>
+
+      <section id="compare"><p class="eyebrow">06 / diff · contract capture · verify</p><h2>Review a change and reconcile its evidence.</h2>
+        <div class="book-code"><pre><code>deepbom diff "./baseline.onnx" "./candidate.onnx" --summary
+deepbom diff "./baseline.gguf" "./candidate.gguf" --tensors --render markdown -o "tensor-changes.md"
+deepbom contract capture "./model.onnx" --json -o "baseline.interface-contract.json"
+deepbom verify "./model.onnx" --contract "./reviewed.interface-contract.json" --render markdown
+deepbom verify "./model.onnx" --bom "./model.cdx.json" --render markdown</code></pre></div>
+        <p><code>diff</code> requires matching supported artifact formats and compares serialized graph, storage, and quantization evidence. It does not establish conversion lineage or a change in model quality.</p>
+        <p><code>contract capture</code> records an artifact-derived external-interface baseline. Review it separately before treating it as a production declaration; capture alone is not approval. <code>verify --contract</code> checks the supplied interface declaration. <code>verify --bom</code> reconciles artifact-observable facts in a CycloneDX 1.7 component, with <code>--component-ref</code> available for explicit selection. The headline <code>NO_CONTRADICTION</code> applies only to compared fields. Review the supplied/accounted/compared property counts and missing, unsupported, or unassessable declarations before using exit 0 as a gate.</p>
+        <p>A partial or blocked verification has a distinct exit code. It is not silently reported as a pass.</p>
+      </section>
+
+      <section id="automation"><p class="eyebrow">07 / Policies · batch</p><h2>Make the review policy explicit.</h2>
+        <div class="book-code"><pre><code>deepbom audit "./model.onnx" --output-format sarif --gate defects -o "findings.sarif" --policy-output "decision.json" --error-format json
+deepbom audit "./model.onnx" --output-format envelope --policy engineering -o "engineering-evidence.json"</code></pre></div>
+        <p><code>--gate defects</code> blocks on artifact defects. The <code>engineering</code> profile preserves cautions and gaps without using them as blockers; <code>regulatory</code> also blocks unresolved evidence gaps and does not determine legal compliance. <code>--fail-on high</code> gates by severity. Choose one of <code>--gate</code>, <code>--policy</code>, <code>--review-policy</code>, or <code>--fail-on</code>; they are mutually exclusive.</p>
+        <p>Successful analysis still writes the requested evidence when the finding policy returns exit code 2. Archive both the evidence and policy decision. Without a selected policy, a completed analysis does not automatically block on its findings.</p>
+        <h3>Process multiple files from a manifest</h3>
+        <p>Save the following as <code>batch.json</code> beside the MNIST sample downloaded in chapter 1. Every entry requires a unique ID, a safe relative path, and the expected SHA-256.</p>
+        <div class="book-code"><pre><code>{
+  "schema": "deepbom.batch_manifest.v1",
+  "artifacts": [{
+    "id": "mnist",
+    "path": "mnist-8.onnx",
+    "expected_sha256": "2f06e72de813a8635c9bc0397ac447a601bdbfa7df4bebc278723b958831c9bf",
+    "scan": "auto",
+    "output": "envelope"
+  }]
+}</code></pre></div>
+        <div class="book-code"><pre><code>deepbom batch "./batch.json" --batch-output-dir "./batch-results" --compact -o "batch-summary.json"</code></pre></div>
+        <p>Per-artifact results are written to the output directory. Existing result files are not overwritten; use a fresh directory for a new run. Read the batch summary's per-file status and exit codes. Batch entries accept <code>analysis</code>, <code>envelope</code>, <code>cyclonedx</code>, or <code>sarif</code> output and their own scan mode.</p>
+      </section>
+
+      <section id="packages"><p class="eyebrow">08 / Multiple files &amp; immutable sources</p><h2>Keep sidecars and source identity together.</h2>
+        <div class="book-code"><pre><code>deepbom audit "./model.onnx" --external-data-dir "./weights" --summary
+deepbom audit "./Model.mlpackage" --summary
+deepbom audit "./sharded-safetensors" --summary
+deepbom audit "./program.pte" --external-data-dir "./sidecars" --summary</code></pre></div>
+        <p>Use the complete package or shard directory with its manifests and members. Do not treat one shard or a missing ONNX data sidecar as a complete model.</p>
+        <h3>Pinned remote input</h3>
+        <p>The following templates require replacement of every bracketed value. Mutable branches and unpinned downloads are not accepted as immutable identity.</p>
+        <div class="book-code"><pre><code>deepbom audit "hf://owner/repo@&lt;40-hex-commit&gt;/model.gguf" --scan structure --summary
+deepbom audit "gs://bucket/model.onnx#generation=&lt;object-generation&gt;" --summary
+deepbom audit "https://host/model.onnx#sha256=&lt;64-hex-digest&gt;" --summary</code></pre></div>
+        <p><code>--cache-dir</code> chooses the content-addressed cache. <code>--offline</code> refuses remote access and requires a verified cache receipt for remote inputs. <code>--max-download-gib</code> bounds the download. This does not prevent a package manager such as npx from downloading DEEPBOM itself.</p>
+      </section>
+
+      <section id="targets"><p class="eyebrow">09 / placement · accelerator · explore</p><h2>Separate a static scenario from a measurement.</h2>
+        <div class="book-code"><pre><code>deepbom audit "./model.tflite" --target android_mid_a55 --summary
+deepbom placement "./model.tflite" --profiles xnnpack_cpu,tflite_coreml_delegate,litert_qualcomm_qnn --compact
+deepbom audit "./model.gguf" --context 4096 --batch 1 --state-bits 16 --memory-mib 8192 --summary</code></pre></div>
+        <p>A target or memory capacity is a declared scenario. Static cost, eligibility, or memory lower bounds do not identify the actual machine, selected runtime provider, measured latency, or usable capacity.</p>
+        <div class="book-code"><pre><code>deepbom accelerator collect nvidia --compact -o "nvidia-profile.json"
+deepbom explore "./model.tflite" --request "./redesign-request.json" --compact</code></pre></div>
+        <p><code>accelerator collect nvidia</code> queries the NVIDIA host environment and requires a working NVIDIA driver/tooling setup. Device identifiers are hashed unless <code>--include-device-identifiers</code> is requested. The profile is not evidence that a model executed on that device.</p>
+        <p><code>explore</code> accepts standalone TFLite and a separately prepared redesign request. It evaluates static alternatives; it does not retrain or rewrite a model. Imported runtime/build sidecars, including TensorRT, Core ML compute plans, and ExecuTorch build inventories, must satisfy their own artifact identity bindings. See the <a href="./reference/#help">complete option reference</a>.</p>
+      </section>
+
+      <section id="agents"><p class="eyebrow">10 / capabilities · integrate · mcp</p><h2>Let a local assistant use the same analyzer.</h2>
+        <div class="book-code"><pre><code>deepbom capabilities --compact
+deepbom capabilities --format agent-json
+deepbom integrate codex
+deepbom integrate codex --apply
+deepbom integrate status codex</code></pre></div>
+        <p>Use <code>claude-code</code> or <code>generic</code> in place of <code>codex</code> for another supported skill target. Installation previews changes first; <code>--apply</code> writes only managed skill files.</p>
+        <div class="book-code"><pre><code>deepbom integrate remove codex
+deepbom integrate remove codex --apply
+deepbom mcp</code></pre></div>
+        <p>The removal preview identifies managed files; applying removal only deletes unchanged managed files. <code>mcp</code> is a local stdio server, so waiting for client input is normal. It provides <code>deepbom_capabilities</code>, <code>deepbom_audit</code>, <code>deepbom_diff</code>, and <code>deepbom_explain_rule</code>.</p>
+        <p>By default the MCP server reads within its launch directory. Set <code>DEEPBOM_MCP_ALLOWED_ROOTS</code> in the host configuration for other approved directories. Returned evidence enters the AI conversation even when model bytes stay local. See <a href="/get-started/#ai">host-specific connection instructions</a>.</p>
+      </section>
+
+      <section id="troubleshooting"><p class="eyebrow">11 / Troubleshooting</p><h2>Use the exit code and the evidence together.</h2>
+        <table class="book-table"><thead><tr><th scope="col">Exit</th><th scope="col">Meaning</th><th scope="col">Next step</th></tr></thead><tbody>
+          <tr><th scope="row"><code>0</code></th><td>Command and requested gate passed.</td><td>Read findings and limits; completion is not model-quality approval.</td></tr>
+          <tr><th scope="row"><code>1</code></th><td>Invocation, input, analysis, or output failed.</td><td>Read stderr; check options, paths, sidecars, and writable output location.</td></tr>
+          <tr><th scope="row"><code>2</code></th><td>Policy or verification blocked.</td><td>Review the decision and blocking evidence; do not discard the report.</td></tr>
+          <tr><th scope="row"><code>3</code></th><td>Verification binding is incomplete.</td><td>Supply the missing declaration or identity evidence.</td></tr>
+          <tr><th scope="row"><code>4</code></th><td>Independently supplied artifact SHA-256 mismatched.</td><td>Confirm the source and file bytes before changing the expected digest.</td></tr>
+        </tbody></table>
+        <p>For automation, <code>--error-format json</code> sends structured errors to stderr while keeping machine evidence on stdout. Inspect the installed release with <code>deepbom --version</code> and its actual command contract with <code>deepbom capabilities --compact</code>.</p>
+        <ul><li><strong>Command not found:</strong> restart the terminal after installation or use the pinned npx invocation.</li><li><strong>Output already exists:</strong> choose a new path when using <code>--no-clobber</code> or a fresh directory for batch results.</li><li><strong>Size or scan policy rejected:</strong> use a supported package/shard representation and scan mode. Do not bypass the parser's allocation limit.</li><li><strong>Cannot read stdin:</strong> provide a regular file or supported package directory; symbolic stdin is deliberately unsupported.</li></ul>
+        <p>Static inspection does not run model code or establish task accuracy, clinical validity, runtime placement, measured latency, or regulatory compliance.</p>
+      </section>
+      <nav class="book-footer" aria-label="Continue reading"><a href="/guides/">← All guides</a><a href="./reference/">Complete CLI reference →</a></nav>
+    </main>
+  </div>
+  <p id="book-status" class="book-status" role="status" aria-live="polite"></p>
+  <footer class="brief-footer">The command reference is generated from the executable. Examples describe static artifact evidence and its limits.</footer>
+</body>
+</html>

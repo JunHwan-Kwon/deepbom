@@ -1,5 +1,5 @@
 {
   "schema": "deepbom.release_version.v1",
-  "base_version": "1.103.0",
+  "base_version": "1.103.1",
   "channel": "release"
 }

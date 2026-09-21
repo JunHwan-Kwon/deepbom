@@ -63,10 +63,13 @@ await updateRegex("web/for-agents/index.html", /deepbom@(?:&lt;verified-version&
 await updateRegex("web/for-agents/index.html", /(?:channels-v|deepbom-)\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g,
   (value) => `${value.startsWith("channels-v") ? "channels-v" : "deepbom-"}${contract.displayVersion}`);
 for (const relativePath of [
+  "web/guides/cli/index.html",
   "web/guides/inspect-onnx-quantization/index.html",
   "web/guides/inspect-gguf-tensor-encodings/index.html",
   "web/guides/compare-model-artifacts/index.html",
 ]) await updateRegex(relativePath, /deepbom@\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g, `deepbom@${contract.displayVersion}`);
+await updateRegex("web/guides/cli/index.html", /(<span data-cli-version>)[^<]+(<\/span>)/,
+  (_match, open, close) => `${open}${contract.displayVersion}${close}`);
 await updateJson("docs/chatgpt-app/submission-profile.json", (document) => ({
   ...document,
   agent_contract: AGENT_CONTRACT,

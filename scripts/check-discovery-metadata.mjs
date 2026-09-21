@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 const html = readFileSync("web/index.html", "utf8");
 const manifest = JSON.parse(readFileSync("web/manifest.webmanifest", "utf8"));
 const buildPages = readFileSync("scripts/build-pages.mjs", "utf8");
+const styles = readFileSync("web/styles.css", "utf8");
 const agentPage = readFileSync("web/for-agents/index.html", "utf8");
 const guidePaths = [
   "web/guides/index.html",
@@ -44,11 +45,11 @@ const briefNodes = Object.fromEntries(
 );
 
 for (const [condition, message] of [
-  [html.includes("<title>DEEPBOM | Deployment Artifact Evidence for On-Device AI</title>"), "canonical page title is current"],
+  [html.includes("<title>DEEPBOM | Local AI Model Analyzer</title>"), "canonical page title is current"],
   [html.includes('rel="canonical" href="https://deepbom.org/"'), "canonical URL is absolute"],
-  [html.includes('property="og:title" content="DEEPBOM | Deployment Artifact Evidence for On-Device AI"'), "Open Graph title matches the page title"],
-  [html.includes('name="twitter:title" content="DEEPBOM | Deployment Artifact Evidence for On-Device AI"'), "Twitter title matches the page title"],
-  [buildPages.includes('title = "DEEPBOM | Deployment Artifact Evidence for On-Device AI"'), "root production shell preserves the canonical page title"],
+  [html.includes('property="og:title" content="DEEPBOM | Local AI Model Analyzer"'), "Open Graph title matches the page title"],
+  [html.includes('name="twitter:title" content="DEEPBOM | Local AI Model Analyzer"'), "Twitter title matches the page title"],
+  [buildPages.includes('title = "DEEPBOM | Local AI Model Analyzer"'), "root production shell preserves the canonical page title"],
   [!html.includes("TFLite &amp; ONNX Model Static Analyzer") && !html.includes("TFLite & ONNX Model Static Analyzer"), "retired search title is absent"],
   [manifest.name.includes("Deployment Artifact Evidence Analyzer"), "PWA name uses the artifact-evidence identity"],
   [!html.includes('"@type": "Offer"') && !html.includes('"price"') && !html.includes('"priceCurrency"'), "public metadata contains no commercial offer or price"],
@@ -66,7 +67,8 @@ for (const [condition, message] of [
   [["regulatory", "quality", "engineering"].every((brief) => buildPages.includes(`"${brief}"`))
     && buildPages.includes("https://deepbom.org/evaluate/${brief}/"), "generated sitemap lists all evaluation briefs"],
   [!buildPages.includes('"    <loc>https://deepbom.org/web/</loc>"'), "generated sitemap does not index the duplicate /web/ shell"],
-  [buildPages.includes("const today = new Date().toISOString().slice(0, 10)"), "generated sitemap receives the build date"],
+  [buildPages.includes('import { sitemapLastmod } from "./sitemap-lastmod.mjs"')
+    && !buildPages.includes("<lastmod>${today}"), "sitemap modification dates come from source revisions, not deployment time"],
 
   // llms.txt is the plain-text place an assistant learns the execution and
   // transfer boundaries. The remote endpoint is a control plane; local and
@@ -92,6 +94,8 @@ for (const [condition, message] of [
   [typeof application.license === "string" && application.license.length > 0, "application entity declares a license"],
   [rootNodes.some((node) => node["@type"] === "FAQPage" && Array.isArray(node.mainEntity) && node.mainEntity.length >= 4),
     "FAQ linked data carries at least four answered questions"],
+  [html.includes('class="product-about"') && !html.includes('class="seo-footer"') && !styles.includes(".seo-footer"),
+    "product information is available to visitors rather than hidden in a crawler-only footer"],
   [agentPage.includes('rel="canonical" href="https://deepbom.org/for-agents/"'), "agent guide has a canonical URL"],
   [agentPage.includes("there is no hosted DEEPBOM analysis endpoint") && agentPage.includes("browser-sandbox integration"),
     "agent guide distinguishes local execution from the ChatGPT browser-sandbox path"],
@@ -135,6 +139,31 @@ for (const [condition, message] of [
   }),
 ]) {
   if (!condition) errors.push(message);
+}
+
+// Each structured answer must have the same readable HTML counterpart.
+const readableText = (text) => text.replace(/<[^>]*>/g, "").replaceAll("&amp;", "&")
+  .replaceAll("&#x27;", "'").replaceAll("&#39;", "'").replaceAll("&quot;", '"').replace(/\s+/g, " ").trim();
+const visibleFaq = [...html.matchAll(/<details class="product-about-question"><summary>(.*?)<\/summary><p>(.*?)<\/p><\/details>/gs)]
+  .map((match) => ({ question: readableText(match[1]), answer: readableText(match[2]) }));
+const schemaFaq = rootNodes.find((node) => node["@type"] === "FAQPage")?.mainEntity || [];
+if (visibleFaq.length !== schemaFaq.length || schemaFaq.some((entry, index) =>
+  entry.name !== visibleFaq[index]?.question || entry.acceptedAnswer?.text !== visibleFaq[index]?.answer)) {
+  errors.push("FAQ structured data must match the user-readable questions and answers");
+}
+
+for (const relative of [
+  ...guidePaths.slice(1), "web/guides/cli/index.html", "web/guides/cli/reference/index.html",
+  ...BRIEFS.map((brief) => `web/evaluate/${brief}/index.html`),
+  "web/for-agents/index.html", "web/chatgpt/index.html", "web/claude/index.html",
+]) {
+  const source = readFileSync(relative, "utf8");
+  const breadcrumb = linkedData(source, relative).find((node) => node["@type"] === "BreadcrumbList");
+  const trail = source.match(/<nav class="breadcrumbs"[^>]*>(.*?)<\/nav>/s)?.[1] || "";
+  const names = [...trail.matchAll(/<li>(.*?)<\/li>/gs)].map((match) => readableText(match[1]));
+  if (JSON.stringify(names) !== JSON.stringify(breadcrumb?.itemListElement?.map((item) => item.name))) {
+    errors.push(`${relative} structured breadcrumb differs from its visible reading path`);
+  }
 }
 
 if (errors.length) {

@@ -55,7 +55,7 @@ for (const row of catalog) {
 }
 
 const generated = execFileSync(process.execPath, ["scripts/generate-finding-rule-catalog.mjs", "--check"], { encoding: "utf8" });
-assert.match(generated, /119 rules/);
+assert.match(generated, new RegExp(`${policy.canonical_report_findings.count} rules`));
 for (const id of [...catalogIds, ...analysisRules]) {
   const human = execFileSync(process.execPath, ["bin/deepbom.mjs", "explain-rule", id], { encoding: "utf8", maxBuffer: 4 * 1024 * 1024 });
   assert.match(human, new RegExp(id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `${id} human renderer omitted the identifier.`);
