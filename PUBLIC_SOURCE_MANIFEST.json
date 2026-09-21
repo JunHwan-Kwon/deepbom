@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "758b0dc30cea0b6ab32e13a2dd6f70f3cb940d26",
+  "source_commit": "f59d8e352744324194107f35a57e2952766f2d40",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1180,
@@ -1402,8 +1402,8 @@
     },
     {
       "path": "scripts/build-pages.mjs",
-      "byte_length": 30424,
-      "sha256": "4931d40c05fe1e727303309e03cc9d989e27114903b8357d1870da81151846fb"
+      "byte_length": 30996,
+      "sha256": "d1d736aa966232915e8c2b4b636547ba0396d6e2612a518b5514649669137e05"
     },
     {
       "path": "scripts/build-public-multiformat-corpus-manifest.mjs",
@@ -4153,7 +4153,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 89753,
-      "sha256": "bbdc7f1051b870b4b7ba1b2e34166b0e435be4279c2731a5df00990f869dbf42"
+      "sha256": "c3c1f0ee143966a86d68c2debdadc92482de724864cc024b47278d09568b93a1"
     },
     {
       "path": "web/lib/bundle.js",

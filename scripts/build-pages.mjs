@@ -622,6 +622,16 @@ async function writeCloudflareStaticAssetHeaders() {
     "/claude/deepbom-widget.js",
     "/pkg/tflite_wasm_audit_bg.wasm",
   ];
+  // Public assets bypass the Worker's UTF-8 response normalization. Preserve
+  // the same encoding explicitly at the static asset boundary.
+  const utf8ContentTypes = [
+    ["/*.js", "text/javascript"],
+    ["/*.mjs", "text/javascript"],
+    ["/*.css", "text/css"],
+    ["/*.json", "application/json"],
+    ["/*.webmanifest", "application/manifest+json"],
+    ["/*.svg", "image/svg+xml"],
+  ];
   const htmlFiles = (await collectFiles(dist))
     .filter((file) => path.extname(file).toLowerCase() === ".html")
     .map((file) => canonicalAssetUrlForHtml(path.relative(dist, file).replaceAll(path.sep, "/")))
@@ -630,6 +640,11 @@ async function writeCloudflareStaticAssetHeaders() {
     "/*",
     ...commonSecurityHeaders,
     "",
+    ...utf8ContentTypes.flatMap(([pattern, contentType]) => [
+      pattern,
+      `  Content-Type: ${contentType}; charset=utf-8`,
+      "",
+    ]),
     ...publicCrossOriginAssets.flatMap((asset) => [
       asset,
       "  Access-Control-Allow-Origin: *",
@@ -642,7 +657,7 @@ async function writeCloudflareStaticAssetHeaders() {
       "",
     ]),
   ];
-  const ruleCount = 1 + publicCrossOriginAssets.length + htmlFiles.length;
+  const ruleCount = 1 + utf8ContentTypes.length + publicCrossOriginAssets.length + htmlFiles.length;
   if (ruleCount > 100) {
     throw new Error(`Cloudflare static header rules exceed the 100-rule limit: ${ruleCount}.`);
   }
