@@ -10,6 +10,7 @@ const packageRoot = path.join(releaseRoot, "npm", "package");
 const expectedMembers = [
   "LICENSE",
   "README.md",
+  "bin/capture-activation-evidence.py",
   "bin/deepbom-self-test.onnx",
   "bin/deepbom.mjs",
   "package.json",
@@ -65,6 +66,10 @@ const selfTest = await readFile(path.join(packageRoot, selfTestRelativePath));
 const selfTestSource = await readFile(path.join(root, "web", "samples", "gpu_partition_probe.onnx"));
 assert(sha256(selfTest) === releaseManifest.runtime.self_test.sha256, "Packaged self-test digest does not reproduce.");
 assert(sha256(selfTest) === sha256(selfTestSource), "Packaged self-test differs from the hash-pinned public source fixture.");
+
+const collector = await readFile(path.join(packageRoot, "bin", "capture-activation-evidence.py"));
+const collectorSource = await readFile(path.join(root, "scripts", "capture-activation-evidence.py"));
+assert(sha256(collector) === sha256(collectorSource), "Packaged activation collector differs from its public source.");
 
 const bundle = await readFile(path.join(packageRoot, "bin", "deepbom.mjs"), "utf8");
 assert(bundle.includes(releaseManifest.runtime.tflite_wasm_sha256), "Packaged CLI does not bind the declared WASM digest.");
