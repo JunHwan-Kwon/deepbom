@@ -1,10 +1,12 @@
 import { buildActivationIr, buildNumericalEvidenceBundle } from "./activation-ir.js";
 import { WEIGHT_VIEWS, renderWeightAnalysisView } from "./weight-analysis-view.js";
+import { installPruningView } from "./weight-pruning-view.js";
 import { weightAnalysisOptions } from "./weight-analysis.js";
 import { parseStrictJson } from "./strict-json.js";
-import { escapeXml as esc, countLabel, numberLabel, zeroLabel, createConnectionIndex, linkedOperations, operationLabel, histogramSvg, distributionMapSvg, connectionsSvg, intervalLabel } from "./weight-visuals.js";
+import { escapeXml as esc, countLabel, numberLabel, zeroLabel, createConnectionIndex, linkedOperations, operationLabel, histogramSvg, distributionMapSvg, tensorMetricMapSvg, connectionsSvg, intervalLabel } from "./weight-visuals.js";
 
 const PAGE_SIZE = 40;
+const INSPECTION_VIEWS = {...WEIGHT_VIEWS, pruning: "Interactive pruning"};
 const phrase = value => String(value || "").replaceAll("_", " ");
 const shapeLabel = row => Array.isArray(row.shape) ? `[${row.shape.join(" × ")}]` : "Shape not assessed";
 const rowName = row => row.name || row.native_locator || row.id;
@@ -37,7 +39,7 @@ export function installNumericalPanel(host, getContext) {
         <div class="weight-pagination"><button type="button" data-page="prev" aria-label="Previous tensors">←</button><span data-page-label></span><button type="button" data-page="next" aria-label="Next tensors">→</button></div>
       </aside>
       <div class="weight-canvas">
-        <section class="weight-map-section" aria-labelledby="weightMapTitle"><header class="weight-section-head"><div><span class="weight-eyebrow">01 / Across tensors</span><h3 id="weightMapTitle">Distribution map</h3></div><span class="weight-legend"><i class="weight-negative"></i>Negative <i class="weight-positive"></i>Zero / positive</span></header><div data-map class="weight-map"></div><p class="weight-chart-note">Shared value bins; intensity is relative to each tensor’s peak. Select a row to inspect it. Filter by encoding when comparing stored integer codes and real values.</p></section>
+        <section class="weight-map-section" aria-labelledby="weightMapTitle"><header class="weight-section-head"><div><span class="weight-eyebrow">01 / Across tensors</span><h3 id="weightMapTitle">Distribution map</h3></div><span class="weight-legend"><i class="weight-negative"></i>Negative <i class="weight-positive"></i>Zero / positive</span></header><div class="weight-map-controls" role="group" aria-label="Across tensor comparison"><button type="button" data-map-mode="distribution" aria-pressed="true">Distributions</button><button type="button" data-map-mode="rms" aria-pressed="false">RMS</button><button type="button" data-map-mode="zero" aria-pressed="false">Zero fraction</button></div><div data-map class="weight-map"></div><p class="weight-chart-note">Shared value bins; intensity is relative to each tensor’s peak. Select a row to inspect it. Filter by encoding when comparing stored integer codes and real values.</p></section>
         <section class="weight-detail" data-detail aria-label="Selected tensor"></section>
       </div>
     </div>
@@ -47,6 +49,8 @@ export function installNumericalPanel(host, getContext) {
   const status = $('[role="status"]'), fileInput = $('[aria-label="Import activation capture"]'), search = $('[type="search"]');
   let model = null, weight = null, activation = null, worker = null, generation = 0, source = "weight", selected = null, page = 0;
   let advanced = null, comparison = null, baseline = null, options = {}, mapping = [], inspection = "distribution";
+  let appliedOptions = {}, pruningView = null, pruningPreview = null, mapMode = "distribution";
+  const pruningStates = new Map();
   let logCount = false, allRows = [], filtered = [], visible = [], index = new Map(), lastSvg = null;
 
   function palette() {
@@ -58,6 +62,7 @@ export function installNumericalPanel(host, getContext) {
   function sync() {
     const next = getContext()?.model || null;
     if (next?.model_ir_sha256 === model?.model_ir_sha256) return false;
+    pruningView?.destroy(); pruningView = null; pruningPreview = null; pruningStates.clear(); appliedOptions = {};
     stopWorker(); model = next; weight = null; activation = null; advanced = null; comparison = null; options = {}; mapping = []; inspection = "distribution"; selected = null; page = 0; source = "weight";
     search.value = ""; $('[data-filter="status"]').value = ""; $('[data-sort]').value = "source";
     button("weights").disabled = !model; button("model").disabled = !model; button("import").disabled = !model;
@@ -110,7 +115,8 @@ export function installNumericalPanel(host, getContext) {
   }
   function empty(title, description, run = false) { return `<div class="weight-empty"><span class="weight-empty-glyph" aria-hidden="true">▥</span><h4>${esc(title)}</h4><p>${esc(description)}</p>${run ? '<button type="button" data-action="weights-inline">Analyze weights</button>' : ""}</div>`; }
   function renderCharts() {
-    const colors = palette(), row = index.get(selected)?.row, map = distributionMapSvg(visible,selected,colors);
+    pruningView?.destroy(); pruningView = null; pruningPreview = null;
+    const colors = palette(), row = index.get(selected)?.row, map = mapMode === "distribution" ? distributionMapSvg(visible,selected,colors) : tensorMetricMapSvg(visible,selected,colors,mapMode);
     $('[data-map]').innerHTML = map || empty(source === "activation" ? "Execution evidence belongs here" : weight ? "No plottable distributions" : "See the numerical structure",source === "activation" ? "Import a hash-bound capture from an explicit runtime execution. No model is run by this workspace." : weight ? "The current tensors have no assessed finite histograms. Their status and reason remain in the inventory and exported evidence." : "Read stored values to reveal a distribution for each tensor. Structure and connections are already available below.",source === "weight" && !weight && Boolean(model));
     const detail = $('[data-detail]');
     if (!row) {detail.innerHTML = empty("No tensor selected","Select a tensor from the inventory or distribution map."); lastSvg = null; button("svg").disabled = button("png").disabled = true; return;}
@@ -119,7 +125,7 @@ export function installNumericalPanel(host, getContext) {
     const connections = connectionsSvg(row,links,colors);
     detail.innerHTML = `<header class="weight-section-head"><div><span class="weight-eyebrow">02 / Selected tensor</span><h3>${esc(rowName(row))}</h3><p class="weight-tensor-contract">${esc(row.dtype)} <span>·</span> ${esc(shapeLabel(row))} <span>·</span> ${esc(phrase(row.representation || (source === "activation" ? "runtime capture" : row.status)))}</p></div><span class="weight-badge ${esc(row.status)}">${esc(phrase(row.status))}</span></header>
       <p class="weight-chart-note">${source === "weight" ? "Stored payload statistics; restored real-value analysis is labeled separately below." : "Captured runtime values."}</p><dl class="weight-stat-grid">${metric("Mean",numberLabel(s?.mean))}${metric("Standard deviation",numberLabel(s?.population_stddev),"Population")}${metric("RMS",numberLabel(s?.rms))}${metric("Zero fraction",zeroLabel(s),"Among finite values")}${metric("Minimum",s?.integer_minimum != null && s?.precision === "not_assessed_unsafe_integer_arithmetic" ? s.integer_minimum : numberLabel(s?.minimum))}${metric("Maximum",s?.integer_maximum != null && s?.precision === "not_assessed_unsafe_integer_arithmetic" ? s.integer_maximum : numberLabel(s?.maximum))}</dl>
-      ${source === "weight" ? `<label class="weight-inspection-label">Inspection <select data-inspection>${Object.entries(WEIGHT_VIEWS).map(([id,label]) => `<option value="${id}" ${inspection === id ? "selected" : ""}>${label}</option>`).join("")}</select></label>` : ""}
+      ${source === "weight" ? `<label class="weight-inspection-label">Inspection <select data-inspection>${Object.entries(INSPECTION_VIEWS).map(([id,label]) => `<option value="${id}" ${inspection === id ? "selected" : ""}>${label}</option>`).join("")}</select></label><nav class="weight-inspection-tabs" aria-label="Weight inspection views">${Object.entries(INSPECTION_VIEWS).map(([id,label]) => `<button type="button" data-inspection-tab="${id}" aria-pressed="${inspection === id}">${label}</button>`).join("")}</nav>` : ""}
       <div class="weight-plot-head"><strong>Value distribution</strong><label><input type="checkbox" data-log-count ${logCount ? "checked" : ""}> Log count axis</label></div>
       <div class="weight-histogram" data-histogram>${lastSvg || empty(row.status === "not_analyzed" ? "Numeric values have not been read" : "Histogram unavailable",row.reason ? phrase(row.reason) : s?.unsafe_integer_count !== "0" && s ? "Exact integer extrema are preserved. Floating statistics and histogram are not assessed for unsafe integer arithmetic." : s ? "No finite values are available for a histogram." : "Run optional weight analysis to populate this view.")}</div>
       <p class="weight-bin-readout" data-bin-readout>Hover or select a bin for its exact interval and count. Unequal numeric intervals are drawn with equal screen width; this is a count histogram, not density.</p>
@@ -127,14 +133,30 @@ export function installNumericalPanel(host, getContext) {
       <div class="weight-connections"><header class="weight-section-head"><div><span class="weight-eyebrow">03 / Serialized structure</span><h3>Operation connections</h3></div><span>${links.length} connected operation${links.length === 1 ? "" : "s"}</span></header>${connections || `<p class="weight-connection-empty">${source === "activation" ? "No serialized operation port is bound to this captured value." : "No serialized operation binding is available for this tensor. A name alone does not establish a layer relationship."}</p>`}
       ${links.length ? `<details><summary>All ${links.length} operation connections${links.length > 12 ? " · diagram shows first 12" : ""}</summary><ul>${links.map(({operation:op,ports}) => `<li><strong>${esc(operationLabel(op))}</strong> · ${esc(op.native_op?.name || op.kind)}<code>${esc(op.id)}</code><span>${esc(ports.join(", "))}</span></li>`).join("")}</ul></details>` : ""}<p class="weight-chart-note">Connections come from serialized references. They do not measure correlation or causal importance, and do not identify training layers or runtime scheduling.</p></div>
       <details class="weight-raw"><summary>Exact tensor evidence</summary><pre>${esc(JSON.stringify(row,null,2))}</pre></details>`;
-    if (source === "weight" && inspection !== "distribution") {
+    if (source === "weight" && inspection !== "distribution" && inspection !== "pruning") {
       const projection = renderWeightAnalysisView(inspection, advanced?.tensors.find(t => t.weight_ref === row.id), comparison, colors);
       lastSvg = projection.svg;
       $('[data-histogram]').innerHTML = projection.html;
       $('.weight-plot-head').hidden = true;
       $('[data-bin-readout]').hidden = true;
     }
+    if (source === "weight" && inspection === "pruning") {
+      lastSvg = null; $('.weight-plot-head').hidden = true; $('[data-bin-readout]').hidden = true;
+      const targetHost = $('[data-histogram]');
+      if (!weight || !advanced) targetHost.innerHTML = empty("Analyze weights first", "The pruning workbench uses complete decoded tensors from optional weight analysis.", Boolean(model));
+      else {
+        const digest = model.model_ir_sha256, id = selected;
+        if (!pruningStates.has(id)) pruningStates.set(id, {});
+        pruningView = installPruningView(targetHost, {
+          context: getContext(), weight, weightRef: id, options: appliedOptions, colors: palette, state: pruningStates.get(id),
+          isCurrent: () => getContext()?.model?.model_ir_sha256 === digest && selected === id && inspection === "pruning" && source === "weight",
+          onResult: (result, svg) => { pruningPreview = result; lastSvg = svg; button("svg").disabled = button("png").disabled = !svg; },
+          onExport: type => button(type === "json" ? "save" : type).click(),
+        });
+      }
+    }
     button("svg").disabled = button("png").disabled = !lastSvg;
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) detail.animate([{opacity:.45,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'ease-out'});
   }
   function renderMethod() {
     $('[data-method]').innerHTML = `<p>Weight statistics describe stored payloads. Integer codes are not automatically dequantized. Counts are exact; floating moments are rounded binary64. A missing or unassessed statistic is never replaced with zero. Each chart is a projection of the exported IR.</p><p>Basic statistics read at most 100,000,000 values. Advanced defaults: 8,000,000 total values, 2,000,000 per tensor, 4,096 total channels, 128 channels per similarity matrix, and 30,000,000 Jacobi pair-row operations in total. Larger or unsupported calculations remain explicitly not assessed. Import analysis options to select tensors, axes or budgets.</p>${model ? `<dl><dt>Model IR SHA-256</dt><dd><code>${esc(model.model_ir_sha256)}</code></dd></dl>` : ""}${weight ? `<dl><dt>Weight IR SHA-256</dt><dd><code>${esc(weight.weight_ir_sha256)}</code></dd></dl>` : ""}${activation ? `<h4>Imported execution evidence</h4><p>${activation.coverage.captured_count}/${activation.coverage.requested_count} requested values captured; ${activation.coverage.missing_count} missing. A hash-bound capture is not independent execution attestation.</p><pre>${esc(JSON.stringify({run:activation.run,coverage:activation.coverage,missing:activation.missing},null,2))}</pre>` : ""}`;
@@ -142,6 +164,7 @@ export function installNumericalPanel(host, getContext) {
   function analyzeWeights() {
     try {
       const context = requireContext(); if (worker) return;
+      pruningView?.destroy(); pruningView = null; pruningPreview = null; if (inspection === "pruning") { lastSvg = null; button("svg").disabled = button("png").disabled = true; $("[data-histogram]").innerHTML = empty("Updating weight evidence", "The interactive preview will reopen after analysis completes."); }
       if (!context.source) throw new Error("Select one serialized artifact file for numeric inspection. Package sidecars need local CLI analysis.");
       const digest = model.model_ir_sha256, ticket = ++generation;
       button("weights").disabled = true; button("cancel").hidden = false; $("progress").hidden = false; $("progress").removeAttribute("value");
@@ -154,6 +177,7 @@ export function installNumericalPanel(host, getContext) {
         if (getContext()?.model?.model_ir_sha256 !== digest) {finish(); sync(); return;}
         if (event.data.progress) {const p = event.data.progress; if (["weights", "weight_analysis"].includes(p.phase)) {setStatus(`${p.phase === "weight_analysis" ? "Advanced tensor analysis" : "Reading tensors"}: ${p.completed} / ${p.total}`); $("progress").max = Math.max(1,p.total); $("progress").value = p.completed;} return;}
         finish(); if (event.data.error) {setStatus(event.data.error,true); return;}
+        if (JSON.stringify(appliedOptions) !== JSON.stringify(options)) pruningStates.clear(); appliedOptions = structuredClone(options);
         weight = event.data.result; advanced = event.data.advanced || null; comparison = event.data.comparison || null; source = "weight";
         setStatus(`${weight.coverage.assessed_count}/${weight.coverage.inventory_count} payloads assessed · ${countLabel(weight.coverage.decoded_value_count)} values · ${weight.coverage.not_assessed_count} not assessed.`);
         rebuild();
@@ -170,14 +194,23 @@ export function installNumericalPanel(host, getContext) {
     const row = index.get(selected).row, colors = palette(), caption = `${rowName(row)} · ${row.dtype} · ${shapeLabel(row)}`;
     const plotHeight = Number(/viewBox="0 0 760 ([0-9.]+)"/.exec(lastSvg)?.[1] || 298), figureHeight = plotHeight + 97;
     const inner = lastSvg.replace(/^<svg[^>]*>/,"").replace(/<\/svg>$/,"");
-    const numericalDigest = source === "weight" ? (inspection === "comparison" && comparison ? comparison.weight_comparison_sha256 : inspection !== "distribution" && advanced ? advanced.weight_analysis_sha256 : weight.weight_ir_sha256) : activation.activation_ir_sha256;
-    const figure = `<svg xmlns="http://www.w3.org/2000/svg" width="1520" height="${figureHeight*2}" viewBox="0 0 760 ${figureHeight}"><rect width="760" height="${figureHeight}" fill="${colors.surface}"/><title>${esc(model.artifact.filename)} · ${esc(caption)}</title><text x="18" y="25" font-family="sans-serif" font-size="15" fill="${colors.ink}">${esc(caption.slice(0,90))}</text><g transform="translate(0 38)">${inner}</g><g font-family="monospace" font-size="8" fill="${colors.muted}"><text x="18" y="${plotHeight+59}">Model IR SHA-256: ${esc(model.model_ir_sha256)}</text><text x="18" y="${plotHeight+75}">${source === "weight" ? (inspection === "distribution" ? "Weight IR" : inspection === "comparison" ? "Weight comparison" : "Weight analysis") : "Activation IR"} SHA-256: ${esc(numericalDigest)}</text></g></svg>`;
+    const numericalDigest = pruningPreview && inspection === "pruning" ? pruningPreview.pruning_preview_sha256 : source === "weight" ? (inspection === "comparison" && comparison ? comparison.weight_comparison_sha256 : inspection !== "distribution" && advanced ? advanced.weight_analysis_sha256 : weight.weight_ir_sha256) : activation.activation_ir_sha256;
+    const figure = `<svg xmlns="http://www.w3.org/2000/svg" width="1520" height="${figureHeight*2}" viewBox="0 0 760 ${figureHeight}"><rect width="760" height="${figureHeight}" fill="${colors.surface}"/><title>${esc(model.artifact.filename)} · ${esc(caption)}</title><text x="18" y="25" font-family="sans-serif" font-size="15" fill="${colors.ink}">${esc(caption.slice(0,90))}</text><g transform="translate(0 38)">${inner}</g><g font-family="monospace" font-size="8" fill="${colors.muted}"><text x="18" y="${plotHeight+59}">Model IR SHA-256: ${esc(model.model_ir_sha256)}</text><text x="18" y="${plotHeight+75}">${source === "weight" ? (inspection === "pruning" ? "Pruning preview" : inspection === "distribution" ? "Weight IR" : inspection === "comparison" ? "Weight comparison" : "Weight analysis") : "Activation IR"} SHA-256: ${esc(numericalDigest)}</text></g></svg>`;
     const blob = new Blob([figure],{type:"image/svg+xml"}), stem = `deepbom-${source}-${rowName(row).replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,80)}`;
     if (format === "svg") {download(stem+".svg",blob); return;}
     const url = URL.createObjectURL(blob);
     try {const image = new Image(); image.src = url; await image.decode(); const canvas = document.createElement("canvas"); canvas.width = 1520; canvas.height = figureHeight*2; canvas.getContext("2d").drawImage(image,0,0,1520,figureHeight*2); const png = await new Promise(resolve => canvas.toBlob(resolve,"image/png")); if (!png) throw new Error("PNG export failed."); download(stem+".png",png);} finally {URL.revokeObjectURL(url);}
   }
   host.addEventListener("click", event => {
+    const mapTab = event.target.closest('[data-map-mode]');
+    if (mapTab) { mapMode = mapTab.dataset.mapMode; for (const tab of host.querySelectorAll('[data-map-mode]')) tab.setAttribute('aria-pressed',String(tab === mapTab)); renderCharts(); return; }
+    const viewTab = event.target.closest('[data-inspection-tab]');
+    if (viewTab) { inspection = viewTab.dataset.inspectionTab; renderCharts(); [...host.querySelectorAll('[data-inspection-tab]')].find(tab=>tab.dataset.inspectionTab===inspection)?.focus({preventScroll:true}); return; }
+    const channelTarget = event.target.closest('[data-weight-channel]');
+    if (channelTarget && selected) {
+      const state = pruningStates.get(selected) || {}; state.channel = Number(channelTarget.dataset.weightChannel); pruningStates.set(selected,state);
+      inspection = "pruning"; renderCharts(); return;
+    }
     const tensor = event.target.closest("[data-tensor-id]");
     if (tensor && index.has(tensor.dataset.tensorId)) {
       const section = tensor.closest('[data-inventory]') ? '[data-inventory]' : '[data-map]';
@@ -234,12 +267,12 @@ export function installNumericalPanel(host, getContext) {
       rebuild();
     } catch (error) {sync(); setStatus(error.message,true);} finally {fileInput.value = "";}
   };
-  button("save").onclick = () => {try {requireContext(); if (!weight && !activation) throw new Error("No numeric evidence is available for this artifact."); saveJson("deepbom-numerical-evidence.json",{bundle:buildNumericalEvidenceBundle(model,weight,activation),model_ir:model,weight_ir:weight,activation_ir:activation,weight_analysis:advanced,weight_comparison:comparison});} catch (error) {setStatus(error.message,true);}};
+  button("save").onclick = () => {try {requireContext(); if (!weight && !activation) throw new Error("No numeric evidence is available for this artifact."); saveJson("deepbom-numerical-evidence.json",{bundle:buildNumericalEvidenceBundle(model,weight,activation),model_ir:model,weight_ir:weight,activation_ir:activation,weight_analysis:advanced,weight_comparison:comparison,pruning_preview:pruningPreview});} catch (error) {setStatus(error.message,true);}};
   button("model").onclick = () => {try {requireContext(); saveJson("deepbom-model-ir.json",model);} catch (error) {setStatus(error.message,true);}};
   for (const type of ["svg","png"]) button(type).onclick = () => exportFigure(type).catch(error => setStatus(error.message,true));
-  const themeObserver = new MutationObserver(() => renderCharts());
+  const themeObserver = new MutationObserver(() => { if (pruningView) { pruningView.repaint(); const colors=palette(); const entry=index.get(selected); const diagram=$(".weight-connections > svg"); if (diagram && entry) diagram.outerHTML=connectionsSvg(entry.row,entry.links,colors); $("[data-map]").innerHTML=mapMode==="distribution"?distributionMapSvg(visible,selected,colors):tensorMetricMapSvg(visible,selected,colors,mapMode); } else renderCharts(); });
   themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
   button("weights").disabled = button("model").disabled = button("import").disabled = true;
   rebuild(); sync();
-  return {sync,destroy() {stopWorker(); themeObserver.disconnect();}};
+  return {sync,destroy() {pruningView?.destroy(); stopWorker(); themeObserver.disconnect();}};
 }

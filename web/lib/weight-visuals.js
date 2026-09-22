@@ -132,3 +132,19 @@ export function connectionsSvg(row, links, palette) {
   });
   return shell(760, height, "Serialized tensor and operation connections", palette, body, "Edges are references in Model IR. They do not measure correlation, causal importance, training layers or runtime scheduling. The complete connection list follows this diagram.");
 }
+
+export function tensorMetricMapSvg(rows, selected, palette, mode) {
+  if (!rows.length) return null;
+  const value = row => !row.statistics ? null : mode === 'rms' ? row.statistics.rms : row.statistics.unsafe_integer_count === '0' && BigInt(row.statistics.finite_count) > 0n ? Number(row.statistics.zero_count) / Number(row.statistics.finite_count) : null;
+  const maximum = mode === 'rms' ? Math.max(1e-300, ...rows.map(row => value(row) ?? 0)) : 1;
+  const height = 42 + rows.length * 29;
+  let body = `<text x="218" y="20" fill="${palette.muted}">${mode === 'rms' ? 'RMS · linear scale shared across visible tensors' : 'Exact zero fraction · 0–100%'} · select a tensor</text>`;
+  rows.forEach((row, i) => {
+    const v = value(row), y = 34 + i * 29;
+    body += `<g data-tensor-id="${escapeXml(row.id)}" role="button" tabindex="0" aria-label="Select ${escapeXml(row.name || row.id)}"><rect x="0" y="${y - 3}" width="760" height="28" fill="${selected === row.id ? palette.selected : palette.surface}"/><text x="12" y="${y + 13}">${escapeXml((row.name || row.id).slice(0, 25))}</text>`;
+    if (v !== null) body += `<rect x="218" y="${y}" width="${Math.max(0, v / maximum * 386)}" height="18" fill="${palette.accent}"/><text x="620" y="${y + 13}">${escapeXml(mode === 'rms' ? numberLabel(v) : numberLabel(v * 100) + '%')}</text><title>${escapeXml(row.name || row.id)}: ${v}</title>`;
+    else body += `<text x="218" y="${y + 13}" fill="${palette.muted}">Not assessed</text>`;
+    body += '</g>';
+  });
+  return shell(760, height, 'Across-tensor metric comparison', palette, body, 'Stored-payload statistics. Compare compatible representations. Unassessed values are not plotted as zero.');
+}

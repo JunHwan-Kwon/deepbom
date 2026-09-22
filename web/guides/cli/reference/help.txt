@@ -1,4 +1,4 @@
-DEEPBOM 1.105.0
+DEEPBOM 1.106.0
 
 Usage:
   deepbom audit <artifact-or-package> [options]

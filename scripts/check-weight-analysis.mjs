@@ -1,6 +1,7 @@
 import Ajv2020 from "ajv/dist/2020.js";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { prepareMagnitudePruning, simulateMagnitudePruning } from "../web/lib/weight-pruning.js";
 import { collectWeightAnalysis, compareWeightAnalyses, validateWeightAnalysis } from "../web/lib/weight-analysis.js";
 import { matrixView, spectrumAnalysis, similarityAnalysis, sparsityAnalysis, compareValues } from "../web/lib/numerical-ir/weight-math.js";
 import { dequantize } from "../web/lib/numerical-ir/weight-contracts.js";
@@ -77,3 +78,13 @@ const schema=ajv.compile(JSON.parse(await readFile('docs/schemas/deepbom-weight-
 for(const result of [a,safe,trans,c,p,tf,g,restricted,quantized])assert(schema(result.weight_analysis),JSON.stringify(schema.errors));
 assert(schema(identical),JSON.stringify(schema.errors));
 console.log('Advanced analysis/comparison JSON Schemas passed.');
+for (const result of [a, safe, c, p, tf, g, quantized]) {
+  const decoded = [...result.decoded.values()].find(d => d.matrix.data.length > 0 && d.matrix.rows <= 4096 && (d.row.representation === 'dequantized_real' || /^(?:B?FLOAT|BF|F)(?:8|16|32|64)/.test(d.row.dtype)));
+  assert(decoded, result.ir.artifact.format + ': expected a real-valued pruning fixture');
+  const prepared = prepareMagnitudePruning({...decoded,source:result.weight_ir.source,weight_ir_sha256:result.weight_ir.weight_ir_sha256});
+  const preview = simulateMagnitudePruning(prepared,{target_percent:50});
+  assert.equal(preview.candidate_zero_count,Math.max(preview.original_zero_count,Math.floor(preview.value_count/2)));
+  assert.equal(preview.metrics.changed_count,String(preview.newly_zeroed_count));
+  assert.equal(preview.channels.reduce((n,c)=>n+c.newly_zeroed_count,0),preview.newly_zeroed_count);
+}
+console.log('Pruning simulation passed through six actual format decoders and affine ONNX quantization.');

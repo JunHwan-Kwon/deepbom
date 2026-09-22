@@ -560,6 +560,7 @@ scripts/check-wasm-hardening.mjs
 scripts/check-web-imports.mjs
 scripts/check-web-usage.mjs
 scripts/check-weight-analysis.mjs
+scripts/check-weight-pruning.mjs
 scripts/check-worker-config.mjs
 scripts/check-workflow-contract.mjs
 scripts/check-xnnpack-delegate-rulepack.mjs
@@ -626,6 +627,7 @@ scripts/path-utils.mjs
 scripts/prepare-instrumented-runtime.mjs
 scripts/prepare-pinned-llama-runtime.mjs
 scripts/prepare-pinned-ort-node-runtime.mjs
+scripts/preview-weight-workbench.mjs
 scripts/private-wasm-modules.mjs
 scripts/probe-onnx-contract-reference.py
 scripts/public-model-corpus-lib.mjs
@@ -1160,6 +1162,8 @@ web/lib/weight-analysis-view.js
 web/lib/weight-analysis.js
 web/lib/weight-hist.js
 web/lib/weight-ir.js
+web/lib/weight-pruning-view.js
+web/lib/weight-pruning.js
 web/lib/weight-visuals.js
 web/lib/workflow-controller.js
 web/lib/workflow-copy.js
@@ -1200,3 +1204,4 @@ web/weight-workspace.css
 web/workers/deepbom-analysis-worker.js
 web/workers/numerical-ir-worker.js
 web/workers/static-audit-worker.js
+web/workers/weight-pruning-worker.js

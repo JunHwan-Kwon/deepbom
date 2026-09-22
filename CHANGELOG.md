@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.106.0 — 2026-09-22
+
+- Add an interactive Web weight pruning workbench with linked tensor/channel views, target-sparsity controls, energy curves, original/candidate/difference heatmaps, zoom, pan and full-screen inspection.
+- Export hash-bound pruning simulation JSON and SVG/PNG views; preserve exact removal counts, deterministic tie handling, existing zeros and explicit floating/dequantized value scope. This release does not export a modified model or infer task quality or runtime acceleration.
+- Verify the simulation with 1,212 independent numerical cases, six format decoders and browser interaction/export checks. Publish the Web, CLI and local/hosted MCP channels at the same engine version.
+- Reserve 4 KiB of runtime-source bookkeeping and 32 KiB of verification source for the interactive workbench and its recorded release qualification.
+
 ## 1.105.0 — 2026-09-22
 
 - Add optional Weight IR derived analysis for six serialized formats: channel statistics, native kernel slices, complete signed similarity, bounded Jacobi SVD, structured sparsity, validated affine dequantization and aligned original/candidate comparison.
