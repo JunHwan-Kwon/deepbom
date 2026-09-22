@@ -46,6 +46,7 @@ export function createWorkflowController({
     diagramSection,
     findingsPanel,
     graphExplorer,
+    weightWorkspace,
     redesignPanel,
     inferencePanel,
     outputModuleSelector,
@@ -91,7 +92,7 @@ export function createWorkflowController({
 
   function revealSelectedTab(tabs, predicate) {
     const selected = tabs.find((tab) => !tab.hidden && predicate(tab));
-    const rail = selected?.closest(".workflow-rail, .audit-tabs, .module-tabs");
+    const rail = selected?.closest(".workflow-rail, .analysis-tool-rail, .audit-tabs, .module-tabs");
     if (!selected || !rail || rail.scrollWidth <= rail.clientWidth + 1) return;
     requestAnimationFrame(() => {
       const tabRect = selected.getBoundingClientRect();
@@ -129,6 +130,7 @@ export function createWorkflowController({
       const applicable = step.dataset.formatApplicable !== "false";
       const available = hasAnalysis && applicable;
       step.classList.toggle("active", step.dataset.workflowStep === activeWorkspace);
+      step.setAttribute("aria-pressed", String(step.dataset.workflowStep === activeWorkspace));
       step.classList.remove("complete");
       step.classList.toggle("available", available);
       step.disabled = !available;
@@ -186,6 +188,7 @@ export function createWorkflowController({
     diagramSection.hidden = !(hasAnalysis && activeWorkspace === "audit" && applicable && activeAuditTab === "stage");
     if (findingsPanel) findingsPanel.hidden = !(hasAnalysis && activeWorkspace === "findings");
     graphExplorer.hidden = !(hasAnalysis && activeWorkspace === "graph");
+    if (weightWorkspace) weightWorkspace.hidden = !(hasAnalysis && activeWorkspace === "weight");
     if (redesignPanel) redesignPanel.hidden = !(hasAnalysis && activeWorkspace === "redesign");
     inferencePanel.hidden = !(hasAnalysis && activeWorkspace === "runtime");
     outputModuleSelector.hidden = !(hasAnalysis && activeWorkspace === "output");

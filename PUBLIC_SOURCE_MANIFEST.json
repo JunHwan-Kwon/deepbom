@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "51625821ca0fcd691cc518ffaa28fb122abf10a8",
+  "source_commit": "dafec7e1509c5f999309191a8022cc2133b9ee2b",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 1193,
+  "file_count": 1195,
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -327,8 +327,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 44114,
-      "sha256": "d49c0c33bb309024bbfbf7fc7b793c413db1224b75fcdbdc681e5cca61c45790"
+      "byte_length": 44165,
+      "sha256": "389dbc8140bbe36c31a3e1f2690da8844aa3d2669d93b8485ae2a3bd92c922cd"
     },
     {
       "path": "corpus/README.md",
@@ -2222,8 +2222,8 @@
     },
     {
       "path": "scripts/check-numerical-ir-browser.mjs",
-      "byte_length": 3365,
-      "sha256": "cf77405657a7faa84305a68860ba5db54274c45983513580d6bfa98a5fd156b6"
+      "byte_length": 10710,
+      "sha256": "331acb5da9f33dcf981f2a4954f66bd9f3bec1f3fc31a3e18415d59da3ff3c12"
     },
     {
       "path": "scripts/check-numerical-ir.mjs",
@@ -3752,8 +3752,8 @@
     },
     {
       "path": "web/app.js",
-      "byte_length": 316127,
-      "sha256": "0de0ad78460b6e149725738dbbe22003c9179da0151d2c6291d9b7515fc1c096"
+      "byte_length": 316407,
+      "sha256": "cb147c6a7a74fdb63b2b297bf596904374e0ce6f74c169f090d48b5e949831f9"
     },
     {
       "path": "web/auth-complete.html",
@@ -3917,13 +3917,13 @@
     },
     {
       "path": "web/guides/numerical-evidence/index.html",
-      "byte_length": 9411,
-      "sha256": "d48e8a10f7309f78640106628ef4101cc5770fe7e75becdae1c7763ca6a42763"
+      "byte_length": 9916,
+      "sha256": "abcbdcd568cf2fa9298311eca77b3e5019dbef93fed766bde11d23d0ffde7a5d"
     },
     {
       "path": "web/index.html",
-      "byte_length": 141477,
-      "sha256": "c96725f84cc0c924f49c08930641a75ce63bc6e91899773dd97fa3e0ed6d2efc"
+      "byte_length": 141957,
+      "sha256": "66c9d67220b978d3de68af54a53c75a4097feb8be2d46366b02c2b32d748a7f3"
     },
     {
       "path": "web/legal/privacy.html",
@@ -4017,8 +4017,8 @@
     },
     {
       "path": "web/lib/app-config.js",
-      "byte_length": 4762,
-      "sha256": "812f8c49b79b9650349c5ffe56b8abe2a113f24ceb116838a14bfedaaec207ce"
+      "byte_length": 4772,
+      "sha256": "ad65d07bd0b95734720c62cb7605aad602914ba044204bd4dc6aa3810df66cca"
     },
     {
       "path": "web/lib/app-deepbom-workspace.js",
@@ -4187,8 +4187,8 @@
     },
     {
       "path": "web/lib/build-metadata.js",
-      "byte_length": 91074,
-      "sha256": "ee4db3c2df6a509f412f64b1b70f9024cfd3339945c4927c12037cc763e6c685"
+      "byte_length": 91401,
+      "sha256": "dc936407f7ebf8568173ffed8a8df312debb1cf5b952858211341e427e256ed1"
     },
     {
       "path": "web/lib/bundle.js",
@@ -4787,8 +4787,8 @@
     },
     {
       "path": "web/lib/numerical-ir-panel.js",
-      "byte_length": 6729,
-      "sha256": "3a78f238386338ee77565a44631ac5253dcc6dae9de7b45db43dfa323ffd4941"
+      "byte_length": 27027,
+      "sha256": "5645f2f937dac1c841f8c07870c66430d892e41795948ad23e2c9e131a2b5603"
     },
     {
       "path": "web/lib/numerical-ir/common.js",
@@ -5781,14 +5781,19 @@
       "sha256": "7bdb6b3b104e7b4c8aa8c724bf468b29b2d559a0c916fac6884b498581497122"
     },
     {
+      "path": "web/lib/weight-visuals.js",
+      "byte_length": 10600,
+      "sha256": "40d5026a714696213714332d5ac1113858136babf5cdb6b5e3acb612029b894e"
+    },
+    {
       "path": "web/lib/workflow-controller.js",
-      "byte_length": 12607,
-      "sha256": "14006cd16d893eb577a79eff9eda402bf9bd9e83149e60a3a958bd83f266a815"
+      "byte_length": 12843,
+      "sha256": "c42fff5bc558e3948ddf815f93c919948a7c96d75f650f29a1dad8ea0ae8f443"
     },
     {
       "path": "web/lib/workflow-copy.js",
-      "byte_length": 11298,
-      "sha256": "1f23ad32c50776ebb7d06bd76f5b5ca524fdfe6a7a9870954df79d349bdeab61"
+      "byte_length": 11495,
+      "sha256": "7c791110b8de61f15b094fd958dd731617fe507aac5d1b8e299781224990300b"
     },
     {
       "path": "web/lib/workspace-navigation.js",
@@ -5937,8 +5942,8 @@
     },
     {
       "path": "web/sw.js",
-      "byte_length": 16451,
-      "sha256": "916be4b77173b3f123c4854604ab22a97e411fa088a44779bfa60cab7708afac"
+      "byte_length": 16536,
+      "sha256": "0988fcead9ff69a294708988bf9b567ffa56790242f5eac56b2f326414c4f101"
     },
     {
       "path": "web/test.html",
@@ -5954,6 +5959,11 @@
       "path": "web/verify.html",
       "byte_length": 7685,
       "sha256": "db33e41bafe84c7b903044ff7eb41af6ad64b9c0de634e719c9dffdb4447be4e"
+    },
+    {
+      "path": "web/weight-workspace.css",
+      "byte_length": 12721,
+      "sha256": "571c8489445b03ea3a497db50b0edfa5629af53f68cb149c42c81eddd65f546d"
     },
     {
       "path": "web/workers/deepbom-analysis-worker.js",

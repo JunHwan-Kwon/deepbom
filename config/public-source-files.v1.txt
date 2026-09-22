@@ -1151,6 +1151,7 @@ web/lib/visual-export.js
 web/lib/web-usage.js
 web/lib/weight-hist.js
 web/lib/weight-ir.js
+web/lib/weight-visuals.js
 web/lib/workflow-controller.js
 web/lib/workflow-copy.js
 web/lib/workspace-navigation.js
@@ -1186,6 +1187,7 @@ web/sw.js
 web/test.html
 web/test.js
 web/verify.html
+web/weight-workspace.css
 web/workers/deepbom-analysis-worker.js
 web/workers/numerical-ir-worker.js
 web/workers/static-audit-worker.js

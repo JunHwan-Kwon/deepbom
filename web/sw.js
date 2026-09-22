@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v586";
+const CACHE_NAME = "tflite-wasm-static-audit-v587";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -20,6 +20,7 @@ const APP_ASSETS = [
   "./execution-placement.css",
   "./onnx-domain.css",
   "./research-theme.css",
+  "./weight-workspace.css",
   "./lib/theme-ui.js",
   "./NOTICE.txt",
   "./bootstrap.js",
@@ -115,6 +116,7 @@ const APP_ASSETS = [
   "./lib/audit-progress.js",
   "./lib/activation-ir.js",
   "./lib/weight-ir.js",
+  "./lib/weight-visuals.js",
   "./lib/numerical-ir-panel.js",
   "./lib/numerical-ir/common.js",
   "./lib/numerical-ir/statistics.js",
@@ -381,6 +383,7 @@ const APP_SHELL_ASSETS = [
   "./explorer-question.css",
   "./onnx-domain.css",
   "./research-theme.css",
+  "./weight-workspace.css",
   "./lib/theme-ui.js",
   "./NOTICE.txt",
   "./bootstrap.js",

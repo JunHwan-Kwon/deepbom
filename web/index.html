@@ -190,6 +190,7 @@
     <link rel="stylesheet" href="./execution-placement.css" />
     <link rel="stylesheet" href="./onnx-domain.css" />
     <link rel="stylesheet" href="./research-theme.css" />
+    <link rel="stylesheet" href="./weight-workspace.css" />
   </head>
   <!-- The application module is interaction-loaded, so the first paint has to
        declare the same idle state it will re-affirm once it runs. Without this
@@ -686,6 +687,11 @@
               <span>Graph</span>
               <strong>Explorer</strong>
               <p>Ops, tensors, links</p>
+            </button>
+            <button class="workflow-step analysis-tool" type="button" data-workflow-step="weight" data-navigation-role="tool" data-analysis-depth="deep">
+              <span>Numerical</span>
+              <strong>Weight</strong>
+              <p>Distributions and connections</p>
             </button>
             <button class="workflow-step analysis-tool" type="button" data-workflow-step="redesign" data-navigation-role="tool" data-analysis-depth="deep">
               <span>Design</span>
@@ -1819,6 +1825,7 @@
         </div>
       </section>
 
+      <section class="weight-workspace" id="weightWorkspace" aria-label="Weight analysis workspace" hidden></section>
       <section class="graph-explorer" id="graphExplorer" hidden>
         <div class="section-head">
           <div>

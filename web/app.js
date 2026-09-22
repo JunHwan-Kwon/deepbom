@@ -799,6 +799,8 @@ const ensureLiteRtRuntime = liteRtRuntime.ensure;
 
 let current = null;
 let currentArtifactIrContext = null;
+let weightWorkspaceController = null;
+const weightWorkspace = document.getElementById("weightWorkspace");
 
 function currentAnalysisView() {
   return currentArtifactIrContext?.primary_view || current;
@@ -874,6 +876,7 @@ function rebuildCurrentArtifactIrContext(analysis = current, { invalidate = fals
     artifact_set_sha256: analysis.artifact_set?.artifact_set_sha256 || null,
   }, { runtimeEvidence: runtimeAssignmentEvidence });
   renderArtifactDossier(artifactDossier, currentArtifactIrContext, analysis);
+  weightWorkspaceController?.sync();
   return currentArtifactIrContext;
 }
 let customTargetEditor = null;
@@ -1021,6 +1024,7 @@ workflowController = createWorkflowController({
     diagramSection,
     findingsPanel,
     graphExplorer,
+    weightWorkspace,
     redesignPanel,
     inferencePanel,
     outputModuleSelector,
@@ -2310,7 +2314,7 @@ downloadModelViews?.addEventListener("click", () => {
   void downloadCurrentModelViews();
 });
 void import("./lib/numerical-ir-panel.js").then(({ installNumericalPanel }) => {
-  installNumericalPanel(artifactDossier?.parentElement, () => ({ model: currentArtifactIrContext?.model_ir, analysis: current, source: pendingModelFile || (currentModelBytes?.length ? new Blob([currentModelBytes]) : null) }));
+  weightWorkspaceController = installNumericalPanel(weightWorkspace, () => ({ model: currentArtifactIrContext?.model_ir, analysis: current, source: pendingModelFile || (currentModelBytes?.length ? new Blob([currentModelBytes]) : null) }));
 });
 
 showModelSummary?.addEventListener("click", () => {
@@ -2389,9 +2393,11 @@ function lockRuntime(code) {
 
 function updateWorkflowState(state, detail = {}) {
   workflowController.updateState(state, detail);
+  weightWorkspaceController?.sync();
 }
 
 function setActiveWorkspace(workspace = "input", options = {}) {
+  weightWorkspaceController?.sync();
   return workflowController.setWorkspace(workspace, options);
 }
 
@@ -2403,6 +2409,7 @@ function navigateToWorkspace(workspace = "input") {
     findings: findingsPanel,
     output: outputModuleSelector,
     graph: graphExplorer,
+    weight: weightWorkspace,
     redesign: redesignPanel,
     runtime: inferencePanel,
     deepbom: moduleRunConsole,
