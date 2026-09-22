@@ -26,6 +26,7 @@
     "web/lib/model-file.js",
     "web/lib/node-edge-evidence-overlay.js",
     "web/lib/numerical-abi-propagation.js",
+    "web/lib/numerical-ir/weight-contracts.js",
     "web/lib/numerical-ir/weight-sources.js",
     "web/lib/on-device-llm-contract.js",
     "web/lib/onnx-contract-conflict.js",

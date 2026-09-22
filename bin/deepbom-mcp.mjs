@@ -53,7 +53,10 @@ const TOOLS = Object.freeze([
           enum: [...AUDIT_OUTPUT_FORMATS],
           description: "summary is the bounded human-readable default. Request envelope for the canonical cross-format contract, json/json-compact for format-specific evidence, CycloneDX 1.7, or SARIF explicitly.",
         },
-        weight_analysis: { type: "boolean", description: "Explicitly opt in to serialized numeric statistics. Use output_format=json and section=weight_ir. Does not execute the model." },
+        weight_baseline: { type: "string", description: "Optional local original artifact for exact aligned weight comparison." },
+        weight_options: { type: "string", description: "Local JSON file with explicit tensor axes and computation budgets." },
+        weight_mapping: { type: "string", description: "Local JSON array of baseline/candidate weight references and optional candidate_axis_permutation; requires weight_baseline." },
+        weight_analysis: { type: "boolean", description: "Opt in to common Weight IR and advanced channels, cosine similarity, SVD, sparsity and quantization. JSON sections: weight_ir, weight_analysis, weight_comparison. No model execution." },
         activation_evidence: { type: "string", description: "Local hash-bound activation capture JSON under allowed roots. Imports execution evidence; does not execute a model. Use output_format=json and section=activation_ir." },
         scan: { type: "string", enum: [...SCAN_MODES], description: "Bounded scan policy. structure avoids payload integrity work; integrity streams supported payload checks; full requests all supported static analysis." },
         section: { type: "string", description: "Emit only these analysis sections, comma-separated. Use list_sections first. model_summary returns deepbom.model_summary.v1. Applies to json formats." },
@@ -299,7 +302,7 @@ function commandArguments(name, args, roots) {
     } else if (Object.hasOwn(args, "pointer")) {
       argv.push("--pointer", String(args.pointer));
     } else {
-      const format = args.output_format || (args.section ? "json-compact" : AUDIT_DEFAULT_OUTPUT_FORMAT);
+      const format = args.output_format || (args.section || args.weight_analysis || args.weight_baseline || args.weight_options ? "json-compact" : AUDIT_DEFAULT_OUTPUT_FORMAT);
       argv.push("--output-format", format);
       if (args.section) argv.push("--section", String(args.section));
     }
@@ -308,6 +311,7 @@ function commandArguments(name, args, roots) {
     if (args.external_data_dir) argv.push("--external-data-dir", requiredLocalPath(args.external_data_dir, "external_data_dir", roots));
     appendRemoteControls(argv, args, roots);
     if (args.weight_analysis) argv.push("--weight-analysis");
+    for (const [key, flag] of [["weight_baseline", "--weight-baseline"], ["weight_options", "--weight-options"], ["weight_mapping", "--weight-mapping"]]) if (args[key]) argv.push(flag, requiredLocalPath(args[key], key, roots));
     if (args.activation_evidence) argv.push("--activation-evidence", requiredLocalPath(args.activation_evidence, "activation_evidence", roots));
     if (args.gate === "defects") argv.push("--gate", "defects");
     if (args.policy) argv.push("--policy", String(args.policy));
@@ -341,7 +345,7 @@ function validateToolArguments(name, args) {
   if (!args || typeof args !== "object" || Array.isArray(args)) throw new Error("Tool arguments must be a JSON object.");
   const allowed = {
     deepbom_capabilities: [],
-    deepbom_audit: ["weight_analysis", "activation_evidence", "path", "output_format", "scan", "section", "tensors", "tensor_offset", "tensor_limit", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
+    deepbom_audit: ["weight_baseline", "weight_options", "weight_mapping", "weight_analysis", "activation_evidence", "path", "output_format", "scan", "section", "tensors", "tensor_offset", "tensor_limit", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
     deepbom_diff: ["baseline", "candidate", "target", "expected_sha256", "cache_dir", "offline", "max_download_gib", "tensors", "tensor_offset", "tensor_limit"],
     deepbom_explain_rule: ["rule"],
   }[name];

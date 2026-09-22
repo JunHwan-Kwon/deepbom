@@ -54,13 +54,13 @@ substitute for MCP registration, review, or approval.
 
 ## Claude Desktop validation
 
-1. Download `deepbom-1.104.0.mcpb` from the `channels-v1.104.0` GitHub Release.
+1. Download `deepbom-1.105.0.mcpb` from the `channels-v1.105.0` GitHub Release.
 2. Install it in Claude Desktop and select a dedicated, non-sensitive model
    directory as the only allowed root.
 3. Confirm all four local MCP tools, execute the Claude indirect cases, and
    confirm that an outside-root path is rejected.
 4. Record real observations in a separate copy of the shared run template and
-   compare one MCP audit with the 1.104.0 CLI.
+   compare one MCP audit with the 1.105.0 CLI.
 5. Review the current Anthropic directory requirements and submit the MCPB
    manually if the publisher account is eligible.
 
@@ -105,10 +105,10 @@ submission form. Directory approval must be recorded only after readback.
 Preview, then apply the managed Skill:
 
 ```bash
-npx -y deepbom@1.104.0 integrate codex
-npx -y deepbom@1.104.0 integrate codex --apply
-npx -y deepbom@1.104.0 integrate claude-code
-npx -y deepbom@1.104.0 integrate claude-code --apply
+npx -y deepbom@1.105.0 integrate codex
+npx -y deepbom@1.105.0 integrate codex --apply
+npx -y deepbom@1.105.0 integrate claude-code
+npx -y deepbom@1.105.0 integrate claude-code --apply
 ```
 
 Open a new session and use the brandless cases. The Skill's verifier must prefer

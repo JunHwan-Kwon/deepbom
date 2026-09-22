@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.105.0 — 2026-09-22
+
+- Add optional Weight IR derived analysis for six serialized formats: channel statistics, native kernel slices, complete signed similarity, bounded Jacobi SVD, structured sparsity, validated affine dequantization and aligned original/candidate comparison.
+- Expose matching numerical results in Web, CLI and local MCP, with SVG/PNG views, hash-bound JSON, explicit per-feature budgets, native axis order and unassessed reasons.
+- Preserve Weight IR v1 and Model IR identities; add separate weight_analysis.v1 and weight_comparison.v1 contracts. Numerical properties do not imply task quality or measured acceleration.
+
+
 All notable archival releases of DEEPBOM are documented here.
 
 ## 1.104.0 — Optional numerical evidence

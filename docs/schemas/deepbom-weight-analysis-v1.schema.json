@@ -1,0 +1,1643 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-weight-analysis-v1.schema.json",
+  "title": "DEEPBOM Weight IR derived analysis and comparison",
+  "description": "Schema validation is followed by source/hash, reference, count conservation, budget and numeric invariant checks. Derived measurements are not execution evidence.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/analysis"
+    },
+    {
+      "$ref": "#/$defs/comparison"
+    }
+  ],
+  "$defs": {
+    "not_assessed": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "const": "not_assessed"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "status",
+        "reason"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "model_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "artifact_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "artifact_set_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "model_ir_sha256",
+        "artifact_sha256",
+        "artifact_set_sha256"
+      ]
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_values": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_tensor_values": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_channels": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_pairwise_channels": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_svd_work": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tensor_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "axes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "channel_axis": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sparsity_axis": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kernel_channel": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "max_values",
+        "max_tensor_values",
+        "max_channels",
+        "max_pairwise_channels",
+        "max_svd_work",
+        "tensor_ids",
+        "axes"
+      ]
+    },
+    "axes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "channel_axis": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "channel_meaning": {
+          "type": "string"
+        },
+        "basis": {
+          "type": "string"
+        },
+        "storage_order": {
+          "enum": [
+            "first_axis_fastest",
+            "last_axis_fastest"
+          ]
+        },
+        "sparsity_axis": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sparsity_axis_basis": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "channel_axis",
+        "channel_meaning",
+        "basis",
+        "storage_order",
+        "sparsity_axis",
+        "sparsity_axis_basis"
+      ]
+    },
+    "projection": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/not_assessed"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "const": "assessed"
+            },
+            "method": {
+              "type": "string"
+            },
+            "rows": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "columns": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "source_rows": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "source_columns": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cells": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "count": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "zero_count": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "mean": {
+                    "type": "number"
+                  },
+                  "minimum": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "maximum": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "count",
+                  "zero_count",
+                  "mean",
+                  "minimum",
+                  "maximum"
+                ]
+              }
+            }
+          },
+          "required": [
+            "status",
+            "method",
+            "rows",
+            "columns",
+            "source_rows",
+            "source_columns",
+            "cells"
+          ]
+        }
+      ]
+    },
+    "kernel": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/not_assessed"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "const": "assessed"
+            },
+            "channel_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "channel_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "horizontal_native_axis": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "vertical_basis": {
+              "type": "string"
+            },
+            "image": {
+              "$ref": "#/$defs/projection"
+            }
+          },
+          "required": [
+            "status",
+            "channel_index",
+            "channel_count",
+            "horizontal_native_axis",
+            "vertical_basis",
+            "image"
+          ]
+        }
+      ]
+    },
+    "channels": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/not_assessed"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "const": "assessed"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "values_per_channel": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "channels": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "statistics": {
+                    "$ref": "https://deepbom.org/schemas/deepbom-numerical-ir-v1.schema.json#/$defs/statistics"
+                  }
+                },
+                "required": [
+                  "index",
+                  "statistics"
+                ]
+              }
+            }
+          },
+          "required": [
+            "status",
+            "count",
+            "values_per_channel",
+            "channels"
+          ]
+        }
+      ]
+    },
+    "similarity": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/not_assessed"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "const": "assessed"
+            },
+            "method": {
+              "type": "string"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "threshold": {
+              "type": "number"
+            },
+            "pairs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "a": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "b": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "cosine": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "a",
+                  "b",
+                  "cosine"
+                ]
+              }
+            },
+            "clusters": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "cluster_method": {
+              "type": "string"
+            },
+            "undefined_reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "status",
+            "method",
+            "size",
+            "values",
+            "threshold",
+            "pairs",
+            "clusters",
+            "cluster_method",
+            "undefined_reason"
+          ]
+        }
+      ]
+    },
+    "spectrum": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/not_assessed"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "const": "assessed"
+            },
+            "method": {
+              "type": "string"
+            },
+            "rows": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "columns": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "singular_values": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "normalized_singular_values": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "overflowed_singular_value_indices": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "scale": {
+              "type": "number"
+            },
+            "numerical_rank": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "rank_tolerance": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "rank_tolerance_normalized": {
+              "type": "number"
+            },
+            "condition_number": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "condition_status": {
+              "type": "string"
+            },
+            "cumulative_energy": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "relative_frobenius_error_by_rank": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "sweeps": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "orthogonality_residual": {
+              "type": "number"
+            },
+            "energy_relative_residual": {
+              "type": "number"
+            },
+            "work_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "scope": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "status",
+            "method",
+            "rows",
+            "columns",
+            "singular_values",
+            "normalized_singular_values",
+            "overflowed_singular_value_indices",
+            "scale",
+            "numerical_rank",
+            "rank_tolerance",
+            "rank_tolerance_normalized",
+            "condition_number",
+            "condition_status",
+            "cumulative_energy",
+            "relative_frobenius_error_by_rank",
+            "sweeps",
+            "orthogonality_residual",
+            "energy_relative_residual",
+            "work_count",
+            "scope"
+          ]
+        }
+      ]
+    },
+    "sparsity": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/not_assessed"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "const": "assessed"
+            },
+            "zero_count": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            "value_count": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            "zero_fraction": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "block": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "basis": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "complete_blocks": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "all_zero_blocks": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "trailing_values": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "basis",
+                "size",
+                "complete_blocks",
+                "all_zero_blocks",
+                "trailing_values"
+              ]
+            },
+            "structured_2_4": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "axis": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "groups": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "compliant_groups": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "trailing_values": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "pattern_satisfied": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "scope": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "axis",
+                "groups",
+                "compliant_groups",
+                "trailing_values",
+                "pattern_satisfied",
+                "scope"
+              ]
+            }
+          },
+          "required": [
+            "status",
+            "zero_count",
+            "value_count",
+            "zero_fraction",
+            "block",
+            "structured_2_4"
+          ]
+        }
+      ]
+    },
+    "quantization": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/not_assessed"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "const": "assessed"
+            },
+            "method": {
+              "type": "string"
+            },
+            "parameterization": {
+              "type": "string"
+            },
+            "axis": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "block_size": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "scales": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "zero_points": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "encoding_minimum": {
+              "type": "number"
+            },
+            "encoding_maximum": {
+              "type": "number"
+            },
+            "observed_code_minimum": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "observed_code_maximum": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "range_utilization": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "lower_endpoint_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "upper_endpoint_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "endpoint_interpretation": {
+              "type": "string"
+            },
+            "reconstruction_error": {
+              "$ref": "#/$defs/not_assessed"
+            }
+          },
+          "required": [
+            "status",
+            "method",
+            "parameterization",
+            "axis",
+            "block_size",
+            "scales",
+            "zero_points",
+            "encoding_minimum",
+            "encoding_maximum",
+            "observed_code_minimum",
+            "observed_code_maximum",
+            "range_utilization",
+            "lower_endpoint_count",
+            "upper_endpoint_count",
+            "endpoint_interpretation",
+            "reconstruction_error"
+          ]
+        }
+      ]
+    },
+    "tensor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "weight_ref": {
+          "type": "string"
+        },
+        "storage_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "shape": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dtype": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "assessed",
+            "not_assessed"
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value_count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "representation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "axes": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/axes"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "statistics": {
+          "anyOf": [
+            {
+              "$ref": "https://deepbom.org/schemas/deepbom-numerical-ir-v1.schema.json#/$defs/statistics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "channels": {
+          "$ref": "#/$defs/channels"
+        },
+        "similarity": {
+          "$ref": "#/$defs/similarity"
+        },
+        "spectrum": {
+          "$ref": "#/$defs/spectrum"
+        },
+        "sparsity": {
+          "$ref": "#/$defs/sparsity"
+        },
+        "quantization": {
+          "$ref": "#/$defs/quantization"
+        },
+        "projection": {
+          "$ref": "#/$defs/projection"
+        },
+        "kernel": {
+          "$ref": "#/$defs/kernel"
+        }
+      },
+      "required": [
+        "weight_ref",
+        "storage_ref",
+        "name",
+        "shape",
+        "dtype",
+        "status",
+        "reason",
+        "value_count",
+        "representation",
+        "axes",
+        "statistics",
+        "channels",
+        "similarity",
+        "spectrum",
+        "sparsity",
+        "quantization",
+        "projection",
+        "kernel"
+      ]
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inventory_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "assessed_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "not_assessed_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "decoded_value_count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "feature_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "channels": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "similarity": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "spectrum": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sparsity": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "quantization": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "projection": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "kernel": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "channels",
+            "similarity",
+            "spectrum",
+            "sparsity",
+            "quantization",
+            "projection",
+            "kernel"
+          ]
+        }
+      },
+      "required": [
+        "inventory_count",
+        "assessed_count",
+        "not_assessed_count",
+        "decoded_value_count",
+        "feature_counts"
+      ]
+    },
+    "comparison_metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "const": "assessed"
+        },
+        "count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "changed_count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "mean_absolute_error": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maximum_absolute_error": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rmse": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mse": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relative_l2": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relative_l2_status": {
+          "type": "string"
+        },
+        "cosine": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sqnr_db": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sqnr_status": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "count",
+        "changed_count",
+        "mean_absolute_error",
+        "maximum_absolute_error",
+        "rmse",
+        "mse",
+        "relative_l2",
+        "relative_l2_status",
+        "cosine",
+        "sqnr_db",
+        "sqnr_status"
+      ]
+    },
+    "comparison_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "weight_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "weight_analysis_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "source",
+        "weight_ir_sha256",
+        "weight_analysis_sha256"
+      ]
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseline",
+        "candidate"
+      ],
+      "properties": {
+        "baseline": {
+          "type": "string"
+        },
+        "candidate": {
+          "type": "string"
+        },
+        "candidate_axis_permutation": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "comparison_tensor": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "candidate_ref": {
+              "type": "string"
+            },
+            "baseline_ref": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "name": {
+              "type": "string"
+            },
+            "matching_basis": {
+              "type": "string"
+            },
+            "metrics": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/comparison_metrics"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "delta": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/projection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "spectrum_change": {
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/not_assessed"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "status": {
+                          "const": "assessed"
+                        },
+                        "baseline_rank": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "candidate_rank": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "baseline_singular_values": {
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "candidate_singular_values": {
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "baseline_rank",
+                        "candidate_rank",
+                        "baseline_singular_values",
+                        "candidate_singular_values"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "const": "not_assessed"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "candidate_ref",
+            "baseline_ref",
+            "name",
+            "matching_basis",
+            "metrics",
+            "delta",
+            "spectrum_change",
+            "status",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "candidate_ref": {
+              "type": "string"
+            },
+            "baseline_ref": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "name": {
+              "type": "string"
+            },
+            "matching_basis": {
+              "type": "string"
+            },
+            "metrics": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/comparison_metrics"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "delta": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/projection"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "spectrum_change": {
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/not_assessed"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "status": {
+                          "const": "assessed"
+                        },
+                        "baseline_rank": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "candidate_rank": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "baseline_singular_values": {
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "candidate_singular_values": {
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "baseline_rank",
+                        "candidate_rank",
+                        "baseline_singular_values",
+                        "candidate_singular_values"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "const": "assessed"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "candidate_axis_permutation": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "value_basis": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "baseline": {
+                  "type": "string"
+                },
+                "candidate": {
+                  "type": "string"
+                },
+                "baseline_dtype": {
+                  "type": "string"
+                },
+                "candidate_dtype": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "baseline",
+                "candidate",
+                "baseline_dtype",
+                "candidate_dtype"
+              ]
+            },
+            "distributions": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "baseline": {
+                  "$ref": "https://deepbom.org/schemas/deepbom-numerical-ir-v1.schema.json#/$defs/statistics"
+                },
+                "candidate": {
+                  "$ref": "https://deepbom.org/schemas/deepbom-numerical-ir-v1.schema.json#/$defs/statistics"
+                }
+              },
+              "required": [
+                "baseline",
+                "candidate"
+              ]
+            }
+          },
+          "required": [
+            "candidate_ref",
+            "baseline_ref",
+            "name",
+            "matching_basis",
+            "metrics",
+            "delta",
+            "spectrum_change",
+            "status",
+            "reason",
+            "candidate_axis_permutation",
+            "value_basis",
+            "distributions"
+          ]
+        }
+      ]
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "deepbom.weight_analysis.v1"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "weight_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "options": {
+          "$ref": "#/$defs/options"
+        },
+        "coverage": {
+          "$ref": "#/$defs/coverage"
+        },
+        "tensors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tensor"
+          }
+        },
+        "interpretation_boundary": {
+          "type": "string"
+        },
+        "weight_analysis_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "schema",
+        "method_version",
+        "source",
+        "weight_ir_sha256",
+        "options",
+        "coverage",
+        "tensors",
+        "interpretation_boundary",
+        "weight_analysis_sha256"
+      ]
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "deepbom.weight_comparison.v1"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "baseline": {
+          "$ref": "#/$defs/comparison_source"
+        },
+        "candidate": {
+          "$ref": "#/$defs/comparison_source"
+        },
+        "mapping": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mapping"
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "candidate_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "compared_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "not_assessed_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unmatched_baseline_refs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "candidate_count",
+            "compared_count",
+            "not_assessed_count",
+            "unmatched_baseline_refs"
+          ]
+        },
+        "tensors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/comparison_tensor"
+          }
+        },
+        "interpretation_boundary": {
+          "type": "string"
+        },
+        "weight_comparison_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "schema",
+        "method_version",
+        "baseline",
+        "candidate",
+        "mapping",
+        "coverage",
+        "tensors",
+        "interpretation_boundary",
+        "weight_comparison_sha256"
+      ]
+    }
+  }
+}

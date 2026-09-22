@@ -20,7 +20,7 @@ export async function hashSource(source, { signal, onProgress } = {}) {
 }
 const unavailable = reason => ({ status: "not_assessed", reason });
 const dtypeAlias = dtype => ({ F32: "FLOAT32", F16: "FLOAT16", F64: "FLOAT64", BF16: "BFLOAT16", FLOAT: "FLOAT32", DOUBLE: "FLOAT64", HALF: "FLOAT16", BYTE: "UINT8", CHAR: "INT8", SHORT: "INT16", INT: "INT32", LONG: "INT64" }[dtype] || dtype);
-export async function numericSources(source, analysis, model) {
+export async function numericSources(source, analysis, model, { captureValues = false, maxCapturedValues = 8_000_000 } = {}) {
   const stores = model.tensors_and_storage.storage_objects, candidates = [], format = String(analysis.format || model.artifact.format).toLowerCase();
   const add = (store, entry) => candidates.push({ storage_ref: store?.id || null, ...entry });
   if (["gguf", "safetensors"].includes(format)) {
@@ -39,12 +39,20 @@ export async function numericSources(source, analysis, model) {
     }
   } else if (["coreml", "mlmodel"].includes(format) && sourceSize(source) <= MAX_IN_MEMORY_SOURCE) {
     const { parseCoreMlModel } = await import("../coreml-metadata-adapter.js");
-    const parsed = parseCoreMlModel(await readBytes(source), model.artifact.filename, sourceSize(source), { numericalFactory: () => new TensorStatistics() });
+    const captures = new WeakMap(); let captured = 0;
+    const parsed = parseCoreMlModel(await readBytes(source), model.artifact.filename, sourceSize(source), { numericalFactory: () => {
+      const stats = new TensorStatistics(); let values = [];
+      return { add(value) { stats.add(value); if (captureValues && values) { if (captured < maxCapturedValues) {values.push(value); captured++;} else values = null; } }, finish() { const result = stats.finish(); if (captureValues) captures.set(result, values); return result; } };
+    } });
     for (const [index, parameter] of (parsed.weight_integrity?.parameters || []).entries()) {
       const store = stores.find(s => s.native_source?.path === `weight_integrity.parameters[${index}]`);
       add(store, { locator: `coreml:parameter:${index}`, name: store?.name || parameter.role, dtype: store?.dtype || parameter.storage,
         shape: store?.shape?.length ? store.shape : Number.isSafeInteger(parameter.value_count) ? [parameter.value_count] : null,
-        visit: () => parameter.optional_statistics ? { status: "assessed", representation: /quantized|int8_dynamic/.test(parameter.storage) ? "dequantized_real" : "stored_scalar", statistics: parameter.optional_statistics, payload_sha256: parameter.numerical_integrity?.payload_sha256 || null, invalid_encoding_count: 0 } : unavailable("parameter_values_not_exposed_by_decoder") });
+        visit: visitor => {
+          if (!parameter.optional_statistics) return unavailable("parameter_values_not_exposed_by_decoder");
+          if (captureValues) { const values = captures.get(parameter.optional_statistics); if (!values) return unavailable("coreml_capture_budget_exceeded"); for (const value of values) visitor(value); }
+          return { status: "assessed", representation: /quantized|int8_dynamic/.test(parameter.storage) ? "dequantized_real" : "stored_scalar", statistics: parameter.optional_statistics, payload_sha256: parameter.numerical_integrity?.payload_sha256 || null, invalid_encoding_count: 0 };
+        } });
     }
     // Complete immediate values can be inspected without interpreting names as graph edges.
     for (const tensor of parsed.tensors || []) {

@@ -69,7 +69,7 @@ const server = createServer((request, response) => {
   } else if (url.pathname === "/host") {
     response.writeHead(200, { "content-type": "text/html" }).end(`<!doctype html><iframe name="widget" sandbox="allow-scripts allow-same-origin" src="/widget" style="width:1050px;height:850px"></iframe>`);
   } else if (url.pathname === "/widget") {
-    response.setHeader("content-security-policy", `default-src 'none'; script-src ${assetOrigin} 'wasm-unsafe-eval'; worker-src blob:; connect-src ${assetOrigin}; style-src 'unsafe-inline'; img-src data: blob:`);
+    response.setHeader("content-security-policy", `default-src 'none'; script-src ${assetOrigin} 'wasm-unsafe-eval'; worker-src blob:; connect-src ${assetOrigin} blob:; style-src 'unsafe-inline'; img-src data: blob:`);
     response.writeHead(200, { "content-type": "text/html" }).end(`<!doctype html><main id="deepbom-claude-root"></main><script type="module" src="${assetOrigin}${scriptUrl.pathname}${scriptUrl.search}"></script>`);
   } else response.writeHead(404).end();
 });
@@ -137,6 +137,13 @@ try {
     assert.equal(contexts.at(-1).structuredContent.artifact.sha256, result.artifact.sha256);
     assert.ok(result.model_summary.row_count > 0);
     assert.ok(JSON.stringify(result).length < 96 * 1024);
+    await frame.locator("#weight-evidence").click();
+    await frame.waitForFunction(() => document.querySelector('#result a[download="deepbom-weight-evidence.json"]'),null,{timeout:120_000});
+    const evidence=await frame.evaluate(async()=> (await fetch(document.querySelector('#result a[download="deepbom-weight-evidence.json"]').href)).json());
+    assert.equal(evidence.weight_analysis.schema,"deepbom.weight_analysis.v1");
+    assert.equal(evidence.weight_analysis.source.artifact_sha256,result.artifact.sha256);
+    assert(evidence.weight_analysis.coverage.assessed_count>0);
+    assert.equal(contexts.at(-1).structuredContent.schema,"deepbom.browser_analysis_result.v1","Optional detailed weights are not sent to the host context");
     console.log(`${format}: SHA-256, bounded result, model summary, and context handoff passed`);
   }
   await frame.locator("#file").setInputFiles({ name: "unsafe.py", mimeType: "text/plain", buffer: Buffer.from("raise RuntimeError('must not execute')") });

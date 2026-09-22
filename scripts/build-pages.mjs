@@ -121,6 +121,7 @@ await copyFile(
   path.join(dist, ".well-known", "deepbom-signing-keys.json"),
 );
 await mkdir(path.join(dist, "schemas"), { recursive: true });
+for (const name of ["deepbom-numerical-ir-v1.schema.json", "deepbom-weight-analysis-v1.schema.json"]) await copyFile(path.join(root, "docs", "schemas", name), path.join(dist, "schemas", name));
 await copyFile(
   path.join(root, "docs", "schemas", "deepbom-artifact-ir-v2.schema.json"),
   path.join(dist, "schemas", "deepbom-artifact-ir-v2.schema.json"),

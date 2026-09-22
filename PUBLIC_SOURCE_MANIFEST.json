@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "dafec7e1509c5f999309191a8022cc2133b9ee2b",
+  "source_commit": "a5942418d404f2a7c5b2cb86b65050c3fa010d94",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 1195,
+  "file_count": 1204,
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -62,8 +62,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "byte_length": 66087,
-      "sha256": "53f7ace68a543aef3ad2f862db3585c5ee8948a0ae6daf2179ed7335eb2d592c"
+      "byte_length": 66734,
+      "sha256": "f146664d5be3676a3247078a576d0266bd29bbddd29d9ac8c07d82915adbe528"
     },
     {
       "path": "CITATION.cff",
@@ -78,12 +78,12 @@
     {
       "path": "Cargo.lock",
       "byte_length": 8653,
-      "sha256": "2211d97fa1ae66208f6d1904d0d5ee27cba303bc4fedea5dcfbe51fd9609a4e5"
+      "sha256": "34bc474406f9aa1f058fa3433554aae826a7ed2579790cdd2d0ecfe6fe404e1b"
     },
     {
       "path": "Cargo.toml",
       "byte_length": 982,
-      "sha256": "e45c83012bbd487b7b0369d4f281c915c1c686279c8028dd7450a084739882cc"
+      "sha256": "ffee3119e33c8ef9e6aa01ba6fc8c1c3d21e25882912a7a185f6b7bb29f9a2dc"
     },
     {
       "path": "LICENSE",
@@ -93,7 +93,7 @@
     {
       "path": "README.md",
       "byte_length": 14444,
-      "sha256": "81ed02b24e6782c92f226f4dd249ec4592719fc8c859de24b7181e674df2e85d"
+      "sha256": "f4b95c3b6dc3545816207f9da7bb6e62e102e39f7922753f015533585d715637"
     },
     {
       "path": "SECURITY.md",
@@ -122,8 +122,8 @@
     },
     {
       "path": "bin/deepbom-automation.mjs",
-      "byte_length": 24913,
-      "sha256": "c825335e5cd02d93b262e5ca9cbb2cb470544b433b8eee1e7b5bae0ad6d24f06"
+      "byte_length": 25336,
+      "sha256": "4f5b0c8b4be54a777c53ae084ce41aaee00aceb8a17d5cd567893630570fb523"
     },
     {
       "path": "bin/deepbom-input.mjs",
@@ -132,8 +132,8 @@
     },
     {
       "path": "bin/deepbom-mcp.mjs",
-      "byte_length": 32763,
-      "sha256": "17e2edbe5635ca9dd99a81b6333e1ad49b5580a1f786f31d56f9b83c24c95b9a"
+      "byte_length": 33616,
+      "sha256": "ba416d14a9b9c1082d2f4b2bb44087b2dec6ce43249e311d5a1015a06d65b96d"
     },
     {
       "path": "bin/deepbom-public-contract-versions.mjs",
@@ -142,8 +142,8 @@
     },
     {
       "path": "bin/deepbom.mjs",
-      "byte_length": 175597,
-      "sha256": "80e2b39351ff0061ab6ebb1b5212c5bc580518446d96d0270ad394ba4af32280"
+      "byte_length": 178029,
+      "sha256": "a1bd5a79f0da43ea803f4d47d311e547dd42e418685ed74bb0dfd419e7df706c"
     },
     {
       "path": "bin/graph-png-export.mjs",
@@ -193,12 +193,12 @@
     {
       "path": "channels/cargo/Cargo.lock",
       "byte_length": 12292,
-      "sha256": "53e93fa5bc129aa68982cd97072fe9c7093718c80c545e0f4de9e06f29eca49f"
+      "sha256": "4463a8950e7c19a743ccdc5b0fde69ffe4028aca39be504f477f656b9183b6b1"
     },
     {
       "path": "channels/cargo/Cargo.toml",
       "byte_length": 752,
-      "sha256": "21ac8b2a41e767673611ac6b734e6c07b7fd5d8c6ac83979d4f21f2376ad8302"
+      "sha256": "a86d3f721b882677fa73eec08c4d394ca38feff8f7863108ffc910654337a20f"
     },
     {
       "path": "channels/cargo/README.md",
@@ -213,12 +213,12 @@
     {
       "path": "channels/container/Dockerfile",
       "byte_length": 317,
-      "sha256": "72a73e8ad35997e35d5ec060a2641e6763047ef5092e991e3151e0eaa862f25c"
+      "sha256": "722bd326500379ddbd00dd57ea5ba9415af7ff694d5e76705236c14512c6f690"
     },
     {
       "path": "channels/container/README.md",
       "byte_length": 563,
-      "sha256": "90914a8006bf593ccfe3d231a99e44a14372200beef37c8a824e20b22166db59"
+      "sha256": "f74f0c63ac1852c2ba2b685067be30a4094c0d1d16b2938245a0990cd3ad60d3"
     },
     {
       "path": "channels/huggingface/Dockerfile",
@@ -238,7 +238,7 @@
     {
       "path": "channels/npm/README.md",
       "byte_length": 4710,
-      "sha256": "d572f91a6154d4668e8a764bdcf4cf1b0a82e40ee6ee32ecc96bc5b13113d337"
+      "sha256": "4b326df46eaa7b2daa98780e4fae30af6ea60a0eb2f60364dc86dd7e8066c93f"
     },
     {
       "path": "channels/python/README.md",
@@ -248,7 +248,7 @@
     {
       "path": "channels/python/pyproject.toml",
       "byte_length": 1322,
-      "sha256": "0f3907eac177340e6eef43c95e346319dd17bf1e61757a62431b5ddbbc7acb6c"
+      "sha256": "f9afa8f11c6758fc062bb8113491881846d7041f1bf572f73f0bbbe2f6052ab5"
     },
     {
       "path": "channels/python/requirements-build.txt",
@@ -268,7 +268,7 @@
     {
       "path": "channels/python/src/deepbom/__init__.py",
       "byte_length": 911,
-      "sha256": "724b8bb87f8a768ff2f99043a86c152eba8f6e898be9aa0bff27e243f8d24dc3"
+      "sha256": "0ed3ac429509ee33176edc5f548698bf668e7cd3228a9a1a49eba59f187f3e36"
     },
     {
       "path": "channels/python/src/deepbom/__main__.py",
@@ -292,8 +292,8 @@
     },
     {
       "path": "config/artifact-ir-consumer-policy.v1.json",
-      "byte_length": 5428,
-      "sha256": "97ba16a5f7c72e93c765da1acfa60537721b63765f51557378b4eba4fe513f27"
+      "byte_length": 5476,
+      "sha256": "5037658523b8d4660b68514d3a5567c656ab0aacff9adbd3120024348aa9375e"
     },
     {
       "path": "config/artifact-ir-import-policy.v2.json",
@@ -302,8 +302,8 @@
     },
     {
       "path": "config/delivery-operations.v1.json",
-      "byte_length": 116888,
-      "sha256": "853e523c75a19838f56aeeab125ee9a229e364e621aa561c98f49d8bcb5aa41d"
+      "byte_length": 119072,
+      "sha256": "9f44e0502e8e14e724cbc1644d49142f31a45c23d71b2985c9f41d2f75b02984"
     },
     {
       "path": "config/finding-rule-registry-policy.v1.json",
@@ -327,8 +327,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 44165,
-      "sha256": "389dbc8140bbe36c31a3e1f2690da8844aa3d2669d93b8485ae2a3bd92c922cd"
+      "byte_length": 44517,
+      "sha256": "8c701da2a188b60f450de1095f3dd7ce7ea5ea63d44ba304fcc55c81f0043dbe"
     },
     {
       "path": "corpus/README.md",
@@ -703,7 +703,7 @@
     {
       "path": "docs/AGENT_DISTRIBUTION_OPERATIONS.md",
       "byte_length": 7491,
-      "sha256": "dc752d0cf49245af182bd98e6be422f9deca3174f60ad7f828f531726124df53"
+      "sha256": "14ce9c32523cd08269fe5b9fe60af7da0f546f3235722769a1a73cd24a559e69"
     },
     {
       "path": "docs/CLI_AUTOMATION.md",
@@ -712,8 +712,8 @@
     },
     {
       "path": "docs/CLI_REFERENCE.md",
-      "byte_length": 15440,
-      "sha256": "317da3dc3cf8a31ae8b60afe6859a64529849e54c5d54e1be116817c87a6576b"
+      "byte_length": 15798,
+      "sha256": "520e762209a57726e87a20e26ac6818d1125a831f75034f63b5be15a191bd6fa"
     },
     {
       "path": "docs/DEEPBOM_PROPERTY_TAXONOMY.md",
@@ -788,7 +788,7 @@
     {
       "path": "docs/PUBLIC_README.md",
       "byte_length": 14444,
-      "sha256": "81ed02b24e6782c92f226f4dd249ec4592719fc8c859de24b7181e674df2e85d"
+      "sha256": "f4b95c3b6dc3545816207f9da7bb6e62e102e39f7922753f015533585d715637"
     },
     {
       "path": "docs/REPRESENTATIVE_DATASET_CAPTURE.md",
@@ -888,7 +888,7 @@
     {
       "path": "docs/chatgpt-app/submission-profile.json",
       "byte_length": 4415,
-      "sha256": "3e0fbf57071395b9aa55494c15201059990a2b72599205b3c7744044eb0008a3"
+      "sha256": "4f5c08c13da3c77653c842217b605f4414caf173ea4ae7edf91928212d6f77d3"
     },
     {
       "path": "docs/chatgpt-app/usage-review-change.json",
@@ -898,12 +898,12 @@
     {
       "path": "docs/claude-app/README.md",
       "byte_length": 2299,
-      "sha256": "87eb548a4a6242a34e5a26fc2cfada8e01b1561263aa3ae042dce842b4147beb"
+      "sha256": "c80d0b2d263c8e41da50250a9c1863c51337f5affd94fbfe25919893b62ce3d9"
     },
     {
       "path": "docs/claude-app/submission-profile.json",
       "byte_length": 2225,
-      "sha256": "19baf50c94fabd6be6deac1106ae2ea2b0e73089a3334545dddad4cba06d38fb"
+      "sha256": "66549e4e3dab83fe6ac1ad404adf68519b7e66fda8ac9e991126dbdf454eb384"
     },
     {
       "path": "docs/claude-remote/PORTAL_VALUES.md",
@@ -918,7 +918,7 @@
     {
       "path": "docs/claude-remote/submission-profile.json",
       "byte_length": 2187,
-      "sha256": "64d65f5038aa3156faef66ae9044b761dcd7d622022c0a5a97a630c77a6b8c90"
+      "sha256": "b0bddc8cd67a290a9976561be1f20c629bd94fc592e5424d876e5e1703d9f8ad"
     },
     {
       "path": "docs/native-runtime-capture.md",
@@ -956,6 +956,11 @@
       "sha256": "f102a94995be3be1c59750ea5591fc08056dda563f3f2329fad8613e676e5efb"
     },
     {
+      "path": "docs/schemas/deepbom-weight-analysis-v1.schema.json",
+      "byte_length": 40800,
+      "sha256": "03a4089448cf128f84c47ec7d89a5754bf9538a4fcb47d12c97f8d2902db4e57"
+    },
+    {
       "path": "docs/zenodo-validation-metadata.json",
       "byte_length": 1182,
       "sha256": "476e24806b79a6172031f591cac068a7ee6b40a6bea35f265a46726a54eba92d"
@@ -973,7 +978,7 @@
     {
       "path": "examples/expected-output/gpu-partition-probe.human.txt",
       "byte_length": 666,
-      "sha256": "12a0aa74cf69c428e554ff55de00c533849bbd38336d55fdf8a43d0c79f8e58a"
+      "sha256": "7e03044313e9d0d2da3901c4b91c8f88d6ece56d87075ddc2d78e1bb7e1c087c"
     },
     {
       "path": "integrations/README.md",
@@ -1108,12 +1113,12 @@
     {
       "path": "package-lock.json",
       "byte_length": 41289,
-      "sha256": "f25c006d7c5e7a96cb8be56d9947985b1747c1dd1d2c775a2514fdc57686e91a"
+      "sha256": "bf5296a5d7ab2c98e42662a34d5843181fbaa532deefade649784ecaae89736f"
     },
     {
       "path": "package.json",
       "byte_length": 26562,
-      "sha256": "01f37bdbfa63f62b58923dda0c4f8ef3f825c2ec3af7016fd37710019aa63a18"
+      "sha256": "f4da590351e0904a44a454842c2f60a399f5e8e08032b7b5d9c2a7c0c34126c4"
     },
     {
       "path": "pkg/LICENSE",
@@ -1123,7 +1128,7 @@
     {
       "path": "pkg/package.json",
       "byte_length": 495,
-      "sha256": "d3dc3a06594501b99f46b216b2a20d17af960ad48309d8b1ef9c1ebbedad2d14"
+      "sha256": "f6c17fd7b44463c848b1f65e00329d270ffe85daba2beeb251c1da435503eea4"
     },
     {
       "path": "pkg/tflite_wasm_audit.d.ts",
@@ -1338,7 +1343,7 @@
     {
       "path": "release/version.json",
       "byte_length": 98,
-      "sha256": "563d6648e8da91f73502e9284e857ae17ca5b3cc32e821e034a243ba38606838"
+      "sha256": "c16617798401a0c8f4be51bdac6c7bc35f6c6c5743c62a5bf63f4633079adf9e"
     },
     {
       "path": "requirements-onnx-corpus.txt",
@@ -1407,8 +1412,8 @@
     },
     {
       "path": "scripts/build-pages.mjs",
-      "byte_length": 31019,
-      "sha256": "90b89fd9ffd885f4e6ee6e918fb9c2144a136200357cefdde6e5db50831a608e"
+      "byte_length": 31213,
+      "sha256": "a47fc1bcbd8e81b08a2bdff2315e9acdae504a4f7594c5965c66617934d6a935"
     },
     {
       "path": "scripts/build-public-multiformat-corpus-manifest.mjs",
@@ -1657,8 +1662,8 @@
     },
     {
       "path": "scripts/check-chatgpt-widget.mjs",
-      "byte_length": 42700,
-      "sha256": "3eb6369cdd85320e7e72f24e5347f42676f3c41cecbdb6f526708b0ccf6813c6"
+      "byte_length": 42911,
+      "sha256": "a4ac1128b83d858cf00a41ef2950847c84edd7666c77ece67c1a0b859ff1bfc9"
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
@@ -1677,8 +1682,8 @@
     },
     {
       "path": "scripts/check-claude-widget.mjs",
-      "byte_length": 9267,
-      "sha256": "ba9ca48bcad52d35a8759c9d45deba56a025202c41c9e754a510d3a10dc52149"
+      "byte_length": 10014,
+      "sha256": "096b47c5ccccc3d926199e7ae23ac2ba3c269ae3f5a486b423cf65ae77374eab"
     },
     {
       "path": "scripts/check-cli-automation.mjs",
@@ -1802,8 +1807,8 @@
     },
     {
       "path": "scripts/check-deploy.mjs",
-      "byte_length": 4655,
-      "sha256": "53457b443e3ae94c342689c32c9ee7e0e34c03356bd4888809295ae04bde25e0"
+      "byte_length": 4751,
+      "sha256": "ec5ec4a81cee5fa8e65fb3bd66b43df67a4d5a5887cfd1acb3ee8dfc07c87ce2"
     },
     {
       "path": "scripts/check-deployment-delta-viewer.mjs",
@@ -2147,8 +2152,8 @@
     },
     {
       "path": "scripts/check-mcp-server.mjs",
-      "byte_length": 25861,
-      "sha256": "ff588449b7bf7ecb72652080dea9df741f5198b0ee9c36cb934c8944b5761011"
+      "byte_length": 26201,
+      "sha256": "afb3f04b1e78cb2e930b32737b206bc5131c2bcc27f1a4912d10e346ff5589d1"
     },
     {
       "path": "scripts/check-mcpb-bundle.mjs",
@@ -2222,8 +2227,8 @@
     },
     {
       "path": "scripts/check-numerical-ir-browser.mjs",
-      "byte_length": 10710,
-      "sha256": "331acb5da9f33dcf981f2a4954f66bd9f3bec1f3fc31a3e18415d59da3ff3c12"
+      "byte_length": 12460,
+      "sha256": "ef0df5b5b2fe9731899304c754cf43e78219ce065df5ba1c413797828cf8dc64"
     },
     {
       "path": "scripts/check-numerical-ir.mjs",
@@ -2692,8 +2697,8 @@
     },
     {
       "path": "scripts/check-source-budget.mjs",
-      "byte_length": 10782,
-      "sha256": "19a6134d832dc301b87112b4d7021add32262b9aff40ae05d8986355e9bfadb5"
+      "byte_length": 10784,
+      "sha256": "68dffed75aab1995a21fec52a963531d59f3a2795ff83c5d87de986ffa6c70b4"
     },
     {
       "path": "scripts/check-spdx-artifact-export.mjs",
@@ -2809,6 +2814,11 @@
       "path": "scripts/check-web-usage.mjs",
       "byte_length": 6990,
       "sha256": "e89f15e6f16968b7d98bdbc27aa6493409af23a4e3a6fd73b8e323736d4b1ffd"
+    },
+    {
+      "path": "scripts/check-weight-analysis.mjs",
+      "byte_length": 9243,
+      "sha256": "c7870d8f03daacf67625326282269af8a679f52d0fb4459ffd0132e38083c24b"
     },
     {
       "path": "scripts/check-worker-config.mjs",
@@ -2971,6 +2981,11 @@
       "sha256": "6d197f4c1b2fb8bbd5a97168e4c3b0c4ff614ffc7b438e094f469394ba4f083d"
     },
     {
+      "path": "scripts/fixtures/weight-svd-oracles.json",
+      "byte_length": 6440,
+      "sha256": "769b871fdf471945c8feb1e572b22c3b0ed41652efc646e0e573903a4afc1b57"
+    },
+    {
       "path": "scripts/generate-accelerator-llm-samples.py",
       "byte_length": 9398,
       "sha256": "d54864d88ade470ce2a06871ba2ca33bcb4d5a026ebeae47809a164093c96771"
@@ -3034,6 +3049,11 @@
       "path": "scripts/generate-sample-onnx.py",
       "byte_length": 2871,
       "sha256": "5f475814f35b24b51d66e97a79b12220adbfc88739a389d7e3032c7fd36f6bb9"
+    },
+    {
+      "path": "scripts/generate-weight-analysis-schema.mjs",
+      "byte_length": 6869,
+      "sha256": "78af2e1821e4f4f525bdcd4cebc23c45bd63a825c7d68df588b70d7a9072fe32"
     },
     {
       "path": "scripts/gguf-architecture-encoding-corpus-lib.mjs",
@@ -3473,7 +3493,7 @@
     {
       "path": "server.json",
       "byte_length": 981,
-      "sha256": "ee1149e81923746f720f7bd4c402bdce9c347cacdf69cf1033f72d22e3b777fc"
+      "sha256": "b48f58abbe86ad41d200d1785eee6723dcc38ed5bd06b30f0128d36348275bc6"
     },
     {
       "path": "skills/deepbom/SKILL.md",
@@ -3777,8 +3797,8 @@
     },
     {
       "path": "web/chatgpt/deepbom-widget.js",
-      "byte_length": 57837,
-      "sha256": "d9a3631781516cf64763f62c4533e2d3b4dca2fb002f64935b8d669e79b7058d"
+      "byte_length": 57874,
+      "sha256": "f29ac76f3d71317e42f3a943e842d4c2e72cd878c4fb9ad40e670a6e7c03486c"
     },
     {
       "path": "web/chatgpt/index.html",
@@ -3787,8 +3807,8 @@
     },
     {
       "path": "web/claude/deepbom-widget.js",
-      "byte_length": 19893,
-      "sha256": "2b357f2cf9dc116ab7fa4293cd716f7418af1414a0015eac8519b3a7f2ae032f"
+      "byte_length": 21485,
+      "sha256": "95e8b26836e5ce42606443d0b1d20e0e2ce07c15a7b71f76824161977463f99a"
     },
     {
       "path": "web/claude/index.html",
@@ -3853,7 +3873,7 @@
     {
       "path": "web/for-agents/index.html",
       "byte_length": 10286,
-      "sha256": "595edc86fa95eeeefbfb15bed1697f72c09cd54c9a3b2e0e9ab45244445d06a1"
+      "sha256": "7b7201f6f6e774ed95989038eb4f43bcdf5d4d2e8baebfe46738d74d3a469fbe"
     },
     {
       "path": "web/get-started/index.html",
@@ -3883,22 +3903,22 @@
     {
       "path": "web/guides/cli/index.html",
       "byte_length": 23126,
-      "sha256": "41d7a09747c7789a2884e212efe6d9b54197f8fa10fa3a01d5930ceb9633a7b8"
+      "sha256": "2cbca39e3e15619b1c47f1f90cbf09e7244d21b870f3bea8aa8c014f74d742f4"
     },
     {
       "path": "web/guides/cli/reference/help.txt",
-      "byte_length": 11691,
-      "sha256": "330183f6be6f3ffd9bb1e07f59240b94ac5422429c4ae01533af989f2add1192"
+      "byte_length": 12049,
+      "sha256": "7fd58727a73f35236234ed76b973c0eba0e2288696ee36299ecdafd2ce99e6ab"
     },
     {
       "path": "web/guides/cli/reference/index.html",
-      "byte_length": 22337,
-      "sha256": "2a95608ca6a0a6e295c0567c4138bf632f5532dabbe40c51f24ba5fcc44b618e"
+      "byte_length": 22713,
+      "sha256": "2765e18a39dd8ea33f547f3d993bbee1a718e877c3f7f303fe9ed6e0cd3ddc68"
     },
     {
       "path": "web/guides/compare-model-artifacts/index.html",
       "byte_length": 3570,
-      "sha256": "3bb9584b5a2009834cd8cd109fc7c9582e3853cabd4bdc8598376b1d3371ab06"
+      "sha256": "00d91fa6f4d95b4afb233ddbe337bf8f235e8d7c044341d1b9f5d3d7285a0988"
     },
     {
       "path": "web/guides/index.html",
@@ -3908,22 +3928,22 @@
     {
       "path": "web/guides/inspect-gguf-tensor-encodings/index.html",
       "byte_length": 3685,
-      "sha256": "c33b32697d913d9ef7d798fe75037d382a47d4c7c837072414e97d798dd28aee"
+      "sha256": "a4532bb71c302b2a4f87643caaeb516a0ef20b06b81031197c22e61856746074"
     },
     {
       "path": "web/guides/inspect-onnx-quantization/index.html",
       "byte_length": 4019,
-      "sha256": "26439e82e8cbe591cc297eced8f3a3a7f7285e9aa202e3381e3d6cb76e8e9b78"
+      "sha256": "09ed170851a15b9c4a6d6aeb27b6a2f4cd3621c852804037eac9cf97155d8f6a"
     },
     {
       "path": "web/guides/numerical-evidence/index.html",
-      "byte_length": 9916,
-      "sha256": "abcbdcd568cf2fa9298311eca77b3e5019dbef93fed766bde11d23d0ffde7a5d"
+      "byte_length": 14818,
+      "sha256": "de48aaa734adc30e0da921a556d1f1c5e18043f3b6a0594c48e374bb94ba3eeb"
     },
     {
       "path": "web/index.html",
       "byte_length": 141957,
-      "sha256": "66c9d67220b978d3de68af54a53c75a4097feb8be2d46366b02c2b32d748a7f3"
+      "sha256": "42b8ca5d7b71ca027a0fd0e58dfefe4d47870a610f97f448630b46fdf75e88c5"
     },
     {
       "path": "web/legal/privacy.html",
@@ -4018,7 +4038,7 @@
     {
       "path": "web/lib/app-config.js",
       "byte_length": 4772,
-      "sha256": "ad65d07bd0b95734720c62cb7605aad602914ba044204bd4dc6aa3810df66cca"
+      "sha256": "144788f563cd52efea47c1af67d6b740ced2711562b47cc77e5b16ea67d5b99b"
     },
     {
       "path": "web/lib/app-deepbom-workspace.js",
@@ -4187,8 +4207,8 @@
     },
     {
       "path": "web/lib/build-metadata.js",
-      "byte_length": 91401,
-      "sha256": "dc936407f7ebf8568173ffed8a8df312debb1cf5b952858211341e427e256ed1"
+      "byte_length": 92244,
+      "sha256": "2aa785c26749e0af356a34985db5a53d49b638c34c74d8d42f6c86df3a793a13"
     },
     {
       "path": "web/lib/bundle.js",
@@ -4787,8 +4807,8 @@
     },
     {
       "path": "web/lib/numerical-ir-panel.js",
-      "byte_length": 27027,
-      "sha256": "5645f2f937dac1c841f8c07870c66430d892e41795948ad23e2c9e131a2b5603"
+      "byte_length": 31802,
+      "sha256": "e492dab603631aa5cf10f1c16a93a85033e562e42e2a4f2e6ddad6b5d2970b59"
     },
     {
       "path": "web/lib/numerical-ir/common.js",
@@ -4801,9 +4821,24 @@
       "sha256": "f465d34f245aae513d7bf7f07911c47890c8d001613f1c4a90987b1251a7f69d"
     },
     {
+      "path": "web/lib/numerical-ir/weight-browser-input.js",
+      "byte_length": 1779,
+      "sha256": "0540553952a481a950561f2f165947722fb26dc2347b22809ee68f881fc636c8"
+    },
+    {
+      "path": "web/lib/numerical-ir/weight-contracts.js",
+      "byte_length": 8230,
+      "sha256": "8509c60d4379575792ea71183d0ae7ff8e5bb59e5b8f8142937a07819fbe221d"
+    },
+    {
+      "path": "web/lib/numerical-ir/weight-math.js",
+      "byte_length": 11164,
+      "sha256": "805aa94555bd6e351307e36606056a60a24f870387ce046524d607d03368c30c"
+    },
+    {
       "path": "web/lib/numerical-ir/weight-sources.js",
-      "byte_length": 8261,
-      "sha256": "3c8ac25ea27fe80c861dc183c8e8a669b29954a2b5dff63b8d9e498e7a7788b9"
+      "byte_length": 8964,
+      "sha256": "f00c75712dfa9de70e66da5e6169c9eb6bbf400a5c3035e9e4354775cad4ebb9"
     },
     {
       "path": "web/lib/nvidia-accelerator-profile.js",
@@ -5771,6 +5806,16 @@
       "sha256": "49562ccf0496c61bc8301099d7c7dc7c1dd9626e98b412d5023a3a1423497912"
     },
     {
+      "path": "web/lib/weight-analysis-view.js",
+      "byte_length": 14201,
+      "sha256": "ac6b4b4d8d9a241ab843b6ee245e6a964705d25907a1c26172040bc87271d491"
+    },
+    {
+      "path": "web/lib/weight-analysis.js",
+      "byte_length": 20482,
+      "sha256": "e20f30ad71c233faba37bb4ba433dc1ce3254ac20e634b8101c7f7378e198ea4"
+    },
+    {
       "path": "web/lib/weight-hist.js",
       "byte_length": 18729,
       "sha256": "a2f6ddcc20d2e5d783a4003c47e64810ebe0c1e5da63f946b758386efb52e92f"
@@ -5942,8 +5987,8 @@
     },
     {
       "path": "web/sw.js",
-      "byte_length": 16536,
-      "sha256": "0988fcead9ff69a294708988bf9b567ffa56790242f5eac56b2f326414c4f101"
+      "byte_length": 16732,
+      "sha256": "9a3c79a541e53d858de5a9a81b847b8439b9fabf1cb27cc795c6107da100e880"
     },
     {
       "path": "web/test.html",
@@ -5962,8 +6007,8 @@
     },
     {
       "path": "web/weight-workspace.css",
-      "byte_length": 12721,
-      "sha256": "571c8489445b03ea3a497db50b0edfa5629af53f68cb149c42c81eddd65f546d"
+      "byte_length": 13654,
+      "sha256": "fd651c3b980aa8a11d4c8dd9ee6f6577a84ffc323a927dcae947d03b161d4c32"
     },
     {
       "path": "web/workers/deepbom-analysis-worker.js",
@@ -5972,13 +6017,13 @@
     },
     {
       "path": "web/workers/numerical-ir-worker.js",
-      "byte_length": 393,
-      "sha256": "90980757ecc366c348882227be62fec4888430e5cf0ff581d9e5423158d61fbf"
+      "byte_length": 965,
+      "sha256": "fb3777c600e06ddfbc3c892ee206d6554c670b65201098ab8b5eba5f6ee33147"
     },
     {
       "path": "web/workers/static-audit-worker.js",
-      "byte_length": 10325,
-      "sha256": "430c00a3d911bc0fec276d62e1ffe4f0f5d6d8a7ffeaabef5e284a4f6b84c683"
+      "byte_length": 10582,
+      "sha256": "5df420a4e885b1909fa77326597645d275f68604a2479d405910d7bf202a32df"
     }
   ],
   "excluded_classes": [

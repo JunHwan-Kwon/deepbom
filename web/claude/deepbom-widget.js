@@ -154,7 +154,10 @@ async function analyzeSelectedFile(file) {
       content: [{ type: "text", text: resultText(returned) }],
       structuredContent: returned,
     });
-    renderResult(result, artifactIrContext.model_summary);
+    renderResult(result, artifactIrContext.model_summary, async () => {
+      await prepareSandboxWorker();
+      return staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.WEIGHT_IR, { file, analysis, model: artifactIrContext.model_ir, advanced: true });
+    });
   } catch (error) {
     await publishFailure(error, file);
   } finally {
@@ -277,7 +280,7 @@ function setStatus(status, detail) {
   root.querySelector("#detail").textContent = detail || "";
 }
 
-function renderResult(result, modelSummary) {
+function renderResult(result, modelSummary, weightEvidence) {
   setStatus("Static evidence ready", `${result.artifact.filename} · ${result.artifact.format.toUpperCase()} · sha256:${result.artifact.sha256.slice(0, 12)}…`);
   root.querySelector("#result").innerHTML = `<div class="metrics">
     <div class="metric"><b>${result.verdict.artifact_defect_count}</b><span>artifact defects</span></div>
@@ -285,6 +288,23 @@ function renderResult(result, modelSummary) {
     <div class="metric"><b>${result.verdict.evidence_needed_count}</b><span>evidence gaps</span></div>
   </div><section class="model-summary"><h3>Format-neutral model summary</h3><pre tabindex="0"></pre></section>`;
   root.querySelector(".model-summary pre").textContent = renderModelSummaryTable(modelSummary);
+  const button=document.createElement("button"),label=document.createElement("p");
+  button.type="button";button.textContent="Analyze weights · save JSON";button.id="weight-evidence";
+  label.className="detail";label.textContent="Optional local payload analysis. Detailed charts are available in the Weight workspace at deepbom.org.";
+  root.querySelector("#result").append(button,label);
+  button.onclick=async()=>{
+    button.disabled=true;
+    try {
+      label.textContent="Reading stored values and computing bounded weight analysis…";
+      const evidence=await weightEvidence();
+      if(!button.isConnected)return;
+      const url=URL.createObjectURL(new Blob([JSON.stringify(evidence,null,2)+"\n"],{type:"application/json"})),link=document.createElement("a");
+      link.href=url;link.download="deepbom-weight-evidence.json";link.textContent="Save weight evidence JSON";
+      root.querySelector("#result").append(link);link.click();
+      setTimeout(()=>URL.revokeObjectURL(url),300_000);
+      label.textContent=`${evidence.weight_analysis.coverage.assessed_count}/${evidence.weight_analysis.coverage.inventory_count} tensors assessed. Download requested; if this host blocks downloads, use the Web Weight workspace or local CLI. Results stay in this sandbox.`;
+    } catch(error) {label.textContent=error.message;} finally {button.disabled=false;}
+  };
 }
 
 function renderError(error, code = "analysis_failed") {

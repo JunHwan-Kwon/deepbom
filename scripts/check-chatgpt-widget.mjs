@@ -356,7 +356,10 @@ try {
   const weightDownloadPromise = page.waitForEvent("download");
   await page.click('[data-action="download-weight-ir"]');
   const weightDownload = await weightDownloadPromise;
-  const weightIr = JSON.parse(await readFile(await weightDownload.path(), "utf8"));
+  const weightEvidence = JSON.parse(await readFile(await weightDownload.path(), "utf8"));
+  const weightIr = weightEvidence.weight_ir;
+  assert.equal(weightEvidence.weight_analysis.schema, "deepbom.weight_analysis.v1");
+  assert.equal(weightEvidence.weight_analysis.coverage.assessed_count, 6);
   assert.equal(weightIr.schema, "deepbom.weight_ir.v1");
   assert.equal(weightIr.source.artifact_sha256, expectedSha256);
   assert.equal(weightIr.coverage.assessed_count, 6);

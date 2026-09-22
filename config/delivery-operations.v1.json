@@ -1,8 +1,53 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-21T02:47:43.933698+00:00",
+  "recorded_at": "2026-09-22T06:21:10.199450+00:00",
   "scope": "Public installation channels and private web delivery",
   "observations": [
+    {
+      "kind": "private_web_preflight_basis",
+      "version": "1.105.0",
+      "source_commit": "96a10f289e68fba71d0724e57a68b82bc795aaae",
+      "platform": "linux-x64",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 207.417,
+      "conclusion": "success",
+      "observed_at": "2026-09-22T06:16:16.136888+00:00",
+      "qualification": "90 deployment checks; advanced numerical methods additionally verified against NumPy and six real format decoders. UI final changes have separate browser parity and export checks.",
+      "check_count": 90
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.105.0",
+      "source_commit": "96a10f289e68fba71d0724e57a68b82bc795aaae",
+      "platform": "linux-x64",
+      "command": "node scripts/build-channel-artifacts.mjs --with-dist",
+      "elapsed_seconds": 11.838,
+      "conclusion": "success",
+      "observed_at": "2026-09-22T06:17:22.310931+00:00",
+      "qualification": "Linux x64 npm, MCPB, standalone and Python artifacts from the formally built production WASM; not a six-platform qualification."
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.105.0",
+      "source_commit": "96a10f289e68fba71d0724e57a68b82bc795aaae",
+      "platform": "linux-x64",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --platform-smoke",
+      "elapsed_seconds": 44.002,
+      "conclusion": "success",
+      "observed_at": "2026-09-22T06:18:30.986701+00:00",
+      "qualification": "Installed standalone and Python TFLite/ONNX parity on Linux x64."
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.105.0",
+      "source_commit": "96a10f289e68fba71d0724e57a68b82bc795aaae",
+      "platform": "linux-x64",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --release-contract",
+      "elapsed_seconds": 145.423,
+      "conclusion": "success",
+      "observed_at": "2026-09-22T06:20:56.410324+00:00",
+      "qualification": "Installed npm multi-format and package evidence, local MCP, standalone/Python/Cargo parity, self-test and tamper rejection on Linux x64."
+    },
     {
       "kind": "private_web_preflight_basis",
       "version": "1.104.0",

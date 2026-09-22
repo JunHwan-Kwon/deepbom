@@ -253,12 +253,14 @@ async function checkRealServerContract() {
       "MCP Model Summary identity must remain bound to the same artifact as the canonical envelope");
     assert.equal(modelSummarySelection.sections.model_summary.trainability.trainable_parameter_count, null,
       "MCP Model Summary must not infer framework trainability");
-    session.request(30, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, output_format: "json", weight_analysis: true, section: "weight_ir" } });
+    session.request(30, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, output_format: "json", weight_analysis: true, weight_baseline: onnxPath, section: "weight_ir,weight_analysis,weight_comparison" } });
     const numerical = (await session.response(30)).result;
     assert.equal(numerical.isError, undefined);
     assert.equal(numerical.structuredContent.sections.weight_ir.schema, "deepbom.weight_ir.v1");
     assert.equal(numerical.structuredContent.sections.weight_ir.source.artifact_sha256, envelope.identity.sha256);
-    const numericalCli = spawnSync(process.execPath, ["bin/deepbom.mjs", "audit", onnxPath, "--weight-analysis", "--output-format", "json", "--section", "weight_ir"], { cwd: root, encoding: "utf8" });
+    assert.equal(numerical.structuredContent.sections.weight_analysis.schema, "deepbom.weight_analysis.v1");
+    assert.equal(numerical.structuredContent.sections.weight_comparison.coverage.not_assessed_count, 0);
+    const numericalCli = spawnSync(process.execPath, ["bin/deepbom.mjs", "audit", onnxPath, "--weight-analysis", "--weight-baseline", onnxPath, "--output-format", "json", "--section", "weight_ir,weight_analysis,weight_comparison"], { cwd: root, encoding: "utf8" });
     assert.equal(numericalCli.status, 0, numericalCli.stderr);
     assert.deepEqual(numerical.structuredContent, JSON.parse(numericalCli.stdout));
     session.request(31, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, output_format: "json", activation_evidence: path.resolve("..", "outside-capture.json"), section: "activation_ir" } });

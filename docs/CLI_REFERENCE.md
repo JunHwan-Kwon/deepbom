@@ -58,10 +58,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.104.0`:
+`1.105.0`:
 
 ```console
-DEEPBOM 1.104.0
+DEEPBOM 1.105.0
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -113,7 +113,13 @@ Options:
   --llm-memory-profile <json>
                           Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools
   --output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif
-  --weight-analysis     Opt in to common Weight IR statistics; requires JSON output
+  --weight-analysis     Weight IR plus channels, similarity, SVD, sparsity and quantization; JSON output
+  --weight-baseline <artifact>
+                          Compare aligned weight values against this original artifact
+  --weight-options <json>
+                          Explicit axes, tensor selection and bounded analysis budgets
+  --weight-mapping <json>
+                          Explicit tensor pairs and candidate axis permutations
   --activation-evidence <json>
                           Import hash-bound runtime captures as Activation IR; no execution
   --section <names>      Emit selected analysis sections; use --list-sections to discover names

@@ -187,6 +187,7 @@ docs/schemas/deepbom-model-ir-v1.schema.json
 docs/schemas/deepbom-model-summary-v1.schema.json
 docs/schemas/deepbom-numerical-ir-v1.schema.json
 docs/schemas/deepbom-onnx-contract-conflict-capsule-v1.schema.json
+docs/schemas/deepbom-weight-analysis-v1.schema.json
 docs/zenodo-validation-metadata.json
 examples/expected-output/README.md
 examples/expected-output/gpu-partition-probe.expected.json
@@ -558,6 +559,7 @@ scripts/check-usage-metrics.mjs
 scripts/check-wasm-hardening.mjs
 scripts/check-web-imports.mjs
 scripts/check-web-usage.mjs
+scripts/check-weight-analysis.mjs
 scripts/check-worker-config.mjs
 scripts/check-workflow-contract.mjs
 scripts/check-xnnpack-delegate-rulepack.mjs
@@ -590,6 +592,7 @@ scripts/fixtures/onnx_dynamic_conv.onnx
 scripts/fixtures/onnx_recursive_scope.onnx
 scripts/fixtures/onnx_zero_dim_identity.onnx
 scripts/fixtures/report-boundary-analysis.v1.json.gz
+scripts/fixtures/weight-svd-oracles.json
 scripts/generate-accelerator-llm-samples.py
 scripts/generate-browser-target-profiles.mjs
 scripts/generate-cli-docs.mjs
@@ -603,6 +606,7 @@ scripts/generate-onnx-dynamic-shape-fixtures.py
 scripts/generate-onnx-recursive-scope-fixture.py
 scripts/generate-onnx-shape-schema.mjs
 scripts/generate-sample-onnx.py
+scripts/generate-weight-analysis-schema.mjs
 scripts/gguf-architecture-encoding-corpus-lib.mjs
 scripts/google-legacy-corpus-lib.mjs
 scripts/google-modern-comparator-lib.mjs
@@ -955,6 +959,9 @@ web/lib/numerical-abi-propagation.js
 web/lib/numerical-ir-panel.js
 web/lib/numerical-ir/common.js
 web/lib/numerical-ir/statistics.js
+web/lib/numerical-ir/weight-browser-input.js
+web/lib/numerical-ir/weight-contracts.js
+web/lib/numerical-ir/weight-math.js
 web/lib/numerical-ir/weight-sources.js
 web/lib/nvidia-accelerator-profile.js
 web/lib/offline-device-controller.js
@@ -1149,6 +1156,8 @@ web/lib/theme-ui.js
 web/lib/transformer-architecture-projection.js
 web/lib/visual-export.js
 web/lib/web-usage.js
+web/lib/weight-analysis-view.js
+web/lib/weight-analysis.js
 web/lib/weight-hist.js
 web/lib/weight-ir.js
 web/lib/weight-visuals.js

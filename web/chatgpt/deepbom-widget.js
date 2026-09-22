@@ -155,7 +155,7 @@ async function start() {
       if (remote.size > FULL_FILE_LIMIT) throw new Error("Widget Weight IR is limited to 128 MiB; use the local CLI for larger artifacts.");
       await prepareSandboxWorker();
       const file = new Blob([await remote.slice(0, remote.size).arrayBuffer()]);
-      return staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.WEIGHT_IR, { file, analysis, model: artifactIrContext.model_ir });
+      return staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.WEIGHT_IR, { file, analysis, model: artifactIrContext.model_ir, advanced: true });
     },
   });
 }
@@ -798,12 +798,12 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
     [downloadCycloneDx, "cyclonedx", "cyclonedx_1_7.cdx.json"],
     [downloadSpdx, "spdx", "spdx_2_3.spdx.json"],
     [downloadModelIr, "modelIr", "model-ir.json"],
-    [downloadWeightIr, "weightIr", "weight-ir.json"],
+    [downloadWeightIr, "weightIr", "weight-evidence.json"],
   ]) {
     button.addEventListener("click", () => runVisualAction(button, "Preparing JSON…", status, async () => {
       const document = await exports[key]();
       offerDownload(artifactFilename(result.artifact.filename, suffix), new Blob([`${JSON.stringify(document, null, 2)}\n`], { type: "application/json" }), ["modelIr", "weightIr"].includes(key) ? "evidence_package" : key);
-      status.textContent = `${({ spdx: "SPDX 2.3 artifact inventory", cyclonedx: "CycloneDX 1.7 artifact evidence", modelIr: "Model IR", weightIr: "Weight IR (see coverage and representation)" })[key]} prepared. If no local file appears, select Save via ChatGPT above. This shares the generated JSON, not the model file.`;
+      status.textContent = `${({ spdx: "SPDX 2.3 artifact inventory", cyclonedx: "CycloneDX 1.7 artifact evidence", modelIr: "Model IR", weightIr: "Weight IR and advanced analysis (see per-feature coverage)" })[key]} prepared. If no local file appears, select Save via ChatGPT above. This shares the generated JSON, not the model file.`;
     }));
   }
 

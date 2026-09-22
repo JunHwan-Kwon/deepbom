@@ -146,3 +146,14 @@
   .weight-connections { overflow-x: auto; }
   .weight-connections > svg { min-width: 480px; }
 }
+.weight-inspection-label { display:flex; align-items:center; gap:12px; padding:18px 24px; border-block:1px solid var(--line); color:var(--muted); font:600 12px var(--sans); }
+.weight-inspection-label select { min-width:210px; }
+.weight-baseline-label { padding:0 28px 12px; margin:0; color:var(--muted); font:12px var(--mono); overflow-wrap:anywhere; }
+.weight-table-scroll { max-height:400px; overflow:auto; margin:12px 0; }
+.weight-table-scroll table { width:100%; border-collapse:collapse; font:11px var(--mono); }
+.weight-table-scroll th,.weight-table-scroll td { padding:8px 12px; text-align:right; border-bottom:1px solid var(--line); }
+.weight-table-scroll th:first-child,.weight-table-scroll td:first-child { text-align:left; }
+.weight-kernel-choice { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:14px 0; }
+.weight-kernel-choice input { width:85px; }
+
+.weight-workspace [hidden]{display:none!important}

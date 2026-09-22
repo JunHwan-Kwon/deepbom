@@ -40,8 +40,12 @@ function metadataProgress(id, progress = {}) {
 
 async function runFileScopedOperation(id, operation, payload) {
   if (operation === STATIC_AUDIT_OPERATION.WEIGHT_IR) {
-    const { buildWeightIr } = await import("../lib/weight-ir.js");
-    return buildWeightIr(payload.model, payload.analysis, payload.file, { onProgress: progress => metadataProgress(id, progress) });
+    if (!payload.advanced) {
+      const { buildWeightIr } = await import("../lib/weight-ir.js");
+      return buildWeightIr(payload.model, payload.analysis, payload.file, { onProgress: progress => metadataProgress(id, progress) });
+    }
+    const { buildWeightEvidence } = await import("../lib/weight-analysis.js");
+    return buildWeightEvidence(payload.model, payload.analysis, payload.file, { onProgress: progress => metadataProgress(id, progress) });
   }
   if (operation === STATIC_AUDIT_OPERATION.ARTIFACT_BUNDLE_ANALYZE) {
     const { readArtifactBundle } = await import("../lib/artifact-bundle.js");
