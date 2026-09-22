@@ -2,6 +2,24 @@
 
 All notable archival releases of DEEPBOM are documented here.
 
+## 1.104.0 — Optional numerical evidence
+
+- Add optional Weight IR and Activation IR linked to the existing Model IR hash,
+  storage, tensor, port and operation IDs. Preserve static defaults and the Model
+  IR v1 schema. Account for every stored object, decoder limitation and missing
+  capture without converting unknown values to zero.
+- Reuse ONNX, TFLite, GGUF, SafeTensors, Core ML and ExecuTorch numeric decoders.
+  Report exact decimal counts, shared fixed-bin histograms, stable floating
+  moments, nonfinite counts and exact large-integer extrema. Withhold unsafe
+  floating integer statistics and label stored codes versus dequantized values.
+- Add local CLI/MCP opt-ins, web inspection/export controls, ChatGPT Weight IR
+  downloads and an explicit local ONNX/LiteRT activation collector. Bind runtime,
+  inputs, collector, instrumentation and configuration; do not infer attestation,
+  production timing or per-node GPU placement.
+- Qualify the new numerical layer with count, identity, reference, schema, numeric
+  edge-case and capture-coverage checks. Budget changes account for these optional
+  modules, the collector, public schema, guide and regression tests.
+
 ## Unreleased
 
 - Add an eleven-chapter CLI Handbook and searchable command reference under

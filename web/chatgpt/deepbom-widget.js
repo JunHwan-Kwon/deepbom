@@ -150,6 +150,13 @@ async function start() {
       hash: sha256, fileSizeBytes: remote.size, artifactIr: artifactIrContext.artifact_ir,
     }),
     spdx: () => buildSpdxArtifactDocument(envelope),
+    modelIr: () => artifactIrContext.model_ir,
+    weightIr: async () => {
+      if (remote.size > FULL_FILE_LIMIT) throw new Error("Widget Weight IR is limited to 128 MiB; use the local CLI for larger artifacts.");
+      await prepareSandboxWorker();
+      const file = new Blob([await remote.slice(0, remote.size).arrayBuffer()]);
+      return staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.WEIGHT_IR, { file, analysis, model: artifactIrContext.model_ir });
+    },
   });
 }
 
@@ -609,6 +616,9 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
   const downloadCycloneDx = visualAction("CycloneDX 1.7 JSON", "download-cyclonedx");
   const downloadSpdx = visualAction("SPDX 2.3 JSON", "download-spdx");
   actions.append(downloadCycloneDx, downloadSpdx);
+  const downloadModelIr = visualAction("Model IR JSON", "download-model-ir");
+  const downloadWeightIr = visualAction("Analyze weights · JSON", "download-weight-ir");
+  actions.append(downloadModelIr, downloadWeightIr);
 
   const canSendImage = typeof openai?.uploadFile === "function"
     && typeof openai?.setWidgetState === "function"
@@ -787,11 +797,13 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
   for (const [button, key, suffix] of [
     [downloadCycloneDx, "cyclonedx", "cyclonedx_1_7.cdx.json"],
     [downloadSpdx, "spdx", "spdx_2_3.spdx.json"],
+    [downloadModelIr, "modelIr", "model-ir.json"],
+    [downloadWeightIr, "weightIr", "weight-ir.json"],
   ]) {
     button.addEventListener("click", () => runVisualAction(button, "Preparing JSON…", status, async () => {
-      const document = exports[key]();
-      offerDownload(artifactFilename(result.artifact.filename, suffix), new Blob([`${JSON.stringify(document, null, 2)}\n`], { type: "application/json" }), key);
-      status.textContent = `${key === "spdx" ? "SPDX 2.3 artifact inventory" : "CycloneDX 1.7 artifact evidence"} prepared. If no local file appears, select Save via ChatGPT above. This shares the generated JSON, not the model file.`;
+      const document = await exports[key]();
+      offerDownload(artifactFilename(result.artifact.filename, suffix), new Blob([`${JSON.stringify(document, null, 2)}\n`], { type: "application/json" }), ["modelIr", "weightIr"].includes(key) ? "evidence_package" : key);
+      status.textContent = `${({ spdx: "SPDX 2.3 artifact inventory", cyclonedx: "CycloneDX 1.7 artifact evidence", modelIr: "Model IR", weightIr: "Weight IR (see coverage and representation)" })[key]} prepared. If no local file appears, select Save via ChatGPT above. This shares the generated JSON, not the model file.`;
     }));
   }
 

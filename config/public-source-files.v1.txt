@@ -185,6 +185,7 @@ docs/schemas/deepbom-artifact-ir-v2.schema.json
 docs/schemas/deepbom-conversion-receipt-v1.schema.json
 docs/schemas/deepbom-model-ir-v1.schema.json
 docs/schemas/deepbom-model-summary-v1.schema.json
+docs/schemas/deepbom-numerical-ir-v1.schema.json
 docs/schemas/deepbom-onnx-contract-conflict-capsule-v1.schema.json
 docs/zenodo-validation-metadata.json
 examples/expected-output/README.md
@@ -286,6 +287,7 @@ scripts/build-safetensors-quantization-corpus.mjs
 scripts/build-tensorrt-collector.mjs
 scripts/build-wasm.mjs
 scripts/build-zenodo-release.mjs
+scripts/capture-activation-evidence.py
 scripts/capture-coreml-compute-plan.py
 scripts/capture-gguf-runtime.mjs
 scripts/capture-pinned-ort-profile.mjs
@@ -438,6 +440,8 @@ scripts/check-native-capture-pipeline.mjs
 scripts/check-no-main-thread-heavy-wasm.mjs
 scripts/check-numerical-abi-propagation-viewer.mjs
 scripts/check-numerical-abi-propagation.mjs
+scripts/check-numerical-ir-browser.mjs
+scripts/check-numerical-ir.mjs
 scripts/check-nvidia-accelerator-profile.mjs
 scripts/check-offline-device-controller.mjs
 scripts/check-on-device-llm-v2.mjs
@@ -581,6 +585,7 @@ scripts/fixtures/generate-external-review-gguf.mjs
 scripts/fixtures/generate-external-review-onnx.mjs
 scripts/fixtures/generate-external-review-tflite.py
 scripts/fixtures/generate-quant-risk-tflite.py
+scripts/fixtures/numerical-tensor.ptd.base64.txt
 scripts/fixtures/onnx_dynamic_conv.onnx
 scripts/fixtures/onnx_recursive_scope.onnx
 scripts/fixtures/onnx_zero_dim_identity.onnx
@@ -774,6 +779,7 @@ web/guides/compare-model-artifacts/index.html
 web/guides/index.html
 web/guides/inspect-gguf-tensor-encodings/index.html
 web/guides/inspect-onnx-quantization/index.html
+web/guides/numerical-evidence/index.html
 web/index.html
 web/legal/privacy.html
 web/legal/support.html
@@ -787,6 +793,7 @@ web/lib/accumulator-atlas.js
 web/lib/accumulator-reachability-viewer.js
 web/lib/accumulator-reachability-worker.js
 web/lib/accumulator-reachability.js
+web/lib/activation-ir.js
 web/lib/admin-elements.js
 web/lib/admin-usage.js
 web/lib/analysis-depth-mode.js
@@ -945,6 +952,10 @@ web/lib/node-edge-evidence-overlay.js
 web/lib/node-view.js
 web/lib/numerical-abi-propagation-viewer.js
 web/lib/numerical-abi-propagation.js
+web/lib/numerical-ir-panel.js
+web/lib/numerical-ir/common.js
+web/lib/numerical-ir/statistics.js
+web/lib/numerical-ir/weight-sources.js
 web/lib/nvidia-accelerator-profile.js
 web/lib/offline-device-controller.js
 web/lib/on-device-llm-contract.js
@@ -1139,6 +1150,7 @@ web/lib/transformer-architecture-projection.js
 web/lib/visual-export.js
 web/lib/web-usage.js
 web/lib/weight-hist.js
+web/lib/weight-ir.js
 web/lib/workflow-controller.js
 web/lib/workflow-copy.js
 web/lib/workspace-navigation.js
@@ -1175,4 +1187,5 @@ web/test.html
 web/test.js
 web/verify.html
 web/workers/deepbom-analysis-worker.js
+web/workers/numerical-ir-worker.js
 web/workers/static-audit-worker.js

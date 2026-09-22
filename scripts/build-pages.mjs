@@ -280,7 +280,7 @@ await writeFile(path.join(dist, "sitemap.xml"), [
   "    <loc>https://deepbom.org/claude/</loc>",
   ...sitemapLastmod("web/claude/index.html", { cwd: root }),
   "  </url>",
-  ...["", "cli/", "cli/reference/", "inspect-onnx-quantization/", "inspect-gguf-tensor-encodings/", "compare-model-artifacts/"].flatMap((guide) => [
+  ...["", "cli/", "cli/reference/", "numerical-evidence/", "inspect-onnx-quantization/", "inspect-gguf-tensor-encodings/", "compare-model-artifacts/"].flatMap((guide) => [
     "  <url>",
     `    <loc>https://deepbom.org/guides/${guide}</loc>`,
     ...sitemapLastmod(`web/guides/${guide}index.html`, { cwd: root }),

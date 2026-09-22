@@ -4,6 +4,51 @@
   "scope": "Public installation channels and private web delivery",
   "observations": [
     {
+      "kind": "private_web_preflight_basis",
+      "version": "1.104.0",
+      "source_commit": "62fd9bf6fc1aed4f8de8ebe0ce70ce0f975148bf",
+      "platform": "linux-x64",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 184.709,
+      "conclusion": "success",
+      "observed_at": "2026-09-22T02:14:13.155118+00:00",
+      "qualification": "88 bounded deployment checks; the subsequent MIL immediate-byte and capture-provenance corrections were separately validated by the numerical schema, decoder and browser regressions.",
+      "check_count": 88
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.104.0",
+      "source_commit": "6039b0186b78b41a44894fc210d2b4899451ddcd",
+      "platform": "linux-x64",
+      "command": "node scripts/build-channel-artifacts.mjs --with-dist",
+      "elapsed_seconds": 12.842,
+      "conclusion": "success",
+      "observed_at": "2026-09-22T02:20:02.829473+00:00",
+      "qualification": "Built Linux x64 installation artifacts using the qualified web WASM. This is not a six-platform native qualification."
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.104.0",
+      "source_commit": "6039b0186b78b41a44894fc210d2b4899451ddcd",
+      "platform": "linux-x64",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --platform-smoke",
+      "elapsed_seconds": 50.902,
+      "conclusion": "success",
+      "observed_at": "2026-09-22T02:20:15.713708+00:00",
+      "qualification": "Installed standalone and Python TFLite/ONNX execution parity on Linux x64."
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.104.0",
+      "source_commit": "6039b0186b78b41a44894fc210d2b4899451ddcd",
+      "platform": "linux-x64",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --release-contract",
+      "elapsed_seconds": 159.855,
+      "conclusion": "success",
+      "observed_at": "2026-09-22T02:21:06.656696+00:00",
+      "qualification": "Installed npm across five formats and two package forms, MCP audit, standalone/Python and Cargo parity, self-test and tamper rejection; later capture validation refinements have separate numerical regression coverage."
+    },
+    {
       "kind": "installation_channel_release",
       "version": "1.94.4",
       "repository": "JunHwan-Kwon/deepbom",

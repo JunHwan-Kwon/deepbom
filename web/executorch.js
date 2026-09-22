@@ -1287,3 +1287,25 @@ function safeNumber(value) { return value == null || BigInt(value) > BigInt(Numb
 function toSafeIndex(value, label) { if (value < 0n || value > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error(`${label} ${value} exceeds the JavaScript address range.`); return Number(value); }
 function hexPrefix(bytes) { return [...bytes.subarray(0, 32)].map((value) => value.toString(16).padStart(2, "0")).join(""); }
 function countRows(items, keyFn) { const counts = new Map(); for (const item of items) { const key = keyFn(item); counts.set(key, (counts.get(key) || 0) + 1); } return [...counts.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, count]) => ({ name, count })); }
+
+export function execuTorchNumericRanges(bytes, analysis) {
+  const ranges = new Map();
+  const reader = new BoundedFlatBufferReader(boundedProgramBytes(bytes, parseExtendedHeader(bytes)), LIMITS);
+  let inline = [];
+  if (analysis.executorch_container !== "ptd") inline = reader.tableVector(reader.root("ET12"), 2, "Program.constant_buffer").map(table => reader.vector(table, 0, 1));
+  for (const [position, tensor] of (analysis.tensors || []).entries()) {
+    if (!tensor.constant_buffer || tensor.storage_offset || tensor.external_data_name || tensor.allocation_info) continue;
+    const length = Number(tensor.buffer_data_length_decimal ?? tensor.buffer_data_length);
+    if (!Number.isSafeInteger(length) || length < 0 || tensor.shape.some(d => d < 0)) continue;
+    let start = null;
+    if (analysis.executorch_container === "ptd") start = Number(analysis.executorch_flat_tensor.segments[tensor.segment_index]?.absolute_offset);
+    else if (inline.length) start = inline[tensor.data_buffer_index]?.data;
+    else {
+      const sub = analysis.executorch_program.constant_segment;
+      const segment = analysis.executorch_program.segments?.[sub?.segment_index];
+      if (segment && sub.offsets[tensor.data_buffer_index] != null) start = Number(BigInt(segment.absolute_offset) + BigInt(sub.offsets[tensor.data_buffer_index]));
+    }
+    if (Number.isSafeInteger(start) && start >= 0 && start + length <= bytes.length) ranges.set(`storage:tensor:${tensor.index ?? position}`, { start, end_exclusive: start + length });
+  }
+  return ranges;
+}

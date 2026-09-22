@@ -315,7 +315,8 @@ function parseDelegateDetails(reader) {
 }
 
 export class ProtoReader {
-  constructor(bytes, label) {
+  constructor(bytes, label, numericalFactory = null) {
+    this.numericalFactory = numericalFactory;
     this.bytes = bytes;
     this.position = 0;
     this.label = label;
@@ -414,7 +415,7 @@ export class ProtoReader {
     throw new Error(`${this.label} field ${name} contains a negative or invalid int32.`);
   }
 
-  message(wire, name) { return new ProtoReader(this.bytesField(wire, name), name); }
+  message(wire, name) { return new ProtoReader(this.bytesField(wire, name), name, this.numericalFactory); }
 
   bytesField(wire, name) {
     this.requireWire(wire, 2, name);

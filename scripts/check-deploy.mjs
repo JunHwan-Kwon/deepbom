@@ -32,6 +32,7 @@ const CHECKS = [
   "scripts/check-export-contract-documents.mjs",
   "scripts/check-conversion-receipt.mjs --no-browser",
   "scripts/check-artifact-ir.mjs",
+  "scripts/check-numerical-ir.mjs",
   "scripts/check-artifact-ir-import-boundary.mjs",
   "scripts/check-artifact-ir-consumers.mjs",
   "scripts/check-evidence-ui-contract.mjs",

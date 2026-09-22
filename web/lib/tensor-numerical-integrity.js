@@ -1210,3 +1210,31 @@ export async function scanSerializedTensorPayloads(source, analysis, { chunkByte
 }
 
 export function ggufDequantizationSource() { return GGUF_DEQUANTIZATION_SOURCE; }
+
+// Optional streaming visitor. Reuses the exact decoders used by integrity scans;
+// consumers never have to retain a complete tensor in memory.
+export async function visitSerializedTensorValues(source, analysis, tensor, visitor, { maxValues = 100_000_000, signal } = {}) {
+  const decoder = tensorDecoder(analysis, tensor);
+  if (decoder.status !== "assessed") return decoder;
+  if (tensor.storage_status && /invalid/.test(tensor.storage_status)) return { status: "not_assessed", reason: tensor.storage_status };
+  const range = tensorRange(analysis, tensor), expected = expectedTensorValueCount(tensor);
+  if (expected > maxValues) return { status: "not_assessed", reason: "value_budget_exceeded" };
+  if (![range.start, range.end].every(Number.isSafeInteger) || range.start < 0 || range.end < range.start || range.end > sourceLength(source)) throw new Error("Numeric tensor payload is outside the source artifact.");
+  const unit = decoder.layout.bytes;
+  if ((range.end - range.start) % unit) throw new Error("Numeric tensor payload is not aligned to its encoding unit.");
+  let count = 0;
+  const accumulator = { invalidEncodingCount: 0, blockCount: 0, nonfiniteScaleBlockCount: 0, add(value) { visitor(value, count++); } };
+  const digest = new Sha256Accumulator();
+  const chunk = Math.max(unit, Math.floor(DEFAULT_CHUNK_BYTES / unit) * unit);
+  for (let cursor = range.start; cursor < range.end; cursor += chunk) {
+    signal?.throwIfAborted();
+    const end = Math.min(range.end, cursor + chunk), bytes = await readRange(source, cursor, end);
+    if (bytes.length !== end - cursor) throw new Error("Numeric tensor payload read was truncated.");
+    digest.update(bytes);
+    if (decoder.kind === "scalar") decodeScalarChunk(bytes, decoder.layout, accumulator, decoder.littleEndian);
+    else if (decoder.kind === "safe_packed") decodeSafePackedChunk(bytes, decoder.layout, accumulator);
+    else for (let offset = 0; offset < bytes.length; offset += unit) decodeGgufBlock(bytes.subarray(offset, offset + unit), tensor.dtype, accumulator, decoder.littleEndian);
+  }
+  if (count !== expected) throw new Error(`Numeric tensor decoder emitted ${count} values; its shape declares ${expected}.`);
+  return { status: "assessed", representation: decoder.representation === "real" ? "stored_scalar" : decoder.representation, payload_sha256: digest.digestHex(), count, invalid_encoding_count: accumulator.invalidEncodingCount };
+}

@@ -24,6 +24,7 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
   return {
     schema: CLI_CAPABILITIES_SCHEMA,
     cli_version: String(version),
+    optional_numerical_ir: { weight: { schema: "deepbom.weight_ir.v1", flag: "--weight-analysis", section: "weight_ir", formats: ["onnx", "tflite", "gguf", "safetensors", "coreml", "executorch"], coverage: "decoder-dependent; every storage object is accounted for", execution: false }, activation: { schema: "deepbom.activation_ir.v1", capture_schema: "deepbom.activation_capture.v1", flag: "--activation-evidence", section: "activation_ir", execution: false, trust: "imported evidence; consistency checked, not attested" }, default_enabled: false, output: "json", maximum_weight_values: 100_000_000, maximum_capture_values: 1_000_000 },
     analysis_engine: "shared_browser_cli_javascript_and_tflite_wasm",
     commands: [
       { name: "audit", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },

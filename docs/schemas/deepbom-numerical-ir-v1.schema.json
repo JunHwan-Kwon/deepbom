@@ -1,0 +1,1052 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-numerical-ir-v1.schema.json",
+  "title": "DEEPBOM optional numerical evidence contracts v1",
+  "description": "JSON shape validation must be followed by semantic validation against the exact Model IR: source identity, digests, reference resolution, coverage and count conservation. Execution captures are imported evidence, not attestation.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/weight_ir"
+    },
+    {
+      "$ref": "#/$defs/activation_ir"
+    },
+    {
+      "$ref": "#/$defs/activation_capture"
+    },
+    {
+      "$ref": "#/$defs/bundle"
+    }
+  ],
+  "$defs": {
+    "statistics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value_count",
+        "finite_count",
+        "nonfinite",
+        "zero_count",
+        "negative_zero_count",
+        "precision",
+        "unsafe_integer_count",
+        "integer_minimum",
+        "integer_maximum",
+        "minimum",
+        "maximum",
+        "mean",
+        "population_stddev",
+        "rms",
+        "l2_norm",
+        "overflowed_metrics",
+        "histogram"
+      ],
+      "properties": {
+        "value_count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "finite_count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "nonfinite": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "nan",
+            "positive_infinity",
+            "negative_infinity"
+          ],
+          "properties": {
+            "nan": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            "positive_infinity": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            "negative_infinity": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            }
+          }
+        },
+        "zero_count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "negative_zero_count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "precision": {
+          "enum": [
+            "binary64_rounded_statistics_exact_counts",
+            "not_assessed_unsafe_integer_arithmetic"
+          ]
+        },
+        "unsafe_integer_count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "integer_minimum": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "integer_maximum": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^-?(0|[1-9][0-9]*)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "minimum": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "maximum": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mean": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "population_stddev": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rms": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "l2_norm": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "overflowed_metrics": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "mean",
+              "population_stddev",
+              "rms",
+              "l2_norm"
+            ]
+          }
+        },
+        "histogram": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "method",
+                "interval",
+                "edges",
+                "counts"
+              ],
+              "properties": {
+                "method": {
+                  "const": "fixed_log2_edges_v1"
+                },
+                "interval": {
+                  "const": "left_closed_right_open_last_closed"
+                },
+                "edges": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "counts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)$"
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_ir_sha256",
+        "artifact_sha256",
+        "artifact_set_sha256"
+      ],
+      "properties": {
+        "model_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "artifact_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "artifact_set_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "started_at",
+        "entry_region_ref",
+        "runtime",
+        "collector",
+        "execution",
+        "probe",
+        "runtime_evidence"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "started_at": {
+          "type": "string"
+        },
+        "entry_region_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "version",
+            "configured_providers",
+            "device"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "configured_providers": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "device": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "collector": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "version",
+            "sha256"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifact_sha256",
+            "instrumented_artifact_sha256",
+            "configuration_sha256",
+            "configuration"
+          ],
+          "properties": {
+            "artifact_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "instrumented_artifact_sha256": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "configuration_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "configuration": {
+              "type": "object"
+            }
+          }
+        },
+        "probe": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "description"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "representative_data",
+                "synthetic_ones",
+                "synthetic_zeros",
+                "synthetic_identity",
+                "synthetic_basis",
+                "synthetic_random",
+                "custom"
+              ]
+            },
+            "description": {
+              "type": "string"
+            }
+          }
+        },
+        "runtime_evidence": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "weight_ir": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "method_version",
+        "source",
+        "budget",
+        "coverage",
+        "tensors",
+        "interpretation_boundary",
+        "weight_ir_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.weight_ir.v1"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximum_decoded_values"
+          ],
+          "properties": {
+            "maximum_decoded_values": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "model_storage_count",
+            "inventory_count",
+            "assessed_count",
+            "not_assessed_count",
+            "unlinked_count",
+            "decoded_value_count",
+            "scope",
+            "completeness"
+          ],
+          "properties": {
+            "model_storage_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "inventory_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "assessed_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "not_assessed_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unlinked_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "decoded_value_count": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            "scope": {
+              "const": "all_model_storage_objects_plus_decoder_exposed_payloads"
+            },
+            "completeness": {
+              "enum": [
+                "complete_within_inventory",
+                "partial_within_inventory"
+              ]
+            }
+          }
+        },
+        "tensors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "storage_ref",
+              "native_locator",
+              "name",
+              "dtype",
+              "shape",
+              "status",
+              "reason",
+              "representation",
+              "payload_sha256",
+              "invalid_encoding_count",
+              "binding_refs",
+              "statistics"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "storage_ref": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "native_locator": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "dtype": {
+                "type": "string"
+              },
+              "shape": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "enum": [
+                  "assessed",
+                  "not_assessed"
+                ]
+              },
+              "reason": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "representation": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "stored_scalar",
+                      "dequantized_real",
+                      "complex_magnitude"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "payload_sha256": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "invalid_encoding_count": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "binding_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "statistics": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/statistics"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "interpretation_boundary": {
+          "type": "string"
+        },
+        "weight_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "activation_ir": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "method_version",
+        "source",
+        "capture_sha256",
+        "run",
+        "inputs",
+        "requested_value_refs",
+        "tensors",
+        "missing",
+        "coverage",
+        "interpretation_boundary",
+        "activation_ir_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.activation_ir.v1"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "capture_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "run": {
+          "$ref": "#/$defs/run"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "value_ref",
+              "native_locator",
+              "dtype",
+              "shape",
+              "values_sha256",
+              "statistics"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "value_ref": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "native_locator": {
+                "type": "string"
+              },
+              "dtype": {
+                "type": "string"
+              },
+              "shape": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "values_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "statistics": {
+                "$ref": "#/$defs/statistics"
+              }
+            }
+          }
+        },
+        "requested_value_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tensors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "value_ref",
+              "native_locator",
+              "dtype",
+              "shape",
+              "values_sha256",
+              "statistics"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "value_ref": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "native_locator": {
+                "type": "string"
+              },
+              "dtype": {
+                "type": "string"
+              },
+              "shape": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "values_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "statistics": {
+                "$ref": "#/$defs/statistics"
+              }
+            }
+          }
+        },
+        "missing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value_ref",
+              "reason"
+            ],
+            "properties": {
+              "value_ref": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requested_count",
+            "captured_count",
+            "missing_count",
+            "unmapped_capture_count",
+            "eligible_graph_value_count",
+            "not_requested_value_refs",
+            "scope",
+            "completeness"
+          ],
+          "properties": {
+            "requested_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "captured_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "missing_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unmapped_capture_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "eligible_graph_value_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "not_requested_value_refs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "scope": {
+              "enum": [
+                "all_eligible_serialized_values",
+                "explicit_selected_values",
+                "unmapped_runtime_values"
+              ]
+            },
+            "completeness": {
+              "enum": [
+                "partial_requested_capture",
+                "complete_requested_capture"
+              ]
+            }
+          }
+        },
+        "interpretation_boundary": {
+          "type": "string"
+        },
+        "activation_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "activation_capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "source",
+        "run",
+        "inputs",
+        "requested_value_refs",
+        "captures",
+        "missing"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.activation_capture.v1"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "run": {
+          "$ref": "#/$defs/run"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value_ref",
+              "native_locator",
+              "dtype",
+              "shape",
+              "values"
+            ],
+            "properties": {
+              "value_ref": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "native_locator": {
+                "type": "string"
+              },
+              "dtype": {
+                "type": "string"
+              },
+              "shape": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "values": {
+                "type": "array",
+                "maxItems": 1000000,
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^(NaN|[+]Infinity|-Infinity|-?(0|[1-9][0-9]*))$"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "requested_value_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "captures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value_ref",
+              "native_locator",
+              "dtype",
+              "shape",
+              "values"
+            ],
+            "properties": {
+              "value_ref": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "native_locator": {
+                "type": "string"
+              },
+              "dtype": {
+                "type": "string"
+              },
+              "shape": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "values": {
+                "type": "array",
+                "maxItems": 1000000,
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string",
+                      "pattern": "^(NaN|[+]Infinity|-Infinity|-?(0|[1-9][0-9]*))$"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "missing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value_ref",
+              "reason"
+            ],
+            "properties": {
+              "value_ref": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "source",
+        "weight_ir_sha256",
+        "activation_ir_sha256",
+        "bundle_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.numerical_evidence_bundle.v1"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "weight_ir_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activation_ir_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bundle_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

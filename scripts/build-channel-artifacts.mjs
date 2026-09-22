@@ -66,6 +66,7 @@ const npmBuildResult = await build({
 assertPublicBundleInputs(npmBuildResult.metafile, "npm");
 await copyFile(wasmSource, path.join(npmRoot, "pkg", "tflite_wasm_audit_bg.wasm"));
 await copyFile(selfTestSource, path.join(npmRoot, "bin", "deepbom-self-test.onnx"));
+await copyFile(path.join(root, "scripts", "capture-activation-evidence.py"), path.join(npmRoot, "bin", "capture-activation-evidence.py"));
 await copyFile(path.join(root, "channels", "npm", "README.md"), path.join(npmRoot, "README.md"));
 await copyFile(publicLicense, path.join(npmRoot, "LICENSE"));
 await cp(path.join(root, "skills", "deepbom"), path.join(npmRoot, "skills", "deepbom"), { recursive: true });

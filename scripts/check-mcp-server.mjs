@@ -253,6 +253,17 @@ async function checkRealServerContract() {
       "MCP Model Summary identity must remain bound to the same artifact as the canonical envelope");
     assert.equal(modelSummarySelection.sections.model_summary.trainability.trainable_parameter_count, null,
       "MCP Model Summary must not infer framework trainability");
+    session.request(30, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, output_format: "json", weight_analysis: true, section: "weight_ir" } });
+    const numerical = (await session.response(30)).result;
+    assert.equal(numerical.isError, undefined);
+    assert.equal(numerical.structuredContent.sections.weight_ir.schema, "deepbom.weight_ir.v1");
+    assert.equal(numerical.structuredContent.sections.weight_ir.source.artifact_sha256, envelope.identity.sha256);
+    const numericalCli = spawnSync(process.execPath, ["bin/deepbom.mjs", "audit", onnxPath, "--weight-analysis", "--output-format", "json", "--section", "weight_ir"], { cwd: root, encoding: "utf8" });
+    assert.equal(numericalCli.status, 0, numericalCli.stderr);
+    assert.deepEqual(numerical.structuredContent, JSON.parse(numericalCli.stdout));
+    session.request(31, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, output_format: "json", activation_evidence: path.resolve("..", "outside-capture.json"), section: "activation_ir" } });
+    assert.equal((await session.response(31)).result.isError, true, "Capture inputs must obey allowed roots");
+
   } finally {
     await session.close();
   }

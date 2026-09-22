@@ -4723,3 +4723,15 @@ function formatNumberPlain(value) {
 function formatPercentPlain(value) {
   return `${(Number(value || 0) * 100).toFixed(1)}%`;
 }
+
+// Opt-in numeric adapters reuse the parser's dtype and cardinality checks.
+export function onnxNumericTensorSources(bytes) {
+  const parsed = parseOnnxModel(bytes);
+  return collectOnnxTensorPayloadScopes(parsed.graph, parsed.functions).map(({ scope, role, tensor }) => ({
+    scope, role, name: tensor.name, dtype: tensor.dtype, shape: [...tensor.shape],
+    visit(visitor) { return forEachOnnxInitializerValue(tensor, visitor); },
+  }));
+}
+export function visitDeclaredNumericBytes(bytes, dtype, shape, visitor) {
+  return forEachOnnxInitializerValue({ rawData: bytes, dtype, shape, typedValues: [] }, visitor);
+}

@@ -22,10 +22,10 @@
     <h1>Compare AI model artifacts before release.</h1>
     <p class="lede">A deterministic diff can identify changed bytes, interfaces, graph structure, tensor encodings, or metadata. It cannot decide by itself whether performance, safety, or intended use remains acceptable.</p>
     <section class="brief-section"><h2>Compare matching formats</h2>
-      <pre><code>npx -y deepbom@1.103.1 diff "./baseline.gguf" "./candidate.gguf" \
+      <pre><code>npx -y deepbom@1.104.0 diff "./baseline.gguf" "./candidate.gguf" \
   --tensors --render markdown
 
-npx -y deepbom@1.103.1 diff "./baseline.onnx" "./candidate.onnx" \
+npx -y deepbom@1.104.0 diff "./baseline.onnx" "./candidate.onnx" \
   --summary</code></pre>
       <p>Record both artifact hashes and the analyzer version. For GGUF, the tensor view reports encoding-transition counts, both assignment digests, and the changed tensor rows. Markdown is a presentation of the same structured result, not a separate analysis.</p>
     </section>

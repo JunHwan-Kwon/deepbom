@@ -2309,6 +2309,10 @@ downloadGraphSvg.addEventListener("click", () => {
 downloadModelViews?.addEventListener("click", () => {
   void downloadCurrentModelViews();
 });
+void import("./lib/numerical-ir-panel.js").then(({ installNumericalPanel }) => {
+  installNumericalPanel(artifactDossier?.parentElement, () => ({ model: currentArtifactIrContext?.model_ir, analysis: current, source: pendingModelFile || (currentModelBytes?.length ? new Blob([currentModelBytes]) : null) }));
+});
+
 showModelSummary?.addEventListener("click", () => {
   if (!currentArtifactIrContext?.model_ir || !modelSummaryPanel || !modelSummaryText) return;
   const summary = buildModelSummary(currentArtifactIrContext.model_ir);

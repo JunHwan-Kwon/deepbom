@@ -125,9 +125,10 @@ function halfToNumber(bits) {
   return sign * (1 + fraction / 1024) * 2 ** (exponent - 15);
 }
 
-function byteValueStats(bytes, kind) {
+function byteValueStats(bytes, kind, optionalStatistics = null) {
   const result = { count: 0, finite_count: 0, zero_count: 0, negative_zero_count: 0, nan_count: 0, positive_infinity_count: 0, negative_infinity_count: 0, min: null, max: null };
   const add = (value) => {
+    optionalStatistics?.add(value);
     result.count += 1;
     if (Number.isNaN(value)) { result.nan_count += 1; return; }
     if (value === Number.POSITIVE_INFINITY) { result.positive_infinity_count += 1; return; }
@@ -201,6 +202,7 @@ function parseQuantization(reader) {
 }
 
 function parseWeightParams(reader, role) {
+  const optionalStatistics = reader.numericalFactory?.();
   const result = {
     role, storage: null, value_count: 0, value_count_status: "exact", byte_length: 0, quantization: null, is_updatable: false,
   };
@@ -214,7 +216,7 @@ function parseWeightParams(reader, role) {
     const { field, wire } = reader.key();
     if (field === 1) {
       storageFields.add("float32");
-      const decoded = readFloatStats(reader, wire, `Core ML ${role} floatValue`, false, true, digest);
+      const decoded = readFloatStats(reader, wire, `Core ML ${role} floatValue`, false, true, digest, optionalStatistics ? { push: value => optionalStatistics.add(value) } : null);
       mergeValueStats(values, decoded);
       result.value_count += decoded.count;
       result.byte_length += decoded.count * 4;
@@ -228,7 +230,7 @@ function parseWeightParams(reader, role) {
       result.byte_length += bytes.length;
       if (field === 2 && bytes.length % 2 !== 0) throw new Error(`Core ML ${role} float16 payload has odd byte cardinality`);
       if (field === 2) {
-        const decoded = byteValueStats(bytes, "float16");
+        const decoded = byteValueStats(bytes, "float16", optionalStatistics);
         mergeValueStats(values, decoded);
         result.value_count += decoded.count;
       } else if (field === 31) {
@@ -275,6 +277,7 @@ function parseWeightParams(reader, role) {
     all_zero: result.storage === "raw_quantized" ? null : values.count > 0 && values.zero_count === values.count,
     constant: result.storage === "raw_quantized" ? null : values.count > 0 && nonfinite === 0 && values.min === values.max,
   };
+  if (optionalStatistics) result.optional_statistics = optionalStatistics;
   Object.defineProperty(result, "_raw_payloads", { value: rawPayloads, enumerable: false, configurable: true });
   return result;
 }
@@ -390,6 +393,7 @@ function bindWeightCardinality(weight, shape, axis, label, expectedQuantizationC
         ? code * quantization._scales[channel] + quantization._biases[channel]
         : quantization._lookup_table[code];
       addDecodedValue(decoded, value);
+      weight.optional_statistics?.add(value);
     }
     const nonfinite = decoded.nan_count + decoded.positive_infinity_count + decoded.negative_infinity_count;
     weight.value_count = cardinality;
@@ -433,6 +437,7 @@ function bindWeightCardinality(weight, shape, axis, label, expectedQuantizationC
       const code = raw > 127 ? raw - 256 : raw;
       codes.add(code);
       addDecodedValue(decoded, code * scale);
+      weight.optional_statistics?.add(code * scale);
     }
     const nonfinite = decoded.nan_count + decoded.positive_infinity_count + decoded.negative_infinity_count;
     Object.assign(weight.quantization, {

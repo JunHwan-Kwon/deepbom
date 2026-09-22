@@ -1,4 +1,5 @@
 export const STATIC_AUDIT_OPERATION = Object.freeze({
+  WEIGHT_IR: "weight_ir",
   LOAD_MODEL: "load_model",
   ARTIFACT_BUNDLE_ANALYZE: "artifact_bundle_analyze",
   METADATA_ANALYZE: "metadata_analyze",
@@ -26,6 +27,7 @@ export const STATIC_AUDIT_OPERATION = Object.freeze({
 });
 
 export const FILE_SCOPED_STATIC_AUDIT_OPERATIONS = Object.freeze(new Set([
+  STATIC_AUDIT_OPERATION.WEIGHT_IR,
   STATIC_AUDIT_OPERATION.ARTIFACT_BUNDLE_ANALYZE,
   STATIC_AUDIT_OPERATION.METADATA_ANALYZE,
   STATIC_AUDIT_OPERATION.COREML_ANALYZE,

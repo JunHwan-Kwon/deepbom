@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v585";
+const CACHE_NAME = "tflite-wasm-static-audit-v586";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -113,6 +113,13 @@ const APP_ASSETS = [
   "./lib/node-view.js",
   "./lib/arena-viewer.js",
   "./lib/audit-progress.js",
+  "./lib/activation-ir.js",
+  "./lib/weight-ir.js",
+  "./lib/numerical-ir-panel.js",
+  "./lib/numerical-ir/common.js",
+  "./lib/numerical-ir/statistics.js",
+  "./lib/numerical-ir/weight-sources.js",
+  "./workers/numerical-ir-worker.js",
   "./lib/static-audit-worker-client.js",
   "./lib/static-audit-worker-protocol.js",
   "./lib/tflite-worker-rpc.js",

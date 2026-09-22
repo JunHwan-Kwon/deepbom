@@ -1490,6 +1490,7 @@ function graphFromNeuralNetwork(network, inputs, outputs) {
         byte_length: weight.byte_length,
         value_count: weight.value_count,
         numerical_integrity: weight.numerical_integrity,
+        ...(weight.optional_statistics ? { optional_statistics: weight.optional_statistics.finish() } : {}),
       })),
     },
   };
@@ -2342,7 +2343,7 @@ function analysisFromHeader(header, filename, fileSize) {
   });
 }
 
-function parseTopLevelBytes(bytes, depth = 0) {
+function parseTopLevelBytes(bytes, depth = 0, numericalFactory = null) {
   if (depth > MAX_PIPELINE_DEPTH) throw new Error(`Core ML pipeline nesting exceeds ${MAX_PIPELINE_DEPTH} levels`);
   const reader = new ProtoReader(bytes, "CoreML.Model");
   const singular = new Set();
@@ -2368,16 +2369,16 @@ function parseTopLevelBytes(bytes, depth = 0) {
       header.model_type_field = field;
       if (LEGACY_NEURAL_NETWORK_FIELDS.has(field)) {
         const payload = reader.bytesField(wire, `CoreML.${header.model_type}`);
-        header.neural_network = parseCoreMlNeuralNetwork(new ProtoReader(payload, `CoreML.${header.model_type}`));
+        header.neural_network = parseCoreMlNeuralNetwork(new ProtoReader(payload, `CoreML.${header.model_type}`, numericalFactory));
       } else if (field === 502) {
         const payload = reader.bytesField(wire, "CoreML.mlProgram");
         header.ml_program = parseCoreMlMilProgram(new ProtoReader(payload, "CoreML.MIL.Program"));
       } else if (COREML_CLASSICAL_FIELDS.has(field)) {
         const payload = reader.bytesField(wire, `CoreML.${header.model_type}`);
-        header.classical_model = parseCoreMlClassicalModel(field, new ProtoReader(payload, `CoreML.${header.model_type}`));
+        header.classical_model = parseCoreMlClassicalModel(field, new ProtoReader(payload, `CoreML.${header.model_type}`, numericalFactory));
       } else if (COREML_PIPELINE_FIELDS.has(field)) {
         const payload = reader.bytesField(wire, `CoreML.${header.model_type}`);
-        header.pipeline = parseCoreMlPipeline(field, new ProtoReader(payload, `CoreML.${header.model_type}`), parseTopLevelBytes, depth);
+        header.pipeline = parseCoreMlPipeline(field, new ProtoReader(payload, `CoreML.${header.model_type}`, numericalFactory), (data, level) => parseTopLevelBytes(data, level, numericalFactory), depth);
       } else reader.skip(wire);
     } else reader.skip(wire);
   }
@@ -2621,8 +2622,8 @@ async function parseCoreMlHeaderRange(file, range, depth = 0) {
   return header;
 }
 
-export function parseCoreMlModel(bytes, filename = "model.mlmodel", fileSize = bytes.length) {
-  const header = parseTopLevelBytes(bytes);
+export function parseCoreMlModel(bytes, filename = "model.mlmodel", fileSize = bytes.length, { numericalFactory = null } = {}) {
+  const header = parseTopLevelBytes(bytes, 0, numericalFactory);
   header.payload_read_strategy = "in_memory_source_bytes";
   return analysisFromHeader(header, filename, fileSize);
 }

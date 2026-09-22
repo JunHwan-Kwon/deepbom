@@ -353,6 +353,16 @@ try {
     }
   }
   assert.equal(await page.locator(".visual-downloads a[download]").count(), 5);
+  const weightDownloadPromise = page.waitForEvent("download");
+  await page.click('[data-action="download-weight-ir"]');
+  const weightDownload = await weightDownloadPromise;
+  const weightIr = JSON.parse(await readFile(await weightDownload.path(), "utf8"));
+  assert.equal(weightIr.schema, "deepbom.weight_ir.v1");
+  assert.equal(weightIr.source.artifact_sha256, expectedSha256);
+  assert.equal(weightIr.coverage.assessed_count, 6);
+  assert.equal(weightIr.coverage.decoded_value_count, "5418");
+  assert.equal(weightIr.coverage.not_assessed_count, 0);
+
   assert.equal(await page.evaluate(() => window.__deepbomUploads.length), 0, "Local exports must not upload files");
   await page.click('[data-action="visual-send-chat"]');
   try {

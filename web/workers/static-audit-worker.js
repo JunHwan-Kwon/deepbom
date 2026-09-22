@@ -39,6 +39,10 @@ function metadataProgress(id, progress = {}) {
 }
 
 async function runFileScopedOperation(id, operation, payload) {
+  if (operation === STATIC_AUDIT_OPERATION.WEIGHT_IR) {
+    const { buildWeightIr } = await import("../lib/weight-ir.js");
+    return buildWeightIr(payload.model, payload.analysis, payload.file, { onProgress: progress => metadataProgress(id, progress) });
+  }
   if (operation === STATIC_AUDIT_OPERATION.ARTIFACT_BUNDLE_ANALYZE) {
     const { readArtifactBundle } = await import("../lib/artifact-bundle.js");
     status(id, "Resolving artifact package and range-bound payloads");

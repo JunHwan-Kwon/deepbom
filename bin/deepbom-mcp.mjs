@@ -53,6 +53,8 @@ const TOOLS = Object.freeze([
           enum: [...AUDIT_OUTPUT_FORMATS],
           description: "summary is the bounded human-readable default. Request envelope for the canonical cross-format contract, json/json-compact for format-specific evidence, CycloneDX 1.7, or SARIF explicitly.",
         },
+        weight_analysis: { type: "boolean", description: "Explicitly opt in to serialized numeric statistics. Use output_format=json and section=weight_ir. Does not execute the model." },
+        activation_evidence: { type: "string", description: "Local hash-bound activation capture JSON under allowed roots. Imports execution evidence; does not execute a model. Use output_format=json and section=activation_ir." },
         scan: { type: "string", enum: [...SCAN_MODES], description: "Bounded scan policy. structure avoids payload integrity work; integrity streams supported payload checks; full requests all supported static analysis." },
         section: { type: "string", description: "Emit only these analysis sections, comma-separated. Use list_sections first. model_summary returns deepbom.model_summary.v1. Applies to json formats." },
         tensors: { type: "boolean", description: "For a GGUF artifact, return the bounded structure-only deepbom.tensor_table.v1 projection instead of the full tensor/numerical ledgers." },
@@ -305,6 +307,8 @@ function commandArguments(name, args, roots) {
     if (args.target) argv.push("--target", String(args.target));
     if (args.external_data_dir) argv.push("--external-data-dir", requiredLocalPath(args.external_data_dir, "external_data_dir", roots));
     appendRemoteControls(argv, args, roots);
+    if (args.weight_analysis) argv.push("--weight-analysis");
+    if (args.activation_evidence) argv.push("--activation-evidence", requiredLocalPath(args.activation_evidence, "activation_evidence", roots));
     if (args.gate === "defects") argv.push("--gate", "defects");
     if (args.policy) argv.push("--policy", String(args.policy));
     return argv;
@@ -337,7 +341,7 @@ function validateToolArguments(name, args) {
   if (!args || typeof args !== "object" || Array.isArray(args)) throw new Error("Tool arguments must be a JSON object.");
   const allowed = {
     deepbom_capabilities: [],
-    deepbom_audit: ["path", "output_format", "scan", "section", "tensors", "tensor_offset", "tensor_limit", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
+    deepbom_audit: ["weight_analysis", "activation_evidence", "path", "output_format", "scan", "section", "tensors", "tensor_offset", "tensor_limit", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
     deepbom_diff: ["baseline", "candidate", "target", "expected_sha256", "cache_dir", "offline", "max_download_gib", "tensors", "tensor_offset", "tensor_limit"],
     deepbom_explain_rule: ["rule"],
   }[name];
@@ -345,7 +349,7 @@ function validateToolArguments(name, args) {
   const extra = Object.keys(args).filter((key) => !allowed.includes(key));
   if (extra.length) throw new Error(`Undeclared tool argument${extra.length === 1 ? "" : "s"}: ${extra.sort().join(", ")}.`);
 
-  const booleanFields = ["tensors", "list_sections", "offline"];
+  const booleanFields = ["weight_analysis", "tensors", "list_sections", "offline"];
   const integerFields = ["max_download_gib", "tensor_offset", "tensor_limit"];
   for (const key of allowed.filter((key) => !booleanFields.includes(key) && !integerFields.includes(key))) {
     if (Object.hasOwn(args, key) && typeof args[key] !== "string") throw new Error(`The ${key} argument must be a string.`);
