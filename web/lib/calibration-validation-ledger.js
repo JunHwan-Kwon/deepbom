@@ -1,8 +1,11 @@
+import { ExactComparison } from "./numerical-ir/exact-moments.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 
 export const REPRESENTATIVE_DATASET_CAPTURE_SCHEMA = "deepbom.representative_dataset_capture.v1";
 export const CALIBRATION_VALIDATION_LEDGER_SCHEMA = "deepbom.calibration_validation_ledger.v1";
+
+const comparisonAccumulators = new WeakMap();
 
 const MAX_SAMPLES = 10_000;
 const MAX_VALUES = 20_000_000;
@@ -31,7 +34,7 @@ export function buildCalibrationValidationLedger(capture, { expectedArtifactSha2
   const aggregate = aggregateSamples(samples);
   const ledger = {
     schema: CALIBRATION_VALIDATION_LEDGER_SCHEMA,
-    method_version: "2026-08-16.1",
+    method_version: "2026-09-23.1",
     status: "assessed",
     evidence_class: "DERIVED_FROM_HASH_BOUND_CAPTURED_DATASET",
     artifact_sha256: capture.artifact_sha256,
@@ -152,11 +155,10 @@ function buildSample(sample, sampleIndex, expectedInterface) {
     ? runs.map((run) => compareTensorLists(references, run.outputs, `${sample.sample_id}/reference/run_${run.run_index}`))
     : [];
   const repeatComparisons = runs.slice(1)
-    .map((run) => ({
-      baseline_run_index: runs[0].run_index,
-      candidate_run_index: run.run_index,
-      ...compareTensorLists(firstOutputs, run.outputs, `${sample.sample_id}/run_${runs[0].run_index}/run_${run.run_index}`),
-    }));
+    .map((run) => Object.assign(
+      compareTensorLists(firstOutputs, run.outputs, `${sample.sample_id}/run_${runs[0].run_index}/run_${run.run_index}`),
+      { baseline_run_index: runs[0].run_index, candidate_run_index: run.run_index },
+    ));
   return {
     sample_index: sampleIndex,
     sample_id: sample.sample_id,
@@ -345,52 +347,34 @@ function compareTensorLists(reference, candidate, label) {
   const tensors = reference.map((left, index) => compareTensor(left, candidate[index], index));
   const total = tensors.reduce((sum, row) => sum + row.element_count, 0);
   const changed = tensors.reduce((sum, row) => sum + row.changed_value_count, 0);
-  const totalAbs = tensors.reduce((sum, row) => sum + row.total_absolute_difference, 0);
-  const sumSq = tensors.reduce((sum, row) => sum + row.sum_squared_difference, 0);
-  const referenceSq = tensors.reduce((sum, row) => sum + row.reference_sum_squares, 0);
-  const dot = tensors.reduce((sum, row) => sum + row.dot_product, 0);
-  const candidateSq = tensors.reduce((sum, row) => sum + row.candidate_sum_squares, 0);
-  return {
+  const accumulator = tensors.reduce((acc, row) => acc.merge(comparisonAccumulators.get(row)), new ExactComparison());
+  const result = {
     tensor_count: tensors.length,
     value_count: total,
     changed_value_count: changed,
     changed_value_ratio: total ? changed / total : 0,
-    total_absolute_difference: totalAbs,
-    mean_absolute_difference: total ? totalAbs / total : 0,
-    root_mean_square_difference: total ? Math.sqrt(sumSq / total) : 0,
-    maximum_absolute_difference: Math.max(0, ...tensors.map((row) => row.maximum_absolute_difference)),
-    relative_l2_difference: referenceSq > 0 ? Math.sqrt(sumSq / referenceSq) : null,
-    cosine_distance: referenceSq > 0 && candidateSq > 0 ? 1 - clamp(dot / Math.sqrt(referenceSq * candidateSq), -1, 1) : null,
+    ...accumulator.finish(),
     raw_argmax_flip_count: tensors.reduce((sum, row) => sum + Number(row.raw_argmax_changed), 0),
     exact_value_identity: changed === 0,
-    tensors: tensors.map(({ sum_squared_difference, reference_sum_squares, dot_product, candidate_sum_squares, ...row }) => row),
+    tensors,
   };
+  comparisonAccumulators.set(result, accumulator);
+  return result;
 }
 
 function compareTensor(reference, candidate, outputIndex) {
   let changed = 0;
-  let totalAbs = 0;
-  let sumSq = 0;
-  let maximum = 0;
-  let referenceSq = 0;
-  let candidateSq = 0;
-  let dot = 0;
+  const accumulator = new ExactComparison();
   for (let index = 0; index < reference.values.length; index += 1) {
     const left = reference.values[index];
     const right = candidate.values[index];
-    if (!Object.is(left, right)) changed += 1;
-    const delta = right - left;
-    const absolute = Math.abs(delta);
-    totalAbs += absolute;
-    sumSq += delta * delta;
-    maximum = Math.max(maximum, absolute);
-    referenceSq += left * left;
-    candidateSq += right * right;
-    dot += left * right;
+    // Captures use canonical JSON, which identifies +0 and -0.
+    if (left !== right) changed += 1;
+    accumulator.add(left, right);
   }
   const referenceArgmax = stableArgmax(reference.values);
   const candidateArgmax = stableArgmax(candidate.values);
-  return {
+  const result = {
     output_index: outputIndex,
     tensor_index: reference.tensor_index,
     name: reference.name,
@@ -402,20 +386,13 @@ function compareTensor(reference, candidate, outputIndex) {
     candidate_tensor_sha256: candidate.tensor_capture_sha256,
     changed_value_count: changed,
     changed_value_ratio: reference.element_count ? changed / reference.element_count : 0,
-    total_absolute_difference: totalAbs,
-    mean_absolute_difference: reference.element_count ? totalAbs / reference.element_count : 0,
-    root_mean_square_difference: reference.element_count ? Math.sqrt(sumSq / reference.element_count) : 0,
-    maximum_absolute_difference: maximum,
-    relative_l2_difference: referenceSq > 0 ? Math.sqrt(sumSq / referenceSq) : null,
-    cosine_distance: referenceSq > 0 && candidateSq > 0 ? 1 - clamp(dot / Math.sqrt(referenceSq * candidateSq), -1, 1) : null,
+    ...accumulator.finish(),
     reference_raw_argmax_index: referenceArgmax,
     candidate_raw_argmax_index: candidateArgmax,
     raw_argmax_changed: referenceArgmax !== candidateArgmax,
-    sum_squared_difference: sumSq,
-    reference_sum_squares: referenceSq,
-    candidate_sum_squares: candidateSq,
-    dot_product: dot,
   };
+  comparisonAccumulators.set(result, accumulator);
+  return result;
 }
 
 function assertTensorListContract(expected, actual, label) {
@@ -456,8 +433,8 @@ function aggregateSamples(samples) {
 function aggregateComparisons(rows, assessedSamples, totalSamples, notAssessedStatus) {
   const values = rows.reduce((sum, row) => sum + row.value_count, 0);
   const changed = rows.reduce((sum, row) => sum + row.changed_value_count, 0);
-  const totalAbs = rows.reduce((sum, row) => sum + row.total_absolute_difference, 0);
-  const sumSq = rows.reduce((sum, row) => sum + row.root_mean_square_difference ** 2 * row.value_count, 0);
+  const accumulator = rows.reduce((acc, row) => acc.merge(comparisonAccumulators.get(row)), new ExactComparison());
+  const metrics = accumulator.finish();
   return {
     status: rows.length ? "assessed" : notAssessedStatus,
     assessed_sample_count: assessedSamples,
@@ -466,9 +443,10 @@ function aggregateComparisons(rows, assessedSamples, totalSamples, notAssessedSt
     compared_value_count: values,
     changed_value_count: changed,
     changed_value_ratio: values ? changed / values : null,
-    mean_absolute_difference: values ? totalAbs / values : null,
-    root_mean_square_difference: values ? Math.sqrt(sumSq / values) : null,
-    maximum_absolute_difference: rows.length ? Math.max(...rows.map((row) => row.maximum_absolute_difference)) : null,
+    mean_absolute_difference: values ? metrics.mean_absolute_difference : null,
+    root_mean_square_difference: values ? metrics.root_mean_square_difference : null,
+    maximum_absolute_difference: rows.length ? metrics.maximum_absolute_difference : null,
+    unrepresentable_metrics: metrics.unrepresentable_metrics,
     maximum_relative_l2_difference: finiteMaximum(rows.map((row) => row.relative_l2_difference)),
     maximum_cosine_distance: finiteMaximum(rows.map((row) => row.cosine_distance)),
     raw_argmax_flip_count: rows.reduce((sum, row) => sum + row.raw_argmax_flip_count, 0),

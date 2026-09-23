@@ -70,13 +70,15 @@ pub(super) fn analyze(ops: &[OpInfo], target: &TargetProfile) -> CoreIsolationAn
         Some("The target profile does not bind the core count represented by effective_peak_gops. Create a custom target with an exact system core count and peak-reference core count before comparing isolated-core scenarios.".to_string())
     } else if system_options.is_empty() {
         Some("The target profile does not bind an exact supported system core-count option. Core partition performance is intentionally not inferred from the ISA label alone.".to_string())
+    } else if ops.iter().any(|op| op.bottleneck_assessment_status != "assessed") {
+        Some("One or more operators lack a closed arithmetic or logical I/O payload contract; a complete core-allocation estimate is not assessable.".to_string())
     } else {
         None
     };
 
     let mut scenarios = Vec::new();
     if let Some(reference) = reference_cores {
-        if reference > 0 {
+        if reference > 0 && unavailable_reason.is_none() {
             for system_cores in &system_options {
                 let mut group = Vec::new();
                 for assigned_cores in 1..=*system_cores {

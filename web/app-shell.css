@@ -2222,3 +2222,11 @@ body.privacy-locked .layout {
   border-radius: 8px;
   background: var(--surface);
 }
+@media (max-width: 640px) {
+  label:has(input[type="checkbox"]) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

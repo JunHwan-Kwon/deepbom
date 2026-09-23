@@ -63,13 +63,13 @@ pub(super) struct SubgraphOperatorIntrinsic {
     pub(super) inputs: Vec<i32>,
     pub(super) outputs: Vec<i32>,
     pub(super) nominal_macs: Option<f64>,
-    nominal_macs_decimal: Option<String>,
+    pub(super) nominal_macs_decimal: Option<String>,
     pub(super) mac_assessment_status: &'static str,
     mac_formula_class: &'static str,
     pub(super) mac_assessment_reason: String,
     logical_io_payload_bytes: Option<usize>,
     assessed_logical_io_payload_bytes: usize,
-    logical_io_payload_status: &'static str,
+    pub(super) logical_io_payload_status: &'static str,
     present_io_tensor_slot_count: usize,
     assessed_io_tensor_slot_count: usize,
     unassessed_io_tensor_slot_count: usize,
@@ -283,7 +283,10 @@ pub(super) fn build_tflite_subgraph_inventory(
                 checked_tensor_indices(fb, operator, 1, "Operator.inputs", tensors.len(), true)?;
             let op_outputs =
                 checked_tensor_indices(fb, operator, 2, "Operator.outputs", tensors.len(), true)?;
+            let adjoints = batch_matmul_adjoints(fb, operator, op_name)?;
             operator_intrinsics.push(build_operator_intrinsic(
+                adjoints,
+                pool_filter(fb, operator, op_name)?,
                 op_index,
                 op_name,
                 op_version,
@@ -491,6 +494,8 @@ fn build_tensor_intrinsic(tensor: &TensorInfo) -> SubgraphTensorIntrinsic {
 }
 
 fn build_operator_intrinsic(
+    adjoints: (bool, bool),
+    pool_filter: Option<(i32, i32)>,
     operator_index: usize,
     name: &str,
     version: i32,
@@ -500,9 +505,9 @@ fn build_operator_intrinsic(
     tensor_intrinsics: &[SubgraphTensorIntrinsic],
 ) -> Result<SubgraphOperatorIntrinsic, String> {
     let (estimated_macs, estimated_ops, estimated_bytes, estimated_input_strip) =
-        estimate_op(name, &inputs, &outputs, tensors);
+        estimate_op(name, &inputs, &outputs, tensors, adjoints, pool_filter);
     let (mac_assessment_status, mac_formula_class, mac_value, mac_reason) =
-        assess_intrinsic_macs(name, &inputs, &outputs, tensors, estimated_macs);
+        assess_intrinsic_macs(name, &inputs, &outputs, tensors, estimated_macs, adjoints);
     let io_payload = payload_ledger(
         inputs.iter().chain(outputs.iter()).copied(),
         tensor_intrinsics,
@@ -513,7 +518,7 @@ fn build_operator_intrinsic(
         version,
         inputs,
         outputs,
-        nominal_macs: mac_value.map(|value| value as f64),
+        nominal_macs: mac_value.filter(|value| *value <= JS_SAFE_INTEGER).map(|value| value as f64),
         nominal_macs_decimal: mac_value.map(|value| value.to_string()),
         mac_assessment_status,
         mac_formula_class,
@@ -542,7 +547,8 @@ fn assess_intrinsic_macs(
     outputs: &[i32],
     tensors: &[TensorInfo],
     estimated_macs: f64,
-) -> (&'static str, &'static str, Option<u64>, String) {
+    adjoints: (bool, bool),
+) -> (&'static str, &'static str, Option<u128>, String) {
     let formula_class = mac_formula_class(name);
     if formula_class == "not_applicable" {
         return (
@@ -553,19 +559,18 @@ fn assess_intrinsic_macs(
         );
     }
     if formula_class == "derived_nominal_dense" || name == "TRANSPOSE_CONV" {
-        if let Err(reason) = validate_nominal_mac_shape_contract(name, inputs, outputs, tensors) {
+        if let Err(reason) = validate_nominal_mac_shape_contract(name, inputs, outputs, tensors, adjoints) {
             return ("not_assessed", formula_class, None, reason);
         }
     }
-    let Some(value) = lossless_nonnegative_integer(estimated_macs) else {
-        return (
-            "not_assessed",
-            formula_class,
-            None,
-            format!(
-                "The shared TFLite arithmetic estimator did not produce a finite non-negative integer within the JSON safe-integer range for {name}."
-            ),
-        );
+    let exact = if formula_class == "derived_nominal_dense" {
+        exact_nominal_macs(name, inputs, outputs, tensors, adjoints)
+    } else {
+        lossless_nonnegative_integer(estimated_macs).map(u128::from)
+    };
+    let Some(value) = exact else {
+        return ("not_assessed", formula_class, None,
+            format!("The {name} MAC product exceeds the checked integer range or its scenario formula is unavailable."));
     };
     if formula_class == "modeled_scenario" && value == 0 {
         return (
@@ -606,12 +611,10 @@ fn assess_intrinsic_macs(
 
 fn mac_formula_class(name: &str) -> &'static str {
     match name {
-        "CONV_2D" | "DEPTHWISE_CONV_2D" | "FULLY_CONNECTED" | "TRANSPOSE_CONV" | "CONV_3D" => {
+        "CONV_2D" | "DEPTHWISE_CONV_2D" | "FULLY_CONNECTED" | "TRANSPOSE_CONV" | "CONV_3D" | "CONV_3D_TRANSPOSE" | "BATCH_MATMUL" => {
             "derived_nominal_dense"
         }
-        "BATCH_MATMUL"
-        | "CONV_3D_TRANSPOSE"
-        | "STABLEHLO_CONVOLUTION"
+        "STABLEHLO_CONVOLUTION"
         | "STABLEHLO_DOT_GENERAL"
         | "LSTM"
         | "UNIDIRECTIONAL_SEQUENCE_LSTM"
@@ -628,6 +631,7 @@ fn validate_nominal_mac_shape_contract(
     inputs: &[i32],
     outputs: &[i32],
     tensors: &[TensorInfo],
+    adjoints: (bool, bool),
 ) -> Result<(), String> {
     let tensor = |indices: &[i32], slot: usize, role: &str| -> Result<&TensorInfo, String> {
         let index = indices
@@ -697,18 +701,49 @@ fn validate_nominal_mac_shape_contract(
                 return Err("FULLY_CONNECTED output width does not equal the serialized weight output-unit dimension".to_string());
             }
         }
-        "CONV_3D" => {
-            let input = tensor(inputs, 0, "input")?;
+        "CONV_3D" | "CONV_3D_TRANSPOSE" => {
+            let transposed = name == "CONV_3D_TRANSPOSE";
+            let input = tensor(inputs, if transposed { 2 } else { 0 }, "input")?;
             let filter = tensor(inputs, 1, "filter")?;
             let output = tensor(outputs, 0, "output")?;
             static_rank(input, 5, "input")?;
             static_rank(filter, 5, "filter")?;
             static_rank(output, 5, "output")?;
             if input.shape[0] != output.shape[0]
-                || filter.shape[3] != input.shape[4]
-                || filter.shape[4] != output.shape[4]
+                || filter.shape[if transposed { 4 } else { 3 }] != input.shape[4]
+                || filter.shape[if transposed { 3 } else { 4 }] != output.shape[4]
             {
                 return Err("CONV_3D input/filter/output channel or batch dimensions do not satisfy the pinned nominal DHWIO/NDHWC contract".to_string());
+            }
+        }
+        "BATCH_MATMUL" => {
+            let lhs = tensor(inputs, 0, "lhs")?;
+            let rhs = tensor(inputs, 1, "rhs")?;
+            let output = tensor(outputs, 0, "output")?;
+            let rank = lhs.shape.len().max(rhs.shape.len());
+            if lhs.shape.len() < 2 || rhs.shape.len() < 2 || rank > 5 {
+                return Err("BATCH_MATMUL requires input ranks 2 through 5".to_string());
+            }
+            static_rank(lhs, lhs.shape.len(), "lhs")?;
+            static_rank(rhs, rhs.shape.len(), "rhs")?;
+            static_rank(output, rank, "output")?;
+            let l = lhs.shape.len(); let r = rhs.shape.len();
+            let m = lhs.shape[l - if adjoints.0 { 1 } else { 2 }];
+            let k = lhs.shape[l - if adjoints.0 { 2 } else { 1 }];
+            let rk = rhs.shape[r - if adjoints.1 { 1 } else { 2 }];
+            let n = rhs.shape[r - if adjoints.1 { 2 } else { 1 }];
+            if k != rk || output.shape[rank - 2] != m || output.shape[rank - 1] != n {
+                return Err("BATCH_MATMUL contracting/output dimensions conflict with adj_x/adj_y".to_string());
+            }
+            for axis in 0..rank - 2 {
+                let a = if axis < rank - l { 1 } else { lhs.shape[axis - (rank - l)] };
+                let b = if axis < rank - r { 1 } else { rhs.shape[axis - (rank - r)] };
+                let broadcast = if a == b || b == 1 { a } else if a == 1 { b } else {
+                    return Err("BATCH_MATMUL batch dimensions cannot broadcast".to_string());
+                };
+                if output.shape[axis] != broadcast {
+                    return Err("BATCH_MATMUL output batch dimension contradicts broadcast".to_string());
+                }
             }
         }
         "TRANSPOSE_CONV" => {
@@ -809,15 +844,15 @@ fn build_subgraph_intrinsic_cost(
             .filter(|row| row.mac_assessment_status == status)
             .try_fold(0u128, |sum, row| {
                 let value = row
-                    .nominal_macs
-                    .and_then(lossless_nonnegative_integer)
+                    .nominal_macs_decimal.as_ref()
+                    .and_then(|value| value.parse::<u128>().ok())
                     .ok_or_else(|| {
                         format!(
                             "S{} {} lost its assessed MAC value",
                             row.operator_index, row.name
                         )
                     })?;
-                sum.checked_add(value as u128)
+                sum.checked_add(value)
                     .ok_or_else(|| "Intrinsic MAC subtotal overflows u128".to_string())
             })
     };
@@ -904,7 +939,7 @@ fn build_subgraph_intrinsic_cost(
         logical_constant_reference_bytes,
         physical_unique_constant_bytes,
         physical_unique_constant_buffer_count: physical_constant_buffers.len(),
-        method: "Use the same TFLite estimate_op implementation as primary-graph analysis exactly once per serialized operator. Promote only shape-validated Conv2D, DepthwiseConv2D, FullyConnected, and Conv3D dense nominal formulas; retain other existing formulas in a separate modeled-scenario subtotal. Compute payloads through deterministic_tensor_payload_assessment with checked integer sums and no unknown-to-zero substitution.",
+        method: "Use the same TFLite estimate_op implementation as primary-graph analysis exactly once per serialized operator. Use checked integer products for shape-validated Conv2D, DepthwiseConv2D, FullyConnected, Conv3D, both transpose convolutions, and BatchMatMul with serialized adjoints/broadcast contracts; retain other existing formulas in a separate modeled-scenario subtotal. Compute payloads through deterministic_tensor_payload_assessment with checked integer sums and no unknown-to-zero substitution.",
         interpretation_boundary: "Intrinsic values describe one invocation of this subgraph at its serialized shape. Logical tensor and operator-I/O payloads are cardinality ledgers, not arena size, cache traffic, physical copies, or runtime memory. Nominal MACs are graph-complexity definitions, not retired hardware instructions. Cross-subgraph execution totals require observed invocation counts.",
     })
 }
@@ -1287,4 +1322,47 @@ fn push_reference(
         target_subgraph_name: target_subgraph_name.clone(),
     });
     Ok(())
+}
+
+// FlatBuffer booleans are bytes; reject malformed values instead of coercing
+// them into a different arithmetic contract.
+pub(super) fn batch_matmul_adjoints(fb: &Fb<'_>, operator: usize, name: &str) -> Result<(bool, bool), String> {
+    if name != "BATCH_MATMUL" { return Ok((false, false)); }
+    let kind = fb.checked_i8_field(operator, 3, 0, "Operator.builtin_options_type")?;
+    let options = fb.checked_table_field(operator, 4, "Operator.builtin_options")?;
+    if kind != 0 && kind != 101 { return Err("BATCH_MATMUL requires BatchMatMulOptions (101)".to_string()); }
+    let flag = |field, label| -> Result<bool, String> {
+        let value = match options { Some(table) => fb.checked_i8_field(table, field, 0, label)?, None => 0 };
+        match value { 0 => Ok(false), 1 => Ok(true), _ => Err(format!("{label} must be a serialized boolean")) }
+    };
+    Ok((flag(0, "BatchMatMulOptions.adj_x")?, flag(1, "BatchMatMulOptions.adj_y")?))
+}
+
+fn exact_nominal_macs(name: &str, inputs: &[i32], outputs: &[i32], tensors: &[TensorInfo], adjoints: (bool, bool)) -> Option<u128> {
+    // Called only after rank, channel, batch and contraction validation.
+    let weight = &tensors[*inputs.get(1)? as usize].shape;
+    let output = &tensors[*outputs.first()? as usize].shape;
+    let factors: Vec<i32> = match name {
+        "CONV_2D" => output[..3].iter().chain(weight.iter()).copied().collect(),
+        "DEPTHWISE_CONV_2D" => output.iter().copied().chain([weight[1], weight[2]]).collect(),
+        "FULLY_CONNECTED" => output.iter().copied().chain([weight[1]]).collect(),
+        "BATCH_MATMUL" => output.iter().copied().chain([weight[weight.len() - if adjoints.1 { 1 } else { 2 }]]).collect(),
+        "CONV_3D" => output[..4].iter().chain(weight.iter()).copied().collect(),
+        "TRANSPOSE_CONV" | "CONV_3D_TRANSPOSE" => {
+            let input = &tensors[*inputs.get(2)? as usize].shape;
+            input[..input.len() - 1].iter().chain(weight.iter()).copied().collect()
+        }
+        _ => return None,
+    };
+    if factors.contains(&0) { return Some(0); }
+    factors.iter().try_fold(1u128, |product, value| product.checked_mul(u128::try_from(*value).ok()?))
+}
+
+pub(super) fn pool_filter(fb: &Fb<'_>, operator: usize, name: &str) -> Result<Option<(i32, i32)>, String> {
+    if !matches!(name, "AVERAGE_POOL_2D" | "MAX_POOL_2D" | "L2_POOL_2D") { return Ok(None); }
+    let Some(options) = fb.checked_table_field(operator, 4, "Operator.builtin_options")? else { return Ok(None); };
+    let width = fb.checked_i32_field(options, 3, 0, "Pool2DOptions.filter_width")?;
+    let height = fb.checked_i32_field(options, 4, 0, "Pool2DOptions.filter_height")?;
+    if width <= 0 || height <= 0 { return Err("Pool2D filter dimensions must be positive".to_string()); }
+    Ok(Some((height, width)))
 }

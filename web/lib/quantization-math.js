@@ -35,7 +35,10 @@ function frexpPositive(value) {
 }
 
 export function roundTiesAway(value) {
-  return value >= 0 ? Math.floor(value + 0.5) : Math.ceil(value - 0.5);
+  if (!Number.isFinite(value)) return value;
+  const absolute = Math.abs(value), integer = Math.floor(absolute);
+  const rounded = integer + Number(absolute - integer >= 0.5);
+  return value < 0 || Object.is(value, -0) ? -rounded : rounded;
 }
 
 export function multiplyByQuantizedMultiplierDefault(value, multiplier, shift) {

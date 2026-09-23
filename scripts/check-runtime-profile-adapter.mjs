@@ -37,6 +37,21 @@ const parsedProfile = parseRuntimeProfileSource(JSON.stringify(events), analysis
 expectEqual(parsedProfile.kind, "onnxruntime_profile", "Raw ORT trace should be detected.");
 expectEqual(parsedProfile.kernel_event_count, 5, "Only complete ORT node kernel events should enter mapping.");
 
+for (const invalid of [null, false, true, "", [], {}]) {
+  expectThrows(() => parseRuntimeProfileSource(JSON.stringify([
+    nodeEvent("conv0_kernel_time", invalid, "Conv", "CPUExecutionProvider", 1),
+  ]), analysis), "no valid Node", "Invalid node IDs must not coerce to zero or one.");
+  expectThrows(() => parseRuntimeProfileSource(JSON.stringify([
+    nodeEvent("conv0_kernel_time", 0, "Conv", "CPUExecutionProvider", invalid),
+  ]), analysis), "no valid Node", "Missing or nonnumeric duration must not become a zero-duration observation.");
+  expectThrows(() => parseRuntimeProfileSource(JSON.stringify([
+    nodeEvent("conv0_kernel_time", 0, "Conv", "CPUExecutionProvider", 1, floatContract([[invalid, 3]], [[1, 4]])),
+  ]), analysis), "invalid concrete tensor shape", "Invalid executed dimensions must not become concrete dimensions.");
+}
+expectThrows(() => parseRuntimeProfileSource(JSON.stringify([
+  nodeEvent("conv0_kernel_time", 0, "Conv", "CPUExecutionProvider", 1, { ...floatContract([[1, 3]], [[1, 4]]), output_size: 9007199254740992 }),
+]), analysis), "safe integer", "Already rounded JSON byte numbers cannot claim an exact decimal identity.");
+
 const unknownOptimization = previewOrtProfileMapping(parsedProfile, analysis, {
   graphOptimizationLevel: "unknown",
   executionMode: "sequential",
@@ -116,6 +131,14 @@ expectThrows(() => parseRuntimeProfileSource(JSON.stringify([
   nodeEvent("conv0_kernel_time", 8, "Conv", "CPUExecutionProvider", 1, { input_type_shape: [{ float: [-1, 3] }], output_type_shape: [{ float: [1, 4] }] }),
 ]), analysis), "invalid concrete tensor shape", "A negative executed dimension must fail closed.");
 
+for (const field of ["op_index", "sample_count", "duration_us", "duration_sum_us", "runtime_node_index"]) {
+  const badType = structuredClone(document);
+  badType.assignments[0][field] = false;
+  expectThrows(() => parseRuntimeAssignmentDocument(JSON.stringify(badType), analysis), "", `Canonical ${field} must not coerce a boolean to a numeric observation.`);
+}
+const precisionEvents = [1e16, 1, 1].map(duration => nodeEvent("conv0_kernel_time", 8, "Conv", "CPUExecutionProvider", duration));
+const precisionPreview = previewOrtProfileMapping(parseRuntimeProfileSource(JSON.stringify(precisionEvents), analysis), analysis);
+expectEqual(precisionPreview.assignments[0].duration_sum_us, 10000000000000002, "Profile sums must not discard small positive durations after a large duration.");
 const tamperedMean = structuredClone(document);
 tamperedMean.assignments[0].duration_us = 99;
 expectThrows(() => parseRuntimeAssignmentDocument(JSON.stringify(tamperedMean), analysis), "duration_us must equal", "Canonical parser should reject a tampered duration mean.");

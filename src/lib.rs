@@ -522,17 +522,31 @@ struct OpInfo {
     macs: f64,
     #[serde(rename = "macs")]
     reported_macs: Option<f64>,
+    macs_decimal: Option<String>,
+    #[serde(skip)]
+    batch_matmul_adjoints: (bool, bool),
+    #[serde(skip)]
+    pool_filter: Option<(i32, i32)>,
+    estimated_bytes_status: String,
+    intensity_status: String,
+    bottleneck_assessment_status: String,
     macs_status: String,
     macs_reason: String,
     mac_percent: f64,
     ops: f64,
+    #[serde(skip)]
     estimated_bytes: f64,
+    #[serde(rename = "estimated_bytes")]
+    reported_estimated_bytes: Option<f64>,
     fallback_byte_percent: f64,
     row_working_set_bytes: f64,
     row_working_set_ratio: f64,
     row_working_set_severity: String,
     cache_payload: CachePayloadBreakdown,
+    #[serde(skip)]
     intensity_ops_per_byte: f64,
+    #[serde(rename = "intensity_ops_per_byte")]
+    reported_intensity_ops_per_byte: Option<f64>,
     static_bound_guess: String,
     static_action: String,
     roofline_reason: String,
@@ -599,12 +613,30 @@ struct OpInfo {
     topo_depth: usize,
     topo_fan_out_max: usize,
     // Per-op roofline bottleneck estimate (μs)
+    #[serde(skip)]
     bottleneck_compute_us: f64,
+    #[serde(rename = "bottleneck_compute_us")]
+    reported_bottleneck_compute_us: Option<f64>,
+    #[serde(skip)]
     bottleneck_memory_us: f64,
+    #[serde(rename = "bottleneck_memory_us")]
+    reported_bottleneck_memory_us: Option<f64>,
+    #[serde(skip)]
     bottleneck_packing_us: f64,
+    #[serde(rename = "bottleneck_packing_us")]
+    reported_bottleneck_packing_us: Option<f64>,
+    #[serde(skip)]
     bottleneck_break_us: f64,
+    #[serde(rename = "bottleneck_break_us")]
+    reported_bottleneck_break_us: Option<f64>,
+    #[serde(skip)]
     bottleneck_fallback_us: f64,
+    #[serde(rename = "bottleneck_fallback_us")]
+    reported_bottleneck_fallback_us: Option<f64>,
+    #[serde(skip)]
     bottleneck_total_us: f64,
+    #[serde(rename = "bottleneck_total_us")]
+    reported_bottleneck_total_us: Option<f64>,
     bottleneck_dominant: String, // steady-state: "compute" | "memory" | "fallback"
 }
 
@@ -634,17 +666,40 @@ struct StageInfo {
     first_op: usize,
     last_op: usize,
     op_count: usize,
+    #[serde(skip_serializing)]
     macs: f64,
+    #[serde(rename = "macs")]
+    reported_macs: Option<f64>,
+    #[serde(skip_serializing)]
     mac_percent: f64,
+    #[serde(rename = "mac_percent")]
+    reported_mac_percent: Option<f64>,
+    #[serde(skip_serializing)]
     delegated_macs: f64,
+    #[serde(rename = "delegated_macs")]
+    reported_delegated_macs: Option<f64>,
+    #[serde(skip_serializing)]
     fallback_macs: f64,
+    #[serde(rename = "fallback_macs")]
+    reported_fallback_macs: Option<f64>,
+    #[serde(skip_serializing)]
     delegated_mac_percent: f64,
+    #[serde(rename = "delegated_mac_percent")]
+    reported_delegated_mac_percent: Option<f64>,
+    #[serde(skip_serializing)]
     fallback_mac_percent: f64,
+    #[serde(rename = "fallback_mac_percent")]
+    reported_fallback_mac_percent: Option<f64>,
     delegated_ops: usize,
     fallback_ops: usize,
     delegated_op_percent: f64,
     fallback_op_percent: f64,
     estimated_bytes: f64,
+    macs_decimal: Option<String>,
+    delegated_macs_decimal: Option<String>,
+    fallback_macs_decimal: Option<String>,
+    mac_assessed_ops: usize,
+    mac_not_assessed_ops: usize,
     channels: Vec<i32>,
     xnnpack_chain_breaks: usize,
     patterns: Vec<String>,
@@ -761,8 +816,15 @@ struct XnnpackChainInfo {
     first_op: usize,
     last_op: usize,
     op_count: usize,
+    #[serde(skip_serializing)]
     macs: f64,
+    #[serde(rename = "macs")]
+    reported_macs: Option<f64>,
+    #[serde(skip_serializing)]
     mac_percent: f64,
+    #[serde(rename = "mac_percent")]
+    reported_mac_percent: Option<f64>,
+    macs_decimal: Option<String>,
     chain_class: String,
     target_hint: String,
 }
@@ -849,9 +911,12 @@ struct QuantizationStatus {
     summary: String,
     detail: String,
     quantized_tensor_percent: f64,
-    quantized_compute_mac_percent: f64,
-    compute_macs: f64,
-    quantized_compute_macs: f64,
+    quantized_compute_mac_percent: Option<f64>,
+    compute_macs: Option<f64>,
+    quantized_compute_macs: Option<f64>,
+    compute_macs_decimal: Option<String>,
+    quantized_compute_macs_decimal: Option<String>,
+    compute_mac_assessment: String,
     quantized_compute_ops: usize,
     compute_ops: usize,
     quantize_ops: usize,
@@ -1529,9 +1594,11 @@ struct Analysis {
     mac_confidence: String,
     mac_assessment: TfliteMacAssessment,
     total_ops: f64,
-    delegated_macs: f64,
-    fallback_macs: f64,
-    delegated_mac_percent: f64,
+    delegated_macs: Option<f64>,
+    delegated_macs_decimal: Option<String>,
+    fallback_macs: Option<f64>,
+    fallback_macs_decimal: Option<String>,
+    delegated_mac_percent: Option<f64>,
     delegated_estimated_bytes: f64,
     fallback_estimated_bytes: f64,
     fallback_byte_percent: f64,
@@ -1841,6 +1908,15 @@ fn compute_topology_annotations(ops: &mut [OpInfo]) {
 fn compute_bottleneck_estimates(ops: &mut [OpInfo], target: &TargetProfile) {
     let bandwidth_gbps = target.effective_memory_bandwidth_gbps.max(0.25);
     for op in ops.iter_mut() {
+        let cost_closed = matches!(op.macs_status.as_str(), "assessed_nominal" | "not_applicable") && op.estimated_bytes_status == "assessed";
+        op.bottleneck_assessment_status = if cost_closed { "assessed" } else { "not_assessed" }.to_string();
+        op.intensity_status = if cost_closed { "assessed" } else { "not_assessed" }.to_string();
+        op.reported_estimated_bytes = (op.estimated_bytes_status == "assessed").then_some(op.estimated_bytes);
+        op.reported_intensity_ops_per_byte = cost_closed.then_some(op.intensity_ops_per_byte);
+        if !cost_closed {
+            op.static_bound_guess = "not_assessed".to_string();
+            op.roofline_reason = "MAC or logical I/O payload coverage is incomplete; no whole-operation roofline estimate is emitted.".to_string();
+        }
         // A family-specific measured utilization wins over the device scalar.
         let utilization = target
             .compute_utilization_by_kernel_class
@@ -1895,6 +1971,13 @@ fn compute_bottleneck_estimates(ops: &mut [OpInfo], target: &TargetProfile) {
         op.bottleneck_fallback_us = fallback_us;
         op.bottleneck_total_us = total_us;
         op.bottleneck_dominant = dominant.to_string();
+        op.reported_bottleneck_compute_us = cost_closed.then_some(op.bottleneck_compute_us);
+        op.reported_bottleneck_memory_us = cost_closed.then_some(op.bottleneck_memory_us);
+        op.reported_bottleneck_packing_us = cost_closed.then_some(op.bottleneck_packing_us);
+        op.reported_bottleneck_break_us = cost_closed.then_some(op.bottleneck_break_us);
+        op.reported_bottleneck_fallback_us = cost_closed.then_some(op.bottleneck_fallback_us);
+        op.reported_bottleneck_total_us = cost_closed.then_some(op.bottleneck_total_us);
+
     }
 }
 
@@ -3507,8 +3590,9 @@ fn analyze_with_target_scope(
                             .map(|tensor| tensor.shape.clone())
                     })
                     .collect::<Vec<_>>();
-                let macs = intrinsic.nominal_macs.unwrap_or(0.0);
+                let macs = intrinsic.nominal_macs.or_else(|| intrinsic.nominal_macs_decimal.as_ref().and_then(|value| value.parse::<f64>().ok())).unwrap_or(0.0);
                 let reported_macs = intrinsic.nominal_macs;
+                let batch_matmul_adjoints = tflite_subgraphs::batch_matmul_adjoints(&fb, *table, &name)?;
                 let ops_count = if intrinsic.raw_ops.is_finite() && intrinsic.raw_ops >= 0.0 {
                     intrinsic.raw_ops
                 } else {
@@ -3679,17 +3763,25 @@ fn analyze_with_target_scope(
                     output_shapes,
                     macs,
                     reported_macs,
+                    macs_decimal: intrinsic.nominal_macs_decimal.clone(),
+                    estimated_bytes_status: intrinsic.logical_io_payload_status.to_string(),
+                    intensity_status: "not_assessed".to_string(),
+                    bottleneck_assessment_status: "not_assessed".to_string(),
+                    batch_matmul_adjoints,
+                    pool_filter: tflite_subgraphs::pool_filter(&fb, *table, &name)?,
                     macs_status: intrinsic.mac_assessment_status.to_string(),
                     macs_reason: intrinsic.mac_assessment_reason.clone(),
                     mac_percent: 0.0,
                     ops: ops_count,
                     estimated_bytes,
+                    reported_estimated_bytes: None,
                     fallback_byte_percent: 0.0,
                     row_working_set_bytes: row_ws,
                     row_working_set_ratio: row_ws_ratio,
                     row_working_set_severity: l1_working_set_severity(row_ws_ratio).to_string(),
                     cache_payload,
                     intensity_ops_per_byte: intensity,
+                    reported_intensity_ops_per_byte: None,
                     static_bound_guess: bound,
                     static_action: roofline_action(
                         &name,
@@ -3765,11 +3857,17 @@ fn analyze_with_target_scope(
                     topo_depth: 0,
                     topo_fan_out_max: 0,
                     bottleneck_compute_us: 0.0,
+                    reported_bottleneck_compute_us: None,
                     bottleneck_memory_us: 0.0,
+                    reported_bottleneck_memory_us: None,
                     bottleneck_packing_us: 0.0,
+                    reported_bottleneck_packing_us: None,
                     bottleneck_break_us: 0.0,
+                    reported_bottleneck_break_us: None,
                     bottleneck_fallback_us: 0.0,
+                    reported_bottleneck_fallback_us: None,
                     bottleneck_total_us: 0.0,
+                    reported_bottleneck_total_us: None,
                     bottleneck_dominant: String::new(),
                 };
                 ops.push(op);
@@ -3791,12 +3889,18 @@ fn analyze_with_target_scope(
     let total_macs = ops.iter().map(|op| op.macs).sum::<f64>().abs();
     let total_ops = ops.iter().map(|op| op.ops).sum::<f64>().abs();
     let mut xnnpack_chains = annotate_xnnpack_chains(&mut ops, &target);
+    let exact_model_macs = exact_mac_sum(ops.iter());
     for chain in &mut xnnpack_chains {
         chain.mac_percent = if total_macs > 0.0 {
             chain.macs / total_macs
         } else {
             0.0
         };
+        let members = &ops[ops.partition_point(|op| op.index < chain.first_op)..ops.partition_point(|op| op.index <= chain.last_op)];
+        let exact = exact_mac_sum(members.iter());
+        chain.macs_decimal = exact.map(|v| v.to_string());
+        chain.reported_macs = safe_mac_number(exact);
+        chain.reported_mac_percent = exact.zip(exact_model_macs).filter(|(_, all)| *all > 0).map(|(v, all)| v as f64 / all as f64);
         chain.chain_class = xnnpack_chain_class(chain);
     }
     let xnnpack_longest_chain = xnnpack_chains
@@ -3810,7 +3914,6 @@ fn analyze_with_target_scope(
         .map(|op| op.macs)
         .sum::<f64>()
         .abs();
-    let fallback_macs = (total_macs - delegated_macs).max(0.0);
     let delegated_mac_percent = if total_macs > 0.0 {
         delegated_macs / total_macs
     } else {
@@ -3971,6 +4074,7 @@ fn analyze_with_target_scope(
     );
     let primary_mac = tflite_subgraph_inventory.primary_mac_assessment();
     let no_mac_compute = primary_mac.compute_operator_count == 0;
+    let complete_mac_ledger = no_mac_compute || primary_mac.complete_macs_decimal.is_some();
     let complete_macs = if no_mac_compute {
         Some(0.0)
     } else {
@@ -3978,7 +4082,7 @@ fn analyze_with_target_scope(
     };
     let mac_confidence = if no_mac_compute {
         "not_applicable"
-    } else if complete_macs.is_some() {
+    } else if complete_mac_ledger {
         "exact"
     } else if dynamic_shape_cost_contract.has_exact_total_formula() {
         "symbolic"
@@ -3987,7 +4091,7 @@ fn analyze_with_target_scope(
     };
     let mac_assessment = TfliteMacAssessment {
         schema: "deepbom.tflite_mac_assessment.v1",
-        status: if complete_macs.is_some() {
+        status: if complete_mac_ledger {
             "assessed_complete"
         } else if mac_confidence == "symbolic" {
             "not_assessed_numeric_symbolic_total_available"
@@ -3996,7 +4100,7 @@ fn analyze_with_target_scope(
         }
         .to_string(),
         confidence: mac_confidence.to_string(),
-        complete: complete_macs.is_some(),
+        complete: complete_mac_ledger,
         compute_ops: primary_mac.compute_operator_count,
         assessed_compute_ops: primary_mac.assessed_operator_count,
         not_assessed_compute_ops: primary_mac.unassessed_operator_count,
@@ -4226,9 +4330,11 @@ fn analyze_with_target_scope(
         mac_confidence: mac_confidence.to_string(),
         mac_assessment,
         total_ops,
-        delegated_macs,
-        fallback_macs,
-        delegated_mac_percent,
+        delegated_macs: safe_mac_number(exact_mac_sum(ops.iter().filter(|op| op.xnnpack_chain_id >= 0))),
+        delegated_macs_decimal: exact_mac_sum(ops.iter().filter(|op| op.xnnpack_chain_id >= 0)).map(|v| v.to_string()),
+        fallback_macs: safe_mac_number(exact_mac_sum(ops.iter().filter(|op| op.xnnpack_chain_id < 0))),
+        fallback_macs_decimal: exact_mac_sum(ops.iter().filter(|op| op.xnnpack_chain_id < 0)).map(|v| v.to_string()),
+        delegated_mac_percent: exact_mac_sum(ops.iter()).filter(|v| *v > 0).map(|_| delegated_mac_percent),
         delegated_estimated_bytes,
         fallback_estimated_bytes,
         fallback_byte_percent,
@@ -5882,6 +5988,8 @@ fn estimate_op(
     inputs: &[i32],
     outputs: &[i32],
     tensors: &[TensorInfo],
+    adjoints: (bool, bool),
+    pool_filter: Option<(i32, i32)>,
 ) -> (f64, f64, f64, f64) {
     let tensor_at = |indices: &[i32], slot: usize| {
         indices
@@ -5964,7 +6072,7 @@ fn estimate_op(
             // [batch, M, K] × [batch, K, N] → [batch, M, N]
             if lhs.shape.len() >= 2 && rhs.shape.len() >= 2 && out.shape.len() >= 2 {
                 let n = out.shape.last().copied().unwrap_or(0) as f64;
-                let k = rhs.shape[rhs.shape.len().saturating_sub(2)] as f64;
+                let k = rhs.shape[rhs.shape.len() - if adjoints.1 { 1 } else { 2 }] as f64;
                 let batch_m: f64 = out.shape[..out.shape.len() - 1]
                     .iter()
                     .fold(1.0, |a, d| a * *d as f64);
@@ -6030,12 +6138,9 @@ fn estimate_op(
                     tensor_at(outputs, 0),
                 ) {
                     if filt.shape.len() == 5 && out.shape.len() == 5 {
-                        let (n, od, oh, ow) = (
-                            out.shape[0] as f64,
-                            out.shape[1] as f64,
-                            out.shape[2] as f64,
-                            out.shape[3] as f64,
-                        );
+                        let spatial = if transposed { &inp.shape } else { &out.shape };
+                        if spatial.len() != 5 { return (0.0, 0.0, estimated_bytes, 0.0); }
+                        let (n, od, oh, ow) = (spatial[0] as f64, spatial[1] as f64, spatial[2] as f64, spatial[3] as f64);
                         let (kd, kh, kw, channel_3, channel_4) = (
                             filt.shape[0] as f64,
                             filt.shape[1] as f64,
@@ -6136,7 +6241,7 @@ fn estimate_op(
                 }
                 0.0
             }
-            // Pooling — estimate kernel area from spatial downsampling ratio
+            // Pooling — use serialized window area. Legacy optionless rows retain a modeled fallback; this scalar-work convention is not a MAC or executed instruction count.
             "AVERAGE_POOL_2D" | "MAX_POOL_2D" | "L2_POOL_2D" => {
                 if let (Some(inp), Some(out)) = (tensor_at(inputs, 0), tensor_at(outputs, 0)) {
                     if inp.shape.len() == 4 && out.shape.len() == 4 {
@@ -6146,8 +6251,7 @@ fn estimate_op(
                             out.shape[2] as f64,
                             out.shape[3] as f64,
                         );
-                        let kh = (inp.shape[1] as f64 / oh).ceil().max(1.0);
-                        let kw = (inp.shape[2] as f64 / ow).ceil().max(1.0);
+                        let (kh, kw) = pool_filter.map(|(h, w)| (h as f64, w as f64)).unwrap_or_else(|| ((inp.shape[1] as f64 / oh).ceil().max(1.0), (inp.shape[2] as f64 / ow).ceil().max(1.0)));
                         n * oh * ow * c * kh * kw
                     } else {
                         0.0
@@ -7164,50 +7268,23 @@ fn classify_model_quantization(
             .entry(op.quantization_state.clone())
             .or_default() += 1;
     }
-    let quantized_compute_macs_sum = compute_ops
-        .iter()
-        .filter(|op| op.quantized_compute_path)
-        .map(|op| {
-            if op.macs.is_finite() && op.macs > 0.0 {
-                op.macs
-            } else {
-                0.0
-            }
+    let exact_count = |op: &&OpInfo| -> Option<u128> {
+        if op.macs_status != "assessed_nominal" { return None; }
+        op.macs_decimal.as_ref().and_then(|value| value.parse().ok()).or_else(|| {
+            (op.macs.is_finite() && op.macs >= 0.0 && op.macs.fract() == 0.0 && op.macs <= 9_007_199_254_740_991.0).then_some(op.macs as u128)
         })
-        .sum::<f64>();
-    let quantized_compute_macs = if quantized_compute_macs_sum == 0.0 {
-        0.0
-    } else {
-        quantized_compute_macs_sum
     };
-    let quantized_tensor_percent = if tensors.is_empty() {
-        0.0
-    } else {
-        quantized_tensors as f64 / tensors.len() as f64
-    };
-    let compute_macs_sum = compute_ops
-        .iter()
-        .map(|op| {
-            if op.macs.is_finite() && op.macs > 0.0 {
-                op.macs
-            } else {
-                0.0
-            }
-        })
-        .sum::<f64>();
-    let compute_macs = if compute_macs_sum == 0.0 {
-        0.0
-    } else {
-        compute_macs_sum
-    };
-    let quantized_compute_mac_percent = if compute_macs > 0.0 {
-        // Exact zero must serialize as +0.0. IEEE clamp can preserve a -0.0
-        // produced by summing zero-MAC floating-path rows.
-        (quantized_compute_macs / compute_macs)
-            .clamp(0.0, 1.0)
-            .abs()
-    } else {
-        0.0
+    let compute_exact = compute_ops.iter().try_fold(0u128, |sum, op| sum.checked_add(exact_count(op)?));
+    let quantized_exact = compute_ops.iter().filter(|op| op.quantized_compute_path)
+        .try_fold(0u128, |sum, op| sum.checked_add(exact_count(op)?));
+    let safe_number = |value: u128| (value <= 9_007_199_254_740_991).then_some(value as f64);
+    let compute_macs = compute_exact.and_then(safe_number);
+    let quantized_compute_macs = quantized_exact.and_then(safe_number);
+    let quantized_tensor_percent = if tensors.is_empty() { 0.0 } else { quantized_tensors as f64 / tensors.len() as f64 };
+    let quantized_compute_mac_percent = match (compute_exact, quantized_exact) {
+        (Some(total), Some(quantized)) if total > 0 => Some(quantized as f64 / total as f64),
+        (Some(0), Some(0)) => None,
+        _ => None,
     };
     let has_integer_signal = quantized_tensors > 0
         || int8_tensors > 0
@@ -7253,20 +7330,23 @@ fn classify_model_quantization(
             "Model I/O is 8-bit, every MAC-bearing compute op has 8-bit activation input/output, and no FLOAT tensor is serialized.",
             true,
         )
-    } else if any_float_io && quantized_compute_mac_percent >= 0.80 {
+    } else if any_float_io && quantized_compute_mac_percent.is_some_and(|value| value >= 0.80) {
         (
             "integer_internal_float_io",
             "Internal INT8 with float I/O",
             "Most compute MACs appear quantized, but model inputs or outputs remain floating point.",
             false,
         )
-    } else if quantized_compute_mac_percent >= 0.20 {
+    } else if quantized_compute_mac_percent.is_some_and(|value| value >= 0.20) {
         (
             "mixed_quantization",
             "Mixed quantization",
             "Some compute path is quantized, but FP and integer regions are both present.",
             false,
         )
+    } else if quantized_compute_ops > 0 && quantized_compute_mac_percent.is_none() {
+        ("quantization_signals", "Quantized compute observed; MAC share not assessed",
+         "Integer compute paths are observed, but an incomplete or zero MAC denominator does not establish their arithmetic share.", false)
     } else if quantized_tensors > 0 || int8_tensors > 0 || uint8_tensors > 0 {
         (
             "dynamic_range_or_weight_only",
@@ -7284,12 +7364,12 @@ fn classify_model_quantization(
     };
 
     let detail = format!(
-        "Quantized tensors: {}/{} ({:.1}%). Quantized compute MACs: {:.1}% across {}/{} compute ops. I/O dtype contract: inputs [{}], outputs [{}]. Serialized Q/DQ ops: QUANTIZE={} / DEQUANTIZE={}; activation conversions: Q={} / DQ={}; 8-bit/float boundaries: {}; integer-domain requantizations: {}; constant precision conversions: {} (FP16-to-FP32 {}).",
+        "Quantized tensors: {}/{} ({:.1}%). Quantized compute MACs: {} across {}/{} compute ops. I/O dtype contract: inputs [{}], outputs [{}]. Serialized Q/DQ ops: QUANTIZE={} / DEQUANTIZE={}; activation conversions: Q={} / DQ={}; 8-bit/float boundaries: {}; integer-domain requantizations: {}; constant precision conversions: {} (FP16-to-FP32 {}).",
         quantized_tensors,
         tensors.len(),
         // .abs() after .max(): IEEE max(-0.0, 0.0) may return -0.0, printing "-0.0%"
         (quantized_tensor_percent * 100.0).max(0.0).abs(),
-        (quantized_compute_mac_percent * 100.0).max(0.0).abs(),
+        quantized_compute_mac_percent.map(|value| format!("{:.1}%", value * 100.0)).unwrap_or_else(|| "not assessed".to_string()),
         quantized_compute_ops,
         compute_ops.len(),
         if input_dtypes.is_empty() { "-".to_string() } else { input_dtypes.join(" / ") },
@@ -7314,6 +7394,9 @@ fn classify_model_quantization(
         quantized_compute_mac_percent,
         compute_macs,
         quantized_compute_macs,
+        compute_macs_decimal: compute_exact.map(|value| value.to_string()),
+        quantized_compute_macs_decimal: quantized_exact.map(|value| value.to_string()),
+        compute_mac_assessment: if compute_exact.is_none() || quantized_exact.is_none() { "not_assessed_mac_coverage_incomplete" } else if compute_exact == Some(0) { "not_applicable_zero_compute_macs" } else { "assessed" }.to_string(),
         quantized_compute_ops,
         compute_ops: compute_ops.len(),
         quantize_ops,
@@ -8365,6 +8448,9 @@ fn annotate_xnnpack_chains(ops: &mut [OpInfo], target: &TargetProfile) -> Vec<Xn
                     last_op: ops[index].index,
                     op_count: 0,
                     macs: 0.0,
+                    reported_macs: None,
+                    reported_mac_percent: None,
+                    macs_decimal: None,
                     mac_percent: 0.0,
                     chain_class: "unclassified".to_string(),
                     target_hint: target.xnnpack_kernel_family.clone(),
@@ -9057,6 +9143,19 @@ fn ranges_overlap(a0: usize, a1: usize, b0: usize, b1: usize) -> bool {
     a0 <= b1 && b0 <= a1
 }
 
+fn exact_mac_sum<'a>(ops: impl Iterator<Item = &'a OpInfo>) -> Option<u128> {
+    ops.map(|op| {
+        if op.macs_status == "not_applicable" { return Some(0); }
+        if op.macs_status != "assessed_nominal" { return None; }
+        op.macs_decimal.as_ref().and_then(|v| v.parse::<u128>().ok())
+            .or_else(|| (op.macs >= 0.0 && op.macs <= 9_007_199_254_740_991.0 && op.macs.fract() == 0.0).then_some(op.macs as u128))
+    }).try_fold(0u128, |sum, value| sum.checked_add(value?))
+}
+
+fn safe_mac_number(value: Option<u128>) -> Option<f64> {
+    value.filter(|v| *v <= 9_007_199_254_740_991).map(|v| v as f64)
+}
+
 fn build_stages(ops: &[OpInfo], total_macs: f64, patterns: &[PatternInfo]) -> Vec<StageInfo> {
     let mut stages = Vec::<StageInfo>::new();
     for op in ops {
@@ -9075,6 +9174,17 @@ fn build_stages(ops: &[OpInfo], total_macs: f64, patterns: &[PatternInfo]) -> Ve
                 last_op: op.index,
                 op_count: 0,
                 macs: 0.0,
+                reported_macs: None,
+                reported_delegated_macs: None,
+                reported_fallback_macs: None,
+                reported_mac_percent: None,
+                reported_delegated_mac_percent: None,
+                reported_fallback_mac_percent: None,
+                macs_decimal: None,
+                delegated_macs_decimal: None,
+                fallback_macs_decimal: None,
+                mac_assessed_ops: 0,
+                mac_not_assessed_ops: 0,
                 mac_percent: 0.0,
                 delegated_macs: 0.0,
                 fallback_macs: 0.0,
@@ -9111,6 +9221,7 @@ fn build_stages(ops: &[OpInfo], total_macs: f64, patterns: &[PatternInfo]) -> Ve
             }
         }
     }
+    let exact_model_macs = exact_mac_sum(ops.iter());
     for stage in &mut stages {
         stage.mac_percent = if total_macs > 0.0 {
             stage.macs / total_macs
@@ -9137,6 +9248,21 @@ fn build_stages(ops: &[OpInfo], total_macs: f64, patterns: &[PatternInfo]) -> Ve
         } else {
             0.0
         };
+        let members = &ops[ops.partition_point(|op| op.index < stage.first_op)..ops.partition_point(|op| op.index <= stage.last_op)];
+        let exact = exact_mac_sum(members.iter());
+        let delegated = exact_mac_sum(members.iter().filter(|op| op.xnnpack_chain_id >= 0));
+        let fallback = exact_mac_sum(members.iter().filter(|op| op.xnnpack_chain_id < 0));
+        stage.macs_decimal = exact.map(|v| v.to_string());
+        stage.delegated_macs_decimal = delegated.map(|v| v.to_string());
+        stage.fallback_macs_decimal = fallback.map(|v| v.to_string());
+        stage.reported_macs = safe_mac_number(exact);
+        stage.reported_delegated_macs = safe_mac_number(delegated);
+        stage.reported_fallback_macs = safe_mac_number(fallback);
+        stage.mac_not_assessed_ops = members.iter().filter(|op| exact_mac_sum(std::iter::once(*op)).is_none()).count();
+        stage.mac_assessed_ops = stage.op_count - stage.mac_not_assessed_ops;
+        stage.reported_mac_percent = exact.zip(exact_model_macs).filter(|(_, all)| *all > 0).map(|(v, all)| v as f64 / all as f64);
+        stage.reported_delegated_mac_percent = delegated.zip(exact).filter(|(_, all)| *all > 0).map(|(v, all)| v as f64 / all as f64);
+        stage.reported_fallback_mac_percent = fallback.zip(exact).filter(|(_, all)| *all > 0).map(|(v, all)| v as f64 / all as f64);
         for pattern in patterns {
             if ranges_overlap(
                 stage.first_op,
@@ -9483,17 +9609,25 @@ mod tests {
             output_shapes: vec![output_shape],
             macs: 0.0,
             reported_macs: Some(0.0),
+            macs_decimal: None,
+            estimated_bytes_status: "assessed".to_string(),
+            intensity_status: "assessed".to_string(),
+            bottleneck_assessment_status: "assessed".to_string(),
+            batch_matmul_adjoints: (false, false),
+            pool_filter: None,
             macs_status: "assessed_nominal".to_string(),
             macs_reason: "Test fixture supplies a closed nominal MAC value.".to_string(),
             mac_percent: 0.0,
             ops: 0.0,
             estimated_bytes: 0.0,
+            reported_estimated_bytes: None,
             fallback_byte_percent: 0.0,
             row_working_set_bytes: 0.0,
             row_working_set_ratio: 0.0,
             row_working_set_severity: "none".to_string(),
             cache_payload: CachePayloadBreakdown::not_applicable(name),
             intensity_ops_per_byte: 0.0,
+            reported_intensity_ops_per_byte: None,
             static_bound_guess: "mixed".to_string(),
             static_action: String::new(),
             roofline_reason: String::new(),
@@ -9556,11 +9690,17 @@ mod tests {
             topo_depth: 0,
             topo_fan_out_max: 0,
             bottleneck_compute_us: 0.0,
+            reported_bottleneck_compute_us: None,
             bottleneck_memory_us: 0.0,
+            reported_bottleneck_memory_us: None,
             bottleneck_packing_us: 0.0,
+            reported_bottleneck_packing_us: None,
             bottleneck_break_us: 0.0,
+            reported_bottleneck_break_us: None,
             bottleneck_fallback_us: 0.0,
+            reported_bottleneck_fallback_us: None,
             bottleneck_total_us: 0.0,
+            reported_bottleneck_total_us: None,
             bottleneck_dominant: "memory".to_string(),
         }
     }
@@ -9745,9 +9885,9 @@ mod tests {
         assert_eq!(complete.classification, "full_integer");
         assert_eq!(complete.compute_ops, 1);
         assert_eq!(complete.quantized_compute_ops, 1);
-        assert_eq!(complete.compute_macs, 64.0);
-        assert_eq!(complete.quantized_compute_macs, 64.0);
-        assert_eq!(complete.quantized_compute_mac_percent, 1.0);
+        assert_eq!(complete.compute_macs, Some(64.0));
+        assert_eq!(complete.quantized_compute_macs, Some(64.0));
+        assert_eq!(complete.quantized_compute_mac_percent, Some(1.0));
 
         let mut float_internal = tensors.clone();
         float_internal[1].dtype = "FLOAT32".to_string();
@@ -9806,9 +9946,9 @@ mod tests {
         );
         assert_eq!(status.compute_ops, 2);
         assert_eq!(status.quantized_compute_ops, 1);
-        assert_eq!(status.compute_macs, 100.0);
-        assert_eq!(status.quantized_compute_macs, 64.0);
-        assert!((status.quantized_compute_mac_percent - 0.64).abs() < f64::EPSILON);
+        assert_eq!(status.compute_macs, Some(100.0));
+        assert_eq!(status.quantized_compute_macs, Some(64.0));
+        assert!((status.quantized_compute_mac_percent.unwrap() - 0.64).abs() < f64::EPSILON);
 
         let mut unresolved_conv = op_with(3, "CONV_2D", vec![0, 1, 2], vec![3], vec![1, 4]);
         unresolved_conv.macs = f64::NAN;
@@ -9823,11 +9963,10 @@ mod tests {
         );
         assert_eq!(unresolved.compute_ops, 1);
         assert_eq!(unresolved.quantized_compute_ops, 1);
-        assert_eq!(unresolved.compute_macs, 0.0);
-        assert_eq!(unresolved.quantized_compute_macs, 0.0);
-        assert_eq!(unresolved.quantized_compute_mac_percent, 0.0);
-        assert!(unresolved.compute_macs.is_finite());
-        assert!(unresolved.quantized_compute_macs.is_finite());
+        assert_eq!(unresolved.compute_macs, None);
+        assert_eq!(unresolved.quantized_compute_macs, None);
+        assert_eq!(unresolved.quantized_compute_mac_percent, None);
+        assert_eq!(unresolved.compute_mac_assessment, "not_assessed_mac_coverage_incomplete");
     }
 
     #[test]
@@ -10652,7 +10791,7 @@ mod tests {
             tensor_with_index_shape(1, vec![3, 4]),
             tensor_with_index_shape(2, vec![2, 3]),
         ];
-        let (macs, _, _, _) = estimate_op("FULLY_CONNECTED", &[0, 1], &[2], &tensors);
+        let (macs, _, _, _) = estimate_op("FULLY_CONNECTED", &[0, 1], &[2], &tensors, (false, false), None);
         assert_eq!(macs, 24.0);
     }
 
@@ -10716,6 +10855,9 @@ mod tests {
             last_op: 0,
             op_count: 1,
             macs: 600_000.0,
+            reported_macs: Some(600_000.0),
+            reported_mac_percent: Some(0.6),
+            macs_decimal: Some("600000".to_string()),
             mac_percent: 0.6,
             chain_class: "high-MAC-share candidate segment".to_string(),
             target_hint: "test".to_string(),

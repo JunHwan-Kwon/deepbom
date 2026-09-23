@@ -320,6 +320,7 @@ scripts/check-bootstrap-retry.mjs
 scripts/check-browser-delivery-boundary.mjs
 scripts/check-browser-import-contract.mjs
 scripts/check-build-metadata.mjs
+scripts/check-calculation-boundaries.mjs
 scripts/check-calibration-validation-ledger.mjs
 scripts/check-calibration-validation-viewer.mjs
 scripts/check-cargo-engine-release.mjs
@@ -443,6 +444,7 @@ scripts/check-numerical-abi-propagation-viewer.mjs
 scripts/check-numerical-abi-propagation.mjs
 scripts/check-numerical-ir-browser.mjs
 scripts/check-numerical-ir.mjs
+scripts/check-numerical-precision.mjs
 scripts/check-nvidia-accelerator-profile.mjs
 scripts/check-offline-device-controller.mjs
 scripts/check-on-device-llm-v2.mjs
@@ -960,6 +962,7 @@ web/lib/numerical-abi-propagation-viewer.js
 web/lib/numerical-abi-propagation.js
 web/lib/numerical-ir-panel.js
 web/lib/numerical-ir/common.js
+web/lib/numerical-ir/exact-moments.js
 web/lib/numerical-ir/statistics.js
 web/lib/numerical-ir/weight-browser-input.js
 web/lib/numerical-ir/weight-contracts.js

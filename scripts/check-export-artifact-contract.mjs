@@ -376,6 +376,9 @@ const reportBoundaryIdentity = {
   target_label: "Boundary target",
 };
 const engineeringReport = buildEngineeringReport(reportBoundaryAnalysis, { identity: reportBoundaryIdentity });
+const boundQuantizationReport = buildEngineeringReport({ ...reportBoundaryAnalysis, quantization_status: { label: "Floating-point compute", classification: "not_quantized_float", compute_mac_assessment: "assessed" } }, { identity: reportBoundaryIdentity });
+expectContains(boundQuantizationReport, "MAC-weighted 8-bit integer compute-kernel throughput ceiling", "A bound floating-point contract must qualify the reduced-precision opportunity number.");
+expectContains(boundQuantizationReport, "not an end-to-end model speedup estimate", "A bound compute-kernel ceiling must retain its runtime limitation.");
 expectContains(engineeringReport, "Artifact Byte Integrity Ledger (DERIVED)", "Engineering Report should expose the artifact byte-integrity ledger.");
 expectContains(engineeringReport, "fixture byte-ledger method", "Engineering Report should preserve the byte-ledger method.");
 const publicByteLedgerBom = buildPublicCycloneDx17ArtifactContract(reportBoundaryAnalysis, { generatedAt: "2026-08-15T00:00:00.000Z" });
@@ -741,8 +744,7 @@ for (const [snippet, label] of [
   ["Hypothetical all-FLOAT32-to-INT8 scalar payload floor", "label theoretical INT8 size as an ideal payload floor"],
   ["Raw 0x00 byte ratio in constant buffers", "define zero-byte ratio as raw bytes"],
   ["target\\|pipe", "escape pipe characters in raw appendix table cells"],
-  ["MAC-weighted 8-bit integer compute-kernel throughput ceiling", "qualify the reduced-precision opportunity number"],
-  ["not an end-to-end model speedup estimate", "avoid presenting the throughput ceiling as a claim"],
+  ["NOT_ASSESSABLE; a bound quantization contract and complete MAC denominator are required", "withhold a compute-kernel ceiling for the legacy fixture without a quantization contract"],
   ["Reduced-precision method", "include INT8 speedup method row"],
   ["compute-kernel ceiling = 1 /", "include the INT8 compute-kernel ceiling formula"],
   ["## Artifact-side Runtime Requirements (OBSERVED/DERIVED)", "avoid claiming app runtime compatibility from artifact-only evidence"],

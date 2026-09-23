@@ -2,6 +2,13 @@ const INTEGER_TEXT = /^-?(?:0|[1-9][0-9]*)$/;
 
 export const GUARDED_INTEGER_EXPRESSION_SCHEMA = "deepbom.guarded_integer_expression.v2";
 
+export function parseNonnegativeInteger(value) {
+  if (typeof value === "bigint") return value >= 0n ? value : null;
+  if (typeof value === "number") return Number.isSafeInteger(value) && value >= 0 ? BigInt(value) : null;
+  if (typeof value === "string" && /^(?:0|[1-9][0-9]*)$/.test(value)) return BigInt(value);
+  return null;
+}
+
 export function integerConstant(value) {
   return { kind: "constant", value_decimal: BigInt(value).toString() };
 }
@@ -101,7 +108,7 @@ export function evaluateIntegerExpression(node, assignments) {
   if (node?.kind === "constant") return INTEGER_TEXT.test(String(node.value_decimal || "")) ? BigInt(node.value_decimal) : null;
   if (node?.kind === "symbol") {
     const assigned = values.get(node.symbol_id);
-    const integer = typeof assigned === "bigint" ? assigned : Number.isSafeInteger(Number(assigned)) ? BigInt(Number(assigned)) : null;
+    const integer = parseNonnegativeInteger(assigned);
     return integer != null && integer >= 0n ? integer : null;
   }
   if (node?.kind !== "call") return null;

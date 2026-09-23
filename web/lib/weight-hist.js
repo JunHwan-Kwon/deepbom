@@ -15,6 +15,7 @@ function dprCanvas(cssW, cssH) {
   const c = document.createElement("canvas");
   c.width = cssW * dpr; c.height = cssH * dpr;
   c.style.width = cssW + "px"; c.style.height = cssH + "px";
+  c.style.maxWidth = "100%";
   const ctx = c.getContext("2d");
   ctx.scale(dpr, dpr);
   return { c, ctx };

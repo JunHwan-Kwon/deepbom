@@ -70,9 +70,9 @@ struct DeltaArtifact {
     tensor_count: usize,
     total_macs: f64,
     quantization_classification: String,
-    quantized_compute_mac_ratio: f64,
+    quantized_compute_mac_ratio: Option<f64>,
     predicted_effective_chain_breaks: usize,
-    delegated_mac_ratio: f64,
+    delegated_mac_ratio: Option<f64>,
     zero_kernel_slice_count: usize,
     low_grid_utilization_tensors: usize,
     saturated_quantized_tensors: usize,
@@ -213,9 +213,9 @@ struct GraphDelta {
     signed_tensor_count: i64,
     signed_total_macs: f64,
     relative_total_macs_delta: Option<f64>,
-    signed_quantized_compute_mac_ratio: f64,
+    signed_quantized_compute_mac_ratio: Option<f64>,
     signed_predicted_effective_chain_breaks: i64,
-    signed_delegated_mac_ratio: f64,
+    signed_delegated_mac_ratio: Option<f64>,
     signed_zero_kernel_slice_count: i64,
     signed_low_grid_utilization_tensors: i64,
     signed_saturated_quantized_tensors: i64,
@@ -320,7 +320,7 @@ fn build_deployment_delta(
     if baseline.format != "tflite" || candidate.format != "tflite" {
         return Err("Deployment delta v1 supports TFLite artifacts only.".to_string());
     }
-    if baseline.total_macs.is_none() || candidate.total_macs.is_none() {
+    if baseline.total_macs.is_none() || candidate.total_macs.is_none() || baseline_analyses.iter().chain(candidate_analyses).any(|analysis| analysis.ops.iter().any(|op| op.bottleneck_assessment_status != "assessed")) {
         return Err("Deployment delta requires complete numeric MAC ledgers for both TFLite artifacts. At least one artifact retains symbolic or partial compute cost; audit that artifact and bind its runtime dimensions before requesting this modeled delta.".to_string());
     }
     for (left, right) in baseline_analyses.iter().zip(candidate_analyses) {
@@ -431,11 +431,9 @@ fn delta_artifact(role: &'static str, analysis: &Analysis, sha256: String) -> De
                 .expect("complete MAC ledgers are validated before delta construction"),
         ),
         quantization_classification: analysis.quantization_status.classification.clone(),
-        quantized_compute_mac_ratio: finite_non_negative(
-            analysis.quantization_status.quantized_compute_mac_percent,
-        ),
+        quantized_compute_mac_ratio: analysis.quantization_status.quantized_compute_mac_percent.map(finite_non_negative),
         predicted_effective_chain_breaks: analysis.xnnpack_effective_chain_breaks,
-        delegated_mac_ratio: finite_non_negative(analysis.delegated_mac_percent),
+        delegated_mac_ratio: analysis.delegated_mac_percent,
         zero_kernel_slice_count: analysis.weight_integrity.zero_kernel_slice_count,
         low_grid_utilization_tensors: analysis.weight_integrity.low_grid_utilization_tensors,
         saturated_quantized_tensors: analysis.weight_integrity.saturated_quantized_tensors,
@@ -451,11 +449,10 @@ fn graph_delta(baseline: &DeltaArtifact, candidate: &DeltaArtifact) -> GraphDelt
         signed_tensor_count: candidate.tensor_count as i64 - baseline.tensor_count as i64,
         signed_total_macs: candidate.total_macs - baseline.total_macs,
         relative_total_macs_delta: relative_delta(candidate.total_macs, baseline.total_macs),
-        signed_quantized_compute_mac_ratio: candidate.quantized_compute_mac_ratio
-            - baseline.quantized_compute_mac_ratio,
+        signed_quantized_compute_mac_ratio: candidate.quantized_compute_mac_ratio.zip(baseline.quantized_compute_mac_ratio).map(|(right, left)| right - left),
         signed_predicted_effective_chain_breaks: candidate.predicted_effective_chain_breaks as i64
             - baseline.predicted_effective_chain_breaks as i64,
-        signed_delegated_mac_ratio: candidate.delegated_mac_ratio - baseline.delegated_mac_ratio,
+        signed_delegated_mac_ratio: candidate.delegated_mac_ratio.zip(baseline.delegated_mac_ratio).map(|(a, b)| a - b),
         signed_zero_kernel_slice_count: candidate.zero_kernel_slice_count as i64
             - baseline.zero_kernel_slice_count as i64,
         signed_low_grid_utilization_tensors: candidate.low_grid_utilization_tensors as i64

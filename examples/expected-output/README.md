@@ -23,3 +23,8 @@ Interpretation:
 The artifact is the deterministic GPU partition probe documented in
 `web/samples/README.md`. Its intermediate shapes are serialized, so graph and
 MAC conservation are reproducible without executing an inference runtime.
+
+The envelope fingerprint pins `envelope_provenance_version` (1.99.2). The
+check verifies the current package version and the emitted envelope hash
+separately, then normalizes only that version for the pinned comparison.
+This prevents release-version changes from hiding regressions in evidence facts.

@@ -9,6 +9,7 @@ import {
   integerConstant,
   integerSymbol,
   nonnegativeGuard,
+  parseNonnegativeInteger,
   serializeGuardedIntegerFormula,
 } from "./guarded-integer-expression.js";
 
@@ -589,7 +590,7 @@ function onnxOpMacFormula(op, tensorByIndex, registry) {
       base = monomialForDimensions(input, [0, 1], registry);
       incomingSequence = monomialForDimensions(weight, [1], registry);
     }
-    const coefficient = qHeads * (qkHeadSize + valueHeadSize);
+    const coefficient = BigInt(qHeads) * (BigInt(qkHeadSize) + BigInt(valueHeadSize));
     const sequenceTerms = [incomingSequence];
     if (pastKey || pastValue) {
       if (!(pastKey && pastValue && denseTensor(pastKey) && denseTensor(pastValue))
@@ -677,7 +678,7 @@ function onnxOpMacFormula(op, tensorByIndex, registry) {
       return { polynomial: null, reason: `${op.name} symbolic MACs require compatible X/W/R, hidden_size, direction, layout, and gate dimensions` };
     }
     return {
-      polynomial: scalePolynomial(monomialForDimensions(input, [layout ? 1 : 0, layout ? 0 : 1], registry), directions * gates * hidden * (input.shape[2] + hidden)),
+      polynomial: scalePolynomial(monomialForDimensions(input, [layout ? 1 : 0, layout ? 0 : 1], registry), BigInt(directions) * BigInt(gates) * BigInt(hidden) * (BigInt(input.shape[2]) + BigInt(hidden))),
       reason: `sequence*batch*directions*${gates}*hidden_size*(input_size+hidden_size)`,
     };
   }
@@ -1057,12 +1058,14 @@ export function evaluateDynamicIntegerFormula(formula, assignments) {
   if (!formula || formula.status !== "exact_symbolic_integer_polynomial") return null;
   let total = 0n;
   for (const term of formula.terms || []) {
-    let value = BigInt(term.coefficient_decimal);
+    let value = parseNonnegativeInteger(term.coefficient_decimal);
+    if (value == null) return null;
     for (const factor of term.factors || []) {
       const assigned = assignments instanceof Map ? assignments.get(factor.symbol_id) : assignments?.[factor.symbol_id];
-      const integer = typeof assigned === "bigint" ? assigned : Number.isSafeInteger(Number(assigned)) ? BigInt(Number(assigned)) : null;
+      const integer = parseNonnegativeInteger(assigned);
       if (integer == null || integer < 0n) return null;
-      value *= integer ** BigInt(Number(factor.exponent));
+      if (!Number.isSafeInteger(factor.exponent) || factor.exponent < 0 || factor.exponent > 64) return null;
+      value *= integer ** BigInt(factor.exponent);
     }
     total += value;
   }

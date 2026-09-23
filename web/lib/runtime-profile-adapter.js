@@ -1,3 +1,4 @@
+import { ExactMoments } from "./numerical-ir/exact-moments.js";
 import { sha256Hex } from "./hash.js";
 import { canonicalJson } from "./report-utils.js";
 import { validateOrtBuildAttestation } from "./ort-build-attestation.js";
@@ -85,7 +86,7 @@ export function parseRuntimeProfileSource(text, analysis) {
     const opName = String(args.op_name || "").trim();
     const provider = String(args.provider || "").trim();
     const runtimeNodeIndex = strictNonNegativeInteger(args.node_index);
-    const durationUs = Number(event.dur);
+    const durationUs = typeof event.dur === "number" ? event.dur : NaN;
     if (!eventName.endsWith(ORT_KERNEL_SUFFIX) || !opName || !provider || runtimeNodeIndex == null) return [];
     if (!Number.isFinite(durationUs) || durationUs < 0) return [];
     const runtimeTensorObservation = parseOrtRuntimeTensorObservation(args, sourceIndex);
@@ -611,10 +612,11 @@ function groupProfileEvents(events) {
       ...event,
       sample_count: 0,
       duration_sum_us: 0,
+      duration_accumulator: new ExactMoments({ squares: false }),
       runtime_tensor_observation_variants: new Map(),
     };
     current.sample_count += 1;
-    current.duration_sum_us += event.duration_us;
+    current.duration_accumulator.add(event.duration_us);
     const observationKey = canonicalJson(event.runtime_tensor_observation);
     if (!current.runtime_tensor_observation_variants.has(observationKey)) {
       current.runtime_tensor_observation_variants.set(observationKey, event.runtime_tensor_observation);
@@ -623,7 +625,9 @@ function groupProfileEvents(events) {
   }
   return [...groups.values()].map((group) => {
     const variants = [...group.runtime_tensor_observation_variants.values()];
-    const { runtime_tensor_observation_variants: _variants, ...rest } = group;
+    const { runtime_tensor_observation_variants: _variants, duration_accumulator: accumulator, ...rest } = group;
+    rest.duration_sum_us = accumulator.mean(1);
+    if (!Number.isFinite(rest.duration_sum_us)) throw new Error("ONNX Runtime cumulative duration exceeds the finite numeric range.");
     return {
       ...rest,
       runtime_tensor_observation: variants.length === 1
@@ -703,7 +707,7 @@ function parseOrtTypeShapeArray(value, field) {
     const ortType = keys[0];
     const shape = entry[ortType];
     if (!Array.isArray(shape) || shape.length > 64
-      || shape.some((dimension) => !Number.isSafeInteger(Number(dimension)) || Number(dimension) < 0)) {
+      || shape.some((dimension) => strictNonNegativeInteger(dimension) == null)) {
       throw new Error(`ONNX Runtime ${field}[${slot}] contains an invalid concrete tensor shape.`);
     }
     return {
@@ -717,7 +721,11 @@ function parseOrtTypeShapeArray(value, field) {
 
 function parseOrtByteCount(value, field) {
   if (value == null) return { number: null, decimal: null };
-  const text = typeof value === "number" ? String(value) : String(value).trim();
+  if (typeof value === "number" && (!Number.isSafeInteger(value) || value < 0)) {
+    throw new Error(`ONNX Runtime ${field} requires a safe integer number or an exact decimal string.`);
+  }
+  if (typeof value !== "number" && typeof value !== "string") throw new Error(`ONNX Runtime ${field} must be a non-negative decimal integer.`);
+  const text = String(value).trim();
   if (!/^\d+$/.test(text)) throw new Error(`ONNX Runtime ${field} must be a non-negative decimal integer.`);
   const exact = BigInt(text);
   return {
@@ -743,6 +751,7 @@ function countBy(values) {
 }
 
 function strictNonNegativeInteger(value) {
+  if (typeof value !== "number" && typeof value !== "string") return null;
   if (typeof value === "string" && !/^\d+$/.test(value)) return null;
   const number = Number(value);
   return Number.isSafeInteger(number) && number >= 0 ? number : null;

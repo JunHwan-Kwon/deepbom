@@ -450,7 +450,7 @@ pub(crate) fn build_redesign_projection(
                 .map(|tensor| tensor.shape.clone())
                 .collect::<Vec<_>>();
             let (macs, operations, estimated_bytes, input_strip) =
-                estimate_op(&op.name, &op.inputs, &op.outputs, &tensors);
+                estimate_op(&op.name, &op.inputs, &op.outputs, &tensors, op.batch_matmul_adjoints, op.pool_filter);
             let source_cache = analysis
                 .ops
                 .iter()
@@ -1325,7 +1325,7 @@ fn pareto_dominates(left: &RedesignParetoCandidate, right: &RedesignParetoCandid
 }
 
 fn validate_request(analysis: &Analysis, request: &RedesignRequest) -> Result<(), String> {
-    if analysis.total_macs.is_none() {
+    if analysis.total_macs.is_none() || analysis.ops.iter().any(|op| op.bottleneck_assessment_status != "assessed") {
         return Err("Redesign projection requires a complete numeric source MAC ledger. This artifact retains symbolic or partial compute cost; bind its runtime dimensions before projecting structural changes.".to_string());
     }
     if request.schema != "deepbom.redesign_request.v1" {

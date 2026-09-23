@@ -28,7 +28,7 @@ const expectedActivation=buildActivationIr(model,capture);
 assert(linkedOperations(expected.tensors[0],model).length>0);
 assert(linkedOperations(expectedActivation.tensors[0],model).length>0);
 assert.equal(histogramWindow([{statistics:statisticsOf([NaN,Infinity])}]),null);
-assert.equal(zeroLabel(statisticsOf([9007199254740993n])),"Not assessed");
+assert.equal(zeroLabel(statisticsOf([9007199254740993n])),"0.00%");
 assert.equal(histogramSvg({statistics:statisticsOf([9007199254740993n])},{}),null);
 const server=createServer(async(req,res)=>{try{
   const url=new URL(req.url,"http://localhost");
@@ -51,6 +51,10 @@ try{
   await page.locator('[data-action="weights"]').click();await page.getByRole("status").filter({hasText:"6/6 payloads assessed"}).waitFor({timeout:60000});
   assert.equal(await page.locator('[data-map] [data-tensor-id]').count(),6);
   assert.equal(await page.locator('[data-histogram] svg').count(),1);
+  const featureCoverage=page.locator('[data-feature-coverage]');assert(await featureCoverage.isVisible());
+  await featureCoverage.locator('summary').click();assert.equal(await featureCoverage.locator('tbody tr').count(),7);
+  assert.match(await featureCoverage.textContent(),/complete affine quantization contract unavailable/);
+  await featureCoverage.locator('summary').click();
   await page.locator('[data-map] [data-tensor-id="weight:2"]').focus();await page.keyboard.press("Enter");
   assert.equal(await page.locator('[data-inventory] [aria-pressed="true"]').getAttribute('data-tensor-id'),"weight:2");
   await page.locator('[data-bin]').first().focus();await page.keyboard.press("Enter");

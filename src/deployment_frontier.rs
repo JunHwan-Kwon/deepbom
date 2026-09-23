@@ -323,7 +323,7 @@ fn build_deployment_frontier(analyses: &[Analysis]) -> Result<DeploymentFrontier
     }
     if analyses
         .iter()
-        .any(|analysis| analysis.total_macs.is_none())
+        .any(|analysis| analysis.total_macs.is_none() || analysis.ops.iter().any(|op| op.bottleneck_assessment_status != "assessed"))
     {
         return Err("Deployment frontier requires complete numeric MAC ledgers for every target analysis. This artifact retains symbolic or partial compute cost; bind its runtime dimensions before comparing cost projections.".to_string());
     }

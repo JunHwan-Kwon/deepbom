@@ -1,8 +1,65 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-22T09:03:40.428895+00:00",
+  "recorded_at": "2026-09-23T06:25:42.385288+00:00",
   "scope": "Public installation channels and private web delivery",
   "observations": [
+    {
+      "kind": "private_web_preflight_basis",
+      "version": "1.107.0",
+      "source_commit": "8f423177ab19b27d72d171c75f1c8ad4f7f6e77e",
+      "platform": "linux-x64",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 223.015,
+      "conclusion": "success",
+      "observed_at": "2026-09-23T06:25:42.385288+00:00",
+      "qualification": "Local 1.107.0 calculation-audit release candidate. Exact stage/partition follow-up and final artifact equivalence are verified separately before publication; this observation is not a deployment. Linux x64 only; no GitHub Actions.",
+      "check_count": 93
+    },
+    {
+      "kind": "local_channel_build",
+      "version": "1.107.0",
+      "source_commit": "8f423177ab19b27d72d171c75f1c8ad4f7f6e77e",
+      "platform": "linux-x64",
+      "command": "node scripts/build-channel-artifacts.mjs --with-dist",
+      "elapsed_seconds": 13.331,
+      "conclusion": "success",
+      "observed_at": "2026-09-23T06:18:30.371131+00:00",
+      "qualification": "Local 1.107.0 calculation-audit release candidate. Exact stage/partition follow-up and final artifact equivalence are verified separately before publication; this observation is not a deployment. Linux x64 only; no GitHub Actions."
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "version": "1.107.0",
+      "source_commit": "8f423177ab19b27d72d171c75f1c8ad4f7f6e77e",
+      "platform": "linux-x64",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --platform-smoke",
+      "elapsed_seconds": 46.58,
+      "conclusion": "success",
+      "observed_at": "2026-09-23T06:19:16.950779+00:00",
+      "qualification": "Local 1.107.0 calculation-audit release candidate. Exact stage/partition follow-up and final artifact equivalence are verified separately before publication; this observation is not a deployment. Linux x64 only; no GitHub Actions."
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "version": "1.107.0",
+      "source_commit": "8f423177ab19b27d72d171c75f1c8ad4f7f6e77e",
+      "platform": "linux-x64",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --release-contract",
+      "elapsed_seconds": 162.418,
+      "conclusion": "success",
+      "observed_at": "2026-09-23T06:21:59.370487+00:00",
+      "qualification": "Local 1.107.0 calculation-audit release candidate. Exact stage/partition follow-up and final artifact equivalence are verified separately before publication; this observation is not a deployment. Linux x64 only; no GitHub Actions."
+    },
+    {
+      "kind": "private_web_preflight_basis",
+      "version": "1.106.0",
+      "source_commit": "673bedca0f803fa6d10545e9ada16087228b3565",
+      "platform": "linux-x64",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 205.1,
+      "conclusion": "success",
+      "observed_at": "2026-09-23T04:52:38.357Z",
+      "qualification": "Unreleased numerical-correctness audit: 92 local deployment checks, including independent Fraction/Decimal oracles and six-format weight analysis. Browser and MCP parity verified separately. This is check-only evidence, not a deployment or channel publication.",
+      "check_count": 92
+    },
     {
       "kind": "private_web_preflight_basis",
       "version": "1.106.0",

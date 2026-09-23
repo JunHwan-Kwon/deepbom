@@ -2,6 +2,23 @@ import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.j
 export const TENSOR_ROLE_ORDER = ["kernel", "bias", "activation", "container_tensor", "metadata"];
 export const TENSOR_ROLE_MAP_VERSION = "deepbom.tensor_role_map.2026-08-04.1";
 
+// Logical dense payload only: no allocator alignment, aliasing, or runtime peak.
+// Unknown shapes/encodings must not become a four-byte scalar or batch one.
+export function staticTensorPayloadBytes(tensor) {
+  const shape = tensor?.shape;
+  if (!Array.isArray(shape) || shape.some(d => !Number.isSafeInteger(d) || d < 0)) return null;
+  const signature = tensor.shape_signature;
+  if (signature != null && (!Array.isArray(signature) || (signature.length &&
+    (signature.length !== shape.length || signature.some((d, i) => d !== shape[i]))))) return null;
+  const bits = ({ FLOAT64: 64, INT64: 64, UINT64: 64, COMPLEX128: 128, COMPLEX64: 64,
+    FLOAT32: 32, INT32: 32, UINT32: 32, FLOAT16: 16, BFLOAT16: 16, INT16: 16, UINT16: 16,
+    INT8: 8, UINT8: 8, BOOL: 8, INT4: 4, UINT4: 4 })[String(tensor.dtype || "").toUpperCase()];
+  if (!bits) return null;
+  const elements = shape.reduce((product, d) => product * BigInt(d), 1n);
+  const bytes = (elements * BigInt(bits) + 7n) / 8n;
+  return bytes <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(bytes) : null;
+}
+
 const TFLITE_INPUT_ROLES = {
   CONV_2D: { kernel: [1], bias: [2] },
   DEPTHWISE_CONV_2D: { kernel: [1], bias: [2] },

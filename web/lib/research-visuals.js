@@ -195,7 +195,7 @@ export function buildDualRadialSvg(firstRadial, secondRadial) {
   const innerWidth = width - left - right;
   const innerHeight = height - top - bottom;
   const radiusMaximum = Math.max(...radii, 1e-8);
-  const values = [...(firstRadial?.mu ?? []), ...(secondRadial?.mu ?? [])].filter((value) => !Number.isNaN(value));
+  const values = [...(firstRadial?.mu ?? []), ...(secondRadial?.mu ?? [])].filter(Number.isFinite);
   const valueMaximum = Math.max(...values, 1e-8);
   const toX = (radius) => left + (radius / radiusMaximum) * innerWidth;
   const toY = (value) => top + innerHeight - Math.max(0, Math.min(1, value / valueMaximum)) * innerHeight;
@@ -221,22 +221,26 @@ export function buildDualRadialSvg(firstRadial, secondRadial) {
   const drawLine = (radial, stroke, fillOpacity) => {
     if (!radial?.mu?.length) return;
     const { rc, mu, sem } = radial;
-    if (sem?.length) {
-      const upper = rc.map((radius, index) => `${toX(radius)},${toY(mu[index] + sem[index])}`);
-      const lower = [...rc].reverse().map((radius, index) => `${toX(radius)},${toY(mu[rc.length - 1 - index] - sem[rc.length - 1 - index])}`);
+    const runs = requireSem => {const result=[];let run=[];for(let i=0;i<rc.length;i++){if(Number.isFinite(rc[i])&&Number.isFinite(mu[i])&&(!requireSem||Number.isFinite(sem?.[i]))){run.push(i);}else if(run.length){result.push(run);run=[];}}if(run.length)result.push(run);return result;};
+    for (const run of runs(true)) {
+      const upper = run.map(index => `${toX(rc[index])},${toY(mu[index] + sem[index])}`);
+      const lower = [...run].reverse().map(index => `${toX(rc[index])},${toY(mu[index] - sem[index])}`);
       const band = document.createElementNS(namespace, "polygon");
       band.setAttribute("points", [...upper, ...lower].join(" "));
       band.setAttribute("fill", stroke);
       band.setAttribute("fill-opacity", fillOpacity);
       svg.append(band);
     }
+    for(const run of runs(false)) {
     const line = document.createElementNS(namespace, "polyline");
-    line.setAttribute("points", rc.map((radius, index) => `${toX(radius)},${toY(mu[index])}`).join(" "));
+    line.setAttribute("points", run.map(index => `${toX(rc[index])},${toY(mu[index])}`).join(" "));
     line.setAttribute("fill", "none");
     line.setAttribute("stroke", stroke);
     line.setAttribute("stroke-width", "1.8");
     svg.append(line);
+    }
     rc.forEach((radius, index) => {
+      if(!Number.isFinite(radius)||!Number.isFinite(mu[index]))return;
       const point = document.createElementNS(namespace, "circle");
       point.setAttribute("cx", toX(radius));
       point.setAttribute("cy", toY(mu[index]));

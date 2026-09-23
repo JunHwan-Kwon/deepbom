@@ -1,3 +1,5 @@
+import { ExactMoments, exactRegressionGain } from "./numerical-ir/exact-moments.js";
+
 export function formatShapes(shapes) {
   if (!Array.isArray(shapes) || !shapes.length) return "-";
   return shapes.map((shape) => `[${shape.join(",")}]`).join(" ");
@@ -15,8 +17,12 @@ export function tensorShapeText(tensor) {
   return signatureText === staticShape ? staticShape : `${staticShape} sig=${signatureText}`;
 }
 
+const finiteDisplayValue = value => !["number","string","bigint"].includes(typeof value) || typeof value === "string" && !value.trim() || !Number.isFinite(Number(value)) ? null : Number(value);
 export function formatNumber(value) {
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Number(value || 0));
+  const formatter = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+  if (typeof value === "bigint" || typeof value === "string" && /^-?\d+$/.test(value)) return formatter.format(BigInt(value));
+  const number = finiteDisplayValue(value);
+  return number === null ? "Not assessed" : formatter.format(number);
 }
 
 export function formatExactInteger(decimalValue, numericValue = null, unavailable = "Not assessed") {
@@ -28,39 +34,44 @@ export function formatExactInteger(decimalValue, numericValue = null, unavailabl
       // Fall through to the safe numeric mirror.
     }
   }
-  const numeric = Number(numericValue);
+  const numeric = finiteDisplayValue(numericValue);
   return Number.isSafeInteger(numeric) ? formatNumber(numeric) : unavailable;
 }
 
 export function formatScientific(value) {
-  const number = Number(value || 0);
+  const number = finiteDisplayValue(value);
+  if (number === null) return "Not assessed";
   if (!number) return "0";
   return number.toExponential(2);
 }
 
 export function formatPercent(value) {
-  const scaled = Number(value || 0) * 100;
-  const normalized = Object.is(Math.round(scaled * 10) / 10, -0) ? 0 : scaled;
+  const number = finiteDisplayValue(value);
+  if (number === null || !Number.isFinite(number * 100)) return "Not assessed";
+  const scaled = number * 100;
+  const normalized = Object.is(scaled, -0) ? 0 : scaled;
   if (normalized !== 0 && Math.abs(normalized) < 0.0001) return `${normalized.toExponential(2)}%`;
   const maximumFractionDigits = normalized !== 0 && Math.abs(normalized) < 0.1 ? 4 : 1;
   return `${new Intl.NumberFormat("en-US", { maximumFractionDigits }).format(normalized)}%`;
 }
 
 export function formatPercentRange(minimum, maximum) {
-  const low = Number(minimum);
-  const high = Number(maximum);
+  const low = finiteDisplayValue(minimum);
+  const high = finiteDisplayValue(maximum);
   if (!Number.isFinite(low) || !Number.isFinite(high)) return "Not assessed";
   const lowText = formatPercent(low);
   const highText = formatPercent(high);
-  return Math.abs(high - low) <= 1e-12 || lowText === highText ? lowText : `${lowText} to ${highText}`;
+  return low === high || lowText === highText ? lowText : `${lowText} to ${highText}`;
 }
 
 export function formatPercent1(value) {
-  return `${(Number(value || 0) * 100).toFixed(1)}%`;
+  const number = finiteDisplayValue(value);
+  return number === null || !Number.isFinite(number * 100) ? "Not assessed" : `${(number * 100).toFixed(1)}%`;
 }
 
 export function score100(value) {
-  return `${(Number(value || 0) * 100).toFixed(1)} / 100`;
+  const number = finiteDisplayValue(value);
+  return number === null || !Number.isFinite(number * 100) ? "Not assessed" : `${(number * 100).toFixed(1)} / 100`;
 }
 
 export function formatDateTime(value) {
@@ -105,7 +116,8 @@ export function humanizeStageKey(value) {
 }
 
 export function formatBytes(value) {
-  const bytes = Number(value || 0);
+  const bytes = finiteDisplayValue(value);
+  if (bytes === null) return "Not assessed";
   if (bytes >= 1024 * 1024) {
     return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(bytes / (1024 * 1024))} MiB`;
   }
@@ -192,12 +204,13 @@ export function argmax(values) {
 
 export function latencyStats(values) {
   const sorted = [...values].sort((a, b) => a - b);
+  if (sorted.some(value => typeof value !== "number" || !Number.isFinite(value) || value < 0)) throw new Error("Latency samples must be finite nonnegative numbers.");
   if (!sorted.length) {
-    return { min: 0, max: 0, p50: 0, p90: 0, p95: 0, p99: 0, mean: 0, stddev: 0, cv: 0 };
+    return { min: null, max: null, p50: null, p90: null, p95: null, p99: null, mean: null, stddev: null, cv: null };
   }
-  const mean = sorted.reduce((acc, value) => acc + value, 0) / sorted.length;
-  const variance = sorted.reduce((acc, value) => acc + (value - mean) ** 2, 0) / sorted.length;
-  const stddev = Math.sqrt(variance);
+  const moments = new ExactMoments();
+  for (const value of sorted) moments.add(value);
+  const { mean, std: stddev } = moments.finish(sorted.length);
   return {
     min: sorted[0],
     max: sorted[sorted.length - 1],
@@ -207,7 +220,7 @@ export function latencyStats(values) {
     p99: percentile(sorted, 0.99),
     mean,
     stddev,
-    cv: mean ? stddev / mean : 0,
+    cv: moments.coefficientOfVariation(sorted.length),
   };
 }
 
@@ -219,24 +232,24 @@ function percentile(sorted, q) {
 
 // Sliding window mean for smoothing a run-time series
 export function movingAverage(values, window = 5) {
-  const half = Math.floor(window / 2);
+  if (!Number.isSafeInteger(window) || window <= 0) throw new Error("Moving-average window must be a positive safe integer.");
+  if (Array.from(values).some(value => typeof value !== "number" || !Number.isFinite(value))) throw new Error("Moving-average samples must be finite numbers.");
+  const left = Math.floor((window - 1) / 2), right = window - left;
   return values.map((_, i) => {
-    const start = Math.max(0, i - half);
-    const end = Math.min(values.length, i + half + 1);
-    const slice = values.slice(start, end);
-    return slice.reduce((a, b) => a + b, 0) / slice.length;
+    const start = Math.max(0, i - left), end = Math.min(values.length, i + right);
+    const moments = new ExactMoments({ squares: false });
+    for (let j = start; j < end; j++) moments.add(values[j]);
+    return moments.mean(end - start);
   });
 }
 
 // Noise analysis on a raw timings array
 export function benchmarkNoise(timings) {
   const n = timings.length;
+  const { mean, stddev, p50 } = latencyStats(timings);
   if (n < 3) {
-    return { outlierCount: 0, gcSpikeCount: 0, trendSlope: 0, trendLabel: "—", trimmedP50: timings[0] ?? 0, trimmedMean: timings[0] ?? 0 };
+    return { outlierCount: 0, gcSpikeCount: 0, trendSlope: null, trendLabel: "—", trimmedP50: p50, trimmedMean: mean };
   }
-  const mean = timings.reduce((a, b) => a + b, 0) / n;
-  const variance = timings.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
-  const stddev = Math.sqrt(variance);
   const limit = mean + 2.5 * stddev;
 
   // Any run above 2.5σ
@@ -252,15 +265,12 @@ export function benchmarkNoise(timings) {
 
   // Linear regression slope (ms per run) — positive slope = getting slower
   const xMean = (n - 1) / 2;
-  let num = 0, den = 0;
-  for (let i = 0; i < n; i++) {
-    num += (i - xMean) * (timings[i] - mean);
-    den += (i - xMean) ** 2;
-  }
-  const trendSlope = den > 0 ? num / den : 0;
+  // Centered integer/half-integer x has an exact zero sum; leave y uncentered
+  // to avoid losing a small slope in subtraction from a rounded mean.
+  const trendSlope = exactRegressionGain(Array.from({ length: n }, (_, i) => i - xMean), timings);
 
   let trendLabel;
-  if (n < 10) {
+  if (n < 10 || trendSlope == null) {
     trendLabel = "—";
   } else if (Math.abs(trendSlope) < 0.03) {
     trendLabel = "stable";
@@ -274,8 +284,9 @@ export function benchmarkNoise(timings) {
   const sorted = [...timings].sort((a, b) => a - b);
   const trimCount = Math.max(1, Math.floor(n * 0.1));
   const trimmed = n > trimCount * 2 + 1 ? sorted.slice(trimCount, n - trimCount) : sorted;
-  const trimmedMean = trimmed.reduce((a, b) => a + b, 0) / trimmed.length;
-  const trimmedP50 = trimmed[Math.floor(trimmed.length / 2)] ?? 0;
+  const trimmedStats = latencyStats(trimmed);
+  const trimmedMean = trimmedStats.mean;
+  const trimmedP50 = trimmedStats.p50;
 
   return { outlierCount, gcSpikeCount, trendSlope, trendLabel, trimmedP50, trimmedMean };
 }
@@ -299,7 +310,8 @@ export function safeStem(filename) {
 }
 
 export function formatDrift(value) {
-  const number = Number(value || 0);
+  const number = finiteDisplayValue(value);
+  if (number === null) return "Not assessed";
   if (Math.abs(number) < 0.001 && number !== 0) return number.toExponential(2);
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 6 }).format(number);
 }

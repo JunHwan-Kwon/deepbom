@@ -635,7 +635,7 @@ fn tflite_op_mac_polynomial(
             let k_axis = lhs
                 .shape
                 .len()
-                .checked_sub(1)
+                .checked_sub(if op.batch_matmul_adjoints.0 { 2 } else { 1 })
                 .ok_or("BATCH_MATMUL left rank is zero")?;
             let output_elements = tensor_element_polynomial(output, symbols)
                 .ok_or("BATCH_MATMUL output dimensions are unresolved")?;
@@ -644,7 +644,7 @@ fn tflite_op_mac_polynomial(
             Ok((
                 multiply_all(&[output_elements, reduction])
                     .ok_or("BATCH_MATMUL polynomial overflow")?,
-                "output_element_count*K for batched matrix multiplication".to_string(),
+                "output_element_count*K with serialized adj_x for batched matrix multiplication".to_string(),
             ))
         }
         "TRANSPOSE_CONV" => {
@@ -673,22 +673,24 @@ fn tflite_op_mac_polynomial(
             ))
         }
         "CONV_3D" | "CONV_3D_TRANSPOSE" => {
-            let output = output.ok_or("3D convolution output tensor is missing")?;
+            let transposed = op.name == "CONV_3D_TRANSPOSE";
+            let spatial_tensor = if transposed { op.inputs.get(2).and_then(|index| tensor(tensors, *index)) } else { output }
+                .ok_or("3D convolution spatial tensor is missing")?;
             let weight = op
                 .inputs
                 .get(1)
                 .and_then(|index| tensor(tensors, *index))
                 .ok_or("3D convolution filter tensor is missing")?;
-            if output.shape.len() != 5 || weight.shape.len() != 5 {
+            if spatial_tensor.shape.len() != 5 || weight.shape.len() != 5 {
                 return Err("3D convolution requires rank-5 output and filter tensors".to_string());
             }
-            let spatial = dimensions_polynomial(output, &[0, 1, 2, 3], symbols)
+            let spatial = dimensions_polynomial(spatial_tensor, &[0, 1, 2, 3], symbols)
                 .ok_or("3D convolution output dimensions are unresolved")?;
             let kernel = dimensions_polynomial(weight, &[0, 1, 2, 3, 4], symbols)
                 .ok_or("3D convolution filter dimensions are unresolved")?;
             Ok((
                 multiply_all(&[spatial, kernel]).ok_or("3D convolution polynomial overflow")?,
-                "N*Dout*Hout*Wout*Cout*Kd*Kh*Kw*Cin from output and filter dimensions".to_string(),
+                if transposed { "N*Din*Hin*Win*Cin*Kd*Kh*Kw*Cout nominal dense scatter footprint" } else { "N*Dout*Hout*Wout*Cout*Kd*Kh*Kw*Cin" }.to_string(),
             ))
         }
         _ => Err(format!(
@@ -699,8 +701,11 @@ fn tflite_op_mac_polynomial(
 }
 
 fn exact_projected_macs(op: &OpInfo) -> Option<u64> {
-    (op.macs.is_finite() && op.macs >= 0.0 && op.macs.fract() == 0.0 && op.macs <= u64::MAX as f64)
-        .then_some(op.macs as u64)
+    if op.macs_status != "assessed_nominal" { return None; }
+    if let Some(decimal) = &op.macs_decimal {
+        return decimal.parse::<u64>().ok().filter(|value| *value <= 9_007_199_254_740_991);
+    }
+    (op.macs.is_finite() && op.macs >= 0.0 && op.macs.fract() == 0.0 && op.macs <= 9_007_199_254_740_991.0).then_some(op.macs as u64)
 }
 
 fn op_formula_rows(
@@ -769,13 +774,14 @@ fn total_mac_polynomial(
                 op_name: op.name.clone(),
                 reason: "dynamic compute op has no exact symbolic formula".to_string(),
             });
-        } else if op.macs > 0.0 {
-            let Some(value) = exact_projected_macs(op) else {
-                issues.push(DynamicOpIssue {
-                    op_index: op.index,
-                    op_name: op.name.clone(),
-                    reason: "static MAC value is not an exact non-negative integer".to_string(),
-                });
+        } else if dynamic_compute_op(&op.name) || op.macs > 0.0 {
+            let value = if op.macs_status == "assessed_nominal" {
+                op.macs_decimal.as_ref().and_then(|value| value.parse::<u128>().ok())
+                    .or_else(|| exact_projected_macs(op).map(u128::from))
+            } else { None };
+            let Some(value) = value else {
+                issues.push(DynamicOpIssue { op_index: op.index, op_name: op.name.clone(),
+                    reason: "static compute operation has no assessed exact MAC count".to_string() });
                 continue;
             };
             let Some(next) = total.add(&Polynomial::constant(value as u128)) else {

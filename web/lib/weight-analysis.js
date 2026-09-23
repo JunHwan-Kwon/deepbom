@@ -31,7 +31,8 @@ export async function collectWeightAnalysis(modelInput,analysis,source,{weightIr
   const weight=weightIr?validateWeightIr(weightIr,model):await buildWeightIr(model,analysis,source,{signal,onProgress});
   requireCondition(await hashSource(source,{signal})===identity.artifact_sha256,"advanced weight source digest mismatch");
   const ids=new Set(weight.tensors.map(r=>r.id));for(const id of [...settings.tensor_ids,...Object.keys(settings.axes)])requireCondition(ids.has(id),"unknown weight reference "+id);
-  const candidates=await numericSources(source,analysis,model,{captureValues:true,maxCapturedValues:settings.max_values}),contracts=await quantizationContracts(source,analysis);
+  const captureLocators=new Set(weight.tensors.filter(row=>row.status==="assessed"&&(!settings.tensor_ids.length||settings.tensor_ids.includes(row.id))).map(row=>row.native_locator));
+  const candidates=await numericSources(source,analysis,model,{captureValues:true,maxCapturedValues:settings.max_values,maxCapturedTensorValues:settings.max_tensor_values,captureLocators}),contracts=await quantizationContracts(source,analysis);
   const stores=new Map(model.tensors_and_storage.storage_objects.map(s=>[s.id,s])),decoded=new Map(),rows=[];
   let remaining=settings.max_values, remainingChannels=settings.max_channels, remainingSvd=settings.max_svd_work, remainingSimilarityCells=1_000_000;
   for(const row of weight.tensors) {

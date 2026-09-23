@@ -79,7 +79,7 @@ export function parseRuntimeAssignmentDocument(text, analysis, { fileSha256 = nu
   const opByIndex = new Map((artifactIrOperators(analysis) || []).map((op) => [op.index, op]));
   const seen = new Set();
   const assignments = source.assignments.map((item) => {
-    const opIndex = Number(item?.op_index);
+    const opIndex = item?.op_index;
     const op = opByIndex.get(opIndex);
     if (!Number.isInteger(opIndex) || !op) throw new Error(`Runtime assignment op_index ${item?.op_index} is not present in the active graph.`);
     if (seen.has(opIndex)) throw new Error(`Runtime assignment contains duplicate op_index ${opIndex}.`);
@@ -88,13 +88,13 @@ export function parseRuntimeAssignmentDocument(text, analysis, { fileSha256 = nu
     if (item.delegated != null && typeof item.delegated !== "boolean") {
       throw new Error(`Runtime assignment op #${opIndex} delegated must be boolean or null.`);
     }
-    const duration = item.duration_us == null ? null : Number(item.duration_us);
+    const duration = item.duration_us == null ? null : typeof item.duration_us === "number" ? item.duration_us : NaN;
     if (duration != null && (!Number.isFinite(duration) || duration < 0)) {
       throw new Error(`Runtime assignment op #${opIndex} duration_us must be a non-negative finite number.`);
     }
     seen.add(opIndex);
-    const sampleCount = item.sample_count == null ? null : Number(item.sample_count);
-    const durationSum = item.duration_sum_us == null ? null : Number(item.duration_sum_us);
+    const sampleCount = item.sample_count == null ? null : item.sample_count;
+    const durationSum = item.duration_sum_us == null ? null : typeof item.duration_sum_us === "number" ? item.duration_sum_us : NaN;
     if (sampleCount != null && (!Number.isSafeInteger(sampleCount) || sampleCount <= 0)) {
       throw new Error(`Runtime assignment op #${opIndex} sample_count must be a positive safe integer.`);
     }
@@ -253,8 +253,8 @@ function validateDispatchObservations(values, assignment, opIndex) {
   if (!Array.isArray(source) || source.length > 16384) throw new Error(`Runtime assignment op #${opIndex} dispatches must be an array with at most 16384 rows.`);
   const rows = source.map((item, index) => {
     const sampleCount = requiredPositiveInteger(item?.sample_count, `assignments[${opIndex}].dispatches[${index}].sample_count`);
-    const duration = item?.duration_us == null ? null : Number(item.duration_us);
-    const durationSum = item?.duration_sum_us == null ? null : Number(item.duration_sum_us);
+    const duration = item?.duration_us == null ? null : typeof item.duration_us === "number" ? item.duration_us : NaN;
+    const durationSum = item?.duration_sum_us == null ? null : typeof item.duration_sum_us === "number" ? item.duration_sum_us : NaN;
     if ((duration == null) !== (durationSum == null) || (duration != null && (!Number.isFinite(duration) || duration < 0 || !Number.isFinite(durationSum) || durationSum < 0 || !closeNumber(duration, durationSum / sampleCount)))) {
       throw new Error(`Runtime assignment op #${opIndex} dispatch timing must be a finite mean/sum pair consistent with sample_count.`);
     }
@@ -388,7 +388,7 @@ function requiredSha(value, field) {
 }
 
 function requiredNonNegativeInteger(value, field) {
-  const number = Number(value);
+  const number = value;
   if (!Number.isSafeInteger(number) || number < 0) throw new Error(`Runtime assignment ${field} must be a non-negative safe integer.`);
   return number;
 }
@@ -1612,7 +1612,7 @@ function requiredZero(value, field) {
 }
 
 function requiredPositiveInteger(value, field) {
-  const number = Number(value);
+  const number = value;
   if (!Number.isSafeInteger(number) || number <= 0) throw new Error(`Runtime assignment ${field} must be a positive safe integer.`);
   return number;
 }

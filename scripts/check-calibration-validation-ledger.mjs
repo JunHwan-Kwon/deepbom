@@ -119,4 +119,42 @@ const badQuant = structuredClone(capture);
 badQuant.samples[0].inputs[0].quantization.scale = 0;
 assert.throws(() => buildCalibrationValidationLedger(badQuant), /greater than zero/);
 
+// Finite captured values must not lose their metrics when intermediate
+// squares overflow or underflow. Exercise tensor, run and sample aggregation.
+for (const scale of [1e200, 1e-200, 1e-308]) {
+  const extreme = structuredClone(capture);
+  extreme.samples = [extreme.samples[0], structuredClone(extreme.samples[0])];
+  extreme.samples[1].sample_id = "extreme-1";
+  for (const sample of extreme.samples) {
+    const tensor = values => ({ dtype: "FLOAT64", shape: [2], values });
+    sample.reference_outputs = [tensor([scale, 0])];
+    sample.runs = [{ run_index: 0, outputs: [tensor([0, scale])] }, { run_index: 1, outputs: [tensor([0, scale])] }];
+  }
+  const result = buildCalibrationValidationLedger(extreme);
+  assert.equal(result.reference_output_drift.mean_absolute_difference, scale);
+  assert.equal(result.reference_output_drift.root_mean_square_difference, scale);
+  assert.equal(result.reference_output_drift.maximum_relative_l2_difference, Math.SQRT2);
+  assert.equal(result.reference_output_drift.maximum_cosine_distance, 1);
+  assert.equal(result.repeat_nondeterminism.maximum_cosine_distance, 0);
+}
+
+const overflowingTotal = structuredClone(capture);
+overflowingTotal.samples = [overflowingTotal.samples[0]];
+const output = values => ({ dtype: "FLOAT64", shape: [values.length], values });
+overflowingTotal.samples[0].reference_outputs = [output([-1e308, 0, 0, 0])];
+overflowingTotal.samples[0].runs = [{ run_index: 0, outputs: [output([1e308, 0, 0, 0])] }];
+const overflowLedger = buildCalibrationValidationLedger(overflowingTotal);
+assert.equal(overflowLedger.reference_output_drift.mean_absolute_difference, 5e307);
+assert.equal(overflowLedger.reference_output_drift.root_mean_square_difference, 1e308);
+assert.equal(overflowLedger.reference_output_drift.maximum_relative_l2_difference, 2);
+assert.equal(overflowLedger.reference_output_drift.maximum_cosine_distance, 2);
+assert.equal(overflowLedger.reference_output_drift.maximum_absolute_difference, null);
+assert(overflowLedger.reference_output_drift.unrepresentable_metrics.includes("maximum_absolute_difference"));
+
+const signedZero = structuredClone(overflowingTotal);
+signedZero.samples[0].reference_outputs = [output([0])];
+signedZero.samples[0].runs = [{ run_index: 0, outputs: [output([-0])] }];
+assert.equal(buildCalibrationValidationLedger(signedZero).reference_output_drift.changed_value_count, 0);
+assert.deepEqual(buildCalibrationValidationLedger(signedZero), buildCalibrationValidationLedger(JSON.parse(JSON.stringify(signedZero))));
+
 console.log("Calibration validation ledger passed (artifact/dataset binding, exact endpoint counts, reference drift, repeat nondeterminism, deterministic digest, and fail-closed mutation checks). ");

@@ -60,6 +60,14 @@ const transposed=safetensors([2,2],[1,3,2,4]),trans=await collect(transposed,par
 assert.equal(compareWeightAnalyses(a,trans,{mapping:[{baseline:'weight:0',candidate:'weight:0',candidate_axis_permutation:[1,0]}]}).tensors[0].metrics.rmse,0);
 assert.throws(()=>compareWeightAnalyses(a,trans,{mapping:[{baseline:'weight:0',candidate:'weight:0',candidate_axis_permutation:[0,0]}]}),/permutation/);
 const core=buildCoreMlPerChannelLinearFixture(),c=await collect(core,parseCoreMlModel(core,'a.mlmodel'),'a.mlmodel');assert(c.weight_analysis.coverage.assessed_count>0);assert.equal(c.weight_analysis.tensors[0].representation,'dequantized_real');
+const coreBias=buildCoreMlPerChannelLinearFixture({biasValues:[2,3]});
+for(const options of [{tensor_ids:['weight:0'],max_values:18},{tensor_ids:['weight:1'],max_values:2},{max_tensor_values:2,max_values:2}]) {
+  const selected=await collect(coreBias,parseCoreMlModel(coreBias,'selected.mlmodel'),'selected.mlmodel',options);
+  const index=options.tensor_ids?.[0]==='weight:0'?0:1;
+  assert.equal(selected.weight_analysis.tensors[index].status,'assessed','excluded Core ML payloads must not consume capture budget');
+  assert.equal(selected.weight_analysis.coverage.assessed_count,1);
+  assert.equal(selected.weight_analysis.tensors[index].statistics.value_count,index===0?'18':'2');
+}
 const ptd=new Uint8Array(Buffer.from(await readFile(new URL('./fixtures/numerical-tensor.ptd.base64.txt',import.meta.url),'utf8'),'base64')),p=await collect(ptd,analyzeExecuTorchModel(ptd,'a.ptd'),'a.ptd');assert(p.weight_analysis.coverage.assessed_count>0);
 initSync({module:await readFile('pkg/tflite_wasm_audit_bg.wasm')});
 const tflite=new Uint8Array(await readFile('web/samples/mobilenet_v2_1.0_224_quant.tflite')),tf=await collect(tflite,analyze_tflite(tflite,'a.tflite'),'a.tflite');

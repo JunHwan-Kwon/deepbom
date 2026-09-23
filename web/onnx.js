@@ -1450,7 +1450,7 @@ function broadcastShape(left, right) {
 
 function tensorShapeKnown(shape, shapeDeclared = Array.isArray(shape) && shape.length > 0) {
   return Array.isArray(shape) && shapeDeclared === true
-    && shape.every((dim) => Number.isSafeInteger(Number(dim)) && Number(dim) >= 0);
+    && shape.every((dim) => Number.isSafeInteger(dim) && dim >= 0);
 }
 
 function knownTensorShape(tensor) {
@@ -1478,7 +1478,7 @@ function safeExactProduct(values) {
 function exactNonnegativeProduct(values) {
   let product = 1n;
   for (const value of values) {
-    if (!Number.isSafeInteger(value) || value < 0) return null;
+    if (typeof value === "bigint" ? value < 0n : !Number.isSafeInteger(value) || value < 0) return null;
     product *= BigInt(value);
   }
   return product;
@@ -1487,8 +1487,7 @@ function exactNonnegativeProduct(values) {
 function exactNonnegativeInteger(value) {
   if (typeof value === "bigint") return value >= 0n ? value : null;
   if (Number.isSafeInteger(value) && value >= 0) return BigInt(value);
-  const text = value == null ? "" : String(value);
-  return /^(?:0|[1-9]\d*)$/.test(text) ? BigInt(text) : null;
+  return typeof value === "string" && /^(?:0|[1-9]\d*)$/.test(value) ? BigInt(value) : null;
 }
 
 function exactNonnegativeSum(values) {
@@ -1517,7 +1516,7 @@ export function summarizeOnnxAssessedMacs(values) {
 }
 
 export function projectOnnxCompleteMacTotals(assessedTotals, unassessedComputeOpCount) {
-  const unresolved = Number(unassessedComputeOpCount);
+  const unresolved = unassessedComputeOpCount;
   if (!Number.isSafeInteger(unresolved) || unresolved < 0) {
     throw new Error("ONNX unassessed compute-op count must be a nonnegative safe integer.");
   }
@@ -3817,8 +3816,8 @@ export function estimateOnnxMacs(node, tensorMap) {
       }
       pastSequence = pastKey.shape[2];
     }
-    const totalSequence = pastSequence + keySequence;
-    const value = exactNonnegativeProduct([batch, queryHeads, querySequence, totalSequence, qkHeadSize + valueHeadSize]);
+    const totalSequence = BigInt(pastSequence) + BigInt(keySequence);
+    const value = exactNonnegativeProduct([batch, queryHeads, querySequence, totalSequence, BigInt(qkHeadSize) + BigInt(valueHeadSize)]);
     return assessed(value, "B*q_num_heads*q_sequence_length*total_sequence_length*(qk_head_size+v_head_size), summing the two source-defined dense Attention MatMul contractions; mask, softmax, and backend pruning are outside nominal MACs.");
   }
   if (node.opType === "DeformConv") {
@@ -3856,7 +3855,7 @@ export function estimateOnnxMacs(node, tensorMap) {
         const previous = dimensions.get(label);
         if (label.startsWith("@ellipsis:")) {
           if (previous != null && previous !== 1 && value !== 1 && previous !== value) return notAssessed("Einsum ellipsis dimensions are not broadcast-compatible.");
-          dimensions.set(label, Math.max(previous ?? 1, value));
+          dimensions.set(label, previous == null || previous === 1 ? value : previous);
         } else if (previous != null && previous !== value) return notAssessed(`Einsum label ${label} has incompatible dimensions.`);
         else dimensions.set(label, value);
       }
@@ -3919,7 +3918,7 @@ export function estimateOnnxMacs(node, tensorMap) {
       const expected = layout ? [batch, sequence, directions, hidden] : [sequence, directions, batch, hidden];
       if (!sameShape(output.shape, expected)) return notAssessed(`${node.opType} Y shape is incompatible with direction, layout, and hidden_size.`);
     }
-    const value = exactNonnegativeProduct([sequence, batch, directions, gates, hidden, x[2] + hidden]);
+    const value = exactNonnegativeProduct([sequence, batch, directions, gates, hidden, BigInt(x[2]) + BigInt(hidden)]);
     return assessed(value, `sequence*batch*directions*${gates}*hidden_size*(input_size+hidden_size), counting source-defined input and recurrent matrix contractions.`);
   }
   if (node.opType === "Gemm") {

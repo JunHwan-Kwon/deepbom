@@ -20,7 +20,7 @@ export async function hashSource(source, { signal, onProgress } = {}) {
 }
 const unavailable = reason => ({ status: "not_assessed", reason });
 const dtypeAlias = dtype => ({ F32: "FLOAT32", F16: "FLOAT16", F64: "FLOAT64", BF16: "BFLOAT16", FLOAT: "FLOAT32", DOUBLE: "FLOAT64", HALF: "FLOAT16", BYTE: "UINT8", CHAR: "INT8", SHORT: "INT16", INT: "INT32", LONG: "INT64" }[dtype] || dtype);
-export async function numericSources(source, analysis, model, { captureValues = false, maxCapturedValues = 8_000_000 } = {}) {
+export async function numericSources(source, analysis, model, { captureValues = false, maxCapturedValues = 8_000_000, maxCapturedTensorValues = maxCapturedValues, captureLocators = null } = {}) {
   const stores = model.tensors_and_storage.storage_objects, candidates = [], format = String(analysis.format || model.artifact.format).toLowerCase();
   const add = (store, entry) => candidates.push({ storage_ref: store?.id || null, ...entry });
   if (["gguf", "safetensors"].includes(format)) {
@@ -39,18 +39,37 @@ export async function numericSources(source, analysis, model, { captureValues = 
     }
   } else if (["coreml", "mlmodel"].includes(format) && sourceSize(source) <= MAX_IN_MEMORY_SOURCE) {
     const { parseCoreMlModel } = await import("../coreml-metadata-adapter.js");
-    const captures = new WeakMap(); let captured = 0;
-    const parsed = parseCoreMlModel(await readBytes(source), model.artifact.filename, sourceSize(source), { numericalFactory: () => {
-      const stats = new TensorStatistics(); let values = [];
-      return { add(value) { stats.add(value); if (captureValues && values) { if (captured < maxCapturedValues) {values.push(value); captured++;} else values = null; } }, finish() { const result = stats.finish(); if (captureValues) captures.set(result, values); return result; } };
+    const bytes = await readBytes(source), captures = new WeakMap(); let sequence = 0;
+    const parsed = parseCoreMlModel(bytes, model.artifact.filename, sourceSize(source), { numericalFactory: () => {
+      const stats = new TensorStatistics(), slot = { index: sequence++, values: null };
+      return { add(value) { stats.add(value); }, finish() { const result = stats.finish(); captures.set(result, slot); return result; } };
     } });
+    if (captureValues) {
+      // Parameter decoding order can differ from inventory order (packed
+      // weights are decoded after their float biases). Reserve complete,
+      // selected payloads first; never spend their budget on excluded tensors.
+      const plan = new Map(); let remaining = maxCapturedValues;
+      for (const [index, parameter] of (parsed.weight_integrity?.parameters || []).entries()) {
+        const stats = parameter.optional_statistics, slot = captures.get(stats), count = Number(stats?.value_count);
+        if (!slot || captureLocators && !captureLocators.has(`coreml:parameter:${index}`) || !count || count > maxCapturedTensorValues || count > remaining || stats.unsafe_integer_count !== "0" || stats.finite_count !== stats.value_count) continue;
+        remaining -= count; slot.values = new Float64Array(count); plan.set(slot.index, slot);
+      }
+      if (plan.size) {
+        let index = 0;
+        parseCoreMlModel(bytes, model.artifact.filename, sourceSize(source), { numericalFactory: () => {
+          const slot = plan.get(index++); if (!slot) return null;
+          let count = 0;
+          return { add(value) { requireCondition(count < slot.values.length, "Core ML capture exceeds reserved count"); slot.values[count++] = value; }, finish() { requireCondition(count === slot.values.length, "Core ML capture count mismatch"); return {}; } };
+        } });
+      }
+    }
     for (const [index, parameter] of (parsed.weight_integrity?.parameters || []).entries()) {
       const store = stores.find(s => s.native_source?.path === `weight_integrity.parameters[${index}]`);
       add(store, { locator: `coreml:parameter:${index}`, name: store?.name || parameter.role, dtype: store?.dtype || parameter.storage,
         shape: store?.shape?.length ? store.shape : Number.isSafeInteger(parameter.value_count) ? [parameter.value_count] : null,
         visit: visitor => {
           if (!parameter.optional_statistics) return unavailable("parameter_values_not_exposed_by_decoder");
-          if (captureValues) { const values = captures.get(parameter.optional_statistics); if (!values) return unavailable("coreml_capture_budget_exceeded"); for (const value of values) visitor(value); }
+          if (captureValues) { const values = captures.get(parameter.optional_statistics)?.values; if (!values) return unavailable("coreml_capture_budget_exceeded"); for (const value of values) visitor(value); }
           return { status: "assessed", representation: /quantized|int8_dynamic/.test(parameter.storage) ? "dequantized_real" : "stored_scalar", statistics: parameter.optional_statistics, payload_sha256: parameter.numerical_integrity?.payload_sha256 || null, invalid_encoding_count: 0 };
         } });
     }

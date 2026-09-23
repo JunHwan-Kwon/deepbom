@@ -821,7 +821,7 @@ function exportInfluenceClasses(analysis, row, contract) {
   const projected = (q0, q1) => {
     const real = (q0 - input0.zeroPoint) * input0.scale + (q1 - input1.zeroPoint) * input1.scale;
     const scaled = real / output.scale;
-    const rounded = scaled >= 0 ? Math.floor(scaled + 0.5) : Math.ceil(scaled - 0.5);
+    const rounded = roundTiesAway(scaled);
     return Math.max(output.qmin, Math.min(output.qmax, rounded + output.zeroPoint));
   };
   const classes = new Uint8Array(255 * 255);

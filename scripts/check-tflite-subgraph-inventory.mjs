@@ -245,6 +245,51 @@ function makeConv3dFixture({ filterShape = [1, 1, 1, 2, 3] } = {}) {
   return finishSingleOpcodeModel(builder, [primary], 132); // BuiltinOperator.CONV_3D
 }
 
+function makeMatrixFixture({ adjX = false, adjY = false, batch = 2, m = 3, k = 5, n = 7, wrongOutput = false, dynamic = false } = {}) {
+  const builder = new Builder(2048);
+  builder.startObject(3);
+  builder.addFieldInt8(0, Number(adjX), 0);
+  builder.addFieldInt8(1, Number(adjY), 0);
+  const options = builder.endObject();
+  const op = controlFlowOperator(builder, options, 101, [0, 1], [2]);
+  const leftShape = [batch, ...(adjX ? [k, m] : [m, k])];
+  const rightShape = [1, ...(adjY ? [n, k] : [k, n])];
+  const outputShape = [batch, m, wrongOutput ? n + 1 : n];
+  const primary = subgraph(builder, {
+    nameValue: "matmul_main",
+    tensors: [tensor(builder, "lhs", 0, leftShape, dynamic ? [-1, ...leftShape.slice(1)] : null), tensor(builder, "rhs", 0, rightShape), tensor(builder, "output", 0, outputShape, dynamic ? [-1, m, n] : null)],
+    inputs: [0, 1], outputs: [2], operators: [op],
+  });
+  return finishSingleOpcodeModel(builder, [primary], 126);
+}
+
+function makePoolFixture() {
+  const builder = new Builder(2048);
+  builder.startObject(6);
+  builder.addFieldInt8(0, 0, 0); // SAME
+  builder.addFieldInt32(1, 2, 0); builder.addFieldInt32(2, 2, 0);
+  builder.addFieldInt32(3, 3, 0); builder.addFieldInt32(4, 3, 0);
+  const options = builder.endObject();
+  const op = controlFlowOperator(builder, options, 5, [0], [1]);
+  const primary = subgraph(builder, {
+    nameValue: "pool_main",
+    tensors: [tensor(builder, "input", 0, [1, 8, 8, 2]), tensor(builder, "output", 0, [1, 4, 4, 2])],
+    inputs: [0], outputs: [1], operators: [op],
+  });
+  return finishSingleOpcodeModel(builder, [primary], 17);
+}
+
+function makeTranspose3dFixture() {
+  const builder = new Builder(2048);
+  const op = plainOperator(builder, 0, [0, 1, 2], [3]);
+  const primary = subgraph(builder, {
+    nameValue: "transpose3d_main",
+    tensors: [tensor(builder, "output_shape", 2, [5]), tensor(builder, "filter", 0, [2, 2, 2, 3, 2]), tensor(builder, "input", 0, [1, 2, 2, 2, 2]), tensor(builder, "output", 0, [1, 4, 4, 4, 3])],
+    inputs: [0, 2], outputs: [3], operators: [op],
+  });
+  return finishSingleOpcodeModel(builder, [primary], 141);
+}
+
 function makeCallOnceFixture({ initSubgraph = 1, sourceInputs = [], sourceOutputs = [], initInputs = [], initOutputs = [] } = {}) {
   const builder = new Builder(1024);
   const op = callOnceOperator(builder, initSubgraph, sourceInputs, sourceOutputs);
@@ -427,6 +472,39 @@ expectRejected(makeWhileFixture({ sourceOutputs: [] }), "pinned Prepare requires
 const dynamicWhile = analyze_tflite_for_target(makeWhileFixture({ conditionShapeSignature: [-1] }), "dynamic-while-subgraphs.tflite", "android_mid_a55");
 expectEqual(dynamicWhile.tflite_subgraph_inventory.control_flow_contracts[0].status, "partial", "Dynamic WHILE contract status");
 expectEqual(dynamicWhile.tflite_subgraph_inventory.control_flow_contracts[0].condition_contract_status, "partial_dynamic_cardinality", "Dynamic WHILE condition status");
+
+// Enumerate the scalar dot products independently of the cost formula and
+// exercise all four serialized adjoint combinations plus broadcasting.
+for (const adjX of [false, true]) for (const adjY of [false, true]) {
+  let expected = 0;
+  for (let b = 0; b < 2; b++) for (let i = 0; i < 3; i++) for (let j = 0; j < 7; j++) for (let k = 0; k < 5; k++) expected++;
+  const result = analyze_tflite_for_target(makeMatrixFixture({ adjX, adjY }), "adjoint.tflite", "android_mid_a55");
+  expectEqual(result.total_macs, expected, "Batched adjoint scalar contraction count");
+  expectEqual(result.ops[0].macs_decimal, String(expected), "Exact operator MAC decimal");
+  expectEqual(result.mac_assessment.complete, true, "Closed BatchMatMul must be fully assessed");
+  const invalid = analyze_tflite_for_target(makeMatrixFixture({ adjX, adjY, wrongOutput: true }), "invalid-adjoint.tflite", "android_mid_a55");
+  expectEqual(invalid.ops[0].macs, undefined, "Conflicting output must withhold its MAC value");
+  expectEqual(invalid.stages[0].macs, undefined, "Unassessed stage does not inherit a zero subtotal");
+  expectEqual(invalid.stages[0].mac_not_assessed_ops, 1, "Stage carries its unavailable-operation count");
+  expectEqual(invalid.mac_assessment.complete, false, "Conflicting output must not claim complete MACs");
+  expectEqual(invalid.mac_assessment.confidence, "partial", "An invalid static contraction must not acquire an exact symbolic zero total");
+  expectEqual(invalid.ops[0].bottleneck_total_us, undefined, "Incomplete compute must not fabricate a roofline time");
+  expectEqual(invalid.core_isolation_analysis.status, "not_assessed", "Incomplete compute must not fabricate a core-allocation scenario");
+  expectEqual(invalid.quantization_status.quantized_compute_mac_percent, undefined, "Unknown MAC denominator must not become zero quantization share");
+}
+const huge = analyze_tflite_for_target(makeMatrixFixture({ batch: 1, m: 2097153, k: 2097153, n: 2097153 }), "huge-matmul.tflite", "android_mid_a55");
+expectEqual(huge.total_macs_decimal, (2097153n ** 3n).toString(), "Exact MACs beyond binary64 safe integers");
+expectEqual(huge.stages[0].macs_decimal, (2097153n ** 3n).toString(), "Stage aggregate retains the exact MAC count");
+expectEqual(huge.stages[0].macs, undefined, "Stage must not emit a rounded unsafe numeric MAC mirror");
+expectEqual(huge.fallback_macs_decimal, (2097153n ** 3n).toString(), "Partition aggregate retains the exact MAC count");
+expectEqual(huge.fallback_macs, undefined, "Partition must not emit a rounded unsafe numeric MAC mirror");
+expectEqual(huge.ops[0].macs_decimal, huge.total_macs_decimal, "Exact per-op and model counts agree");
+expectEqual(huge.mac_assessment.complete, true, "Exact decimal ledger is complete even without a numeric mirror");
+const pooling = analyze_tflite_for_target(makePoolFixture(), "pooling.tflite", "android_mid_a55");
+expectEqual(pooling.ops[0].ops, 288, "Scalar pooling work uses the serialized 3x3 window, not the 8/4 downsampling ratio");
+expectEqual(pooling.total_macs, 0, "Pooling scalar work is not a MAC count");
+const transpose3d = analyze_tflite_for_target(makeTranspose3dFixture(), "transpose3d.tflite", "android_mid_a55");
+expectEqual(transpose3d.total_macs, 384, "Transpose3D counts input-site scatter, not expanded output sites");
 
 const callOnceResult = analyze_tflite_for_target(makeCallOnceFixture(), "call-once-subgraphs.tflite", "android_mid_a55");
 const callOnceInventory = callOnceResult.tflite_subgraph_inventory;

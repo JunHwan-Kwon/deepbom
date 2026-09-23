@@ -8,7 +8,7 @@ import { readCoreMlModelFile } from "../web/lib/coreml-metadata-adapter.js";
 export const COREML_LEGACY_QUANTIZATION_CORPUS_PATH = "corpus/coreml-legacy-quantization-corpus.v1.json";
 export const COREML_LEGACY_QUANTIZATION_MODEL_PATH = "corpus/coreml-legacy-quantization-corpus/per-output-channel-linear-int4.mlmodel";
 
-export function buildCoreMlPerChannelLinearFixture({ scaleCount = 2 } = {}) {
+export function buildCoreMlPerChannelLinearFixture({ scaleCount = 2, biasValues = null } = {}) {
   const packedCodes = Buffer.from([0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01]);
   const scales = [0.5, 0.25].slice(0, scaleCount);
   const biases = [-1, 1].slice(0, scaleCount);
@@ -17,6 +17,7 @@ export function buildCoreMlPerChannelLinearFixture({ scaleCount = 2 } = {}) {
   const convolution = concat(
     uint(1, 2), uint(2, 1), packedUint(20, [3, 3]), packedUint(30, [1, 1]),
     message(51, Buffer.alloc(0)), message(90, weights),
+    ...(biasValues ? [uint(70, 1), message(91, packedFloat(1, biasValues))] : []),
   );
   const network = concat(message(1, layer("per_channel_conv", ["input"], ["output"], 100, convolution)), uint(5, 1));
   const description = concat(

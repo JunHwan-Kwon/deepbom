@@ -4902,7 +4902,10 @@ button.runtime-timing-row:hover { background: var(--surface-hover); }
 
 .graph-map-toolbar {
   display: flex;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
   gap: 6px;
   align-items: center;
 }
@@ -8821,14 +8824,15 @@ tr.clickable-row:hover {
 /* Grid container */
 .whist-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
   gap: 1px;
   background: var(--line);
 }
-.whist-grid-explorer { grid-template-columns: 1fr; }
+.whist-grid-explorer { grid-template-columns: minmax(0, 1fr); }
 
 /* Card */
 .whist-tensor {
+  min-width: 0;
   background: var(--surface);
   padding: 14px 16px 12px;
 }

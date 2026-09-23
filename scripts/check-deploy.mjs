@@ -33,6 +33,8 @@ const CHECKS = [
   "scripts/check-conversion-receipt.mjs --no-browser",
   "scripts/check-artifact-ir.mjs",
   "scripts/check-numerical-ir.mjs",
+  "scripts/check-numerical-precision.mjs",
+  "scripts/check-calculation-boundaries.mjs",
   "scripts/generate-weight-analysis-schema.mjs --check",
   "scripts/check-weight-analysis.mjs",
   "scripts/check-weight-pruning.mjs",

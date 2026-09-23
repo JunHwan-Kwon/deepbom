@@ -1,4 +1,12 @@
 import { argmax, clampInteger, formatDrift } from "./format.js";
+import { roundTiesAway as roundTiesAwayFromZero } from "./quantization-math.js";
+import { ExactMoments, exactRegressionGain } from "./numerical-ir/exact-moments.js";
+
+const gridNumber = value => value == null || value === "" ? NaN : Number(value);
+function finiteMoments(values) {
+  const moments=new ExactMoments();for(const value of values)moments.add(value);
+  return moments.finish(values.length);
+}
 import {
   driftSeverity,
   statusForCosineDistance,
@@ -59,9 +67,8 @@ export function summarizeProjectedHessians(hessians = []) {
   if (!values.length) {
     return { assessedCount: 0, lambdaMean: null, lambdaStd: null, directionalLambdaMaxCv: null };
   }
-  const lambdaMean = values.reduce((sum, value) => sum + value, 0) / values.length;
-  const lambdaStd = Math.sqrt(values.reduce((sum, value) => sum + (value - lambdaMean) ** 2, 0) / values.length);
-  const directionalLambdaMaxCv = Math.abs(lambdaMean) > 1e-12
+  const {mean:lambdaMean,std:lambdaStd}=finiteMoments(values);
+  const directionalLambdaMaxCv = lambdaMean !== 0 && Number.isFinite(lambdaStd / Math.abs(lambdaMean))
     ? lambdaStd / Math.abs(lambdaMean)
     : null;
   return { assessedCount: values.length, lambdaMean, lambdaStd, directionalLambdaMaxCv };
@@ -106,10 +113,8 @@ export function summarizeOutputDriftProjectionEnsemble(raw, { numProjections, gr
   const summarizeCell = (row, column, spread) => {
     const values = dmGrids.map((grid) => grid[row][column]).filter(Number.isFinite);
     if (!values.length) return Number.NaN;
-    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
-    if (!spread) return mean;
-    if (values.length < 2) return 0;
-    return Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length);
+    const moments=finiteMoments(values);
+    return spread ? moments.std : moments.mean;
   };
   const matrix = (spread) => Array.from({ length: gridSize }, (_, row) => (
     Array.from({ length: gridSize }, (_, column) => summarizeCell(row, column, spread))
@@ -204,37 +209,36 @@ export function aggregateGrids(grids, size) {
   const gridSize = positiveInteger(size, "landscape grid size");
   if (!Array.isArray(grids)) throw new TypeError("Landscape grids must be an array.");
   const mean = Array.from({ length: gridSize }, () => new Float64Array(gridSize).fill(NaN));
-  const sem = Array.from({ length: gridSize }, () => new Float64Array(gridSize));
+  const sem = Array.from({ length: gridSize }, () => new Float64Array(gridSize).fill(NaN));
   for (let row = 0; row < gridSize; row += 1) {
     for (let column = 0; column < gridSize; column += 1) {
-      const values = grids.map((grid) => Number(grid?.[row]?.[column])).filter(Number.isFinite);
+      const values = grids.map((grid) => gridNumber(grid?.[row]?.[column])).filter(Number.isFinite);
       if (!values.length) continue;
       mean[row][column] = arithmeticMean(values);
       sem[row][column] = sampleSem(values);
     }
   }
   const center = Math.floor(gridSize / 2);
-  const centerLoss = Number.isFinite(mean[center][center]) ? mean[center][center] : 0;
+  const centerLoss = mean[center][center];
   const dmean = mean.map((row) => Array.from(row, (value) => Number.isFinite(value) ? value - centerLoss : NaN));
   const finiteDeltas = dmean.flat().filter(Number.isFinite);
-  const nonzeroSems = sem.flatMap((row) => Array.from(row)).filter((value) => value > 0);
+  const assessedSems = sem.flatMap((row) => Array.from(row)).filter(Number.isFinite);
   return {
     mean: mean.map((row) => Array.from(row)),
     sem: sem.map((row) => Array.from(row)),
     dmean,
     centerLoss,
-    maxDmean: finiteDeltas.length ? Math.max(...finiteDeltas) : 0,
-    meanSem: nonzeroSems.length ? arithmeticMean(nonzeroSems) : 0,
+    maxDmean: finiteDeltas.length ? Math.max(...finiteDeltas) : NaN,
+    meanSem: assessedSems.length ? arithmeticMean(assessedSems) : NaN,
   };
 }
 
 export function subtractCenter(grid, size) {
   const gridSize = positiveInteger(size, "landscape grid size");
   const center = Math.floor(gridSize / 2);
-  const centerValue = Number(grid?.[center]?.[center]);
-  const baseline = Number.isFinite(centerValue) ? centerValue : 0;
+  const baseline = gridNumber(grid?.[center]?.[center]);
   return Array.from({ length: gridSize }, (_, row) => Array.from({ length: gridSize }, (_, column) => {
-    const value = Number(grid?.[row]?.[column]);
+    const value = gridNumber(grid?.[row]?.[column]);
     return Number.isFinite(value) ? value - baseline : NaN;
   }));
 }
@@ -246,9 +250,9 @@ export function computeRadialProfileSEM(perSeedDmeans, axes, size, binCount = 9)
   validateAxes(axes, gridSize);
   const profiles = perSeedDmeans.map((grid) => radialMeanOneSeed(grid, axes, gridSize, bins));
   const rc = profiles[0].rc;
-  const mu = rc.map((_, index) => arithmeticMean(profiles.map((profile) => profile.mu[index] ?? 0)));
-  const sem = rc.map((_, index) => sampleSem(profiles.map((profile) => profile.mu[index] ?? 0)));
-  return { rc, mu, sem };
+  const samples=rc.map((_,index)=>profiles.map(profile=>profile.mu[index]).filter(Number.isFinite));
+  const mu = samples.map(arithmeticMean), sem = samples.map(sampleSem);
+  return { rc, mu, sem, sample_counts: samples.map(values=>values.length) };
 }
 
 export function computeHessian2D(grid, axes, size) {
@@ -258,10 +262,10 @@ export function computeHessian2D(grid, axes, size) {
   const center = Math.floor(gridSize / 2);
   const step = Number(axes[center + 1]) - Number(axes[center]);
   const previousStep = Number(axes[center]) - Number(axes[center - 1]);
-  const tolerance = Math.max(Math.abs(step), Math.abs(previousStep), 1) * 1e-12;
-  if (!Number.isFinite(step) || Math.abs(step) < 1e-12 || Math.abs(step - previousStep) > tolerance) return null;
+  const tolerance = Math.max(Math.abs(step), Math.abs(previousStep)) * 1e-12;
+  if (!Number.isFinite(step) || step === 0 || Math.abs(step - previousStep) > tolerance || !Number.isFinite(step*step) || step*step===0) return null;
   const value = (row, column) => {
-    const item = Number(grid?.[row]?.[column]);
+    const item = gridNumber(grid?.[row]?.[column]);
     return Number.isFinite(item) ? item : null;
   };
   const centerValue = value(center, center);
@@ -276,18 +280,19 @@ export function computeHessian2D(grid, axes, size) {
   const stencil = [centerValue, positiveA, negativeA, positiveB, negativeB, positivePositive, positiveNegative, negativePositive, negativeNegative];
   if (stencil.some((item) => item == null)) return null;
   const stepSquared = step * step;
-  const Haa = (positiveA - 2 * centerValue + negativeA) / stepSquared;
-  const Hbb = (positiveB - 2 * centerValue + negativeB) / stepSquared;
-  const Hab = (positivePositive - positiveNegative - negativePositive + negativeNegative) / (4 * stepSquared);
+  const difference=(values,factor=1)=>{const moments=new ExactMoments({squares:false});for(const v of values)moments.add(v);return moments.dividedBy(stepSquared,factor);};
+  const Haa = difference([positiveA,-centerValue,-centerValue,negativeA]);
+  const Hbb = difference([positiveB,-centerValue,-centerValue,negativeB]);
+  const Hab = difference([positivePositive,-positiveNegative,-negativePositive,negativeNegative],4);
   const trace = Haa + Hbb;
-  const discriminant = Math.sqrt(Math.max(0, ((Haa - Hbb) / 2) ** 2 + Hab ** 2));
-  return { Haa, Hbb, Hab, trace, lambdaMax: trace / 2 + discriminant };
+  const discriminant = Math.hypot(Haa/2-Hbb/2,Hab),lambdaMax=trace/2+discriminant;
+  return [Haa,Hbb,Hab,trace,lambdaMax].every(Number.isFinite) ? {Haa,Hbb,Hab,trace,lambdaMax} : null;
 }
 
 export function aggregateHessian(hessians) {
   if (!Array.isArray(hessians) || !hessians.length) return null;
-  const lambdaValues = hessians.map((item) => Number(item?.lambdaMax));
-  const traceValues = hessians.map((item) => Number(item?.trace));
+  const lambdaValues = hessians.map((item) => gridNumber(item?.lambdaMax));
+  const traceValues = hessians.map((item) => gridNumber(item?.trace));
   if (lambdaValues.some((value) => !Number.isFinite(value)) || traceValues.some((value) => !Number.isFinite(value))) {
     throw new TypeError("Hessian aggregation requires finite lambdaMax and trace values.");
   }
@@ -302,21 +307,17 @@ export function aggregateHessian(hessians) {
 
 export function requantRatio(int8Dmean, f64Dmean, size) {
   const gridSize = positiveInteger(size, "requantization-ratio grid size");
-  let crossProduct = 0;
-  let floatEnergy = 0;
-  let count = 0;
+  const reference=[],observed=[];
   for (let row = 0; row < gridSize; row += 1) {
     for (let column = 0; column < gridSize; column += 1) {
-      const quantized = Number(int8Dmean?.[row]?.[column]);
-      const floating = Number(f64Dmean?.[row]?.[column]);
-      if (Number.isFinite(quantized) && Number.isFinite(floating) && Math.abs(floating) > 1e-10) {
-        crossProduct += floating * quantized;
-        floatEnergy += floating * floating;
-        count += 1;
+      const quantized = gridNumber(int8Dmean?.[row]?.[column]);
+      const floating = gridNumber(f64Dmean?.[row]?.[column]);
+      if (Number.isFinite(quantized) && Number.isFinite(floating)) {
+        reference.push(floating);observed.push(quantized);
       }
     }
   }
-  return count && floatEnergy > 1e-20 ? crossProduct / floatEnergy : null;
+  return exactRegressionGain(reference,observed);
 }
 
 function radialMeanOneSeed(grid, axes, size, binCount) {
@@ -324,33 +325,31 @@ function radialMeanOneSeed(grid, axes, size, binCount) {
   const radius = Math.sqrt(2) * (axisRadius || 0.4);
   const boundaries = linspaceArr(0, radius, binCount + 1);
   const rc = boundaries.slice(0, -1).map((lower, index) => (lower + boundaries[index + 1]) / 2);
-  const sums = new Float64Array(binCount);
+  const sums = Array.from({length:binCount},()=>new ExactMoments({squares:false}));
   const counts = new Uint32Array(binCount);
   for (let row = 0; row < size; row += 1) {
     for (let column = 0; column < size; column += 1) {
       const radial = Math.hypot(Number(axes[column]), Number(axes[row]));
-      const value = Number(grid?.[row]?.[column]);
+      const value = gridNumber(grid?.[row]?.[column]);
       if (!Number.isFinite(value)) continue;
       let bin = Math.floor(radial / radius * binCount);
       if (bin === binCount && Math.abs(radial - radius) <= radius * 1e-12) bin = binCount - 1;
       if (bin >= 0 && bin < binCount) {
-        sums[bin] += value;
+        sums[bin].add(value);
         counts[bin] += 1;
       }
     }
   }
-  return { rc, mu: Array.from(sums, (value, index) => counts[index] ? value / counts[index] : 0) };
+  return { rc, mu: sums.map((sum,index)=>counts[index]?sum.mean(counts[index]):NaN) };
 }
 
 function sampleSem(values) {
-  if (values.length < 2) return 0;
-  const mean = arithmeticMean(values);
-  const sampleVariance = values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (values.length - 1);
-  return Math.sqrt(sampleVariance / values.length);
+  if (values.length < 2) return NaN;
+  return finiteMoments(values).std / Math.sqrt(values.length-1);
 }
 
 function arithmeticMean(values) {
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
+  return values.length ? finiteMoments(values).mean : NaN;
 }
 
 function directionDelta(d1, d2, index, alpha, beta) {
@@ -358,10 +357,6 @@ function directionDelta(d1, d2, index, alpha, beta) {
   const right = Number(d2[index]);
   if (!Number.isFinite(left) || !Number.isFinite(right)) throw new TypeError(`Landscape direction ${index} is not finite.`);
   return alpha * left + beta * right;
-}
-
-function roundTiesAwayFromZero(value) {
-  return value < 0 ? -Math.floor(-value + 0.5) : Math.floor(value + 0.5);
 }
 
 function validateAxes(axes, size) {
@@ -827,16 +822,14 @@ export function createHaarPatternData(dtype, shape, patternId, staticTensor, opt
 export function computePatternInputStats(data, dtype, zp = 0) {
   const n = data.length;
   if (!n) return { l2: 0, linf: 0, mean: 0, nonzero_ratio: 0, is_zero_mean: true, n };
-  let sumSq = 0, sum = 0, maxAbs = 0, nz = 0;
+  const moments=new ExactMoments();let maxAbs = 0, nz = 0;
   for (let i = 0; i < n; i++) {
     const v = Number(data[i]) - zp;
-    sumSq += v * v;
-    sum   += v;
+    moments.add(v);
     if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v);
     if (v !== 0) nz++;
   }
-  const l2   = Math.sqrt(sumSq / n);
-  const mean = sum / n;
+  const {rms:l2,mean}=moments.finish(n);
   return { l2, linf: maxAbs, mean, nonzero_ratio: nz / n, is_zero_mean: Math.abs(mean) < l2 * 0.05 + 1e-9, n };
 }
 

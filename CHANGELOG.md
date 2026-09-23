@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.107.0 — 2026-09-23
+
+- Derive TFLite BatchMatMul from serialized adjoints and validated broadcast/contraction axes; close its nominal MAC ledger. Correct 3D transpose-convolution input-site scatter counts and pooling scalar-work estimates from serialized filter dimensions.
+- Retain checked integer TFLite per-op, model, stage and predicted-partition MAC decimals beyond binary64's safe-integer range. Do not turn missing arithmetic into a symbolic zero total, quantized-MAC percentage, roofline time or core-allocation scenario.
+- Correct ONNX empty-batch Einsum broadcasting, exact Attention/recurrent dimension sums and large symbolic coefficients. Reject missing/boolean/rounded dynamic bindings while accepting exact decimal bindings.
+- Correct benchmark means, variance, coefficients of variation and moving averages; retain nearest-rank trimmed medians and all samples in two-run summaries. Empty timings remain unassessed.
+- Compute captured-output MAE, RMS, relative L2 and cosine distance from exact mergeable accumulators. Preserve tiny angular differences, overflow-safe normalization and explicit unrepresentable metrics.
+- Reject nonnumeric runtime IDs/durations/dimensions and unsafe byte-number claims; accumulate ORT event durations without losing smaller observations. Preserve unknown quantization in old snapshots.
+- Correct fallback logical-memory views for packed INT4, scalar and empty tensors. Withhold totals for unknown shapes/encodings and unsafe totals; never present a batch-one substitution as a memory upper bound.
+- Add independent Fraction/Decimal comparison oracles, scalar-enumerated ConvTranspose cases, adjoint/large-count fixtures and missing-data regression tests. Correct mobile checkbox targets and chart overflow found by the complete UI checks.
+- Reserve 24 KiB of additional runtime source, 16 KiB of verification source and 4 KiB of local release qualification records for arithmetic contracts, evidence propagation and independent oracles. Analysis work budgets are unchanged. Reserve 128 KiB of distribution headroom for the measured 66.03 MiB release; initial page scripts remain 2,475 gzip bytes.
+
+
+- Accumulate finite decoded binary64 sums, squares and dot products exactly, rounding only the resulting moments or cosine. Preserve cancellation, near-constant variance and tiny heatmap cells without overflowing intermediate sums.
+- Correct SVD rank overstatement for dependent low-energy columns, unequally scaled rotations and underflow in column norms/tail errors. Replace the hidden 256-column limit and conservative cubic rejection with actual work limits; compute diagonal spectra analytically. Keep normalization/convergence limits explicit.
+- Reserve Core ML capture budgets for complete selected tensors, independent of parameter decode order. Show separate coverage and gap reasons for each advanced analysis in the Web workspace.
+- Correct half-away-from-zero rounding at adjacent half-integers and large exact integers across quantization analysis, synthetic probes and export views.
+- Preserve unavailable numbers as unavailable in shared display helpers; keep exact decimal integers beyond binary64 integer precision, signed small percentages and unknown MAC denominators.
+- Correct output-drift aggregation: exact moments, available small-step curvature and small-scale regression, missing-center propagation, empty radial bins and insufficient-sample SEM. Draw gaps without fabricated zero observations or uncertainty bands.
+- Add independent Python Fraction/Decimal numerical oracles, selection/rank/rounding regressions and browser coverage checks. Normalize only the separately verified analyzer version in the pinned static-evidence fixture.
+- Reserve an additional 12 KiB of runtime source and 4 KiB of audit/release bookkeeping; runtime analysis budgets and public IR schemas remain unchanged.
+
 ## 1.106.0 — 2026-09-22
 
 - Add an interactive Web weight pruning workbench with linked tensor/channel views, target-sparsity controls, energy curves, original/candidate/difference heatmaps, zoom, pan and full-screen inspection.

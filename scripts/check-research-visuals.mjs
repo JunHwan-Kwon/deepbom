@@ -70,6 +70,10 @@ try {
   assert.equal(countTags(svg, "circle"), 4);
   assert.equal(countTags(svg, "text"), 2);
   assert.equal(buildDualRadialSvg(null, null), null);
+  const gaps=buildDualRadialSvg({rc:[0,1,2],mu:[1,NaN,2],sem:[NaN,NaN,NaN]},null);
+  assert.equal(countTags(gaps,'polygon'),0,'one-sample uncertainty must not draw a zero-width confidence band');
+  assert.equal(countTags(gaps,'polyline'),2,'a missing bin breaks the line');
+  assert.equal(countTags(gaps,'circle'),2,'missing bins must not appear as zeros');
 } finally {
   if (priorDocument === undefined) delete globalThis.document;
   else globalThis.document = priorDocument;

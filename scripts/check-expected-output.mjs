@@ -29,8 +29,13 @@ assert.equal(envelope.artifact_set?.artifact_set_sha256, expected.artifact_set_s
 const envelopeBody = structuredClone(envelope);
 delete envelopeBody.envelope_sha256;
 assert.equal(envelope.envelope_sha256, sha256TextHex(canonicalJson(envelopeBody)), "evidence envelope canonical SHA-256");
+const packageVersion = JSON.parse(await readFile("package.json", "utf8")).version;
+assert.equal(envelopeBody.provenance.version, packageVersion, "current analyzer provenance version");
+// The pinned evidence facts do not change merely because a new package ships.
+// Check current provenance separately, then compare against the fixture release.
+envelopeBody.provenance.version = expected.envelope_provenance_version;
 if (ANALYZER_BUILD_SOURCE_STATE === "clean") {
-  assert.equal(envelope.envelope_sha256, expected.artifact_evidence_envelope_sha256, "clean release evidence envelope SHA-256");
+  assert.equal(sha256TextHex(canonicalJson(envelopeBody)), expected.artifact_evidence_envelope_sha256, "version-normalized release evidence envelope SHA-256");
 } else {
   assert.equal(ANALYZER_BUILD_SOURCE_STATE, "working-tree-dirty", "known analyzer source state");
   const provenanceFindings = envelopeBody.findings.filter((finding) => finding.id === "EA-PROV-0001");

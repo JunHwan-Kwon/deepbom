@@ -1,4 +1,5 @@
 import { decimalCount, exactKeys, parseNumeric, requireCondition } from "./common.js";
+import { ExactMoments } from "./exact-moments.js";
 
 // Fixed log2 bins permit exact-count streaming and merging without a second
 // payload read. The bin definition is identical for every format and tensor.
@@ -7,7 +8,7 @@ export const HISTOGRAM_EDGES = Object.freeze([-Number.MAX_VALUE, ...EXPONENTS.sl
 export class TensorStatistics {
   constructor() {
     this.count = 0n; this.finite = 0n; this.nan = 0n; this.positiveInf = 0n; this.negativeInf = 0n; this.zero = 0n; this.negativeZero = 0n;
-    this.min = null; this.max = null; this.scale = 0; this.mean = 0; this.m2 = 0; this.squares = 0; this.unsafeInteger = 0n;
+    this.min = null; this.max = null; this.moments = new ExactMoments(); this.unsafeInteger = 0n;
     this.integerMin = null; this.integerMax = null;
     this.bins = HISTOGRAM_EDGES.slice(1).map(() => 0n);
   }
@@ -26,12 +27,7 @@ export class TensorStatistics {
     requireCondition(this.finite <= BigInt(Number.MAX_SAFE_INTEGER), "floating statistics exceed exact count budget");
     this.min = this.min == null ? value : Math.min(this.min, value); this.max = this.max == null ? value : Math.max(this.max, value);
     if (value === 0) { this.zero++; if (Object.is(value, -0)) this.negativeZero++; }
-    const magnitude = Math.abs(value);
-    if (magnitude > this.scale) {
-      const ratio = this.scale / magnitude; this.mean *= ratio; this.m2 *= ratio * ratio; this.squares *= ratio * ratio; this.scale = magnitude;
-    }
-    const scaled = this.scale ? value / this.scale : 0;
-    const delta = scaled - this.mean; this.mean += delta / Number(this.finite); this.m2 += delta * (scaled - this.mean); this.squares += scaled * scaled;
+    this.moments.add(value);
     let lo = 0, hi = this.bins.length - 1;
     while (lo < hi) { const mid = (lo + hi) >>> 1; if (value < HISTOGRAM_EDGES[mid + 1]) hi = mid; else lo = mid + 1; }
     this.bins[lo]++;
@@ -40,10 +36,8 @@ export class TensorStatistics {
     const complete = this.unsafeInteger === 0n;
     const rounded = value => Number.isFinite(value) ? value : null;
     const n = Number(this.finite);
-    const mean = n ? rounded(this.mean * this.scale) : null;
-    const std = n ? rounded(Math.sqrt(Math.max(0, this.m2 / n)) * this.scale) : null;
-    const rms = n ? rounded(Math.sqrt(this.squares / n) * this.scale) : null;
-    const l2 = n ? rounded(Math.sqrt(this.squares) * this.scale) : null;
+    const moments = this.moments.finish(n);
+    const mean = rounded(moments.mean), std = rounded(moments.std), rms = rounded(moments.rms), l2 = rounded(moments.l2);
     return {
       value_count: String(this.count), finite_count: String(this.finite + this.unsafeInteger), nonfinite: { nan: String(this.nan), positive_infinity: String(this.positiveInf), negative_infinity: String(this.negativeInf) },
       zero_count: String(this.zero), negative_zero_count: String(this.negativeZero),

@@ -88,9 +88,10 @@ assert.ok(radial.sem.some((value) => value > 0), "Cross-seed radial SEM must ret
 assert.equal(requantRatio([[0, 2], [4, 6]], [[0, 1], [2, 3]], 2), 2);
 assert.equal(
   requantRatio([[0, 1_000_000], [2, 4]], [[0, 1e-12], [1, 2]], 2),
-  2,
-  "OLS gain must exclude near-zero floating deltas instead of amplifying pointwise ratios",
+  2.0000002, // Correctly rounded exact binary64-input quotient; avoid rounding the expected numerator first.
+  "OLS gain uses sum(x*y)/sum(x*x) over all finite observations, without magnitude-dependent omissions",
 );
+assert.equal(requantRatio([[2e-200]], [[1e-200]], 1), 2, "OLS gain remains defined after rescaling both observations");
 assert.equal(requantRatio([[0]], [[0]], 1), null, "Undefined OLS gain must remain not-assessed");
 
 console.log("Landscape math contract passed (strict patch spans, ties-away INT8 requantization, analytic Hessian, and sample SEM).");

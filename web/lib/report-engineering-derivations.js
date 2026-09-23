@@ -2,6 +2,7 @@ import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { formatBytes, formatNumber } from "./format.js";
 import { ANALYZER_METADATA } from "./report-metadata.js";
 import { code } from "./report-utils.js";
+import { staticTensorPayloadBytes } from "./tensor-inventory.js";
 
 export function intensityPosture(bound) {
   return bound === "compute-bound" ? "high-intensity"
@@ -112,14 +113,6 @@ export function reachabilityDivergenceChannelPartition(reachability) {
     }
   }
   return result;
-}
-
-function staticTensorPayloadBytes(tensor) {
-  const shape = Array.isArray(tensor?.shape) ? tensor.shape.map(Number) : [];
-  if (!shape.length || shape.some((value) => !Number.isSafeInteger(value) || value < 0)) return null;
-  const width = ({ FLOAT64: 8, INT64: 8, UINT64: 8, FLOAT32: 4, INT32: 4, UINT32: 4, FLOAT16: 2, BFLOAT16: 2, INT16: 2, UINT16: 2, INT8: 1, UINT8: 1, BOOL: 1 })[String(tensor?.dtype || "").toUpperCase()];
-  if (!width) return null;
-  return shape.reduce((product, value) => product * value, 1) * width;
 }
 
 function isOnnxAnalysis(analysis) {

@@ -62,6 +62,12 @@ export function deriveQuantizedComputeAssessment(analysis = {}, quantizationStat
     mac_status: "not_assessed_mac_coverage_incomplete",
     mac_reason: coverageValue.reason || coverageValue.status,
   };
+  if (quant.compute_mac_assessment === "not_applicable_zero_compute_macs") return {
+    operator_status: quantizedOps == null ? "not_assessed_quantized_operator_count_unavailable" : "assessed",
+    operator_reason: quantizedOps == null ? "quantized_compute_operator_count_not_emitted" : null,
+    mac_status: "not_applicable_zero_compute_macs",
+    mac_reason: "the_complete_compute_mac_denominator_is_zero",
+  };
   if (format === "coreml" && quantizedOps == null) return {
     operator_status: "not_assessed_execution_precision_not_serialized",
     operator_reason: "serialized_weights_do_not_establish_executed_operator_precision",

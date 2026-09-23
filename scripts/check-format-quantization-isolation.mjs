@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { modelQuantizationStatus } from "../web/lib/analysis.js";
 
 import { analyzeExecuTorchModel } from "../web/executorch.js";
 import { buildQuantizationEvidence, buildStaticAnalysisExport } from "../web/lib/report-evidence.js";
@@ -6,6 +7,15 @@ import { buildQuantizationContractChecks } from "../web/lib/report-quantization-
 import { EXECUTORCH_ADD_PTE_BASE64, decodeFixtureBase64 } from "./fixtures/executorch-fixtures.mjs";
 
 const SHA = "a".repeat(64);
+for (const format of ["onnx", "tflite", "gguf", "safetensors", "coreml", "executorch"]) {
+  const missing = modelQuantizationStatus({ format });
+  assert.equal(missing.quantized_compute_mac_percent, null);
+  assert.equal(missing.full_integer, null);
+  assert.notEqual(missing.classification, "not_quantized_float");
+}
+const staleCounts = modelQuantizationStatus({ format: "tflite", tensor_count: 4, quantized_tensors: 2 });
+assert.equal(staleCounts.quantized_tensor_percent, 0.5);
+assert.equal(staleCounts.quantized_compute_mac_percent, null);
 
 const executorch = analyzeExecuTorchModel(decodeFixtureBase64(EXECUTORCH_ADD_PTE_BASE64), "add.pte");
 const executorchStatic = buildStaticAnalysisExport(executorch);

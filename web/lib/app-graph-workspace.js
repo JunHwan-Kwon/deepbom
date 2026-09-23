@@ -3,6 +3,7 @@ import {
   renderEvidenceTreemap,
 } from "./evidence-treemap.js";
 import { buildOverviewDomainMap } from "./overview-domain-map.js";
+import { staticTensorPayloadBytes } from "./tensor-inventory.js";
 
 export function createGraphWorkspace(workspace) {
   const {
@@ -1065,13 +1066,6 @@ function renderTensorExplorer(analysis) {
 }
 
 
-const TENSOR_DTYPE_BYTES = {
-  FLOAT64: 8, INT64: 8, UINT64: 8, COMPLEX64: 8,
-  FLOAT32: 4, INT32: 4, UINT32: 4,
-  FLOAT16: 2, INT16: 2, UINT16: 2,
-  INT8: 1, UINT8: 1, BOOL: 1, INT4: 1,
-};
-
 function renderTensorMemoryTimeline(analysis, consumersMap) {
   if (!tensorMemoryTimeline) return;
   if (analysis?.tensor_arena_plan || analysis?.tensor_liveness) {
@@ -1095,7 +1089,8 @@ function renderTensorMemoryTimeline(analysis, consumersMap) {
   const graphInputs = new Set(analysis.input_tensor_indices ?? []);
   const graphOutputs = new Set(analysis.output_tensor_indices ?? []);
 
-  let hasDynamicDims = false;
+  const unavailable = () => tensorMemoryTimeline.replaceChildren(mk("div", "insight-strip-label",
+    "Activation memory not assessed: a complete static shape, encoding, and representable payload total are required."));
   const spans = [];
   for (const t of graphTensors(analysis)) {
     if (!t || t.constant_buffer) continue;
@@ -1106,33 +1101,31 @@ function renderTensorMemoryTimeline(analysis, consumersMap) {
     if (prod == null && !cons.length && !isIn && !isOut) continue; // detached tensor
     const birth = isIn ? 0 : (prod ?? 0);
     const death = isOut ? N - 1 : (cons.length ? Math.max(...cons) : birth);
-    let elems = 1;
-    for (const d of t.shape || []) {
-      if (d > 0) elems *= d;
-      else hasDynamicDims = true; // dynamic dim counted as 1 — underestimates
-    }
-    spans.push({ t, birth: Math.max(0, birth), death: Math.min(N - 1, Math.max(birth, death)), bytes: elems * (TENSOR_DTYPE_BYTES[t.dtype] ?? 4) });
+    const bytes = staticTensorPayloadBytes(t);
+    if (bytes == null) { unavailable(); return; }
+    spans.push({ t, birth: Math.max(0, birth), death: Math.min(N - 1, Math.max(birth, death)), bytes });
   }
   if (!spans.length) return;
 
-  const delta = new Float64Array(N + 1);
+  const delta = Array(N + 1).fill(0n);
   for (const s of spans) {
-    delta[s.birth] += s.bytes;
-    delta[s.death + 1] -= s.bytes;
+    delta[s.birth] += BigInt(s.bytes);
+    delta[s.death + 1] -= BigInt(s.bytes);
   }
-  let acc = 0, peak = 0, peakIdx = 0;
+  let acc = 0n, peak = 0, peakIdx = 0;
   const curve = new Float64Array(N);
   for (let i = 0; i < N; i++) {
     acc += delta[i];
-    curve[i] = acc;
-    if (acc > peak) { peak = acc; peakIdx = i; }
+    if (acc > BigInt(Number.MAX_SAFE_INTEGER)) { unavailable(); return; }
+    curve[i] = Number(acc);
+    if (Number(acc) > peak) { peak = Number(acc); peakIdx = i; }
   }
   if (peak <= 0) return;
 
   const label = mk("div", "insight-strip-label");
   const peakOp = ops.find((o) => o.index === peakIdx);
   label.textContent = `Est. activation memory — peak ${formatBytes(peak)} at op #${peakIdx}${peakOp ? ` ${peakOp.name}` : ""} `
-    + `(static upper bound, no arena reuse${hasDynamicDims ? "; dynamic dims counted as 1" : ""})`;
+    + "(logical dense payload, static display order, no arena reuse; not runtime allocation)";
 
   const canvas = document.createElement("canvas");
   const W = Math.max(480, Math.round(tensorMemoryTimeline.clientWidth || graphExplorer?.clientWidth || 1200));

@@ -68,21 +68,25 @@ export function modelQuantizationStatus(analysis) {
       full_integer: null,
     };
   }
-  // Fallback for stale analysis objects without WASM-computed status
-  const quantizedTensors = Number(analysis?.quantized_tensors || 0);
-  const tensorCount = Number(analysis?.tensor_count || 0);
-  const ratio = tensorCount ? quantizedTensors / tensorCount : 0;
+  // Old snapshots can establish tensor signals, but cannot reconstruct a
+  // compute-path contract or a complete MAC denominator from a count alone.
+  const quantizedTensors = analysis?.quantized_tensors;
+  const tensorCount = analysis?.tensor_count;
+  const knownCounts = Number.isSafeInteger(quantizedTensors) && quantizedTensors >= 0
+    && Number.isSafeInteger(tensorCount) && tensorCount >= quantizedTensors;
+  const signals = knownCounts && quantizedTensors > 0;
+  const ratio = knownCounts && tensorCount > 0 ? quantizedTensors / tensorCount : null;
   return {
-    classification: quantizedTensors ? "quantization_signals" : "not_quantized_float",
-    label: quantizedTensors ? "Quantization signals detected" : "Not quantized",
-    summary: quantizedTensors ? "Quantized tensor or op signals present." : "No quantized tensor or op signal detected.",
-    detail: quantizedTensors ? `${formatNumber(quantizedTensors)}/${formatNumber(tensorCount)} tensors quantized (${formatPercent(ratio)}).` : "",
+    classification: signals ? "quantization_signals" : "not_assessed_format_contract_unbound",
+    label: signals ? "Quantization signals detected" : "Quantization not assessed",
+    summary: "The stored analysis does not contain a normalized quantization contract.",
+    detail: knownCounts ? `${formatNumber(quantizedTensors)}/${formatNumber(tensorCount)} tensors carry quantization metadata.` : "Tensor quantization coverage was not recorded.",
     quantized_tensor_percent: ratio,
-    quantized_compute_mac_percent: 0,
-    compute_macs: 0,
-    quantized_compute_macs: 0,
-    op_state_counts: [{ name: "none", count: (analysis?.ops || []).length }],
-    full_integer: false,
+    quantized_compute_mac_percent: null,
+    compute_macs: null,
+    quantized_compute_macs: null,
+    op_state_counts: [],
+    full_integer: null,
   };
 }
 
@@ -201,8 +205,8 @@ export function bottleneckComponentTotals(estimates) {
 export function macDistributionData(analysis, { limit = 12 } = {}) {
   const ops = Array.isArray(analysis?.ops) ? analysis.ops : [];
   const hasMacAssessment = analysis?.mac_assessment && typeof analysis.mac_assessment === "object";
-  const computeOps = Number(analysis?.mac_assessment?.compute_ops);
-  const assessedComputeOps = Number(analysis?.mac_assessment?.assessed_compute_ops);
+  const computeOps = analysis?.mac_assessment?.compute_ops == null ? NaN : Number(analysis.mac_assessment.compute_ops);
+  const assessedComputeOps = analysis?.mac_assessment?.assessed_compute_ops == null ? NaN : Number(analysis.mac_assessment.assessed_compute_ops);
   const coverageComplete = hasMacAssessment
     ? Number.isSafeInteger(computeOps)
       && Number.isSafeInteger(assessedComputeOps)
@@ -498,7 +502,7 @@ export function stageSummaryText(stage) {
     ? ` / MAC coverage ${stage.mac_assessed_ops || 0}/${(stage.mac_assessed_ops || 0) + stage.mac_not_assessed_ops}`
     : "";
   const channels = Array.isArray(stage.channels) ? stage.channels : [];
-  return `ops ${stage.first_op}-${stage.last_op} / count ${stage.op_count} / C ${channels.join("/") || "-"} / MACs ${stage.macs == null ? "N/A" : formatNumber(stage.macs)} (${stage.mac_percent == null ? "N/A" : formatPercent(stage.mac_percent)})${macCoverage} / MAC-weighted conditionally delegatable ${formatPercent(stage.delegated_mac_percent || 0)} predicted fallback ${formatPercent(stage.fallback_mac_percent || 0)} / op-count conditionally delegatable ${formatPercent(stage.delegated_op_percent || 0)} predicted fallback ${formatPercent(stage.fallback_op_percent || 0)} / predicted partition breaks ${stage.xnnpack_chain_breaks || 0} / ${stage.patterns?.join(", ") || "no pattern"}`;
+  return `ops ${stage.first_op}-${stage.last_op} / count ${stage.op_count} / C ${channels.join("/") || "-"} / MACs ${formatNumber(stage.macs_decimal ?? stage.macs)} (${stage.mac_percent == null ? "N/A" : formatPercent(stage.mac_percent)})${macCoverage} / MAC-weighted conditionally delegatable ${formatPercent(stage.delegated_mac_percent)} predicted fallback ${formatPercent(stage.fallback_mac_percent)} / op-count conditionally delegatable ${formatPercent(stage.delegated_op_percent || 0)} predicted fallback ${formatPercent(stage.fallback_op_percent || 0)} / predicted partition breaks ${stage.xnnpack_chain_breaks || 0} / ${stage.patterns?.join(", ") || "no pattern"}`;
 }
 
 export function topMacOps(analysis, limit = 24) {

@@ -1688,7 +1688,10 @@ async function assertMobileExplorerTabs(page) {
       || snapshot.visibleTargets.length !== 1
       || snapshot.visibleTargets[0] !== tab
       || snapshot.documentOverflow > 1) {
-      throw new Error(`Mobile Explorer tab ${tab} is not isolated or viewport-safe: ${JSON.stringify(snapshot)}`);
+      const overflowing = await page.evaluate(() => [...document.querySelectorAll("body *")]
+        .filter(node => node.getClientRects().length && node.getBoundingClientRect().right > innerWidth + 1)
+        .filter(node => { for (let p = node.parentElement; p && p !== document.body; p = p.parentElement) if (["auto", "scroll", "hidden", "clip"].includes(getComputedStyle(p).overflowX)) return false; return true; }).slice(0, 20).map(node => ({ tag: node.tagName, id: node.id, class: node.className, right: node.getBoundingClientRect().right, parent: node.parentElement?.outerHTML.slice(0, 500) })));
+      throw new Error(`Mobile Explorer tab ${tab} is not isolated or viewport-safe: ${JSON.stringify({ ...snapshot, overflowing })}`);
     }
   }
   await page.locator('[data-explorer-tab="node"]').focus();

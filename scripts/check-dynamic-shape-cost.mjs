@@ -148,6 +148,10 @@ expect(contract.op_formulas[0]?.macs_formula?.expression === "388800*D0", "Conv 
 expect(contract.total_macs_formula?.expression === "388800*D0", "total MAC polynomial mismatch");
 expect(contract.liveness?.peak_live_payload_formula?.expression === "69888*D0", "symbolic peak live-payload polynomial mismatch");
 expect(evaluateDynamicIntegerFormula(contract.total_macs_formula, { D0: 4 }) === 1_555_200n, "bound batch-4 MAC evaluation mismatch");
+for (const invalid of [null, false, true, "", " ", [], {}, 9007199254740992]) {
+  expect(evaluateDynamicIntegerFormula(contract.total_macs_formula, { D0: invalid }) === null, "Invalid or rounded symbol assignments must not become exact dimensions");
+}
+expect(evaluateDynamicIntegerFormula(contract.total_macs_formula, { D0: "9007199254740993" }) === 388800n * 9007199254740993n, "Decimal dimension bindings beyond binary64 must remain exact");
 
 const rankNConv = buildOnnxDynamicShapeCostContract([
   tensor(0, "x3d", [-1, 2, 5, 6, 7], "FLOAT32", { dimensions: ["batch3d", 2, 5, 6, 7] }),

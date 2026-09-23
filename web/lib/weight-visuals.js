@@ -1,4 +1,5 @@
 // Display projections only. The hash-bound numerical IR remains unchanged.
+import { exactCountRatio } from "./numerical-ir/exact-moments.js";
 export const escapeXml = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 export const countLabel = value => value == null ? "Not assessed" : BigInt(value).toLocaleString("en-US");
 export function numberLabel(value) {
@@ -11,13 +12,12 @@ export function numberLabel(value) {
     : Number(value.toPrecision(5)).toString();
 }
 export function countRatio(numerator, denominator) {
-  const n = BigInt(numerator), d = BigInt(denominator);
-  return d === 0n ? null : Number(n * 1_000_000n / d) / 1_000_000;
+  return exactCountRatio(numerator,denominator);
 }
 export function zeroLabel(statistics) {
-  if (!statistics || statistics.unsafe_integer_count !== "0") return "Not assessed";
+  if (!statistics) return "Not assessed";
   const ratio = countRatio(statistics.zero_count, statistics.finite_count);
-  return ratio == null ? "No finite values" : `${(ratio * 100).toFixed(2)}%`;
+  return ratio == null ? "No finite values" : ratio>0&&ratio*100<0.01 ? `${(ratio*100).toExponential(2)}%` : `${(ratio * 100).toFixed(2)}%`;
 }
 export function histogramWindow(rows) {
   let first = Infinity, last = -1, edges = null;
@@ -135,7 +135,7 @@ export function connectionsSvg(row, links, palette) {
 
 export function tensorMetricMapSvg(rows, selected, palette, mode) {
   if (!rows.length) return null;
-  const value = row => !row.statistics ? null : mode === 'rms' ? row.statistics.rms : row.statistics.unsafe_integer_count === '0' && BigInt(row.statistics.finite_count) > 0n ? Number(row.statistics.zero_count) / Number(row.statistics.finite_count) : null;
+  const value = row => !row.statistics ? null : mode === 'rms' ? row.statistics.rms : countRatio(row.statistics.zero_count,row.statistics.finite_count);
   const maximum = mode === 'rms' ? Math.max(1e-300, ...rows.map(row => value(row) ?? 0)) : 1;
   const height = 42 + rows.length * 29;
   let body = `<text x="218" y="20" fill="${palette.muted}">${mode === 'rms' ? 'RMS · linear scale shared across visible tensors' : 'Exact zero fraction · 0–100%'} · select a tensor</text>`;

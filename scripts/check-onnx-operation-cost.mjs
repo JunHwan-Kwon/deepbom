@@ -103,6 +103,32 @@ const scalarEinsum = assess(node("Einsum", ["scalar", "vector"], ["scaled"], { e
 ]);
 expectEqual(scalarEinsum.value, 7, "Einsum must accept an empty scalar subscript and count scalar-vector products.");
 
+for (const [a, b] of [[0, 1], [1, 0], [0, 0]]) {
+  const emptyBatch = assess(node("Einsum", ["a", "b"], ["y"], { equation: "...ik,...kj->...ij" }), [
+    tensor("a", [a, 2, 3]), tensor("b", [b, 3, 4]), tensor("y", [0, 2, 4]),
+  ]);
+  expectEqual(emptyBatch.status, "assessed", "Zero-sized broadcast batch is a closed contraction.");
+  expectEqual(emptyBatch.value, 0, "Broadcasting zero with one must retain zero MACs.");
+}
+// Scalar-pair enumeration is independent of the production overlap formula.
+for (let input = 1; input <= 5; input++) for (let kernel = 1; kernel <= 4; kernel++) {
+  for (let stride = 1; stride <= 3; stride++) for (let dilation = 1; dilation <= 3; dilation++) {
+    for (let start = 0; start <= 2; start++) for (let end = 0; end <= 2; end++) {
+      const output = stride * (input - 1) + dilation * (kernel - 1) + 1 - start - end;
+      if (output <= 0) continue;
+      let pairs = 0;
+      for (let i = 0; i < input; i++) for (let k = 0; k < kernel; k++) {
+        const position = i * stride + k * dilation - start;
+        if (position >= 0 && position < output) pairs++;
+      }
+      const result = assess(node("ConvTranspose", ["x", "w"], ["y"], { strides: [stride], dilations: [dilation], pads: [start, end] }), [
+        tensor("x", [2, 3, input]), tensor("w", [3, 4, kernel]), tensor("y", [2, 4, output]),
+      ]);
+      expectEqual(result.value, 24 * pairs, "ConvTranspose scalar valid-pair oracle");
+    }
+  }
+}
+
 const orderDependentEinsum = assess(node("Einsum", ["a", "b", "c"], ["y"], { equation: "ab,bc,cd->ad" }), [
   tensor("a", [2, 3]), tensor("b", [3, 4]), tensor("c", [4, 5]), tensor("y", [2, 5]),
 ]);
