@@ -556,6 +556,7 @@ mod tests {
 
     fn tensor(index: usize, dtype: &str, shape: Vec<i32>) -> TensorInfo {
         TensorInfo {
+            has_rank: true,
             index,
             name: format!("T{index}"),
             shape_signature: shape.clone(),

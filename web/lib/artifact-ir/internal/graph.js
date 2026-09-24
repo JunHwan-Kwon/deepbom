@@ -1,3 +1,6 @@
+import { buildValueType } from "../../ir-value-type.js";
+import { integerMetric } from "../../ir-metric.js";
+import { compareCanonicalText } from "../../report-utils.js";
 import {
   compactStrings, dimensions, exact, exactInteger, integerArray, list, logicalTensorBytes,
   nonNegativeInteger, optionalInteger, optionalText, positiveStorageBytes, scopedStorageId, storageId, tensorIndex,
@@ -45,6 +48,8 @@ export function buildSerializedGraph(analysis, format, tensors) {
         role: optionalText(op.topo_role),
         stage: optionalText(op.stage_key ?? op.stage_index),
       },
+      attributes: nativeAttributes(op, format),
+      semantic_contract: semanticContract(op, format),
       native_source: nativeOperatorLocator(format, scope, op),
       completeness: "serialized_operator_with_available_canonical_contract",
     };
@@ -59,6 +64,7 @@ export function buildSerializedGraph(analysis, format, tensors) {
     value_kind: String(tensor.value_kind || "tensor"),
     dtype: String(tensor.dtype || "UNKNOWN").toUpperCase(),
     shape: dimensions(tensor.shape),
+    type_contract: buildValueType(tensor, format, scope.id),
     shape_signature: Array.isArray(tensor.shape_signature) ? dimensions(tensor.shape_signature) : null,
     shape_contract_status: String(tensor.contract_status || tensor.buffer_data_status || "not_declared"),
     producer: producer.get(index) || null,
@@ -69,13 +75,19 @@ export function buildSerializedGraph(analysis, format, tensors) {
       ...(tensor.constant_buffer || positiveStorageBytes(tensor, format) > 0 ? ["serialized_constant_or_storage"] : []),
     ],
     storage_refs: positiveStorageBytes(tensor, format) > 0 ? [storageId(index)] : [],
-    logical_byte_length: logicalTensorBytes(tensor),
+    logical_byte_length: logicalTensorBytes(tensor, format),
     native_source: nativeValueLocator(format, scope, tensor, index),
   }));
   const additional = materializeAdditionalScopes(analysis, format, scope.id);
   const scopes = [scope, ...additional.scopes];
   const allOperators = [...operators, ...additional.operators];
   const allValues = [...values, ...additional.values];
+  for (const row of allOperators) {
+    row.attributes ||= nativeAttributes(null, format);
+    row.semantic_contract ||= semanticContract(null, format);
+    row.metric_contracts = { macs: integerMetric({ value: row.metrics.macs, unit: "MAC", sourceRefs: [row.id], assessed: row.metrics.macs ? 1 : 0, eligible: 1, reason: row.metrics.mac_assessment_status, assumptions: ["nominal_serialized_operator_cost_not_measured_runtime"] }),
+      logical_io_bytes: integerMetric({ value: row.metrics.logical_io_bytes, unit: "byte", sourceRefs: [row.id], assessed: row.metrics.logical_io_bytes ? 1 : 0, eligible: 1, assumptions: ["logical_io_sum_not_unique_storage_or_peak_memory"] }) };
+  }
   const macAssessment = graphMacAssessment(analysis, operators);
   const serializedScopeAssessedMacs = allOperators.reduce((sum, row) => sum + BigInt(row.metrics?.macs?.decimal || "0"), 0n);
   return {
@@ -209,6 +221,7 @@ function materializeTfliteScopes(analysis, primaryId) {
         value_kind: "tensor",
         dtype: String(tensor.dtype || "UNKNOWN").toUpperCase(),
         shape: dimensions(tensor.shape),
+        type_contract: buildValueType(tensor, "tflite", scopeId),
         shape_signature: Array.isArray(tensor.shape_signature) && tensor.shape_signature.length ? dimensions(tensor.shape_signature) : null,
         shape_contract_status: String(tensor.payload_status || "serialized_shape"),
         producer: producer.get(index) || null,
@@ -243,7 +256,7 @@ function materializeTfliteScopes(analysis, primaryId) {
 function materializeOnnxScopes(analysis, primaryId) {
   const ledger = list(analysis?.onnx_domain_analysis?.scope_ledger);
   const nested = ledger.filter((row) => String(row.scope || "main_graph") !== "main_graph")
-    .sort((left, right) => String(left.scope).localeCompare(String(right.scope)));
+    .sort((left, right) => compareCanonicalText(left.scope, right.scope));
   const scopeIdByName = new Map([["main_graph", primaryId]]);
   nested.forEach((row, index) => scopeIdByName.set(String(row.scope), `scope:onnx:nested:${index}`));
   const scopes = nested.map((row, index) => ({
@@ -303,6 +316,7 @@ function materializeOnnxScopes(analysis, primaryId) {
         value_kind: String(value.value_kind || "tensor"),
         dtype: String(value.dtype || "UNKNOWN").toUpperCase(),
         shape: dimensions(value.shape),
+        type_contract: buildValueType(value, "onnx", scopeId),
         shape_signature: null,
         shape_contract_status: String(value.contract_status || "serialized_name_only"),
         producer: producer.get(index) || null,
@@ -341,7 +355,8 @@ function graphMacAssessment(analysis, operators) {
     };
   }
   const sum = operators.reduce((total, row) => total + BigInt(row.metrics?.macs?.decimal || "0"), 0n);
-  return { total: exact(sum), assessed: exact(sum), assessment: { status: "complete_without_separate_compute_denominator", compute_op_count: null, assessed_compute_op_count: null, unassessed_compute_op_count: null, scope: "sum_of_operator_macs_present_in_artifact_ir" } };
+  const complete = operators.every(row => row.metrics.macs !== null);
+  return { total: complete ? exact(sum) : null, assessed: exact(sum), assessment: { status: complete ? "complete_without_separate_compute_denominator" : "partial_without_separate_compute_denominator", compute_op_count: null, assessed_compute_op_count: null, unassessed_compute_op_count: null, scope: "sum_of_operator_macs_present_in_artifact_ir" } };
 }
 
 function nativeOperatorLocator(format, scope, op) {
@@ -365,11 +380,11 @@ function nativeValueLocator(format, scope, tensor, index) {
 function uniqueConsumers(rows) {
   const values = new Map();
   for (const row of rows) values.set(`${row.operator_ref}:${row.port}`, row);
-  return [...values.values()].sort((left, right) => left.operator_ref.localeCompare(right.operator_ref) || left.port - right.port);
+  return [...values.values()].sort((left, right) => compareCanonicalText(left.operator_ref, right.operator_ref) || left.port - right.port);
 }
 
 function tensorPorts(values, scopeId) {
-  return list(values).map((value, port) => ({ native_index: Number(value), port }))
+  return list(values).map((value, port) => ({ native_index: optionalInteger(value), port }))
     .filter((row) => Number.isSafeInteger(row.native_index) && row.native_index >= 0)
     .map((row) => ({ ...row, value_ref: valueId(scopeId, row.native_index) }));
 }
@@ -382,10 +397,23 @@ function namedValuePorts(names, scopeId, values) {
 }
 
 function canonicalOps(value) {
-  return list(value).map((op, position) => ({ ...op, index: Number.isSafeInteger(Number(op?.index)) ? Number(op.index) : position }))
+  return list(value).map((op, position) => ({ ...op, index: nonNegativeInteger(op?.index) ?? position }))
     .sort((left, right) => left.index - right.index);
 }
 
 function operatorId(scopeId, index) { return `operator:${scopeId}:${index}`; }
 
 function valueId(scopeId, index) { return `value:${scopeId}:${index}`; }
+
+function nativeAttributes(op, format) {
+  const rows = op?.onnx_attributes || (op?.coreml_attributes && typeof op.coreml_attributes === "object"
+    ? Object.entries(op.coreml_attributes).sort(([a], [b]) => compareCanonicalText(a, b)).map(([name, value]) => ({ name, value })) : null);
+  return { status: Array.isArray(rows) ? "adapter_attribute_projection" : "not_exposed_by_adapter", format,
+    entries: Array.isArray(rows) ? JSON.parse(JSON.stringify(rows)) : [],
+    completeness: "native_payloads_and_schema_defaults_require_original_artifact" };
+}
+function semanticContract(op, format) {
+  return { schema: "deepbom.operator_semantics.v1", format, method: "native_adapter_calculation",
+    version: "1.0.0", mac_reason: String(op?.macs_reason || op?.mac_assessment_status || "adapter_did_not_expose_formula_reason"),
+    independent_reexecution_supported: false };
+}

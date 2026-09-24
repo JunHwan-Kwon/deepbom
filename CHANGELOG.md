@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.108.0 — 2026-09-24
+
+- Preserve recursive logical value types, scalar/unknown rank and graphless empty tensors in Artifact IR 2.3.0 and Model IR 1.1.0, while retaining legacy readers.
+- Fix cross-scope quantization/control bindings, incomplete MAC totals, and logical tensor bytes confused with absent initializer storage. Stream complete ONNX internal quantization-vector digests and preserve TFLite nested parameters.
+- Add typed file/member/range identities, overlap accounting, operator metric/attribute contracts, source-backed Model IR rederivation and explicit runtime input/environment provenance. Enforce ONNX shared dimension symbols without asserting measurement attestation.
+- Add a pinned-source support gate, 19 hardening regression groups and a native scalar-rank fixture. Use indexed storage/value lookups and register all new offline/public modules.
+- Account for the bounded runtime/schema/fixture additions in source budgets: runtime 12,800 KiB; verification 3,824 KiB; docs 800 KiB; development tooling 1,700 KiB.
+
+The following previously unreleased fixes are included:
+
+
+- Preserve canonical object semantics and locale-independent ordering across Artifact IR, Model IR and summary hashes; reject non-JSON values before cloning.
+- Preserve scalar, unknown and large exact cardinalities, validate decimal/numeric mirrors and Model IR storage conservation, and distinguish external-file identity from tensor-payload identity.
+- Retain declared quantization-vector counts and complete interface vectors; partial samples no longer claim complete vector digests. Record native attribute/type projection limits explicitly.
+- Advance Artifact IR method to 2.2.1 and Model IR method to 1.0.1 while accepting prior 2.2.0/1.0.0 documents. Add 15 common IR regression groups and a dated standards/research review.
+- Account for approximately 8 KiB of runtime validation changes, the new regression script and the review/source snapshot in explicit source budgets (runtime 12,752 KiB; verification 3,800 KiB; documentation 752 KiB).
+
 ## 1.107.0 — 2026-09-23
 
 - Derive TFLite BatchMatMul from serialized adjoints and validated broadcast/contraction axes; close its nominal MAC ledger. Correct 3D transpose-convolution input-site scatter counts and pooling scalar-work estimates from serialized filter dimensions.

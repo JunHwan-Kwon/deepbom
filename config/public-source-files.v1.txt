@@ -58,6 +58,7 @@ config/artifact-ir-consumer-policy.v1.json
 config/artifact-ir-import-policy.v2.json
 config/delivery-operations.v1.json
 config/finding-rule-registry-policy.v1.json
+config/ir-support-gate.v1.json
 config/model-ir-applicability.v1.json
 config/model-ir-import-policy.v1.json
 config/model-ir-upstream-sources.v1.json
@@ -139,6 +140,8 @@ docs/AGENT_CONTRACT_VERSIONING.md
 docs/AGENT_DISTRIBUTION_OPERATIONS.md
 docs/CLI_AUTOMATION.md
 docs/CLI_REFERENCE.md
+docs/CORE_IR_HARDENING_2026-09-24.md
+docs/CORE_IR_REVIEW_2026-09-24.md
 docs/DEEPBOM_PROPERTY_TAXONOMY.md
 docs/DEEPBOM_PROPERTY_TAXONOMY.v1.json
 docs/DELIVERY_OPERATIONS.md
@@ -181,6 +184,8 @@ docs/claude-remote/PORTAL_VALUES.md
 docs/claude-remote/README.md
 docs/claude-remote/submission-profile.json
 docs/native-runtime-capture.md
+docs/research/CORE_IR_UPSTREAM_SNAPSHOT_2026-09-24.json
+docs/research/CORE_IR_VALIDATION_2026-09-24.json
 docs/schemas/deepbom-artifact-ir-v2.schema.json
 docs/schemas/deepbom-conversion-receipt-v1.schema.json
 docs/schemas/deepbom-model-ir-v1.schema.json
@@ -338,6 +343,7 @@ scripts/check-cli-automation.mjs
 scripts/check-cli-graph-export.mjs
 scripts/check-cli-model-ir-visualization.mjs
 scripts/check-cli.mjs
+scripts/check-common-ir-semantics.mjs
 scripts/check-contract-migration-viewer.mjs
 scripts/check-contract-migration.mjs
 scripts/check-conversion-receipt.mjs
@@ -416,7 +422,9 @@ scripts/check-input-counterexample-viewer.mjs
 scripts/check-input-counterexample.mjs
 scripts/check-integration-kit.mjs
 scripts/check-interface-contract-comparison.mjs
+scripts/check-ir-hardening.mjs
 scripts/check-ir-stabilization-ui.mjs
+scripts/check-ir-support-gate.mjs
 scripts/check-js.mjs
 scripts/check-kernel-inspector-contract.mjs
 scripts/check-kernel-witness-viewer.mjs
@@ -888,6 +896,7 @@ web/lib/evidence-package-rights.js
 web/lib/evidence-treemap.js
 web/lib/evidence-visual-contract.js
 web/lib/evidence-why-drawer.js
+web/lib/exact-integer.js
 web/lib/exact-rational.js
 web/lib/execution-placement-evidence.js
 web/lib/execution-placement-view.js
@@ -927,6 +936,12 @@ web/lib/input-counterexample-viewer.js
 web/lib/input-counterexample.js
 web/lib/insights.js
 web/lib/interface-contract.js
+web/lib/ir-artifact-members.js
+web/lib/ir-logical-inventory.js
+web/lib/ir-metric.js
+web/lib/ir-parameter-vector.js
+web/lib/ir-runtime-provenance.js
+web/lib/ir-value-type.js
 web/lib/kernel-inspector.js
 web/lib/kernel-witness-worker.js
 web/lib/kernel-witness.js

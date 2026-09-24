@@ -1,8 +1,53 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-23T06:25:42.385288+00:00",
+  "recorded_at": "2026-09-24T01:20:06.693531+00:00",
   "scope": "Public installation channels and private web delivery",
   "observations": [
+    {
+      "kind": "private_web_preflight_basis",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 206.859,
+      "observed_at": "2026-09-24T01:15:45.646556+00:00",
+      "version": "1.108.0",
+      "source_commit": "ecb81a016cd1a8ab5de27648cac3466cd92c6956",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean IR hardening candidate. No GitHub Actions. This is validation, not a deployment; final frozen-source and product-boundary checks are recorded separately.",
+      "check_count": 96
+    },
+    {
+      "kind": "local_channel_build",
+      "command": "node scripts/build-channel-artifacts.mjs",
+      "elapsed_seconds": 13.617,
+      "observed_at": "2026-09-24T01:15:59.264560+00:00",
+      "version": "1.108.0",
+      "source_commit": "ecb81a016cd1a8ab5de27648cac3466cd92c6956",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean IR hardening candidate. No GitHub Actions. This is validation, not a deployment; final frozen-source and product-boundary checks are recorded separately."
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --platform-smoke",
+      "elapsed_seconds": 52.364,
+      "observed_at": "2026-09-24T01:16:51.629051+00:00",
+      "version": "1.108.0",
+      "source_commit": "ecb81a016cd1a8ab5de27648cac3466cd92c6956",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean IR hardening candidate. No GitHub Actions. This is validation, not a deployment; final frozen-source and product-boundary checks are recorded separately."
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --release-contract",
+      "elapsed_seconds": 156.783,
+      "observed_at": "2026-09-24T01:19:28.412010+00:00",
+      "version": "1.108.0",
+      "source_commit": "ecb81a016cd1a8ab5de27648cac3466cd92c6956",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean IR hardening candidate. No GitHub Actions. This is validation, not a deployment; final frozen-source and product-boundary checks are recorded separately."
+    },
     {
       "kind": "private_web_preflight_basis",
       "version": "1.107.0",

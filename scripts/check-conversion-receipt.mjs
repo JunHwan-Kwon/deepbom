@@ -84,7 +84,7 @@ const context = getArtifactIrContext(analysis, {
   sha256: activeArtifact.sha256,
   size: artifactBytes.length,
 });
-assert.equal(context.artifact_ir.method_version, "2.2.0", "Artifact IR conversion-lineage method version");
+assert.equal(context.artifact_ir.method_version, "2.3.0", "Artifact IR conversion-lineage method version");
 assert.equal(context.artifact_ir.lineage_evidence.status, "output_bound_source_declared", "Artifact IR conversion lineage status");
 assert.equal(context.artifact_ir.lineage_evidence.conversion.binding_sha256, bound.binding_sha256, "Artifact IR receipt binding conservation");
 

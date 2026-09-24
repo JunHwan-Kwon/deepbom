@@ -1,3 +1,4 @@
+import { validateRuntimeProvenance } from "./ir-runtime-provenance.js";
 import { validateWeightIr } from "./weight-ir.js";
 import { METHOD_VERSION, SHA256, bindSource, checkDigest, exactKeys, requireCondition, seal, shapeCount, sourceContract, parseNumeric } from "./numerical-ir/common.js";
 import { statisticsOf, validateStatistics } from "./numerical-ir/statistics.js";
@@ -9,7 +10,7 @@ const BOUNDARY="Imported execution evidence is consistency-checked, not remotely
 function digest(value) { return sha256TextHex(canonicalJson(value)); }
 function nonempty(value,label) { requireCondition(typeof value==="string" && value.length>0 && value.length<=4096,`invalid ${label}`); }
 function validateRun(run,source,model) {
-  exactKeys(run,["id","started_at","entry_region_ref","runtime","collector","execution","probe","runtime_evidence"],"execution run");
+  exactKeys(run,["id","started_at","entry_region_ref","runtime","collector","execution","probe","runtime_evidence",...(Object.hasOwn(run,"provenance")?["provenance"]:[])],"execution run");
   const entries=model.program.programs.flatMap(p=>p.entry_region_refs);
   requireCondition(entries.length ? entries.includes(run.entry_region_ref) : run.entry_region_ref===null,"run entry region does not match Model IR");
   nonempty(run.id,"run id"); requireCondition(typeof run.started_at==="string" && /^\d{4}-\d{2}-\d{2}T.*Z$/.test(run.started_at) && Number.isFinite(Date.parse(run.started_at)),"invalid run timestamp");
@@ -24,14 +25,29 @@ function validateRun(run,source,model) {
   exactKeys(run.probe,["kind","description"],"probe"); requireCondition(["representative_data","synthetic_ones","synthetic_zeros","synthetic_identity","synthetic_basis","synthetic_random","custom"].includes(run.probe.kind),"unknown input probe kind"); nonempty(run.probe.description,"probe description");
   if(run.runtime_evidence!==null) { exactKeys(run.runtime_evidence,["schema","sha256"],"runtime evidence link"); nonempty(run.runtime_evidence.schema,"runtime evidence schema"); requireCondition(SHA256.test(run.runtime_evidence.sha256),"invalid runtime evidence digest"); }
 }
-function compatibleShape(actual,expected) { return actual.length===expected.length && expected.every((d,i)=>!Number.isSafeInteger(d)||d<0||d===actual[i]); }
+function compatibleShape(actual,expected,type) {
+  if(type?.rank_status==="unknown_rank") return true;
+  if(type?.rank_status==="ranked") return actual.length===type.dimensions.length && type.dimensions.every((d,i)=>d.kind!=="constant"||BigInt(d.value.decimal)===BigInt(actual[i]));
+  return actual.length===expected.length && expected.every((d,i)=>typeof d==="string"&&/^(0|[1-9][0-9]*)$/.test(d)?BigInt(d)===BigInt(actual[i]):!Number.isSafeInteger(d)||d<0||d===actual[i]);
+}
+function bindSymbols(rows,model) {
+  const bindings=new Map(),values=new Map(model.program.values.map(row=>[row.id,row]));
+  for(const row of rows) {
+    const type=values.get(row.value_ref)?.type_contract?.root;
+    for(const [axis,dim] of (type?.dimensions||[]).entries()) if(dim.kind==="symbol") {
+      const key=JSON.stringify([dim.scope_ref,dim.name]),size=row.shape[axis];
+      requireCondition(!bindings.has(key)||bindings.get(key)===size,"runtime shapes contradict a shared symbolic dimension");bindings.set(key,size);
+    }
+  }
+}
 function validateTensorBinding(row,model,input=false,entry=null) {
   requireCondition(typeof row.native_locator==="string" && row.native_locator.length<=4096,"invalid native locator");
   requireCondition(typeof row.dtype==="string" && row.dtype.length>0,"missing tensor dtype"); shapeCount(row.shape);
   if(row.value_ref===null) { requireCondition(!input || entry===null,"inputs must bind to the selected Model IR entry"); nonempty(row.native_locator,"unmapped capture locator"); return; }
   const value=model.program.values.find(v=>v.id===row.value_ref); requireCondition(value,"capture refers to unknown Model IR value");
   requireCondition(value.dtype===row.dtype || value.dtype==="UNKNOWN","capture dtype contradicts Model IR");
-  requireCondition(compatibleShape(row.shape,value.shape),"capture shape contradicts Model IR");
+  requireCondition(!value.type_contract || ["tensor","sparse_tensor"].includes(value.type_contract.root.kind),"capture requires a tensor value type");
+  requireCondition(compatibleShape(row.shape,value.shape,value.type_contract?.root),"capture shape contradicts Model IR");
   if(input) requireCondition(value.roles.includes("graph_input") && value.region_ref===entry,"input is not a serialized entry graph input");
 }
 function checkValues(values,dtype) {
@@ -96,6 +112,8 @@ export function validateActivationIr(document,model) {
       else if(row.value_ref!==null) { requireCondition(requested.includes(row.value_ref)&&!accounted.has(row.value_ref),"unrequested or duplicate capture");accounted.add(row.value_ref); }
     }
   }
+  bindSymbols([...document.inputs,...document.tensors],model);
+  if(document.run.provenance) validateRuntimeProvenance(document.run.provenance,document.inputs,document.run);
   const required=model.program.values.filter(v=>v.roles.includes("graph_input")&&v.region_ref===document.run.entry_region_ref&&!v.storage_refs.length).map(v=>v.id);
   requireCondition(required.every(id=>inputRefs.has(id)),"run is missing graph input evidence");
   requireCondition(Array.isArray(document.missing),"invalid missing capture ledger");

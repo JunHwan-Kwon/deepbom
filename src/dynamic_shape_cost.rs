@@ -1078,6 +1078,7 @@ mod tests {
 
     fn tensor(index: usize, shape: &[i32], signature: &[i32], dtype: &str) -> TensorInfo {
         TensorInfo {
+            has_rank: true,
             index,
             name: format!("T{}", index),
             shape: shape.to_vec(),

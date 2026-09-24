@@ -26,7 +26,7 @@ for (const entry of cases) {
   const modelIr = output.model_ir;
   outputs.set(entry.format, modelIr);
   assert.equal(modelIr.schema, "deepbom.model_ir.v1", `${entry.format} schema`);
-  assert.equal(modelIr.method_version, "1.0.0", `${entry.format} method version`);
+  assert.equal(modelIr.method_version, "1.1.0", `${entry.format} method version`);
   assert.equal(modelIr.source_contract.schema, "deepbom.artifact_ir.v2", `${entry.format} source schema`);
   assert.equal(modelIr.source_contract.sha256, output.artifact_ir.artifact_ir_sha256, `${entry.format} source digest binding`);
   assert.equal(validateSchema(modelIr), true, `${entry.format} JSON Schema: ${errors(validateSchema.errors)}`);

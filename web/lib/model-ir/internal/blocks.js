@@ -1,3 +1,4 @@
+import { compareCanonicalText } from "../../report-utils.js";
 import { sha256TextHex } from "../../sha256-sync.js";
 
 const MAX_PATTERN_LENGTH = 64;
@@ -136,4 +137,4 @@ function normalizeObject(value) {
   return Object.fromEntries(Object.keys(value).sort().map((key) => [key, normalizeObject(value[key])]));
 }
 
-function displayOrder(left, right) { return (left.display_order ?? Number.MAX_SAFE_INTEGER) - (right.display_order ?? Number.MAX_SAFE_INTEGER) || left.id.localeCompare(right.id); }
+function displayOrder(left, right) { return (left.display_order ?? Number.MAX_SAFE_INTEGER) - (right.display_order ?? Number.MAX_SAFE_INTEGER) || compareCanonicalText(left.id, right.id); }

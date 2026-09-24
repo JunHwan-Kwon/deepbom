@@ -239,7 +239,7 @@ function artifactIdentity(analysis, options = {}) {
   const mlBom = options.mlBomDocument || {};
   const component = mlBom.metadata?.component || {};
   const sha256 = artifactSha256(analysis, mlBom, options.hash);
-  const byteLength = finite(options.fileSizeBytes ?? analysis?.file_size_bytes);
+  const byteLength = finite(options.fileSizeBytes ?? analysis?.file_size_bytes ?? analysis?.file_size);
   const integrity = collectArtifactIntegrity(analysis, { sha256 }, byteLength || 0);
   const suppliedSchemaOrOpset = propertyMap(component.properties).get("mlbom:model:schemaOrOpset") || null;
   const schemaOrOpset = integrity.schema_or_opset && !/\bunknown\b/i.test(integrity.schema_or_opset)
@@ -998,7 +998,7 @@ export function buildCycloneDxEvidenceDocument(analysis, options = {}) {
     filename: irIdentity.name,
     format: irIdentity.format,
     sha256: irIdentity.sha256,
-    size: irIdentity.byte_length ?? 0,
+    size: irIdentity.byte_length,
     artifact_set_sha256: analysis?.artifact_set?.artifact_set_sha256 || null,
   }, {
     artifactIrContext: options.artifactIrContext || null,
@@ -2249,7 +2249,7 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
     filename: irIdentity.name,
     format: irIdentity.format,
     sha256: irIdentity.sha256,
-    size: irIdentity.byte_length ?? 0,
+    size: irIdentity.byte_length,
     artifact_set_sha256: analysis?.artifact_set?.artifact_set_sha256 || null,
   }, {
     artifactIrContext: options.artifactIrContext || null,

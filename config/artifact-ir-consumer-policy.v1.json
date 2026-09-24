@@ -60,7 +60,8 @@
     "web/lib/artifact-ir-context.js",
     "web/lib/artifact-ir.js",
     "web/lib/artifact-ir/internal/graph.js",
-    "web/lib/artifact-ir/internal/overlays.js"
+    "web/lib/artifact-ir/internal/overlays.js",
+    "web/lib/ir-logical-inventory.js"
   ],
   "compatibility_facade_modules": [
     "web/lib/artifact-ir-selectors.js"

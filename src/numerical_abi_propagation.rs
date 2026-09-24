@@ -1386,6 +1386,7 @@ mod tests {
 
     fn test_tensor(index: usize) -> TensorInfo {
         TensorInfo {
+            has_rank: true,
             index,
             name: format!("t{index}"),
             shape: vec![1],

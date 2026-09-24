@@ -1,9 +1,10 @@
+import { compareCanonicalText } from "./report-utils.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { validateModelIr } from "./model-ir.js";
 
 export const MODEL_SUMMARY_SCHEMA = "deepbom.model_summary.v1";
-export const MODEL_SUMMARY_METHOD_VERSION = "1.0.0";
+export const MODEL_SUMMARY_METHOD_VERSION = "1.1.0";
 export const MODEL_SUMMARY_LEVELS = Object.freeze(["auto", "operation", "block", "storage"]);
 
 export function buildModelSummary(input, { level = "auto" } = {}) {
@@ -71,12 +72,21 @@ export function buildModelSummary(input, { level = "auto" } = {}) {
 }
 
 export function validateModelSummary(document) {
+  canonicalJson(document);
   const body = structuredClone(document);
   const digest = String(body.model_summary_sha256 || "").toLowerCase();
   delete body.model_summary_sha256;
   validateModelSummaryBody(body);
   if (!/^[a-f0-9]{64}$/.test(digest) || digest !== sha256TextHex(canonicalJson(body))) throw new Error("Model summary SHA-256 is invalid.");
   return deepFreeze({ ...body, model_summary_sha256: digest });
+}
+
+export function validateModelSummaryAgainstSource(document, modelIr) {
+  const summary = validateModelSummary(document);
+  if (summary.method_version !== MODEL_SUMMARY_METHOD_VERSION) throw new Error("Legacy summary requires its original projection method for source validation.");
+  const expected = buildModelSummary(modelIr, { level: summary.projection.requested_level });
+  if (canonicalJson(summary) !== canonicalJson(expected)) throw new Error("Model summary differs from its independently supplied Model IR source.");
+  return summary;
 }
 
 export function renderModelSummaryTable(input) {
@@ -139,7 +149,7 @@ export function compactModelSummaryForConversation(input, { maximumRows = 40 } =
     subject_ref: row.subject_ref,
     name: row.name,
     native_type: `${row.native_type.domain || ""}:${row.native_type.name || "unknown"}`,
-    outputs: row.outputs.slice(0, 8).map((value) => ({ name: value.name, dtype: value.dtype, shape: value.shape, roles: value.roles })),
+    outputs: row.outputs.slice(0, 8).map((value) => ({ name: value.name, dtype: value.dtype, shape: value.shape, type_contract: value.type_contract || null, roles: value.roles })),
     predecessor_refs: row.predecessor_relationships.slice(0, 8).map((edge) => edge.from_ref),
     bound_storage_count: row.aggregates.storage_object_count ?? 0,
     serialized_element_count: row.aggregates.serialized_element_count || null,
@@ -199,7 +209,7 @@ function operationRows(modelIr) {
       block_ref: blocksByMember.get(operation.id) || null,
       inputs: inputValues,
       outputs: outputValues,
-      predecessor_relationships: (incoming.get(operation.id) || []).sort((a, b) => a.relationship_ref.localeCompare(b.relationship_ref)),
+      predecessor_relationships: (incoming.get(operation.id) || []).sort((a, b) => compareCanonicalText(a.relationship_ref, b.relationship_ref)),
       bound_storage: bound,
       aggregates: aggregateStorage(bound),
       metrics: structuredClone(operation.metrics || null),
@@ -259,10 +269,12 @@ function buildTotals(modelIr) {
   const storage = modelIr.tensors_and_storage.storage_objects;
   const boundRefs = new Set(modelIr.weight_bindings.bindings.map((row) => row.storage_ref));
   const boundStorage = storage.filter((row) => boundRefs.has(row.id));
+  const entries = new Set(modelIr.program.programs.flatMap(row => row.entry_region_refs));
+  const entryOperations = modelIr.program.operations.filter(row => entries.has(row.region_ref));
   return {
     operation_count: modelIr.program.operations.length,
     structural_block_count: modelIr.program.blocks.length,
-    logical_value_count: modelIr.program.values.length,
+    logical_value_count: modelIr.tensors_and_storage.logical_values.length,
     storage_object_count: storage.length,
     bound_storage_object_count: boundStorage.length,
     unbound_storage_object_count: storage.length - boundStorage.length,
@@ -271,7 +283,8 @@ function buildTotals(modelIr) {
     bound_serialized_element_count: exactSum(boundStorage.map((row) => row.element_count)),
     bound_serialized_byte_length: exactSum(boundStorage.map((row) => row.serialized_byte_length)),
     quantization_record_count: modelIr.quantization.records.length,
-    macs: sumMetric(modelIr.program.operations, "macs"),
+    macs: sumMetric(entryOperations, "macs", modelIr.program.status === "serialized"),
+    mac_scope: "entry_regions_nominal_serialized_operations_not_runtime_execution_count",
     trainable_parameter_count: null,
   };
 }
@@ -300,7 +313,7 @@ function storageContract(storage, quantization) {
 }
 
 function valueContract(value) {
-  return { value_ref: value.id, name: value.name, dtype: value.dtype, shape: structuredClone(value.shape), shape_signature: structuredClone(value.shape_signature), roles: structuredClone(value.roles) };
+  return { value_ref: value.id, name: value.name, dtype: value.dtype, shape: structuredClone(value.shape), shape_signature: structuredClone(value.shape_signature), ...(value.type_contract ? { type_contract: structuredClone(value.type_contract) } : {}), roles: structuredClone(value.roles) };
 }
 
 function aggregateStorage(rows) {
@@ -311,14 +324,14 @@ function aggregateStorage(rows) {
 function exactSum(values) {
   const known = values.map(exactDecimal);
   const assessed = known.filter((value) => value !== null);
+  if (values.length && !assessed.length) return { decimal: null, number: null, status: "not_assessable", assessed_count: 0, total_count: values.length };
   const sum = assessed.reduce((total, value) => total + BigInt(value), 0n);
   return { decimal: sum.toString(), number: sum <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(sum) : null, status: assessed.length === values.length ? "complete" : assessed.length ? "partial" : "not_assessable", assessed_count: assessed.length, total_count: values.length };
 }
 
-function sumMetric(rows, key) {
-  const values = rows.map((row) => exactDecimal(row.metrics?.[key])).filter((value) => value !== null);
-  const sum = values.reduce((total, value) => total + BigInt(value), 0n);
-  return { decimal: sum.toString(), number: sum <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(sum) : null, status: values.length === rows.length ? "complete" : values.length ? "partial" : "not_assessable", assessed_count: values.length, total_count: rows.length };
+function sumMetric(rows, key, assessedEmpty = true) {
+  if (!rows.length && !assessedEmpty) return { decimal: null, number: null, status: "not_assessable", assessed_count: 0, total_count: 0 };
+  return exactSum(rows.map(row => row.metrics?.[key]));
 }
 
 function orderingContract(modelIr, level) {
@@ -351,13 +364,21 @@ function operationCompleteness(outputs, storage) {
 }
 
 function validateModelSummaryBody(value) {
-  if (value?.schema !== MODEL_SUMMARY_SCHEMA || value?.method_version !== MODEL_SUMMARY_METHOD_VERSION) throw new Error("Model summary schema identity is invalid.");
+  if (value?.schema !== MODEL_SUMMARY_SCHEMA || !["1.0.0", MODEL_SUMMARY_METHOD_VERSION].includes(value?.method_version)) throw new Error("Model summary schema identity is invalid.");
   if (value?.source_contract?.schema !== "deepbom.model_ir.v1" || !/^[a-f0-9]{64}$/.test(String(value.source_contract.model_ir_sha256 || "")) || !/^[a-f0-9]{64}$/.test(String(value.source_contract.artifact_sha256 || ""))) throw new Error("Model summary source binding is invalid.");
   if (value?.hash_contract?.canonicalization !== "RFC8785-JCS" || JSON.stringify(value.hash_contract.excluded_pointers) !== JSON.stringify(["/model_summary_sha256"])) throw new Error("Model summary hash contract is invalid.");
   if (!Array.isArray(value.rows) || !value.projection || !value.totals || !value.coverage || !value.trainability) throw new Error("Model summary required sections are missing.");
   if (!["operation", "block", "storage", "identity"].includes(value.projection.selected_level)) throw new Error("Model summary projection level is invalid.");
   if (value.projection.ordering.runtime_order_claim !== false || value.coverage.unknown_is_zero !== false) throw new Error("Model summary evidence boundary was promoted beyond its source.");
   if (value.trainability.trainable_parameter_count !== null || value.trainability.non_trainable_parameter_count !== null) throw new Error("Model summary must not infer trainability from deployment storage.");
+  if (value.method_version === MODEL_SUMMARY_METHOD_VERSION) {
+    for (const [key, count] of Object.entries(value.totals).filter(([key]) => key.endsWith("_count") && !key.includes("element") && key !== "trainable_parameter_count")) {
+      if (!Number.isSafeInteger(count) || count < 0) throw new Error(`Model summary count is invalid: ${key}.`);
+    }
+    if (value.totals.bound_storage_object_count + value.totals.unbound_storage_object_count !== value.totals.storage_object_count) throw new Error("Model summary storage counts do not reconcile.");
+    for (const key of ["unique_serialized_element_count", "unique_serialized_byte_length", "bound_serialized_element_count", "bound_serialized_byte_length", "macs"]) validateAssessedSum(value.totals[key]);
+    if (value.totals.mac_scope !== "entry_regions_nominal_serialized_operations_not_runtime_execution_count") throw new Error("Model summary MAC scope is invalid.");
+  }
   const ids = new Set();
   for (const row of value.rows) {
     if (!row?.id || !row.subject_ref || ids.has(row.id) || !row.order || !Array.isArray(row.outputs) || !Array.isArray(row.bound_storage) || !row.evidence_class || !row.completeness) throw new Error("Model summary row contract is invalid.");
@@ -368,18 +389,27 @@ function validateModelSummaryBody(value) {
   if (!String(value.interpretation_boundary || "").trim()) throw new Error("Model summary interpretation boundary is missing.");
 }
 
+function validateAssessedSum(value) {
+  if (!value || !Number.isSafeInteger(value.total_count) || !Number.isSafeInteger(value.assessed_count) || value.assessed_count < 0 || value.total_count < value.assessed_count) throw new Error("Model summary assessment coverage is invalid.");
+  const expected = value.assessed_count === value.total_count ? "complete" : value.assessed_count ? "partial" : "not_assessable";
+  if (value.status === "not_assessable" && value.assessed_count === 0 && value.decimal === null && value.number === null) return;
+  if (value.status !== expected || !/^(0|[1-9][0-9]*)$/.test(value.decimal)) throw new Error("Model summary exact subtotal is invalid.");
+  const exact = BigInt(value.decimal), number = exact <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(exact) : null;
+  if (value.number !== number) throw new Error("Model summary exact subtotal numeric mirror is invalid.");
+}
+
 function summaryRowCells(row) {
-  const output = row.outputs.map((value) => `${value.dtype || "?"}${shapeText(value.shape)}`).join(", ") || "not assessable";
+  const output = row.outputs.map((value) => `${value.dtype || "?"}${shapeText(value.shape, value.type_contract)}`).join(", ") || "not assessable";
   return [row.order.display ?? row.order.source ?? "-", clean(row.name), `${clean(row.native_type.domain)}:${clean(row.native_type.name)}`, output, row.aggregates.storage_object_count ?? 0, exactText(row.aggregates.serialized_element_count), exactText(row.aggregates.serialized_byte_length), exactText(row.metrics?.macs), row.evidence_class];
 }
 
 function exactText(value) { return value?.status === "not_assessable" || value?.decimal == null ? "N/A" : value.status === "partial" ? `${value.decimal} (partial)` : value.decimal; }
 function exactDecimal(value) { const raw = value && typeof value === "object" ? value.decimal : value; return /^\d+$/.test(String(raw ?? "")) ? String(raw) : null; }
-function displayOrder(a, b) { return Number(a.order?.display ?? a.display_order ?? Number.MAX_SAFE_INTEGER) - Number(b.order?.display ?? b.display_order ?? Number.MAX_SAFE_INTEGER) || String(a.subject_ref || a.id).localeCompare(String(b.subject_ref || b.id)); }
+function displayOrder(a, b) { return Number(a.order?.display ?? a.display_order ?? Number.MAX_SAFE_INTEGER) - Number(b.order?.display ?? b.display_order ?? Number.MAX_SAFE_INTEGER) || compareCanonicalText(a.subject_ref || a.id, b.subject_ref || b.id); }
 function minimum(values) { const rows = values.filter(Number.isSafeInteger); return rows.length ? Math.min(...rows) : null; }
 function groupBy(rows, key) { const result = new Map(); for (const row of rows) { const id = row[key]; if (!result.has(id)) result.set(id, []); result.get(id).push(row); } return result; }
 function uniqueBy(rows, key) { const seen = new Set(); return rows.filter((row) => { const id = row[key]; if (seen.has(id)) return false; seen.add(id); return true; }); }
-function shapeText(shape) { return Array.isArray(shape) && shape.length ? `[${shape.map((value) => value == null ? "?" : value).join(",")}]` : "[?]"; }
+function shapeText(shape, type) { if (type?.root?.rank_status === "ranked" && type.root.dimensions.length === 0) return "[]"; if (type && !["tensor", "sparse_tensor"].includes(type.root.kind)) return `<${type.root.kind}>`; return Array.isArray(shape) && shape.length ? `[${shape.map((value) => value == null ? "?" : value).join(",")}]` : "[?]"; }
 function clean(value) { return String(value ?? "").replace(/[\t\r\n|]+/g, " ").trim() || "-"; }
 function markdownCell(value) { return String(value ?? "").replaceAll("|", "\\|").replace(/[\r\n]+/g, " "); }
 function escapeInline(value) { return String(value ?? "").replaceAll("`", "\\`"); }

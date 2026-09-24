@@ -162,6 +162,8 @@ function serializedScopeRow(graph, descriptor) {
         value_kind: String(source?.valueKind || "tensor"),
         dtype: String(source?.dtype || "UNKNOWN"),
         shape: Array.isArray(source?.shape) ? [...source.shape] : [],
+        shape_declared: source?.shapeDeclared === true,
+        type_proto: source?.typeProto ? structuredClone(source.typeProto) : null,
         contract_status: source?.shapeDeclared === true || (source?.dtype && source.dtype !== "UNKNOWN") ? "serialized_declared_contract" : "serialized_name_only",
         roles: [],
         native_path: nativePath,
@@ -172,6 +174,8 @@ function serializedScopeRow(graph, descriptor) {
       row.value_kind = String(source?.valueKind || row.value_kind);
       row.dtype = String(source?.dtype || row.dtype);
       row.shape = Array.isArray(source?.shape) ? [...source.shape] : row.shape;
+      row.shape_declared = source?.shapeDeclared === true;
+      row.type_proto = source?.typeProto ? structuredClone(source.typeProto) : null;
       row.contract_status = "serialized_declared_contract";
       row.native_path = nativePath;
     }

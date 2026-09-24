@@ -1,3 +1,4 @@
+import { compareCanonicalText } from "./report-utils.js";
 export const MODEL_IR_GENERIC_ANALYSIS_SCHEMA = "deepbom.model_ir_generic_analysis.v1";
 
 export function buildGenericModelIrAnalysis({ program, storage, quantization, staticRuntime }) {
@@ -80,7 +81,7 @@ function storagePass(storage) {
       serialized_object_bytes_sum: clone(storage.totals.serialized_object_bytes_sum),
       exact_range_count: storage.totals.exact_range_count,
       payload_digest_count: storage.totals.payload_digest_count,
-      encoding_histogram: [...encodings].sort(([left], [right]) => left.localeCompare(right)).map(([encoding, count]) => ({ encoding, count })),
+      encoding_histogram: [...encodings].sort(([left], [right]) => compareCanonicalText(left, right)).map(([encoding, count]) => ({ encoding, count })),
     },
     completeness: storage.completeness,
   });
@@ -96,8 +97,8 @@ function quantizationPass(quantization) {
     subjectRefs: quantization.records.map((row) => row.subject_ref),
     result: {
       record_count: quantization.records.length,
-      family_histogram: [...families].sort(([left], [right]) => String(left).localeCompare(String(right))).map(([family, count]) => ({ family, count })),
-      incomplete_record_count: quantization.records.filter((row) => !/complete/i.test(String(row.completeness))).length,
+      family_histogram: [...families].sort(([left], [right]) => compareCanonicalText(left, right)).map(([family, count]) => ({ family, count })),
+      incomplete_record_count: quantization.records.filter((row) => row.completeness !== "complete_for_serialized_contract").length,
     },
     completeness: quantization.status,
   });

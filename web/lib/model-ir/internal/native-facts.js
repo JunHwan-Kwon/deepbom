@@ -5,7 +5,7 @@ import { clone, list } from "./shared.js";
 export const MODEL_IR_NATIVE_FACT_LEDGER_SCHEMA = "deepbom.model_ir_native_fact_ledger.v1";
 
 export function buildModelIrNativeFactLedger(analysis, artifactIr) {
-  const operatorByNativeIndex = new Map(artifactIr.graph.operators.map((row) => [row.native_index, row.id]));
+  const operatorByNativeIndex = new Map(artifactIr.graph.operators.filter(row => row.scope_ref === artifactIr.graph.primary_scope_ref).map((row) => [row.native_index, row.id]));
   const graphdef = analysis?.graphdef;
   const controlDependencies = list(graphdef?.control_dependencies).map((row, index) => ({
     id: `native-control:${index}`,
@@ -41,6 +41,7 @@ export function buildModelIrNativeFactLedger(analysis, artifactIr) {
 }
 
 export function validateModelIrNativeFactLedger(input, artifactIrSha256) {
+  canonicalJson(input);
   const value = clone(input);
   if (value?.schema !== MODEL_IR_NATIVE_FACT_LEDGER_SCHEMA) throw new Error("Model IR native fact ledger schema is invalid.");
   const digest = String(value.ledger_sha256 || "").toLowerCase();

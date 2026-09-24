@@ -1,3 +1,6 @@
+import { buildValueType, valueElementCount } from "./ir-value-type.js";
+import { validateLogicalInventory } from "./ir-logical-inventory.js";
+import { validateArtifactMembers } from "./ir-artifact-members.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { validateArtifactEvidenceIr } from "./artifact-ir.js";
@@ -7,6 +10,7 @@ import { buildModelProfiles } from "./model-ir/internal/profiles.js";
 import { buildModelIrNativeFactLedger, validateModelIrNativeFactLedger } from "./model-ir/internal/native-facts.js";
 import { buildGenericModelIrAnalysis } from "./model-ir-generic-analysis.js";
 import { clone, deepFreeze, evidenceClass, exact, list, unique } from "./model-ir/internal/shared.js";
+import { validateExactInteger } from "./exact-integer.js";
 
 export { MODEL_IR_METHOD_VERSION, MODEL_IR_SCHEMA };
 
@@ -43,8 +47,10 @@ export function buildModelIrFromArtifactIr(input, { nativeFactLedger = null } = 
     artifact_set: {
       status: artifactIr.artifact.artifact_set_sha256 ? "identity_bound" : "single_artifact_or_set_not_declared",
       artifact_set_sha256: artifactIr.artifact.artifact_set_sha256,
-      member_refs: ["artifact:primary"],
+      member_refs: artifactIr.artifact_members ? artifactIr.artifact_members.members.map(row => row.id) : ["artifact:primary"],
     },
+    logical_inventory: clone(artifactIr.logical_inventory || null),
+    artifact_members: clone(artifactIr.artifact_members || null),
     artifact_role: inferArtifactRole(artifactIr),
     format_profile: { id: artifactIr.artifact.format, native_schema: nativeSchemaName(artifactIr.artifact.format), applicability: "applicable" },
     profiles,
@@ -78,6 +84,7 @@ export function buildModelIrFromArtifactIr(input, { nativeFactLedger = null } = 
 }
 
 export function validateModelIr(document) {
+  canonicalJson(document); // Validate the supplied values, not a lossy JSON clone.
   const body = clone(document);
   const digest = String(body.model_ir_sha256 || "").toLowerCase();
   delete body.model_ir_sha256;
@@ -88,9 +95,11 @@ export function validateModelIr(document) {
 
 function buildStorageModel(artifactIr) {
   const graphValues = new Map(artifactIr.graph.values.map((row) => [row.id, row]));
+  const logicalByStorage = new Map();
+  for (const row of graphValues.values()) for (const ref of row.storage_refs) if (!logicalByStorage.has(ref)) logicalByStorage.set(ref, row);
   const quantBySubject = new Map(artifactIr.quantization_contracts.records.map((row) => [row.subject_ref, row]));
   const storageObjects = artifactIr.storage_topology.objects.map((row) => {
-    const logical = [...graphValues.values()].find((value) => list(value.storage_refs).includes(row.id));
+    const logical = logicalByStorage.get(row.id);
     const quant = quantBySubject.get(logical?.id) || quantBySubject.get(row.id);
     return {
       id: row.id,
@@ -100,7 +109,8 @@ function buildStorageModel(artifactIr) {
       encoding: clone(row.encoding),
       shape: clone(row.shape),
       dimension_order: dimensionOrder(artifactIr.artifact.format),
-      element_count: elementCount(row.shape),
+      element_count: elementCount(row.shape, row.shape_rank_status),
+      shape_rank_status: row.shape_rank_status || (row.shape.length ? "ranked" : "unknown_rank"),
       serialized_byte_length: clone(row.serialized_byte_length),
       logical_byte_length: clone(logical?.logical_byte_length || null),
       byte_range: clone(row.byte_range),
@@ -114,13 +124,13 @@ function buildStorageModel(artifactIr) {
   });
   return {
     status: artifactIr.storage_topology.status,
-    logical_values: artifactIr.graph.values.map((row) => ({ id: row.id, dtype: row.dtype, shape: clone(row.shape), storage_refs: clone(row.storage_refs), evidence_class: "OBSERVED_SERIALIZED_ARTIFACT" })),
+    logical_values: (artifactIr.logical_inventory?.values || artifactIr.graph.values).map((row) => ({ id: row.id, dtype: row.dtype, shape: clone(row.shape || graphValues.get(row.id)?.shape || []), ...(row.type_contract ? { type_contract: clone(row.type_contract) } : {}), storage_refs: clone(row.storage_refs), evidence_class: "OBSERVED_SERIALIZED_ARTIFACT" })),
     storage_objects: storageObjects,
     storage_ranges: storageObjects.filter((row) => row.byte_range?.status === "exact").map((row) => ({ storage_ref: row.id, ...clone(row.byte_range) })),
     external_storage: storageObjects.filter((row) => row.external_storage.status !== "inline_or_not_exposed").map((row) => ({ storage_ref: row.id, ...row.external_storage })),
     aliases: [],
     totals: {
-      logical_value_count: artifactIr.graph.values.length,
+      logical_value_count: artifactIr.logical_inventory?.count ?? artifactIr.graph.values.length,
       storage_object_count: storageObjects.length,
       serialized_object_bytes_sum: clone(artifactIr.storage_topology.totals.serialized_object_bytes_sum),
       exact_range_count: storageObjects.filter((row) => row.byte_range?.status === "exact").length,
@@ -134,8 +144,9 @@ function buildStorageModel(artifactIr) {
 function buildBindings(program, storage) {
   const storageIds = new Set(storage.storage_objects.map((row) => row.id));
   const bindings = [];
+  const values = new Map(program.values.map(row => [row.id, row]));
   for (const port of program.ports.filter((row) => row.direction === "input")) {
-    const value = program.values.find((row) => row.id === port.value_ref);
+    const value = values.get(port.value_ref);
     for (const storageRef of list(value?.storage_refs)) {
       if (!storageIds.has(storageRef)) continue;
       bindings.push({
@@ -300,7 +311,7 @@ function profile(id, requirement, applicable, status) { return { id, requirement
 function buildCapabilities(program, storage, bindings, quantization, staticRuntime, observedRuntime) {
   return {
     serialized_program_graph: program.status === "serialized",
-    tensor_shapes: program.values.length > 0 || storage.storage_objects.length > 0,
+    tensor_shapes: program.values.length > 0 || storage.logical_values.length > 0 || storage.storage_objects.length > 0,
     serialized_storage: storage.storage_objects.length > 0,
     weight_bindings: bindings.bindings.length > 0,
     quantization_contracts: quantization.records.length > 0,
@@ -317,6 +328,9 @@ function buildLossLedger(artifactIr, program, bindings) {
   if (!bindings.bindings.length) rows.push(loss("weight_bindings", bindings.status, "No operation-to-storage weight binding can be established from the serialized subjects."));
   if (!artifactIr.overlays.runtime.length) rows.push(loss("runtime_order_and_assignment", "not_observed", "No identity-bound runtime trace was imported."));
   if (artifactIr.lineage_evidence.status === "not_provided") rows.push(loss("conversion_lineage", "not_provided", "The artifact does not independently establish its source model or conversion procedure."));
+  if (program.status === "serialized") rows.push(loss("native_operator_attributes", "adapter_projection_with_explicit_limits", "Available adapter attributes are preserved, but native payloads, defaults and complete operator semantics still require the original artifact. This ledger is not an executable interchange format."));
+  if (program.values.some(row => !["tensor", "dense_tensor"].includes(row.kind) && !row.type_contract?.native_type)) rows.push(loss("native_value_type_tree", "not_materialized_in_common_ir", "The common value kind does not embed the complete native sequence, map, optional or sparse type tree. Recover it from the original artifact through the pinned native adapter."));
+  if (artifactIr.quantization_contracts.totals.partial_record_count) rows.push(loss("quantization_parameter_vectors", "partial_serialized_contract", "One or more native parameter vectors are not available in full. Declared cardinalities and partial samples do not establish a complete vector digest."));
   return { status: rows.length ? "bounded_losses_recorded" : "no_known_projection_loss", entries: rows, count: rows.length };
 }
 
@@ -335,11 +349,13 @@ function inferArtifactRole(artifactIr) {
 }
 function nativeSchemaName(format) { return ({ onnx: "ONNX ModelProto", tflite: "TensorFlow Lite FlatBuffer", gguf: "GGUF", safetensors: "SafeTensors", coreml: "Core ML Model", mlmodel: "Core ML Model", executorch: "ExecuTorch PTE", pte: "ExecuTorch PTE", ptd: "ExecuTorch PTD", graphdef: "TensorFlow GraphDef", savedmodel: "TensorFlow SavedModel", hdf5: "HDF5 safe envelope", keras: "Keras v3 archive safe envelope", pt2: "PyTorch PT2 archive safe envelope", pytorch_checkpoint: "PyTorch checkpoint safe envelope" })[format] || format; }
 function dimensionOrder(format) { return format === "gguf" ? "format_native_ne0_innermost_first" : "format_native_declared_order"; }
-function elementCount(shape) { if (!list(shape).length || list(shape).some((value) => !Number.isSafeInteger(Number(value)) || Number(value) < 0)) return null; return exact(list(shape).reduce((product, value) => product * BigInt(value), 1n)); }
-function externalStorageStatus(row) { return row.native_source?.external_data ? { status: "external_bound", source: clone(row.native_source.external_data) } : { status: "inline_or_not_exposed", source: null }; }
+function elementCount(shape, rankStatus) {
+  return valueElementCount(buildValueType({ shape, dtype: "UNKNOWN", shape_declared: rankStatus === "ranked" || (rankStatus == null && Array.isArray(shape) && shape.length > 0) }, "", "storage-cardinality"));
+}
+function externalStorageStatus(row) { return row.native_source?.external_data ? { status: row.native_source.external_data.verified === true ? "external_bound" : "external_declared_unverified", source: clone(row.native_source.external_data) } : { status: "inline_or_not_exposed", source: null }; }
 
 function validateModelIrBody(value) {
-  if (value?.schema !== MODEL_IR_SCHEMA || value?.method_version !== MODEL_IR_METHOD_VERSION) throw new Error("Model IR schema identity is invalid.");
+  if (value?.schema !== MODEL_IR_SCHEMA || !["1.0.0", "1.0.1", MODEL_IR_METHOD_VERSION].includes(value?.method_version)) throw new Error("Model IR schema identity is invalid.");
   if (value?.source_contract?.schema !== MODEL_IR_SOURCE_SCHEMA || !SHA256.test(String(value?.source_contract?.sha256 || ""))) throw new Error("Model IR source contract binding is invalid.");
   validateModelIrNativeFactLedger(value.source_contract.native_fact_ledger, value.source_contract.sha256);
   if (value?.hash_contract?.algorithm !== "SHA-256" || value?.hash_contract?.canonicalization !== "RFC8785-JCS" || JSON.stringify(value?.hash_contract?.excluded_pointers) !== JSON.stringify(["/model_ir_sha256"])) throw new Error("Model IR hash contract is invalid.");
@@ -347,14 +363,21 @@ function validateModelIrBody(value) {
   const program = value.program;
   const expectedCapabilities = {
     serialized_program_graph: program?.status === "serialized",
-    tensor_shapes: Boolean(program?.values?.length || value?.tensors_and_storage?.storage_objects?.length),
+    tensor_shapes: Boolean(program?.values?.length || value?.tensors_and_storage?.logical_values?.length || value?.tensors_and_storage?.storage_objects?.length),
     serialized_storage: Boolean(value?.tensors_and_storage?.storage_objects?.length),
     weight_bindings: Boolean(value?.weight_bindings?.bindings?.length),
     quantization_contracts: Boolean(value?.quantization?.records?.length),
     static_runtime_projection: Boolean(value?.static_runtime?.projections?.length),
     observed_runtime_overlay: Boolean(value?.observed_runtime?.overlays?.length),
   };
-  if (JSON.stringify(value.capabilities) !== JSON.stringify(expectedCapabilities)) throw new Error("Model IR capability applicability is inconsistent with its ledgers.");
+  if (canonicalJson(value.capabilities) !== canonicalJson(expectedCapabilities)) throw new Error("Model IR capability applicability is inconsistent with its ledgers.");
+  validateExactInteger(value.artifact.byte_length);
+  for (const row of value.tensors_and_storage.storage_objects) {
+    for (const key of ["element_count", "serialized_byte_length", "logical_byte_length"]) validateExactInteger(row[key]);
+    validateExactInteger(row.external_storage?.source?.file_byte_length);
+    if (value.method_version === MODEL_IR_METHOD_VERSION && canonicalJson(row.element_count) !== canonicalJson(elementCount(row.shape, row.shape_rank_status))) throw new Error("Model IR storage element count contradicts its declared shape.");
+  }
+  for (const row of program.operations) for (const key of ["macs", "logical_io_bytes"]) validateExactInteger(row.metrics?.[key]);
   const profileById = new Map(value.profiles.map((profile) => [profile.id, profile]));
   if (profileById.size !== value.profiles.length || profileById.get("identity")?.requirement !== "core_mandatory" || profileById.get("identity")?.applicability !== "applicable") throw new Error("Model IR mandatory profile contract is invalid.");
   for (const [id, capability] of [["program_graph", "serialized_program_graph"], ["tensor_storage", "serialized_storage"], ["quantization", "quantization_contracts"], ["static_runtime_projection", "static_runtime_projection"], ["observed_runtime", "observed_runtime_overlay"]]) {
@@ -366,7 +389,29 @@ function validateModelIrBody(value) {
   const collect = (rows, label) => rows.forEach((row) => { if (!row?.id || ids.has(row.id)) throw new Error(`Model IR ${label} identity is invalid or duplicated.`); ids.add(row.id); });
   collect(program.programs, "program"); collect(program.functions, "function"); collect(program.regions, "region"); collect(program.blocks, "block"); collect(program.operations, "operation"); collect(program.values, "value"); collect(program.ports, "port");
   const storageIds = new Set(value.tensors_and_storage.storage_objects.map((row) => row.id));
+  const storage = value.tensors_and_storage;
+  if (storageIds.size !== storage.storage_objects.length || storageIds.has(null) || storageIds.has(undefined) || storageIds.has("")) throw new Error("Model IR storage identity is invalid or duplicated.");
+  const expectedStorageBytes = storage.storage_objects.reduce((sum, row) => sum + BigInt(row.serialized_byte_length.decimal), 0n);
+  validateExactInteger(storage.totals.serialized_object_bytes_sum);
+  if (storage.totals.storage_object_count !== storage.storage_objects.length || storage.totals.logical_value_count !== storage.logical_values.length
+    || storage.totals.serialized_object_bytes_sum?.decimal !== expectedStorageBytes.toString()
+    || storage.totals.exact_range_count !== storage.storage_objects.filter(row => row.byte_range?.status === "exact").length
+    || storage.totals.payload_digest_count !== storage.storage_objects.filter(row => SHA256.test(String(row.payload_sha256 || ""))).length) throw new Error("Model IR storage count or byte conservation failed.");
   storageIds.forEach((id) => { if (ids.has(id)) throw new Error("Model IR storage identity collides with a program subject."); ids.add(id); });
+  if (value.method_version === MODEL_IR_METHOD_VERSION && value.logical_inventory !== null) {
+    validateLogicalInventory(value.logical_inventory, program.values, storage.storage_objects);
+    const inventory = new Map(value.logical_inventory.values.map(row => [row.id, row]));
+    if (inventory.size !== storage.logical_values.length) throw new Error("Model IR logical inventory count is inconsistent.");
+    const logicalIds = new Set();
+    for (const row of storage.logical_values) {
+      const original = inventory.get(row.id);
+      if (!original || logicalIds.has(row.id) || row.dtype !== original.dtype || canonicalJson(row.shape) !== canonicalJson(original.shape)
+        || canonicalJson(row.type_contract) !== canonicalJson(original.type_contract) || canonicalJson(row.storage_refs) !== canonicalJson(original.storage_refs)) throw new Error("Model IR logical value contradicts inventory.");
+      logicalIds.add(row.id);
+    }
+    validateArtifactMembers(value.artifact_members, value.artifact, { objects: storage.storage_objects });
+    if (canonicalJson(value.artifact_set.member_refs) !== canonicalJson(value.artifact_members.members.map(row => row.id))) throw new Error("Model IR artifact member count is inconsistent.");
+  }
   const relationshipIds = new Set();
   for (const row of program.relationships) {
     if (!row.id || relationshipIds.has(row.id) || !RELATIONSHIP_KINDS.includes(row.kind)) throw new Error("Model IR relationship identity or kind is invalid.");
@@ -402,4 +447,18 @@ function validateModelIrBody(value) {
   for (const pass of value.generic_analysis.passes) if (!Array.isArray(pass.subject_refs) || !pass.status || !pass.completeness) throw new Error("Model IR generic analysis pass contract is invalid.");
   if (value.completeness?.unknown_is_zero !== false || !Array.isArray(value.loss_ledger?.entries) || value.loss_ledger.count !== value.loss_ledger.entries.length) throw new Error("Model IR completeness or loss ledger is inconsistent.");
   if (!String(value.interpretation_boundary || "").trim()) throw new Error("Model IR interpretation boundary is missing.");
+}
+
+
+// The source and supplementary ledger must be supplied independently by the caller.
+// A self-consistent document hash alone is never treated as source rederivation.
+export function validateModelIrAgainstSource(document, artifactIr, { nativeFactLedger = null } = {}) {
+  const model = validateModelIr(document);
+  const source = validateArtifactEvidenceIr(artifactIr);
+  if (model.source_contract.sha256 !== source.artifact_ir_sha256) throw new Error("Model IR source artifact binding mismatch.");
+  if (model.method_version !== MODEL_IR_METHOD_VERSION) throw new Error("Source rederivation requires the current Model IR method; legacy validation remains available separately.");
+  const expected = buildModelIrFromArtifactIr(source, { nativeFactLedger });
+  if (canonicalJson(model) !== canonicalJson(expected)) throw new Error("Model IR differs from independently rederived source projection.");
+  return { status: "source_projection_verified", model_ir_sha256: model.model_ir_sha256, artifact_ir_sha256: source.artifact_ir_sha256,
+    interpretation_boundary: "Recomputed projection from supplied source evidence; this does not authenticate original bytes or a runtime measurement." };
 }

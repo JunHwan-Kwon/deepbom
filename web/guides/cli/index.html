@@ -36,7 +36,7 @@
     </nav></aside>
     <main class="book-main" id="main">
       <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/guides/">Guides</a></li><li><span aria-current="page">CLI Handbook</span></li></ol></nav>
-      <p class="eyebrow">CLI / <span data-cli-version>1.107.0</span></p>
+      <p class="eyebrow">CLI / <span data-cli-version>1.108.0</span></p>
       <h1>CLI Handbook</h1>
       <p class="lede">Inspect a model, understand its evidence, and save a reproducible result. Work through the chapters or jump directly to the command you need.</p>
       <div class="book-actions"><a class="primary" href="#start">Run your first audit</a><a href="./reference/">Command reference</a><button type="button" data-print hidden>Print / Save as PDF</button></div>
@@ -44,10 +44,10 @@
 
       <section id="start"><p class="eyebrow">01 / Getting started</p><h2>Install once. Inspect your first file.</h2>
         <p>With Node.js 20 or newer, install the pinned release and verify the installation:</p>
-        <div class="book-code"><pre><code>npm install -g deepbom@1.107.0
+        <div class="book-code"><pre><code>npm install -g deepbom@1.108.0
 deepbom --version
 deepbom self-test --compact</code></pre></div>
-        <p>For Python, Cargo, standalone binaries, or a graphical application, see <a href="/get-started/#cli">installation methods</a>. To run without a global installation, replace <code>deepbom</code> with <code>npx -y deepbom@1.107.0</code>; its first run downloads the package.</p>
+        <p>For Python, Cargo, standalone binaries, or a graphical application, see <a href="/get-started/#cli">installation methods</a>. To run without a global installation, replace <code>deepbom</code> with <code>npx -y deepbom@1.108.0</code>; its first run downloads the package.</p>
         <p>Try the small <a href="/web/samples/mnist-8.onnx" download>MNIST ONNX sample</a> (26,454 bytes; <a href="https://github.com/JunHwan-Kwon/deepbom/blob/main/web/samples/README.md">source and license</a>). Open a terminal in its download directory:</p>
         <div class="book-code"><pre><code>deepbom audit "./mnist-8.onnx" --summary --expected-sha256 2f06e72de813a8635c9bc0397ac447a601bdbfa7df4bebc278723b958831c9bf --offline</code></pre></div>
         <p>The summary identifies the artifact by its full SHA-256 and separates artifact defects, cautions, and evidence gaps. <code>self-test</code> checks the installation; it does not validate the quality of your model.</p>

@@ -1,3 +1,4 @@
+import { compareCanonicalText } from "../../report-utils.js";
 import { clone, list, sortById } from "./shared.js";
 import { buildStructuralBlocks } from "./blocks.js";
 
@@ -27,6 +28,7 @@ export function buildProgramModel(artifactIr, nativeFactLedger = null) {
     kind: value.value_kind,
     dtype: value.dtype,
     shape: clone(value.shape),
+    ...(value.type_contract ? { type_contract: clone(value.type_contract) } : {}),
     shape_signature: clone(value.shape_signature),
     roles: clone(value.roles),
     logical_byte_length: clone(value.logical_byte_length),
@@ -51,6 +53,7 @@ export function buildProgramModel(artifactIr, nativeFactLedger = null) {
     input_port_refs: operator.inputs.map((_, index) => portId(operator.id, "input", index)),
     output_port_refs: operator.outputs.map((_, index) => portId(operator.id, "output", index)),
     metrics: clone(operator.metrics),
+    ...(operator.metric_contracts ? { metric_contracts: clone(operator.metric_contracts), attributes: clone(operator.attributes), semantic_contract: clone(operator.semantic_contract) } : {}),
     quantization_summary: clone(operator.quantization_summary),
     native_source: clone(operator.native_source),
     evidence_class: "OBSERVED_SERIALIZED_ARTIFACT",
@@ -207,7 +210,7 @@ function buildOrderSummary(operations, relationships) {
   };
 }
 
-function nativeOrder(left, right) { return Number(left.native_index ?? Number.MAX_SAFE_INTEGER) - Number(right.native_index ?? Number.MAX_SAFE_INTEGER) || left.id.localeCompare(right.id); }
+function nativeOrder(left, right) { return Number(left.native_index ?? Number.MAX_SAFE_INTEGER) - Number(right.native_index ?? Number.MAX_SAFE_INTEGER) || compareCanonicalText(left.id, right.id); }
 function regionId(scopeId) { return `region:${scopeId}`; }
 function portId(operationId, direction, position) { return `port:${operationId}:${direction}:${position}`; }
 function encodeId(value) { return encodeURIComponent(String(value)).replaceAll("%", "_"); }

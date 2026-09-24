@@ -6,8 +6,9 @@ const dist = path.resolve("dist");
 // The public multi-format corpus accounts for 7.3 MiB of the deploy artifact.
 // Keep a small explicit ceiling above the measured release instead of requiring
 // deploy-time overrides that would make the budget non-reproducible.
-// Exact numerical contracts add about 32 KiB to the 1.107.0 distribution.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 66.125);
+// The measured 1.108.0 IR contracts/schemas distribution is 69,368,916 bytes.
+// Retain about 30 KiB of headroom; the 16 MiB per-file ceiling is unchanged.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 66.1875);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

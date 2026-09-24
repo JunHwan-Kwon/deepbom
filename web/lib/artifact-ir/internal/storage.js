@@ -1,7 +1,7 @@
 import { SHA256 } from "./constants.js";
 import {
   dimensions, exact, exactInteger, list, nonNegativeInteger, normalizeSha256, positiveInteger, positiveStorageBytes,
-  safeExactSum, scopedStorageId, storageId, tensorIndex,
+  safeExactSum, scopedStorageId, storageId, tensorIndex, shapeRankStatus,
 } from "./shared.js";
 
 export function buildStorageTopology(analysis, format, tensors) {
@@ -20,6 +20,7 @@ export function buildStorageTopology(analysis, format, tensors) {
         name: String(tensor.name || `tensor_${index}`),
         dtype: String(tensor.dtype || "UNKNOWN").toUpperCase(),
         shape: dimensions(tensor.shape),
+        shape_rank_status: shapeRankStatus(tensor, "tflite"),
         serialized_byte_length: byteLength,
         byte_range: start != null && byteLength ? { status: "exact", offset_basis: "artifact_absolute", start, end_exclusive: safeExactSum(start, byteLength.decimal) }
           : { status: byteLength ? "length_only" : "not_assessed", offset_basis: null, start: null, end_exclusive: null },
@@ -35,6 +36,7 @@ export function buildStorageTopology(analysis, format, tensors) {
     name: String(parameter.layer_name ? `${parameter.layer_name}/${parameter.role || index}` : parameter.name || `parameter_${index}`),
     dtype: String(parameter.storage || parameter.dtype || "UNKNOWN").toUpperCase(),
     shape: dimensions(parameter.shape),
+    shape_rank_status: shapeRankStatus(parameter, format),
     serialized_byte_length: exactInteger(parameter.byte_length),
     byte_range: { status: "length_only", offset_basis: null, start: null, end_exclusive: null },
     payload_sha256: normalizeSha256(parameter?.numerical_integrity?.payload_sha256 || parameter.payload_sha256),
@@ -68,11 +70,12 @@ function storageObject(format, tensor, index) {
     name: String(tensor.name || `tensor_${index}`),
     dtype: String(tensor.dtype || "UNKNOWN").toUpperCase(),
     shape: dimensions(tensor.shape),
+    shape_rank_status: shapeRankStatus(tensor, format),
     serialized_byte_length: byteLength,
     byte_range: start != null && end != null
       ? { status: "exact", offset_basis: absoluteOffset != null ? "artifact_absolute" : "format_payload_relative", start, end_exclusive: end }
       : { status: byteLength ? "length_only" : "not_assessed", offset_basis: null, start: null, end_exclusive: null },
-    payload_sha256: normalizeSha256(tensor?.numerical_integrity?.payload_sha256 || tensor.external_sidecar_sha256),
+    payload_sha256: normalizeSha256(tensor?.numerical_integrity?.payload_sha256),
     encoding: storageEncoding(format, tensor),
     native_source: nativeStorageLocator(format, tensor, index),
   };
@@ -82,7 +85,13 @@ function nativeStorageLocator(format, tensor, index) {
   if (format === "gguf") return { format, path: `tensor_infos[${index}]`, payload_offset_basis: "tensor_data_section" };
   if (format === "safetensors") return { format, path: `header[${JSON.stringify(String(tensor.name || ""))}]`, payload_offset_basis: "data_section" };
   if (format === "tflite") return { format, path: `SubGraph[0].tensors[${index}].buffer` };
-  if (format === "onnx") return { format, path: `ModelProto.graph.initializer[name=${JSON.stringify(String(tensor.name || ""))}]` };
+  if (format === "onnx") return { format, path: `ModelProto.graph.initializer[name=${JSON.stringify(String(tensor.name || ""))}]`,
+    ...(list(tensor.external_data).length || tensor.data_location === 1 ? { external_data: {
+      entries: tensor.external_data || [], status: tensor.external_payload_status || "not_supplied", verified: tensor.external_payload_verified === true,
+      file_path: tensor.external_sidecar_path || null, file_sha256: normalizeSha256(tensor.external_sidecar_sha256),
+      file_byte_length: tensor.external_sidecar_sha256 ? exactInteger(tensor.external_sidecar_bytes) : null,
+    } } : {}),
+  };
   return { format, path: `serialized_parameters[${index}]` };
 }
 

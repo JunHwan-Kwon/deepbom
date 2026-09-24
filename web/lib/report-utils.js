@@ -69,6 +69,12 @@ export function normalizeJsonContractValue(value, path = "$") {
   return normalized;
 }
 
+// Canonical array ordering must not depend on the browser or process locale.
+export function compareCanonicalText(left, right) {
+  const a = String(left), b = String(right);
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 export function canonicalJson(value) {
   const ancestors = new Set();
   const serialize = (item, path) => {
@@ -89,7 +95,7 @@ export function canonicalJson(value) {
     ancestors.add(item);
     let result;
     if (Array.isArray(item)) {
-      result = `[${item.map((entry, index) => serialize(entry, `${path}/${index}`)).join(",")}]`;
+      result = `[${Array.from(item, (entry, index) => serialize(entry, `${path}/${index}`)).join(",")}]`;
     } else {
       const keys = Object.keys(item).sort();
       for (const key of keys) assertIJsonString(key, `${path}/<key>`);

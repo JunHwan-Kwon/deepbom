@@ -1,3 +1,5 @@
+import { compareCanonicalText } from "./lib/report-utils.js";
+import { parameterVectorEvidence } from "./lib/ir-parameter-vector.js";
 import { buildOnnxDomainAnalysis } from "./lib/onnx-domain-analysis.js";
 import { buildOnnxDynamicShapeCostContract } from "./lib/dynamic-shape-cost.js";
 import { inferOnnxShapesWithReachableScopes } from "./lib/onnx-extended-shape-inference.js";
@@ -243,6 +245,7 @@ export function analyzeOnnxModel(bytes, filename, targetProfile = null, options 
       shape_signature: Array.isArray(tensor.shape) ? tensor.shape.map((dim) => Number.isSafeInteger(Number(dim)) && Number(dim) >= 0 ? Number(dim) : -1) : [],
       quant_scales: tensor.quantScaleValues?.length || 0,
       quant_zero_points: tensor.quantZeroPointValues?.length || 0,
+      quantization_vectors: { scale: parameterVectorEvidence(tensor.quantScaleValues || [], "scale"), zero_point: parameterVectorEvidence(tensor.quantZeroPointValues || [], "zero_point") },
       scale_sample: tensor.quantScaleValues?.slice(0, 256) || [],
       zero_point_sample: tensor.quantZeroPointValues?.slice(0, 256) || [],
       interface_scale_values: externalInterfaceNames.has(tensor.name) ? [...(tensor.quantScaleValues || [])] : undefined,
@@ -3622,7 +3625,7 @@ function buildOnnxOp(node, index, tensorMap, tensorIdByName) {
 
 function serializeOnnxAttributes(node) {
   return [...(node.attributes?.values?.() || [])]
-    .sort((left, right) => left.name.localeCompare(right.name))
+    .sort((left, right) => compareCanonicalText(left.name, right.name))
     .map((attribute) => ({
       name: attribute.name,
       type: Number(attribute.type || 0),

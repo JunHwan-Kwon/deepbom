@@ -1,3 +1,4 @@
+import { exactInteger } from "./exact-integer.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 
@@ -5,7 +6,8 @@ export const ARTIFACT_SET_SCHEMA = "deepbom.artifact_set.v1";
 const SHA256 = /^[a-f0-9]{64}$/;
 
 export function buildSingleFileArtifactSet({ filename, format, sha256, byteLength }) {
-  const size = Number(byteLength);
+  const size = exactInteger(byteLength);
+  if (!size) throw new Error("Artifact-set byte length must be an exact nonnegative integer.");
   return finalizeArtifactSet({
     schema: ARTIFACT_SET_SCHEMA,
     evidence_class: "OBSERVED_ACQUISITION",
@@ -18,14 +20,14 @@ export function buildSingleFileArtifactSet({ filename, format, sha256, byteLengt
       filename,
       format,
       sha256,
-      byte_length: { decimal: String(size), number: size },
+      byte_length: size,
       identity_basis: "artifact_file_bytes",
     },
     files: [{
       role: "primary",
       path: filename,
       sha256,
-      byte_length: { decimal: String(size), number: size },
+      byte_length: size,
     }],
     trust: {
       remote_code_execution: "forbidden",
@@ -68,11 +70,11 @@ function validateBody(value) {
   const paths = new Set();
   for (const file of value.files) {
     if (!["primary", "sidecar", "shard", "manifest", "configuration"].includes(file.role)
-      || !safePath(file.path) || paths.has(file.path) || !SHA256.test(String(file.sha256 || ""))) {
+      || !safePath(file.path) || paths.has(file.path.replaceAll("\\", "/")) || !SHA256.test(String(file.sha256 || ""))) {
       throw new Error("Artifact-set file identity is invalid.");
     }
     validateExactBytes(file.byte_length);
-    paths.add(file.path);
+    paths.add(file.path.replaceAll("\\", "/"));
   }
   if (value.files.filter((file) => file.role === "primary").length !== 1) throw new Error("Artifact-set requires exactly one primary file.");
   if (value.trust?.model_code_execution !== "forbidden" || value.trust?.pickle_execution !== "forbidden"
@@ -84,7 +86,7 @@ function validateExactBytes(value) {
   if (!/^\d+$/.test(decimal) || BigInt(decimal) < 0n) throw new Error("Artifact-set byte length is invalid.");
   const exact = BigInt(decimal);
   const expected = exact <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(exact) : null;
-  if ((value.number == null ? null : Number(value.number)) !== expected) throw new Error("Artifact-set byte length representations differ.");
+  if (value.number !== expected) throw new Error("Artifact-set byte length representations differ.");
 }
 
 function safePath(value) {
@@ -98,4 +100,4 @@ function text(value, maximum) {
   return normalized.length > 0 && normalized.length <= maximum;
 }
 
-function clone(value) { return JSON.parse(JSON.stringify(value)); }
+function clone(value) { return JSON.parse(canonicalJson(value)); }

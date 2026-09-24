@@ -22,7 +22,7 @@
   ],
   "properties": {
     "schema": { "const": "deepbom.artifact_ir.v2" },
-    "method_version": { "const": "2.2.0" },
+    "method_version": { "enum": ["2.2.0", "2.2.1", "2.3.0"] },
     "hash_contract": {
       "type": "object",
       "required": ["algorithm", "canonicalization", "source_encoding", "excluded_pointers"],
@@ -49,7 +49,13 @@
     "overlays": { "$ref": "#/$defs/overlays" },
     "completeness": { "$ref": "#/$defs/completeness" },
     "interpretation_boundary": { "type": "string", "minLength": 1 },
-    "artifact_ir_sha256": { "$ref": "#/$defs/sha256" }
+    "artifact_ir_sha256": { "$ref": "#/$defs/sha256" },
+    "logical_inventory": {
+      "$ref": "#/$defs/logicalInventory"
+    },
+    "artifact_members": {
+      "$ref": "#/$defs/artifactMembers"
+    }
   },
   "$defs": {
     "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
@@ -179,7 +185,85 @@
         "quantization_summary": { "$ref": "#/$defs/quantizationSummary" },
         "topology": { "$ref": "#/$defs/topology" },
         "native_source": { "$ref": "#/$defs/nativeSource" },
-        "completeness": { "type": "string" }
+        "completeness": { "type": "string" },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "format",
+            "entries",
+            "completeness"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "adapter_attribute_projection",
+                "not_exposed_by_adapter"
+              ]
+            },
+            "format": {
+              "type": "string"
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "completeness": {
+              "type": "string"
+            }
+          }
+        },
+        "semantic_contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "format",
+            "method",
+            "version",
+            "mac_reason",
+            "independent_reexecution_supported"
+          ],
+          "properties": {
+            "schema": {
+              "const": "deepbom.operator_semantics.v1"
+            },
+            "format": {
+              "type": "string"
+            },
+            "method": {
+              "const": "native_adapter_calculation"
+            },
+            "version": {
+              "const": "1.0.0"
+            },
+            "mac_reason": {
+              "type": "string"
+            },
+            "independent_reexecution_supported": {
+              "const": false
+            }
+          }
+        },
+        "metric_contracts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "macs",
+            "logical_io_bytes"
+          ],
+          "properties": {
+            "macs": {
+              "$ref": "#/$defs/metric"
+            },
+            "logical_io_bytes": {
+              "$ref": "#/$defs/metric"
+            }
+          }
+        }
       },
       "additionalProperties": false
     },
@@ -236,7 +320,10 @@
         "roles": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
         "storage_refs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
         "logical_byte_length": { "anyOf": [{ "$ref": "#/$defs/exactInteger" }, { "type": "null" }] },
-        "native_source": { "$ref": "#/$defs/nativeSource" }
+        "native_source": { "$ref": "#/$defs/nativeSource" },
+        "type_contract": {
+          "$ref": "#/$defs/valueType"
+        }
       },
       "additionalProperties": false
     },
@@ -254,7 +341,19 @@
         "format": { "type": "string", "minLength": 1 },
         "path": { "type": "string", "minLength": 1 },
         "byte_range": { "type": ["object", "null"] },
-        "payload_offset_basis": { "type": "string" }
+        "payload_offset_basis": { "type": "string" },
+        "external_data": {
+          "type": "object", "additionalProperties": false,
+          "required": ["entries", "status", "verified", "file_path", "file_sha256", "file_byte_length"],
+          "properties": {
+            "entries": { "type": "array", "items": { "type": "object", "required": ["key", "value"], "properties": { "key": { "type": "string" }, "value": { "type": "string" } }, "additionalProperties": false } },
+            "status": { "type": "string", "minLength": 1 },
+            "verified": { "type": "boolean" },
+            "file_path": { "type": ["string", "null"] },
+            "file_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+            "file_byte_length": { "anyOf": [{ "$ref": "#/$defs/exactInteger" }, { "type": "null" }] }
+          }
+        }
       },
       "additionalProperties": false
     },
@@ -280,6 +379,7 @@
         "name": { "type": "string" },
         "dtype": { "type": "string", "minLength": 1 },
         "shape": { "$ref": "#/$defs/shape" },
+        "shape_rank_status": { "enum": ["ranked", "unknown_rank"] },
         "serialized_byte_length": { "$ref": "#/$defs/exactInteger" },
         "byte_range": { "$ref": "#/$defs/byteRange" },
         "payload_sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
@@ -453,7 +553,16 @@
         "count": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" }, { "type": "null" }] },
         "sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
         "inline_values": { "type": ["array", "null"], "items": { "type": "number" } },
-        "inline_status": { "type": "string", "minLength": 1 }
+        "inline_status": { "type": "string", "minLength": 1 },
+        "collection_status": {
+          "type": "string"
+        },
+        "all_zero": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
       },
       "additionalProperties": false
     },
@@ -732,6 +841,531 @@
         "unknown_is_zero": { "const": false }
       },
       "additionalProperties": false
+    },
+    "valueType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "root",
+        "native_type",
+        "evidence_basis"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.value_type.v1"
+        },
+        "root": {
+          "$ref": "#/$defs/typeNode"
+        },
+        "native_type": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "evidence_basis": {
+          "enum": [
+            "native_type_tree",
+            "adapter_tensor_descriptor"
+          ]
+        }
+      }
+    },
+    "typeNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "dtype",
+            "rank_status",
+            "dimensions"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "tensor",
+                "sparse_tensor"
+              ]
+            },
+            "dtype": {
+              "type": "string"
+            },
+            "rank_status": {
+              "enum": [
+                "ranked",
+                "unknown_rank"
+              ]
+            },
+            "dimensions": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/dimension"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "element_type"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "sequence",
+                "optional"
+              ]
+            },
+            "element_type": {
+              "$ref": "#/$defs/typeNode"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "key_dtype",
+            "value_type"
+          ],
+          "properties": {
+            "kind": {
+              "const": "map"
+            },
+            "key_dtype": {
+              "type": "string"
+            },
+            "value_type": {
+              "$ref": "#/$defs/typeNode"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "domain",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "opaque"
+            },
+            "domain": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            }
+          }
+        }
+      ]
+    },
+    "dimension": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "constant"
+            },
+            "value": {
+              "$ref": "#/$defs/exactInteger"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name",
+            "scope_ref"
+          ],
+          "properties": {
+            "kind": {
+              "const": "symbol"
+            },
+            "name": {
+              "type": "string"
+            },
+            "scope_ref": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            }
+          }
+        }
+      ]
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "unit",
+        "value",
+        "exactness",
+        "denominator",
+        "coverage",
+        "source_refs",
+        "assumptions",
+        "reason",
+        "evidence_class"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.metric.v1"
+        },
+        "unit": {
+          "enum": [
+            "MAC",
+            "byte",
+            "element",
+            "count"
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/exactInteger"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exactness": {
+          "enum": [
+            "exact_integer",
+            "not_assessable"
+          ]
+        },
+        "denominator": {
+          "type": "null"
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "assessed",
+            "eligible"
+          ],
+          "properties": {
+            "assessed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "eligible": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_class": {
+          "const": "DERIVED"
+        }
+      }
+    },
+    "logicalInventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "values",
+        "count",
+        "interpretation_boundary"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.logical_inventory.v1"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "dtype",
+              "shape",
+              "type_contract",
+              "graph_value_ref",
+              "storage_refs",
+              "element_count"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "dtype": {
+                "type": "string"
+              },
+              "shape": {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "type_contract": {
+                "$ref": "#/$defs/valueType"
+              },
+              "graph_value_ref": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "storage_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "element_count": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/exactInteger"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "interpretation_boundary": {
+          "type": "string"
+        }
+      }
+    },
+    "artifactMembers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "members",
+        "storage_bindings",
+        "completeness",
+        "interpretation_boundary",
+        "overlap_groups"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.artifact_members.v1"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "path",
+              "sha256",
+              "byte_length",
+              "verification"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "byte_length": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/exactInteger"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "verification": {
+                "enum": [
+                  "identity_bound",
+                  "declared_unverified"
+                ]
+              }
+            }
+          }
+        },
+        "storage_bindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "storage_ref",
+              "member_ref",
+              "range",
+              "bounds_assessment"
+            ],
+            "properties": {
+              "storage_ref": {
+                "type": "string"
+              },
+              "member_ref": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "range": {
+                "type": "object"
+              },
+              "bounds_assessment": { "enum": ["within_artifact_member", "outside_artifact_member", "not_assessable"] }
+            }
+          }
+        },
+        "completeness": {
+          "enum": [
+            "partial_member_binding",
+            "available_members_bound"
+          ]
+        },
+        "interpretation_boundary": {
+          "type": "string"
+        },
+        "overlap_groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "member_ref",
+              "offset_basis",
+              "storage_refs",
+              "classification"
+            ],
+            "properties": {
+              "member_ref": {
+                "type": "string"
+              },
+              "offset_basis": {
+                "type": "string"
+              },
+              "storage_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "classification": {
+                "const": "overlapping_serialized_ranges_alias_semantics_not_established"
+              }
+            }
+          }
+        }
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "method_version": {
+            "const": "2.3.0"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "logical_inventory",
+          "artifact_members"
+        ],
+        "properties": {
+          "logical_inventory": {},
+          "artifact_members": {}
+        }
+      }
+    }
+  ]
 }

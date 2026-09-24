@@ -5,11 +5,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CLI Command Reference | DEEPBOM Guides</title>
-  <meta name="description" content="The DEEPBOM 1.107.0 CLI command inventory, output contracts, and complete executable help. Search commands and copy options from the versioned reference." />
+  <meta name="description" content="The DEEPBOM 1.108.0 CLI command inventory, output contracts, and complete executable help. Search commands and copy options from the versioned reference." />
   <link rel="canonical" href="https://deepbom.org/guides/cli/reference/" />
   <meta property="og:title" content="DEEPBOM CLI Command Reference" />
   <meta property="og:description" content="Command inventory and complete help, generated from the executable CLI." />
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"DEEPBOM CLI Command Reference","url":"https://deepbom.org/guides/cli/reference/","version":"1.107.0","about":{"@id":"https://deepbom.org/#app"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"DEEPBOM CLI Command Reference","url":"https://deepbom.org/guides/cli/reference/","version":"1.108.0","about":{"@id":"https://deepbom.org/#app"}}</script>
   <link rel="icon" href="/chatgpt/deepbom-app-icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="../../../evaluate/evaluation.css" />
   <link rel="stylesheet" href="../book.css" />
@@ -20,14 +20,14 @@
   <a class="book-skip" href="#main">Skip to reference</a>
   <header class="brief-header"><a class="brand" href="/">DEEPBOM</a><nav class="brief-nav" aria-label="Main navigation"><a href="/">Workspace</a><a href="/get-started/">Get started</a><a href="/guides/" aria-current="location">Guides</a><a href="/evaluate/">Evaluate</a></nav></header>
   <div class="book-layout">
-    <aside class="book-sidebar"><p class="eyebrow">CLI 1.107.0</p><nav aria-label="Reference sections"><a href="#commands">Command index</a><a href="#help">Complete help &amp; options</a><a href="#machine">Machine discovery</a><a href="../">← Practical handbook</a><a href="/get-started/#cli">Installation methods</a></nav></aside>
+    <aside class="book-sidebar"><p class="eyebrow">CLI 1.108.0</p><nav aria-label="Reference sections"><a href="#commands">Command index</a><a href="#help">Complete help &amp; options</a><a href="#machine">Machine discovery</a><a href="../">← Practical handbook</a><a href="/get-started/#cli">Installation methods</a></nav></aside>
     <main class="book-main" id="main">
       <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/guides/">Guides</a></li><li><a href="/guides/cli/">CLI Handbook</a></li><li><span aria-current="page">Command reference</span></li></ol></nav>
-      <p class="eyebrow">CLI reference / 1.107.0</p>
+      <p class="eyebrow">CLI reference / 1.108.0</p>
       <h1>Command reference</h1>
-      <p class="lede">The command inventory and help below are generated from DEEPBOM 1.107.0. For step-by-step examples and interpretation, read the <a href="../">CLI Handbook</a>.</p>
-      <div class="book-actions"><a href="./help.txt" download="deepbom-1.107.0-help.txt">Download plain-text help</a><button type="button" data-print hidden>Print / Save as PDF</button></div>
-      <div class="book-note"><p><strong>Verified behavior in 1.107.0:</strong> the help advertises <code>capabilities --format agent-text</code>, but the command currently rejects it. Use <code>capabilities --format agent-json</code>. The help below is preserved verbatim; the handbook uses the working invocation.</p></div>
+      <p class="lede">The command inventory and help below are generated from DEEPBOM 1.108.0. For step-by-step examples and interpretation, read the <a href="../">CLI Handbook</a>.</p>
+      <div class="book-actions"><a href="./help.txt" download="deepbom-1.108.0-help.txt">Download plain-text help</a><button type="button" data-print hidden>Print / Save as PDF</button></div>
+      <div class="book-note"><p><strong>Verified behavior in 1.108.0:</strong> the help advertises <code>capabilities --format agent-text</code>, but the command currently rejects it. Use <code>capabilities --format agent-json</code>. The help below is preserved verbatim; the handbook uses the working invocation.</p></div>
       <section id="commands"><p class="eyebrow">Find a command</p><h2>Command index</h2>
         <div class="command-search" hidden><label for="command-search">Search commands or output formats</label><input id="command-search" type="search" placeholder="Try audit, CycloneDX, SVG, or MCP" aria-controls="command-table" /><p id="command-count" role="status">17 commands</p></div>
         <table class="book-table" id="command-table"><caption>Select a command for its handbook examples. Output contracts are declared by CLI capabilities.</caption><thead><tr><th scope="col">Command</th><th scope="col">Purpose</th><th scope="col">Declared outputs</th></tr></thead><tbody>
@@ -50,7 +50,7 @@
       <tr data-command-row><th scope="row"><a href="../#agents"><code>mcp</code></a></th><td>Serve four local assistant tools over standard input/output.</td><td>MCP transport; no standalone evidence document</td></tr>
         </tbody></table><p id="command-empty" hidden>No matching commands. Clear the search or inspect the complete help below.</p>
       </section>
-      <section id="help"><p class="eyebrow">Executable reference</p><h2>Complete help &amp; options</h2><p>This is the normalized output of <code>deepbom --help</code>. Options are command-specific; the CLI rejects unsupported combinations. Use your browser's Find command to locate an option.</p><div class="book-code"><pre><code>DEEPBOM 1.107.0
+      <section id="help"><p class="eyebrow">Executable reference</p><h2>Complete help &amp; options</h2><p>This is the normalized output of <code>deepbom --help</code>. Options are command-specific; the CLI rejects unsupported combinations. Use your browser's Find command to locate an option.</p><div class="book-code"><pre><code>DEEPBOM 1.108.0
 
 Usage:
   deepbom audit &lt;artifact-or-package&gt; [options]
@@ -273,6 +273,6 @@ deepbom capabilities --format agent-json</code></pre></div><p>Automations should
     </main>
   </div>
   <p id="book-status" class="book-status" role="status" aria-live="polite"></p>
-  <footer class="brief-footer">Generated from the same executable and capabilities as the repository CLI reference. Version 1.107.0.</footer>
+  <footer class="brief-footer">Generated from the same executable and capabilities as the repository CLI reference. Version 1.108.0.</footer>
 </body>
 </html>

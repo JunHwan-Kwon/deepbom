@@ -8,7 +8,7 @@
   "required": ["schema", "method_version", "source_contract", "hash_contract", "artifact", "artifact_role", "projection", "columns", "rows", "totals", "coverage", "trainability", "loss_ledger", "interpretation_boundary", "model_summary_sha256"],
   "properties": {
     "schema": { "const": "deepbom.model_summary.v1" },
-    "method_version": { "const": "1.0.0" },
+    "method_version": { "enum": ["1.0.0", "1.1.0"] },
     "source_contract": {
       "type": "object", "additionalProperties": false,
       "required": ["schema", "model_ir_sha256", "artifact_sha256"],
@@ -58,7 +58,7 @@
       "type": "object", "additionalProperties": false,
       "required": ["decimal", "number", "status", "assessed_count", "total_count"],
       "properties": {
-        "decimal": { "type": "string", "pattern": "^[0-9]+$" },
+        "decimal": { "type": ["string", "null"], "pattern": "^[0-9]+$" },
         "number": { "type": ["integer", "null"], "minimum": 0 },
         "status": { "enum": ["complete", "partial", "not_assessable"] },
         "assessed_count": { "type": "integer", "minimum": 0 },
@@ -131,6 +131,7 @@
       "required": ["value_ref", "name", "dtype", "shape", "shape_signature", "roles"],
       "properties": {
         "value_ref": { "$ref": "#/$defs/nullableString" },
+        "type_contract": { "type": "object" },
         "name": { "$ref": "#/$defs/nullableString" },
         "dtype": { "$ref": "#/$defs/nullableString" },
         "shape": { "type": ["array", "null"], "items": { "anyOf": [{ "type": "integer" }, { "type": "string" }, { "type": "null" }] } },
@@ -211,6 +212,7 @@
         "bound_serialized_byte_length": { "$ref": "#/$defs/assessedExactInteger" },
         "quantization_record_count": { "type": "integer", "minimum": 0 },
         "macs": { "$ref": "#/$defs/assessedExactInteger" },
+        "mac_scope": { "const": "entry_regions_nominal_serialized_operations_not_runtime_execution_count" },
         "trainable_parameter_count": { "type": "null" }
       }
     },

@@ -1,3 +1,4 @@
+import { compareCanonicalText } from "./report-utils.js";
 import { GGUF_DEQUANTIZATION_SOURCE, SAFETENSORS_NUMERICAL_SOURCE, safeTensorsNumericalSourceEvidence, scanSerializedTensorPayloads } from "./tensor-numerical-integrity.js";
 import { buildGgufBackendCompatibility } from "./gguf-backend-contract.js";
 import { buildOnDeviceLlmContract } from "./on-device-llm-contract.js";
@@ -221,7 +222,7 @@ function duplicatePayloadGroups(tensors, numericalIntegrity) {
     tensor_names: group.map((tensor) => tensor.name),
     interpretation: "Content-addressed duplicate candidate: identical dtype, shape, byte length, and payload SHA-256. Runtime aliasing or semantic weight tying is not inferred.",
   })).sort((left, right) => right.duplicate_bytes_after_first - left.duplicate_bytes_after_first
-    || left.tensor_names[0].localeCompare(right.tensor_names[0]));
+    || compareCanonicalText(left.tensor_names[0], right.tensor_names[0]));
 }
 
 export function buildTensorStorageSummary(format, tensors, numericalIntegrity = null) {
@@ -258,7 +259,7 @@ export function buildTensorStorageSummary(format, tensors, numericalIntegrity = 
   })).sort((left, right) => {
     const leftBytes = BigInt(left.byte_length_decimal);
     const rightBytes = BigInt(right.byte_length_decimal);
-    return leftBytes === rightBytes ? left.dtype.localeCompare(right.dtype) : leftBytes > rightBytes ? -1 : 1;
+    return leftBytes === rightBytes ? compareCanonicalText(left.dtype, right.dtype) : leftBytes > rightBytes ? -1 : 1;
   });
   return {
     schema: "deepbom.tensor_storage_summary.v1",

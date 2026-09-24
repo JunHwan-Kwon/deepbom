@@ -2,6 +2,10 @@
 
 `deepbom.model_ir.v1` is a preview, hash-bound, format-neutral evidence contract. It does not replace `deepbom.artifact_ir.v2` during the migration period. Every Model IR document names and hashes the validated Artifact IR from which it was projected.
 
+Method 1.1.0 adds independent logical inventory, recursive logical types, operator attributes/metric contracts, artifact members and source-backed rederivation. Artifact IR method 2.3.0 carries these source ledgers. Readers retain support for earlier methods without rewriting their digests. See [the hardening implementation record](CORE_IR_HARDENING_2026-09-24.md) for concrete fixes, tests and bounded support.
+
+Method 1.0.1 preserves storage rank status and exact cardinalities, uses locale-independent canonical ordering, distinguishes external file hashes from tensor payload hashes, and validates exact-number mirrors and storage conservation. Readers also accept method 1.0.0 without rewriting its digest. Artifact IR method 2.2.1 similarly accepts 2.2.0. New projections can have different hashes for the same artifact because their method and preserved facts differ. See the [2026-09-24 core IR review](CORE_IR_REVIEW_2026-09-24.md) for confirmed regressions, research sources and remaining representation limits.
+
 ## Purpose and non-claims
 
 The IR gives generic analyzers and renderers one vocabulary for serialized programs, logical values, physical storage, bindings, quantization, architecture grouping, static runtime projections, and observed runtime overlays. It does not claim that different native operators are semantically identical, infer a graph from weight names, predict actual runtime order, or decide standards or regulatory conformity.

@@ -1,3 +1,4 @@
+import { compareCanonicalText } from "../../report-utils.js";
 import { GRAPH_FORMATS } from "./constants.js";
 import { clone, exact, exactInteger, list, nonNegativeInteger, positiveStorageBytes, storageId, tensorIndex } from "./shared.js";
 
@@ -59,7 +60,7 @@ function namespaceGroups(tensors, format) {
     // fabricated payload object. An unassessed group's byte total stays unknown.
     if (bytes > 0n) group.members.push(storageId(tensorIndex(tensor, position)));
   }
-  return [...groups.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([label, group], index) => ({
+  return [...groups.entries()].sort(([left], [right]) => compareCanonicalText(left, right)).map(([label, group], index) => ({
     id: `architecture:namespace:${index}`, kind: "storage_namespace", native_index: index, label,
     tensor_count: group.count, serialized_bytes: group.complete ? exact(group.bytes) : null, storage_object_refs: group.members,
   }));

@@ -396,6 +396,55 @@
               "type": "null"
             }
           ]
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "environment",
+            "environment_sha256",
+            "input_manifest_sha256",
+            "code_sha256",
+            "trace_sha256",
+            "signature",
+            "trust"
+          ],
+          "properties": {
+            "schema": {
+              "const": "deepbom.runtime_provenance.v1"
+            },
+            "environment": {
+              "type": "object"
+            },
+            "environment_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "input_manifest_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "code_sha256": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "trace_sha256": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "signature": {
+              "type": [
+                "object",
+                "null"
+              ]
+            },
+            "trust": {
+              "const": "declared_not_attested"
+            }
+          }
         }
       }
     },
@@ -1047,6 +1096,10 @@
           "pattern": "^[a-f0-9]{64}$"
         }
       }
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
     }
   }
 }

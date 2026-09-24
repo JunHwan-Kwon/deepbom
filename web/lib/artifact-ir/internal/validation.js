@@ -1,10 +1,15 @@
+import { canonicalJson } from "../../report-utils.js";
+import { validateLogicalInventory } from "../../ir-logical-inventory.js";
+import { validateArtifactMembers } from "../../ir-artifact-members.js";
+import { validateValueType } from "../../ir-value-type.js";
+import { validateMetric } from "../../ir-metric.js";
 import { ARTIFACT_IR_METHOD_VERSION, ARTIFACT_IR_SCHEMA, SHA256 } from "./constants.js";
 import { validateArtifactIrRuntimeReconciliation } from "../../artifact-ir-runtime.js";
 import { validateBoundConversionReceipt } from "../../conversion-receipt.js";
-import { exact, list, text, uniqueIds } from "./shared.js";
+import { exact, list, text, uniqueIds, validateExactInteger } from "./shared.js";
 
 export function validateArtifactIrBody(value) {
-  if (value?.schema !== ARTIFACT_IR_SCHEMA || value?.method_version !== ARTIFACT_IR_METHOD_VERSION) throw new Error("Artifact IR schema identity is invalid.");
+  if (value?.schema !== ARTIFACT_IR_SCHEMA || !["2.2.0", "2.2.1", ARTIFACT_IR_METHOD_VERSION].includes(value?.method_version)) throw new Error("Artifact IR schema identity is invalid.");
   if (value?.hash_contract?.algorithm !== "SHA-256"
     || value?.hash_contract?.canonicalization !== "RFC8785-JCS"
     || value?.hash_contract?.source_encoding !== "UTF-8"
@@ -13,6 +18,15 @@ export function validateArtifactIrBody(value) {
   }
   if (!SHA256.test(String(value.artifact?.sha256 || "")) || !text(value.artifact?.filename, 1000) || !text(value.artifact?.format, 40)) throw new Error("Artifact IR artifact identity is invalid.");
   const graph = value.graph;
+  validateExactInteger(value.artifact.byte_length);
+  for (const row of list(graph?.operators)) for (const key of ["macs", "logical_io_bytes"]) validateExactInteger(row.metrics?.[key]);
+  for (const row of list(graph?.values)) validateExactInteger(row.logical_byte_length);
+  for (const key of ["macs", "assessed_macs", "serialized_scope_assessed_macs"]) validateExactInteger(graph?.totals?.[key]);
+  for (const row of list(value.storage_topology?.objects)) {
+    validateExactInteger(row.serialized_byte_length);
+    validateExactInteger(row.native_source?.external_data?.file_byte_length);
+  }
+  validateExactInteger(value.storage_topology?.totals?.serialized_object_bytes_sum);
   if (!graph || !Array.isArray(graph.scopes) || !Array.isArray(graph.scope_relationships) || !Array.isArray(graph.operators) || !Array.isArray(graph.values)) throw new Error("Artifact IR graph ledger is invalid.");
   if (graph.status === "not_serialized" && (graph.scopes.length || graph.operators.length || graph.values.length || graph.totals.relationship_count)) {
     throw new Error("Artifact IR fabricated an executable graph for a graphless format.");
@@ -91,6 +105,27 @@ export function validateArtifactIrBody(value) {
     for (const storageRef of list(graphValue.storage_refs)) {
       if (!storageIds.has(storageRef)) throw new Error("Artifact IR value references an unknown storage object.");
     }
+  }
+  if (value.method_version === ARTIFACT_IR_METHOD_VERSION) {
+    validateLogicalInventory(value.logical_inventory, graph.values, storage.objects);
+    validateArtifactMembers(value.artifact_members, value.artifact, storage);
+    for (const row of graph.values) validateValueType(row.type_contract);
+    for (const op of graph.operators) for (const [key, unit] of [["macs", "MAC"], ["logical_io_bytes", "byte"]]) {
+      const metric = op.metric_contracts?.[key]; validateMetric(metric);
+      if (metric.unit !== unit || canonicalJson(metric.value) !== canonicalJson(op.metrics[key]) || canonicalJson(metric.source_refs) !== canonicalJson([op.id])) throw new Error("IR operator metric contradicts native projection.");
+    }
+    for (const op of graph.operators) {
+      for (const port of op.inputs) if (!valueById.get(port.value_ref).consumers.some(row => row.operator_ref === op.id && row.port === port.port)) throw new Error("IR input port lacks a reciprocal consumer.");
+      for (const port of op.outputs) {
+        const producer = valueById.get(port.value_ref).producer;
+        if (!producer || !operatorById.get(producer.operator_ref).outputs.some(row => row.value_ref === port.value_ref && row.port === producer.port)) throw new Error("IR output port lacks a valid producer.");
+      }
+    }
+    for (const row of graph.values) {
+      for (const consumer of row.consumers) if (!operatorById.get(consumer.operator_ref).inputs.some(port => port.value_ref === row.id && port.port === consumer.port)) throw new Error("IR consumer contradicts its input port.");
+      if (row.producer && !operatorById.get(row.producer.operator_ref).outputs.some(port => port.value_ref === row.id && port.port === row.producer.port)) throw new Error("IR producer contradicts its output port.");
+    }
+    if (graph.totals.macs !== null && graph.totals.macs?.decimal !== graph.totals.assessed_macs?.decimal) throw new Error("IR complete MAC total contradicts assessed subtotal.");
   }
   const architecture = value.architecture_projection;
   if (!architecture || !Array.isArray(architecture.nodes) || !Array.isArray(architecture.relationships)) throw new Error("Artifact IR architecture projection is invalid.");

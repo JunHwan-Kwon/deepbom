@@ -1,0 +1,318 @@
+{
+  "checked_date": "2026-09-24",
+  "purpose": "Observed upstream HEAD and selected official source files; this is not a claim that DEEPBOM supports each HEAD.",
+  "repositories": [
+    {
+      "repository": "llvm/llvm-project",
+      "checked_at": "2026-09-23T23:28:02.376576+00:00",
+      "branch": "main",
+      "commit": "104f644ddbd3891bcc5955164672dd447110bd3c",
+      "commit_date": "2026-09-23T23:25:26Z",
+      "commit_url": "https://github.com/llvm/llvm-project/commit/104f644ddbd3891bcc5955164672dd447110bd3c",
+      "latest_release": {
+        "tag_name": "llvmorg-23.1.2",
+        "published_at": "2026-09-22T06:49:10Z",
+        "html_url": "https://github.com/llvm/llvm-project/releases/tag/llvmorg-23.1.2"
+      },
+      "files": [
+        {
+          "path": "mlir/docs/LangRef.md",
+          "url": "https://raw.githubusercontent.com/llvm/llvm-project/104f644ddbd3891bcc5955164672dd447110bd3c/mlir/docs/LangRef.md",
+          "sha256": "f2e267cb07ff36af88ae0a0a325ea81e3f350ad6e032f8fed0b62abf20cbe7fd",
+          "bytes": 39561
+        },
+        {
+          "path": "mlir/docs/Interfaces.md",
+          "url": "https://raw.githubusercontent.com/llvm/llvm-project/104f644ddbd3891bcc5955164672dd447110bd3c/mlir/docs/Interfaces.md",
+          "sha256": "cdd6bb60e326b9955ac4c8a0106c8efc3223f882e33f0a00695efc80875838cb",
+          "bytes": 38645
+        }
+      ]
+    },
+    {
+      "repository": "openxla/stablehlo",
+      "checked_at": "2026-09-23T23:28:02.378486+00:00",
+      "branch": "main",
+      "commit": "b9029ac2228a12e176ea20e56f7d3dcb6bf8a019",
+      "commit_date": "2026-09-22T21:17:15Z",
+      "commit_url": "https://github.com/openxla/stablehlo/commit/b9029ac2228a12e176ea20e56f7d3dcb6bf8a019",
+      "latest_release": {
+        "tag_name": "v1.0.0",
+        "published_at": "2024-05-14T23:37:03Z",
+        "html_url": "https://github.com/openxla/stablehlo/releases/tag/v1.0.0"
+      },
+      "files": [
+        {
+          "path": "docs/compatibility.md",
+          "url": "https://raw.githubusercontent.com/openxla/stablehlo/b9029ac2228a12e176ea20e56f7d3dcb6bf8a019/docs/compatibility.md",
+          "sha256": "e1f3099983fa74838ecbe5b916a16309402e0dbf77d6a5e8631025062c608b36",
+          "bytes": 10337
+        }
+      ]
+    },
+    {
+      "repository": "onnx/onnx",
+      "checked_at": "2026-09-23T23:28:02.379612+00:00",
+      "branch": "main",
+      "commit": "718bf2eaa65ad7df49f1fb2dfc91e15f51a1ef92",
+      "commit_date": "2026-09-22T01:04:31Z",
+      "commit_url": "https://github.com/onnx/onnx/commit/718bf2eaa65ad7df49f1fb2dfc91e15f51a1ef92",
+      "latest_release": {
+        "tag_name": "v1.23.0",
+        "published_at": "2026-09-18T18:39:37Z",
+        "html_url": "https://github.com/onnx/onnx/releases/tag/v1.23.0"
+      },
+      "files": [
+        {
+          "path": "docs/IR.md",
+          "url": "https://raw.githubusercontent.com/onnx/onnx/718bf2eaa65ad7df49f1fb2dfc91e15f51a1ef92/docs/IR.md",
+          "sha256": "e474f1aa3cb23df1a1c1d5a8cdbe7d33aef84be4c57f5671fb04b0826782ffb4",
+          "bytes": 48465
+        },
+        {
+          "path": "onnx/onnx.in.proto",
+          "url": "https://raw.githubusercontent.com/onnx/onnx/718bf2eaa65ad7df49f1fb2dfc91e15f51a1ef92/onnx/onnx.in.proto",
+          "sha256": "60ba9a08e0ecbbee4ec621d6a4dc84e8cab386d23d2b92f0d3ce1184994c644c",
+          "bytes": 44464
+        }
+      ]
+    },
+    {
+      "repository": "onnx/ir-py",
+      "checked_at": "2026-09-23T23:28:02.380686+00:00",
+      "branch": "main",
+      "commit": "5c08fc1f676477e4bee6de398f42ee780d97c348",
+      "commit_date": "2026-09-21T16:39:57Z",
+      "commit_url": "https://github.com/onnx/ir-py/commit/5c08fc1f676477e4bee6de398f42ee780d97c348",
+      "latest_release": {
+        "tag_name": "v1.0.0",
+        "published_at": "2026-08-10T23:24:54Z",
+        "html_url": "https://github.com/onnx/ir-py/releases/tag/v1.0.0"
+      },
+      "files": [
+        {
+          "path": "README.md",
+          "url": "https://raw.githubusercontent.com/onnx/ir-py/5c08fc1f676477e4bee6de398f42ee780d97c348/README.md",
+          "sha256": "9ea5adaa8096dd84af83637783603cfa372f6b045a7890af77ea2cf2f8582ae1",
+          "bytes": 2592
+        },
+        {
+          "path": "src/onnx_ir/_protocols.py",
+          "url": "https://raw.githubusercontent.com/onnx/ir-py/5c08fc1f676477e4bee6de398f42ee780d97c348/src/onnx_ir/_protocols.py",
+          "sha256": "09a166b2b0d157716a5637384f247756672c26bb9be58f6a32d85bf790a6a3cf",
+          "bytes": 21858
+        }
+      ]
+    },
+    {
+      "repository": "apache/tvm",
+      "checked_at": "2026-09-23T23:28:03.533852+00:00",
+      "branch": "main",
+      "commit": "e269315c90e3a061c9e1c77b370ce883b1b223f4",
+      "commit_date": "2026-09-22T23:28:37Z",
+      "commit_url": "https://github.com/apache/tvm/commit/e269315c90e3a061c9e1c77b370ce883b1b223f4",
+      "latest_release": {
+        "tag_name": "v0.26.0",
+        "published_at": "2026-08-11T01:02:45Z",
+        "html_url": "https://github.com/apache/tvm/releases/tag/v0.26.0"
+      },
+      "files": [
+        {
+          "path": "README.md",
+          "url": "https://raw.githubusercontent.com/apache/tvm/e269315c90e3a061c9e1c77b370ce883b1b223f4/README.md",
+          "sha256": "afb22aac927350415156670ba73864905cc1bf7ce74231f8137a3ecbd7479a3e",
+          "bytes": 3494
+        },
+        {
+          "path": "include/tvm/relax/struct_info.h",
+          "url": "https://raw.githubusercontent.com/apache/tvm/e269315c90e3a061c9e1c77b370ce883b1b223f4/include/tvm/relax/struct_info.h",
+          "error": "HTTP Error 404: Not Found"
+        }
+      ]
+    },
+    {
+      "repository": "safetensors/safetensors",
+      "checked_at": "2026-09-23T23:28:03.722852+00:00",
+      "branch": "main",
+      "commit": "e246a2560645b7525f5775669ed816eb57c5bcc8",
+      "commit_date": "2026-09-22T16:39:09Z",
+      "commit_url": "https://github.com/safetensors/safetensors/commit/e246a2560645b7525f5775669ed816eb57c5bcc8",
+      "latest_release": {
+        "tag_name": "v0.8.0",
+        "published_at": "2026-06-09T08:34:30Z",
+        "html_url": "https://github.com/safetensors/safetensors/releases/tag/v0.8.0"
+      },
+      "files": [
+        {
+          "path": "README.md",
+          "url": "https://raw.githubusercontent.com/safetensors/safetensors/e246a2560645b7525f5775669ed816eb57c5bcc8/README.md",
+          "sha256": "0a932f120de5c2477b286cae5517b6fec5e1d3ed64a19b99ccfc0a8504db7b13",
+          "bytes": 10630
+        }
+      ]
+    },
+    {
+      "repository": "ggml-org/ggml",
+      "checked_at": "2026-09-23T23:28:03.852123+00:00",
+      "branch": "master",
+      "commit": "64302f42eb959556633c89ae651915d8157dcd63",
+      "commit_date": "2026-09-23T17:55:44Z",
+      "commit_url": "https://github.com/ggml-org/ggml/commit/64302f42eb959556633c89ae651915d8157dcd63",
+      "latest_release": {
+        "tag_name": "v0.25.1",
+        "published_at": "2026-09-23T17:26:19Z",
+        "html_url": "https://github.com/ggml-org/ggml/releases/tag/v0.25.1"
+      },
+      "files": [
+        {
+          "path": "docs/gguf.md",
+          "url": "https://raw.githubusercontent.com/ggml-org/ggml/64302f42eb959556633c89ae651915d8157dcd63/docs/gguf.md",
+          "sha256": "1dead27b6a522709f0127d194e58c21dbbbf00ba1c64fe37c54d1a9048b05020",
+          "bytes": 43175
+        }
+      ]
+    },
+    {
+      "repository": "lutzroeder/netron",
+      "checked_at": "2026-09-23T23:28:03.960593+00:00",
+      "branch": "main",
+      "commit": "00bd8067d7b96023d6c41504cf3044fccc320f9e",
+      "commit_date": "2026-09-22T12:03:11Z",
+      "commit_url": "https://github.com/lutzroeder/netron/commit/00bd8067d7b96023d6c41504cf3044fccc320f9e",
+      "latest_release": {
+        "tag_name": "v9.2.9",
+        "published_at": "2026-09-19T01:08:33Z",
+        "html_url": "https://github.com/lutzroeder/netron/releases/tag/v9.2.9"
+      },
+      "files": [
+        {
+          "path": "source/base.js",
+          "url": "https://raw.githubusercontent.com/lutzroeder/netron/00bd8067d7b96023d6c41504cf3044fccc320f9e/source/base.js",
+          "sha256": "6f5c1f49951bad7e9c31a9c25ee945d649ddf15d0f34537d98759cf2d09b5f8b",
+          "bytes": 58162
+        },
+        {
+          "path": "source/onnx.js",
+          "url": "https://raw.githubusercontent.com/lutzroeder/netron/00bd8067d7b96023d6c41504cf3044fccc320f9e/source/onnx.js",
+          "sha256": "6b239ec52155c4819d7ac89f8c4c530e9dde3490566cecb3c278fb368b5aaaac",
+          "bytes": 111788
+        }
+      ]
+    },
+    {
+      "repository": "CycloneDX/specification",
+      "checked_at": "2026-09-23T23:28:04.787539+00:00",
+      "branch": "master",
+      "commit": "db25df607d029f886f1006496392e7b2c7f28f05",
+      "commit_date": "2026-09-17T14:13:51Z",
+      "commit_url": "https://github.com/CycloneDX/specification/commit/db25df607d029f886f1006496392e7b2c7f28f05",
+      "latest_release": {
+        "tag_name": "1.7.2",
+        "published_at": "2026-09-17T12:31:18Z",
+        "html_url": "https://github.com/CycloneDX/specification/releases/tag/1.7.2"
+      },
+      "files": [
+        {
+          "path": "schema/bom-1.7.schema.json",
+          "url": "https://raw.githubusercontent.com/CycloneDX/specification/db25df607d029f886f1006496392e7b2c7f28f05/schema/bom-1.7.schema.json",
+          "sha256": "73308edec3ab2d38bfffd993e96a042b594314143b6971a6e9ed98bbb6bd76ce",
+          "bytes": 315722
+        }
+      ]
+    },
+    {
+      "repository": "spdx/spdx-spec",
+      "checked_at": "2026-09-23T23:28:04.865419+00:00",
+      "branch": "develop",
+      "commit": "b0f290ffdb31b5682ff90bd99636d1d29e79d3b2",
+      "commit_date": "2026-09-23T05:11:48Z",
+      "commit_url": "https://github.com/spdx/spdx-spec/commit/b0f290ffdb31b5682ff90bd99636d1d29e79d3b2",
+      "latest_release": {
+        "tag_name": "3.0.1",
+        "published_at": "2024-12-17T18:58:27Z",
+        "html_url": "https://github.com/spdx/spdx-spec/releases/tag/3.0.1"
+      },
+      "files": [
+        {
+          "path": "README.md",
+          "url": "https://raw.githubusercontent.com/spdx/spdx-spec/b0f290ffdb31b5682ff90bd99636d1d29e79d3b2/README.md",
+          "sha256": "acf597e90f2bfc4c270098836eddca5d2dfc2af4be256eee40114f8129514923",
+          "bytes": 6404
+        }
+      ]
+    },
+    {
+      "repository": "pytorch/executorch",
+      "checked_at": "2026-09-23T23:28:04.902214+00:00",
+      "branch": "main",
+      "commit": "b253af8a155b823b434ff3cc8c7ecb9a1cc59f91",
+      "commit_date": "2026-09-23T23:27:09Z",
+      "commit_url": "https://github.com/pytorch/executorch/commit/b253af8a155b823b434ff3cc8c7ecb9a1cc59f91",
+      "latest_release": {
+        "tag_name": "v1.5.1",
+        "published_at": "2026-09-23T16:58:34Z",
+        "html_url": "https://github.com/pytorch/executorch/releases/tag/v1.5.1"
+      },
+      "files": [
+        {
+          "path": "schema/program.fbs",
+          "url": "https://raw.githubusercontent.com/pytorch/executorch/b253af8a155b823b434ff3cc8c7ecb9a1cc59f91/schema/program.fbs",
+          "sha256": "da7b809b497abea70e813cb23f39e46b6c76e2501d66ef3e91d4f9e1c9cfd62f",
+          "bytes": 18832
+        }
+      ]
+    },
+    {
+      "repository": "apple/coremltools",
+      "checked_at": "2026-09-23T23:28:05.447759+00:00",
+      "branch": "main",
+      "commit": "db4dd46b64dcaa4c636c8360b5485c18828140d8",
+      "commit_date": "2026-09-22T18:07:52Z",
+      "commit_url": "https://github.com/apple/coremltools/commit/db4dd46b64dcaa4c636c8360b5485c18828140d8",
+      "latest_release": {
+        "tag_name": "9.0",
+        "published_at": "2025-11-10T22:22:40Z",
+        "html_url": "https://github.com/apple/coremltools/releases/tag/9.0"
+      },
+      "files": [
+        {
+          "path": "mlmodel/format/Model.proto",
+          "url": "https://raw.githubusercontent.com/apple/coremltools/db4dd46b64dcaa4c636c8360b5485c18828140d8/mlmodel/format/Model.proto",
+          "sha256": "c731d0202acecd54f20eaf97c94a2a4764fe541ba92311485a9c36d3c3c3b544",
+          "bytes": 13408
+        }
+      ]
+    },
+    {
+      "repository": "tensorflow/tensorflow",
+      "checked_at": "2026-09-23T23:28:05.963705+00:00",
+      "branch": "master",
+      "commit": "9edd58f895c58c3db484a9e39ab2e953baca4bca",
+      "commit_date": "2026-09-21T19:11:06Z",
+      "commit_url": "https://github.com/tensorflow/tensorflow/commit/9edd58f895c58c3db484a9e39ab2e953baca4bca",
+      "latest_release": {
+        "tag_name": "v2.21.0",
+        "published_at": "2026-03-06T19:48:15Z",
+        "html_url": "https://github.com/tensorflow/tensorflow/releases/tag/v2.21.0"
+      },
+      "files": [
+        {
+          "path": "tensorflow/compiler/mlir/lite/schema/schema.fbs",
+          "url": "https://raw.githubusercontent.com/tensorflow/tensorflow/9edd58f895c58c3db484a9e39ab2e953baca4bca/tensorflow/compiler/mlir/lite/schema/schema.fbs",
+          "superseded_path": "tensorflow/lite/schema/schema.fbs",
+          "sha256": "38a5b591c0ed70a37d808fdb6de6b6b758b15da444d7a3a542f64cf980847e1a",
+          "bytes": 45218
+        }
+      ]
+    }
+  ],
+  "property_taxonomy": {
+    "repository": "CycloneDX/cyclonedx-property-taxonomy",
+    "commit": "658451fdf5501f857f77d1372c9ac6323279d8d1",
+    "commit_url": "https://github.com/CycloneDX/cyclonedx-property-taxonomy/commit/658451fdf5501f857f77d1372c9ac6323279d8d1",
+    "matching_paths": [
+      "cdx/ai-ml.md"
+    ],
+    "path_search_scope": "mlbom or ai-ml in repository tree paths; this is not a full-content search"
+  }
+}

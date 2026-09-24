@@ -422,6 +422,7 @@ struct TensorInfo {
     name: String,
     shape: Vec<i32>,
     shape_signature: Vec<i32>,
+    has_rank: bool,
     dtype: String,
     buffer_index: i32,
     buffer_data_offset: usize,
@@ -5624,6 +5625,7 @@ fn read_tensor(
 ) -> Result<TensorInfo, String> {
     let shape = fb.vector_i32(table, 0);
     let shape_signature = fb.vector_i32(table, 7);
+    let has_rank = fb.checked_i8_field(table, 8, 0, "Tensor.has_rank")? != 0;
     let dtype_code = fb.checked_i8_field(table, 1, 0, "Tensor.type")?;
     let dtype_name = tensor_type_name(dtype_code).to_string();
     let name = fb
@@ -5731,6 +5733,7 @@ fn read_tensor(
         name,
         shape,
         shape_signature,
+        has_rank,
         dtype: dtype_name,
         buffer_index,
         buffer_data_offset: buffer_location.offset,
@@ -9432,6 +9435,21 @@ mod tests {
     }
 
     #[test]
+    fn tensor_has_rank_preserves_scalar_and_unknown_rank() {
+        for has_rank in [false, true] {
+            let mut bytes = vec![0u8; 40];
+            bytes[0..2].copy_from_slice(&22u16.to_le_bytes());
+            bytes[2..4].copy_from_slice(&5u16.to_le_bytes());
+            bytes[20..22].copy_from_slice(&4u16.to_le_bytes());
+            bytes[32..36].copy_from_slice(&32i32.to_le_bytes());
+            bytes[36] = u8::from(has_rank);
+            let tensor = read_tensor(&Fb::new_for_test(&bytes), 0, 32, &[]).unwrap();
+            assert!(tensor.shape.is_empty());
+            assert_eq!(tensor.has_rank, has_rank);
+        }
+    }
+
+    #[test]
     fn buffer_table_reads_v3c_appended_offset_and_size_fields() {
         let mut bytes = vec![0u8; 128];
         bytes[0..2].copy_from_slice(&10u16.to_le_bytes());
@@ -9492,6 +9510,7 @@ mod tests {
             index,
             name: format!("T{index}"),
             shape_signature: shape.clone(),
+            has_rank: true,
             shape,
             dtype: "INT8".to_string(),
             buffer_index: 0,

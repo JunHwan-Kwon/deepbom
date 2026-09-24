@@ -1,0 +1,105 @@
+{
+  "schema": "deepbom.ir_support_gate.v1",
+  "reviewed_source_manifest_sha256": "8c43d934bb5b9bdbf469e92570c6f294e1ec880b03fa60578e9e7d9c10ad3905",
+  "artifact_ir_method": "2.3.0",
+  "model_ir_method": "1.1.0",
+  "reviewed_change": "Preserve logical type trees and empty tensors, scope quantization, distinguish logical bytes from storage, validate source projections and runtime input provenance. Native semantic support remains bounded by each adapter.",
+  "required_checks": [
+    "scripts/check-common-ir-semantics.mjs",
+    "scripts/check-ir-hardening.mjs",
+    "scripts/check-artifact-ir.mjs",
+    "scripts/check-model-ir.mjs",
+    "scripts/check-numerical-ir.mjs",
+    "scripts/check-model-summary.mjs"
+  ],
+  "support": [
+    {
+      "source_id": "onnx",
+      "reviewed_commit": "be2b5fde82d9c8874f3d19328bdfe3b6962dc67b",
+      "support_claim": "bounded_adapter_projection",
+      "semantic_coverage": "operator_and_format_specific_tests_required",
+      "upstream_head_implies_support": false,
+      "source_verifier": "scripts/verify-serialized-source-pins.mjs"
+    },
+    {
+      "source_id": "onnxruntime",
+      "reviewed_commit": "8c546c37b43caaca1fa25db430dab94b901cf277",
+      "support_claim": "bounded_adapter_projection",
+      "semantic_coverage": "operator_and_format_specific_tests_required",
+      "upstream_head_implies_support": false,
+      "source_verifier": "scripts/generate-ort-rulepack.mjs"
+    },
+    {
+      "source_id": "tensorflow_tflite",
+      "reviewed_commit": "87bbf65b8d23d3f06912b1b2183587e1884bc45c",
+      "support_claim": "bounded_adapter_projection",
+      "semantic_coverage": "operator_and_format_specific_tests_required",
+      "upstream_head_implies_support": false,
+      "source_verifier": "scripts/verify-serialized-source-pins.mjs"
+    },
+    {
+      "source_id": "llama_cpp_gguf",
+      "reviewed_commit": "7bd8282c37fcd9c4d7236106d664761a23318f18",
+      "support_claim": "bounded_adapter_projection",
+      "semantic_coverage": "operator_and_format_specific_tests_required",
+      "upstream_head_implies_support": false,
+      "source_verifier": "scripts/verify-serialized-source-pins.mjs"
+    },
+    {
+      "source_id": "safetensors",
+      "reviewed_commit": "6eb4dc9a28ebce297606e0f4836bbf28839cacef",
+      "support_claim": "bounded_adapter_projection",
+      "semantic_coverage": "operator_and_format_specific_tests_required",
+      "upstream_head_implies_support": false,
+      "source_verifier": "scripts/verify-serialized-source-pins.mjs"
+    },
+    {
+      "source_id": "coremltools",
+      "reviewed_commit": "428d4b2658dfc44194f27f4f36870751be402ff7",
+      "support_claim": "bounded_adapter_projection",
+      "semantic_coverage": "operator_and_format_specific_tests_required",
+      "upstream_head_implies_support": false,
+      "source_verifier": "scripts/verify-coreml-source-pins.mjs"
+    },
+    {
+      "source_id": "executorch",
+      "reviewed_commit": "e4d02f41f7909e8ed5bf4a14ffc520d733453d9f",
+      "support_claim": "bounded_adapter_projection",
+      "semantic_coverage": "operator_and_format_specific_tests_required",
+      "upstream_head_implies_support": false,
+      "source_verifier": "scripts/generate-executorch-operator-signatures.mjs"
+    },
+    {
+      "source_id": "tensorflow_graphdef_savedmodel",
+      "reviewed_commit": "87bbf65b8d23d3f06912b1b2183587e1884bc45c",
+      "support_claim": "bounded_adapter_projection",
+      "semantic_coverage": "operator_and_format_specific_tests_required",
+      "upstream_head_implies_support": false,
+      "source_verifier": "scripts/verify-model-ir-preview-source-pins.mjs"
+    },
+    {
+      "source_id": "hdf5",
+      "reviewed_commit": "7489f285bee1b597586ccd660228376890a00ab4",
+      "support_claim": "bounded_adapter_projection",
+      "semantic_coverage": "operator_and_format_specific_tests_required",
+      "upstream_head_implies_support": false,
+      "source_verifier": "scripts/verify-model-ir-preview-source-pins.mjs"
+    },
+    {
+      "source_id": "keras",
+      "reviewed_commit": "d3d234b7baf2857d6e3d1c40091a279912782993",
+      "support_claim": "bounded_adapter_projection",
+      "semantic_coverage": "operator_and_format_specific_tests_required",
+      "upstream_head_implies_support": false,
+      "source_verifier": "scripts/verify-model-ir-preview-source-pins.mjs"
+    },
+    {
+      "source_id": "pytorch",
+      "reviewed_commit": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+      "support_claim": "bounded_adapter_projection",
+      "semantic_coverage": "operator_and_format_specific_tests_required",
+      "upstream_head_implies_support": false,
+      "source_verifier": "scripts/verify-model-ir-preview-source-pins.mjs"
+    }
+  ]
+}

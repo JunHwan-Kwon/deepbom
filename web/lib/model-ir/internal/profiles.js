@@ -1,3 +1,4 @@
+import { compareCanonicalText } from "../../report-utils.js";
 import { list } from "./shared.js";
 
 const STORAGE_ROLE_RULES = Object.freeze([
@@ -110,7 +111,7 @@ function buildGroups(profileId, rows) {
     if (!byRole.has(row.role)) byRole.set(row.role, []);
     byRole.get(row.role).push(row.subject_ref);
   }
-  return [...byRole.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([role, members]) => ({
+  return [...byRole.entries()].sort(([left], [right]) => compareCanonicalText(left, right)).map(([role, members]) => ({
     id: `profile-group:${profileId}:${role}`,
     role,
     member_refs: [...members].sort(),

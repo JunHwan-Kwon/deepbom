@@ -6,19 +6,30 @@ import {
 } from "./shared.js";
 
 export function buildQuantizationContracts(analysis, format, graph, storage, tensors) {
-  const graphValues = new Map(graph.values.map((value) => [value.native_index, value.id]));
-  const storageObjects = new Map(storage.objects.map((value) => [value.native_index, value.id]));
+  const storageObjects = new Map(storage.objects.filter(value => !value.scope_ref).map((value) => [value.native_index, value.id]));
   const records = [];
-  for (const [position, tensor] of tensors.entries()) {
+  const scopedTensors = tensors.map((tensor, position) => ({ tensor, position, scope: graph.primary_scope_ref, subgraph: 0 }));
+  if (format === "tflite") for (const row of list(analysis?.tflite_subgraph_inventory?.rows)) {
+    if (row.subgraph_index === 0) continue;
+    for (const [position, tensor] of list(row.tensor_intrinsics).entries()) scopedTensors.push({ tensor: { ...tensor, index: tensor.tensor_index }, position, scope: `scope:tflite:subgraph:${row.subgraph_index}`, subgraph: row.subgraph_index });
+  }
+  const scopedValues = new Map(graph.values.map(row => [`${row.scope_ref}:${row.native_index}`, row.id]));
+  for (const { tensor, position, scope, subgraph } of scopedTensors) {
     const index = tensorIndex(tensor, position);
-    const scales = finiteNumberArray(tensor.scale_sample?.length ? tensor.scale_sample : tensor.interface_scale_values);
-    const zeroPoints = integerArray(tensor.zero_point_sample?.length ? tensor.zero_point_sample : tensor.interface_zero_point_values);
+    const scales = finiteNumberArray(Array.isArray(tensor.interface_scale_values) ? tensor.interface_scale_values : tensor.scale_sample);
+    const zeroPoints = integerArray(Array.isArray(tensor.interface_zero_point_values) ? tensor.interface_zero_point_values : tensor.zero_point_sample);
+    const scaleCount = nonNegativeInteger(tensor.quant_scales) ?? (Array.isArray(tensor.interface_scale_values) ? tensor.interface_scale_values.length : null);
+    const zeroCount = nonNegativeInteger(tensor.quant_zero_points) ?? (Array.isArray(tensor.interface_zero_point_values) ? tensor.interface_zero_point_values.length : null);
+    const nativeScale = tensor.quantization_vectors?.scale, nativeZero = tensor.quantization_vectors?.zero_point;
+    const completeDescriptor = (row, count) => row?.collection_status === "complete_vector" && row.count === count && normalizeSha256(row.sha256);
+    const completeScale = Boolean(completeDescriptor(nativeScale, scaleCount)) || scaleCount !== null && scaleCount === scales.length, completeZero = Boolean(completeDescriptor(nativeZero, zeroCount)) || zeroCount !== null && zeroCount === zeroPoints.length;
+    const completeAffine = scales.length > 0 && zeroPoints.length > 0 && completeScale && completeZero;
     const encoded = format === "gguf" && /^(?:Q\d|IQ\d|TQ\d|MXFP|NVFP)/i.test(String(tensor.dtype || ""));
-    if (!scales.length && !zeroPoints.length && !encoded) continue;
+    if (!scales.length && !zeroPoints.length && !scaleCount && !zeroCount && !encoded) continue;
     const parameterization = encoded
       ? { kind: "per_block", axes: [], block_size: positiveInteger(tensor.block_elements) }
-      : quantizationParameterization(tensor, scales);
-    const subjectRef = graphValues.get(index) || storageObjects.get(index);
+      : quantizationParameterization(tensor, scales, scaleCount);
+    const subjectRef = scopedValues.get(`${scope}:${index}`) || (subgraph === 0 ? storageObjects.get(index) : null);
     if (!subjectRef) continue;
     records.push({
       id: `quantization:${subjectRef}`,
@@ -30,7 +41,7 @@ export function buildQuantizationContracts(analysis, format, graph, storage, ten
       } : {
         family: "affine",
         scheme: "affine_unspecified_symmetry",
-        zero_point_constraint: zeroPointConstraint(zeroPoints),
+        zero_point_constraint: completeZero ? nativeZero?.collection_status === "complete_vector" ? nativeZero.all_zero ? "observed_all_zero_not_symmetry_proof" : "observed_contains_nonzero" : zeroPointConstraint(zeroPoints) : "not_assessed_incomplete_vector",
       },
       parameterization,
       storage: {
@@ -43,15 +54,15 @@ export function buildQuantizationContracts(analysis, format, graph, storage, ten
         scale: null,
         zero_point: null,
       } : {
-        status: scales.length && zeroPoints.length ? "complete_affine_vectors" : "partial_affine_vectors",
-        scale: parameterVector(scales),
-        zero_point: parameterVector(zeroPoints),
+        status: completeAffine ? "complete_affine_vectors" : "partial_affine_vectors",
+        scale: completeDescriptor(nativeScale, scaleCount) ? structuredClone(nativeScale) : parameterVector(scales, scaleCount, completeScale),
+        zero_point: completeDescriptor(nativeZero, zeroCount) ? structuredClone(nativeZero) : parameterVector(zeroPoints, zeroCount, completeZero),
       },
       source: {
-        native_locator: nativeQuantizationLocator(format, tensor, index),
+        native_locator: nativeQuantizationLocator(format, tensor, index, subgraph),
         evidence_class: "OBSERVED_SERIALIZED_ARTIFACT",
       },
-      completeness: encoded || (scales.length && zeroPoints.length) ? "complete_for_serialized_contract" : "partial_serialized_contract",
+      completeness: encoded || completeAffine ? "complete_for_serialized_contract" : "partial_serialized_contract",
     });
   }
   for (const [index, parameter] of (["coreml", "mlmodel"].includes(format) ? list(analysis?.weight_integrity?.parameters) : []).entries()) {
@@ -70,8 +81,8 @@ export function buildQuantizationContracts(analysis, format, graph, storage, ten
       },
       parameterization: {
         kind: perAxis ? "per_axis" : "per_tensor",
-        axes: Number.isSafeInteger(Number(quantization.axis)) ? [Number(quantization.axis)] : [],
-        axis_status: perAxis && !Number.isSafeInteger(Number(quantization.axis)) ? "not_exposed_by_serialized_weight_contract" : "not_applicable_or_explicit",
+        axes: optionalInteger(quantization.axis) !== null ? [optionalInteger(quantization.axis)] : [],
+        axis_status: perAxis && optionalInteger(quantization.axis) === null ? "not_exposed_by_serialized_weight_contract" : "not_applicable_or_explicit",
         block_size: null,
       },
       storage: {
@@ -102,7 +113,7 @@ export function buildQuantizationContracts(analysis, format, graph, storage, ten
       subject_ref: subjectRef,
       related_storage_refs: [...new Set(related)],
       mapping: { family: "packed_integer_weight", scheme: String(safeContract.method || "unknown"), zero_point_constraint: module.symmetric === true ? "declared_symmetric" : module.symmetric === false ? "declared_asymmetric" : "not_declared" },
-      parameterization: { kind: "per_group", axes: Number.isSafeInteger(Number(module.logical_weight_axis)) ? [Number(module.logical_weight_axis)] : [], block_size: positiveInteger(module.group_size), group_count: nonNegativeInteger(module.group_count) },
+      parameterization: { kind: "per_group", axes: optionalInteger(module.logical_weight_axis) !== null ? [optionalInteger(module.logical_weight_axis)] : [], block_size: positiveInteger(module.group_size), group_count: nonNegativeInteger(module.group_count) },
       storage: { data_type: `PACKED_UINT${module.bits || safeContract.bits || ""}`, code_min: 0, code_max: Number.isSafeInteger(Number(module.bits || safeContract.bits)) ? 2 ** Number(module.bits || safeContract.bits) - 1 : null, code_domain_status: "source_pinned_packed_layout", block_bytes: null },
       parameters: { status: String(module.quantization_payload_integrity?.status || module.status || "not_assessed"), scale: { count: decimalCount(module.scale_element_count), sha256: null, inline_values: null, inline_status: "referenced_storage_object" }, zero_point: { count: decimalCount(module.zero_point_code_capacity), sha256: null, inline_values: null, inline_status: module.zero_point_storage_transform || "not_assessed" } },
       source: { native_locator: { format: "safetensors", path: `safetensors.quantization_contract.modules[${index}]` }, evidence_class: String(safeContract.evidence_class || "OBSERVED/DERIVED_FROM_PINNED_FORMAT_SOURCE") },
@@ -123,18 +134,18 @@ export function buildQuantizationContracts(analysis, format, graph, storage, ten
   };
 }
 
-function nativeQuantizationLocator(format, tensor, index) {
-  if (format === "tflite") return { format, path: `SubGraph[0].tensors[${index}].quantization` };
+function nativeQuantizationLocator(format, tensor, index, subgraph = 0) {
+  if (format === "tflite") return { format, path: `SubGraph[${subgraph}].tensors[${index}].quantization` };
   if (format === "onnx") return { format, path: `graph.value[${JSON.stringify(String(tensor.name || ""))}].quantization_bindings` };
   if (format === "gguf") return { format, path: `tensor_infos[${index}].ggml_type` };
   return { format, path: `tensors[${index}].quantization` };
 }
 
-function quantizationParameterization(tensor, scales) {
+function quantizationParameterization(tensor, scales, declaredScaleCount) {
   const declared = String(tensor.quantization_parameterization || tensor.scale_mode || "").toLowerCase().replaceAll("-", "_");
   const blockSize = positiveInteger(tensor.quantization_block_size);
   if (blockSize || declared.includes("block")) return { kind: "per_block", axes: optionalAxis(tensor), block_size: blockSize };
-  if (scales.length > 1 || declared.includes("axis") || declared.includes("channel")) return { kind: "per_axis", axes: optionalAxis(tensor), block_size: null };
+  if (scales.length > 1 || declaredScaleCount > 1 || declared.includes("axis") || declared.includes("channel")) return { kind: "per_axis", axes: optionalAxis(tensor), block_size: null };
   return { kind: "per_tensor", axes: [], block_size: null };
 }
 
@@ -143,13 +154,13 @@ function optionalAxis(tensor) {
   return value == null ? [] : [value];
 }
 
-function parameterVector(values) {
+function parameterVector(values, declaredCount, complete) {
   const normalized = list(values);
   return {
-    count: normalized.length,
-    sha256: sha256TextHex(canonicalJson(normalized)),
+    count: declaredCount,
+    sha256: complete ? sha256TextHex(canonicalJson(normalized)) : null,
     inline_values: normalized.length <= INLINE_PARAMETER_LIMIT ? normalized : null,
-    inline_status: normalized.length <= INLINE_PARAMETER_LIMIT ? "complete" : "digest_only_large_vector",
+    inline_status: complete ? normalized.length <= INLINE_PARAMETER_LIMIT ? "complete" : "digest_only_large_vector" : "partial_sample_not_complete_vector",
   };
 }
 

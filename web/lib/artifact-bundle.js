@@ -1,3 +1,4 @@
+import { compareCanonicalText } from "./report-utils.js";
 import { readCoreMlModelFile, refreshCoreMlDerivedEvidence } from "./coreml-metadata-adapter.js";
 import { scanCoreMlBlobFile } from "./coreml-blob.js";
 import { sha256FileHex } from "./hash.js";
@@ -214,7 +215,7 @@ async function hashRecords(rows, onProgress) {
 }
 
 function bundleDigest(records) {
-  const rows = records.map(({ path, byte_length, sha256, role, required }) => ({ path, byte_length, sha256, role, required })).sort((a, b) => a.path.localeCompare(b.path));
+  const rows = records.map(({ path, byte_length, sha256, role, required }) => ({ path, byte_length, sha256, role, required })).sort((a, b) => compareCanonicalText(a.path, b.path));
   return sha256TextHex(JSON.stringify({ schema: "deepbom.artifact_bundle_digest.v1", files: rows }));
 }
 

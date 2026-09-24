@@ -1,0 +1,218 @@
+{
+  "schema": "deepbom.core_ir_audit_record.v1",
+  "checked_date": "2026-09-24",
+  "baseline_full_run": {
+    "source_commit": "71cb1cfba94dc0fdecdc54036803703008a05e3e",
+    "immutable_source": true,
+    "total": 248,
+    "passed": 248,
+    "failed": 0,
+    "results_sha256": "e75d9e4acaf93fa155385b83ec6cf2622138a27727cd7ba8c48a58487110bdb5"
+  },
+  "candidate_full_run": {
+    "source_commit": "92c7b6cd0eb956e8da936a2f9c906c2f8b7aa8c6",
+    "immutable_source": true,
+    "execution": "27 sequential + 222 across four isolated worktrees at the same immutable commit; interrupted CLI attempt discarded and rerun",
+    "total": 249,
+    "passed": 246,
+    "failed": 3,
+    "isolated_seconds": 730.865,
+    "results_sha256": "4ebbeac7db18352d8e2c908cb5da1fd97af13357241c60712126117baefd43cd",
+    "initial_failures": [
+      {
+        "check": "scripts/check-parser-robustness-isolated.mjs",
+        "status": "fail",
+        "exit_code": 1,
+        "seconds": 91.457,
+        "source_commit": "92c7b6cd0eb956e8da936a2f9c906c2f8b7aa8c6",
+        "worktree": "deepbom-core-ir-check-4",
+        "log": ".local-validation/core-ir-final-audit/check-108.log"
+      },
+      {
+        "check": "scripts/check-sw-assets.mjs",
+        "status": "fail",
+        "exit_code": 1,
+        "seconds": 0.065,
+        "source_commit": "92c7b6cd0eb956e8da936a2f9c906c2f8b7aa8c6",
+        "worktree": "deepbom-core-ir-check-3",
+        "log": ".local-validation/core-ir-final-audit/check-240.log"
+      },
+      {
+        "check": "scripts/check-cyclonedx-consumer-compatibility.mjs",
+        "status": "fail",
+        "exit_code": 1,
+        "seconds": 0.416,
+        "source_commit": "92c7b6cd0eb956e8da936a2f9c906c2f8b7aa8c6",
+        "worktree": "deepbom-core-ir-audit",
+        "log": ".local-validation/core-ir-final-audit/check-042.log"
+      }
+    ]
+  },
+  "followup_run": {
+    "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f",
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "checks": [
+      {
+        "check": "scripts/check-common-ir-semantics.mjs",
+        "exit_code": 0,
+        "status": "pass",
+        "seconds": 0.916,
+        "log": ".local-validation/core-ir-audit/followup-01.log",
+        "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f"
+      },
+      {
+        "check": "scripts/check-sw-assets.mjs",
+        "exit_code": 0,
+        "status": "pass",
+        "seconds": 0.115,
+        "log": ".local-validation/core-ir-audit/followup-02.log",
+        "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f"
+      },
+      {
+        "check": "scripts/check-service-worker-lifecycle.mjs",
+        "exit_code": 0,
+        "status": "pass",
+        "seconds": 0.065,
+        "log": ".local-validation/core-ir-audit/followup-03.log",
+        "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f"
+      },
+      {
+        "check": "scripts/check-offline-device-controller.mjs",
+        "exit_code": 0,
+        "status": "pass",
+        "seconds": 0.065,
+        "log": ".local-validation/core-ir-audit/followup-04.log",
+        "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f"
+      },
+      {
+        "check": "scripts/check-sw-version.mjs",
+        "exit_code": 0,
+        "status": "pass",
+        "seconds": 0.064,
+        "log": ".local-validation/core-ir-audit/followup-05.log",
+        "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f"
+      },
+      {
+        "check": "scripts/check-importmap-runtime-cache.mjs",
+        "exit_code": 0,
+        "status": "pass",
+        "seconds": 0.064,
+        "log": ".local-validation/core-ir-audit/followup-06.log",
+        "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f"
+      },
+      {
+        "check": "scripts/check-browser-import-contract.mjs",
+        "exit_code": 0,
+        "status": "pass",
+        "seconds": 0.315,
+        "log": ".local-validation/core-ir-audit/followup-07.log",
+        "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f"
+      },
+      {
+        "check": "scripts/check-web-imports.mjs",
+        "exit_code": 0,
+        "status": "pass",
+        "seconds": 0.415,
+        "log": ".local-validation/core-ir-audit/followup-08.log",
+        "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f"
+      },
+      {
+        "check": "scripts/check-cyclonedx-consumer-compatibility.mjs",
+        "exit_code": 0,
+        "status": "pass",
+        "seconds": 0.415,
+        "log": ".local-validation/core-ir-audit/followup-09.log",
+        "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f"
+      },
+      {
+        "check": "scripts/check-external-review-ledger.mjs",
+        "exit_code": 0,
+        "status": "pass",
+        "seconds": 0.064,
+        "log": ".local-validation/core-ir-audit/followup-10.log",
+        "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f"
+      },
+      {
+        "check": "scripts/check-export-contract-documents.mjs",
+        "exit_code": 0,
+        "status": "pass",
+        "seconds": 14.792,
+        "log": ".local-validation/core-ir-audit/followup-11.log",
+        "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f"
+      },
+      {
+        "check": "scripts/check-source-budget.mjs",
+        "exit_code": 0,
+        "status": "pass",
+        "seconds": 0.315,
+        "log": ".local-validation/core-ir-audit/followup-12.log",
+        "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f"
+      }
+    ]
+  },
+  "parser_retry": {
+    "source_commit": "a0c46dffe0d60453e34ccc16cef95113b2bc064f",
+    "case_count": 126,
+    "unexpected_count": 0,
+    "timeout_limits_changed": false,
+    "control": {
+      "id": "tflite:control: valid MobileNetV2",
+      "group": "tflite",
+      "name": "control: valid MobileNetV2",
+      "expectation": "accept",
+      "timeout_ms": 15000,
+      "status": "accepted",
+      "verdict": "ok",
+      "duration_ms": 10192,
+      "detail": "tflite",
+      "exit_code": 0,
+      "signal": null
+    },
+    "results_sha256": "e18046ede0fec6e6f9d4d25cdb7917f12cab61b4e6026fd8944c5f0c7cb751ff"
+  },
+  "new_regressions": {
+    "groups": 15,
+    "baseline_passed": 0,
+    "fixed_passed": 15,
+    "group_names": [
+      "JCS object reordering preserves Artifact IR and Model IR validity",
+      "Unicode namespace hashes are independent of the process locale",
+      "JCS rejects sparse arrays and preserves valid zero/unicode serialization",
+      "IR validators reject non-JSON values before a lossy clone",
+      "exact counts reject booleans, whitespace, arrays and unsafe numeric inputs",
+      "unknown dimensions are not observed empty dimensions",
+      "canonical decimal dimensions preserve cardinality above 2^53",
+      "a real SafeTensors rank-zero tensor has one element",
+      "rehashed contradictory exact-number mirrors fail semantic validation",
+      "Model IR rejects duplicate storage identities and contradictory storage totals",
+      "external file digest is not mislabeled as a tensor payload digest",
+      "partial native quantization samples do not claim a complete vector digest",
+      "declared multi-channel quantization is retained without vector samples",
+      "complete interface vectors take precedence over truncated samples",
+      "a real 300-channel ONNX quantization contract retains full parameter coverage"
+    ]
+  },
+  "legacy_documents": [
+    {
+      "file": "deepbom_artifact_ir.json",
+      "method": "2.2.0",
+      "sha256": "88b850ade73779ee629696a077a418f84c6d2de808490c63f2b9be0e43c13b0a",
+      "status": "pass"
+    },
+    {
+      "file": "deepbom_model_ir.json",
+      "method": "1.0.0",
+      "sha256": "9c59d119460de974a03b4c1b876cc5e7365d0f57a0818574e0ce8f60afa95a9a",
+      "status": "pass"
+    }
+  ],
+  "changes_after_candidate_full_run": [
+    "corpus/external-review/cyclonedx-17-consumer-compatibility.v1.json",
+    "web/sw.js"
+  ],
+  "numerical_core_changed_after_candidate_full_run": false,
+  "upstream_snapshot_sha256": "bc6051ea342cbc62798fa375f930c40136e2ace8f668a0835758308f426bee8e",
+  "limits": "Bounded code and regression review; not a proof of correctness for all formats, models, runtimes or inputs. Preserve the initial failures; do not describe this as one 249/249 pass at the follow-up commit."
+}

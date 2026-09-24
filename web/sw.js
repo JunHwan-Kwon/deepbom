@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v591";
+const CACHE_NAME = "tflite-wasm-static-audit-v592";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -343,6 +343,13 @@ const APP_ASSETS = [
   "./lib/public-verification-manifest.js",
   "./lib/report-store.js",
   "./lib/report-utils.js",
+  "./lib/exact-integer.js",
+  "./lib/ir-artifact-members.js",
+  "./lib/ir-logical-inventory.js",
+  "./lib/ir-metric.js",
+  "./lib/ir-parameter-vector.js",
+  "./lib/ir-runtime-provenance.js",
+  "./lib/ir-value-type.js",
   "./lib/runtime.js",
   "./lib/runtime-module-loader.js",
   "./lib/runtime-evidence-closure.js",

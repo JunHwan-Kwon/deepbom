@@ -1034,6 +1034,7 @@
             1001
           ],
           "shape_signature": [],
+          "has_rank": false,
           "dtype": "UINT8",
           "buffer_index": 135,
           "buffer_data_offset": 0,
@@ -4132,5 +4133,5 @@
     ]
   },
   "evidence_boundary": "Serialized artifact facts and deterministic static derivations. Declarations and runtime measurements are accepted only through separately identified inputs.",
-  "envelope_sha256": "81c08fcec38de091bf1d16d6f7355be5de007695384bd3a511567af4af85c377"
+  "envelope_sha256": "13c4994f04ef5573c563ddc703dbade9c5a27d7128a5b0de3bad3c87fbfce8e6"
 }

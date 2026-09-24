@@ -1,3 +1,4 @@
+import { compareCanonicalText } from "./report-utils.js";
 const SHA256 = /^[a-f0-9]{64}$/;
 
 export function normalizeArtifactIrRuntimeOverlay(runtimeEvidence, graph, architecture, artifactSha256) {
@@ -53,7 +54,7 @@ export function normalizeArtifactIrRuntimeOverlay(runtimeEvidence, graph, archit
       runtime_node_kind: row.runtime_node_kind,
       evidence_class: row.evidence_class,
     };
-  }).sort((left, right) => left.runtime_node_ref.localeCompare(right.runtime_node_ref));
+  }).sort((left, right) => compareCanonicalText(left.runtime_node_ref, right.runtime_node_ref));
   if (!runtimeNodes.length) return [];
   const rows = runtimeNodes.flatMap((node) => node.source_subject_refs.map((subjectRef) => ({
     subject_ref: subjectRef,

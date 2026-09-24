@@ -1,3 +1,5 @@
+import { buildLogicalInventory } from "./ir-logical-inventory.js";
+import { buildArtifactMembers } from "./ir-artifact-members.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 // Internal construction boundary. Consumers must resolve a shared context through
@@ -53,6 +55,8 @@ export function buildArtifactEvidenceIrUnchecked(analysis, artifact = {}, { runt
     },
     graph,
     storage_topology: storage,
+    logical_inventory: buildLogicalInventory(analysis, graph, storage, format),
+    artifact_members: buildArtifactMembers(analysis, identity, storage),
     architecture_projection: architecture,
     quantization_contracts: quantization,
     lineage_evidence: lineage,
@@ -65,6 +69,7 @@ export function buildArtifactEvidenceIrUnchecked(analysis, artifact = {}, { runt
 }
 
 export function validateArtifactEvidenceIr(document) {
+  canonicalJson(document); // Reject invalid JSON before cloning could erase it.
   const body = clone(document);
   const digest = String(body.artifact_ir_sha256 || "").toLowerCase();
   delete body.artifact_ir_sha256;
