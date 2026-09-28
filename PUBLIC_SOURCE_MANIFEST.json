@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "0e806c778c705311c5a78611378150ec0dca2ab8",
+  "source_commit": "698f78b13cdaf8c39793312f107d7017a27c45d2",
   "source_state": "clean",
   "license": "Apache-2.0",
   "file_count": 1245,
@@ -3862,8 +3862,8 @@
     },
     {
       "path": "web/app-shell.css",
-      "byte_length": 43069,
-      "sha256": "5ea227a5b92acd2bcdee216b9afce2114a64a4cc9731373439e586e71d0ec926"
+      "byte_length": 43866,
+      "sha256": "4dcbb6b3b814f76a2435c20c8e3ca750991e58651a56f60680b66d6e54f4c5f7"
     },
     {
       "path": "web/app.js",
@@ -4312,8 +4312,8 @@
     },
     {
       "path": "web/lib/build-metadata.js",
-      "byte_length": 95846,
-      "sha256": "8963703dca1dc55e688cbec9d71f372c3460ad6a6bcaf4d9042598f77bccb1fb"
+      "byte_length": 95865,
+      "sha256": "99272221df3b059cb324104c26c3c371ab217f3ae4e002987851d3f0b8eaa9f9"
     },
     {
       "path": "web/lib/bundle.js",
@@ -6102,8 +6102,8 @@
     },
     {
       "path": "web/research-theme.css",
-      "byte_length": 59715,
-      "sha256": "5a165764ace5d958a0036a592bc1d87d1454a162aee6d977b25acda57776a92d"
+      "byte_length": 59526,
+      "sha256": "33936157997bb83c6dfe31bbfe62d6be6cab7fb367a7cc07b1613ecbbc2b36b0"
     },
     {
       "path": "web/samples/MNISTClassifier.mlmodel",
@@ -6188,7 +6188,7 @@
     {
       "path": "web/sw.js",
       "byte_length": 17475,
-      "sha256": "c99e40d47e38cef80cab66863eaedb13b36df02eb3f1b7947d692af101086ec0"
+      "sha256": "16879f2a6f76ef1cd4d1a320b8235aaf6c897eacde092169be3f69955fd36a07"
     },
     {
       "path": "web/test.html",

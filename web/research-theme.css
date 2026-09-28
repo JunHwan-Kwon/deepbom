@@ -2481,12 +2481,6 @@ button.overview-domain-control:focus-visible { outline: 2px solid var(--focus); 
   .artifact-drop-target { min-height: 96px; }
 }
 
-/* 다이제스트가 패널 경계에 붙어 잘린 것처럼 보인다. 경계에서 떼어 놓는다. */
-.review-summary-head code {
-  padding-inline-end: 2px;
-  white-space: nowrap;
-}
-
 /* 테마 전환 중에는 전이를 끈다. 커스텀 속성으로 색을 받는 요소가
    전이 때문에 이전 테마 값에 고착되는 것을 막는다. (theme-ui.js) */
 :root[data-theme-swapping] *,
