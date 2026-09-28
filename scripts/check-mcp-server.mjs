@@ -263,6 +263,26 @@ async function checkRealServerContract() {
     const numericalCli = spawnSync(process.execPath, ["bin/deepbom.mjs", "audit", onnxPath, "--weight-analysis", "--weight-baseline", onnxPath, "--output-format", "json", "--section", "weight_ir,weight_analysis,weight_comparison"], { cwd: root, encoding: "utf8" });
     assert.equal(numericalCli.status, 0, numericalCli.stderr);
     assert.deepEqual(numerical.structuredContent, JSON.parse(numericalCli.stdout));
+    assert.equal(auditTool.inputSchema.properties.metadata.type, "string");
+    session.request(40, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, metadata_template: "generic" } });
+    const templateResult = (await session.response(40)).result;
+    const template = templateResult.structuredContent;
+    assert.equal(template.schema, "deepbom.evidence_link_input.v1");
+    const metadataFile = path.join(scratch, "metadata.json");
+    await writeFile(metadataFile, JSON.stringify(template));
+    session.request(41, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, metadata: metadataFile, section: "evidence_link_ir" } });
+    const linked = (await session.response(41)).result;
+    assert.equal(linked.structuredContent.sections.evidence_link_ir.verdict.status, "no_contradiction_observed");
+    const cliLinked = spawnSync(process.execPath, ["bin/deepbom.mjs", "audit", onnxPath, "--metadata", metadataFile, "--section", "evidence_link_ir", "--output-format", "json-compact"], { encoding: "utf8" });
+    assert.equal(cliLinked.status, 0, cliLinked.stderr);
+    assert.deepEqual(linked.structuredContent, JSON.parse(cliLinked.stdout));
+    template.relationships.push({ id: "missing", from: "artifact:primary", to: "absent", role: "documented_by" });
+    await writeFile(metadataFile, JSON.stringify(template));
+    session.request(42, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, metadata: metadataFile, section: "evidence_link_ir" } });
+    const incomplete = (await session.response(42)).result;
+    assert.equal(incomplete.structuredContent.sections.evidence_link_ir.verdict.status, "incomplete", "MCP preserves incomplete evidence JSON even with exit 3");
+    session.request(43, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, metadata: path.resolve("..", "outside-metadata.json") } });
+    assert((await session.response(43)).result.isError, "metadata respects allowed roots");
     session.request(31, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, output_format: "json", activation_evidence: path.resolve("..", "outside-capture.json"), section: "activation_ir" } });
     assert.equal((await session.response(31)).result.isError, true, "Capture inputs must obey allowed roots");
 

@@ -6,9 +6,10 @@ const dist = path.resolve("dist");
 // The public multi-format corpus accounts for 7.3 MiB of the deploy artifact.
 // Keep a small explicit ceiling above the measured release instead of requiring
 // deploy-time overrides that would make the budget non-reproducible.
-// The measured 1.108.0 IR contracts/schemas distribution is 69,368,916 bytes.
-// Retain about 30 KiB of headroom; the 16 MiB per-file ceiling is unchanged.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 66.1875);
+// The measured 1.109.0 evidence-link/OMOP distribution is 69,660,368 bytes,
+// including the shared editor, both host widgets, schema and guide (+291,452).
+// Retain about 68 KiB of headroom; the 16 MiB per-file ceiling is unchanged.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 66.5);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

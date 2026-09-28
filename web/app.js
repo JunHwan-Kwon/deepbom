@@ -800,6 +800,8 @@ const ensureLiteRtRuntime = liteRtRuntime.ensure;
 let current = null;
 let currentArtifactIrContext = null;
 let weightWorkspaceController = null;
+let metadataWorkspaceController = null;
+const metadataWorkspace = document.getElementById("metadataWorkspace");
 const weightWorkspace = document.getElementById("weightWorkspace");
 
 function currentAnalysisView() {
@@ -877,6 +879,7 @@ function rebuildCurrentArtifactIrContext(analysis = current, { invalidate = fals
   }, { runtimeEvidence: runtimeAssignmentEvidence });
   renderArtifactDossier(artifactDossier, currentArtifactIrContext, analysis);
   weightWorkspaceController?.sync();
+  metadataWorkspaceController?.sync();
   return currentArtifactIrContext;
 }
 let customTargetEditor = null;
@@ -1025,6 +1028,7 @@ workflowController = createWorkflowController({
     findingsPanel,
     graphExplorer,
     weightWorkspace,
+    metadataWorkspace,
     redesignPanel,
     inferencePanel,
     outputModuleSelector,
@@ -2317,6 +2321,10 @@ void import("./lib/numerical-ir-panel.js").then(({ installNumericalPanel }) => {
   weightWorkspaceController = installNumericalPanel(weightWorkspace, () => ({ model: currentArtifactIrContext?.model_ir, analysis: current, source: pendingModelFile || (currentModelBytes?.length ? new Blob([currentModelBytes]) : null) }));
 });
 
+void import("./lib/evidence-links-panel.js").then(({ installEvidenceLinksPanel }) => {
+  metadataWorkspaceController = installEvidenceLinksPanel(metadataWorkspace, () => ({ model: currentArtifactIrContext?.model_ir, analysis: current }), { onDownload: async (blob, name) => { if (name.endsWith(".cdx.json") && !(await ensureRawExportAllowed("Linked CycloneDX"))) return; const record = webUsage.observeExport(name.endsWith(".cdx.json") ? "cyclonedx" : "evidence_package"); downloadBlob(name, blob); record(); } });
+});
+
 showModelSummary?.addEventListener("click", () => {
   if (!currentArtifactIrContext?.model_ir || !modelSummaryPanel || !modelSummaryText) return;
   const summary = buildModelSummary(currentArtifactIrContext.model_ir);
@@ -2394,10 +2402,12 @@ function lockRuntime(code) {
 function updateWorkflowState(state, detail = {}) {
   workflowController.updateState(state, detail);
   weightWorkspaceController?.sync();
+  metadataWorkspaceController?.sync();
 }
 
 function setActiveWorkspace(workspace = "input", options = {}) {
   weightWorkspaceController?.sync();
+  metadataWorkspaceController?.sync();
   return workflowController.setWorkspace(workspace, options);
 }
 
@@ -2410,6 +2420,7 @@ function navigateToWorkspace(workspace = "input") {
     output: outputModuleSelector,
     graph: graphExplorer,
     weight: weightWorkspace,
+    metadata: metadataWorkspace,
     redesign: redesignPanel,
     runtime: inferencePanel,
     deepbom: moduleRunConsole,

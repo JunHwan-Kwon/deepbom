@@ -10,12 +10,13 @@
     "web/lib/public-cyclonedx-export.js",
     "web/lib/report-mlbom-compat.js",
     "web/lib/safetensors-quantization-export.js",
-    "web/lib/tensorrt-cyclonedx-properties.js"
+    "web/lib/tensorrt-cyclonedx-properties.js",
+    "web/lib/evidence-links/cyclonedx.js"
   ],
   "counts": {
-    "total": 335,
+    "total": 356,
     "stable": 111,
-    "experimental": 224,
+    "experimental": 245,
     "deprecated": 0
   },
   "properties": [
@@ -158,6 +159,111 @@
       "name": "deepbom:evidenceBoundary",
       "status": "experimental",
       "reconciliation": "context_or_publisher_declaration"
+    },
+    {
+      "name": "deepbom:evidenceLinks:bomReference",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:checks",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:coverage",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:declaredAttributes",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:digestBasis",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:evidenceClass",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:expectedSha256",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:fieldLedger",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:inputSha256",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:interpretationBoundary",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:irSha256",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:kind",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:nodeId",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:observedFiles",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:relationshipRole",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:relationships",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:relativeFile",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:runNode",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:schema",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:source",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:evidenceLinks:status",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:file:byteLength",

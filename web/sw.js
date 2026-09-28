@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v592";
+const CACHE_NAME = "tflite-wasm-static-audit-v593";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -21,6 +21,7 @@ const APP_ASSETS = [
   "./onnx-domain.css",
   "./research-theme.css",
   "./weight-workspace.css",
+  "./evidence-links.css",
   "./lib/theme-ui.js",
   "./NOTICE.txt",
   "./bootstrap.js",
@@ -125,6 +126,15 @@ const APP_ASSETS = [
   "./lib/numerical-ir/weight-contracts.js",
   "./lib/numerical-ir/weight-browser-input.js",
   "./lib/numerical-ir-panel.js",
+  "./lib/ir-evidence-contract.js",
+  "./lib/evidence-link-ir.js",
+  "./lib/evidence-links-panel.js",
+  "./lib/evidence-links/bom-reference.js",
+  "./lib/evidence-links/contracts.js",
+  "./lib/evidence-links/cyclonedx.js",
+  "./lib/evidence-links/files.js",
+  "./lib/evidence-links/omop.js",
+  "./lib/evidence-links/summary.js",
   "./lib/numerical-ir/common.js",
   "./lib/numerical-ir/exact-moments.js",
   "./lib/numerical-ir/statistics.js",
@@ -400,6 +410,7 @@ const APP_SHELL_ASSETS = [
   "./onnx-domain.css",
   "./research-theme.css",
   "./weight-workspace.css",
+  "./evidence-links.css",
   "./lib/theme-ui.js",
   "./NOTICE.txt",
   "./bootstrap.js",

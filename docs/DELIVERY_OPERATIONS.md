@@ -10,6 +10,10 @@ The machine-readable record is `config/delivery-operations.v1.json`.
 
 | Observation | Result | Wall time |
 | --- | --- | ---: |
+| Linux 1.109.0 web preflight basis | 98 parser, IR, export, metadata-link, cache and deployment checks; self-referential delivery record checked separately | 258.792 s |
+| Linux 1.109.0 channel build | npm tarball, MCPB, Linux executable, Python wheel and Cargo source | 13.455 s |
+| Linux 1.109.0 platform smoke | Installed Python and standalone TFLite/ONNX execution | 52.445 s |
+| Linux 1.109.0 release equivalence | Installed npm/MCP and native/Python/Cargo parity, capability and tamper checks | 175.213 s |
 | Public channels 1.94.4 | All platform and registry jobs completed; later superseded after a fresh Cargo install exposed Windows stack pressure | 443 s critical path |
 | Public channels 1.94.5, attempt 1 | Every product gate, npm, and PyPI passed; Cargo alone failed because the token lacked `publish-update` | 529 s critical path |
 | Public channels 1.94.5, failed-job retry | Cargo publication only | 21 s |
@@ -158,7 +162,7 @@ build, dist, cache, and egg-info directories before packaging.
 The web deployment gate is the bounded `scripts/check-deploy.mjs` set. The
 exhaustive release tier remains available as `npm run check:release`; it must not
 be wired back into every Cloudflare deployment. The measured preflight budget is
-240 seconds; the current measured baseline is 182.382 seconds for 84 checks.
+300 seconds. The 1.109.0 baseline is 258.792 seconds for 98 non-self-referential checks. The budget increased from 240 seconds to include the common metadata schema and six-format evidence-link checks; the separate delivery-record check completes the 99-check gate. No product checks were removed.
 Release-contract equivalence is a manual publication gate with a 720-second
 budget; it is not repeated for ordinary pushes or web-only delivery. Local
 release validation records channel construction and no-build equivalence as

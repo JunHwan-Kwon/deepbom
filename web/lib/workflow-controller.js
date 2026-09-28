@@ -47,6 +47,7 @@ export function createWorkflowController({
     findingsPanel,
     graphExplorer,
     weightWorkspace,
+    metadataWorkspace,
     redesignPanel,
     inferencePanel,
     outputModuleSelector,
@@ -188,6 +189,7 @@ export function createWorkflowController({
     diagramSection.hidden = !(hasAnalysis && activeWorkspace === "audit" && applicable && activeAuditTab === "stage");
     if (findingsPanel) findingsPanel.hidden = !(hasAnalysis && activeWorkspace === "findings");
     graphExplorer.hidden = !(hasAnalysis && activeWorkspace === "graph");
+    if (metadataWorkspace) metadataWorkspace.hidden = !(hasAnalysis && activeWorkspace === "metadata");
     if (weightWorkspace) weightWorkspace.hidden = !(hasAnalysis && activeWorkspace === "weight");
     if (redesignPanel) redesignPanel.hidden = !(hasAnalysis && activeWorkspace === "redesign");
     inferencePanel.hidden = !(hasAnalysis && activeWorkspace === "runtime");

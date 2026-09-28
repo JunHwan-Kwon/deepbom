@@ -1,3 +1,7 @@
+import { installEvidenceLinksPanel } from "../lib/evidence-links-panel.js";
+import { evidenceLinkSummary } from "../lib/evidence-link-ir.js";
+import { evidenceLinkSummaryText } from "../lib/evidence-links/summary.js";
+import { buildSingleFileArtifactSet } from "../lib/artifact-set.js";
 import { McpAppClient } from "../lib/mcp-app-client.js";
 import { analyzeOnnxModel } from "../onnx.js";
 import { analyzeExecuTorchModel } from "../executorch.js";
@@ -128,6 +132,7 @@ async function analyzeSelectedFile(file) {
     }
 
     const artifact = { filename: safeName, format, sha256, size: file.size };
+    analysis.artifact_set = buildSingleFileArtifactSet({ filename: safeName, format, sha256, byteLength: file.size });
     const artifactIrContext = getArtifactIrContext(analysis, artifact);
     if (!artifactIrContext) throw new Error("The canonical Artifact Evidence IR could not be constructed for this file.");
     const analysisView = artifactIrContext.primary_view;
@@ -157,7 +162,7 @@ async function analyzeSelectedFile(file) {
     renderResult(result, artifactIrContext.model_summary, async () => {
       await prepareSandboxWorker();
       return staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.WEIGHT_IR, { file, analysis, model: artifactIrContext.model_ir, advanced: true });
-    });
+    }, { model: artifactIrContext.model_ir, analysis: analysisView });
   } catch (error) {
     await publishFailure(error, file);
   } finally {
@@ -280,7 +285,7 @@ function setStatus(status, detail) {
   root.querySelector("#detail").textContent = detail || "";
 }
 
-function renderResult(result, modelSummary, weightEvidence) {
+function renderResult(result, modelSummary, weightEvidence, context) {
   setStatus("Static evidence ready", `${result.artifact.filename} · ${result.artifact.format.toUpperCase()} · sha256:${result.artifact.sha256.slice(0, 12)}…`);
   root.querySelector("#result").innerHTML = `<div class="metrics">
     <div class="metric"><b>${result.verdict.artifact_defect_count}</b><span>artifact defects</span></div>
@@ -292,6 +297,7 @@ function renderResult(result, modelSummary, weightEvidence) {
   button.type="button";button.textContent="Analyze weights · save JSON";button.id="weight-evidence";
   label.className="detail";label.textContent="Optional local payload analysis. Detailed charts are available in the Weight workspace at deepbom.org.";
   root.querySelector("#result").append(button,label);
+  appendMetadataPanel(result, context);
   button.onclick=async()=>{
     button.disabled=true;
     try {
@@ -305,6 +311,24 @@ function renderResult(result, modelSummary, weightEvidence) {
       label.textContent=`${evidence.weight_analysis.coverage.assessed_count}/${evidence.weight_analysis.coverage.inventory_count} tensors assessed. Download requested; if this host blocks downloads, use the Web Weight workspace or local CLI. Results stay in this sandbox.`;
     } catch(error) {label.textContent=error.message;} finally {button.disabled=false;}
   };
+}
+
+function appendMetadataPanel(result, context) {
+  const section = document.createElement("details"), title = document.createElement("summary"), host = document.createElement("div"), report = document.createElement("button"), note = document.createElement("p");
+  title.textContent = "Metadata & lineage · OMOP and external evidence"; report.type = "button"; report.textContent = "Report metadata counts to Claude"; report.disabled = true;
+  note.textContent = "Metadata stays in this widget. Only counts and digests are shared when you report. File downloads depend on the host's permissions.";
+  section.append(title, host, report, note); root.querySelector("#result").prepend(section); let latest = null;
+  installEvidenceLinksPanel(host, () => context, { onResult: value => { latest = value; report.disabled = !value; } });
+  report.addEventListener("click", async () => {
+    if (!latest) return; report.disabled = true; const selected = latest;
+    try {
+      const summary = evidenceLinkSummary(selected), extended = { ...result, evidence_links: summary };
+      await app.callServerTool({ name: "deepbom_publish_browser_analysis", arguments: { result: extended } });
+      if (selected !== latest || !report.isConnected) return;
+      await app.updateModelContext({ content: [{ type: "text", text: evidenceLinkSummaryText(summary) }], structuredContent: extended });
+      note.textContent = "Counts and digests shared. Metadata rows and supporting file bytes remain in this widget.";
+    } catch (error) { note.textContent = error.message; } finally { report.disabled = !latest; }
+  });
 }
 
 function renderError(error, code = "analysis_failed") {

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.109.0 — 2026-09-28
+
+- Add an optional, model-bound Evidence Link IR shared by Web, CLI and local/remote MCP, with deterministic hashing, typed connections, explicit unverified declarations and separate coverage denominators. Preserve existing Artifact, Model, Weight and Activation IR contracts.
+- Import selected OMOP CDM_SOURCE metadata for 5.4/5.5 without modifying OMOP tables. Connect releases, cohorts, feature definitions, code, runs and external reports; retain unsupported fields and reject identity/date/type conflicts.
+- Add an interactive Metadata workspace, local evidence file checks, model-bound CLI templates, bounded host summaries and linked CycloneDX 1.7 export. BOM reference resolution does not certify component attributes; SPDX 3 relationship projection remains unimplemented.
+- Publish the common JSON Schema, field-mapping architecture and OMOP usage guide. Cover tampering, missing references, file isolation, transport equivalence, exports and browser interactions in regression checks.
+- Reserve measured source additions within runtime 12,928 KiB, documentation 896 KiB verification 3,872 KiB and development tooling 1,728 KiB budgets. Analysis and file-reading limits remain explicit.
+
 ## 1.108.0 — 2026-09-24
 
 - Preserve recursive logical value types, scalar/unknown rank and graphless empty tensors in Artifact IR 2.3.0 and Model IR 1.1.0, while retaining legacy readers.

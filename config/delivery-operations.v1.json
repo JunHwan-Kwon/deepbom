@@ -1,8 +1,53 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-24T01:20:06.693531+00:00",
+  "recorded_at": "2026-09-28T02:54:55.781657+00:00",
   "scope": "Public installation channels and private web delivery",
   "observations": [
+    {
+      "kind": "private_web_preflight_basis",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 258.792,
+      "observed_at": "2026-09-28T02:53:37.820592+00:00",
+      "version": "1.109.0",
+      "source_commit": "894f3b5e980694219c6ff942c3a90df5c7433410",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the common metadata evidence candidate. No GitHub Actions. This records validation, not deployment; final release artifacts are verified separately.",
+      "check_count": 98
+    },
+    {
+      "kind": "local_channel_build",
+      "command": "node scripts/build-channel-artifacts.mjs",
+      "elapsed_seconds": 13.455,
+      "observed_at": "2026-09-28T02:50:29.996293+00:00",
+      "version": "1.109.0",
+      "source_commit": "894f3b5e980694219c6ff942c3a90df5c7433410",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the common metadata evidence candidate. No GitHub Actions. This records validation, not deployment; final release artifacts are verified separately."
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --platform-smoke",
+      "elapsed_seconds": 52.445,
+      "observed_at": "2026-09-28T02:51:22.441472+00:00",
+      "version": "1.109.0",
+      "source_commit": "894f3b5e980694219c6ff942c3a90df5c7433410",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the common metadata evidence candidate. No GitHub Actions. This records validation, not deployment; final release artifacts are verified separately."
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --release-contract",
+      "elapsed_seconds": 175.213,
+      "observed_at": "2026-09-28T02:54:17.655138+00:00",
+      "version": "1.109.0",
+      "source_commit": "894f3b5e980694219c6ff942c3a90df5c7433410",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the common metadata evidence candidate. No GitHub Actions. This records validation, not deployment; final release artifacts are verified separately."
+    },
     {
       "kind": "private_web_preflight_basis",
       "command": "node scripts/check-deploy.mjs --establish-observation",
@@ -2962,7 +3007,7 @@
   "budgets": {
     "installation_release_critical_path_seconds": 720,
     "failed_registry_job_retry_seconds": 120,
-    "private_web_preflight_seconds": 240,
+    "private_web_preflight_seconds": 300,
     "local_channel_build_seconds": 300,
     "platform_channel_smoke_seconds": 300,
     "public_pr_channel_equivalence_seconds": 90,

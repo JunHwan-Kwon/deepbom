@@ -1,6 +1,6 @@
 import { canonicalJson } from "../report-utils.js";
 import { sha256TextHex } from "../sha256-sync.js";
-import { validateModelIr } from "../model-ir.js";
+import { modelEvidenceSource } from "../ir-evidence-contract.js";
 
 export const METHOD_VERSION = "1.0.0";
 export const SHA256 = /^[a-f0-9]{64}$/;
@@ -12,8 +12,7 @@ export function exactKeys(value, keys, label) {
   requireCondition(keys.every(key => Object.hasOwn(value, key)), `${label} is missing a field`);
 }
 export function sourceContract(input) {
-  const model = validateModelIr(input);
-  return { model, source: { model_ir_sha256: model.model_ir_sha256, artifact_sha256: model.artifact.sha256, artifact_set_sha256: model.artifact_set.artifact_set_sha256 } };
+  return modelEvidenceSource(input);
 }
 export function bindSource(source, model) {
   exactKeys(source, ["model_ir_sha256", "artifact_sha256", "artifact_set_sha256"], "source");

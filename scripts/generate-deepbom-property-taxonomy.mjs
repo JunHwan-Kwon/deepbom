@@ -8,10 +8,11 @@ import {
   componentPropertyReconciliationKind,
 } from "../web/lib/deepbom-property-taxonomy.js";
 
-const sourceFiles = ["web/lib/report-export-contracts.js", "web/lib/public-cyclonedx-export.js", "web/lib/report-mlbom-compat.js", "web/lib/safetensors-quantization-export.js", "web/lib/tensorrt-cyclonedx-properties.js"];
+const sourceFiles = ["web/lib/report-export-contracts.js", "web/lib/public-cyclonedx-export.js", "web/lib/report-mlbom-compat.js", "web/lib/safetensors-quantization-export.js", "web/lib/tensorrt-cyclonedx-properties.js", "web/lib/evidence-links/cyclonedx.js"];
 const names = new Set();
 for (const sourceFile of sourceFiles) {
   const source = await readFile(sourceFile, "utf8");
+  if (sourceFile.endsWith("evidence-links/cyclonedx.js")) for (const match of source.matchAll(/property\("([^"]+)"/g)) names.add(`deepbom:evidenceLinks:${match[1]}`);
   for (const match of source.matchAll(/(?:\[|property\()"((?:deepbom|mlbom):[^"]+)"/g)) names.add(match[1]);
 }
 const stable = new Set(DEEPBOM_RECONCILABLE_COMPONENT_PROPERTIES);

@@ -10,6 +10,7 @@ const guidePaths = [
   "web/guides/inspect-onnx-quantization/index.html",
   "web/guides/inspect-gguf-tensor-encodings/index.html",
   "web/guides/compare-model-artifacts/index.html",
+  "web/guides/omop-metadata/index.html",
 ];
 const guidePages = guidePaths.map((file) => readFileSync(file, "utf8"));
 const packageVersion = JSON.parse(readFileSync("package.json", "utf8")).version;

@@ -21,6 +21,7 @@ bin/deepbom-agent-contract.mjs
 bin/deepbom-agent-integration.mjs
 bin/deepbom-agent-skill.mjs
 bin/deepbom-automation.mjs
+bin/deepbom-evidence-links.mjs
 bin/deepbom-input.mjs
 bin/deepbom-mcp.mjs
 bin/deepbom-public-contract-versions.mjs
@@ -136,6 +137,7 @@ corpus/safetensors-quantization-contract-corpus/teeny-tiny-llama-460m-awq.quant_
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.config.json
 corpus/safetensors-quantization-contract-corpus/tiny-llama-1.1b-chat-v1-gptq.quantize_config.json
 deepbom-artifact-evidence-skill.zip
+docs/AGENT_CONTRACT_1_1_0.md
 docs/AGENT_CONTRACT_VERSIONING.md
 docs/AGENT_DISTRIBUTION_OPERATIONS.md
 docs/CLI_AUTOMATION.md
@@ -146,6 +148,7 @@ docs/DEEPBOM_PROPERTY_TAXONOMY.md
 docs/DEEPBOM_PROPERTY_TAXONOMY.v1.json
 docs/DELIVERY_OPERATIONS.md
 docs/DEPENDENCY_SECURITY.md
+docs/EVIDENCE_LINK_IR.md
 docs/EXTERNAL_REVIEW_TRIAGE.md
 docs/KNOWN_ISSUES.md
 docs/MEASUREMENT_ORACLE_GATE.md
@@ -188,6 +191,7 @@ docs/research/CORE_IR_UPSTREAM_SNAPSHOT_2026-09-24.json
 docs/research/CORE_IR_VALIDATION_2026-09-24.json
 docs/schemas/deepbom-artifact-ir-v2.schema.json
 docs/schemas/deepbom-conversion-receipt-v1.schema.json
+docs/schemas/deepbom-evidence-links-v1.schema.json
 docs/schemas/deepbom-model-ir-v1.schema.json
 docs/schemas/deepbom-model-summary-v1.schema.json
 docs/schemas/deepbom-numerical-ir-v1.schema.json
@@ -376,6 +380,8 @@ scripts/check-dom-contract.mjs
 scripts/check-dynamic-shape-cost-viewer.mjs
 scripts/check-dynamic-shape-cost.mjs
 scripts/check-evaluation-briefs.mjs
+scripts/check-evidence-links-browser.mjs
+scripts/check-evidence-links.mjs
 scripts/check-evidence-package-profile-ui.mjs
 scripts/check-evidence-package-profiles.mjs
 scripts/check-evidence-treemap.mjs
@@ -609,6 +615,7 @@ scripts/generate-browser-target-profiles.mjs
 scripts/generate-cli-docs.mjs
 scripts/generate-cyclonedx-17-example.mjs
 scripts/generate-deepbom-property-taxonomy.mjs
+scripts/generate-evidence-link-schema.mjs
 scripts/generate-executorch-operator-signatures.mjs
 scripts/generate-finding-rule-catalog.mjs
 scripts/generate-gguf-backend-contract.mjs
@@ -777,6 +784,7 @@ web/evaluate/evaluation.css
 web/evaluate/index.html
 web/evaluate/quality/index.html
 web/evaluate/regulatory/index.html
+web/evidence-links.css
 web/execution-placement.css
 web/executorch.js
 web/explorer-evidence.css
@@ -796,6 +804,7 @@ web/guides/index.html
 web/guides/inspect-gguf-tensor-encodings/index.html
 web/guides/inspect-onnx-quantization/index.html
 web/guides/numerical-evidence/index.html
+web/guides/omop-metadata/index.html
 web/index.html
 web/legal/privacy.html
 web/legal/support.html
@@ -891,6 +900,14 @@ web/lib/evidence-applicability.js
 web/lib/evidence-class.js
 web/lib/evidence-cursor.js
 web/lib/evidence-level-report.js
+web/lib/evidence-link-ir.js
+web/lib/evidence-links-panel.js
+web/lib/evidence-links/bom-reference.js
+web/lib/evidence-links/contracts.js
+web/lib/evidence-links/cyclonedx.js
+web/lib/evidence-links/files.js
+web/lib/evidence-links/omop.js
+web/lib/evidence-links/summary.js
 web/lib/evidence-package-profiles.js
 web/lib/evidence-package-rights.js
 web/lib/evidence-treemap.js
@@ -937,6 +954,7 @@ web/lib/input-counterexample.js
 web/lib/insights.js
 web/lib/interface-contract.js
 web/lib/ir-artifact-members.js
+web/lib/ir-evidence-contract.js
 web/lib/ir-logical-inventory.js
 web/lib/ir-metric.js
 web/lib/ir-parameter-vector.js

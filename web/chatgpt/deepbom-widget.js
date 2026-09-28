@@ -1,3 +1,7 @@
+import { installEvidenceLinksPanel } from "../lib/evidence-links-panel.js";
+import { evidenceLinkSummary } from "../lib/evidence-link-ir.js";
+import { evidenceLinkSummaryText } from "../lib/evidence-links/summary.js";
+import { buildSingleFileArtifactSet } from "../lib/artifact-set.js";
 import { analyzeOnnxModel } from "../onnx.js";
 import { analyzeExecuTorchModel } from "../executorch.js";
 import { readCoreMlModelFile } from "../lib/coreml-metadata-adapter.js";
@@ -121,6 +125,7 @@ async function start() {
   }
 
   const artifact = { filename: remote.name, format, sha256, size: remote.size };
+  analysis.artifact_set = buildSingleFileArtifactSet({ filename: remote.name, format, sha256, byteLength: remote.size });
   const artifactIrContext = getArtifactIrContext(analysis, artifact);
   if (!artifactIrContext) throw new Error("The canonical Artifact Evidence IR could not be constructed for this attachment.");
   const analysisView = artifactIrContext.primary_view;
@@ -513,6 +518,7 @@ function renderResult(result, openai, modelIr = null, modelSummary = null, repor
     if (reportControl) reportControl.button.parentElement.after(visual);
     else container.prepend(visual);
   }
+  if (modelIr) appendMetadataPanel(container, result, openai, modelIr, exports);
   if (modelSummary) appendModelSummary(container, modelSummary);
   return reportControl;
 }
@@ -693,6 +699,7 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
     link.click();
     status.textContent = `${filename} prepared. If no local file appears, select Save via ChatGPT.`;
   };
+  exports.offerDownload = (blob, name) => { offerDownload(blob, name, name.endsWith(".cdx.json") ? "cyclonedx" : "evidence_package"); downloads.scrollIntoView({ block: "nearest" }); };
   window.addEventListener("pagehide", () => {
     for (const { url } of preparedDownloads.values()) URL.revokeObjectURL(url);
   }, { once: true });
@@ -1065,4 +1072,22 @@ function progressText(progress) {
   return Number.isSafeInteger(index) && Number.isSafeInteger(count) && count > 0
     ? `${phase} ${index + 1}/${count}`
     : phase;
+}
+
+function appendMetadataPanel(container, result, openai, model, exports) {
+  const section = document.createElement("details"), title = document.createElement("summary"), host = document.createElement("div"), button = document.createElement("button"), note = document.createElement("p");
+  title.textContent = "Metadata & lineage · OMOP and external evidence"; button.type = "button"; button.textContent = "Report metadata counts in chat"; button.disabled = true;
+  note.textContent = "Metadata stays in this widget. Reporting shares only counts and digests. Saving a file via ChatGPT shares that generated file with ChatGPT.";
+  section.append(title, host, button, note); container.append(section); let latest = null;
+  installEvidenceLinksPanel(host, () => ({ model, cyclonedx: exports.cyclonedx }), { onResult: value => { latest = value; button.disabled = !value; }, onDownload: (blob, name) => exports.offerDownload(blob, name) });
+  button.addEventListener("click", async () => {
+    if (!latest) return; button.disabled = true; const selected = latest;
+    try {
+      const summary = evidenceLinkSummary(selected);
+      await openai.callTool("deepbom_publish_analysis", { result: { ...result, evidence_links: summary } });
+      if (selected !== latest || !button.isConnected) return;
+      await openai.sendFollowUpMessage({ prompt: `DEEPBOM returned optional metadata-link counts and digests. Explain the consistency checks and their limits; relationships are declared and have not been authenticated. ${evidenceLinkSummaryText(summary)}`, scrollToBottom: true });
+      note.textContent = "Counts and digests sent. Metadata rows and supporting file bytes were not sent to the DEEPBOM service.";
+    } catch (error) { note.textContent = error.message; } finally { button.disabled = !latest; }
+  });
 }

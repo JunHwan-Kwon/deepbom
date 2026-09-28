@@ -128,6 +128,12 @@ const published = await rpc("tools/call", {
   arguments: { result: validResult },
 });
 assert.deepEqual(published.structuredContent, validResult);
+const linkSummary = { schema: "deepbom.evidence_link_summary.v1", artifact_sha256: validResult.artifact.sha256, model_ir_sha256: "b".repeat(64), evidence_link_ir_sha256: "c".repeat(64), status: "incomplete", node_count: 2, relationship_count: 1, observed_file_count: 0, check_count: 2, check_counts: { match: 1, mismatch: 0, not_assessed: 1, unresolved: 0, unsupported: 0 }, field_count: 1, mapped_declared_field_count: 1, unsupported_field_count: 0, attested_relationship_count: 0, metadata_truth_verified: false, publisher_authenticity: "not_verified" };
+const withLinks = { ...validResult, model_summary: { ...validResult.model_summary, model_ir_sha256: "b".repeat(64) }, evidence_links: linkSummary };
+const publishedLinks = await rpc("tools/call", { name: "deepbom_publish_analysis", arguments: { result: withLinks } });
+assert.deepEqual(publishedLinks.structuredContent.evidence_links, linkSummary);
+assert.match(publishedLinks.content[0].text, /Relationship truth and publisher authenticity remain unverified/);
+
 assert.match(published.content[0].text, /0 artifact defect\(s\), 1 caution\(s\), and 2 evidence gap\(s\)/);
 assert.match(published.content[0].text, /2 operation row\(s\)/);
 

@@ -121,7 +121,7 @@ await copyFile(
   path.join(dist, ".well-known", "deepbom-signing-keys.json"),
 );
 await mkdir(path.join(dist, "schemas"), { recursive: true });
-for (const name of ["deepbom-numerical-ir-v1.schema.json", "deepbom-weight-analysis-v1.schema.json"]) await copyFile(path.join(root, "docs", "schemas", name), path.join(dist, "schemas", name));
+for (const name of ["deepbom-numerical-ir-v1.schema.json", "deepbom-weight-analysis-v1.schema.json", "deepbom-evidence-links-v1.schema.json"]) await copyFile(path.join(root, "docs", "schemas", name), path.join(dist, "schemas", name));
 await copyFile(
   path.join(root, "docs", "schemas", "deepbom-artifact-ir-v2.schema.json"),
   path.join(dist, "schemas", "deepbom-artifact-ir-v2.schema.json"),
@@ -281,7 +281,7 @@ await writeFile(path.join(dist, "sitemap.xml"), [
   "    <loc>https://deepbom.org/claude/</loc>",
   ...sitemapLastmod("web/claude/index.html", { cwd: root }),
   "  </url>",
-  ...["", "cli/", "cli/reference/", "numerical-evidence/", "inspect-onnx-quantization/", "inspect-gguf-tensor-encodings/", "compare-model-artifacts/"].flatMap((guide) => [
+  ...["", "cli/", "cli/reference/", "numerical-evidence/", "omop-metadata/", "inspect-onnx-quantization/", "inspect-gguf-tensor-encodings/", "compare-model-artifacts/"].flatMap((guide) => [
     "  <url>",
     `    <loc>https://deepbom.org/guides/${guide}</loc>`,
     ...sitemapLastmod(`web/guides/${guide}index.html`, { cwd: root }),

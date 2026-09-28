@@ -58,6 +58,9 @@ const TOOLS = Object.freeze([
         weight_mapping: { type: "string", description: "Local JSON array of baseline/candidate weight references and optional candidate_axis_permutation; requires weight_baseline." },
         weight_analysis: { type: "boolean", description: "Opt in to common Weight IR and advanced channels, cosine similarity, SVD, sparsity and quantization. JSON sections: weight_ir, weight_analysis, weight_comparison. No model execution." },
         activation_evidence: { type: "string", description: "Local hash-bound activation capture JSON under allowed roots. Imports execution evidence; does not execute a model. Use output_format=json and section=activation_ir." },
+        metadata: { type: "string", description: "Local deepbom.evidence_link_input.v1 or deepbom.omop_metadata_input.v1 JSON under allowed roots. Adds the common evidence_link_ir section; declarations are not execution attestation." },
+        evidence_files: { type: "string", description: "Local directory under allowed roots containing files explicitly mapped by metadata. No remote links are fetched. Requires metadata." },
+        metadata_template: { type: "string", enum: ["omop", "generic"], description: "Return a metadata template bound to this model; fill institution/release identity before importing. Mutually exclusive with metadata." },
         scan: { type: "string", enum: [...SCAN_MODES], description: "Bounded scan policy. structure avoids payload integrity work; integrity streams supported payload checks; full requests all supported static analysis." },
         section: { type: "string", description: "Emit only these analysis sections, comma-separated. Use list_sections first. model_summary returns deepbom.model_summary.v1. Applies to json formats." },
         tensors: { type: "boolean", description: "For a GGUF artifact, return the bounded structure-only deepbom.tensor_table.v1 projection instead of the full tensor/numerical ledgers." },
@@ -270,7 +273,8 @@ async function callTool(params, state, signal) {
   if (run.timedOut) {
     return toolError(`DEEPBOM exceeded the ${TOOL_TIMEOUT_MS} ms MCP tool timeout. Retry with scan structure/integrity, narrow the result with section or pointer, or raise DEEPBOM_MCP_TOOL_TIMEOUT_MS deliberately.`);
   }
-  if (run.code !== 0 && run.code !== 2) {
+  const incompleteMetadata = run.code === 3 && name === "deepbom_audit" && Boolean(args.metadata);
+  if (run.code !== 0 && run.code !== 2 && !incompleteMetadata) {
     return toolError(run.stderr.trim() || run.stdout.trim() || `deepbom exited ${run.code}`);
   }
 
@@ -279,8 +283,12 @@ async function callTool(params, state, signal) {
   const structured = parseStructuredObject(text);
   if (structured) result.structuredContent = structured;
   if (run.code === 2) {
-    result.content.push({ type: "text", text: "The requested gate policy blocked this run (exit 2). The first content block remains the complete, unmodified result; treat this as a policy outcome, not an analysis failure." });
-    result._meta = { deepbom: { exit_code: 2, policy_status: "blocked", analysis_completed: true } };
+    result.content.push({ type: "text", text: args.metadata ? "A metadata consistency check or requested gate blocked this run (exit 2). The first content block preserves the complete result; inspect metadata checks and policy findings separately." : "The requested gate policy blocked this run (exit 2). The first content block remains the complete, unmodified result; treat this as a policy outcome, not an analysis failure." });
+    result._meta = { deepbom: { exit_code: 2, policy_status: args.metadata ? "blocked_or_metadata_contradiction" : "blocked", analysis_completed: true } };
+  }
+  if (incompleteMetadata) {
+    result.content.push({ type: "text", text: "Metadata checks are incomplete (exit 3). The first content block preserves the result and its coverage; this is not a verified lineage claim." });
+    result._meta = { deepbom: { exit_code: 3, metadata_status: "incomplete", analysis_completed: true } };
   }
   if (Buffer.byteLength(JSON.stringify(result), "utf8") > MAX_RESPONSE_BYTES) {
     return toolError(`The serialized MCP result exceeded the ${formatBytes(MAX_RESPONSE_BYTES)} response limit after compatibility content was added. Retry with output_format summary, envelope, section, or pointer.`);
@@ -302,7 +310,7 @@ function commandArguments(name, args, roots) {
     } else if (Object.hasOwn(args, "pointer")) {
       argv.push("--pointer", String(args.pointer));
     } else {
-      const format = args.output_format || (args.section || args.weight_analysis || args.weight_baseline || args.weight_options ? "json-compact" : AUDIT_DEFAULT_OUTPUT_FORMAT);
+      const format = args.output_format || (args.section || args.metadata || args.metadata_template || args.weight_analysis || args.weight_baseline || args.weight_options ? "json-compact" : AUDIT_DEFAULT_OUTPUT_FORMAT);
       argv.push("--output-format", format);
       if (args.section) argv.push("--section", String(args.section));
     }
@@ -313,6 +321,9 @@ function commandArguments(name, args, roots) {
     if (args.weight_analysis) argv.push("--weight-analysis");
     for (const [key, flag] of [["weight_baseline", "--weight-baseline"], ["weight_options", "--weight-options"], ["weight_mapping", "--weight-mapping"]]) if (args[key]) argv.push(flag, requiredLocalPath(args[key], key, roots));
     if (args.activation_evidence) argv.push("--activation-evidence", requiredLocalPath(args.activation_evidence, "activation_evidence", roots));
+    if (args.metadata) argv.push("--metadata", requiredLocalPath(args.metadata, "metadata", roots));
+    if (args.evidence_files) argv.push("--evidence-files", requiredLocalPath(args.evidence_files, "evidence_files", roots));
+    if (args.metadata_template) argv.push("--metadata-template", args.metadata_template);
     if (args.gate === "defects") argv.push("--gate", "defects");
     if (args.policy) argv.push("--policy", String(args.policy));
     return argv;
@@ -345,7 +356,7 @@ function validateToolArguments(name, args) {
   if (!args || typeof args !== "object" || Array.isArray(args)) throw new Error("Tool arguments must be a JSON object.");
   const allowed = {
     deepbom_capabilities: [],
-    deepbom_audit: ["weight_baseline", "weight_options", "weight_mapping", "weight_analysis", "activation_evidence", "path", "output_format", "scan", "section", "tensors", "tensor_offset", "tensor_limit", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
+    deepbom_audit: ["metadata", "evidence_files", "metadata_template", "weight_baseline", "weight_options", "weight_mapping", "weight_analysis", "activation_evidence", "path", "output_format", "scan", "section", "tensors", "tensor_offset", "tensor_limit", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
     deepbom_diff: ["baseline", "candidate", "target", "expected_sha256", "cache_dir", "offline", "max_download_gib", "tensors", "tensor_offset", "tensor_limit"],
     deepbom_explain_rule: ["rule"],
   }[name];

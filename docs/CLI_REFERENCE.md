@@ -58,10 +58,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`1.108.0`:
+`1.109.0`:
 
 ```console
-DEEPBOM 1.108.0
+DEEPBOM 1.109.0
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -277,6 +277,13 @@ Agent capability summary:
 
 Additional exit code:
   4 independently supplied artifact SHA-256 mismatch
+Optional metadata and lineage:
+  --metadata-template <omop|generic>  Create a model-bound JSON input template
+  --metadata <json>                  Add common Evidence Link IR from declared metadata
+  --evidence-files <directory>       Read explicitly mapped local supporting files
+  --section evidence_link_ir         Select the common connection IR (JSON output)
+  With metadata: exit 2 = contradiction, 3 = incomplete checks, 0 = no observed contradiction.
+  Relationships remain declarations. CycloneDX projection supports 1.7; SPDX metadata projection is not implemented.
 ```
 
 ## Evidence boundary

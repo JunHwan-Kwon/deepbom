@@ -8,6 +8,10 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { runMcpServer } from "./deepbom-mcp.mjs";
+import { observeLocalEvidence } from "./deepbom-evidence-links.mjs";
+import { buildEvidenceLinkIr, evidenceLinkSummary } from "../web/lib/evidence-link-ir.js";
+import { metadataTemplate } from "../web/lib/evidence-links/omop.js";
+import { projectEvidenceLinksToCycloneDx } from "../web/lib/evidence-links/cyclonedx.js";
 import { buildAgentCapabilities } from "./deepbom-agent-contract.mjs";
 import { manageAgentIntegration } from "./deepbom-agent-integration.mjs";
 import { detectModelFormat } from "../web/lib/model-file.js";
@@ -109,7 +113,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.108.0";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.109.0";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 const EXPECTED_SELF_TEST_SHA256 = typeof __DEEPBOM_SELF_TEST_SHA256__ === "string" ? __DEEPBOM_SELF_TEST_SHA256__ : "";
 
@@ -117,6 +121,12 @@ async function main(argv) {
   const parsed = parseArguments(argv);
   if (parsed.help) return printHelp(parsed.command);
   if (parsed.version) return process.stdout.write(`${VERSION}\n`);
+  if ((parsed.metadata || parsed.metadataTemplate || parsed.evidenceFiles) && !["audit", "gguf"].includes(parsed.command)) throw new Error("Metadata options apply only to audit or gguf.");
+  if (parsed.evidenceFiles && !parsed.metadata) throw new Error("--evidence-files requires --metadata.");
+  if (parsed.metadata && parsed.metadataTemplate) throw new Error("--metadata and --metadata-template are mutually exclusive.");
+  if (parsed.metadataTemplate && !["omop", "generic"].includes(parsed.metadataTemplate)) throw new Error("--metadata-template must be omop or generic.");
+  if (parsed.metadataTemplate && (parsed.gate !== "none" || parsed.failOn !== "none" || parsed.policyProfile || parsed.policyOutput || parsed.weightBaseline || parsed.weightOptions || parsed.weightMapping || parsed.outputFormat === "cyclonedx")) throw new Error("--metadata-template creates JSON input only; it cannot evaluate gates, compare weights or export a BOM.");
+  if ((parsed.metadata || parsed.metadataTemplate) && (parsed.tensorTable || parsed.encodingInventory || parsed.listSections || ["envelope", "sarif"].includes(parsed.outputFormat))) throw new Error("Metadata requires summary, json, json-compact or cyclonedx output without a tensor-only projection.");
   if (parsed.weightBaseline || parsed.weightOptions || parsed.weightMapping) parsed.weightAnalysis = true;
   if (parsed.weightMapping && !parsed.weightBaseline) throw new Error("--weight-mapping requires --weight-baseline.");
   if ((parsed.weightAnalysis || parsed.activationEvidence) && !["audit", "gguf"].includes(parsed.command)) throw new Error("Numerical IR options apply only to audit or gguf.");
@@ -421,6 +431,16 @@ async function main(argv) {
     : null;
   if (requiresArtifactIrContext(parsed) && !artifactIrContext) throw new Error("Canonical Artifact Evidence IR could not be constructed for the analyzed artifact.");
   const analysisView = artifactIrContext?.primary_view || analysis;
+  if (parsed.metadataTemplate) {
+    if (parsed.sections.length || parsed.pointer || parsed.weightAnalysis || parsed.activationEvidence) throw new Error("--metadata-template cannot be combined with analysis selection or numerical evidence.");
+    const template = metadataTemplate(artifactIrContext.model_ir, parsed.metadataTemplate);
+    return emitDocument({ ...parsed, json: true, outputFormat: "analysis" }, template, () => `${JSON.stringify(template, null, 2)}\n`);
+  }
+  if (parsed.metadata) {
+    const { document: metadata } = await readJsonSidecar(parsed.metadata, "evidence metadata", 2 * 1024 * 1024);
+    const observations = await observeLocalEvidence(metadata, parsed.evidenceFiles);
+    analysis.evidence_link_ir = buildEvidenceLinkIr(artifactIrContext.model_ir, metadata, { observations });
+  }
   if (parsed.weightAnalysis || parsed.activationEvidence) {
     if (!["audit", "gguf"].includes(parsed.command) || parsed.outputFormat !== "analysis" || parsed.summary || parsed.tensorTable) throw new Error("Optional numerical IR requires audit/gguf with --output-format json (or json-compact).");
     const { buildActivationIr, buildNumericalEvidenceBundle } = await import("../web/lib/activation-ir.js");
@@ -485,7 +505,7 @@ async function main(argv) {
       : parsed.gate === "defects"
         ? evaluateDefectGate(envelope)
         : parsed.failOn !== "none" ? evaluateFindingPolicy(envelope, parsed.failOn) : null;
-  const completeDocument = parsed.outputFormat === "cyclonedx"
+  let completeDocument = parsed.outputFormat === "cyclonedx"
     ? buildMlBomDocument(analysisView, {
         hash: artifactSha256,
         fileSizeBytes: artifact.size,
@@ -501,13 +521,15 @@ async function main(argv) {
       : parsed.outputFormat === "sarif"
         ? buildSarifDocument(envelope, { version: VERSION, policyResult })
         : analysis;
+  if (parsed.outputFormat === "cyclonedx" && analysis.evidence_link_ir) completeDocument = projectEvidenceLinksToCycloneDx(completeDocument, analysis.evidence_link_ir, artifactIrContext.model_ir);
   const document = ["analysis", "summary"].includes(parsed.outputFormat)
     ? selectAnalysisOutput(completeDocument, parsed, reviewSummary, artifactIrContext)
     : completeDocument;
   await emitDocument(parsed, document, () => parsed.tensorTable
     ? (parsed.render === "markdown" ? buildTensorTableMarkdown(document) : buildTensorTable(document))
     : parsed.encodingInventory ? buildEncodingInventoryTable(document)
-      : parsed.render === "markdown" ? buildAuditMarkdown(reviewSummary) : buildHumanSummary(reviewSummary));
+      : (parsed.render === "markdown" ? buildAuditMarkdown(reviewSummary) : buildHumanSummary(reviewSummary)) + (analysis.evidence_link_ir ? `\nMetadata links: ${analysis.evidence_link_ir.verdict.status}\nCoverage: ${JSON.stringify(evidenceLinkSummary(analysis.evidence_link_ir))}\nMetadata relationships remain declared; publisher authenticity is not verified.\n` : ""));
+  if (analysis.evidence_link_ir) process.exitCode = analysis.evidence_link_ir.verdict.status === "contradiction_observed" ? 2 : analysis.evidence_link_ir.verdict.status === "incomplete" ? 3 : 0;
   if (parsed.policyOutput) {
     await writeOutputAtomically(parsed.policyOutput, `${JSON.stringify(policyResult, null, parsed.compact ? 0 : 2)}\n`, { noClobber: parsed.noClobber });
   }
@@ -2600,6 +2622,9 @@ function parseArguments(argv) {
     weightOptions: "",
     weightMapping: "",
     activationEvidence: "",
+    metadata: "",
+    evidenceFiles: "",
+    metadataTemplate: "",
     offline: false,
     maxDownloadGib: 50,
     maxDownloadExplicit: false,
@@ -2626,6 +2651,9 @@ function parseArguments(argv) {
     else if (token === "--weight-options") parsed.weightOptions = requiredValue(values, token);
     else if (token === "--weight-mapping") parsed.weightMapping = requiredValue(values, token);
     else if (token === "--activation-evidence") parsed.activationEvidence = requiredValue(values, token);
+    else if (token === "--metadata") parsed.metadata = requiredValue(values, token);
+    else if (token === "--evidence-files") parsed.evidenceFiles = requiredValue(values, token);
+    else if (token === "--metadata-template") parsed.metadataTemplate = requiredValue(values, token);
     else if (token === "--bom") parsed.bom = requiredValue(values, token);
     else if (token === "--component-ref") parsed.componentRef = requiredValue(values, token);
     else if (token === "--render") {
@@ -2880,7 +2908,7 @@ async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_B
 }
 
 function printHelp(command) {
-  if (command === "gguf") return printGgufHelp();
+  if (command === "gguf") { printGgufHelp(); printMetadataHelp(); return; }
   process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom verify <artifact> --bom <cyclonedx-1.7.json> [--component-ref <bom-ref>]\n  deepbom contract capture <artifact> [-o baseline.interface-contract.json]\n  deepbom batch <manifest.json> --batch-output-dir <directory> [options]\n  deepbom diff <baseline-artifact-or-package> <candidate-artifact-or-package> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom visualize <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  Stable or existing: .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  Preview static graph: GraphDef or saved_model.pb\n  Preview safe envelope: .h5, .hdf5, .keras, .pt2, .pt, .pth, .ckpt\n  Packages: .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --bom <json>           Reconcile CycloneDX 1.7 claims with the selected artifact\n  --component-ref <ref>  Explicitly select a BOM component; hash disagreements still block\n  --expected-sha256 <hex> Require the exact artifact digest before analysis\n  --summary             Compatibility alias for --output-format summary\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif\n  --weight-analysis     Weight IR plus channels, similarity, SVD, sparsity and quantization; JSON output\n  --weight-baseline <artifact>\n                          Compare aligned weight values against this original artifact\n  --weight-options <json>\n                          Explicit axes, tensor selection and bounded analysis budgets\n  --weight-mapping <json>\n                          Explicit tensor pairs and candidate axis permutations\n  --activation-evidence <json>\n                          Import hash-bound runtime captures as Activation IR; no execution\n  --section <names>      Emit selected analysis sections; use --list-sections to discover names\n  --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity\n  --list-sections        List selectable analysis sections for this artifact\n  --gate defects         Exit 2 only when an artifact_defect finding is present\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Compatibility severity gate: informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Compatibility alias for --output-format json\n  --compact              Compatibility alias for --output-format json-compact\n  --version              Print version\n  --help                 Show this help\n\nSafe-envelope boundary:\n  Keras, HDF5, PT2, and PyTorch checkpoint previews do not construct framework objects or claim an executable graph.\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding; 4 expected SHA-256 mismatch\n`);
   process.stdout.write("\nAdditional command:\n  deepbom model-summary <artifact> [--level auto|operation|block|storage] [--format table|markdown|json|json-compact]\n");
   process.stdout.write("\nSavedModel package preview:\n  TensorFlow SavedModel directories are accepted with bounded member hashing and first-MetaGraph projection.\n  GraphDef, Keras config, and PT2 JSON expose serialized declarative relationships only; HDF5 and PyTorch checkpoints remain safe-envelope-only.\n");
@@ -2909,6 +2937,11 @@ function printHelp(command) {
   process.stdout.write("\nArtifact reconciliation and baseline capture:\n  deepbom verify <artifact> --bom <cyclonedx-1.7.json> [--component-ref <bom-ref>]\n  deepbom contract capture <artifact> [-o baseline.interface-contract.json]\n  deepbom diff <baseline> <candidate> --tensors\n  --render markdown      Render audit, diff, or verify results as Markdown\n");
   process.stdout.write("\nAgent capability summary:\n  deepbom capabilities --format agent-text\n");
   process.stdout.write("\nAdditional exit code:\n  4 independently supplied artifact SHA-256 mismatch\n");
+  printMetadataHelp();
+}
+
+function printMetadataHelp() {
+  process.stdout.write("Optional metadata and lineage:\n  --metadata-template <omop|generic>  Create a model-bound JSON input template\n  --metadata <json>                  Add common Evidence Link IR from declared metadata\n  --evidence-files <directory>       Read explicitly mapped local supporting files\n  --section evidence_link_ir         Select the common connection IR (JSON output)\n  With metadata: exit 2 = contradiction, 3 = incomplete checks, 0 = no observed contradiction.\n  Relationships remain declarations. CycloneDX projection supports 1.7; SPDX metadata projection is not implemented.\n");
 }
 
 const CLI_OPTION_SPELLINGS = Object.freeze([
@@ -2918,7 +2951,7 @@ const CLI_OPTION_SPELLINGS = Object.freeze([
   "--encoding-inventory", "--error-format", "--executorch-build", "--expected-sha256", "--fail-on",
   "--format", "--gate", "--help", "--images", "--include-device-identifiers", "--json", "--level",
   "--list", "--list-sections", "--litert-qualcomm-evidence", "--llm-memory-profile", "--max-download-gib",
-  "--memory-mib", "--no-clobber", "--offline", "--orientation", "--output", "--output-format", "--pointer", "--policy",
+  "--metadata", "--metadata-template", "--evidence-files", "--memory-mib", "--no-clobber", "--offline", "--orientation", "--output", "--output-format", "--pointer", "--policy",
   "--policy-output", "--profiles", "--render", "--request", "--review-policy", "--scan", "--section",
   "--state-bits", "--summary", "--target", "--target-profile", "--tensor-limit", "--tensor-offset",
   "--tensors", "--tensorrt-engine-inspector", "--tensorrt-llm-binding", "--tensorrt-llm-config",

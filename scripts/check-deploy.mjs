@@ -33,6 +33,8 @@ const CHECKS = [
   "scripts/check-conversion-receipt.mjs --no-browser",
   "scripts/check-artifact-ir.mjs",
   "scripts/check-numerical-ir.mjs",
+  "scripts/generate-evidence-link-schema.mjs --check",
+  "scripts/check-evidence-links.mjs",
   "scripts/check-numerical-precision.mjs",
   "scripts/check-calculation-boundaries.mjs",
   "scripts/check-common-ir-semantics.mjs",
