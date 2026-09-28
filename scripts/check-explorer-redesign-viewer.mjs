@@ -1040,7 +1040,7 @@ try {
     || !redesignNodeInitial.viewControls.includes("Inspector")
     || !redesignNodeInitial.viewControls.includes("Expand")
     || !redesignNodeInitial.fullActive
-    || redesignNodeInitial.selectedNodeWidth < 8
+    || redesignNodeInitial.selectedNodeWidth < 180
     || redesignNodeInitial.issue + redesignNodeInitial.watch < 1
     || redesignNodeInitial.direct !== 0
     || redesignNodeInitial.propagated !== 0
@@ -1051,14 +1051,36 @@ try {
     throw new Error(`Node-first Redesign no-op state is incomplete: ${JSON.stringify(redesignNodeInitial)}`);
   }
   const redesignGraph = page.locator("#redesignPanel .nv-graph");
+  const redesignScroll = page.locator("#redesignPanel .nv-scrollport");
+  const scrollStart = await redesignScroll.evaluate((port) => ({ top: port.scrollTop, height: port.clientHeight, total: port.scrollHeight }));
+  if (scrollStart.total < scrollStart.height * 5) throw new Error("Full graph must retain readable nodes in a bounded scroll viewport.");
+  await redesignScroll.scrollIntoViewIfNeeded();
+  const scrollBounds = await redesignScroll.boundingBox();
+  await page.mouse.move(scrollBounds.x + scrollBounds.width / 2, scrollBounds.y + scrollBounds.height / 2);
+  const pageScrollBefore = await page.evaluate(() => scrollY);
+  await page.mouse.wheel(0, 440);
+  await page.waitForFunction((top) => document.querySelector("#redesignPanel .nv-scrollport")?.scrollTop > top + 300, scrollStart.top);
+  if (await page.locator("#redesignPanel .nv-zoom-level").textContent() !== "100%"
+    || Math.abs(await page.evaluate(() => scrollY) - pageScrollBefore) > 2) {
+    throw new Error("Ordinary wheel must scroll the graph without shrinking nodes or moving the page.");
+  }
+  await redesignScroll.focus();
+  await page.keyboard.press("End");
+  await page.waitForFunction(() => {
+    const port = document.querySelector("#redesignPanel .nv-scrollport");
+    return port.scrollTop + port.clientHeight >= port.scrollHeight - 1;
+  });
+  await page.keyboard.press("Home");
   const redesignViewBoxInitial = (await redesignGraph.getAttribute("viewBox")).split(" ").map(Number);
   await redesignGraph.dispatchEvent("wheel", {
+    ctrlKey: true,
     deltaY: 180,
     clientX: 420,
     clientY: 320,
   });
   const redesignViewBoxWheelOut = (await redesignGraph.getAttribute("viewBox")).split(" ").map(Number);
   await redesignGraph.dispatchEvent("wheel", {
+    ctrlKey: true,
     deltaY: -180,
     clientX: 420,
     clientY: 320,
@@ -1094,6 +1116,9 @@ try {
     stageHeight: panel.querySelector(".xr-redesign-node-stage")?.getBoundingClientRect().height || 0,
     viewportHeight: panel.querySelector(".xr-redesign-node-host .nv-viewport")?.getBoundingClientRect().height || 0,
     graphHeight: panel.querySelector(".xr-redesign-node-host .nv-graph")?.getBoundingClientRect().height || 0,
+    nodeWidth: panel.querySelector(".nv-node.selected rect")?.getBoundingClientRect().width || 0,
+    scrollTop: panel.querySelector(".nv-scrollport")?.scrollTop,
+    scrollHeight: panel.querySelector(".nv-scrollport")?.scrollHeight || 0,
   }));
   if (!(redesignSelectionState.visibleNodes > 0 && redesignSelectionState.visibleNodes < 65)
     || redesignSelectionState.selectedNodeWidth < 40
@@ -1103,7 +1128,10 @@ try {
     || redesignFullState.stageHeight > 1200
     || redesignFullState.viewportHeight < 500
     || redesignFullState.viewportHeight > 780
-    || Math.abs(redesignFullState.graphHeight - redesignFullState.viewportHeight) > 1) {
+    || Math.abs(redesignFullState.graphHeight - redesignFullState.viewportHeight) > 20
+    || redesignFullState.nodeWidth < 180
+    || redesignFullState.scrollTop !== 0
+    || redesignFullState.scrollHeight < redesignFullState.viewportHeight * 5) {
     throw new Error(`Redesign scope controls do not restore the complete graph: ${JSON.stringify({ redesignSelectionState, redesignFullState })}`);
   }
   await page.locator("#redesignPanel .xr-redesign-node-stage").screenshot({ path: redesignGraphScreenshot });
@@ -1197,11 +1225,14 @@ try {
     graphWidth: panel.querySelector(".xr-redesign-node-host svg")?.getBoundingClientRect().width || 0,
     selectedNodeWidth: panel.querySelector(".nv-node.selected rect")?.getBoundingClientRect().width || 0,
     workbenchColumns: getComputedStyle(panel.querySelector(".xr-redesign-workbench")).gridTemplateColumns,
+    inspectorHeight: panel.querySelector(".nv-detail")?.getBoundingClientRect().height || 0,
+    screenHeight: innerHeight,
   }));
   if (redesignMobile.documentOverflow > 1
     || redesignMobile.panelOverflow > 1
     || redesignMobile.graphWidth > 390
-    || redesignMobile.selectedNodeWidth < 34
+    || redesignMobile.selectedNodeWidth < 180
+    || redesignMobile.inspectorHeight > redesignMobile.screenHeight * 0.48 + 1
     || redesignMobile.workbenchColumns.split(" ").length !== 1) {
     throw new Error(`Node-first Redesign mobile layout overflows: ${JSON.stringify(redesignMobile)}`);
   }

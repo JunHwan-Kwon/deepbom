@@ -12,6 +12,7 @@ import {
 import { formatBytes, formatExactInteger, formatNumber, formatUs, padOp } from "./format.js";
 import { buildHierarchicalGraphProjection } from "./graph-hierarchy.js";
 import { indexNodeEdgeEvidenceOverlay } from "./node-edge-evidence-overlay.js";
+import { mountScrollableGraph, zoomScrollableGraph } from "./node-scroll-viewport.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const NODE_WIDTH = 216;
@@ -946,6 +947,17 @@ function renderSvg(root, analysis, graph, layout, state, actions) {
   }
   svg.append(nodeLayer);
 
+  if (state.scrollable) {
+    const overview = createMinimap(graph, layout, state, (next) => viewport.navigate(next));
+    const viewport = mountScrollableGraph({ root, svg, layout, state, onChange: (percent) => {
+      const readout = root.closest(".nv-shell")?.querySelector(".nv-zoom-level");
+      if (readout) readout.textContent = `${percent}%`;
+      overview.sync();
+    } });
+    root.append(overview.root);
+    return viewport.dispose;
+  }
+
   let minimap = null;
   const updateView = (nextViewBox) => {
     state.viewBox = clampViewBox(nextViewBox, layout);
@@ -1156,6 +1168,12 @@ function renderHierarchySvg(root, hierarchy, state, actions) {
     nodes.append(node);
   }
   svg.append(nodes);
+  if (state.scrollable) {
+    return mountScrollableGraph({ root, svg, layout, state, onChange: (percent) => {
+      const readout = root.closest(".nv-shell")?.querySelector(".nv-zoom-level");
+      if (readout) readout.textContent = `${percent}%`;
+    } }).dispose;
+  }
   root.append(svg);
   installHierarchyNavigation(root, svg, layout, state);
 }
@@ -1238,6 +1256,7 @@ export function createNodeViewController({
   onEditNode = () => {},
 } = {}) {
   let mountedRoot = root;
+  let disposeViewport = null;
   const state = {
     analysis: null,
     selectedOpIndex: 0,
@@ -1245,6 +1264,9 @@ export function createNodeViewController({
     viewScope: "full",
     search: "",
     viewBox: [0, 0, 1000, 600],
+    scrollable: mode === "redesign",
+    graphScale: 1,
+    scrollTarget: null,
     graph: null,
     layout: null,
     hierarchy: null,
@@ -1274,6 +1296,12 @@ export function createNodeViewController({
   function frameTop() {
     const layout = activeLayout();
     if (!layout) return;
+    if (state.scrollable) {
+      state.graphScale = 1;
+      const first = layout.nodes[0];
+      state.scrollTarget = { x: first ? first.x + NODE_WIDTH / 2 : layout.bounds.x, y: layout.bounds.y, top: true };
+      return;
+    }
     const width = Math.max((mountedRoot?.clientWidth || 0) < 600 ? 500 : 720, layout.bounds.width);
     const height = Math.min(layout.bounds.height, Math.max(560, Math.min(760, width * 0.78)));
     state.viewBox = clampViewBox([
@@ -1298,6 +1326,12 @@ export function createNodeViewController({
     const minY = Math.min(...placed.map((item) => item.y));
     const maxX = Math.max(...placed.map((item) => item.x + NODE_WIDTH));
     const maxY = Math.max(...placed.map((item) => item.y + NODE_HEIGHT));
+    if (state.scrollable) {
+      const selected = placed.find((item) => item.op.index === state.selectedOpIndex) || placed[0];
+      state.graphScale = 1;
+      state.scrollTarget = { x: selected.x + NODE_WIDTH / 2, y: selected.y + NODE_HEIGHT / 2 };
+      return;
+    }
     const width = Math.max(520, maxX - minX + padding * 2);
     const height = Math.max(300, maxY - minY + padding * 2);
     state.viewBox = clampViewBox([
@@ -1325,6 +1359,10 @@ export function createNodeViewController({
       && placed.y >= y + paddingY
       && placed.y + NODE_HEIGHT <= y + height - paddingY;
     if (visible) return;
+    if (state.scrollable) {
+      state.scrollTarget = { x: placed.x + NODE_WIDTH / 2, y: placed.y + NODE_HEIGHT / 2 };
+      return;
+    }
     state.viewBox = clampViewBox([
       placed.x + NODE_WIDTH / 2 - width / 2,
       placed.y + NODE_HEIGHT / 2 - height / 2,
@@ -1380,8 +1418,7 @@ export function createNodeViewController({
       focusIndices(state.focusedIndices);
     } else {
       state.focusedIndices = null;
-      if (mode === "redesign") fit();
-      else frameTop();
+      frameTop();
     }
   }
 
@@ -1391,7 +1428,8 @@ export function createNodeViewController({
     const anchorSelection = state.viewScope === "selection" && selected;
     const anchorX = anchorSelection ? selected.x + NODE_WIDTH / 2 : state.viewBox[0] + state.viewBox[2] / 2;
     const anchorY = anchorSelection ? selected.y + NODE_HEIGHT / 2 : state.viewBox[1] + state.viewBox[3] / 2;
-    state.viewBox = zoomViewBoxAt(state.viewBox, factor, anchorX, anchorY, layout);
+    if (state.scrollable) zoomScrollableGraph(state, factor, anchorX, anchorY);
+    else state.viewBox = zoomViewBoxAt(state.viewBox, factor, anchorX, anchorY, layout);
   }
 
   function openHierarchyGroup(group) {
@@ -1454,7 +1492,7 @@ export function createNodeViewController({
     if (!artifactIrOperators(analysis)?.some((op) => op.index === state.selectedOpIndex)) {
       state.selectedOpIndex = artifactIrOperators(analysis)?.[0]?.index ?? 0;
     }
-    if (state.hierarchy) fit();
+    if (state.hierarchy && !state.scrollable) fit();
     else applyViewScope();
     render();
   }
@@ -1468,12 +1506,16 @@ export function createNodeViewController({
   }
 
   function resetInteractionState() {
+    disposeViewport?.();
+    disposeViewport = null;
     state.analysis = null;
     state.selectedOpIndex = 0;
     state.overlay = "structure";
     state.viewScope = "full";
     state.search = "";
     state.viewBox = [0, 0, 1000, 600];
+    state.graphScale = 1;
+    state.scrollTarget = null;
     state.graph = null;
     state.layout = null;
     state.hierarchy = null;
@@ -1542,6 +1584,8 @@ export function createNodeViewController({
   }
 
   function render() {
+    disposeViewport?.();
+    disposeViewport = null;
     if (!mountedRoot || !state.analysis || !state.graph || !state.layout) return;
     const shell = element("div", `nv-shell${state.inspectorOpen ? "" : " inspector-collapsed"}${state.expanded ? " expanded" : ""}`);
     const toolbar = element("div", "nv-toolbar");
@@ -1615,9 +1659,9 @@ export function createNodeViewController({
         const control = button(label, state.viewScope === value ? "active" : "");
         control.setAttribute("aria-pressed", String(state.viewScope === value));
         control.title = {
-          selection: "Fit the selected layer and directly connected layers",
-          changes: "Fit every directly edited or automatically propagated layer",
-          full: "Fit the complete graph",
+          selection: "Show the selected layer and connected layers at a readable scale",
+          changes: "Show edited or propagated layers; scroll to inspect them",
+          full: "Show the complete graph at 100%; scroll from the beginning",
         }[value];
         control.addEventListener("click", () => {
           applyViewScope(value);
@@ -1676,7 +1720,7 @@ export function createNodeViewController({
       });
       viewControls.append(control);
     }
-    viewControls.append(element("output", "nv-zoom-level", `${zoomPercent(state.viewBox, activeLayout())}%`));
+    viewControls.append(element("output", "nv-zoom-level", `${state.scrollable ? Math.round(state.graphScale * 100) : zoomPercent(state.viewBox, activeLayout())}%`));
     for (const [label, title, factor] of [["+", "Zoom in", 0.8]]) {
       const control = button(label, "nv-zoom-button");
       control.title = title;
@@ -1715,6 +1759,7 @@ export function createNodeViewController({
       flagControls.append(previous, next);
     }
     toolbar.append(search, overlays, viewControls, flagControls);
+    if (state.scrollable) toolbar.append(element("p", "nv-scroll-hint", "Scroll to explore · Ctrl/⌘ + wheel to zoom"));
 
     const heading = element("div", "nv-heading");
     const title = element("div");
@@ -1760,10 +1805,10 @@ export function createNodeViewController({
     };
     if (state.lod === "hierarchy" && state.hierarchy) {
       actions.openGroup = openHierarchyGroup;
-      renderHierarchySvg(viewport, state.hierarchy, state, actions);
+      disposeViewport = renderHierarchySvg(viewport, state.hierarchy, state, actions);
       renderHierarchyDetail(detail, state.hierarchy, state.selectedOpIndex, openHierarchyGroup);
     } else {
-      renderSvg(viewport, state.analysis, state.graph, state.layout, state, actions);
+      disposeViewport = renderSvg(viewport, state.analysis, state.graph, state.layout, state, actions);
       renderDetail(
         detail,
         state.analysis,

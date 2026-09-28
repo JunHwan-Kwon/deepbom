@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v594";
+const CACHE_NAME = "tflite-wasm-static-audit-v595";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -23,6 +23,7 @@ const APP_ASSETS = [
   "./weight-workspace.css",
   "./evidence-links.css",
   "./lib/theme-ui.js",
+  "./lib/node-scroll-viewport.js",
   "./NOTICE.txt",
   "./bootstrap.js",
   "./app.js",

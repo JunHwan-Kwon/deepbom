@@ -990,6 +990,7 @@ web/lib/model-ir/internal/program.js
 web/lib/model-ir/internal/shared.js
 web/lib/model-summary.js
 web/lib/node-edge-evidence-overlay.js
+web/lib/node-scroll-viewport.js
 web/lib/node-view.js
 web/lib/numerical-abi-propagation-viewer.js
 web/lib/numerical-abi-propagation.js
