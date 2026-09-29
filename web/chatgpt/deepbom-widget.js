@@ -28,6 +28,8 @@ import { createChatGptUsage, mountUsageControls } from "../lib/chatgpt-usage.js"
 import { CHATGPT_RESULT_V2, publishConversationResult } from "../lib/chatgpt-result-transport.js";
 import { normalizeEvidenceQuery, validateEvidenceQueryResult } from "../lib/evidence-query-contract.js";
 import { queryEvidence } from "../lib/evidence-query.js";
+import { mountWorkflowGuide } from "../lib/workflow-guide-view.js";
+import { buildWeightQueryVisual } from "../lib/weight-query-visual.js";
 import { mountEvidenceQuery } from "../lib/evidence-query-view.js";
 import { BROWSER_TARGET_PROFILES } from "../lib/target-profiles.generated.js";
 import { buildCpuCostTargetBinding } from "../lib/cpu-target-binding.js";
@@ -165,6 +167,7 @@ async function start() {
   const returned = inspection ? result : await publishConversationResult(openai, result);
   usage.track("analysis_completed", { format: usageFormat });
   const reportDelivery = inspection ? null : createReportDelivery(openai, resultFollowUpPrompt(returned));
+  let weightEvidence = null;
   const exportActions = {
     cyclonedx: () => buildPublicCycloneDx17ArtifactContract(analysisView, {
       hash: sha256, fileSizeBytes: remote.size, artifactIr: artifactIrContext.artifact_ir,
@@ -172,17 +175,19 @@ async function start() {
     spdx: () => buildSpdxArtifactDocument(envelope),
     modelIr: () => artifactIrContext.model_ir,
     weightIr: async () => {
+      if (weightEvidence) return weightEvidence;
       if (remote.size > FULL_FILE_LIMIT) throw new Error("Widget Weight IR is limited to 128 MiB; use the local CLI for larger artifacts.");
       await prepareSandboxWorker();
       const file = new Blob([await remote.slice(0, remote.size).arrayBuffer()]);
-      return staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.WEIGHT_IR, { file, analysis, model: artifactIrContext.model_ir, advanced: true });
+      weightEvidence = await staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.WEIGHT_IR, { file, analysis, model: artifactIrContext.model_ir, advanced: true });
+      return weightEvidence;
     },
   };
   renderResult(returned, openai, artifactIrContext.model_ir, artifactIrContext.model_summary, reportDelivery, exportActions);
-  if (inspection) {
+  const inspect = async requestedQuery => {
     const context = { analysis: analysisView, artifactIrContext, summary, envelope };
-    const queryContainer = document.createElement("section");
-    root.querySelector("#result").prepend(queryContainer);
+    let queryContainer = root.querySelector(".evidence-query");
+    if (!queryContainer) { queryContainer = document.createElement("section"); root.querySelector("#result").prepend(queryContainer); }
     const publish = async (queryResult) => {
       const response = await openai.callTool("deepbom_publish_query", { result: queryResult });
       if (response?.isError || response?.error) throw new Error("ChatGPT did not accept the requested evidence. Retry Report query in chat after refreshing the development connection.");
@@ -192,12 +197,18 @@ async function start() {
       return accepted;
     };
     await mountEvidenceQuery(queryContainer, {
-      initialQuery: inspection,
-      execute: query => queryEvidence(context, query),
+      initialQuery: normalizeEvidenceQuery(requestedQuery),
+      execute: async query => {
+        if (query.section === "weights") context.weightEvidence = await exportActions.weightIr();
+        return queryEvidence(context, query);
+      },
+      weightVisual: (ref, view) => buildWeightQueryVisual(weightEvidence, ref, view),
       publish, openai, offerDownload: exportActions.offerDownload,
     });
-    setStatus("Requested evidence ready", `${remote.name} · ${inspection.section} · identity verified`);
-  }
+    setStatus("Requested evidence ready", `${remote.name} · ${requestedQuery.section} · identity verified`);
+  };
+  mountWorkflowGuide(root.querySelector("#result"), { format, openai, inspect });
+  if (inspection) await inspect(inspection);
 }
 
 function observeWidgetHeight(openai) {

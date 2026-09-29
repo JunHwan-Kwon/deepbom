@@ -608,6 +608,7 @@ scripts/check-weight-analysis.mjs
 scripts/check-weight-pruning.mjs
 scripts/check-worker-config.mjs
 scripts/check-workflow-contract.mjs
+scripts/check-workflow-guide.mjs
 scripts/check-xnnpack-delegate-rulepack.mjs
 scripts/check-xnnpack-selector-evidence.mjs
 scripts/check-zenodo-release.mjs
@@ -1251,9 +1252,13 @@ web/lib/weight-hist.js
 web/lib/weight-ir.js
 web/lib/weight-pruning-view.js
 web/lib/weight-pruning.js
+web/lib/weight-query-visual.js
 web/lib/weight-visuals.js
+web/lib/workflow-catalog.js
+web/lib/workflow-continuation.js
 web/lib/workflow-controller.js
 web/lib/workflow-copy.js
+web/lib/workflow-guide-view.js
 web/lib/workspace-navigation.js
 web/lib/xnnpack-rulepack-metadata.js
 web/lib/xnnpack-selector-evidence.js

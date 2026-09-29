@@ -13,6 +13,8 @@ import { EVIDENCE_QUERY_RESULT_JSON_SCHEMA, normalizeEvidenceQuery, sealEvidence
 import { analyzeExecuTorchModel } from "../web/executorch.js";
 import { sha256BytesHex } from "../web/lib/sha256-sync.js";
 import { decodeFixtureBase64, EXECUTORCH_ADD_PTE_BASE64 } from "./fixtures/executorch-fixtures.mjs";
+import { buildWeightEvidence } from "../web/lib/weight-analysis.js";
+import { buildWeightQueryVisual } from "../web/lib/weight-query-visual.js";
 
 const ajv = new Ajv({ strict: false, allowUnionTypes: true });
 const schema = ajv.compile(EVIDENCE_QUERY_RESULT_JSON_SCHEMA);
@@ -66,6 +68,30 @@ for (const [format, context] of contexts) {
 }
 
 const tflite = contexts.get("tflite");
+// Decode a real model, then ensure the transport preserves the shared numerical
+// results rather than recomputing approximations or using truncated plot data.
+const weightContext = contexts.get("onnx");
+const weightBytes = await readFile("web/samples/gpu_partition_probe.onnx");
+weightContext.weightEvidence = await buildWeightEvidence(weightContext.artifactIrContext.model_ir, weightContext.analysis, weightBytes);
+for (const view of ["distribution", "channels", "similarity", "spectrum", "sparsity", "quantization"]) {
+  const result = queryEvidence(weightContext, { section: "weights", weight_view: view, limit: 40 });
+  assert(schema(result), JSON.stringify(schema.errors));
+  assert.equal(result.coverage.total_rows, weightContext.weightEvidence.weight_analysis.tensors.length);
+  for (const row of result.rows) {
+    const source = weightContext.weightEvidence.weight_analysis.tensors.find(item => item.weight_ref === row.subject_ref);
+    assert.deepEqual(row.details.statistics, source.statistics);
+    assert.equal(row.details.value_count, source.value_count);
+    if (!row.detail_truncations.length && view !== "distribution") assert.deepEqual(row.details.feature, source[view]);
+    const visual = buildWeightQueryVisual(weightContext.weightEvidence, row.subject_ref, view);
+    if (visual) { assert(visual.svg.includes(result.artifact.sha256)); assert(visual.render_model.page.width_mm > 0); }
+  }
+}
+assert.throws(() => queryEvidence({ ...weightContext, weightEvidence: undefined }, { section: "weights" }), /must complete/);
+const wrongWeight = structuredClone(weightContext.weightEvidence);
+wrongWeight.weight_analysis.source.artifact_sha256 = "0".repeat(64);
+assert.throws(() => queryEvidence({ ...weightContext, weightEvidence: wrongWeight }, { section: "weights" }), /source does not match/);
+assert.throws(() => normalizeEvidenceQuery({ section: "operators", weight_view: "distribution" }), /Invalid weight/);
+assert.throws(() => normalizeEvidenceQuery({ section: "weights", source_index: 0 }), /weight subject_ref/);
 const placement = buildExecutionPlacementEvidence(tflite.analysis);
 for (const profile of placement.static_profiles) {
   const result = queryEvidence(tflite, { section: "placement", profile_ids: [profile.profile_id], limit: 40 });

@@ -750,6 +750,43 @@ try {
   assert.deepEqual(retried.map(call => call.args.result?.schema), ["deepbom.chatgpt_analysis_result.v1", "deepbom.chatgpt_analysis_result.v2"]);
   assert.equal(retried[1].args.result.artifact.sha256, expectedSha256);
   hostDefinition = "current";
+  // Start from a completed ordinary report and explicitly opt into weights.
+  // This also verifies the visible workflow router, same-session reuse and
+  // actual browser SVG/PNG generation, not just a matching method signature.
+  await page.locator('[data-testid="workflow-guide"] summary').click();
+  await page.getByLabel("DEEPBOM workflow", { exact: true }).selectOption("weights");
+  assert.equal(await page.locator('[data-action="workflow-web"]').getAttribute("href"), "https://deepbom.org/#workflow=weights");
+  await page.locator('[data-action="workflow-inspect"]').click();
+  await page.waitForFunction(() => window.__deepbomToolCalls.some(call => call.name === "deepbom_publish_query"), null, { timeout: 90_000 });
+  const weightResult = await page.evaluate(() => window.__deepbomToolCalls.find(call => call.name === "deepbom_publish_query").args.result);
+  assert.equal(weightResult.query.section, "weights");
+  assert.equal(weightResult.artifact.sha256, expectedSha256);
+  assert(weightResult.context.weight_evidence.coverage.assessed_count > 0);
+  assert(await page.locator(".query-weight-chart svg").count() > 0);
+  const weightSvgDownload = page.waitForEvent("download");
+  await page.locator('[data-action="export-weight-svg"]').click();
+  assert.match(await readFile(await (await weightSvgDownload).path(), "utf8"), new RegExp(expectedSha256));
+  const weightPngDownload = page.waitForEvent("download");
+  await page.locator('[data-action="export-weight-png"]').click();
+  const weightPng = await readFile(await (await weightPngDownload).path());
+  assert.deepEqual(weightPng.subarray(0, 8), Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  assert(weightPng.readUInt32BE(16) > 500 && weightPng.readUInt32BE(20) > 200);
+  assert(await page.evaluate(async base64 => {
+    const bytes = Uint8Array.from(atob(base64), ch => ch.charCodeAt(0));
+    const image = await createImageBitmap(new Blob([bytes], { type: "image/png" }));
+    const canvas = document.createElement("canvas"); canvas.width = image.width; canvas.height = image.height;
+    const context = canvas.getContext("2d"); context.drawImage(image, 0, 0); image.close();
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    for (let i = 0; i < pixels.length; i += 4) if (Math.abs(pixels[i] - pixels[i + 1]) > 20) return true;
+    return false;
+  }, weightPng.toString("base64")), "Weight plots retain their color encoding in PNG");
+  await page.getByLabel("Weight feature", { exact: true }).selectOption("spectrum");
+  await page.locator('[data-action="run-evidence-query"]').click();
+  await page.waitForFunction(() => window.__deepbomToolCalls.some(call => call.name === "deepbom_publish_query" && call.args.result.query.weight_view === "spectrum"));
+  await page.locator('[data-testid="workflow-guide"]').scrollIntoViewIfNeeded();
+  await page.getByLabel("DEEPBOM workflow", { exact: true }).selectOption("verify");
+  assert.equal(await page.locator('[data-action="workflow-inspect"]').isVisible(), false);
+  assert.match(await page.locator('[data-testid="workflow-guide"] pre').innerText(), /verify.*--bom/);
   for (const scenario of ["success", "wrong_hash", "unavailable_profile"]) {
     const queryPage = await browser.newPage({ viewport: { width: 900, height: 900 } });
     await installToolBridge(queryPage);

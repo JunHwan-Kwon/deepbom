@@ -67,7 +67,7 @@ assertPng(directoryIcon, 512, "directory icon");
 assertPng(composerIcon, 256, "composer icon", 10_000);
 
 const toolNames = CHATGPT_MCP_CONTRACT.tools.map((tool) => tool.name);
-assert.deepEqual(toolNames, ["deepbom_analyze_file", "deepbom_capabilities", "deepbom_publish_analysis", "deepbom_publish_error", "deepbom_query_file", "deepbom_publish_query"]);
+assert.deepEqual(toolNames, ["deepbom_analyze_file", "deepbom_capabilities", "deepbom_publish_analysis", "deepbom_publish_error", "deepbom_query_file", "deepbom_publish_query", "deepbom_workflow_guide"]);
 for (const tool of CHATGPT_MCP_CONTRACT.tools.filter(tool => tool.name.startsWith("deepbom_publish_"))) {
   assert.deepEqual(tool._meta.ui.visibility, ["app"]);
   assert.equal(tool._meta["openai/visibility"], "private");

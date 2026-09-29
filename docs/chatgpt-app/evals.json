@@ -46,6 +46,13 @@
         },
         "expected_behavior": "Preserve payload inspection depth, source profile identities, conditions, and runtime evidence limits."
       }
+    },
+    {
+      "id": "workflow-routing",
+      "class": "indirect",
+      "prompt": "How can I inspect weight distributions here, investigate pruning interactively, and verify a CycloneDX declaration locally?",
+      "expected_tool": "deepbom_workflow_guide",
+      "expected_behavior": "Return supported query sections, explicit web continuation and local CLI argument templates. Do not fabricate completed analysis or transfer an attachment to the website."
     }
   ],
   "negative": [
@@ -79,6 +86,7 @@
     "On failure, report the structured code and suggested_action without inventing a partial success.",
     "Use actual static support evidence when available; do not report everything unknown merely because execution was not observed.",
     "Do not invent a missing delegate profile, artifact identity, query result, image attachment, or download link.",
-    "A query failure is not completed evidence. Preserve pagination, detail truncation and the actual scan scope."
+    "A query failure is not completed evidence. Preserve pagination, detail truncation and the actual scan scope.",
+    "Weight plots use complete in-browser feature evidence; conversation truncation, decoder and budget coverage remain explicit. Website links transfer only a public workflow ID and require model reselection and SHA-256 comparison."
   ]
 }

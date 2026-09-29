@@ -2,6 +2,8 @@ import { ANALYZER_SEMANTIC_VERSION } from "./app-config.js";
 import { BROWSER_TARGET_PROFILES } from "./target-profiles.generated.js";
 import { buildExecutionPlacementEvidence } from "./execution-placement-evidence.js";
 import { artifactIrOperators } from "./artifact-ir-selectors.js";
+import { bindSource, checkDigest } from "./numerical-ir/common.js";
+import { workflowUrl } from "./workflow-catalog.js";
 import { canonicalJson, compareCanonicalText } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { EVIDENCE_QUERY_MAX_BYTES, EVIDENCE_QUERY_RESULT_SCHEMA, normalizeEvidenceQuery, sealEvidenceQueryResult, validateEvidenceQueryResult } from "./evidence-query-contract.js";
@@ -9,7 +11,7 @@ import { EVIDENCE_QUERY_MAX_BYTES, EVIDENCE_QUERY_RESULT_SCHEMA, normalizeEviden
 const BOUNDARY = "This is a query projection of the existing Evidence IR and source-pinned analysis rules. Static eligibility and serialized fused activation are not executed placement or runtime fusion. MACs are not measured latency. Improvement rows identify investigation priorities, not proven accuracy or speed gains. Missing evidence remains unknown. Digests establish consistency, not the authenticity of browser-produced evidence.";
 const list = value => Array.isArray(value) ? value : [];
 
-export function queryEvidence({ analysis, artifactIrContext, summary, envelope }, input) {
+export function queryEvidence({ analysis, artifactIrContext, summary, envelope, weightEvidence }, input) {
   const query = normalizeEvidenceQuery(input);
   const model = artifactIrContext.model_ir;
   const modelSummary = artifactIrContext.model_summary;
@@ -43,6 +45,7 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope }
     ordering: modelSummary.projection.ordering,
     native_detail_scope: analysis.artifact_ir_primary_scope_ref ?? null,
     reproduction: summary.reproduction,
+    continuation: { url: workflowUrl(({ operators: "layers", operator: "layers", findings: "findings", improvements: "findings", placement: "placement", profiles: "placement", fusion: "fusion", weights: "weights" })[query.section]), instruction: "For richer interaction, select the model again on deepbom.org and compare its SHA-256. No file or result is transferred by this link." },
   };
   let rows;
   let unavailable = null;
@@ -51,6 +54,21 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope }
   } else if (query.section === "findings") {
     rows = list(envelope.findings).map((finding, index) => makeRow(`finding:${finding.id}:${index}`, "finding", finding.title || finding.id, finding));
     context.finding_boundary = "Finding classes are distinct. Severity is an investigation priority, not a measured loss of accuracy.";
+  } else if (query.section === "weights") {
+    if (!weightEvidence) throw new Error("Weight analysis must complete before a weight query is projected.");
+    const { weight_ir: weight, weight_analysis: advanced } = weightEvidence;
+    bindSource(weight.source, model); bindSource(advanced.source, model);
+    checkDigest(weight, "weight_ir_sha256"); checkDigest(advanced, "weight_analysis_sha256");
+    if (advanced.weight_ir_sha256 !== weight.weight_ir_sha256) throw new Error("Weight analysis identity mismatch.");
+    const view = query.weight_view || "distribution";
+    context.weight_evidence = { weight_ir_sha256: weight.weight_ir_sha256, weight_analysis_sha256: advanced.weight_analysis_sha256, coverage: advanced.coverage, options: advanced.options, view, interpretation_boundary: advanced.interpretation_boundary };
+    const weightsByRef = new Map(weight.tensors.map(row => [row.id, row]));
+    rows = advanced.tensors.map(row => makeRow(row.weight_ref, "weight_evidence", row.name || row.weight_ref, {
+      ...pick(row, ["weight_ref", "storage_ref", "shape", "dtype", "status", "reason", "value_count", "representation", "axes", "statistics"]),
+      feature: view === "distribution" ? { status: row.status, reason: row.reason, statistics: row.statistics } : row[view],
+      binding_refs: weightsByRef.get(row.weight_ref)?.binding_refs ?? [],
+    }));
+    if (!rows.some(row => row.details.status === "assessed")) unavailable = "No weights could be assessed within the decoder and budget contracts. Inspect per-tensor reasons; absent evidence is not zero.";
   } else if (query.section === "fusion") {
     rows = all.filter(row => row.kind === "operation").map(row => {
       const native = nativeFor(row);
@@ -169,7 +187,7 @@ function boundDetails(value) {
   const visit = (item, path, depth) => {
     if (depth > 8) { paths.push(path); return null; }
     if (typeof item === "string" && item.length > 1200) { paths.push(path); return item.slice(0, 1200); }
-    if (Array.isArray(item)) { if (item.length > 32) paths.push(path); return item.slice(0, 32).map((child, index) => visit(child, `${path}/${index}`, depth + 1)); }
+    if (Array.isArray(item)) { const cap = /\/histogram\/(counts|edges)$/.test(path) ? 128 : 32; if (item.length > cap) paths.push(path); return item.slice(0, cap).map((child, index) => visit(child, `${path}/${index}`, depth + 1)); }
     if (item && typeof item === "object") return Object.fromEntries(Object.entries(item).map(([key, child]) => [key, visit(child, `${path}/${key}`, depth + 1)]));
     return item;
   };

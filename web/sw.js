@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v599";
+const CACHE_NAME = "tflite-wasm-static-audit-v600";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -396,6 +396,8 @@ const APP_ASSETS = [
   "./lib/workflow-copy.js",
   "./lib/workflow-controller.js",
   "./lib/workspace-navigation.js",
+  "./lib/workflow-catalog.js",
+  "./lib/workflow-continuation.js",
   "./lib/xnnpack-selector-evidence.js",
   "./lib/zip.js",
   "./admin.js",

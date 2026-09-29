@@ -32,7 +32,15 @@ export async function buildBrowserModelIrVisualizationArchive(modelIr, { orienta
   return { blob: createZipBlob(files), bundle: generated.bundle, png_manifest: pngManifest };
 }
 
-export async function rasterizeMonochromeModelView(svg, renderModel, { dpi = 300 } = {}) {
+export function rasterizeMonochromeModelView(svg, renderModel, options = {}) {
+  return rasterizeView(svg, renderModel, { ...options, monochrome: true });
+}
+
+export function rasterizeColorModelView(svg, renderModel, options = {}) {
+  return rasterizeView(svg, renderModel, { ...options, monochrome: false });
+}
+
+async function rasterizeView(svg, renderModel, { dpi = 300, monochrome } = {}) {
   if (!Number.isFinite(dpi) || dpi < 72 || dpi > 300) {
     throw new Error("Model IR PNG resolution must be between 72 and 300 DPI.");
   }
@@ -55,6 +63,7 @@ export async function rasterizeMonochromeModelView(svg, renderModel, { dpi = 300
   } else {
     await drawDecodedSvg(context, svg, width, height);
   }
+  if (!monochrome) return canvasToPngBytes(canvas);
   const raster = context.getImageData(0, 0, width, height);
   for (let offset = 0; offset < raster.data.length; offset += 4) {
     const black = (raster.data[offset] * 299 + raster.data[offset + 1] * 587 + raster.data[offset + 2] * 114) < 224000;

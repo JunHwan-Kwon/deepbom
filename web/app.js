@@ -1,3 +1,4 @@
+import { installWorkflowContinuation } from "./lib/workflow-continuation.js";
 import { prepareExternalDataFiles } from "./lib/onnx-external-data.js";
 import { BROWSER_TARGET_PROFILES } from "./lib/target-profiles.generated.js";
 import {
@@ -256,6 +257,7 @@ import { createAnalysisDepthMode } from "./lib/analysis-depth-mode.js";
 import { createOfflineDeviceController } from "./lib/offline-device-controller.js";
 import {
   installWorkspaceNavigation,
+  initPinnedSessionOffset,
   syncTabSelection,
 } from "./lib/workspace-navigation.js";
 import { renderFormatCapabilityMatrix } from "./lib/format-capability-view.js";
@@ -1046,6 +1048,7 @@ workflowController = createWorkflowController({
   syncSelection: syncTabSelection,
   updatePerformanceVisibility: () => performanceVisualController.updateVisibility(),
 });
+const workflowContinuation = installWorkflowContinuation({ host: dropzone, getAnalysis: () => current, navigate: navigateToWorkspace, selectAuditTab: setActiveAuditTab });
 createAnalysisDepthMode();
 const offlineDeviceController = createOfflineDeviceController({
   registryList: deviceRegistryList,
@@ -1259,7 +1262,7 @@ function resetAdvancedResultState({
 
 registerServiceWorker();
 
-initPinnedSessionOffset();
+initPinnedSessionOffset({ topbar, sessionAnchor });
 updateFormatSpecificAuditLabels({
   modelFormat: "",
   analysis: null,
@@ -2401,6 +2404,7 @@ function lockRuntime(code) {
 
 function updateWorkflowState(state, detail = {}) {
   workflowController.updateState(state, detail);
+  if (state === "audited") workflowContinuation.apply();
   weightWorkspaceController?.sync();
   metadataWorkspaceController?.sync();
 }
@@ -2453,31 +2457,6 @@ function setActiveAuditTab(tabId = "overview") {
   workflowController?.setAuditTab(tabId);
 }
 
-function initPinnedSessionOffset() {
-  const root = document.documentElement;
-  const update = () => {
-    const stickyHeight = (element) => {
-      const position = element ? getComputedStyle(element).position : "static";
-      return ["fixed", "sticky"].includes(position)
-        ? Math.round(element.getBoundingClientRect().height || 0)
-        : 0;
-    };
-    const topbarH = stickyHeight(topbar);
-    const anchorH = stickyHeight(sessionAnchor);
-    const staticMobileChrome = window.matchMedia("(max-width: 820px)").matches;
-    root.style.setProperty("--session-sticky-top", `${staticMobileChrome ? 0 : topbarH}px`);
-    const coverH = staticMobileChrome ? 0 : topbarH + anchorH + 8;
-    root.style.setProperty("--sticky-cover-height", `${coverH}px`);
-    root.style.scrollPaddingTop = `${coverH}px`;
-  };
-  update();
-  if (window.ResizeObserver) {
-    const ro = new ResizeObserver(update);
-    if (topbar) ro.observe(topbar);
-    if (sessionAnchor) ro.observe(sessionAnchor);
-  }
-  window.addEventListener("resize", update);
-}
 
 document.addEventListener("keydown", (e) => {
   if (!current || graphExplorer.hidden) return;

@@ -23,7 +23,7 @@ The existing approved portal version is managed separately. Do not replace or wi
 
 Description:
 
-> Inspect attached AI model deployment files without executing model code. DEEPBOM analyzes supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files in the browser and reports SHA-256, serialized structure, tensor encodings, quantization evidence, and static findings. Ask follow-up questions to inspect a layer, search and page through model evidence, investigate improvement priorities, or compare available static delegate profiles. Inspect encoded activation fusion while keeping runtime fusion unobserved. Explore Model IR tables and visualizations, and export SVG, PNG, Word-ready bundles, CycloneDX 1.7 artifact evidence, or SPDX 2.3 artifact inventories. Use Send PNG to chat to share a selected visualization or Save via ChatGPT to obtain a download link for a generated file when supported by the host. These actions share the generated export, not the model file. Results separate artifact defects, cautions, and evidence gaps, and explain what static analysis cannot establish. Use the local CLI or local MCP for confidential, very large, sharded, or multi-file artifacts.
+> Inspect attached AI model deployment files without executing model code. DEEPBOM analyzes supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files in the browser and reports SHA-256, serialized structure, tensor encodings, quantization evidence, and static findings. Ask follow-up questions to inspect a layer, search and page through model evidence, investigate improvement priorities, or compare available static delegate profiles. Inspect encoded activation fusion while keeping runtime fusion unobserved. Explore Model IR tables and visualizations, and export SVG, PNG, Word-ready bundles, CycloneDX 1.7 artifact evidence, or SPDX 2.3 artifact inventories. Use Send PNG to chat to share a selected visualization or Save via ChatGPT to obtain a download link for a generated file when supported by the host. These actions share the generated export, not the model file. Results separate artifact defects, cautions, and evidence gaps, and explain what static analysis cannot establish. Use the local CLI or local MCP for confidential, very large, sharded, or multi-file artifacts. Ask for optional weight distributions, channel statistics, similarity, singular spectra, sparsity or quantization evidence with explicit decoder and budget coverage. Discover workflows for comparison, pruning investigation, BOM verification, metadata and runtime evidence; continue in the relevant deepbom.org workspace for richer interaction, or use the provided local CLI commands. Web continuation requires selecting the model again; model files and results are not transferred by the link.
 
 Select the verified individual or business identity that legally owns this
 submission. The Plugin Author value must exactly match that verified identity;
@@ -49,7 +49,7 @@ export or the deeper payload-integrity test. The scenarios in
 
 After the portal issues a token, expose exactly that token at
 `https://deepbom.org/.well-known/openai-apps-challenge`, then run **Scan Tools**.
-Review all six discovered tools and confirm that every annotation matches
+Review all seven discovered tools and confirm that every annotation matches
 `chatgpt-app-submission.json`.
 
 ## Skills
@@ -103,7 +103,10 @@ Release notes:
 > serialized activation fusion and improvement priorities. Query results retain
 > artifact identity, source references, and coverage limits, with interactive
 > diagrams and SVG/PNG exports. Existing analysis and export workflows remain
-> compatible. Static results do not establish runtime placement or performance.
+> compatible. Added optional weight analysis and SVG/PNG plots, plus shared workflow
+> guidance for web interaction and local CLI tasks such as comparison and BOM
+> verification. Web continuation requires selecting the model again and does not
+> transfer the attachment. Static results do not establish runtime performance.
 
 This update changes the ChatGPT Skill. Replace the previous skill ZIP and wait
 for its new portal scan. The earlier video covers the basic analysis/export path;

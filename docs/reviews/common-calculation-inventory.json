@@ -21,7 +21,7 @@
     ],
     "boundary": "All application source files in these roots are enumerated. JS functions/tables are parsed; Rust/Python/C++ candidates also require semantic review. Textual equality is a candidate, not proof of equivalent contracts."
   },
-  "source_file_count": 496,
+  "source_file_count": 500,
   "files": [
     {
       "file": "bin/deepbom-agent-contract.mjs",
@@ -577,10 +577,10 @@
     },
     {
       "file": "web/app.js",
-      "sha256": "63608ed353495316b6802b185924db3ea2de38b6b24738243cfd864b8935073c",
+      "sha256": "df57922433feea4e2f99e0b11ba0c47f9879e444c42d50d4b3375f27f248d323",
       "language": "js",
       "role": "runtime",
-      "functions": 596,
+      "functions": 594,
       "calculation_candidates": 13
     },
     {
@@ -601,10 +601,10 @@
     },
     {
       "file": "web/chatgpt/deepbom-widget.js",
-      "sha256": "5bec5d7c74ad35b85a1cfd4f03d37e8706d31d43a907ddb2634625f9109af430",
+      "sha256": "ce48cb0515fc92a17a01760928e6b65b953025cb2cae3ce2d49cce43d36560fd",
       "language": "js",
       "role": "runtime",
-      "functions": 103,
+      "functions": 105,
       "calculation_candidates": 3
     },
     {
@@ -1049,7 +1049,7 @@
     },
     {
       "file": "web/lib/build-metadata.js",
-      "sha256": "2044b9fc7d2090a265b6fee330750b2441ed8b2729cdb0d5fdfc18349b38554e",
+      "sha256": "de82a895ac4d6e5a51f538b2652b838b66563718bae8a11af1a4a1054e4fd52d",
       "language": "js",
       "role": "runtime",
       "functions": 0,
@@ -1425,7 +1425,7 @@
     },
     {
       "file": "web/lib/evidence-query-contract.js",
-      "sha256": "f317b237bbbb2fa96545392da3c8747d9bc1f8e6058551331f7664f485999d56",
+      "sha256": "45801113161d86c3a5eb87bee62c12e9208060f7e0f20f6deaff8ff6c37aa339",
       "language": "js",
       "role": "runtime",
       "functions": 9,
@@ -1433,18 +1433,18 @@
     },
     {
       "file": "web/lib/evidence-query-view.js",
-      "sha256": "82d7d3dbda45cbaa7068e3509e0ee67e05947e08490308247b8a2c9f9a32dfc1",
+      "sha256": "c2502a57f1052f636ad4498b0337362cc7398102a609fae381b370b21bba9536",
       "language": "js",
       "role": "runtime",
-      "functions": 25,
+      "functions": 30,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/evidence-query.js",
-      "sha256": "73a1173f620fd270ba6ccf92628854033714083dba202bb82cb8369f9d706e4a",
+      "sha256": "a19ebb88dc5b7e90ccb77f33b2444aeaa2ad344a8ad2513496ff6ede74a85341",
       "language": "js",
       "role": "runtime",
-      "functions": 42,
+      "functions": 45,
       "calculation_candidates": 1
     },
     {
@@ -2001,10 +2001,10 @@
     },
     {
       "file": "web/lib/model-ir-browser-export.js",
-      "sha256": "9592529067c8fe1d14e84ca54b3322e1033db4fe09b4c4f0009081f83cd4db72",
+      "sha256": "ff079f555c83584a0f7db00b90829d3c680ba06483214228dcc588134a287f5b",
       "language": "js",
       "role": "runtime",
-      "functions": 9,
+      "functions": 11,
       "calculation_candidates": 0
     },
     {
@@ -3880,12 +3880,36 @@
       "calculation_candidates": 1
     },
     {
+      "file": "web/lib/weight-query-visual.js",
+      "sha256": "7d813b215b46fa75e46d2fa89346e1bd2e0d6b357f0ea2bc25c824c902d336f1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
       "file": "web/lib/weight-visuals.js",
       "sha256": "0ff43d85e9c017cb9c0d7e7989a5e9f0ea5261f029a96b617392107b9de2de1f",
       "language": "js",
       "role": "runtime",
       "functions": 31,
       "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/workflow-catalog.js",
+      "sha256": "dc3011ba9c4732e173b8dd7750a928c9a807b2e8ae4f285776516e852affdfa9",
+      "language": "js",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/workflow-continuation.js",
+      "sha256": "7fd4136f86a2a72c5af2b4e68a42de76ddbfe884e1519566e58d2ff1bb2e3206",
+      "language": "js",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/workflow-controller.js",
@@ -3904,11 +3928,19 @@
       "calculation_candidates": 0
     },
     {
-      "file": "web/lib/workspace-navigation.js",
-      "sha256": "db1355e2eab4eb47800325f81fe95946aa2d408fddc6624fbd8501b89be0c65a",
+      "file": "web/lib/workflow-guide-view.js",
+      "sha256": "dbed948478e71b2a34843d21de967d1f67e15c66e7c34d3b35a14a4cc94b53c0",
       "language": "js",
       "role": "runtime",
-      "functions": 14,
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/workspace-navigation.js",
+      "sha256": "92f61641d009b633e34cb48b00c6834fd366a85223ac0c7ae28cc7dfc6a22408",
+      "language": "js",
+      "role": "runtime",
+      "functions": 17,
       "calculation_candidates": 0
     },
     {
@@ -3945,7 +3977,7 @@
     },
     {
       "file": "web/sw.js",
-      "sha256": "ba56f690ef5bf81d35842f28743261d63d6fba8cf13078ab5d13e305a1d929ce",
+      "sha256": "c928552249981147bd952f031c5016849045f2733e754f148040f025a0c3330b",
       "language": "js",
       "role": "runtime",
       "functions": 18,
@@ -4146,7 +4178,7 @@
         {
           "file": "web/chatgpt/deepbom-widget.js",
           "name": "formatBytes",
-          "line": 1106
+          "line": 1117
         },
         {
           "file": "web/claude/deepbom-widget.js",

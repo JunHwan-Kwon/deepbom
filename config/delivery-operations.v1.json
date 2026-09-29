@@ -6,6 +6,18 @@
     {
       "kind": "private_web_preflight_basis",
       "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 250.58,
+      "observed_at": "2026-09-29T09:09:10.877905+00:00",
+      "version": "2.0.0",
+      "source_commit": "0940aaefef08425902654bdec6ff9b0a85450a61",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally for shared conversational workflow routing, optional Weight IR query/visualization, and web continuation. Core CLI and canonical IR schemas are unchanged. No GitHub Actions. This is validation evidence, not OpenAI approval or actual ChatGPT-host verification.",
+      "check_count": 100
+    },
+    {
+      "kind": "private_web_preflight_basis",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
       "elapsed_seconds": 246.14,
       "observed_at": "2026-09-29T08:27:14.186157+00:00",
       "version": "2.0.0",

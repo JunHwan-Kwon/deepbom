@@ -4,7 +4,8 @@ import { sha256TextHex } from "./sha256-sync.js";
 // A bounded transport projection of existing Evidence IR, not another IR or
 // an attestation that the receiving service inspected the original bytes.
 export const EVIDENCE_QUERY_RESULT_SCHEMA = "deepbom.evidence_query_result.v1";
-export const EVIDENCE_QUERY_SECTIONS = Object.freeze(["operators", "operator", "findings", "placement", "fusion", "improvements", "profiles"]);
+export const EVIDENCE_QUERY_SECTIONS = Object.freeze(["operators", "operator", "findings", "placement", "fusion", "improvements", "profiles", "weights"]);
+export const EVIDENCE_WEIGHT_VIEWS = Object.freeze(["distribution", "channels", "similarity", "spectrum", "sparsity", "quantization"]);
 export const EVIDENCE_QUERY_MAX_BYTES = 64 * 1024;
 const SHA = /^[a-f0-9]{64}$/;
 export const EVIDENCE_QUERY_JSON_SCHEMA = Object.freeze({
@@ -18,6 +19,7 @@ export const EVIDENCE_QUERY_JSON_SCHEMA = Object.freeze({
     limit: { type: "integer", minimum: 1, maximum: 40, default: 20 },
     profile_ids: { type: "array", items: { type: "string", minLength: 1, maxLength: 128 }, uniqueItems: true, maxItems: 4, description: "Exact static backend profile IDs returned by section=profiles. Independent eligibility profiles, not runtime assignments." },
     target: { type: "string", minLength: 1, maxLength: 128, description: "Optional TFLite CPU planning profile ID from capabilities. Not detected hardware or a GPU delegate selector." },
+    weight_view: { type: "string", enum: [...EVIDENCE_WEIGHT_VIEWS], description: "Only for section=weights: explicitly opt into bounded payload analysis; use returned weight subject_ref to select a tensor. Default distribution." },
   },
   required: ["section"],
 });
@@ -26,6 +28,8 @@ export function normalizeEvidenceQuery(value) {
   object(value, "query");
   allowed(value, Object.keys(EVIDENCE_QUERY_JSON_SCHEMA.properties), "query");
   if (!EVIDENCE_QUERY_SECTIONS.includes(value.section)) throw new Error("Unknown evidence query section.");
+  if (value.weight_view !== undefined && (value.section !== "weights" || !EVIDENCE_WEIGHT_VIEWS.includes(value.weight_view))) throw new Error("Invalid weight view or query section.");
+  if (value.section === "weights" && value.source_index !== undefined) throw new Error("Weight queries require a weight subject_ref, not an operator index.");
   for (const [key, max] of [["subject_ref", 512], ["search", 160], ["target", 128]]) {
     if (value[key] !== undefined && (typeof value[key] !== "string" || value[key].length > max || (key !== "search" && !value[key].length))) throw new Error(`Invalid query ${key}.`);
   }

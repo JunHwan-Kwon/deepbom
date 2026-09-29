@@ -76,11 +76,11 @@ explicit export/file-sharing controls. A preview is not a chat attachment.
 ## Submission update
 
 - Keep the published directory version operating while preparing this draft.
-- Import the updated root `chatgpt-app-submission.json`: six tool justifications,
+- Import the updated root `chatgpt-app-submission.json`: seven tool justifications,
   exactly five positive cases (including multi-turn follow-ups), and three
   negative cases.
 - Rescan tools to discover the public `deepbom_query_file` and component-only
-  `deepbom_publish_query`, in addition to the existing four tools.
+  `deepbom_publish_query`, plus `deepbom_workflow_guide`, in addition to the existing four tools.
 - Replace the old `deepbom-artifact-evidence` ZIP with the newly built ZIP; its
   earlier Passed status covered the previous content. Await the new scan.
 - Record the follow-up flow in Developer Mode before declaring it demonstrated
@@ -105,3 +105,37 @@ existing host handoff. Keep static predicates and runtime boundaries visible.
 - [OpenAI tool results and file parameters](https://developers.openai.com/plugins/reference)
 - [Tool review and directory updates](https://developers.openai.com/plugins/deploy/app-review)
 - [Publication compatibility](PUBLICATION_COMPATIBILITY.md)
+
+## Conversational workflow coverage
+
+The shared `web/lib/workflow-catalog.js` routes 18 workflows across conversation,
+web and local CLI. `deepbom_workflow_guide` returns this catalog without file
+access or command execution. The same catalog powers the widget's **Explore
+next · Chat, web and CLI** controls and website continuation. It is navigation
+metadata, not another IR or duplicate analysis implementation. Format-specific
+coverage and access gates still apply. CLI capability discovery remains the
+complete installed-machine contract; the catalog does not claim to expose every
+local function as a remote executable tool.
+
+`weights` queries explicitly opt into the existing optional Weight IR and
+advanced numerical analysis worker. They return identity-bound tensor statistics
+and a selected feature: distribution, channels, similarity, spectrum, sparsity or
+quantization. Decoder and computation budgets, coverage and omitted detail are
+preserved. The 128 MiB widget limit is explicit. The widget reuses computed
+weights within its mounted session and the website's visual encoders; plots use
+complete in-browser feature data rather than truncated conversation arrays.
+Weight SVG/PNG can use the same explicit host file-sharing controls as other
+exports. Similarity and sparsity are not proofs of safe pruning or acceleration.
+
+Web URLs have the form `https://deepbom.org/#workflow=weights`. Only a public
+workflow ID is carried. No model bytes, filename, hash, prompt or result is
+transferred. The landing banner asks the user to select the model and compare
+its SHA-256 with the conversation. After the audit, the normal navigation
+controller opens the requested view once. Unsupported formats and access gates
+are respected. No model is automatically fetched or executed.
+
+Additional recording steps: request ONNX weight distribution and spectrum,
+select a tensor and export the selected plot; request a pruning workflow and
+open its website link, select the same file and show the Weight workspace; ask
+for BOM verification and batch commands and show that these are local templates,
+not results. The old recording does not establish these new interactions.

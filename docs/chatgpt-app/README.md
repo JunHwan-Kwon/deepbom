@@ -8,7 +8,7 @@ no CycloneDX development-branch claims.
 
 - Streamable HTTP MCP: `https://deepbom.org/mcp`
 - Authentication: none
-- Public tools: `deepbom_analyze_file`, `deepbom_capabilities`, `deepbom_query_file`
+- Public tools: `deepbom_analyze_file`, `deepbom_capabilities`, `deepbom_query_file`, `deepbom_workflow_guide`
 - Component-only tools: `deepbom_publish_analysis`, `deepbom_publish_error`, `deepbom_publish_query`
 - Widget resource: `ui://deepbom/analyzer-v2.html`
 - Privacy: `https://deepbom.org/privacy`
@@ -119,3 +119,5 @@ be automated from a source checkout.
 ## Follow-up evidence queries
 
 `deepbom_query_file` adds identity-checked layer queries, paginated search, finding and improvement investigations, static backend comparisons and encoded activation-fusion inspection. See [interactive review](INTERACTIVE_REVIEW.md) for the contract, validation and submission update.
+
+The workflow guide shares its catalog with the widget and web workspace. Optional weight queries reuse Weight IR and web visual encoders. Web continuation carries only a public workflow ID and requires selecting the model again; local CLI commands are templates, not remotely executed jobs. See [interactive review](INTERACTIVE_REVIEW.md).

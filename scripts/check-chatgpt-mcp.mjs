@@ -40,6 +40,7 @@ assert.deepEqual(tools.map((tool) => tool.name), [
   "deepbom_publish_error",
   "deepbom_query_file",
   "deepbom_publish_query",
+  "deepbom_workflow_guide",
 ]);
 const analyze = tools[0];
 assert.deepEqual(analyze._meta["openai/fileParams"], ["file"]);
@@ -63,7 +64,7 @@ const read = await rpc("resources/read", { uri: CHATGPT_MCP_CONTRACT.widgetUri }
 assert.equal(read.contents[0].mimeType, "text/html;profile=mcp-app");
 assert.match(read.contents[0].text, /deepbom-widget\.js/);
 assert.equal(CHATGPT_MCP_CONTRACT.widgetUri, "ui://deepbom/analyzer-v2.html");
-assert(read.contents[0].text.includes(`deepbom-widget.js?v=${ANALYZER_SEMANTIC_VERSION}-20260929.3`));
+assert(read.contents[0].text.includes(`deepbom-widget.js?v=${ANALYZER_SEMANTIC_VERSION}-20260929.4`));
 assert.equal(read.contents[0]._meta.ui.domain, "https://deepbom.org");
 assert.ok(read.contents[0]._meta.ui.csp.connectDomains.some((domain) => domain.includes("oaiusercontent")));
 assert.match(read.contents[0]._meta["openai/widgetDescription"], /format-neutral Model IR table/);

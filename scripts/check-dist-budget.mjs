@@ -10,7 +10,9 @@ const dist = path.resolve("dist");
 // Retain a bounded 128 KiB increment; the 16 MiB per-file ceiling is unchanged.
 // Conversational queries add 99,113 bytes to the widget bundle and 27,968
 // bytes of shared query modules. Reserve a further 128 KiB for these features.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 66.75);
+// Workflow navigation and reused weight visual encoders raise measured dist to
+// 66.76 MiB; reserve 128 KiB. The per-file ceiling remains unchanged.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 66.875);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

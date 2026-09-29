@@ -44,7 +44,7 @@ try {
     await route.fulfill({ status: 200, json: path.endsWith("/session") ? { token: `test-session-${++sessions}` } : { ok: true } });
   });
   const origin = process.env.DEEPBOM_WEB_USAGE_ORIGIN || `http://127.0.0.1:${server.address().port}`;
-  await page.goto(`${origin}/web/index.html`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${origin}/web/index.html#workflow=weights`, { waitUntil: "domcontentloaded" });
   await page.locator("#dropzone").dispatchEvent("pointerdown");
   await page.waitForFunction(() => document.querySelector("#sampleEvidenceGlance")?.childElementCount > 0);
   if (await page.locator("#agreementBackdrop").isVisible()) {
@@ -59,6 +59,8 @@ try {
   await page.locator("#sampleModelSelect").selectOption("gguf-tinymqa-q4");
   await page.locator("#trySampleModel").click();
   await waitForAudit();
+  await page.waitForFunction(() => document.body.dataset.workspace === "weight");
+  assert.match(await page.locator(".workflow-continuation").innerText(), /Verify the artifact SHA-256/);
   assert.equal(requests.length, 0, "No usage request before consent, even for a complete analysis");
   assert.equal(await page.evaluate(() => localStorage.getItem("deepbom.web.usage.v1")), null);
   const controls = page.locator("#webUsageControls");

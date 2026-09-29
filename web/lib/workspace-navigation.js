@@ -63,3 +63,29 @@ function installRovingTablist(tabs, activate) {
     });
   }
 }
+
+export function initPinnedSessionOffset({ topbar, sessionAnchor }) {
+  const root = document.documentElement;
+  const update = () => {
+    const stickyHeight = (element) => {
+      const position = element ? getComputedStyle(element).position : "static";
+      return ["fixed", "sticky"].includes(position)
+        ? Math.round(element.getBoundingClientRect().height || 0)
+        : 0;
+    };
+    const topbarH = stickyHeight(topbar);
+    const anchorH = stickyHeight(sessionAnchor);
+    const staticMobileChrome = window.matchMedia("(max-width: 820px)").matches;
+    root.style.setProperty("--session-sticky-top", `${staticMobileChrome ? 0 : topbarH}px`);
+    const coverH = staticMobileChrome ? 0 : topbarH + anchorH + 8;
+    root.style.setProperty("--sticky-cover-height", `${coverH}px`);
+    root.style.scrollPaddingTop = `${coverH}px`;
+  };
+  update();
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(update);
+    if (topbar) ro.observe(topbar);
+    if (sessionAnchor) ro.observe(sessionAnchor);
+  }
+  window.addEventListener("resize", update);
+}

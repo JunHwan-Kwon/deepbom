@@ -1,6 +1,6 @@
 ---
 name: deepbom-artifact-evidence
-description: Inspect attached AI deployment artifacts and follow up with layer, finding, optimization-investigation, static delegate, and serialized activation-fusion queries. Use DEEPBOM Evidence IR, Model IR visualizations, and CycloneDX or SPDX exports for supported TFLite, ONNX, GGUF, SafeTensors, Core ML, or ExecuTorch files. Does not execute models or establish measured performance, accuracy, or regulatory compliance.
+description: Inspect attached AI deployment artifacts and follow up with layer, finding, optimization-investigation, static delegate, optional weight, and serialized activation-fusion queries. Use DEEPBOM Evidence IR, Model IR visualizations, and CycloneDX or SPDX exports for supported TFLite, ONNX, GGUF, SafeTensors, Core ML, or ExecuTorch files. Does not execute models or establish measured performance, accuracy, or regulatory compliance.
 ---
 
 # Inspect an attached artifact with DEEPBOM
@@ -123,3 +123,51 @@ and **SPDX 2.3 JSON**.
   not establish a complete software dependency inventory or an SPDX 3 AI
   profile. Model IR pictures are deterministic structural projections, not
   observations of runtime execution.
+
+## Route broader analysis questions
+
+Use `deepbom_workflow_guide` for the appropriate DEEPBOM workflow when the user
+asks about weights, pruning investigation, comparison, BOM verification, metadata,
+activation captures, runtime evidence, automation or a capability beyond the
+initial report. Select its workflow and known format, or use `workflow: all`
+for discovery. This metadata tool requires no attachment and executes nothing.
+It lists implemented routes, supported formats, limits, exact query sections,
+widget actions and local CLI argument templates from a shared catalog.
+
+Answer the user's actual question using existing evidence first. If the guide
+provides a query section and the needed evidence is missing, inspect the same
+authorized attachment with `deepbom_query_file`. Do not merely send a website
+link for an analysis available in the conversation. For unsupported requests,
+explain what input or execution is needed and provide the applicable local
+command or specific web continuation link from the guide.
+
+- `weights` explicitly reads optional weight payloads. Only request it when the
+  user asks for weight analysis. `weight_view` selects `distribution`, `channels`,
+  `similarity`, `spectrum`, `sparsity` or `quantization`. Use a returned weight
+  `subject_ref`, not an operator index, to inspect one tensor. Unknown decoder or
+  budget coverage is not zero. Preserve source identities, representation, axes,
+  feature status and omitted detail. The widget is limited to 128 MiB; larger
+  files use the local CLI. Static weight patterns do not establish pruning
+  safety, task accuracy or speedup.
+- Selected weight plots use the same full in-browser evidence and renderers as
+  the website; the returned JSON is bounded and may have truncated arrays. Do not
+  reconstruct complete plots from those truncated arrays. Download selected
+  weight SVG/PNG, then use the existing host export-sharing controls.
+- Use `Continue on deepbom.org` for more interaction: graph exploration, channel
+  inspection, pruning controls, baseline comparison, structure scenarios,
+  metadata and supported runtime workspaces. The URL transfers only a public
+  workflow ID. Tell the user to select the model again, run its audit and compare
+  its full SHA-256 to the conversation. No file, query result or private context
+  is transferred. Format and account-access requirements remain in effect.
+- Verification, batch manifests, CI policies, external capture tools and local
+  agent setup use the guide's local CLI path. Replace placeholders only with
+  user-provided local paths. Pass argument arrays safely when a separate local
+  execution tool is explicitly authorized; never evaluate model metadata as
+  shell commands. This ChatGPT integration itself cannot execute a local CLI.
+- For an unlisted operation or integration, use the installed CLI capability
+  output and official CLI Handbook. Do not invent a CLI flag, web workspace,
+  evaluation result, model export or supported external adapter.
+
+Keep replies focused: answer the current question, cite the relevant evidence
+and give one useful next interaction. Avoid dumping the entire catalog unless
+requested. A guide response is never a completed model analysis.
