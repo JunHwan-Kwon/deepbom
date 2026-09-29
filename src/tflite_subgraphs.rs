@@ -470,7 +470,6 @@ pub(super) fn build_tflite_subgraph_inventory(
     })
 }
 
-const JS_SAFE_INTEGER: u128 = 9_007_199_254_740_991;
 
 struct PayloadLedger {
     total_bytes: Option<usize>,
@@ -530,7 +529,7 @@ fn build_operator_intrinsic(
         version,
         inputs,
         outputs,
-        nominal_macs: mac_value.filter(|value| *value <= JS_SAFE_INTEGER).map(|value| value as f64),
+        nominal_macs: mac_value.and_then(crate::tensor_math::safe_count_number),
         nominal_macs_decimal: mac_value.map(|value| value.to_string()),
         mac_assessment_status,
         mac_formula_class,
@@ -553,7 +552,7 @@ fn build_operator_intrinsic(
     })
 }
 
-fn assess_intrinsic_macs(
+pub(super) fn assess_intrinsic_macs(
     name: &str,
     inputs: &[i32],
     outputs: &[i32],
@@ -782,10 +781,7 @@ fn validate_nominal_mac_shape_contract(
 }
 
 fn lossless_nonnegative_integer(value: f64) -> Option<u64> {
-    if !value.is_finite() || value < 0.0 || value.fract() != 0.0 || value > JS_SAFE_INTEGER as f64 {
-        return None;
-    }
-    Some(value as u64)
+    crate::tensor_math::exact_safe_count(value).and_then(|count| u64::try_from(count).ok())
 }
 
 fn payload_ledger(
@@ -874,7 +870,7 @@ fn build_subgraph_intrinsic_cost(
         && modeled_scenario_mac_operator_count == 0
         && unassessed_mac_operator_count == 0)
         .then_some(assessed_nominal_macs);
-    let to_safe_number = |value: u128| (value <= JS_SAFE_INTEGER).then_some(value as f64);
+    let to_safe_number = crate::tensor_math::safe_count_number;
     let mut assessed_operator_io_payload_bytes = 0usize;
     let mut assessed_operator_io_tensor_slot_count = 0usize;
     let mut unassessed_operator_io_tensor_slot_count = 0usize;
@@ -1350,8 +1346,9 @@ pub(super) fn batch_matmul_adjoints(fb: &Fb<'_>, operator: usize, name: &str) ->
     Ok((flag(0, "BatchMatMulOptions.adj_x")?, flag(1, "BatchMatMulOptions.adj_y")?))
 }
 
-fn exact_nominal_macs(name: &str, inputs: &[i32], outputs: &[i32], tensors: &[TensorInfo], adjoints: (bool, bool)) -> Option<u128> {
-    // Called only after rank, channel, batch and contraction validation.
+pub(super) fn exact_nominal_macs(name: &str, inputs: &[i32], outputs: &[i32], tensors: &[TensorInfo], adjoints: (bool, bool)) -> Option<u128> {
+    // Shared by artifact analysis and redesign; never index an unvalidated contract.
+    validate_nominal_mac_shape_contract(name, inputs, outputs, tensors, adjoints).ok()?;
     let weight = &tensors[*inputs.get(1)? as usize].shape;
     let output = &tensors[*outputs.first()? as usize].shape;
     let factors: Vec<i32> = match name {

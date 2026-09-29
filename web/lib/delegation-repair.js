@@ -1,15 +1,9 @@
+import { tensorPayloadAssessment as assessTensorPayload } from "./tensor-size.js";
 import { formatBytes, formatNumber, padOp } from "./format.js";
 
 export const DELEGATION_REPAIR_SCHEMA = "deepbom.delegation_repair.v1.3";
 
 const VIEWS = new Set(["portfolio", "repair", "islands", "fragility", "edges"]);
-const DTYPE_BYTES = Object.freeze({
-  BOOL: 1, INT8: 1, UINT8: 1,
-  FLOAT16: 2, BFLOAT16: 2, INT16: 2, UINT16: 2,
-  FLOAT32: 4, INT32: 4, UINT32: 4,
-  FLOAT64: 8, INT64: 8, UINT64: 8,
-  COMPLEX64: 8, COMPLEX128: 16,
-});
 
 export function createDelegationRepairController({
   root,
@@ -948,25 +942,8 @@ function tensorPayloadBytes(tensor) {
 }
 
 function tensorPayloadAssessment(tensor) {
-  if (!Array.isArray(tensor?.shape) || tensor.shape.some((dim) => !Number.isInteger(Number(dim)) || Number(dim) < 0)) return { bytes: null, status: "not_assessed", binding: "unbound" };
-  const signature = Array.isArray(tensor.shape_signature) ? tensor.shape_signature : [];
-  const staticSignature = !signature.length
-    || (signature.length === tensor.shape.length
-      && signature.every((dim, index) => Number.isInteger(Number(dim)) && Number(dim) >= 0 && Number(dim) === Number(tensor.shape[index])));
-  const serializedBatchOne = signature.length === tensor.shape.length
-    && Number(signature[0]) === -1
-    && Number(tensor.shape[0]) === 1
-    && signature.slice(1).every((dim, index) => Number.isInteger(Number(dim)) && Number(dim) >= 0 && Number(dim) === Number(tensor.shape[index + 1]));
-  if (!staticSignature && !serializedBatchOne) return { bytes: null, status: "not_assessed", binding: "unbound" };
-  const width = DTYPE_BYTES[String(tensor.dtype || "").toUpperCase()];
-  if (!width) return { bytes: null, status: "not_assessed", binding: "unbound" };
-  const elements = tensor.shape.reduce((product, dim) => product * Number(dim), 1);
-  if (!Number.isSafeInteger(elements) || !Number.isSafeInteger(elements * width)) return { bytes: null, status: "not_assessed", binding: "unbound" };
-  return {
-    bytes: elements * width,
-    status: serializedBatchOne ? "assessed_serialized_batch1" : "assessed_static",
-    binding: serializedBatchOne ? "serialized_batch1_projection" : "static",
-  };
+  const { bytes, status, binding } = assessTensorPayload(tensor, { allowSerializedBatchOne: true });
+  return { bytes, status, binding };
 }
 
 function contiguousCount(assignments, value) {

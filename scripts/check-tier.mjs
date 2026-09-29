@@ -44,6 +44,8 @@ const SMOKE = [
 ];
 
 const FORMATS = [
+  "scripts/audit-common-rules.mjs",
+  "scripts/check-common-calculation-rules.mjs",
   ...(existsSync("web/protected/deepbom/pkg/deepbom_wasm.js")
     ? ["scripts/check-model-file-contract.mjs"]
     : []),
@@ -65,6 +67,8 @@ const FORMATS = [
   "scripts/check-safetensors-quantization-contract.mjs",
   "scripts/check-tensor-numerical-integrity.mjs",
   "scripts/check-numerical-ir.mjs",
+  "scripts/check-evidence-ir-family.mjs",
+  "scripts/check-evidence-compatibility.mjs",
   "scripts/check-external-review-tflite-correctness.mjs",
   "scripts/check-tensorrt-static-preflight.mjs",
   "scripts/check-execution-placement-evidence.mjs",

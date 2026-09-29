@@ -282,7 +282,7 @@ function nodeIdSuffix(name) {
   return Number.isSafeInteger(value) ? value : null;
 }
 
-function commonTimingRunCount(rows) {
+export function commonTimingRunCount(rows) {
   if (!rows.length || rows.some((row) => row.run_count == null)) return null;
   const counts = new Set(rows.map((row) => row.run_count));
   return counts.size === 1 ? rows[0].run_count : null;

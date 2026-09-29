@@ -1,21 +1,8 @@
+import { staticTensorPayloadBytes } from "./tensor-size.js";
 import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 function tensorMeta(analysis, tensorId, tensors = tensorByIndex(analysis)) {
-  const t = tensors.get(Number(tensorId));
-  if (!t) return { bytes: 0, dtype: null };
-  const shape = t.shape ?? [];
-  const shapeKnown = Array.isArray(shape) && shape.every((dim) => Number.isSafeInteger(Number(dim)) && Number(dim) >= 0);
-  const elements = shapeKnown ? shape.reduce((product, dim) => product * Number(dim), 1) : null;
-  const bits = ({
-    UINT2: 2, INT2: 2, UINT4: 4, INT4: 4, FLOAT4E2M1: 4,
-    BOOL: 8, INT8: 8, UINT8: 8, FLOAT8E4M3FN: 8, FLOAT8E4M3FNUZ: 8,
-    FLOAT8E5M2: 8, FLOAT8E5M2FNUZ: 8, FLOAT8E8M0: 8,
-    FLOAT16: 16, BFLOAT16: 16, INT16: 16, UINT16: 16,
-    FLOAT32: 32, INT32: 32, UINT32: 32,
-    FLOAT64: 64, INT64: 64, UINT64: 64, COMPLEX64: 64, COMPLEX128: 128,
-  })[String(t.dtype || "").toUpperCase()] || 0;
-  const bytes = Number.isSafeInteger(elements) && bits > 0 && elements <= Math.floor(Number.MAX_SAFE_INTEGER / bits)
-    ? Math.ceil(elements * bits / 8) : 0;
-  return { bytes, dtype: t.dtype };
+  const tensor = tensors.get(Number(tensorId));
+  return { bytes: staticTensorPayloadBytes(tensor), dtype: tensor?.dtype ?? null };
 }
 
 export function collectFullGraph(analysis, graphIndex) {

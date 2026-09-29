@@ -690,11 +690,7 @@ fn tensor_contract(tensors: &[TensorInfo], tensor_index: i32) -> Option<QuantCon
     let tensor = tensors
         .iter()
         .find(|tensor| tensor.index == tensor_index as usize)?;
-    let (qmin, qmax) = match tensor.dtype.as_str() {
-        "INT8" => (-128, 127),
-        "UINT8" => (0, 255),
-        _ => return None,
-    };
+    let (qmin, qmax) = crate::quantization_math::storage_code_range_8bit(&tensor.dtype)?;
     if tensor.scale_sample.len() != 1
         || tensor.zero_point_sample.len() != 1
         || !tensor.scale_sample[0].is_finite()

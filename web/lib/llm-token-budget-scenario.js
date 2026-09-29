@@ -1,3 +1,4 @@
+import { exactIntegerWithValue as exact, exactCountValue as exactFrom } from "./exact-integer.js";
 import { compareLlmMemoryCapacity, LLM_STATIC_RESIDENCY_ASSUMPTION } from "./llm-memory-feasibility.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
@@ -15,18 +16,6 @@ function positiveInteger(value, label) {
 function nonNegativeInteger(value, label) {
   if (!Number.isSafeInteger(value) || value < 0) throw new Error(`${label} must be a non-negative safe integer.`);
   return value;
-}
-
-function exactFrom(value) {
-  if (value && typeof value === "object" && /^\d+$/.test(String(value.decimal || ""))) return BigInt(value.decimal);
-  if (typeof value === "string" && /^\d+$/.test(value)) return BigInt(value);
-  if (typeof value === "bigint" && value >= 0n) return value;
-  if (Number.isSafeInteger(value) && value >= 0) return BigInt(value);
-  return null;
-}
-
-function exact(value) {
-  return { value: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null, decimal: String(value) };
 }
 
 function scenarioIdentity(analysis, source) {

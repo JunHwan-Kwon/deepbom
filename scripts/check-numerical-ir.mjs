@@ -40,6 +40,16 @@ const ptd=new Uint8Array(Buffer.from(await readFile(new URL("./fixtures/numerica
 function safeTensor(dtype,shape,payload) { const header=Buffer.from(JSON.stringify({weight:{dtype,shape,data_offsets:[0,payload.length]}}));const size=Buffer.alloc(8);size.writeBigUInt64LE(BigInt(header.length));return new Uint8Array(Buffer.concat([size,header,payload])); }
 const u64=Buffer.alloc(16);u64.writeBigUInt64LE(9007199254740993n);u64.writeBigUInt64LE(18446744073709551615n,8);const sb=safeTensor("U64",[2],u64),sa=parseMetadataModel(sb,"exact.safetensors",sb.length,"safetensors"),si=context(sb,sa,"exact.safetensors"),sw=await buildWeightIr(si,sa,sb);assert.equal(sw.tensors[0].statistics.integer_maximum,"18446744073709551615");assert.equal(sw.tensors[0].statistics.mean,null);
 const empty=safeTensor("F32",[0],Buffer.alloc(0)),ea=parseMetadataModel(empty,"empty.safetensors",empty.length,"safetensors"),ei=context(empty,ea,"empty.safetensors"),ew=await buildWeightIr(ei,ea,empty);assert.equal(ew.tensors.length,1);assert.equal(ew.tensors[0].storage_ref,null);assert.equal(ew.tensors[0].statistics.value_count,"0");
+// A scalar and a one-element vector have equal cardinality but different contracts.
+const scalarBytes=safeTensor("F32",[],Buffer.from([0,0,128,63]));
+const scalarAnalysis=parseMetadataModel(scalarBytes,"scalar.safetensors",scalarBytes.length,"safetensors");
+const scalarIr=context(scalarBytes,scalarAnalysis,"scalar.safetensors");
+const scalarWeight=await buildWeightIr(scalarIr,scalarAnalysis,scalarBytes);
+assert.deepEqual(scalarWeight.tensors[0].shape,[]);
+for(const shape of [[1],[1,1],null]) {
+  const copy=structuredClone(scalarWeight);copy.tensors[0].shape=shape;delete copy.weight_ir_sha256;
+  assert.throws(()=>validateWeightIr(seal(copy,"weight_ir_sha256"),scalarIr),/weight shape/);
+}
 const vals=ir.program.values,input=vals.find(v=>v.name==="x"),outputs=vals.filter(v=>["middle","y"].includes(v.name));
 const config={optimization:"disabled"};
 const capture={schema:"deepbom.activation_capture.v1",source:w.source,run:{id:"run1",entry_region_ref:input.region_ref,started_at:"2026-09-22T00:00:00Z",runtime:{name:"fixture",version:"1",configured_providers:["CPU"],device:null},collector:{name:"test",version:"1",sha256:"a".repeat(64)},execution:{artifact_sha256:w.source.artifact_sha256,instrumented_artifact_sha256:null,configuration:config,configuration_sha256:sha256TextHex(canonicalJson(config))},probe:{kind:"synthetic_ones",description:"one-valued tensor"},runtime_evidence:null},inputs:[{value_ref:input.id,native_locator:"x",dtype:"FLOAT32",shape:[4],values:[1,1,1,1]}],requested_value_refs:outputs.map(v=>v.id),captures:[{value_ref:outputs[0].id,native_locator:outputs[0].name,dtype:"FLOAT32",shape:[4],values:[-1,1,2,4]}],missing:[{value_ref:outputs[1].id,reason:"not_preserved"}]};

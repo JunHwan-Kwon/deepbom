@@ -24,6 +24,7 @@ export function validateMetric(row) {
   if (row?.schema !== "deepbom.metric.v1" || !["MAC", "byte", "element", "count"].includes(row.unit) || row.denominator !== null) throw new Error("IR metric unit or denominator is invalid.");
   validateExactInteger(row.value);
   if (![row.coverage?.assessed, row.coverage?.eligible].every(n => Number.isSafeInteger(n) && n >= 0) || row.coverage.assessed > row.coverage.eligible) throw new Error("IR metric coverage is invalid.");
+  if (row.value !== null && row.coverage.assessed !== row.coverage.eligible) throw new Error("IR metric complete value contradicts partial coverage.");
   if (row.exactness !== (row.value === null ? "not_assessable" : "exact_integer") || (row.value === null && !row.reason)) throw new Error("IR metric exactness is inconsistent.");
   if (!Array.isArray(row.source_refs) || row.source_refs.some(ref => typeof ref !== "string" || !ref) || new Set(row.source_refs).size !== row.source_refs.length) throw new Error("IR metric source references are invalid.");
   canonicalJson(row); return row;

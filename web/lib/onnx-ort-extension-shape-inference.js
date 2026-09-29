@@ -1,3 +1,5 @@
+import { knownDtype, makeOnnxTensorTypeFromDimensions, onnxShapeDimensionsFromValue } from "./onnx-type-proto.js";
+import { normalizeAxis } from "./scalar-numeric.js";
 import { assessOnnxAttributeProto } from "./onnx-schema-legality.js";
 import {
   assessOnnxOrtTransformerSchemaForm,
@@ -14,7 +16,6 @@ import {
   canInferOnnxOrtMatMulNode,
   inferOnnxOrtMatMulNode,
 } from "./onnx-ort-matmul-shape-inference.js";
-import { makeOnnxTensorTypeFromDimensions, onnxShapeDimensionsFromValue } from "./onnx-type-proto.js";
 
 const ORT_COMMIT = "8c546c37b43caaca1fa25db430dab94b901cf277";
 const NORMALIZATION_ATTRIBUTES = Object.freeze(new Map([
@@ -240,9 +241,9 @@ function inputTensor(tensors, name) {
   return tensor && tensor.shapeDeclared !== true ? { ...tensor, shape: null } : tensor;
 }
 function tensorRankKnown(tensor) { return tensor?.shapeDeclared === true && Array.isArray(tensor.shape); }
-function knownDtype(tensor) { const value = String(tensor?.dtype || ""); return value && value !== "UNKNOWN" ? value : ""; }
+
 function attributeInt(node, name, fallback) { const value = node.attributes?.get(name)?.i; return Number.isSafeInteger(value) ? value : fallback; }
-function normalizeAxis(axis, rank) { const value = axis < 0 ? axis + rank : axis; return Number.isSafeInteger(value) && value >= 0 && value < rank ? value : null; }
+
 function normalizeDomain(value) { const domain = String(value || "").trim(); return domain || "ai.onnx"; }
 function valueDimension(value) { return { kind: "value", value, parameter: "", denotation: "", valueFieldCount: 1 }; }
 function cloneDimension(dimension) { return { ...dimension }; }

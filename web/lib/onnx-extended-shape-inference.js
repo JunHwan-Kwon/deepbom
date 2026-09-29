@@ -1,3 +1,5 @@
+import { exactSequenceLength, exactSequenceInventory, exactOptionalPresence, canonicalOnnxTypeProto, cloneOnnxTypeProto, makeOnnxOptionalType, makeOnnxSequenceType, makeOnnxTensorType, onnxTypeProtoFromValue, onnxTypeProtoKnown, onnxValueDescriptorFromType, unionOnnxTypeProtos } from "./onnx-type-proto.js";
+import { normalizeAxis } from "./scalar-numeric.js";
 import {
   inferOnnxShapes,
   mergeOnnxInferredTensor,
@@ -7,17 +9,6 @@ import {
   assessOnnxAttributeProto,
   resolveOnnxSchemaSinceVersion,
 } from "./onnx-schema-legality.js";
-import {
-  canonicalOnnxTypeProto,
-  cloneOnnxTypeProto,
-  makeOnnxOptionalType,
-  makeOnnxSequenceType,
-  makeOnnxTensorType,
-  onnxTypeProtoFromValue,
-  onnxTypeProtoKnown,
-  onnxValueDescriptorFromType,
-  unionOnnxTypeProtos,
-} from "./onnx-type-proto.js";
 
 const SOURCE_COMMIT = "be2b5fde82d9c8874f3d19328bdfe3b6962dc67b";
 const CONTROL_FLOW_OPS = new Set(["If", "Loop", "Scan"]);
@@ -1435,21 +1426,6 @@ function validSequenceMapSequenceType(type) {
   return type?.kind === "sequence" && type.elementType?.kind === "tensor" && onnxTypeProtoKnown(type.elementType);
 }
 
-function exactSequenceLength(value) {
-  return value?.sequenceLengthStatus === "assessed_exact" && Number.isSafeInteger(value.sequenceLength) && value.sequenceLength >= 0
-    ? value.sequenceLength : null;
-}
-
-function exactSequenceInventory(value) {
-  return value?.sequenceElementInventoryStatus === "assessed_exact" && Array.isArray(value.sequenceElementTypes)
-    ? value.sequenceElementTypes.map(cloneOnnxTypeProto) : null;
-}
-
-function exactOptionalPresence(value) {
-  return value?.optionalPresenceStatus === "assessed_exact" && typeof value.optionalPresence === "boolean"
-    ? value.optionalPresence : null;
-}
-
 function mergeTensorContracts(left, right) {
   if (!left) return { status: right ? "pass" : "unresolved", patch: right || null };
   if (!right) return { status: "pass", patch: left };
@@ -1505,12 +1481,6 @@ function mergeDimension(current, next) {
   if (!knownDimension(current)) return knownDimension(next) ? next : -1;
   if (!knownDimension(next)) return current;
   return current === next ? current : null;
-}
-
-function normalizeAxis(axis, rank) {
-  const value = Number(axis);
-  if (!Number.isSafeInteger(value) || value < -rank || value >= rank) return null;
-  return value < 0 ? value + rank : value;
 }
 
 function mapNamedOutputs(callOutputs, formalOutputs, tensorMap) {

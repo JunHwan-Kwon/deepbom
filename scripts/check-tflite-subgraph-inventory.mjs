@@ -3,6 +3,7 @@ import { Builder } from "flatbuffers";
 
 import { analyze_tflite_for_target, initSync } from "../pkg/tflite_wasm_audit.js";
 import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
+import { sha256BytesHex } from "../web/lib/sha256-sync.js";
 import { buildEngineeringBundleArtifactFiles, buildMlBomDocument } from "../web/lib/report.js";
 
 const expect = (condition, message) => { if (!condition) throw new Error(message); };
@@ -472,6 +473,11 @@ expectRejected(makeWhileFixture({ sourceOutputs: [] }), "pinned Prepare requires
 const dynamicWhile = analyze_tflite_for_target(makeWhileFixture({ conditionShapeSignature: [-1] }), "dynamic-while-subgraphs.tflite", "android_mid_a55");
 expectEqual(dynamicWhile.tflite_subgraph_inventory.control_flow_contracts[0].status, "partial", "Dynamic WHILE contract status");
 expectEqual(dynamicWhile.tflite_subgraph_inventory.control_flow_contracts[0].condition_contract_status, "partial_dynamic_cardinality", "Dynamic WHILE condition status");
+const dynamicBytes = makeWhileFixture({ conditionShapeSignature: [-1] });
+const dynamicContext = getArtifactIrContext(dynamicWhile, { filename: "dynamic-while-subgraphs.tflite", format: "tflite", sha256: sha256BytesHex(dynamicBytes), size: dynamicBytes.length });
+const dynamicCondition = dynamicContext.model_ir.program.values.find(row => row.name === "condition_output");
+expectEqual(dynamicCondition.type_contract.root.dimensions[0].kind, "unknown", "Nested TFLite dynamic signature must not become a fixed dimension");
+expectEqual(dynamicContext.model_ir.logical_inventory.values.find(row => row.id === dynamicCondition.id).element_count, null, "Dynamic signature must not fabricate exact cardinality");
 
 // Enumerate the scalar dot products independently of the cost formula and
 // exercise all four serialized adjoint combinations plus broadcasting.

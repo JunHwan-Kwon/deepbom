@@ -1,0 +1,216 @@
+{
+  "schema": "deepbom.common_rule_exceptions.v1",
+  "boundary": "Reviewed semantic exceptions only. Adding another copy or changing a retained implementation requires reviewing its exact body and occurrence list.",
+  "exceptions": [
+    {
+      "body_sha256": "1ec1055d1abf29a75f3d8663985317bd678c05b153b3b254bb67b798d565044e",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-linear-model-conformance.js",
+          "name": "bigintFloat32"
+        },
+        {
+          "file": "web/lib/onnx-ml-normalizer-conformance.js",
+          "name": "bigintToFloat32"
+        },
+        {
+          "file": "web/lib/onnx-ml-scaler-conformance.js",
+          "name": "bigintToFloat32"
+        }
+      ],
+      "category": "independent_oracle",
+      "reason": "Independent conformance implementations of direct integer-to-binary32 conversion. Production uses scalar-numeric.js; external Fraction oracle also verifies every production boundary."
+    },
+    {
+      "body_sha256": "5bf4230ed1d72bb381179898fc1bdf602ed430f605d3a5a36f692e756f993028",
+      "occurrences": [
+        {
+          "file": "web/lib/dynamic-shape-cost-conformance.js",
+          "name": "exactSpatialValues"
+        },
+        {
+          "file": "web/lib/dynamic-shape-cost.js",
+          "name": "exactSpatialValues"
+        }
+      ],
+      "category": "independent_oracle",
+      "reason": "Symbolic shape-cost conformance reconstructs native spatial attributes independently from the production formula builder."
+    },
+    {
+      "body_sha256": "6027b28b79cb647d3bc8c4b2d03d8287bfab37d1466042fd3b93fc5092710f79",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-svm-conformance.js",
+          "name": "floats"
+        },
+        {
+          "file": "web/lib/onnx-ml-tree-ensemble-conformance.js",
+          "name": "floats"
+        }
+      ],
+      "category": "independent_oracle",
+      "reason": "Independent operator-conformance readers retain separate native attribute validation."
+    },
+    {
+      "body_sha256": "607f38da5ddff22b1491e33723a851de950237852563644797d08852b7f85139",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-normalizer-conformance.js",
+          "name": "squareToFloat32"
+        },
+        {
+          "file": "web/lib/onnx-ml-normalizer.js",
+          "name": "squareToFloat32"
+        }
+      ],
+      "category": "independent_oracle",
+      "reason": "Normalizer conformance independently reconstructs pinned float32 intermediate rounding; sharing production arithmetic would weaken the oracle."
+    },
+    {
+      "body_sha256": "69b2be6191d2da144b01932c135c65f00c52dedc20c4f89e5c52b36c4b4032c0",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-normalizer-conformance.js",
+          "name": "toFloat32"
+        },
+        {
+          "file": "web/lib/onnx-ml-scaler-conformance.js",
+          "name": "toFloat32"
+        },
+        {
+          "file": "web/lib/scalar-numeric.js",
+          "name": "numericToFloat32"
+        }
+      ],
+      "category": "independent_oracle",
+      "reason": "One production Number/BigInt-to-float32 adapter is shared; independent conformance paths retain their own integer-rounding implementation."
+    },
+    {
+      "body_sha256": "6bec5c9086cdd0247a7b1fde742d7a21ca5f5f7f27f4e757169d71181209af06",
+      "occurrences": [
+        {
+          "file": "web/chatgpt/deepbom-widget.js",
+          "name": "formatBytes"
+        },
+        {
+          "file": "web/claude/deepbom-widget.js",
+          "name": "formatBytes"
+        }
+      ],
+      "category": "presentation_boundary",
+      "reason": "ChatGPT and Claude sandbox widgets have isolated delivery/bootstrap contracts. These format labels only; neither computes artifact bytes or IR metrics."
+    },
+    {
+      "body_sha256": "70cae0bcc73e8aa2399b5a5b49aabf0f7439d6254ab4ec1e20ff4298cdfdf540",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-linear-model-conformance.js",
+          "name": "safeProduct"
+        },
+        {
+          "file": "web/lib/onnx-ml-one-hot-encoder-conformance.js",
+          "name": "safeProduct"
+        }
+      ],
+      "category": "independent_oracle",
+      "reason": "Independent conformance multiplication for linear models and one-hot encoding; production safe-count products use tensor-size.js."
+    },
+    {
+      "body_sha256": "742d58ec426cc12ea53553db69245ecfebd389494942f6d80c44ba6f97fec1ff",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-linear-model-conformance.js",
+          "name": "duplicateCount"
+        },
+        {
+          "file": "web/lib/onnx-ml-svm-conformance.js",
+          "name": "duplicateCount"
+        }
+      ],
+      "category": "independent_oracle",
+      "reason": "Independent vocabulary conformance checks preserve typed key equality; production vocabulary counts have one owner in onnx-static-value-evidence.js."
+    },
+    {
+      "body_sha256": "8ed8d37419c2f2a966a5de1e653956ebd130b1a337a915c589ef2d52538c19e2",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-value-inference.js",
+          "name": "sumExactNonnegative"
+        },
+        {
+          "file": "web/lib/report-conformance-onnx.js",
+          "name": "exactArraySum"
+        }
+      ],
+      "category": "independent_oracle",
+      "reason": "Production integer-list inference and report conformance independently validate exact nonnegative sums."
+    },
+    {
+      "body_sha256": "a8052629185105985bb06e352b4e64203a40643fbbee8175642c1516e0d43f60",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-imputer-conformance.js",
+          "name": "safeShapeProduct"
+        },
+        {
+          "file": "web/lib/onnx-ml-label-encoder-conformance.js",
+          "name": "shapeProduct"
+        },
+        {
+          "file": "web/lib/onnx-ml-normalizer-conformance.js",
+          "name": "safeShapeProduct"
+        },
+        {
+          "file": "web/lib/onnx-ml-scaler-conformance.js",
+          "name": "safeShapeProduct"
+        }
+      ],
+      "category": "independent_oracle",
+      "reason": "Independent conformance shape products; production shape products are centralized and checked against separate integer/broadcast oracles."
+    },
+    {
+      "body_sha256": "dce8e768abcfe9ebae5aa43922311e9eae7d6861aa3abcf5631685b0610c2d83",
+      "occurrences": [
+        {
+          "file": "web/lib/kernel-inspector.js",
+          "name": "sameCountMap"
+        },
+        {
+          "file": "web/lib/report-conformance.js",
+          "name": "sameCountObject"
+        }
+      ],
+      "category": "independent_observation_check",
+      "reason": "Inspector and report independently compare named observed count dictionaries; neither computes the underlying counts."
+    },
+    {
+      "body_sha256": "e4a09c51681eaafe2b1a8cd139bfafe519a348e9c13f0126149e7f81670c113d",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-normalizer-conformance.js",
+          "name": "countOverflow"
+        },
+        {
+          "file": "web/lib/onnx-ml-normalizer.js",
+          "name": "countSignedOverflow"
+        }
+      ],
+      "category": "independent_oracle",
+      "reason": "Normalizer conformance independently detects signed-overflow boundaries for pinned operator semantics."
+    }
+  ],
+  "scalar_width_oracles": [
+    {
+      "file": "web/lib/dynamic-shape-cost-conformance.js",
+      "body_sha256": "7fb0af0ae481c7aba5ced06c45ed3c78af7c3c2c850fd10ccb5075f45ce05ceb",
+      "reason": "Independent symbolic-cost reconstruction oracle; deliberately does not import production width rules."
+    }
+  ],
+  "non_width_tables": [
+    {
+      "file": "src/research.rs",
+      "body_sha256": "5d40df430446b48556d67ceb8884fcb1aba1e2ac82a983d68f4ccab34d927290",
+      "reason": "Synthetic sensitivity-input amplitudes (30, 0.3, 1000), not dtype storage widths or measured data."
+    }
+  ]
+}

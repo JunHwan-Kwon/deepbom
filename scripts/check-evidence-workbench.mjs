@@ -53,6 +53,14 @@ assert.equal(hierarchy.nodes.length, 2);
 assert.equal(hierarchy.edges.length, 1, "Only a serialized inter-group relationship may be rendered.");
 assert.equal(hierarchy.edges[0].edge_count, 2);
 assert.equal(hierarchy.edges[0].byte_length, null, "A partial payload aggregate must not be promoted to a complete zero or sum.");
+for (const invalid of [false, true, [], { decimal: "8", number: 9 }]) {
+  const malformed = buildHierarchicalGraphProjection({
+    nodes: [node("a", 0, "left"), node("a2", 1, "left"), node("b", 2, "right"), node("b2", 3, "right")],
+    edges: [{ ...edge("a", "b", 0, 8), byte_length: invalid }],
+  });
+  assert.equal(malformed.edges[0].byte_length, null, "A coerced or contradictory count must stay unassessed.");
+  assert.equal(malformed.edges[0].unassessed_payload_edge_count, 1);
+}
 assert.deepEqual(hierarchy.conservation, {
   original_node_count: 4,
   projected_group_count: 2,

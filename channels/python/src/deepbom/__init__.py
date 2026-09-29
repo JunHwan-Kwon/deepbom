@@ -1,6 +1,6 @@
 """Python launcher and experimental typed facade for the DEEPBOM engine."""
 
-__version__ = "1.109.0"
+__version__ = "2.0.0"
 
 from .api import (  # noqa: E402
     DeepBomError,

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-evidence-compatibility-v1.schema.json",
+  "title": "DEEPBOM Evidence IR compatibility catalog",
+  "description": "Descriptive implementation crosswalk. Reference closure, pinned-source freshness and mapping semantics require additional checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "catalog_version", "status", "baseline", "scope", "validation_boundary", "version_policy", "nodes", "mappings", "source_files"],
+  "properties": {
+    "schema": { "const": "deepbom.evidence_compatibility_catalog.v1" },
+    "catalog_version": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" },
+    "status": { "enum": ["draft", "published"] },
+    "baseline": { "$ref": "#/$defs/text" },
+    "scope": { "$ref": "#/$defs/text" },
+    "validation_boundary": { "$ref": "#/$defs/text" },
+    "version_policy": { "$ref": "#/$defs/text" },
+    "nodes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/node" } },
+    "mappings": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/mapping" } },
+    "source_files": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": { "path": { "$ref": "#/$defs/text" }, "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } } }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1 },
+    "texts": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/text" } },
+    "node": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "kind", "name", "contract", "boundary", "json_schema"],
+      "properties": {
+        "id": { "$ref": "#/$defs/text" }, "kind": { "enum": ["input", "ir", "output", "context"] },
+        "name": { "$ref": "#/$defs/text" }, "contract": { "$ref": "#/$defs/text" }, "boundary": { "$ref": "#/$defs/text" },
+        "json_schema": { "type": ["string", "null"] }, "digest_field": { "$ref": "#/$defs/text" },
+        "maturity": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "mapping": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "from", "to", "status", "fields", "implementation", "checks", "boundary"],
+      "properties": {
+        "id": { "$ref": "#/$defs/text" }, "from": { "$ref": "#/$defs/text" }, "to": { "$ref": "#/$defs/text" },
+        "status": { "enum": ["implemented", "conditional", "preview", "proposed"] },
+        "fields": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["source", "target"], "properties": { "source": { "$ref": "#/$defs/text" }, "target": { "$ref": "#/$defs/text" } } } },
+        "implementation": { "$ref": "#/$defs/texts" }, "checks": { "$ref": "#/$defs/texts" }, "boundary": { "$ref": "#/$defs/text" }
+      }
+    }
+  }
+}

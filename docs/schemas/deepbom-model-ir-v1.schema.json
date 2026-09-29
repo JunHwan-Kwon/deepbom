@@ -8,7 +8,7 @@
   "required": ["schema", "method_version", "source_contract", "hash_contract", "artifact", "artifact_set", "artifact_role", "format_profile", "profiles", "capabilities", "evidence_vocabulary", "program", "tensors_and_storage", "weight_bindings", "quantization", "architecture", "static_runtime", "observed_runtime", "generic_analysis", "lineage", "completeness", "loss_ledger", "native_extensions", "interpretation_boundary", "model_ir_sha256"],
   "properties": {
     "schema": { "const": "deepbom.model_ir.v1" },
-    "method_version": { "enum": ["1.0.0", "1.0.1", "1.1.0"] },
+    "method_version": { "enum": ["1.0.0", "1.0.1", "1.1.0", "1.1.1", "1.1.2"] },
     "source_contract": {
       "type": "object", "additionalProperties": false,
       "required": ["schema", "sha256", "projection_status", "native_fact_ledger"],
@@ -857,5 +857,5 @@
       }
     }
   },
-  "allOf": [{"if": {"properties": {"method_version": {"const": "1.1.0"}}}, "then": {"required": ["logical_inventory", "artifact_members"], "properties": {"logical_inventory": {}, "artifact_members": {}}}}]
+  "allOf": [{"if": {"properties": {"method_version": {"enum": ["1.1.0", "1.1.1", "1.1.2"]}}}, "then": {"required": ["logical_inventory", "artifact_members"], "properties": {"logical_inventory": {}, "artifact_members": {}}}}]
 }

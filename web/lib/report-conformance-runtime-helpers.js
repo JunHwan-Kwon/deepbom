@@ -1,3 +1,4 @@
+import { tensorPayloadAssessment, logicalBytesForElements } from "./tensor-size.js";
 import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import { ANALYZER_METADATA } from "./report-metadata.js";
 import { benchmarkNoise, latencyStats } from "./format.js";
@@ -377,34 +378,8 @@ export function deterministicTensorPayloadBytes(tensor) {
 }
 
 export function deterministicTensorPayloadAssessment(tensor) {
-  const shape = tensor?.shape || [];
-  const signature = tensor?.shape_signature || [];
-  if (shape.some((dim) => !Number.isInteger(Number(dim)) || Number(dim) < 0)) {
-    return { payload_bytes: null, payload_status: "not_assessed", payload_binding: "unbound" };
-  }
-  const staticSignature = !signature.length
-    || (signature.length === shape.length && signature.every((dim, index) => Number.isInteger(Number(dim)) && Number(dim) >= 0 && Number(dim) === Number(shape[index])));
-  const serializedBatchOne = signature.length === shape.length
-    && Number(signature[0]) === -1
-    && Number(shape[0]) === 1
-    && signature.slice(1).every((dim, index) => Number.isInteger(Number(dim)) && Number(dim) >= 0 && Number(dim) === Number(shape[index + 1]));
-  if (!staticSignature && !serializedBatchOne) {
-    return { payload_bytes: null, payload_status: "not_assessed", payload_binding: "unbound" };
-  }
-  const elements = shape.reduce((product, dim) => product * Number(dim), 1);
-  if (!Number.isSafeInteger(elements)) {
-    return { payload_bytes: null, payload_status: "not_assessed", payload_binding: "unbound" };
-  }
-  const dtype = String(tensor?.dtype || "").toUpperCase();
-  const payload = onnxTensorPayloadBytes(dtype, elements);
-  if (payload == null) {
-    return { payload_bytes: null, payload_status: "not_assessed", payload_binding: "unbound" };
-  }
-  return {
-    payload_bytes: payload,
-    payload_status: serializedBatchOne ? "assessed_serialized_batch1" : "assessed_static",
-    payload_binding: serializedBatchOne ? "serialized_batch1_projection" : "static",
-  };
+  const { bytes, status, binding } = tensorPayloadAssessment(tensor, { allowSerializedBatchOne: true });
+  return { payload_bytes: bytes, payload_status: status, payload_binding: binding };
 }
 
 export function deriveDelegationRepairGraph(analysis) {
@@ -1078,19 +1053,7 @@ export function parseExternalDataDecimal(value, absentValue) {
 }
 
 export function onnxTensorPayloadBytes(dtype, elements) {
-  const bits = ({
-    UINT2: 2, INT2: 2,
-    UINT4: 4, INT4: 4, FLOAT4E2M1: 4,
-    BOOL: 8, INT8: 8, UINT8: 8, FLOAT8E4M3FN: 8, FLOAT8E4M3FNUZ: 8,
-    FLOAT8E5M2: 8, FLOAT8E5M2FNUZ: 8, FLOAT8E8M0: 8,
-    FLOAT16: 16, BFLOAT16: 16, INT16: 16, UINT16: 16,
-    FLOAT32: 32, INT32: 32, UINT32: 32,
-    FLOAT64: 64, INT64: 64, UINT64: 64, COMPLEX64: 64, COMPLEX128: 128,
-  })[String(dtype || "").toUpperCase()] || 0;
-  const count = Number(elements);
-  if (!(bits > 0) || !Number.isSafeInteger(count) || count < 0 || count > Math.floor(Number.MAX_SAFE_INTEGER / bits)) return null;
-  const bytes = Math.ceil(count * bits / 8);
-  return Number.isSafeInteger(bytes) ? bytes : null;
+  return logicalBytesForElements(dtype, elements)?.number ?? null;
 }
 
 export function externalLocationStatus(location) {

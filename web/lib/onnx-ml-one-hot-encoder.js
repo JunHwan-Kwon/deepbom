@@ -1,3 +1,5 @@
+import { canonicalFloatText as exactValueText } from "./onnx-static-value-evidence.js";
+import { safeShapeElementCount, safeCountProduct as safeProduct } from "./tensor-size.js";
 import {
   canonicalOnnxTypeProto,
   makeOnnxTensorType,
@@ -277,29 +279,6 @@ function categoryKey(value) {
   return typeof value === "bigint" ? `i:${value}` : `s:${value}`;
 }
 
-function exactValueText(value) {
-  if (typeof value === "bigint") return value.toString();
-  if (Number.isNaN(value)) return "NaN";
-  if (value === Number.POSITIVE_INFINITY) return "Infinity";
-  if (value === Number.NEGATIVE_INFINITY) return "-Infinity";
-  if (Object.is(value, -0)) return "-0";
-  return String(value);
-}
-
 function knownDimension(value) {
   return Number.isSafeInteger(value) && value >= 0;
-}
-
-function safeShapeElementCount(shape) {
-  let product = 1;
-  for (const dimension of shape) {
-    product = safeProduct(product, dimension);
-    if (product == null) return null;
-  }
-  return product;
-}
-
-function safeProduct(left, right) {
-  const value = left * right;
-  return Number.isSafeInteger(value) && value >= 0 ? value : null;
 }

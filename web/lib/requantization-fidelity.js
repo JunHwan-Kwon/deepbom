@@ -1,3 +1,4 @@
+import { float64BitsHex as f64Bits } from "./scalar-numeric.js";
 import { validateAccumulatorAtlas } from "./accumulator-atlas.js";
 import { sha256Hex } from "./hash.js";
 import { quantizeMultiplier } from "./quantization-math.js";
@@ -489,12 +490,6 @@ function compareWitness(actual, expected, opIndex) {
 
 function ledgerRow(opIndex, witness) {
   return `op=${opIndex};channel=${witness.channel_index};real=${f64Bits(witness.real_multiplier)};q=${witness.quantized_multiplier};shift=${witness.shift};represented=${f64Bits(witness.represented_multiplier)};abs_error=${f64Bits(witness.absolute_multiplier_error)};relative_error=${f64Bits(witness.relative_multiplier_error)};encoding_drift=${f64Bits(witness.encoding_drift_bound_codes)};default_bound=${optionalF64Bits(witness.default_double_rounding_bound_codes)};pre_shift_safe=${Number(witness.default_pre_shift_int32_safe)};single_q=${witness.single_rounding_quantized_multiplier};single_shift=${witness.single_rounding_shift};single_represented=${f64Bits(witness.single_rounding_represented_multiplier)};single_bound=${optionalF64Bits(witness.single_rounding_bound_codes)};single_diverges=${Number(witness.single_rounding_encoding_diverges)}\n`;
-}
-
-function f64Bits(value) {
-  const view = new DataView(new ArrayBuffer(8));
-  view.setFloat64(0, value, false);
-  return view.getBigUint64(0, false).toString(16).padStart(16, "0");
 }
 
 function optionalF64Bits(value) {

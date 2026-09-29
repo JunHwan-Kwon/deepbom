@@ -1,3 +1,4 @@
+import { exactIntegerWithValue as exact, exactCountValue as exactFrom } from "./exact-integer.js";
 export const LLM_MEMORY_FEASIBILITY_SCHEMA = "deepbom.llm_memory_feasibility.v1.1";
 export const LLM_STATIC_RESIDENCY_ASSUMPTION = "All serialized tensor bytes and the logical state bytes are simultaneously resident in one aggregate primary-memory budget; storage-backed weight paging, remote execution, and capacity split across independently constrained memory pools are excluded.";
 
@@ -18,18 +19,6 @@ export const LLM_MEMORY_CAPACITY_TIERS = Object.freeze([
   ["96 GiB", 96n * GIB],
   ["128 GiB", 128n * GIB],
 ].map(([label, bytes]) => Object.freeze({ label, bytes: String(bytes) })));
-
-function exactFrom(value) {
-  if (value && typeof value === "object" && /^\d+$/.test(String(value.decimal || ""))) return BigInt(value.decimal);
-  if (typeof value === "string" && /^\d+$/.test(value)) return BigInt(value);
-  if (typeof value === "bigint" && value >= 0n) return value;
-  if (Number.isSafeInteger(value) && value >= 0) return BigInt(value);
-  return null;
-}
-
-function exact(value) {
-  return { value: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null, decimal: String(value) };
-}
 
 export function compareLlmMemoryCapacity(requiredValue, capacityValue) {
   const requiredBytes = exactFrom(requiredValue);

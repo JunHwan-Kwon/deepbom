@@ -138,7 +138,6 @@ function nodeTone(node, view) {
   return "neutral";
 }
 
-function exact(value) { return { decimal: value.toString(), number: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null }; }
 function clip(value, maximum) { const text = String(value || ""); return text.length <= maximum ? text : `${text.slice(0, maximum - 1)}…`; }
 function formatInteger(value) { return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
 function formatBytes(value) { let n=Number(value),i=0;const u=["B","KiB","MiB","GiB","TiB"];while(n>=1024&&i<u.length-1){n/=1024;i+=1}return `${n.toFixed(i?1:0)} ${u[i]}`; }

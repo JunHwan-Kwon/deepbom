@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.artifact_ir.v2",
-  "method_version": "2.3.0",
+  "method_version": "2.3.2",
   "hash_contract": {
     "algorithm": "SHA-256",
     "canonicalization": "RFC8785-JCS",
@@ -32965,9 +32965,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -33109,9 +33109,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -33349,9 +33349,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -33493,9 +33493,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -33589,9 +33589,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -33781,9 +33781,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -33877,9 +33877,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -34021,9 +34021,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -34213,9 +34213,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -34309,9 +34309,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -34453,9 +34453,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -34693,9 +34693,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -34789,9 +34789,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -34933,9 +34933,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -35173,9 +35173,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -35269,9 +35269,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -35413,9 +35413,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -35605,9 +35605,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -35701,9 +35701,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -35845,9 +35845,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -36085,9 +36085,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -36181,9 +36181,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -36325,9 +36325,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -36565,9 +36565,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -36661,9 +36661,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -36805,9 +36805,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -36997,9 +36997,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -37093,9 +37093,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -37237,9 +37237,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -37477,9 +37477,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -37573,9 +37573,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -37717,9 +37717,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -37909,9 +37909,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -38005,9 +38005,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -38149,9 +38149,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -38389,9 +38389,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -38485,9 +38485,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -38629,9 +38629,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -38869,9 +38869,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -38965,9 +38965,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -39109,9 +39109,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -39301,9 +39301,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -39397,9 +39397,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -39541,9 +39541,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -39781,9 +39781,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -39877,9 +39877,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -40021,9 +40021,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -40261,9 +40261,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -40357,9 +40357,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -40501,9 +40501,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -40741,9 +40741,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -40837,9 +40837,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -40981,9 +40981,9 @@
         },
         "storage": {
           "data_type": "INT32",
-          "code_min": null,
-          "code_max": null,
-          "code_domain_status": "format_defined_or_not_integer",
+          "code_min": -2147483648,
+          "code_max": 2147483647,
+          "code_domain_status": "declared_storage_dtype",
           "block_bytes": null
         },
         "parameters": {
@@ -42095,5 +42095,5 @@
     "unknown_is_zero": false
   },
   "interpretation_boundary": "The canonical graph, storage, architecture, and quantization ledgers preserve distinct evidence scopes. Static backend eligibility and imported runtime observations are overlays and never rewrite serialized artifact facts. A missing executable graph is represented as not_serialized; no execution edge is synthesized from tensor names or architecture order.",
-  "artifact_ir_sha256": "be88db200dfe7fc3072ad93af50cf3c2a0a8fea98b576749f2ee0259ecc2c121"
+  "artifact_ir_sha256": "82fc953c6057397075caf874f41887cf26fc149d0f1d8d0f905d272c09c1532b"
 }

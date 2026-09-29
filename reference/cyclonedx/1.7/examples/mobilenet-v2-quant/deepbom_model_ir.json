@@ -1,14 +1,14 @@
 {
   "schema": "deepbom.model_ir.v1",
-  "method_version": "1.1.0",
+  "method_version": "1.1.2",
   "source_contract": {
     "schema": "deepbom.artifact_ir.v2",
-    "sha256": "be88db200dfe7fc3072ad93af50cf3c2a0a8fea98b576749f2ee0259ecc2c121",
+    "sha256": "82fc953c6057397075caf874f41887cf26fc149d0f1d8d0f905d272c09c1532b",
     "projection_status": "loss_accounted_compatibility_migration",
     "native_fact_ledger": {
       "schema": "deepbom.model_ir_native_fact_ledger.v1",
       "status": "no_supplementary_facts",
-      "artifact_ir_sha256": "be88db200dfe7fc3072ad93af50cf3c2a0a8fea98b576749f2ee0259ecc2c121",
+      "artifact_ir_sha256": "82fc953c6057397075caf874f41887cf26fc149d0f1d8d0f905d272c09c1532b",
       "source_format": "tflite",
       "facts": {
         "control_dependencies": [],
@@ -16,7 +16,7 @@
         "savedmodel_meta_graphs": []
       },
       "interpretation_boundary": "Only explicitly allow-listed serialized facts omitted by the frozen Artifact IR v2 compatibility contract are embedded. This ledger does not authorize arbitrary native-analysis access and does not synthesize absent program structure.",
-      "ledger_sha256": "115f795ae22e574d0786172ff70d113359794600e547f0ff2a112881dabbad75"
+      "ledger_sha256": "5d711dd16747c036ab3532bea072b23a3344a93749d5988503f5c9419576d7c8"
     }
   },
   "hash_contract": {
@@ -56499,9 +56499,9 @@
   "native_extensions": {
     "status": "available_through_hash_bound_source_contract",
     "source_schema": "deepbom.artifact_ir.v2",
-    "source_sha256": "be88db200dfe7fc3072ad93af50cf3c2a0a8fea98b576749f2ee0259ecc2c121",
+    "source_sha256": "82fc953c6057397075caf874f41887cf26fc149d0f1d8d0f905d272c09c1532b",
     "embedded": false
   },
   "interpretation_boundary": "DEEPBOM Model IR preserves serialized program, logical tensor, physical storage, quantization, architecture grouping, static projection, and observed runtime as separate evidence layers. Missing structures are represented by applicability and loss records. Display order is deterministic but is not runtime order. This engineering evidence does not assert model quality, safety, regulatory conformity, or standard conformance.",
-  "model_ir_sha256": "06c5d118ff0f1f42b89a2d2703c0e2d042afda5f19f8145625a1511e00da0b76"
+  "model_ir_sha256": "d91fae70ff9df4483962c6a91045208b8a4589c9e6dc282aeeeba85b673b3af4"
 }

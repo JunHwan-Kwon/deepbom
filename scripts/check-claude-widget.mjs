@@ -143,7 +143,7 @@ try {
     assert.equal(evidence.weight_analysis.schema,"deepbom.weight_analysis.v1");
     assert.equal(evidence.weight_analysis.source.artifact_sha256,result.artifact.sha256);
     assert(evidence.weight_analysis.coverage.assessed_count>0);
-    assert.equal(contexts.at(-1).structuredContent.schema,"deepbom.browser_analysis_result.v1","Optional detailed weights are not sent to the host context");
+    assert.equal(contexts.at(-1).structuredContent.schema,"deepbom.browser_analysis_result.v2","Optional detailed weights are not sent to the host context");
     console.log(`${format}: SHA-256, bounded result, model summary, and context handoff passed`);
   }
   await frame.locator("#file").setInputFiles({ name: "unsafe.py", mimeType: "text/plain", buffer: Buffer.from("raise RuntimeError('must not execute')") });

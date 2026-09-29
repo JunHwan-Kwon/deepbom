@@ -4,11 +4,11 @@
     "openai": "candidate_unsubmitted",
     "claude_remote": "candidate_unsubmitted"
   },
-  "captured_engine_version": "1.109.0",
+  "captured_engine_version": "2.0.0",
   "agent_contract": {
-    "id": "deepbom.agent_contract.v1",
-    "version": "1.1.0",
-    "compatibility": "backward_compatible_within_v1"
+    "id": "deepbom.agent_contract.v2",
+    "version": "2.0.0",
+    "compatibility": "current_contract_only_v2"
   },
   "evidence_contract": {
     "id": "deepbom.artifact_evidence_envelope.v1",
@@ -47,12 +47,12 @@
   },
   "surfaces": {
     "openai": {
-      "fingerprint": "2675c41aea7c73832c8c88e28db15c6724752ef7ab0f3664647efc32c7c9fef0",
+      "fingerprint": "af37aa02b5beafb4bf25ff9c11469df14ede9cd8d2d2c9a200ec4451968902a4",
       "sections": {
         "endpoint": "65d495bd038797ad035c1c8d302f1c3d8cdb925acc605134d7a4ad72e1b2c066",
-        "plugin_package": "dfbeaad5b4eac28ff4e8024d52e54b3a99d92c54f5de19e699b09d911847f889",
+        "plugin_package": "9c26e564eb0f3678a8845147ab91f215fa7cdef2161d4418378b6eec36f01c09",
         "privacy_and_transfer": "95cd61f124544a0946c1dfc1601a28d6cfa045d24d9c4ff7c597b6c7ec5dea30",
-        "mcp_metadata": "dc408e544c226a93723494403658b6ba876be0e8074779d3dd56ae916fff567c"
+        "mcp_metadata": "e632a1db9d33cf5d5d527819e7e8fc06b80c41bcee388fbff204149da1237273"
       }
     },
     "claude_remote": {

@@ -1,3 +1,4 @@
+import { PROVENANCE_IR } from "../web/lib/evidence-ir.js";
 import { existsSync, realpathSync } from "node:fs";
 import { spawn } from "node:child_process";
 import path from "node:path";
@@ -58,7 +59,7 @@ const TOOLS = Object.freeze([
         weight_mapping: { type: "string", description: "Local JSON array of baseline/candidate weight references and optional candidate_axis_permutation; requires weight_baseline." },
         weight_analysis: { type: "boolean", description: "Opt in to common Weight IR and advanced channels, cosine similarity, SVD, sparsity and quantization. JSON sections: weight_ir, weight_analysis, weight_comparison. No model execution." },
         activation_evidence: { type: "string", description: "Local hash-bound activation capture JSON under allowed roots. Imports execution evidence; does not execute a model. Use output_format=json and section=activation_ir." },
-        metadata: { type: "string", description: "Local deepbom.evidence_link_input.v1 or deepbom.omop_metadata_input.v1 JSON under allowed roots. Adds the common evidence_link_ir section; declarations are not execution attestation." },
+        metadata: { type: "string", description: `Local deepbom.provenance_input.v1 or deepbom.omop_metadata_input.v1 JSON under allowed roots. Adds ${PROVENANCE_IR.name}; select ${PROVENANCE_IR.section}. Declarations are not execution attestation.` },
         evidence_files: { type: "string", description: "Local directory under allowed roots containing files explicitly mapped by metadata. No remote links are fetched. Requires metadata." },
         metadata_template: { type: "string", enum: ["omop", "generic"], description: "Return a metadata template bound to this model; fill institution/release identity before importing. Mutually exclusive with metadata." },
         scan: { type: "string", enum: [...SCAN_MODES], description: "Bounded scan policy. structure avoids payload integrity work; integrity streams supported payload checks; full requests all supported static analysis." },

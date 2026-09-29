@@ -1,3 +1,4 @@
+import { exactIntegerWithValue as exact, exactCountValue as exactFrom } from "./exact-integer.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 
@@ -217,14 +218,6 @@ function unbound() {
   };
 }
 
-function exactFrom(value) {
-  if (value && typeof value === "object" && /^(?:0|[1-9]\d*)$/.test(String(value.decimal || ""))) return BigInt(value.decimal);
-  if (typeof value === "string" && /^(?:0|[1-9]\d*)$/.test(value)) return BigInt(value);
-  if (typeof value === "bigint" && value >= 0n) return value;
-  if (Number.isSafeInteger(value) && value >= 0) return BigInt(value);
-  return null;
-}
-
 function requiredExact(value, label) {
   const result = exactFrom(value);
   if (result == null) throw new Error(`${label} must be an exact non-negative integer.`);
@@ -244,10 +237,6 @@ function requiredNonNegative(value, label) {
 function positiveInteger(value, label) {
   if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`${label} must be a positive safe integer.`);
   return value;
-}
-
-function exact(value) {
-  return { value: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null, decimal: String(value) };
 }
 
 function mapExact(values) {

@@ -1,3 +1,4 @@
+import { packedBytesForElements } from "./tensor-size.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { TENSORRT_LLM_SOURCE_METADATA } from "./tensorrt-llm-source-metadata.js";
@@ -209,7 +210,7 @@ function deriveKvScenario(architecture, context, batch, bits) {
   const values = [architecture.layer_count, architecture.kv_head_count, architecture.head_size, context, batch, bits];
   if (!values.every((value) => Number.isSafeInteger(value) && value > 0)) return { status: "not_assessable_incomplete_dimensions", logical_bytes: null };
   const elements = 2n * BigInt(architecture.layer_count) * BigInt(architecture.kv_head_count) * BigInt(architecture.head_size) * BigInt(context) * BigInt(batch);
-  const bytes = (elements * BigInt(bits) + 7n) / 8n;
+  const bytes = BigInt(packedBytesForElements(elements, bits).decimal);
   return { status: "derived_conditional_logical_state", evidence_class: "OBSERVED_CONFIG/DERIVED_CONDITIONAL", context_length: context, batch_size: batch, storage_bits: bits, logical_elements_decimal: String(elements), logical_bytes: { value: bytes <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(bytes) : null, decimal: String(bytes) }, boundary: "Logical full-context KV cardinality from serialized TensorRT-LLM dimensions. Runtime block allocation, reserved capacity, beam sharing, eviction, reuse, fragmentation, and residency are not included." };
 }
 

@@ -1,4 +1,4 @@
-import { formatBytes, formatNumber, formatPercent, padOp } from "./format.js";
+import { formatBytes, formatNumber, formatPercent, padOp, formatSignedCount as signedCount } from "./format.js";
 import { code, markdownTable } from "./report-utils.js";
 import { buildQuantResearchCoverage } from "./quant-research-applicability.js";
 import { reachabilityDivergenceChannelPartition } from "./report-engineering-derivations.js";
@@ -10,11 +10,6 @@ function isOnnxAnalysis(analysis) {
 function signedScientific(value) {
   const number = Number(value || 0);
   return `${number >= 0 ? "+" : ""}${number.toExponential(6)}`;
-}
-
-function signedCount(value) {
-  const number = Number(value || 0);
-  return `${number >= 0 ? "+" : ""}${formatNumber(number)}`;
 }
 
 function accumulatorAtlasMarkdown(analysis) {

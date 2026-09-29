@@ -7,7 +7,28 @@ export function exactInteger(value) {
   return null;
 }
 
-function exact(value) { return { decimal: value.toString(), number: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null }; }
+function exact(value) { return { decimal: value.toString(), number: safeBigIntNumber(value) }; }
+
+export function safeBigIntNumber(value) {
+  return typeof value === "bigint" && value >= BigInt(Number.MIN_SAFE_INTEGER) && value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null;
+}
+
+// Legacy public ledgers use `value`, while common IR uses `number`. Share the
+// count/mirror rule without changing either wire contract.
+export function exactIntegerWithValue(value) {
+  const result = exactInteger(value);
+  return result ? { value: result.number, decimal: result.decimal } : null;
+}
+
+export function exactCountValue(value) {
+  const record = value && typeof value === "object" ? value : null;
+  const raw = record ? record.decimal : value;
+  if (typeof raw === "string" && !/^(0|[1-9][0-9]*)$/.test(raw)) return null;
+  const count = exactInteger(raw);
+  if (!count) return null;
+  if (record && ["number", "value"].some(key => Object.hasOwn(record, key) && record[key] !== count.number)) return null;
+  return BigInt(count.decimal);
+}
 
 export function validateExactInteger(value) {
   if (value == null) return;

@@ -2256,7 +2256,7 @@ export function buildDeploymentContractDocuments(analysis, options = {}) {
     artifactIr: options.artifactIr || null,
     runtimeEvidence: options.runtimeEvidence || options.runtimeAssignmentEvidence || null,
   });
-  if (!artifactIrContext) throw new Error("Canonical Artifact Evidence IR could not be resolved for the deployment contract.");
+  if (!artifactIrContext) throw new Error("Canonical Artifact IR could not be resolved for the deployment contract.");
   const artifactIr = artifactIrContext.artifact_ir;
   const modelIr = artifactIrContext.model_ir;
   const canonicalInterfaceLedger = artifactEnvelope.interfaces || buildInterfaceQuantizationContractLedger(analysis);

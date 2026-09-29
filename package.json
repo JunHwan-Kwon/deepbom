@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "1.109.0",
+  "version": "2.0.0",
   "mcpName": "io.github.JunHwan-Kwon/deepbom",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
   "homepage": "https://deepbom.org",
@@ -20,6 +20,8 @@
   },
   "main": "index.js",
   "scripts": {
+    "generate:evidence-ir": "node scripts/generate-evidence-ir-catalog.mjs",
+    "check:evidence-ir": "node scripts/check-evidence-ir-family.mjs",
     "postinstall": "node scripts/patch-litert-int8.mjs && node scripts/write-build-metadata.mjs --auto-distribution",
     "patch:litert": "node scripts/patch-litert-int8.mjs",
     "build:wasm": "node scripts/build-wasm.mjs main",
@@ -328,7 +330,9 @@
     "test:live-permissions": "node scripts/test-live-permissions.mjs",
     "report:dist-size": "node scripts/report-dist-size.mjs",
     "report:source-size": "node scripts/report-source-size.mjs",
-    "check:pre-interaction-shell": "node scripts/check-pre-interaction-shell.mjs"
+    "check:pre-interaction-shell": "node scripts/check-pre-interaction-shell.mjs",
+    "generate:scalar-types": "node scripts/generate-scalar-types.mjs",
+    "check:common-calculations": "node scripts/audit-common-rules.mjs && node scripts/check-common-calculation-rules.mjs"
   },
   "keywords": [],
   "author": "",

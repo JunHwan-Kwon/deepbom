@@ -1,3 +1,4 @@
+import { safeIntegerCodeRange } from "../../tensor-size.js";
 import { INLINE_PARAMETER_LIMIT } from "./constants.js";
 import { canonicalJson } from "../../report-utils.js";
 import { sha256TextHex } from "../../sha256-sync.js";
@@ -186,8 +187,6 @@ function zeroPointConstraint(values) {
 }
 
 function codeDomain(dtype) {
-  const key = String(dtype || "").toUpperCase();
-  const domains = { INT8: [-128, 127], UINT8: [0, 255], INT16: [-32768, 32767], UINT16: [0, 65535], INT4: [-8, 7], UINT4: [0, 15] };
-  const row = domains[key];
+  const row = safeIntegerCodeRange(dtype);
   return row ? { code_min: row[0], code_max: row[1], code_domain_status: "declared_storage_dtype" } : { code_min: null, code_max: null, code_domain_status: "format_defined_or_not_integer" };
 }

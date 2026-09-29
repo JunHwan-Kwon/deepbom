@@ -1,0 +1,391 @@
+{
+  "schema": "deepbom.scalar_types.v1",
+  "boundary": "Fixed-width logical scalar encodings only. Native enum membership, packed row/block layout, decoder support and backend applicability are separate contracts.",
+  "references": [
+    "https://onnx.ai/onnx/technical/int4.html",
+    "https://github.com/onnx/onnx/blob/be2b5fde82d9c8874f3d19328bdfe3b6962dc67b/onnx/onnx.proto",
+    "https://github.com/apple/coremltools/blob/main/mlmodel/format/MIL.proto",
+    "https://github.com/huggingface/safetensors/tree/6eb4dc9a28ebce297606e0f4836bbf28839cacef",
+    "https://onnx.ai/onnx/technical/float8.html#e8m0"
+  ],
+  "types": [
+    {
+      "name": "BF16",
+      "bits": 16,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "BFLOAT16",
+      "bits": 16,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "BOOL",
+      "bits": 8,
+      "kind": "boolean",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "BOOLEAN",
+      "bits": 8,
+      "kind": "boolean",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "C64",
+      "bits": 64,
+      "kind": "complex",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "COMPLEX128",
+      "bits": 128,
+      "kind": "complex",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "COMPLEX64",
+      "bits": 64,
+      "kind": "complex",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "DOUBLE",
+      "bits": 64,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "F16",
+      "bits": 16,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "F32",
+      "bits": 32,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "F4",
+      "bits": 4,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "F64",
+      "bits": 64,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "F6_E2M3",
+      "bits": 6,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "F6_E3M2",
+      "bits": 6,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "F8_E4M3",
+      "bits": 8,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "F8_E4M3FNUZ",
+      "bits": 8,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "F8_E5M2",
+      "bits": 8,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "F8_E5M2FNUZ",
+      "bits": 8,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "F8_E8M0",
+      "bits": 8,
+      "kind": "float",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "FLOAT",
+      "bits": 32,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "FLOAT16",
+      "bits": 16,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "FLOAT32",
+      "bits": 32,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "FLOAT4E2M1",
+      "bits": 4,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "FLOAT64",
+      "bits": 64,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "FLOAT8E4M3FN",
+      "bits": 8,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "FLOAT8E4M3FNUZ",
+      "bits": 8,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "FLOAT8E5M2",
+      "bits": 8,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "FLOAT8E5M2FNUZ",
+      "bits": 8,
+      "kind": "float",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "FLOAT8E8M0",
+      "bits": 8,
+      "kind": "float",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "I16",
+      "bits": 16,
+      "kind": "integer",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "I32",
+      "bits": 32,
+      "kind": "integer",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "I4",
+      "bits": 4,
+      "kind": "integer",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "I64",
+      "bits": 64,
+      "kind": "integer",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "I8",
+      "bits": 8,
+      "kind": "integer",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "INT16",
+      "bits": 16,
+      "kind": "integer",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "INT2",
+      "bits": 2,
+      "kind": "integer",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "INT32",
+      "bits": 32,
+      "kind": "integer",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "INT4",
+      "bits": 4,
+      "kind": "integer",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "INT64",
+      "bits": 64,
+      "kind": "integer",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "INT8",
+      "bits": 8,
+      "kind": "integer",
+      "signed": true,
+      "aliases": []
+    },
+    {
+      "name": "U16",
+      "bits": 16,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "U32",
+      "bits": 32,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "U4",
+      "bits": 4,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "U64",
+      "bits": 64,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "U8",
+      "bits": 8,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "UINT1",
+      "bits": 1,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "UINT16",
+      "bits": 16,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "UINT2",
+      "bits": 2,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "UINT3",
+      "bits": 3,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "UINT32",
+      "bits": 32,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "UINT4",
+      "bits": 4,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "UINT6",
+      "bits": 6,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "UINT64",
+      "bits": 64,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    },
+    {
+      "name": "UINT8",
+      "bits": 8,
+      "kind": "integer",
+      "signed": false,
+      "aliases": []
+    }
+  ]
+}

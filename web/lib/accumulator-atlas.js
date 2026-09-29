@@ -1,3 +1,5 @@
+import { quantized8CodeRange as codeRange } from "./quantization-math.js";
+import { arraysEqual as equalArray } from "./array-contract.js";
 import { sha256Hex } from "./hash.js";
 
 export const ACCUMULATOR_ATLAS_SCHEMA = "deepbom.accumulator_atlas.v1.3";
@@ -829,12 +831,6 @@ function tensorBytes(bytes, tensor, message) {
   return bytes.subarray(offset, offset + length);
 }
 
-function codeRange(dtype, message) {
-  if (dtype === "INT8") return [-128, 127];
-  if (dtype === "UINT8") return [0, 255];
-  throw new Error(message);
-}
-
 function rawCode(byte, dtype) { return dtype === "INT8" ? (byte << 24) >> 24 : byte; }
 function requiredTensor(tensors, index, message) { const tensor = tensors.get(Number(index)); if (!tensor) throw new Error(message); return tensor; }
 function requiredSignedBits(minimum, maximum) { for (let bits = 1; bits < 128; bits += 1) { const magnitude = 1n << BigInt(bits - 1); if (minimum >= -magnitude && maximum <= magnitude - 1n) return bits; } return 128; }
@@ -846,7 +842,7 @@ function maxBigInt(...values) { return values.reduce((left, right) => left > rig
 function compareBigIntDesc(left, right) { const a = BigInt(left); const b = BigInt(right); return a === b ? 0 : a > b ? -1 : 1; }
 function product(values) { return values.reduce((total, value) => total * value, 1); }
 function sum(values) { return values.reduce((total, value) => total + Number(value || 0), 0); }
-function equalArray(left, right) { return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value, index) => value === right[index]); }
+
 function compareScalar(actual, expected, key, opIndex = "summary") { assert(actual[key] === expected[key], `Accumulator ${key} mismatch at ${opIndex}.`); }
 function compareOptional(actual, expected, key, opIndex = "summary") { const left = actual[key] ?? null; const right = expected[key] ?? null; assert(left === right, `Accumulator ${key} mismatch at ${opIndex}.`); }
 function compareOptionalNear(actual, expected, key, opIndex = "summary") { const left = actual[key]; const right = expected[key]; if (left == null || right == null) { assert(left == null && right == null, `Accumulator ${key} missing mismatch at ${opIndex}.`); return; } assertNear(left, right, `Accumulator ${key} mismatch at ${opIndex}.`); }

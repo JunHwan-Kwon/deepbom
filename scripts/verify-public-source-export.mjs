@@ -39,6 +39,12 @@ for (const record of declared) {
   assert(sha256(bytes) === record.sha256, `Public source SHA-256 drifted for ${record.path}.`);
   assert(!isForbidden(record.path), `Forbidden path entered public source export: ${record.path}`);
 }
+const inventory = JSON.parse(await readFile(path.join(exportRoot, "docs/reviews/common-calculation-inventory.json"), "utf8"));
+assert(inventory.source_file_count > 0 && inventory.source_file_count === inventory.files.length, "Public calculation inventory count drifted.");
+for (const row of inventory.files) {
+  const member = declared.find(record => record.path === row.file);
+  assert(member && member.sha256 === row.sha256, `Public calculation inventory references an absent or stale source: ${row.file}`);
+}
 
 const publicLicense = await readFile(path.join(exportRoot, "channels", "LICENSE"));
 const rootLicense = await readFile(path.join(exportRoot, "LICENSE"));

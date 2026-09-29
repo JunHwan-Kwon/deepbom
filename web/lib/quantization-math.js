@@ -1,4 +1,27 @@
+import { safeIntegerCodeRange } from "./tensor-size.js";
+
 const Q31_SCALE = 2 ** 31;
+
+export function quantized8CodeRange(dtype, message = "An INT8 or UINT8 storage contract is required.") {
+  if (dtype === "INT8" || dtype === "UINT8") return safeIntegerCodeRange(dtype);
+  throw new Error(message);
+}
+
+export function perTensor8BitContract(tensors, index) {
+  const tensor = tensors.find(item => item.index === index);
+  if (!tensor || !["INT8", "UINT8"].includes(tensor.dtype)
+    || tensor.scale_sample?.length !== 1 || tensor.zero_point_sample?.length !== 1
+    || tensor.quant_scales != null && tensor.quant_scales !== 1
+    || tensor.quant_zero_points != null && tensor.quant_zero_points !== 1) {
+    throw new Error(`Tensor T${index} lacks a per-tensor 8-bit contract.`);
+  }
+  const [qmin, qmax] = quantized8CodeRange(tensor.dtype);
+  const scale = tensor.scale_sample[0], zeroPoint = tensor.zero_point_sample[0];
+  if (!(scale > 0) || !Number.isFinite(scale) || !Number.isSafeInteger(zeroPoint) || zeroPoint < qmin || zeroPoint > qmax) {
+    throw new Error(`Tensor T${index} quantization metadata is invalid.`);
+  }
+  return { index, qmin, qmax, scale, zeroPoint };
+}
 
 export function quantizeMultiplier(realMultiplier, singleRounding = false) {
   if (realMultiplier === 0) return { multiplier: 0, shift: 0, represented: 0 };

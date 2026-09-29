@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { shapeElementCount } from "../web/lib/tensor-size.js";
 
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -8,10 +9,11 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import { runMcpServer } from "./deepbom-mcp.mjs";
-import { observeLocalEvidence } from "./deepbom-evidence-links.mjs";
-import { buildEvidenceLinkIr, evidenceLinkSummary } from "../web/lib/evidence-link-ir.js";
-import { metadataTemplate } from "../web/lib/evidence-links/omop.js";
-import { projectEvidenceLinksToCycloneDx } from "../web/lib/evidence-links/cyclonedx.js";
+import { observeLocalEvidence } from "./deepbom-provenance.mjs";
+import { buildProvenanceIr, provenanceSummary } from "../web/lib/provenance-ir.js";
+import { EVIDENCE_IR_NAME, PROVENANCE_IR } from "../web/lib/evidence-ir.js";
+import { metadataTemplate } from "../web/lib/provenance/omop.js";
+import { projectProvenanceToCycloneDx } from "../web/lib/provenance/cyclonedx.js";
 import { buildAgentCapabilities } from "./deepbom-agent-contract.mjs";
 import { manageAgentIntegration } from "./deepbom-agent-integration.mjs";
 import { detectModelFormat } from "../web/lib/model-file.js";
@@ -113,7 +115,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "1.109.0";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "2.0.0";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 const EXPECTED_SELF_TEST_SHA256 = typeof __DEEPBOM_SELF_TEST_SHA256__ === "string" ? __DEEPBOM_SELF_TEST_SHA256__ : "";
 
@@ -429,7 +431,7 @@ async function main(argv) {
         artifact_set_sha256: analysis.artifact_set?.artifact_set_sha256 || null,
       })
     : null;
-  if (requiresArtifactIrContext(parsed) && !artifactIrContext) throw new Error("Canonical Artifact Evidence IR could not be constructed for the analyzed artifact.");
+  if (requiresArtifactIrContext(parsed) && !artifactIrContext) throw new Error("Canonical Artifact IR could not be constructed for the analyzed artifact.");
   const analysisView = artifactIrContext?.primary_view || analysis;
   if (parsed.metadataTemplate) {
     if (parsed.sections.length || parsed.pointer || parsed.weightAnalysis || parsed.activationEvidence) throw new Error("--metadata-template cannot be combined with analysis selection or numerical evidence.");
@@ -439,7 +441,7 @@ async function main(argv) {
   if (parsed.metadata) {
     const { document: metadata } = await readJsonSidecar(parsed.metadata, "evidence metadata", 2 * 1024 * 1024);
     const observations = await observeLocalEvidence(metadata, parsed.evidenceFiles);
-    analysis.evidence_link_ir = buildEvidenceLinkIr(artifactIrContext.model_ir, metadata, { observations });
+    analysis.provenance_ir = buildProvenanceIr(artifactIrContext.model_ir, metadata, { observations });
   }
   if (parsed.weightAnalysis || parsed.activationEvidence) {
     if (!["audit", "gguf"].includes(parsed.command) || parsed.outputFormat !== "analysis" || parsed.summary || parsed.tensorTable) throw new Error("Optional numerical IR requires audit/gguf with --output-format json (or json-compact).");
@@ -466,7 +468,6 @@ async function main(argv) {
     if (parsed.activationEvidence) analysis.activation_ir = buildActivationIr(artifactIrContext.model_ir, (await readJsonSidecar(parsed.activationEvidence, "activation capture")).document);
     analysis.numerical_evidence_bundle = buildNumericalEvidenceBundle(artifactIrContext.model_ir, analysis.weight_ir, analysis.activation_ir);
   }
-
 
   if (parsed.command === "graph") return runGraphCommand(parsed, artifactIrContext);
   if (parsed.command === "visualize") return runVisualizationCommand(parsed, artifactIrContext);
@@ -521,15 +522,15 @@ async function main(argv) {
       : parsed.outputFormat === "sarif"
         ? buildSarifDocument(envelope, { version: VERSION, policyResult })
         : analysis;
-  if (parsed.outputFormat === "cyclonedx" && analysis.evidence_link_ir) completeDocument = projectEvidenceLinksToCycloneDx(completeDocument, analysis.evidence_link_ir, artifactIrContext.model_ir);
+  if (parsed.outputFormat === "cyclonedx" && analysis.provenance_ir) completeDocument = projectProvenanceToCycloneDx(completeDocument, analysis.provenance_ir, artifactIrContext.model_ir);
   const document = ["analysis", "summary"].includes(parsed.outputFormat)
     ? selectAnalysisOutput(completeDocument, parsed, reviewSummary, artifactIrContext)
     : completeDocument;
   await emitDocument(parsed, document, () => parsed.tensorTable
     ? (parsed.render === "markdown" ? buildTensorTableMarkdown(document) : buildTensorTable(document))
     : parsed.encodingInventory ? buildEncodingInventoryTable(document)
-      : (parsed.render === "markdown" ? buildAuditMarkdown(reviewSummary) : buildHumanSummary(reviewSummary)) + (analysis.evidence_link_ir ? `\nMetadata links: ${analysis.evidence_link_ir.verdict.status}\nCoverage: ${JSON.stringify(evidenceLinkSummary(analysis.evidence_link_ir))}\nMetadata relationships remain declared; publisher authenticity is not verified.\n` : ""));
-  if (analysis.evidence_link_ir) process.exitCode = analysis.evidence_link_ir.verdict.status === "contradiction_observed" ? 2 : analysis.evidence_link_ir.verdict.status === "incomplete" ? 3 : 0;
+      : (parsed.render === "markdown" ? buildAuditMarkdown(reviewSummary) : buildHumanSummary(reviewSummary)) + (analysis.provenance_ir ? `\nMetadata links: ${analysis.provenance_ir.verdict.status}\nCoverage: ${JSON.stringify(provenanceSummary(analysis.provenance_ir))}\nMetadata relationships remain declared; publisher authenticity is not verified.\n` : ""));
+  if (analysis.provenance_ir) process.exitCode = analysis.provenance_ir.verdict.status === "contradiction_observed" ? 2 : analysis.provenance_ir.verdict.status === "incomplete" ? 3 : 0;
   if (parsed.policyOutput) {
     await writeOutputAtomically(parsed.policyOutput, `${JSON.stringify(policyResult, null, parsed.compact ? 0 : 2)}\n`, { noClobber: parsed.noClobber });
   }
@@ -1073,7 +1074,7 @@ async function analyzeDiffArtifact(spec, parsed, targetBinding, { expectedSha256
     ...artifact,
     artifact_set_sha256: analysis.artifact_set?.artifact_set_sha256 || null,
   });
-  if (!artifactIrContext) throw new Error(`Canonical Artifact Evidence IR could not be constructed for ${artifact.filename}.`);
+  if (!artifactIrContext) throw new Error(`Canonical Artifact IR could not be constructed for ${artifact.filename}.`);
   return { source, input, format, artifact, analysis, artifactIrContext };
 }
 
@@ -2171,8 +2172,8 @@ function positiveSafeIntegerOrNull(value) {
 }
 
 function exactTensorElementCount(shape) {
-  if (!Array.isArray(shape) || shape.some((value) => !Number.isSafeInteger(value) || value < 0)) return null;
-  return shape.reduce((product, value) => product * BigInt(value), 1n);
+  const count = shapeElementCount(shape);
+  return count ? BigInt(count.decimal) : null;
 }
 
 function buildEncodingInventoryProjection(analysis, reviewSummary) {
@@ -2941,7 +2942,7 @@ function printHelp(command) {
 }
 
 function printMetadataHelp() {
-  process.stdout.write("Optional metadata and lineage:\n  --metadata-template <omop|generic>  Create a model-bound JSON input template\n  --metadata <json>                  Add common Evidence Link IR from declared metadata\n  --evidence-files <directory>       Read explicitly mapped local supporting files\n  --section evidence_link_ir         Select the common connection IR (JSON output)\n  With metadata: exit 2 = contradiction, 3 = incomplete checks, 0 = no observed contradiction.\n  Relationships remain declarations. CycloneDX projection supports 1.7; SPDX metadata projection is not implemented.\n");
+  process.stdout.write(`${EVIDENCE_IR_NAME} — optional provenance:\n  --metadata-template <omop|generic>  Create a model-bound JSON input template\n  --metadata <json>                  Add ${PROVENANCE_IR.name} from declared metadata\n  --evidence-files <directory>       Read explicitly mapped local supporting files\n  --section provenance_ir            Select Provenance IR (JSON output)\n  With metadata: exit 2 = contradiction, 3 = incomplete checks, 0 = no observed contradiction.\n  Relationships remain declarations. CycloneDX projection supports 1.7; SPDX metadata projection is not implemented.\n`);
 }
 
 const CLI_OPTION_SPELLINGS = Object.freeze([

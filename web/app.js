@@ -2321,8 +2321,8 @@ void import("./lib/numerical-ir-panel.js").then(({ installNumericalPanel }) => {
   weightWorkspaceController = installNumericalPanel(weightWorkspace, () => ({ model: currentArtifactIrContext?.model_ir, analysis: current, source: pendingModelFile || (currentModelBytes?.length ? new Blob([currentModelBytes]) : null) }));
 });
 
-void import("./lib/evidence-links-panel.js").then(({ installEvidenceLinksPanel }) => {
-  metadataWorkspaceController = installEvidenceLinksPanel(metadataWorkspace, () => ({ model: currentArtifactIrContext?.model_ir, analysis: current }), { onDownload: async (blob, name) => { if (name.endsWith(".cdx.json") && !(await ensureRawExportAllowed("Linked CycloneDX"))) return; const record = webUsage.observeExport(name.endsWith(".cdx.json") ? "cyclonedx" : "evidence_package"); downloadBlob(name, blob); record(); } });
+void import("./lib/provenance-panel.js").then(({ installProvenancePanel }) => {
+  metadataWorkspaceController = installProvenancePanel(metadataWorkspace, () => ({ model: currentArtifactIrContext?.model_ir, analysis: current }), { onDownload: async (blob, name) => { if (name.endsWith(".cdx.json") && !(await ensureRawExportAllowed("Linked CycloneDX"))) return; const record = webUsage.observeExport(name.endsWith(".cdx.json") ? "cyclonedx" : "evidence_package"); downloadBlob(name, blob); record(); } });
 });
 
 showModelSummary?.addEventListener("click", () => {

@@ -1,0 +1,4255 @@
+{
+  "schema": "deepbom.common_rule_inventory.v1",
+  "scope": {
+    "roots": [
+      "web",
+      "src",
+      "bin",
+      "worker",
+      "native",
+      "channels",
+      "protected"
+    ],
+    "excluded_directories": [
+      "node_modules",
+      "target",
+      "vendor",
+      "pkg",
+      ".git",
+      ".local-validation",
+      "__pycache__"
+    ],
+    "boundary": "All application source files in these roots are enumerated. JS functions/tables are parsed; Rust/Python/C++ candidates also require semantic review. Textual equality is a candidate, not proof of equivalent contracts."
+  },
+  "source_file_count": 492,
+  "files": [
+    {
+      "file": "bin/deepbom-agent-contract.mjs",
+      "sha256": "a93ba42be2ff2583f33bcc6e731b851d6b1e616187a605ee99507873c8e9d0c3",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "bin/deepbom-agent-integration.mjs",
+      "sha256": "45dfa364dd8f7d6f1a6e3e431532fe330a20032e95b70492a5ba4d7b4011d5e6",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 22,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "bin/deepbom-agent-skill.mjs",
+      "sha256": "2c35707b25a5fc1b915958c635996fb9e6e0d424e1634b52762d79dcc4d20528",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "bin/deepbom-automation.mjs",
+      "sha256": "9cc136e7545498e88f1665ebd76d9905b6e310fc7d9f0cbc8551c3172464031e",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 35,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "bin/deepbom-input.mjs",
+      "sha256": "2b98b1620aafccf8c78c2478a60fd167bd8b7491c4b561a72edc03d9ca491d09",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 31,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "bin/deepbom-mcp.mjs",
+      "sha256": "d17af47f3cbc17fdd5c6fb4368d0a8f1a9da5ea0bf4611410eab8c3c62383b51",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 57,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "bin/deepbom-provenance.mjs",
+      "sha256": "72418cdb1437d0f7d2c2e5d1e5af7b2a6cf0c477c8d29eecde972ddb854e2a38",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "bin/deepbom-public-contract-versions.mjs",
+      "sha256": "823256365d42611ba7506cfbf526e258c679f17d8f034e995f3432435e4a8577",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "bin/deepbom.mjs",
+      "sha256": "32f9f0f2f59db5e3b445b7ec1778a6b4288a7cd0720b23e13b05db184443613b",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 206,
+      "calculation_candidates": 23
+    },
+    {
+      "file": "bin/graph-png-export.mjs",
+      "sha256": "7c8384918331a59360c7d651c7bf37318c285dad484c2a2c344bfae1de86ea17",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "bin/model-ir-png-export.mjs",
+      "sha256": "25e1e60fe3b8f4a610603253896a2ca0fd29166881cb03bb6ca36365dea978b5",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "bin/nvidia-accelerator-collector.mjs",
+      "sha256": "1f281eff24a4e0f15c788eadb2d6ea65244761f6fdd9f2df34516b91b91c29f7",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 21,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "bin/remote-artifact-closure.mjs",
+      "sha256": "d0815b0e147f2d1f4dfa1c182ff5322b722f760558f92b92ec88cfc9af717b0a",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 15,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "bin/remote-artifact-resolver.mjs",
+      "sha256": "8f8c3f2422a73a4cf590587caa7226d30d559cfbc7c46c86afe8df4437ac855e",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 22,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "bin/store-zip.mjs",
+      "sha256": "c9d21861bc038d3f97d287d2232380a42b47de24836d328609be8ba87a94b2d1",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/cargo/src/main.rs",
+      "sha256": "67ddbaa526cab0beb0a3880ec6dce6fd692eddaf17343c881c8148bb1b1005d3",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 37,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/setup.py",
+      "sha256": "574bd43a28ef8c4132ce86e2610c2236a84427f2be0fcdc3bc879aa42d8314a6",
+      "language": "py",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/__init__.py",
+      "sha256": "27380afc8ae323a1cbe7fc8dfba83bf5aa745459c2fb305982181e24ec7da034",
+      "language": "py",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/__main__.py",
+      "sha256": "5dabf475b45e5730c7017bc076d241ec0f50025f5687d40751374632efdfc9a3",
+      "language": "py",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/_engine.py",
+      "sha256": "70d29c9532bec7fd003e6318091cedd1bf56665b7a3ded13c35832ed5ee77ff3",
+      "language": "py",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/api.py",
+      "sha256": "a093ae60433d15cea40f60ca48aa4bcde35acbdec5d64c32d0210ebfe317817a",
+      "language": "py",
+      "role": "runtime",
+      "functions": 20,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "native/instrumentation/deepbom_runtime_trace.h",
+      "sha256": "92b7a79d7fcfd0043d9e9fce1237623cf099eb166e1c8e6281af53ca9a46994b",
+      "language": "h",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "native/instrumented_runtime/xnnpack/deepbom.h",
+      "sha256": "ded5295682cdbb8a9c9b048d5056d43840d03b02ed2f9174b1849c1ce3fb4e76",
+      "language": "h",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "native/runtime_collector/src/main.rs",
+      "sha256": "3c4ab87cb4757656c61079a413a2073c19e08d90ba22a590e1f65f475eda3a2d",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 36,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "native/runtime_probe/src/main.rs",
+      "sha256": "0f223a561447b3c25b26f806f5db307ee4c719eab3307f52fbf10699369a5b77",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/accumulator_atlas.rs",
+      "sha256": "3acd6286c82aecf6db85adc60efd208a1d9e9ad5f559075424c32e286df0fbbe",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 25,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "src/accumulator_reachability.rs",
+      "sha256": "8a8245b7ca55a695448b1d40080130eff9af447e28bcf56f1dd3a285141188b6",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 42,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/arena_planner.rs",
+      "sha256": "1690f0b531df8ef501dfbe4022462afac3f407ac9324fab611f53bd929c09e7a",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/artifact_byte_ledger.rs",
+      "sha256": "68ccbc5ee010240ff46989cde9abbc7d88dc4a2a5248fde30efa7736985bd1ae",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/block_inventory.rs",
+      "sha256": "b0ec8f692d40bfdafe35fb6256c195955c7d7b1e10c5483958807950bcc7dbdb",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 19,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "src/channel_vitality.rs",
+      "sha256": "ce68dbb8ffc9be3ba141a7d11b907169d80ac8fb7b662997c31100e54fe59824",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 22,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/contract_migration.rs",
+      "sha256": "0732ac3237f53406514b44e4d856336918574770e3a9d37cb862954e464a4e54",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 26,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "src/core_isolation.rs",
+      "sha256": "1fe5f4687e020937c9c93c614f8236ab442021010086ec43f745a80d4f8bd980",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/delegation_repair.rs",
+      "sha256": "95960374174b5ae27a210b5f61c0fe00aba62769032780d4fdb2988fb78b2b38",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 33,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "src/deployment_delta.rs",
+      "sha256": "067352b81cfd17ef73cb448021f7f229eb04add90fc46cd46101c3c06b9ec1fd",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 33,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/deployment_frontier.rs",
+      "sha256": "c487c182236a7696541dc8b3f5c4c0ff2de90a55d6bc72d1456bfb3f2340fa90",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 39,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/dynamic_shape_cost.rs",
+      "sha256": "6b467bb8e0376af726bb7e09f7aed3847c9d9f23d5dc3d06e07205d7e7052740",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 33,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "src/findings.rs",
+      "sha256": "afcbb7e1cd591d1c3d183a3af33059b24beb281cc64ccc73c9dab640c8c6e250",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/influence.rs",
+      "sha256": "57c266fe2b5867752b4b6016987c46dd750739fa157a63fa6ec5400bca405b0e",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/input_counterexample.rs",
+      "sha256": "0b5ef36751ba52d87564c23885bd843b80dd2627ec1de1446fcad5a5842fdb98",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 24,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "src/kernel_witness.rs",
+      "sha256": "9958b9236abe0ba8df3a749e752f65445163518ba7f583dbeb933ac7e7234ac8",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 28,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/lib.rs",
+      "sha256": "0a22cbb68c99ad7a09221dee590ed2366e3b090a989d2351783f879116f27f06",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 183,
+      "calculation_candidates": 45
+    },
+    {
+      "file": "src/numerical_abi_propagation.rs",
+      "sha256": "dd7623c7a10415f3016fc5ccb12d933c91e7a4471a49b18ea3ebf3d74012680c",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 31,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "src/preprocessing.rs",
+      "sha256": "a7e97957fa6e31f3bc20692cb0150afee4aa6cc96a3fbae6435029bf20c3325c",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/preprocessing_realizability.rs",
+      "sha256": "0bf81db4c5a7a591c851878ee11d6267d86f0594430af2d5c941120df0f8c7e0",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 21,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "src/quantization_lattice.rs",
+      "sha256": "939c4be994f00ef906c0b535ce1ce7a945d6c4ae1a4fdfeb4c4d89c3285ddb19",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 32,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "src/quantization_math.rs",
+      "sha256": "edafcd066223416ad29ab86e7ea0afd17b39cabfdf2f8d5e8305f3979a194c9d",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 10
+    },
+    {
+      "file": "src/redesign.rs",
+      "sha256": "e78b0948d3751fa6a741081ac497887ca8319fdaf4d5eee71834ec518a84023f",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 55,
+      "calculation_candidates": 8
+    },
+    {
+      "file": "src/report_exports.rs",
+      "sha256": "837bbba549024c0c6e3d83ebec7aa14d50abd5699cf5712357b0eb2011515253",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/requantization_fidelity.rs",
+      "sha256": "c81e920ef8d9f56cf65105b7e3dc94b61940e51c31c37e76267e6344e921abf1",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 23,
+      "calculation_candidates": 7
+    },
+    {
+      "file": "src/research.rs",
+      "sha256": "feeeee19c76fa2595c3ce46993adfd25b2bcbb633264d74aa22e94bcfb697d8d",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 42,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/residual_contract_distortion.rs",
+      "sha256": "78c43d9e5cde42b281a470dc1df01a6fdcb14090ff66cfd633dd6d1d92ce56ba",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 17,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "src/residual_step_response.rs",
+      "sha256": "c7f6bde2201806c7f70e3942d030dc40af5209cf6249857f4c13a9c28c661b8b",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/rounding_equivalence.rs",
+      "sha256": "8b5caa0317585c6a0f3b078b4f70713877a6acbb6a2b7f991ebcac79748f92c6",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 33,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "src/runtime_version.rs",
+      "sha256": "402dd8253de3d6b05401c06abc493970fef1661901c07d8e2ddefea19703c37f",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/scalar_types_generated.rs",
+      "sha256": "e367d09bac15010afd5ff69ad2621a549eba7e3ef349f4a57ad4907c11cf4446",
+      "language": "rs",
+      "role": "generated_source",
+      "functions": 1,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/target_profiles.rs",
+      "sha256": "583b81002dcb4a01f63db1855199c95abd0d35864302b54990a6549bc3efbf1e",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/tensor_math.rs",
+      "sha256": "09a96ff0387530924ba64513d2fcb40ba8c895cf35b488c51a4f95043243b256",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 7
+    },
+    {
+      "file": "src/tflite_deep_scopes.rs",
+      "sha256": "f19829a8a494f2d7bab91ecef4372b3da13b4ccb150897d4d48b026b037c1307",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/tflite_metadata.rs",
+      "sha256": "284cefcf609521d905ecd72dc96e0c52191b0302cd576d5249619172219c7b73",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 52,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/tflite_operator_names.rs",
+      "sha256": "5b9449896fd92fbc73f9630ff8e8c108f933451c21e305c912232fc7ee389b14",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/tflite_scalar.rs",
+      "sha256": "ebfdfb2c2800225ea3e8e228a7fd425c4f7f405b0fdff2d78305c4946832c871",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/tflite_shape_reconciliation.rs",
+      "sha256": "c04925d5d91b57264b0f55f72b9feb223c2adb0723415622ce414b47a3223899",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "src/tflite_sparse.rs",
+      "sha256": "e194f4fa4b1e9a996030209814553f6a0343707b6972dd4eec4c3e477e06d690",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/tflite_subgraphs.rs",
+      "sha256": "6fc4ea4dd1f4b8b7b459169b3bb9fc80c775cd304fd441df9ff08b9635c9210c",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 25,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "src/verified_flatbuffer.rs",
+      "sha256": "a532d8eb2443dedbf80c78dffba95dd5fbcf8117e1b066f7a0ac2d98c13cb1fe",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 49,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/xnnpack_delegate.rs",
+      "sha256": "25f7c8e2947f9d6bef615e66c18c279f338c0994674a01e5530f50a5286ed40e",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 31,
+      "calculation_candidates": 10
+    },
+    {
+      "file": "src/xnnpack_rulepack_generated.rs",
+      "sha256": "b8c31b73e1fc73b6e0d62ad444cfbd458976b94b239fea6029b1652f3a370942",
+      "language": "rs",
+      "role": "generated_source",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/admin.js",
+      "sha256": "a5ba57fed53487be1ac145c4b4bf1c27ed3b735847e7f4f7030f701b75edbc18",
+      "language": "js",
+      "role": "runtime",
+      "functions": 45,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/app.js",
+      "sha256": "63608ed353495316b6802b185924db3ea2de38b6b24738243cfd864b8935073c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 596,
+      "calculation_candidates": 13
+    },
+    {
+      "file": "web/auth-complete.js",
+      "sha256": "1b5ee5a15f4988bc90148aa8dad5970ce317c43999911257237b127457679e81",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/bootstrap.js",
+      "sha256": "98e3fce5b314c004f6fc91bc35fe2d87a67ba0c42a6aee889fb87c2b1b98a583",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/chatgpt/deepbom-widget.js",
+      "sha256": "e0cbd0996d280c1e22c4f96beccabbcfb59992537bb33ed73e0290590dc9cb0e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 100,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/claude/deepbom-widget.js",
+      "sha256": "7356b15f312bd970045a6d96f251be56d454e45a845025b7071699ad6bd3698f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 33,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/executorch.js",
+      "sha256": "cc07ffedf3ce86a68736c3ff2b4b3bb904fe02cc3ae0057bbd311a797613af33",
+      "language": "js",
+      "role": "runtime",
+      "functions": 169,
+      "calculation_candidates": 10
+    },
+    {
+      "file": "web/get-started/setup.js",
+      "sha256": "3ae032a5f402310ce6aba588922dfe295b2e02571283f188eab8b859a99740e9",
+      "language": "js",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/guides/cli/book.js",
+      "sha256": "297723521764b6debe9ac48ddb7beb99807f8be34373096f50411211d2acf9aa",
+      "language": "js",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/guides/evidence-ir/compatibility/catalog.js",
+      "sha256": "73d660bc141fecca331e8ca45ba2caf09ecca00800dd1f52eeedf0ce4745f504",
+      "language": "js",
+      "role": "runtime",
+      "functions": 31,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/accelerator-binding.js",
+      "sha256": "541826e43577417d95cd198855af33440cc4134c6e48fec63e61915f7751e4e6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 33,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/accelerator-profile-binding.js",
+      "sha256": "12fb96a7c1bae3f37616d11b5e983b904a5755c3d07997c522ce249c1655de2a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 13,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/accelerator-profile-switcher.js",
+      "sha256": "742bae0a24339e4e802278ed2c207da80453ab9e8eefe7edeee63ec92cbcd315",
+      "language": "js",
+      "role": "runtime",
+      "functions": 16,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/access-policy.js",
+      "sha256": "d0a7f1b7fbbc17a9703fca47bfbce5fc8007345fc47926f01d9fa5cd175133bc",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/account-ui.js",
+      "sha256": "0ad59404b936d73c39f1bbbac3129b4097d61e088ebbc736e38c09d7aa913fe1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/accumulator-atlas.js",
+      "sha256": "c888f898e940c7e8df7a5a469845f7ea9d83be2fcfacaeff58f708ccdced5028",
+      "language": "js",
+      "role": "runtime",
+      "functions": 116,
+      "calculation_candidates": 9
+    },
+    {
+      "file": "web/lib/accumulator-reachability-viewer.js",
+      "sha256": "d26ce83df265524a662eebdba47cda05670e00aa00dc9d21378b99e8aa3a9b52",
+      "language": "js",
+      "role": "runtime",
+      "functions": 75,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/accumulator-reachability-worker.js",
+      "sha256": "ddef70cc6ce7242fbf59578d31aa637c2eb254327c5a6b7d1c1caeafcef11805",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/accumulator-reachability.js",
+      "sha256": "701a6aa143834d7d4d8d9253a8d7746303ae48e06109a6e7602b6b57c33e95c7",
+      "language": "js",
+      "role": "runtime",
+      "functions": 84,
+      "calculation_candidates": 7
+    },
+    {
+      "file": "web/lib/activation-ir.js",
+      "sha256": "d2641168a7b6a233a24672500aa69a26d56226866b729d62c654d90d6479228e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 31,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/admin-elements.js",
+      "sha256": "7d4ec292f2a1b15800d40e8192583a5090f1a8bde0c3ca8513fbd8588423263a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/admin-usage.js",
+      "sha256": "ec866bd7ec5d6bb17baacbc51ebf07e5dd9b362fe0f725267620a7882ac813ab",
+      "language": "js",
+      "role": "runtime",
+      "functions": 65,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/analysis-depth-mode.js",
+      "sha256": "d873fdd38bd223bfb0770d45c9cc54d1baa9dfdfff96e1ec85647075278427c2",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/analysis-summary-contract.js",
+      "sha256": "e990c7815bacf2af6560ea57989d2e889c00482e8cbfe2df1668f2ceb525b759",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/analysis.js",
+      "sha256": "ce9bf1196455a20976d02eb08b025c2929ebc1bc9537b04c7f7182e3fbc1f30f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 95,
+      "calculation_candidates": 15
+    },
+    {
+      "file": "web/lib/app-config.js",
+      "sha256": "85b1beb6d79f1e5bc2370e56b66db8d85916364ad9c75205fac13a54af727a2d",
+      "language": "js",
+      "role": "runtime",
+      "functions": 15,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/app-deepbom-workspace.js",
+      "sha256": "bb73716a455c36bd58030c2d368ddbfbfa00f0ff07e17f73b4ae7ecc1b7882dd",
+      "language": "js",
+      "role": "runtime",
+      "functions": 90,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/app-graph-workspace.js",
+      "sha256": "7450642be26b76aae4e41cdf5284553e65bbb3a2fe9b591fad47e53fb19b86ec",
+      "language": "js",
+      "role": "runtime",
+      "functions": 183,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/app-surface.js",
+      "sha256": "e296f6bea0e6ba2569cf82dc75ed41329eab56a8abb5588a03fae474d0a9be10",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/arena-viewer.js",
+      "sha256": "5f66bc066690b6c94f819ec767864bd5fed8e75937f90d58014dabe6c9122c61",
+      "language": "js",
+      "role": "runtime",
+      "functions": 32,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/array-contract.js",
+      "sha256": "d8637a9d20967c16475f2db624d53b0caa0ac69f7391591121746c1994e499ce",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/artifact-bundle.js",
+      "sha256": "2770f4be8c9953cb746144c48d9c800efbc24caee97b3e2b7ed342711c75f52b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 92,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/artifact-diff-view.js",
+      "sha256": "cd4871a53d7524472d644e614e7edbc3ad0466cdca8c7fade22a646517c81aad",
+      "language": "js",
+      "role": "runtime",
+      "functions": 13,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/artifact-diff.js",
+      "sha256": "a6a2a22314ec2ed152584823edda06efdff6e13e583979b6cdb0dafe1893c413",
+      "language": "js",
+      "role": "runtime",
+      "functions": 58,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/artifact-dossier-view.js",
+      "sha256": "890377e4f6afe2d17e7436e4e114e8618f6baa7ca158a21f5dc3fc2d196dbef1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/artifact-evidence-envelope.js",
+      "sha256": "05d9db50751ea0d3c16c00920dcd083387d75b2b8721e33478a46f849cc45246",
+      "language": "js",
+      "role": "runtime",
+      "functions": 34,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/artifact-ir-context.js",
+      "sha256": "1fd2977ac19cea9bd0a8f042121ebe457d525d7e22e9f81fb772225e4fa60a0f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 28,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/artifact-ir-runtime.js",
+      "sha256": "7ed92e745fc002d13a41bc5296319be45da5f0ca84c17398f31c750319dd269b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 34,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/artifact-ir-selectors.js",
+      "sha256": "d002320f6601dcd329abbb499a16c73b3a90cc12eb7636d28e1b4f4b6192aff8",
+      "language": "js",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/artifact-ir.js",
+      "sha256": "acf24360e9b637275b217af4e676f626d559f51f6cd682d1d033d92e86d28a77",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/artifact-ir/internal/architecture.js",
+      "sha256": "8804cdf765615997124e36699607b11e77d5dbfa2f83e486eff711b5194868e6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/artifact-ir/internal/constants.js",
+      "sha256": "745769a6c4178b3ef924d646bbdc13dea9b7d4dd71a651ac7d922daf6e403447",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/artifact-ir/internal/graph.js",
+      "sha256": "05158244192106ebbbce80a0be2f2c1fdee4b5354f5897c05d9bef2109aba15d",
+      "language": "js",
+      "role": "runtime",
+      "functions": 61,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/artifact-ir/internal/identity.js",
+      "sha256": "0c23032a0402bbb017dd1c7251eb919fe46898f91ab0931b0880a8cbda323bc8",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/artifact-ir/internal/overlays.js",
+      "sha256": "9c9330de0d732581b7a21c8d5689bbf04b6df8cf6082ec1bdb21b96084068bc1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/artifact-ir/internal/quantization.js",
+      "sha256": "5f20ce2d31c509f4856915c1687723ccc8ef48ae1d1097bbcc31f7e4ba12004b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 22,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/artifact-ir/internal/shared.js",
+      "sha256": "60946e0a3c5a48c34cba714b3565fa2cac9546e0b8e931725e33b9cc6889ed1f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 26,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/artifact-ir/internal/storage.js",
+      "sha256": "c0e7bca466e3275d75246be3b02a4909c9d35232a36aa984f6c71cfcdd55f888",
+      "language": "js",
+      "role": "runtime",
+      "functions": 15,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/artifact-ir/internal/validation.js",
+      "sha256": "af302ab82cdda8096106a885181c3690e44533bd0f38fbb67b289fcbbdf2fd14",
+      "language": "js",
+      "role": "runtime",
+      "functions": 20,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/artifact-overview.js",
+      "sha256": "8f824838d2ea94c7e9d042fe1a2dbc1d530bf233db56ed3275ed00230909919b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 62,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/artifact-set.js",
+      "sha256": "6f4b700722f3e0ef78f54c27b7f294f63d696a53f6e95ea8e7d8e1b253f874e9",
+      "language": "js",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/audit-output-contracts.js",
+      "sha256": "bd07a3f49368dd09c13ad893b06d34e1c3e1b9ed88d5e2b25e81636388f6aaa7",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/audit-progress.js",
+      "sha256": "6f2bcb6686219a4b31323239d5883f12dd89d8d17fc35d9b7a5739f0a60fec96",
+      "language": "js",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/audit-ui.js",
+      "sha256": "78d11ea26cf06817f7f4dab7ae609ebaf2594d8890c6f616f8b348c067f0e9cd",
+      "language": "js",
+      "role": "runtime",
+      "functions": 67,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/auth-labels.js",
+      "sha256": "9d69211829dfc3f6e3820aa4370e4e8b6ce53c837994e7d44fcd470050819e38",
+      "language": "js",
+      "role": "runtime",
+      "functions": 21,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/auth-ui.js",
+      "sha256": "8c0eadcd1e50248f219ab43f2c797cd61b43bfe2768f4e84c4098cd6e07e934e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/backend-placement-projection.js",
+      "sha256": "af400c5125e25236c6fbcee981fe0e0b9fccf09f16b2e3c56d69b6cc713c134d",
+      "language": "js",
+      "role": "runtime",
+      "functions": 59,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/benchmark-ui.js",
+      "sha256": "4221a996fd864ed09915660151e4655f610a4d8324676e2b17a83390dbbc1fbb",
+      "language": "js",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/bom-artifact-reconciliation.js",
+      "sha256": "77e01b043752415ca25c36b87b067d63dc49f7b2ad4baabcd3b67ccadc0ba37e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 42,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/browser-asset-url.js",
+      "sha256": "e5e23365943eae1bc5e09ed81ba427768cdfcc1dc7f7ad453de9c1287a728dea",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/build-metadata.js",
+      "sha256": "76b1f353204325cac4cf2bdfb98d999602963adb0faf894e46159a54f6e408e0",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/bundle.js",
+      "sha256": "5b19f79e8eec1d08452c5e96e079ca08f6797e9e48aef6a8d9bcc75d1da28cf9",
+      "language": "js",
+      "role": "runtime",
+      "functions": 16,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/calibration-validation-ledger.js",
+      "sha256": "d1c0916dea3c66f630105f060ee0e6241c76fe7c5a5263973130dc08c844bcb5",
+      "language": "js",
+      "role": "runtime",
+      "functions": 83,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/calibration-validation-view.js",
+      "sha256": "014851d6a1d9e1d021e7c5c042bdc72d72fe83651e9d0e9e5ab852fff31aa94c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/channel-vitality-worker.js",
+      "sha256": "b812fa6ccd01ba58452aaa3811752197a9c9fd71e8f4627308b8aecb8eb0aea7",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/channel-vitality.js",
+      "sha256": "9e5700a5be62d5eb9e82e008eab4cae1626a7dc9577d2497be2d089d18175f02",
+      "language": "js",
+      "role": "runtime",
+      "functions": 120,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/chatgpt-usage.js",
+      "sha256": "c7a7ea8f344d765b2d5da0f19a477bc8c3c40b8e6602121b92401e9526eca81f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 28,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/citation-ui.js",
+      "sha256": "cbfd02c4b0127a73b808e7c6c52c12021feab1d2bb0439df5294380e9cbee242",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/clipboard.js",
+      "sha256": "8421bf6e0d0d92c3cb0116b9c635bb99413a33b84498fe0908e03dd4327bfa61",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/contract-migration.js",
+      "sha256": "3ec8c7ad945f2396587d4a4f34550b0a07ec7f7f1229cdae01bd52e277f138fd",
+      "language": "js",
+      "role": "runtime",
+      "functions": 151,
+      "calculation_candidates": 8
+    },
+    {
+      "file": "web/lib/conversion-receipt.js",
+      "sha256": "0afb07e979cbdae0af6db8c0ab352284f7e3c9643ae9fec612e8c6f7d72b1032",
+      "language": "js",
+      "role": "runtime",
+      "functions": 21,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/core-isolation-view.js",
+      "sha256": "98e4f00100457c9975f0f75704c747bec77362b0d610f8f81dd8e6d5a84eefcf",
+      "language": "js",
+      "role": "runtime",
+      "functions": 28,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/coreml-blob.js",
+      "sha256": "e3c4a229a8e0d9198935d639a9509695a2ec067d2c9c56230bac5f1b199bcc14",
+      "language": "js",
+      "role": "runtime",
+      "functions": 20,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/coreml-classical-model.js",
+      "sha256": "b7decd064997c8b5534af216fcc4ec5a33480dcdc0f6e991e3f784b42ca681f1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 46,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/coreml-compute-plan.js",
+      "sha256": "a1bad54a5ae95d2e827d894b1a02f19730a7bdd84c9c19818b1db6d9c6402976",
+      "language": "js",
+      "role": "runtime",
+      "functions": 25,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/coreml-deployment-contract.js",
+      "sha256": "0ace70a8843fd8bd09708ad1994f7c23e9d8e367159dffeb5d07d863e3070a2f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/coreml-exact-integer.js",
+      "sha256": "f8095189c598944fcd3c841e5b29748bbc73c73fa40009af84bf31c1fbf9ba17",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/coreml-metadata-adapter.js",
+      "sha256": "47205c70a9469b800048aebc5e3be5612b0d03742df85077a1172668b1fd1f71",
+      "language": "js",
+      "role": "runtime",
+      "functions": 289,
+      "calculation_candidates": 11
+    },
+    {
+      "file": "web/lib/coreml-mil-program.js",
+      "sha256": "6e9392b2d2dbc634840676898e1945c9fcecc0007a65085aed53e14482fda641",
+      "language": "js",
+      "role": "runtime",
+      "functions": 125,
+      "calculation_candidates": 15
+    },
+    {
+      "file": "web/lib/coreml-neural-network.js",
+      "sha256": "7d17d7a6ed3e9083b0304f960cadf8c0d4081e9ef9c16b29f59a40377b59afab",
+      "language": "js",
+      "role": "runtime",
+      "functions": 59,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/corpus-validation-provenance.js",
+      "sha256": "79552562c429a6988034dbbed832187dd423a406a19c05ae9c5c4300dcc777a9",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/cpu-target-binding.js",
+      "sha256": "63a9da9c81ddc9447484649ae36261ffdb29a8b65b3ffe1eb9c247baedc7fe78",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/custom-target-editor.js",
+      "sha256": "b0e3315c5ca03bae1405416b76d728748bf4fafd0b1109968eec486557856741",
+      "language": "js",
+      "role": "runtime",
+      "functions": 16,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/custom-targets.js",
+      "sha256": "367f3d93d64338de89d8049a4013d497b8f8263354d6479fb9f7d9ebd84e068a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/cyclonedx-component-inventory.js",
+      "sha256": "03d315f52e04c4c0d36af528c0a8b59155fc98ea0be2b1ca58e701883e5469bb",
+      "language": "js",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/cyclonedx-component-metadata.js",
+      "sha256": "3afc4ed0c03e6dd2fc5709a656be71e37d1941492d3b8a814fcafa3aca7e33db",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/cyclonedx-identity.js",
+      "sha256": "50231deaeb15b577ac6ac34b6a758a110bb1ed6e9614a4b03899fd18cc86cd3e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/decision-coverage.js",
+      "sha256": "5af6f0a5c17cca42b5cb6b3bae48d3e84f3e910f7cd286cc2ead9c9dfbeea6c6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 28,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/deepbom-property-taxonomy.js",
+      "sha256": "0b06940920b5a56406a608268f509e183ba1afa31ed5690e601ad33dbeaaecf5",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/deepbom-worker-client.js",
+      "sha256": "437a7ba5a88b86dd0844c6afa34982e478ba133be5cfe210a4992193ceba4f26",
+      "language": "js",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/delegation-repair.js",
+      "sha256": "ca928e2df298a0b7a59e8f367fe0e50383ae357835e596e150a2d3185c57f5d5",
+      "language": "js",
+      "role": "runtime",
+      "functions": 156,
+      "calculation_candidates": 8
+    },
+    {
+      "file": "web/lib/deployment-delta.js",
+      "sha256": "024a29cbf81b17e97c5b0f93e86712d1182e35da872955000a5ff7f1228ef62f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 91,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/deployment-frontier.js",
+      "sha256": "b6bcd9cc3ea79a0142ec3b5c89dc70f9b1ded1d4e72b82145a1f3b2b0273f30e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 98,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/dom.js",
+      "sha256": "24a0550c72011834778050835e171a0e4f5e559003708847017034edbd40b71e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 39,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/download.js",
+      "sha256": "aa1ff200ea2250ad71c513370169c331569265b8f3a2b0371c66bc040e78432d",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/dynamic-shape-cost-conformance.js",
+      "sha256": "a710dcfde3dc3ec20d820eb5009aeee5cbc35f9e997b5e8581812c4f6b128d53",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 138,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/dynamic-shape-cost.js",
+      "sha256": "dae76193027bd4b81fb57ae4cc4b1c8f20a082a63ad4cf6e06d69a07105b35bf",
+      "language": "js",
+      "role": "runtime",
+      "functions": 133,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/edgetpu-compiler-evidence.js",
+      "sha256": "e283734deec13788ac7da73ca9cdd881b9afec0aa2475db0dde6bf40c814e4c6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/elements.js",
+      "sha256": "0667884da30a535bbb8f123ccc1df3d45c1e885a73422362ea7242ac256db6e1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-applicability.js",
+      "sha256": "52532f4c39378ba9907af6a88ecb2d94bf488c391a0a6801ccb72559247dbb1d",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-class.js",
+      "sha256": "67f4ee53d405a66bd97a0b15bdb17ff91737950d6fcb2143ba3938386003c23b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-cursor.js",
+      "sha256": "1d4c8c586f66a872ef4a5eb8ad00b01059cbb0b4d80413483d4d20b4ee940931",
+      "language": "js",
+      "role": "runtime",
+      "functions": 13,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-ir.js",
+      "sha256": "7543ccab58880bac318b697e2b55ecac208eaaff1fc59ee345fdb55a3c2ced79",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-level-report.js",
+      "sha256": "5afb0bf749fdeac9e9c95bdc101f3d29f5dace23eefe656cdb9a5d9d78fcdbe8",
+      "language": "js",
+      "role": "runtime",
+      "functions": 28,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-package-profiles.js",
+      "sha256": "6d919f6352acebc9c1b8dda27585a3f616d2d1b1ff70b29f79e4c7e878ec377b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-package-rights.js",
+      "sha256": "9b1d76628179f09e9d93b9d0eb214222063ec0c8ae0abcc8cd37f8c54cf1305c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-treemap.js",
+      "sha256": "c566dc324ae69967b44b20e1c98fa363a4cfbf6c0a8f4da41e6131651f126da5",
+      "language": "js",
+      "role": "runtime",
+      "functions": 63,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/evidence-visual-contract.js",
+      "sha256": "eb668f597fea492bc4b679096f30062692cb6f7c94512c7f0d97787ce62d1adb",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-why-drawer.js",
+      "sha256": "3eaa96c67a990d457b59522def54a43a0be030106acce817e1e36490c4f33dcc",
+      "language": "js",
+      "role": "runtime",
+      "functions": 15,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/exact-integer.js",
+      "sha256": "9bc3b0e87fd01c86dfa516ae90f572b724f7a0b86f79f972361e0950b060fbef",
+      "language": "js",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/exact-rational.js",
+      "sha256": "38d8f710054cce4d4d12c68634c557d431e6719ce68b149b7e3214ef126243c4",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/execution-placement-evidence.js",
+      "sha256": "047de7f1bb550d484fe28120717f9a6de246ecfc886254cc78cc5dcfa1de1464",
+      "language": "js",
+      "role": "runtime",
+      "functions": 58,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/execution-placement-view.js",
+      "sha256": "93a62f9e2185767d0240409a04bcc1c7904f07e8c7aa2927b292003c6f781419",
+      "language": "js",
+      "role": "runtime",
+      "functions": 65,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/executorch-build-binding.js",
+      "sha256": "62acce0b6da002a4b4dacac6e413890536e3ca863fc29c6149cd8576a60a3c31",
+      "language": "js",
+      "role": "runtime",
+      "functions": 39,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/executorch-operator-signatures.generated.js",
+      "sha256": "8c494c1136ba7580bc871c33250666299f18fec72ccc65b539e510f8cee125ac",
+      "language": "js",
+      "role": "generated_source",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/explorer-decision-view.js",
+      "sha256": "6d242da225dc5085218b5652b1187d1757f436b2f5e2f7c68d09befc612b1934",
+      "language": "js",
+      "role": "runtime",
+      "functions": 43,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/explorer-question-view.js",
+      "sha256": "20dbb77fbc8968360c7677d788998518caf776e3eae0b64b7403ce0b8b9f3125",
+      "language": "js",
+      "role": "runtime",
+      "functions": 19,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/explorer-redesign.js",
+      "sha256": "2cb85191cd46208b9a4215c1bb0773031a7bec6e7313acec995ddc2cd5ef32aa",
+      "language": "js",
+      "role": "runtime",
+      "functions": 198,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/export-artifacts.js",
+      "sha256": "29e9e3b05e2b57ccd5c3d4082b341990463f015cdba66f456ef0d9d87993c908",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/export-contract-view.js",
+      "sha256": "e4055726b1d5bf7fa43cd50151d2e4ead1fafd8e80325dcb951c22641ff7fa39",
+      "language": "js",
+      "role": "runtime",
+      "functions": 17,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/finding-contract.js",
+      "sha256": "4db3a98db6f3095caa5f350656cd865f1bab80c1a9ad41277c9a8116a8ee6f4e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/finding-rule-catalog.generated.js",
+      "sha256": "7d04ec99a4487a4016443052ead21953dff86b0400ff593d361f5bb09e68bedd",
+      "language": "js",
+      "role": "generated_source",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/finding-rule-catalog.js",
+      "sha256": "11c07273ceeeca1f9aaa2927d9dca55751fa4c15887473085675fd1123c742f8",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/findings-viewer.js",
+      "sha256": "44c47d13caabf85f25f3a754ea79e75a12e3db6694ddba6eca45a0588d6171be",
+      "language": "js",
+      "role": "runtime",
+      "functions": 27,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/flatbuffer-reader.js",
+      "sha256": "b877bcf9bf65910647731ea5b45f41a9a7d43e39c04e60766bf8ecf8ccffc6a7",
+      "language": "js",
+      "role": "runtime",
+      "functions": 26,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/format-audit-tabs.js",
+      "sha256": "e3ef92a6a956350e7dd4c846d6fff941cebbf89cac597d4c94d98fed4648cd70",
+      "language": "js",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/format-capability-view.js",
+      "sha256": "35932d92108bec379610aa3f2d42f2773288fea22ba861d511fc7f48e5a01a0c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 31,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/format-evidence-scope.js",
+      "sha256": "1dcbce5c27e9d72be31427110c7ceddbc6654f068b11eb8cccc26ec4d74ac272",
+      "language": "js",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/format-workflow-ui.js",
+      "sha256": "aa559155eb27842e10adb325278a765794f153d9a9f7aada277a4e8ea5205588",
+      "language": "js",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/format.js",
+      "sha256": "6f630acfe657d908cd1b139615d454288400889a0326173f43af2a524bac6e46",
+      "language": "js",
+      "role": "runtime",
+      "functions": 54,
+      "calculation_candidates": 9
+    },
+    {
+      "file": "web/lib/gate-policy-profiles.js",
+      "sha256": "840f3481fa0ec94c438257ecb11831c99f3c2c4693b5f546d21dce1867f87c5a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/gguf-backend-contract.generated.js",
+      "sha256": "87ee27c72551a4e21f85b1d7ba8d48c9b99fc218a8a7e47beafb80b1689c84db",
+      "language": "js",
+      "role": "generated_source",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/gguf-backend-contract.js",
+      "sha256": "7f272f0835cde147a8d0d93ad3e5636b665d27ed704df4645822425401faf93c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/gguf-codebooks.generated.js",
+      "sha256": "0f749ad42ac914e225cf45eb47e7362ceb9d388f5248a12a4c48904db6db682c",
+      "language": "js",
+      "role": "generated_source",
+      "functions": 7,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/gguf-runtime-environment.js",
+      "sha256": "1a250d03bd1a21ee002b6ca2cbd47cb7d5fba91f14936117a6b638ab07b7b199",
+      "language": "js",
+      "role": "runtime",
+      "functions": 74,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/gguf-storage-types.js",
+      "sha256": "1263f9f979a1fc162d3a873a3c114e3af5884ac7f3f578fee4c5015852d357aa",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/graph-export.js",
+      "sha256": "ba66fdc5bc9f521f53288d39484f8ac1227c11aacda96ff18fd0d62b9e7281c1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 27,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/graph-hierarchy.js",
+      "sha256": "c3b2e59e26aa5d5b57ac098b047b56f13178028b781b90737ee02dae7d5259dd",
+      "language": "js",
+      "role": "runtime",
+      "functions": 40,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/graph-ir.js",
+      "sha256": "790b4a290db42cdea0e819248edc22abb2a98e36bc828301e62a54d1b6c924e2",
+      "language": "js",
+      "role": "runtime",
+      "functions": 28,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/graph-layout.js",
+      "sha256": "ff457cadbe7f4d4089a4943e16d66c636899f042b4bf528b0368e6bc565b7be7",
+      "language": "js",
+      "role": "runtime",
+      "functions": 40,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/graph-topology.js",
+      "sha256": "c47dd3b704fa54f43f52ae89296863ad80fc2ee4e9bf09b972e288e536ec8fc9",
+      "language": "js",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/graph-ui.js",
+      "sha256": "ced1925451242d92b4458e5035154ca88a235c892a8128d69504cf76c4d04037",
+      "language": "js",
+      "role": "runtime",
+      "functions": 48,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/guarded-integer-expression.js",
+      "sha256": "80db9536a2db7239b45f171836353167b2311aeb3d53b3fddd62afa32d79d21a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 29,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/hash.js",
+      "sha256": "541aa5058fc2b712a25f00affdd442340a2a9fbcecc0b94b4b4634010b949ffb",
+      "language": "js",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/hf-safetensors-contract.js",
+      "sha256": "f012dbb373e022c44567045ca9a9bc745a8d4803cf647493225e6bec760027e3",
+      "language": "js",
+      "role": "runtime",
+      "functions": 55,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/influence.js",
+      "sha256": "406bca5b20c5d66b668c2a9ebe0c577ae861a39f8474399ee6fb2d61e7f2231a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/input-counterexample-viewer.js",
+      "sha256": "541d119ff23efec154a65e39a1bbb4f37931b50a4474a44510c6e1a007ae1c52",
+      "language": "js",
+      "role": "runtime",
+      "functions": 44,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/input-counterexample.js",
+      "sha256": "55a76dc863f43cf1b42c0f4da37581bda1df27e1a2ec3e3ac2b670b31a79165e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 34,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/insights.js",
+      "sha256": "6a984abf2161cfe6063ba913bdeacd430a257e32a59b2043d0568960a46b9bdd",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/interface-contract.js",
+      "sha256": "8be2d388110999031a7460e29ebf3f70d00b7e0d1ff14012d073fa4e0dac633e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 45,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/ir-artifact-members.js",
+      "sha256": "f9813699d37dd3ae0b8f85e128a37886bed87ddb04d10d7409b5d1aef6f6eccd",
+      "language": "js",
+      "role": "runtime",
+      "functions": 13,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/ir-evidence-contract.js",
+      "sha256": "fe3e5f6daf8411ce81860755a6dc3717fdd8b530f6e5709fa8989f467b3cd757",
+      "language": "js",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/ir-logical-inventory.js",
+      "sha256": "adc450369ed3ef4c98f624e3df08173aabbe2a9681692725b649024974b22337",
+      "language": "js",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/ir-metric.js",
+      "sha256": "5a3ccb0a6aadb07eb43ce80e40d5ce6de1f7e6ad4c23f8cd3149f7a2231b68c3",
+      "language": "js",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/ir-parameter-vector.js",
+      "sha256": "fc6ea6b881892a32937ab79922147301f50f5189e98f09c970b2ac577d7be070",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/ir-runtime-provenance.js",
+      "sha256": "fa6a1ed792db3ddca25e054eb7aba2ddea52a2251c6c2da87eac48dda5d70770",
+      "language": "js",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/ir-value-type.js",
+      "sha256": "fadd68d31ba7a761e1dd3b5511fa2fdab182b4643c668d7830cddce359b233f5",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/kernel-inspector.js",
+      "sha256": "4fe591fe1461649cb7984eb0c91a5be8a24a25c949ab933b0a13f47db4c0689c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 292,
+      "calculation_candidates": 13
+    },
+    {
+      "file": "web/lib/kernel-witness-worker.js",
+      "sha256": "f69d02315f5f882e8a450938088e68860026bc6ffab56192b7e925e61ff8ff89",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/kernel-witness.js",
+      "sha256": "532e3b991cd6f8006d0d39428a7c4361dc029213ae5a051a125b10ee218ad55d",
+      "language": "js",
+      "role": "runtime",
+      "functions": 139,
+      "calculation_candidates": 10
+    },
+    {
+      "file": "web/lib/litert-qualcomm-evidence.js",
+      "sha256": "8dd6df0d1885bf18ff3a654ba123cc86f7a700e4fb2270624c70152c0bfe4527",
+      "language": "js",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/llm-device-feasibility-view.js",
+      "sha256": "176f4fb194e5ee905429eb08619c1eafe6c6a96352be5ce75c7a43d3103dc198",
+      "language": "js",
+      "role": "runtime",
+      "functions": 17,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/llm-layer-storage.js",
+      "sha256": "fd31d3e3154b38ffc83d8c5d0585bd26977c6cb4e84e056946cd9c02b0e8e391",
+      "language": "js",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/llm-memory-feasibility.js",
+      "sha256": "168de97940ce8c26a18296e12950d727078f814cd930c78b23c00b130e5840a9",
+      "language": "js",
+      "role": "runtime",
+      "functions": 19,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/llm-specialized-projection.js",
+      "sha256": "0bf91203f60ca1245f39059f196619206477dbd99793834519f61644361ef8e6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/llm-static-memory-placement.js",
+      "sha256": "32e50eeccb73211edf5d97366df05daad325363dc5c1e26bde81fd2335145bd7",
+      "language": "js",
+      "role": "runtime",
+      "functions": 21,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/llm-token-budget-scenario.js",
+      "sha256": "e9678cefa8a5b6079db71c95cf2f2daf72404b6fa186ffb4524148c8f8890978",
+      "language": "js",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/mac-coverage.js",
+      "sha256": "ec026693e2d3556b9d243c814396ad23610d3956eb57ad7b663c7872b1109a3b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/markdown-report.js",
+      "sha256": "a8ca6a150f7893bc3076e8239c15ecec8143951dc926f4ee887319df2ade0d08",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/mcp-app-client.js",
+      "sha256": "22459e68e49416dfeac5d075ac7d5c0a16df9f6294d71429c0adb9b304e08636",
+      "language": "js",
+      "role": "runtime",
+      "functions": 15,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/metadata-model-adapters.js",
+      "sha256": "124ca65ab5eff5b96ede02727092cd8b3c4e7e6f9f0b2b591456641a037ba356",
+      "language": "js",
+      "role": "runtime",
+      "functions": 73,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/metric-coverage.js",
+      "sha256": "4cb6638bd89df7a95f61bfafb6cfe433f4623afd7ba1aa92e412850b9737ba2b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 176,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/modal-accessibility.js",
+      "sha256": "e84bed83f3ebbe577e496b851b74ba5403c95f60eb2b13f8db151b0d5ae15c6f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/model-file.js",
+      "sha256": "8f871d7ff5e5ca1ba03a6d05204cb8fb027ab06b08eb6bcacbfd99abf2b83fed",
+      "language": "js",
+      "role": "runtime",
+      "functions": 25,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/model-glance.js",
+      "sha256": "cd409577e872f7885909680bcd4a69f761364e1970d3fabfed73571a7b3b9220",
+      "language": "js",
+      "role": "runtime",
+      "functions": 53,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/model-ir-browser-export.js",
+      "sha256": "9592529067c8fe1d14e84ca54b3322e1033db4fe09b4c4f0009081f83cd4db72",
+      "language": "js",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/model-ir-generic-analysis.js",
+      "sha256": "848fd2d8b016f3d7803f31b680c50eb4052dd99164c2d890a71fe2b6d2e364a4",
+      "language": "js",
+      "role": "runtime",
+      "functions": 26,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/model-ir-visualization.js",
+      "sha256": "50a344e4fc2ef5de5d5dba8d5e5892e0d816630cec333b4e4c3d2dcace6056f3",
+      "language": "js",
+      "role": "runtime",
+      "functions": 76,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/model-ir.js",
+      "sha256": "a48deb072cbf5ebcbede3b8acf58356db500032dc334ccd4f1f6986476a842ec",
+      "language": "js",
+      "role": "runtime",
+      "functions": 75,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/model-ir/internal/blocks.js",
+      "sha256": "decd1096f07da474acd2c77c87510382f7551c1c0709bbf718e6c64044d7b671",
+      "language": "js",
+      "role": "runtime",
+      "functions": 35,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/model-ir/internal/constants.js",
+      "sha256": "24361769a4d7ff1791b194f88e667b21700f1b0588a6f3f9879c2a05fa30e76b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/model-ir/internal/native-facts.js",
+      "sha256": "0c1b08447564d83130d6867f8161e39f1945560a9ab0939456139c88ea37178a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/model-ir/internal/profiles.js",
+      "sha256": "89e3a699c32126b3cbdcd777192e1d3e4ef7751b629cc2916074a4f1584ea888",
+      "language": "js",
+      "role": "runtime",
+      "functions": 28,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/model-ir/internal/program.js",
+      "sha256": "0ab44689af80101f20b626cb10750e944e22025008f9f1221377edf14cb2ea44",
+      "language": "js",
+      "role": "runtime",
+      "functions": 42,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/model-ir/internal/shared.js",
+      "sha256": "d45019ff391beb0e382c94ed936e2581d360d4133ddb0c7f692f45fd79b8b301",
+      "language": "js",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/model-summary.js",
+      "sha256": "40b09b3704eec86f7968fdbe3b62fb40209f7a8019a9ba40f035687f3427f427",
+      "language": "js",
+      "role": "runtime",
+      "functions": 78,
+      "calculation_candidates": 14
+    },
+    {
+      "file": "web/lib/node-edge-evidence-overlay.js",
+      "sha256": "06117f6d5738e6aa6939ca420dd772103a753ce958091d4bcd5ff4c491a7e7c4",
+      "language": "js",
+      "role": "runtime",
+      "functions": 21,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/node-scroll-viewport.js",
+      "sha256": "33e76d50377b77cd614e4f1a01acc89a7f4d0934b2dfcbf15824a1dc0677f493",
+      "language": "js",
+      "role": "runtime",
+      "functions": 13,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/node-view.js",
+      "sha256": "1807d837a655849ee3ffe9f9dfe98e8931238ba4917d29d8d694157986ae6aef",
+      "language": "js",
+      "role": "runtime",
+      "functions": 188,
+      "calculation_candidates": 10
+    },
+    {
+      "file": "web/lib/numerical-abi-propagation-viewer.js",
+      "sha256": "f9b40f2702041c3e89d41a21f7d88c5fa40163c1f66dc426236cc4f8b04fc308",
+      "language": "js",
+      "role": "runtime",
+      "functions": 102,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/numerical-abi-propagation.js",
+      "sha256": "17e79dcce724be9867872af58dec7afe6e741201f4f22279d49592bc9e7a6080",
+      "language": "js",
+      "role": "runtime",
+      "functions": 145,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/numerical-ir-panel.js",
+      "sha256": "41912e9befe5091153306d838c79ed8fcdd66ee27edb23fa881f02af609afb4e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 84,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/numerical-ir/common.js",
+      "sha256": "1623718968e6827cfa45f8527832c403821b733079c90aa418f6d31612f917d6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/numerical-ir/exact-moments.js",
+      "sha256": "7c7a3b4163f50021234330cf141131930a0eb05b3283a5042bb5ac0468ca0207",
+      "language": "js",
+      "role": "runtime",
+      "functions": 27,
+      "calculation_candidates": 9
+    },
+    {
+      "file": "web/lib/numerical-ir/statistics.js",
+      "sha256": "736c55cf5f1f08554062342821f289532bbea3793c915f5443aab5bbc15893d6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 15,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/numerical-ir/weight-browser-input.js",
+      "sha256": "0540553952a481a950561f2f165947722fb26dc2347b22809ee68f881fc636c8",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/numerical-ir/weight-contracts.js",
+      "sha256": "8509c60d4379575792ea71183d0ae7ff8e5bb59e5b8f8142937a07819fbe221d",
+      "language": "js",
+      "role": "runtime",
+      "functions": 19,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/numerical-ir/weight-math.js",
+      "sha256": "dd8fcb34c5277a2ca42b988f4251b75d85f70f1b450785ddb1d887d44464a0cc",
+      "language": "js",
+      "role": "runtime",
+      "functions": 38,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/numerical-ir/weight-sources.js",
+      "sha256": "9b452d81bf4017a4b71224bfba1c046cfd72e0888399788df65a7c0aca9ca43b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 27,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/nvidia-accelerator-profile.js",
+      "sha256": "100817f6b1d2eec2bc4b0350db4a8708de49c032b6fea61ed9656f7b551dc93f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/offline-device-controller.js",
+      "sha256": "debb5e0289aea51ec78ac7fb738aa3151f95237083f9c39c611151e41a634665",
+      "language": "js",
+      "role": "runtime",
+      "functions": 19,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/on-device-llm-contract.js",
+      "sha256": "d63a62d4036661b55071852abd817ba491cb266f4aa3b1bdbf59ebeda8ca0815",
+      "language": "js",
+      "role": "runtime",
+      "functions": 46,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/on-device-llm-runtime-manifest.js",
+      "sha256": "f06e26a31fc94cf475ccfb7eb3aa2f24baac7642b24750f6e90db8a772076e4a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 32,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/on-device-llm-view.js",
+      "sha256": "77aed565b8e7e89d1cc8ce9fcb156d54477555dc5e8f7d928b806c001ee894fa",
+      "language": "js",
+      "role": "runtime",
+      "functions": 22,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/onnx-benchmark.js",
+      "sha256": "66e49589c11ea1df2aa4c08f7c12910b6c0feffd5e64d9045c61875c67e5492a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 33,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/onnx-container-inference.js",
+      "sha256": "f4446d860d5e4426cfca651eeee65b43313df31c041f0556732ac4c9264869b4",
+      "language": "js",
+      "role": "runtime",
+      "functions": 59,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/onnx-contract-conflict.js",
+      "sha256": "9bc48c1871f828a65cd7c1da812d27756fd28242521b68d8bfd03566983e9a40",
+      "language": "js",
+      "role": "runtime",
+      "functions": 55,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/onnx-dimension-expression.js",
+      "sha256": "e9c24d6a53514fc6c2b5f740bde9d0f601072dd086bdce500de5419db568d730",
+      "language": "js",
+      "role": "runtime",
+      "functions": 19,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-domain-analysis.js",
+      "sha256": "49ffa577661cdfd1c2c77bd872b27b719490c99f5d34f1e2eddec8e128fb7929",
+      "language": "js",
+      "role": "runtime",
+      "functions": 48,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-domain-viewer.js",
+      "sha256": "f6134845bc2c184a09b28981b4d705134de8d2747bd719fba8691fe726c50436",
+      "language": "js",
+      "role": "runtime",
+      "functions": 42,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-einsum-contract.js",
+      "sha256": "483ea748096ad2079d50fc88ae812b1130f85f4139bf28968672f801e8225284",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/onnx-extended-shape-inference.js",
+      "sha256": "665ae995587eb983c057c64ffbe7df7ba6189bc5c765ccbb4f2fcee830d422d0",
+      "language": "js",
+      "role": "runtime",
+      "functions": 192,
+      "calculation_candidates": 20
+    },
+    {
+      "file": "web/lib/onnx-external-data-status.js",
+      "sha256": "eb9ad04924317738dac2eac3aebf6ce8c4fd1908a5c643cd418024f306134e28",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-external-data-structure-binding.js",
+      "sha256": "cbd2af4a87ddca073e2b5e63d4ffb2f6e3d9566c1116c695c672e813990238e4",
+      "language": "js",
+      "role": "runtime",
+      "functions": 22,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/onnx-external-data.js",
+      "sha256": "aef473c86eac64f4cfb37d2378f3fac2099614486f4e799cc3b471b37d1f02f2",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-ml-imputer-conformance.js",
+      "sha256": "fa9a10e4405d564d2147afa75eb5428f20aa049383cb47c8b3650ec7f0d69ad1",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 21,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/onnx-ml-imputer.js",
+      "sha256": "799f99a12f8e02c08545488c90669e77199000c8f528b8e0b33dcc5f61b8a337",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/onnx-ml-label-encoder-conformance.js",
+      "sha256": "ff0d645a048e7f84c8e3a92080b2ae7475697c81737dcb9ee50258747d6e4362",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 41,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/onnx-ml-label-encoder.js",
+      "sha256": "c6d65729e2a10020e0ec84d845499db6fa795087b868d96dea6cadfb86b0eedf",
+      "language": "js",
+      "role": "runtime",
+      "functions": 38,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/onnx-ml-linear-model-conformance.js",
+      "sha256": "2fe74a510f45e15b3779caf56ea6a6d7931ee316f834af33f2a4c434133d3ca7",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 46,
+      "calculation_candidates": 6
+    },
+    {
+      "file": "web/lib/onnx-ml-linear-model.js",
+      "sha256": "8c5a7abbd4df3404f7683f2a517cf508f161522e047d57be0da294a13a0f6935",
+      "language": "js",
+      "role": "runtime",
+      "functions": 35,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/onnx-ml-normalizer-conformance.js",
+      "sha256": "d7e1543cb5d39f777d605380f832d32f9171923ecb6beaf9958193ef33add6e9",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 18,
+      "calculation_candidates": 6
+    },
+    {
+      "file": "web/lib/onnx-ml-normalizer.js",
+      "sha256": "c92fe96aceecbbe84c995fd7f7092758a4b2f4dc37580f51660fda5c6f5e1424",
+      "language": "js",
+      "role": "runtime",
+      "functions": 13,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/onnx-ml-one-hot-encoder-conformance.js",
+      "sha256": "839b60efc245541f69c7b1dc6eb81443ac6da87383774dcbdab6bcf2ef4a4668",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 27,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/onnx-ml-one-hot-encoder.js",
+      "sha256": "1660405122d17253a6af763602969f7e74d7240bf3befd71b23ff81dd248237b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-ml-scaler-conformance.js",
+      "sha256": "8d456a6a3325f2bf8de104ea9bee1d44cedc8d0af12a111ef9c6d6d0619ea05d",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 17,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/onnx-ml-scaler.js",
+      "sha256": "58883cf9e8d7a4c37eb8d3852c48a529103c8ecc179362fb92d6ad9735806098",
+      "language": "js",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-ml-svm-conformance.js",
+      "sha256": "ac2946710dae87cb2df660455fdff8a2800f1e9c737ecef67498fec0acaddfb7",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 29,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/onnx-ml-svm.js",
+      "sha256": "90b3641c0f40e511f3dd0ea23de5e0f5d2e3340b8067dc243e90b053a5121133",
+      "language": "js",
+      "role": "runtime",
+      "functions": 57,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/onnx-ml-tree-ensemble-conformance.js",
+      "sha256": "3b9ee05c06d9ed0625cd7e7751b151a17b77b9227df80b651aac77eb36711e35",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 63,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/onnx-ml-tree-ensemble.js",
+      "sha256": "1738f39c553d64008bcbf19ce5cbe89db64c732bb0aeda74a64ca747789a8732",
+      "language": "js",
+      "role": "runtime",
+      "functions": 108,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/onnx-ml-value-inference.js",
+      "sha256": "c213f24657b21b6a112d5ab8a5b011a448e06070cda8fc1c85f5b40b9d8933ad",
+      "language": "js",
+      "role": "runtime",
+      "functions": 61,
+      "calculation_candidates": 12
+    },
+    {
+      "file": "web/lib/onnx-operation-cost.js",
+      "sha256": "2f50364e6b142432459113c0ac6ac38b5726f0474a776521240ea01f6c4bceb3",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-opset-imports.js",
+      "sha256": "f44a68399206069b194e46e22c84119012fa134e20d007df5807179e61b60fb9",
+      "language": "js",
+      "role": "runtime",
+      "functions": 21,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-ort-extension-shape-inference.js",
+      "sha256": "47714385e4057c69034da23d3cdd8a86ae5503b62e8d29afc29d85ea63152b63",
+      "language": "js",
+      "role": "runtime",
+      "functions": 19,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/onnx-ort-matmul-shape-inference.js",
+      "sha256": "c66d0fb278ad53aa9843c73a6234b133d027a680a57fbdcb1990e17a2a367446",
+      "language": "js",
+      "role": "runtime",
+      "functions": 24,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/onnx-ort-recurrent-shape-inference.js",
+      "sha256": "096596e889ea899b404002334c81b712b828554bc4747668e267dcdba284093a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-ort-transformer-shape-inference.js",
+      "sha256": "ffcd883d6038d265b56b1127c86cdf699f5de0ba22549483f7a17cf7d2b401fd",
+      "language": "js",
+      "role": "runtime",
+      "functions": 25,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/onnx-runtime-shape-binding.js",
+      "sha256": "6bd6f4eae513529804ec81a0ea0a07311a6729b74774c1e8b5726b41aca2bbf1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 37,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/onnx-schema-legality.js",
+      "sha256": "af81ab59cf53d1286492eacaa5cf42f181f21d54d28f9e337088dea33b4c12a4",
+      "language": "js",
+      "role": "runtime",
+      "functions": 13,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-shape-inference.js",
+      "sha256": "e0b6147455eda287f75b56b7a6c098d14dee7e59649c0162110f13c82ddf5e0f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 606,
+      "calculation_candidates": 43
+    },
+    {
+      "file": "web/lib/onnx-shape-ops.js",
+      "sha256": "14705c42a9cc89e5939663b159c94670c3d430f196b7eb7752bb0073d2138ded",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-shape-schema-generated.js",
+      "sha256": "cb8d7111db5e9a97bd7109cba9368ce48f432814e97d35e50b217c210cd69dcc",
+      "language": "js",
+      "role": "generated_source",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-sparse-tensor.js",
+      "sha256": "165ced8b5a1fd092296ae876385798df95eda6875e9bf92563e3e4a84c473408",
+      "language": "js",
+      "role": "runtime",
+      "functions": 33,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/onnx-static-value-evidence.js",
+      "sha256": "7d43f34e2100abcd8306728c1c16f6332fbf108e338e8d35efed39b889ed8db2",
+      "language": "js",
+      "role": "runtime",
+      "functions": 13,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/onnx-tensor-types.js",
+      "sha256": "b43c7df7ba512f25f7214d13a47e748dc3cede7cc0dfb4d3396ecfadfc13952c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-tfidf-vectorizer-conformance.js",
+      "sha256": "d8cb2abd84840324caef8a296da409c7a03a3ab9bc8a900d6f2e96b710b93954",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 58,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/onnx-tfidf-vectorizer.js",
+      "sha256": "482d106fbeb04827d4f684bf3b381894ad398056f6e5354fcc6c8be7d7b226b0",
+      "language": "js",
+      "role": "runtime",
+      "functions": 44,
+      "calculation_candidates": 7
+    },
+    {
+      "file": "web/lib/onnx-type-proto.js",
+      "sha256": "70c9cae4fb43e1e35c862b273838742f58c29ad5d3b55fc40d1dd6b368a99d6e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 72,
+      "calculation_candidates": 9
+    },
+    {
+      "file": "web/lib/ort-build-attestation.js",
+      "sha256": "39f07c00788df072e6228bd613f9d3177f95e248209b0856d97fa891be3e3081",
+      "language": "js",
+      "role": "runtime",
+      "functions": 23,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/ort-compatibility-evidence.js",
+      "sha256": "ccd8549fa08a722c212dd2dc62700bd8707333b0121588e87d47af325fb7f097",
+      "language": "js",
+      "role": "runtime",
+      "functions": 85,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/ort-reduced-operator-config.js",
+      "sha256": "a55653affeb35c412510a111469c0363d0e26bff371c49e8369d1d269c8e6e7f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 27,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/ort-selected-build-binding.js",
+      "sha256": "ced4db25d3058cd11cc568690d1c22946dd736594a0c426bdf218d79f5e17a88",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/overview-domain-map.js",
+      "sha256": "142228ae8f3f13f65dd1dade7c022df737e27b97b37f912162dec98cde0f23d7",
+      "language": "js",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/performance-visuals.js",
+      "sha256": "37b3346f436ad96f8caa1b84644795049fb92b736b90d3b6bf252b31a90ebf83",
+      "language": "js",
+      "role": "runtime",
+      "functions": 234,
+      "calculation_candidates": 14
+    },
+    {
+      "file": "web/lib/placement-comparison.js",
+      "sha256": "24e94e9c5e45c6f5ff9c24e7dba64acf909e1fecc29efde60ab7128543867504",
+      "language": "js",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/preprocess-ui.js",
+      "sha256": "2078bbad83514502a506133551db66358855afae6f9e5c47364e9a699cd5ad04",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/preprocess.js",
+      "sha256": "5a406429b025c53da5d3428b8c89a24a35cc8b1bea9bab9eb43e930aac0bd24b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/preprocessing-consequence-core.js",
+      "sha256": "4e60e54f6b1965d5f6ab757df266d4ef88af90caec6d55b704a0baabc016a25a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 28,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/preprocessing-consequence-runtime.js",
+      "sha256": "1e1c0ab5908b155f9bbeb2814915d9cc3edf0d4e81b3be9a1c7c9ee063d09939",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/preprocessing-consequence-validator.js",
+      "sha256": "17597e9b81e232a764848da88b62131f29f4c86364e02d93ca86cb9d145953f8",
+      "language": "js",
+      "role": "runtime",
+      "functions": 19,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/preprocessing-consequence-viewer.js",
+      "sha256": "f56d1fb5af6e7702126d4c941544e4e790653a06859690c0ba6ce782389577c3",
+      "language": "js",
+      "role": "runtime",
+      "functions": 55,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/preprocessing-realizability-viewer.js",
+      "sha256": "d6ef794060abfdf70d2be83ddf254cf44dbed114ed1b7e332e1d81921ade1814",
+      "language": "js",
+      "role": "runtime",
+      "functions": 47,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/preprocessing-realizability.js",
+      "sha256": "f1a412d3e7458068593f180e28ab82125205c5a87dc06892e39a8339b32ba2a3",
+      "language": "js",
+      "role": "runtime",
+      "functions": 32,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/protocols.js",
+      "sha256": "0e24e0e00856df1e0fd5757acb2dac78a48f18d13ff2e7f513ae39b53ae7bcc5",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/provenance-ir.js",
+      "sha256": "a35561196c07b3655fd2d3550fc0a44b23348f57122a621003eeff03ff6e5efa",
+      "language": "js",
+      "role": "runtime",
+      "functions": 27,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/provenance-panel.js",
+      "sha256": "1acaf77306c114f4c0b3a0655f2e770a347d736b0162f8ceff7b1423d90cfb85",
+      "language": "js",
+      "role": "runtime",
+      "functions": 63,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/provenance/bom-reference.js",
+      "sha256": "cd15d21aeed8463d85bce8144b326560b8d33cad755a6ed28f40318dd297c129",
+      "language": "js",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/provenance/contracts.js",
+      "sha256": "8227c213028aeb8583aaee62ec67e79de05cc5750812d41b3e4c734d61fc1ead",
+      "language": "js",
+      "role": "runtime",
+      "functions": 16,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/provenance/cyclonedx.js",
+      "sha256": "f86f38288c3629f792d06a1216fd07b7df490cfe040bf488285eddc9724b2d99",
+      "language": "js",
+      "role": "runtime",
+      "functions": 26,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/provenance/files.js",
+      "sha256": "66b7f1faa929e6f4ee2b3bfb328d8ec52108905abde485f59631be45ec9cc0ad",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/provenance/omop.js",
+      "sha256": "de821a4329ce12aeba14bb2e1a46a7a7c24c52c5269a66e28ef97add862b44e3",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/provenance/summary.js",
+      "sha256": "8070c7a9936ba59a5e919e3f2dfb7108f86ea41fd2f3c0cb23d6cf0d9d156002",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/public-cyclonedx-export.js",
+      "sha256": "6decee757f1632a8bd718ec0868fd5bb87d6a7493b99f9afe919222e433dafce",
+      "language": "js",
+      "role": "runtime",
+      "functions": 16,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/public-evidence-package.js",
+      "sha256": "ed1c48c9d7cfbc62cea1e41780d591703843ed3db29703ae81a6f472b268ca2a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/public-export.js",
+      "sha256": "ae7781e44ab3e0ef9a213d400f1837aeef5ca75903cf30aa4dc3cb81625aac4f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/public-key-signature.js",
+      "sha256": "6044ca306cfd5239dab6f61fa35374282f698d5c683b9e7b5a30a73cd6a3c735",
+      "language": "js",
+      "role": "runtime",
+      "functions": 29,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/public-product-contracts.js",
+      "sha256": "8ee87015500ed9cedf192d5f1633c0966d77ca8e5d3ccb4a09be50c2314c39ea",
+      "language": "js",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/public-verification-manifest.js",
+      "sha256": "ca0e59c5dcd0fa5f9b7a52e71d059b8bcfc28512c590f432038c953d11ea2737",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/public-verification-ui.js",
+      "sha256": "10b3908c7c3f641b1c29d00cc148c132a57c0a1d3a57f12a2bff1fa3b3edc59c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/quant-evidence-chains.js",
+      "sha256": "f57eed5cf3d8f96ec783e4b55d856c2caf0eff2ca612bbd37d9eeb30d401f6f1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 42,
+      "calculation_candidates": 10
+    },
+    {
+      "file": "web/lib/quant-evidence-view.js",
+      "sha256": "c33fa3b4e9640398b739b27dec540f23c2856457980a287fadd0c510b3f33fe1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 68,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/quant-research-applicability.js",
+      "sha256": "202cd634a7b6db9b1fabdd0643878b29f1a509da50d21d825e8bdbb4085870c0",
+      "language": "js",
+      "role": "runtime",
+      "functions": 29,
+      "calculation_candidates": 6
+    },
+    {
+      "file": "web/lib/quantization-contract-summary.js",
+      "sha256": "4b27a027f36f1ded2417514b7cd446b7000f5bd23d3eb2d2eaf5a3890102637a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 66,
+      "calculation_candidates": 6
+    },
+    {
+      "file": "web/lib/quantization-lattice.js",
+      "sha256": "e3af077fa2f46ef6403a2a31d29265a1b08350b3e6a24bcb8d863c194eff27c0",
+      "language": "js",
+      "role": "runtime",
+      "functions": 162,
+      "calculation_candidates": 6
+    },
+    {
+      "file": "web/lib/quantization-math.js",
+      "sha256": "ff83178f02d2ff5a36eca83c8e4a97f27730166067316c5dc51c364c457fa89e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 13,
+      "calculation_candidates": 7
+    },
+    {
+      "file": "web/lib/quantization-research-suite.js",
+      "sha256": "275b483b9ef2a2f1aca90d104e5561a277a0aacfea5114c96d5c72f9cdea9e9f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/reason-codes.js",
+      "sha256": "e53d26d8d60c4794c2cd49b479c82b5b98a71a501cde7cb890f10c751a90ad90",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/redesign-codegen.js",
+      "sha256": "d9301b2e20b1de7564d22f1ffacd2fe7628aa3d900fd425bd5ca660623cfbb5e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 64,
+      "calculation_candidates": 6
+    },
+    {
+      "file": "web/lib/report-bundle.js",
+      "sha256": "d23c53de212d6e8a56df04530415aa8108de3b04a4062f6a21f8a9c5b768f7b1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/report-change-analysis.js",
+      "sha256": "8182a7a5f030f009a23e753511977903869415144d8cf2eb41bbc8f6ba7dec9d",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-conformance-common.js",
+      "sha256": "82b98cd95a4cb92aef4ad9178ea14744077a14a7e49ecac50718c1e379c2abc1",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 18,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-conformance-coreml.js",
+      "sha256": "b50354fe658de662f14c5b2a2078154674933357de83377ff7d0c583661aa64b",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 45,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/report-conformance-execution-placement.js",
+      "sha256": "ceaaccf364ab879333027b4b58d748195ded914c2d2d53b684e15e2f917f4376",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-conformance-onnx-tfidf.js",
+      "sha256": "eb9419917868e09acd27bf53f536ee1f1ec48ec524a56d4b3cf475645ef17af3",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 29,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/report-conformance-onnx-tree.js",
+      "sha256": "1ba6e13fa1be4156555d2b12358fa210ddb3e095193d48dd3fa0f56d900ac1ad",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 30,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/report-conformance-onnx.js",
+      "sha256": "4a49b64a07fc87df6319f7065cf10034c0be1bedad8326d91d1d59176c359ed4",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 571,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/report-conformance-ort-runtime.js",
+      "sha256": "2baf6baeb86992208c85db50db5c489f07185428064e432fc80c3bdada25eee7",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 20,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/report-conformance-runtime-helpers.js",
+      "sha256": "9dd7a8b1a091fa272d26c185e9c79770f98cc2dfee7552295bc860973f792f15",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 174,
+      "calculation_candidates": 9
+    },
+    {
+      "file": "web/lib/report-conformance-serialized-containers.js",
+      "sha256": "e33e78f251b3c5b6fe011682c1b38689f955fe4436f99954867bcf9e54e52d4c",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 53,
+      "calculation_candidates": 7
+    },
+    {
+      "file": "web/lib/report-conformance-tflite-storage.js",
+      "sha256": "0577ff0fe6d558b66ddc4505c91b479dcfb4e74fa402d5e08069e6ed8a0c6bb8",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 68,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/report-conformance.js",
+      "sha256": "2dc0637e174051ceb82dfb18f74e316642dfc39ffc7d8a345f2b5fce895f74b4",
+      "language": "js",
+      "role": "independent_reconstruction",
+      "functions": 384,
+      "calculation_candidates": 8
+    },
+    {
+      "file": "web/lib/report-context.js",
+      "sha256": "4a5727f0906d6c6ddbce2cfb0bc3040d2530a4d43adae8e93cfd90139600e9ef",
+      "language": "js",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/report-engineering-deployment.js",
+      "sha256": "0718f6d413ddba43a9b66081f51d3f89b396fc9558f79b185b23ca780ec790d8",
+      "language": "js",
+      "role": "runtime",
+      "functions": 52,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/report-engineering-derivations.js",
+      "sha256": "79a7abd069a1670f32cd68ba6022e11cfaff6724847c527d0e57fe558548d416",
+      "language": "js",
+      "role": "runtime",
+      "functions": 19,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/report-engineering-dynamic-shapes.js",
+      "sha256": "8b363c6242992c673269eaf16b5207805177882714e83ebc3f6427333e0c4abb",
+      "language": "js",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/report-engineering-entry.js",
+      "sha256": "16041e14670b18cc9cd38a19ae2b9c298e87a69543cfcb452643b072bb8a4d35",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-engineering-interface.js",
+      "sha256": "9bdbd5b10595ef083e817f13d9c4d27424d6969ed0995a4904ee8eb41f5c8cc7",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/report-engineering-kernels.js",
+      "sha256": "6caed86ebeaccf51e42f77f9d49620387001118320df843b062ccfa8c0edca91",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-engineering-onnx.js",
+      "sha256": "464a1db52a50387694e3702bd7f703ccb3bbf5ad3d8438d9bc530ba3cfcb5c8c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 76,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/report-engineering-quant-research.js",
+      "sha256": "48de093b2b70b09c6dfda95db664135abfbf6c22e1541aeebb64e1b3ef01178f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 134,
+      "calculation_candidates": 7
+    },
+    {
+      "file": "web/lib/report-engineering-safetensors-quantization.js",
+      "sha256": "1e983005c8f914b4040b2f7a186499dad391bff325aed513c708b33f4d6e39ba",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/report-engineering-serialized.js",
+      "sha256": "878fb677d2987524f2b00c42abbd04bd06764313102748ce3eeed8993b6dcbe7",
+      "language": "js",
+      "role": "runtime",
+      "functions": 43,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-engineering-tflite-delegates.js",
+      "sha256": "69f381ce7a192bd0bdcf020984267c9e71b75a74fafa132486747c0124bb4a86",
+      "language": "js",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-engineering-tflite-subgraphs.js",
+      "sha256": "09d2944c233d97868089aca25c1b5848022195d2271b92f1f91670ee9f6478e6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 20,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-engineering.js",
+      "sha256": "313b1dfc900ee615e9f0d7eb02eb0768f3fb765ce22397fb03c29853229034f6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 266,
+      "calculation_candidates": 20
+    },
+    {
+      "file": "web/lib/report-evidence.js",
+      "sha256": "9e3edeb44d4dff8fe89f11ad8687b682da6a36c322bdf0f5626fa0eab6c72de9",
+      "language": "js",
+      "role": "runtime",
+      "functions": 96,
+      "calculation_candidates": 6
+    },
+    {
+      "file": "web/lib/report-execution-placement.js",
+      "sha256": "885fbe009a3e41020129d7f1870536d97b7fe916ffcd48b7f7fcb0e6422fa875",
+      "language": "js",
+      "role": "runtime",
+      "functions": 17,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-export-contracts.js",
+      "sha256": "0f07dcffcdaf96471f4305f76ec2f96da4a9e1bf75e572afa8f1a41dcc87ba16",
+      "language": "js",
+      "role": "runtime",
+      "functions": 131,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/report-findings.js",
+      "sha256": "b534da972245d19e631e12194f8bd88e6de56a97e0e2cca384f590ad75774522",
+      "language": "js",
+      "role": "runtime",
+      "functions": 315,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/report-integrity.js",
+      "sha256": "4ff84592676541ed66488021ecc25db15e2f63bb6790c4a5c778f04a76fe80d6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-metadata.js",
+      "sha256": "67196abab4bb37ea5ca92d158c5dcca0726d1d4adfd3f359106feadbaf3f378a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-mlbom-compat.js",
+      "sha256": "f3f93e332f79871ed4df31b274467ae72a9cbcf6e974abf8d2d300714dd0acbd",
+      "language": "js",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/report-mlbom.js",
+      "sha256": "5cf13dd801d23b3eb4650224f60df7c61a3dbf13e1cdc1bef19d4b06aa45db52",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-quantization-contracts.js",
+      "sha256": "012e2a78b792ee65515b110e750cf4f877335522583b182584598850808f563c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 139,
+      "calculation_candidates": 15
+    },
+    {
+      "file": "web/lib/report-raw-entry.js",
+      "sha256": "c692c3e6a0694693f3c073fd34388db064b3f3c6102ad41ccaf9e63636cc34fd",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-regulatory-entry.js",
+      "sha256": "3618d07dce1b6fc0f5627ba0498201fd7b9dfb69ea362a1388d4b76f0b04f6e0",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-regulatory.js",
+      "sha256": "d7dc13924e8d37e10b99d596886425b4f2b8fbe926834bc4b41e20fd8a5b2b2f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-sections.js",
+      "sha256": "d0f14f95b861792201000d6de7e07bf02e83bb250ca5e419a8c0ff6060e229b3",
+      "language": "js",
+      "role": "runtime",
+      "functions": 71,
+      "calculation_candidates": 6
+    },
+    {
+      "file": "web/lib/report-security-posture.js",
+      "sha256": "6b616fc950c918907381fdfaf2c2c896699c22e21817169e20af08136cef4e89",
+      "language": "js",
+      "role": "runtime",
+      "functions": 17,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-store.js",
+      "sha256": "e2ab2c15551b38b062853de932dade12f4f3bc8474769a70dbeca0f9faab9d95",
+      "language": "js",
+      "role": "runtime",
+      "functions": 63,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report-utils.js",
+      "sha256": "c8c2b9b7fcf8ca58e82805e3744e71718e690162e58acea6e6f569a31dcfdf69",
+      "language": "js",
+      "role": "runtime",
+      "functions": 29,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/report.js",
+      "sha256": "333f6469952b7fb9c575eea170b3ea7cdfeed95b1f735bcbae082c13d217f0a0",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/requantization-fidelity.js",
+      "sha256": "94d65a8cdb8fa242d51cf358ffcc02fe8fb0dadf8e6ae2c8e7a78c7a3e83eb81",
+      "language": "js",
+      "role": "runtime",
+      "functions": 103,
+      "calculation_candidates": 12
+    },
+    {
+      "file": "web/lib/research-visuals.js",
+      "sha256": "55e9152966e6a223ad7bb491c9c1ee3c377044c89efec07c57c928098a9605a0",
+      "language": "js",
+      "role": "runtime",
+      "functions": 24,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/research.js",
+      "sha256": "334d2fdc115b4a3f0d703ceb0ada135ad6cc18cde0a10e1096caaad252b1ce42",
+      "language": "js",
+      "role": "runtime",
+      "functions": 187,
+      "calculation_candidates": 14
+    },
+    {
+      "file": "web/lib/residual-contract-distortion-worker.js",
+      "sha256": "c8ced197c93f05882e67a8e070fd7d06286433a863211c0de9ac23a70bd98fd1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/residual-contract-distortion.js",
+      "sha256": "26bfaa19d8471b1f1b206911e95921139d375df6952442f9e38be7faf6275e98",
+      "language": "js",
+      "role": "runtime",
+      "functions": 136,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/residual-step-response-worker.js",
+      "sha256": "015d02d98d815e96cad0d0a769a4c9077a6339f570f71e8f20fdb53cde969d5d",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/residual-step-response.js",
+      "sha256": "68b5e15d14410082a694de9e379ae358bafe912e0f31b847ad7c6037bb75541c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 118,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/review-export.js",
+      "sha256": "9ac8ef3b69b040f30f97e823132763a687c9d0c725ffbe8d2bc00284169afc0e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 35,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/review-policy.js",
+      "sha256": "4547d33de6fdacae604cca47b22a0953e7bf0bd5fc0e9bfa4d0672b7b13f29c0",
+      "language": "js",
+      "role": "runtime",
+      "functions": 25,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/review-summary-view.js",
+      "sha256": "11db1f256dd0d020c2c2dc0dddfc5fc1b93bedf5f741520b9095d4e8efbdb780",
+      "language": "js",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/review-summary.js",
+      "sha256": "90e866192d9733fc01e62762ef8770e492d5810974e69912e4485a8d3967436b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/rgb-png.js",
+      "sha256": "83fdee7d9a5725a9243c83c08de46ab39f55b26f79afa894049138c76d82bb6a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 16,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/rounding-equivalence-worker.js",
+      "sha256": "99d4f1f6a0ee4db28ab4476129afcf105413c4f0c51fa6e66bcb8224502b5f70",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/rounding-equivalence.js",
+      "sha256": "c8e5b591293d710f5d2470501af64e1288c7d9b4b6ac6b39a75a50cdd5e5a69e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 152,
+      "calculation_candidates": 15
+    },
+    {
+      "file": "web/lib/rule-explanations.js",
+      "sha256": "ced61760100c5763f8dd2ea195f72a5c4d7b1c879bfd0d08e8656fe59a0b2780",
+      "language": "js",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/runtime-backend-evidence-ledger.js",
+      "sha256": "079a7730873d2eed3a539b86e5c40ef535728a1c5df4e160ea9cf3e50f0308fe",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/runtime-data-movement-evidence.js",
+      "sha256": "a1160643848be46aa369e8e0432eedb4644e4539443b8885c251ca0593115968",
+      "language": "js",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/runtime-evidence-closure.js",
+      "sha256": "8496f97365db4de46724dc0c2138eb17e41c0cd7692c03e91aeb3beeed4bb271",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/runtime-evidence-controller.js",
+      "sha256": "6f03e82d75f312153c5372ec64f519cd68de86bfc98008ca5daf9cde776c7bc4",
+      "language": "js",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/runtime-evidence-sidecar.js",
+      "sha256": "72771618980755a16a9f3c591077a4a3cf749016c39e4997ded5c5d0570ddcce",
+      "language": "js",
+      "role": "runtime",
+      "functions": 21,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/runtime-memory.js",
+      "sha256": "020c399ec9d0f173f75b824025bd5141de4d43b5ed9ea17edc02a9ca63963d29",
+      "language": "js",
+      "role": "runtime",
+      "functions": 39,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/runtime-module-loader.js",
+      "sha256": "4e3c6abb7bc7b801e7f18f136e83d5f61d170661d4872c1f3eafc11df30ff5a6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/runtime-profile-adapter.js",
+      "sha256": "a6b8ec8ed6aa8e09cb8eabaab2ff7fb5704931b56f7eb81016b368168c3e3e07",
+      "language": "js",
+      "role": "runtime",
+      "functions": 63,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/runtime-profile-modal.js",
+      "sha256": "4319369f1b909dd31c720983a1185015650c3427490bf1aed8195eb22d1706da",
+      "language": "js",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/runtime.js",
+      "sha256": "94b25ce1cd8ddaff8dc744a9d711d455c2dcc4a36166d5da2f7d23edb7814a56",
+      "language": "js",
+      "role": "runtime",
+      "functions": 27,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/safe-source-artifacts.js",
+      "sha256": "7802fd544a7508d8d749f704f2ceb1a67f4be70efaf2a5dc8a4804f24e8436cc",
+      "language": "js",
+      "role": "runtime",
+      "functions": 200,
+      "calculation_candidates": 7
+    },
+    {
+      "file": "web/lib/safetensors-quantization-contract.js",
+      "sha256": "73c6e1943699dd6d22413a06f491a0bc23df8454323c901cd4be654110dc5c84",
+      "language": "js",
+      "role": "runtime",
+      "functions": 154,
+      "calculation_candidates": 14
+    },
+    {
+      "file": "web/lib/safetensors-quantization-export.js",
+      "sha256": "70d9300b8e38027df8c5ac0c9861b4b99fd14b64fb246f32a9f564e065c53122",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/safetensors-quantization-view.js",
+      "sha256": "ea290d002635e7754fe55be6ee10ac298dfc540a3ea4a03b6bb9b402bdad2cac",
+      "language": "js",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/sample-library.js",
+      "sha256": "4f8931d09d5fd195cb97635938d01ebf0aba094bfd5ee1ac7a28b86c5574c56d",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/sample-models.js",
+      "sha256": "297070b218664f35f387572bf78fceb872ddc85f0ab026eb8a9bf58693b32695",
+      "language": "js",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/sample-verification.js",
+      "sha256": "97b641b8cc38f1cae453402b84b0f003f221b7266a62c6c26f32f3b81a645acc",
+      "language": "js",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/scalar-numeric.js",
+      "sha256": "fee757a9526ff70bc633931139022619ad05f7a9d5923b293f3c88ae2af270ca",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 7
+    },
+    {
+      "file": "web/lib/scalar-types.generated.js",
+      "sha256": "560258e1c676fbb1b002ff25b65a0a4d86246034909e54aeb7238f04f04a07ea",
+      "language": "js",
+      "role": "generated_source",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/semantic-artifact-diff.js",
+      "sha256": "ae9740f00c93c33764baf90f846a9ad55cd70744c419471b4580e987c8497740",
+      "language": "js",
+      "role": "runtime",
+      "functions": 56,
+      "calculation_candidates": 5
+    },
+    {
+      "file": "web/lib/serialized-tensor-view.js",
+      "sha256": "ffe04435944a9069e0667c90624cf7a5776565fc8fc84b7fa6a4db519fd25c9f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/service-worker.js",
+      "sha256": "aad329bb0b5713600d4d9326e0a8dcc2c5b507d7ab9614ec13d3d7e4283719f7",
+      "language": "js",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/session-evidence.js",
+      "sha256": "ec88759a4cb0649b2e46788c139435106157cddacc852ef88b593e7e5c730211",
+      "language": "js",
+      "role": "runtime",
+      "functions": 26,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/sha256-sync.js",
+      "sha256": "7c9b351bcb453e579fc5166c4774313957f75fcc36f6e18d61c3027d0c8abd9b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/signing-key-trust.js",
+      "sha256": "a53aa5e04809435e988dd2232932b13cb49bbf6aff65b3db10859527e4165e3d",
+      "language": "js",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/spdx-artifact-export.js",
+      "sha256": "668ef678cd44950115cbb4d53ac1611490766b646f29d129c7f39280ac0f9ef0",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/static-audit-worker-client.js",
+      "sha256": "9f68aba5ad8bfa79e7c8dbbcd652ae72d80cc334ca84712024f86e25c1cb88d6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 17,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/static-audit-worker-protocol.js",
+      "sha256": "97bcbf9548a6fae2f8d1989861294693a627fa23376c98e112a25d8dd4570f98",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/status.js",
+      "sha256": "a59af553cfe378d4dfee6cc4aad728ce935101b967aaf5a4ada6adefb8adc057",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/storage.js",
+      "sha256": "974760ad15b82f7a9155b790af54db1db7333f86af4180d5bc3cfd6d95803b10",
+      "language": "js",
+      "role": "runtime",
+      "functions": 13,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/strict-json.js",
+      "sha256": "d2a99f28bba82126fe54430aadef919610e702b80cba7b5ce0308f870fec3462",
+      "language": "js",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/target-profiles.generated.js",
+      "sha256": "191ccdf930f49e3a4e09c1a5d150968728a33fe6aa04eb3e4651f421222aac27",
+      "language": "js",
+      "role": "generated_source",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/telemetry.js",
+      "sha256": "a02037c33a946fbcc678af163e308d1ec6c943285f7fd32314bd3635152880b1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 22,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/tensor-inventory.js",
+      "sha256": "414cf25d51c4fc0f216292cb0e35340ea02cbae3be27e883c5c66797c9a73ce3",
+      "language": "js",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/tensor-numerical-integrity.js",
+      "sha256": "a17bbc6d70767ca3e92c025fa75f9ff3b03891732296c1d3ad922017f0481f79",
+      "language": "js",
+      "role": "runtime",
+      "functions": 84,
+      "calculation_candidates": 7
+    },
+    {
+      "file": "web/lib/tensor-size.js",
+      "sha256": "404e3659cac1d92e35827c9e978cc28c97fb4c0ad5e567ceff3f0399275b859e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 23,
+      "calculation_candidates": 12
+    },
+    {
+      "file": "web/lib/tensorrt-cyclonedx-properties.js",
+      "sha256": "9ea1390d0833708d85326bc2cac443e629a7bbb82f2bf0986ba3ca4e1207de9c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/tensorrt-engine-inspector.js",
+      "sha256": "6f772f7c8280c53affbdacb7ef685c4ff9571833ab8c37a69c6aa198069fb455",
+      "language": "js",
+      "role": "runtime",
+      "functions": 38,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/tensorrt-llm-contract.js",
+      "sha256": "668138d02cec9c4fd2e2a5164fc1753f4af4721fa63ffef5626f81ca71154d2b",
+      "language": "js",
+      "role": "runtime",
+      "functions": 27,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/tensorrt-llm-source-metadata.js",
+      "sha256": "e1bad70c4699155aa0b1b011984508f384608f185b452d7b721b9d7016e74814",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/tensorrt-profile-cost.js",
+      "sha256": "07fa4a42582b063ddb4526675b6a6ef59c17113dc19e9d25b3ee3f2b4d937b5e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 16,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/tensorrt-source-metadata.js",
+      "sha256": "2d026449d6e1d0bed34d93a47db30cc322a453151faf1e0579bdfe8ba9329b48",
+      "language": "js",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/tensorrt-static-preflight.js",
+      "sha256": "2684637b2c077d597b5759ff9c4345eb656e7e1e7bd4b3e0c3aeb3fe6892993f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 43,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/tflite-accelerator-source-profiles.js",
+      "sha256": "c5e514ed822212411087b4898e30a8024b50ce90d06421917ef3d510a19b835c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 20,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/tflite-analysis-contract.js",
+      "sha256": "0bf420747fdb57fd899887fdcb4e58feeea9b1004f889190da8e2c329c649192",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/tflite-benchmark.js",
+      "sha256": "0b450c19dda30f7cb97a9dd573df39386a6c9a6e7eb80b82dea2d9c253bfe1bf",
+      "language": "js",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/tflite-build-configuration-binding.js",
+      "sha256": "18cf9b94e6008df0231e6e265c8e413f0a2dddf0d2cd643a3378f6eb4303dcd1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 20,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/tflite-delegate-compatibility.js",
+      "sha256": "5d83d1ed938071a182fac564a431a10017e0be8079d265cd54e600cb2002e709",
+      "language": "js",
+      "role": "runtime",
+      "functions": 13,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/tflite-delegate-rulepack-metadata.js",
+      "sha256": "e355e6b15e850cbe5604f55c9e1cf115dafc16e74dd43f5c7ae47d4fc8966c0e",
+      "language": "js",
+      "role": "generated_source",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/tflite-profile-info-adapter.js",
+      "sha256": "da49424c9f39e26795526a997ee85124517344aabea07157e55d2e1ce9fa4c4e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 48,
+      "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/tflite-runtime-info-adapter.js",
+      "sha256": "3efdfd2038b9ecc69c3a93546b9959f70fd62ded31f45da9e4350834b26a3332",
+      "language": "js",
+      "role": "runtime",
+      "functions": 48,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/tflite-worker-rpc.js",
+      "sha256": "edcdd7dbb919cfbe73eba9a778bfc96f8ae8b49c821a9d3962689c9beb7117f2",
+      "language": "js",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/theme-ui.js",
+      "sha256": "3957537ebeac861274cec6d78a397ac4c36ef2206e874d6e1c94bbf5c55c098f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/transformer-architecture-projection.js",
+      "sha256": "fac86b3326273bf29ba0747ff8488b9d5d18b692b155843983676ca4d6dcb358",
+      "language": "js",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/visual-export.js",
+      "sha256": "ba89d28ae0ae59951bace1c75a5b86e0af80e96123fdfce102acdd5b6cbfd7be",
+      "language": "js",
+      "role": "runtime",
+      "functions": 149,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/web-usage.js",
+      "sha256": "49562ccf0496c61bc8301099d7c7dc7c1dd9626e98b412d5023a3a1423497912",
+      "language": "js",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/weight-analysis-view.js",
+      "sha256": "53a253b0d585f397f31b3115ad1fc74c61c017e91f571040e934e0bc7efe6e36",
+      "language": "js",
+      "role": "runtime",
+      "functions": 28,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/weight-analysis.js",
+      "sha256": "15a68fa3db1798bc8959a44e8d90c7b29d1c3e4acf99364b5a3bd6bf5096c7b4",
+      "language": "js",
+      "role": "runtime",
+      "functions": 49,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/weight-hist.js",
+      "sha256": "440faadcbeb6f08f9e0e272ebe23b221e517868b153a4eaf21c971190de114ae",
+      "language": "js",
+      "role": "runtime",
+      "functions": 24,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/weight-ir.js",
+      "sha256": "b039758111563bcb7ff31be322e52e08b61169f619ee638c4a4d0f7c5d34ef83",
+      "language": "js",
+      "role": "runtime",
+      "functions": 15,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/weight-pruning-view.js",
+      "sha256": "0f34f0b2114eff58fc62fe1bf14089ce47007bd706253d0c5127d043ca751d00",
+      "language": "js",
+      "role": "runtime",
+      "functions": 45,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/weight-pruning.js",
+      "sha256": "40bb53a0397c16fae35e4dc97d9b3bf85d98b6fca582b6d7cb7701d4e4c76933",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/weight-visuals.js",
+      "sha256": "0ff43d85e9c017cb9c0d7e7989a5e9f0ea5261f029a96b617392107b9de2de1f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 31,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "web/lib/workflow-controller.js",
+      "sha256": "4d5818dd37124ca6bcec6c8e3a3c20adbfce34e92cc0c485411486cc36afa61e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 36,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/workflow-copy.js",
+      "sha256": "6fd35ad677406d9d31a8b161771270f87a4eda21d25e6c458392c9f4e8c7e36e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/workspace-navigation.js",
+      "sha256": "db1355e2eab4eb47800325f81fe95946aa2d408fddc6624fbd8501b89be0c65a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/xnnpack-rulepack-metadata.js",
+      "sha256": "f42250b981488417d038a4e6a778979852e93bfff9c7fa38774d2853af8bd975",
+      "language": "js",
+      "role": "generated_source",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/xnnpack-selector-evidence.js",
+      "sha256": "6b0e751683f7a42c7706cb8eb5f3885e00b2a865a470fe4a7414f669183b3e8a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 55,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/zip.js",
+      "sha256": "2dac7a8a38cf5cdc2b7155c70497a3ecb901aa7a2c36a072d9ea947546a86500",
+      "language": "js",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/onnx.js",
+      "sha256": "8e17743804947063dd7f6f24acef5c7c5e7ab93e9b60c0b01c3e9d3af33268ca",
+      "language": "js",
+      "role": "runtime",
+      "functions": 504,
+      "calculation_candidates": 59
+    },
+    {
+      "file": "web/sw.js",
+      "sha256": "ba56f690ef5bf81d35842f28743261d63d6fba8cf13078ab5d13e305a1d929ce",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/test.js",
+      "sha256": "9d053130199dbd57a6d0dded1f8b4d8bd11f6add2972df16c4dc59470c682ce5",
+      "language": "js",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/workers/deepbom-analysis-worker.js",
+      "sha256": "df4509460e1969dbd35ba9835cc83cb83c82c65d8d81fed14654f79c84fe28be",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/workers/numerical-ir-worker.js",
+      "sha256": "fb3777c600e06ddfbc3c892ee206d6554c670b65201098ab8b5eba5f6ee33147",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/workers/static-audit-worker.js",
+      "sha256": "5df420a4e885b1909fa77326597645d275f68604a2479d405910d7bf202a32df",
+      "language": "js",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/workers/weight-pruning-worker.js",
+      "sha256": "c599054a6a329cc44432fea8a5c479e707ceb785d565e793751ca6cea3cd41d4",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    }
+  ],
+  "scalar_width_tables": [
+    {
+      "file": "web/lib/dynamic-shape-cost-conformance.js",
+      "line": 24,
+      "body_sha256": "7fb0af0ae481c7aba5ced06c45ed3c78af7c3c2c850fd10ccb5075f45ce05ceb",
+      "names": [
+        "BOOL",
+        "UINT8",
+        "INT8",
+        "FLOAT8E4M3FN",
+        "FLOAT8E4M3FNUZ",
+        "FLOAT8E5M2",
+        "FLOAT8E5M2FNUZ",
+        "FLOAT8E8M0",
+        "UINT16",
+        "INT16",
+        "FLOAT16",
+        "BFLOAT16",
+        "UINT32",
+        "INT32",
+        "FLOAT32",
+        "UINT64",
+        "INT64",
+        "FLOAT64",
+        "COMPLEX64",
+        "COMPLEX128",
+        "UINT4",
+        "INT4",
+        "FLOAT4E2M1",
+        "UINT2",
+        "INT2"
+      ],
+      "disposition": "Independent symbolic-cost reconstruction oracle; deliberately does not import production width rules."
+    }
+  ],
+  "native_scalar_tables": [
+    {
+      "file": "src/research.rs",
+      "body_sha256": "5d40df430446b48556d67ceb8884fcb1aba1e2ac82a983d68f4ccab34d927290",
+      "disposition": "Synthetic sensitivity-input amplitudes (30, 0.3, 1000), not dtype storage widths or measured data."
+    }
+  ],
+  "remaining_duplicate_calculation_candidates": [
+    {
+      "body_sha256": "1ec1055d1abf29a75f3d8663985317bd678c05b153b3b254bb67b798d565044e",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-linear-model-conformance.js",
+          "name": "bigintFloat32",
+          "line": 355
+        },
+        {
+          "file": "web/lib/onnx-ml-normalizer-conformance.js",
+          "name": "bigintToFloat32",
+          "line": 185
+        },
+        {
+          "file": "web/lib/onnx-ml-scaler-conformance.js",
+          "name": "bigintToFloat32",
+          "line": 167
+        }
+      ],
+      "disposition": {
+        "category": "independent_oracle",
+        "reason": "Independent conformance implementations of direct integer-to-binary32 conversion. Production uses scalar-numeric.js; external Fraction oracle also verifies every production boundary."
+      }
+    },
+    {
+      "body_sha256": "5bf4230ed1d72bb381179898fc1bdf602ed430f605d3a5a36f692e756f993028",
+      "occurrences": [
+        {
+          "file": "web/lib/dynamic-shape-cost-conformance.js",
+          "name": "exactSpatialValues",
+          "line": 356
+        },
+        {
+          "file": "web/lib/dynamic-shape-cost.js",
+          "name": "exactSpatialValues",
+          "line": 366
+        }
+      ],
+      "disposition": {
+        "category": "independent_oracle",
+        "reason": "Symbolic shape-cost conformance reconstructs native spatial attributes independently from the production formula builder."
+      }
+    },
+    {
+      "body_sha256": "6027b28b79cb647d3bc8c4b2d03d8287bfab37d1466042fd3b93fc5092710f79",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-svm-conformance.js",
+          "name": "floats",
+          "line": 220
+        },
+        {
+          "file": "web/lib/onnx-ml-tree-ensemble-conformance.js",
+          "name": "floats",
+          "line": 415
+        }
+      ],
+      "disposition": {
+        "category": "independent_oracle",
+        "reason": "Independent operator-conformance readers retain separate native attribute validation."
+      }
+    },
+    {
+      "body_sha256": "607f38da5ddff22b1491e33723a851de950237852563644797d08852b7f85139",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-normalizer-conformance.js",
+          "name": "squareToFloat32",
+          "line": 170
+        },
+        {
+          "file": "web/lib/onnx-ml-normalizer.js",
+          "name": "squareToFloat32",
+          "line": 229
+        }
+      ],
+      "disposition": {
+        "category": "independent_oracle",
+        "reason": "Normalizer conformance independently reconstructs pinned float32 intermediate rounding; sharing production arithmetic would weaken the oracle."
+      }
+    },
+    {
+      "body_sha256": "69b2be6191d2da144b01932c135c65f00c52dedc20c4f89e5c52b36c4b4032c0",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-normalizer-conformance.js",
+          "name": "toFloat32",
+          "line": 181
+        },
+        {
+          "file": "web/lib/onnx-ml-scaler-conformance.js",
+          "name": "toFloat32",
+          "line": 163
+        },
+        {
+          "file": "web/lib/scalar-numeric.js",
+          "name": "numericToFloat32",
+          "line": 32
+        }
+      ],
+      "disposition": {
+        "category": "independent_oracle",
+        "reason": "One production Number/BigInt-to-float32 adapter is shared; independent conformance paths retain their own integer-rounding implementation."
+      }
+    },
+    {
+      "body_sha256": "6bec5c9086cdd0247a7b1fde742d7a21ca5f5f7f27f4e757169d71181209af06",
+      "occurrences": [
+        {
+          "file": "web/chatgpt/deepbom-widget.js",
+          "name": "formatBytes",
+          "line": 1061
+        },
+        {
+          "file": "web/claude/deepbom-widget.js",
+          "name": "formatBytes",
+          "line": 400
+        }
+      ],
+      "disposition": {
+        "category": "presentation_boundary",
+        "reason": "ChatGPT and Claude sandbox widgets have isolated delivery/bootstrap contracts. These format labels only; neither computes artifact bytes or IR metrics."
+      }
+    },
+    {
+      "body_sha256": "70cae0bcc73e8aa2399b5a5b49aabf0f7439d6254ab4ec1e20ff4298cdfdf540",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-linear-model-conformance.js",
+          "name": "safeProduct",
+          "line": 384
+        },
+        {
+          "file": "web/lib/onnx-ml-one-hot-encoder-conformance.js",
+          "name": "safeProduct",
+          "line": 231
+        }
+      ],
+      "disposition": {
+        "category": "independent_oracle",
+        "reason": "Independent conformance multiplication for linear models and one-hot encoding; production safe-count products use tensor-size.js."
+      }
+    },
+    {
+      "body_sha256": "742d58ec426cc12ea53553db69245ecfebd389494942f6d80c44ba6f97fec1ff",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-linear-model-conformance.js",
+          "name": "duplicateCount",
+          "line": 343
+        },
+        {
+          "file": "web/lib/onnx-ml-svm-conformance.js",
+          "name": "duplicateCount",
+          "line": 267
+        }
+      ],
+      "disposition": {
+        "category": "independent_oracle",
+        "reason": "Independent vocabulary conformance checks preserve typed key equality; production vocabulary counts have one owner in onnx-static-value-evidence.js."
+      }
+    },
+    {
+      "body_sha256": "8ed8d37419c2f2a966a5de1e653956ebd130b1a337a915c589ef2d52538c19e2",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-value-inference.js",
+          "name": "sumExactNonnegative",
+          "line": 1350
+        },
+        {
+          "file": "web/lib/report-conformance-onnx.js",
+          "name": "exactArraySum",
+          "line": 992
+        }
+      ],
+      "disposition": {
+        "category": "independent_oracle",
+        "reason": "Production integer-list inference and report conformance independently validate exact nonnegative sums."
+      }
+    },
+    {
+      "body_sha256": "a8052629185105985bb06e352b4e64203a40643fbbee8175642c1516e0d43f60",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-imputer-conformance.js",
+          "name": "safeShapeProduct",
+          "line": 218
+        },
+        {
+          "file": "web/lib/onnx-ml-label-encoder-conformance.js",
+          "name": "shapeProduct",
+          "line": 327
+        },
+        {
+          "file": "web/lib/onnx-ml-normalizer-conformance.js",
+          "name": "safeShapeProduct",
+          "line": 230
+        },
+        {
+          "file": "web/lib/onnx-ml-scaler-conformance.js",
+          "name": "safeShapeProduct",
+          "line": 190
+        }
+      ],
+      "disposition": {
+        "category": "independent_oracle",
+        "reason": "Independent conformance shape products; production shape products are centralized and checked against separate integer/broadcast oracles."
+      }
+    },
+    {
+      "body_sha256": "dce8e768abcfe9ebae5aa43922311e9eae7d6861aa3abcf5631685b0610c2d83",
+      "occurrences": [
+        {
+          "file": "web/lib/kernel-inspector.js",
+          "name": "sameCountMap",
+          "line": 1615
+        },
+        {
+          "file": "web/lib/report-conformance.js",
+          "name": "sameCountObject",
+          "line": 2292
+        }
+      ],
+      "disposition": {
+        "category": "independent_observation_check",
+        "reason": "Inspector and report independently compare named observed count dictionaries; neither computes the underlying counts."
+      }
+    },
+    {
+      "body_sha256": "e4a09c51681eaafe2b1a8cd139bfafe519a348e9c13f0126149e7f81670c113d",
+      "occurrences": [
+        {
+          "file": "web/lib/onnx-ml-normalizer-conformance.js",
+          "name": "countOverflow",
+          "line": 153
+        },
+        {
+          "file": "web/lib/onnx-ml-normalizer.js",
+          "name": "countSignedOverflow",
+          "line": 211
+        }
+      ],
+      "disposition": {
+        "category": "independent_oracle",
+        "reason": "Normalizer conformance independently detects signed-overflow boundaries for pinned operator semantics."
+      }
+    }
+  ]
+}

@@ -718,11 +718,7 @@ fn valid_scale(value: f64) -> bool {
 }
 
 fn quantized_code_range(dtype: &str) -> Option<[i64; 2]> {
-    match dtype {
-        "INT8" => Some([-128, 127]),
-        "UINT8" => Some([0, 255]),
-        _ => None,
-    }
+    crate::quantization_math::storage_code_range_8bit(dtype).map(|(minimum, maximum)| [minimum, maximum])
 }
 
 fn tensor_at(tensors: &[TensorInfo], index: i32) -> Option<&TensorInfo> {

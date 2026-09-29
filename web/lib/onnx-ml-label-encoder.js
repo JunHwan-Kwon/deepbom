@@ -1,3 +1,6 @@
+import { scalarDtypeBytes, safeShapeElementCount as shapeProduct } from "./tensor-size.js";
+import { numericTokenValue as parseCanonicalNumber, canonicalFloatText as valueText } from "./onnx-static-value-evidence.js";
+
 import {
   canonicalOnnxTypeProto,
   makeOnnxTensorType,
@@ -298,7 +301,7 @@ function decodeTensorValues(tensor) {
   }
   let values = [];
   if (tensor.rawData instanceof Uint8Array) {
-    const bytes = { INT16: 2, INT32: 4, INT64: 8, FLOAT32: 4, FLOAT64: 8 }[tensor.dtype];
+    const bytes = ["INT16", "INT32", "INT64", "FLOAT32", "FLOAT64"].includes(tensor.dtype) ? scalarDtypeBytes(tensor.dtype) : null;
     if (!bytes || tensor.rawData.byteLength !== count * bytes) return { ok: false, values: [], reason: "label_encoder_tensor_raw_data_size_mismatch" };
     const view = new DataView(tensor.rawData.buffer, tensor.rawData.byteOffset, tensor.rawData.byteLength);
     for (let index = 0; index < count; index += 1) {
@@ -420,14 +423,6 @@ function staticInput(input, dtype) {
   return null;
 }
 
-function parseCanonicalNumber(value) {
-  if (value === "NaN") return Number.NaN;
-  if (value === "Infinity") return Number.POSITIVE_INFINITY;
-  if (value === "-Infinity") return Number.NEGATIVE_INFINITY;
-  if (value === "-0") return -0;
-  return Number(value);
-}
-
 function mapping(keys, values, policy) {
   const result = new Map();
   keys.forEach((key, index) => {
@@ -460,28 +455,10 @@ function sameValue(left, right) {
   return typeof left === "number" && typeof right === "number" ? Object.is(left, right) || left === right : left === right;
 }
 
-function valueText(value) {
-  if (typeof value === "bigint") return value.toString();
-  if (Number.isNaN(value)) return "NaN";
-  if (value === Number.POSITIVE_INFINITY) return "Infinity";
-  if (value === Number.NEGATIVE_INFINITY) return "-Infinity";
-  if (Object.is(value, -0)) return "-0";
-  return String(value);
-}
-
 function isNonFinite(value) {
   return typeof value === "number" && !Number.isFinite(value);
 }
 
 function knownDimension(value) {
   return Number.isSafeInteger(value) && value >= 0;
-}
-
-function shapeProduct(shape) {
-  let product = 1;
-  for (const dimension of shape) {
-    product *= dimension;
-    if (!Number.isSafeInteger(product) || product < 0) return null;
-  }
-  return product;
 }

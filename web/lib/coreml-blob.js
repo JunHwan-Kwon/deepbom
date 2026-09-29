@@ -1,3 +1,5 @@
+import { scalarDtypeBits, safePositiveShapeElementCount } from "./tensor-size.js";
+import { float16ToNumber as halfToNumber, bfloat16ToNumber as bfloatToNumber } from "./scalar-numeric.js";
 import { Sha256Accumulator } from "./sha256-sync.js";
 
 const ALIGNMENT = 64;
@@ -22,25 +24,25 @@ export const COREML_BLOB_SOURCE = Object.freeze({
   fp8_source_sha256: "279c8ab85617289d844c4b63bef42cecdc177c77ba0066ea04529952ae90e35a",
 });
 
-const TYPES = Object.freeze({
-  1: { dtype: "FLOAT16", bits: 16, kind: "float16" },
-  2: { dtype: "FLOAT32", bits: 32, kind: "float32" },
-  3: { dtype: "UINT8", bits: 8, kind: "uint" },
-  4: { dtype: "INT8", bits: 8, kind: "int" },
-  5: { dtype: "BFLOAT16", bits: 16, kind: "bfloat16" },
-  6: { dtype: "INT16", bits: 16, kind: "int" },
-  7: { dtype: "UINT16", bits: 16, kind: "uint" },
-  8: { dtype: "INT4", bits: 4, kind: "int" },
-  9: { dtype: "UINT1", bits: 1, kind: "uint" },
-  10: { dtype: "UINT2", bits: 2, kind: "uint" },
-  11: { dtype: "UINT4", bits: 4, kind: "uint" },
-  12: { dtype: "UINT3", bits: 3, kind: "uint" },
-  13: { dtype: "UINT6", bits: 6, kind: "uint" },
-  14: { dtype: "INT32", bits: 32, kind: "int" },
-  15: { dtype: "UINT32", bits: 32, kind: "uint" },
-  16: { dtype: "FLOAT8E4M3FN", bits: 8, kind: "float8e4m3fn" },
-  17: { dtype: "FLOAT8E5M2", bits: 8, kind: "float8e5m2" },
-});
+const TYPES = Object.freeze(Object.fromEntries(Object.entries({
+  1: { dtype: "FLOAT16", kind: "float16" },
+  2: { dtype: "FLOAT32", kind: "float32" },
+  3: { dtype: "UINT8", kind: "uint" },
+  4: { dtype: "INT8", kind: "int" },
+  5: { dtype: "BFLOAT16", kind: "bfloat16" },
+  6: { dtype: "INT16", kind: "int" },
+  7: { dtype: "UINT16", kind: "uint" },
+  8: { dtype: "INT4", kind: "int" },
+  9: { dtype: "UINT1", kind: "uint" },
+  10: { dtype: "UINT2", kind: "uint" },
+  11: { dtype: "UINT4", kind: "uint" },
+  12: { dtype: "UINT3", kind: "uint" },
+  13: { dtype: "UINT6", kind: "uint" },
+  14: { dtype: "INT32", kind: "int" },
+  15: { dtype: "UINT32", kind: "uint" },
+  16: { dtype: "FLOAT8E4M3FN", kind: "float8e4m3fn" },
+  17: { dtype: "FLOAT8E5M2", kind: "float8e5m2" },
+}).map(([id, row]) => [id, { ...row, bits: scalarDtypeBits(row.dtype) }])));
 
 function align64(value) { return Math.ceil(value / ALIGNMENT) * ALIGNMENT; }
 
@@ -50,25 +52,7 @@ function safeNumber(value, label) {
 }
 
 function product(shape) {
-  if (!Array.isArray(shape) || shape.some((value) => !Number.isSafeInteger(value) || value <= 0)) return null;
-  let result = 1;
-  for (const value of shape) { if (result > Math.floor(Number.MAX_SAFE_INTEGER / value)) return null; result *= value; }
-  return result;
-}
-
-function halfToNumber(bits) {
-  const sign = bits & 0x8000 ? -1 : 1;
-  const exponent = bits >>> 10 & 31;
-  const fraction = bits & 1023;
-  if (!exponent) return fraction ? sign * fraction * 2 ** -24 : sign < 0 ? -0 : 0;
-  if (exponent === 31) return fraction ? Number.NaN : sign * Number.POSITIVE_INFINITY;
-  return sign * (1 + fraction / 1024) * 2 ** (exponent - 15);
-}
-
-function bfloatToNumber(bits) {
-  const bytes = new ArrayBuffer(4);
-  new DataView(bytes).setUint32(0, bits << 16, true);
-  return new DataView(bytes).getFloat32(0, true);
+  return safePositiveShapeElementCount(shape, { allowScalar: true });
 }
 
 function float8ToNumber(code, exponentBits, mantissaBits, bias, finiteOnly) {

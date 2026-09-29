@@ -16,7 +16,7 @@ const FORMAT_MATURITY = Object.freeze([
 ]);
 
 const MACHINE_CONTRACTS = Object.freeze([
-  machineContract("deepbom.agent_contract.v1", "stable", "Reviewed Agent metadata and Skill content are versioned independently from the analyzer engine."),
+  machineContract("deepbom.agent_contract.v2", "stable", "Reviewed Agent metadata and Skill content are versioned independently from the analyzer engine."),
   machineContract("deepbom.cli_capabilities.v1", "stable", "Additive fields only within v1; removals or semantic changes require a new schema id."),
   machineContract("deepbom.artifact_evidence_envelope.v1", "stable", "Canonical cross-format automation envelope."),
   machineContract("deepbom.artifact_ir.v2", "stable", "Canonical artifact evidence identity, graph/storage topology, and overlay contract."),
@@ -38,7 +38,7 @@ export const PUBLIC_PRODUCT_CONTRACTS = deepFreeze({
     schema: "deepbom.release_channel_policy.v1",
     version_axes: {
       engine: "release/version.json; changes with product releases",
-      agent_contract: "deepbom.agent_contract.v1@1.0.0; changes only with the reviewed Agent surface",
+      agent_contract: "deepbom.agent_contract.v2@2.0.0; changes only with the reviewed Agent surface",
       evidence_contract: "deepbom.artifact_evidence_envelope.v1@1.0.0; changes only with incompatible evidence semantics",
     },
     stable_channel: {

@@ -22,7 +22,7 @@
   ],
   "properties": {
     "schema": { "const": "deepbom.artifact_ir.v2" },
-    "method_version": { "enum": ["2.2.0", "2.2.1", "2.3.0"] },
+    "method_version": { "enum": ["2.2.0", "2.2.1", "2.3.0", "2.3.1", "2.3.2"] },
     "hash_contract": {
       "type": "object",
       "required": ["algorithm", "canonicalization", "source_encoding", "excluded_pointers"],
@@ -1352,7 +1352,7 @@
       "if": {
         "properties": {
           "method_version": {
-            "const": "2.3.0"
+            "enum": ["2.3.0", "2.3.1", "2.3.2"]
           }
         }
       },

@@ -1,11 +1,9 @@
+import { quantized8CodeRange as codeRange, multiplyByQuantizedMultiplierDefault, multiplyByQuantizedMultiplierSingleRounding, roundTiesAway } from "./quantization-math.js";
+import { arraysEqual as equalArray } from "./array-contract.js";
 import { validateAccumulatorAtlas } from "./accumulator-atlas.js";
 import { browserAssetUrl } from "./browser-asset-url.js";
 import { sha256Hex } from "./hash.js";
-import {
-  multiplyByQuantizedMultiplierDefault,
-  multiplyByQuantizedMultiplierSingleRounding,
-  roundTiesAway,
-} from "./quantization-math.js";
+
 import { validateRequantizationFidelity } from "./requantization-fidelity.js";
 
 export const KERNEL_WITNESS_SCHEMA = "deepbom.kernel_extremum_witness.v1";
@@ -903,7 +901,7 @@ function messageNode(text, tone = "muted") {
 function tensorMap(analysis) { return new Map((analysis?.tensors || []).map((tensor) => [Number(tensor.index), tensor])); }
 function requiredTensor(tensors, index, message) { const tensor = tensors.get(Number(index)); assert(tensor, message); return tensor; }
 function tensorBytes(bytes, tensor, message) { const offset = Number(tensor.buffer_data_offset); const length = Number(tensor.buffer_data_length); assert(Number.isSafeInteger(offset) && Number.isSafeInteger(length) && length > 0 && offset >= 0 && offset + length <= bytes.length, message); return bytes.subarray(offset, offset + length); }
-function codeRange(dtype, message) { if (dtype === "INT8") return [-128, 127]; if (dtype === "UINT8") return [0, 255]; throw new Error(message); }
+
 function rawCode(byte, dtype) { return dtype === "INT8" ? (byte << 24) >> 24 : byte; }
 function expandedZeroPoints(tensor, channels, range) { const values = (tensor.zero_point_sample || []).map(Number); assert(values.length === 1 || values.length === channels, `Weight tensor ${tensor.index} zero-point cardinality mismatch.`); assert(values.every((value) => value >= range[0] && value <= range[1]), `Weight tensor ${tensor.index} zero-point range mismatch.`); return values.length === 1 ? Array(channels).fill(values[0]) : values; }
 function weightLayout(op, weight) { const dimensions = (weight.shape || []).map(Number); assert(dimensions.every((value) => Number.isSafeInteger(value) && value > 0), `Weight tensor ${weight.index} has an invalid shape.`); if (op.name === "CONV_2D" && dimensions.length === 4) return { channels: dimensions[0], terms: product(dimensions.slice(1)), axis: 0, rawIndex: (channel, term) => channel * product(dimensions.slice(1)) + term }; if (op.name === "DEPTHWISE_CONV_2D" && dimensions.length === 4 && dimensions[0] === 1) return { channels: dimensions[3], terms: dimensions[1] * dimensions[2], axis: 3, rawIndex: (channel, term) => term * dimensions[3] + channel }; if (op.name === "FULLY_CONNECTED" && dimensions.length === 2) return { channels: dimensions[0], terms: dimensions[1], axis: 0, rawIndex: (channel, term) => channel * dimensions[1] + term }; throw new Error(`${op.name} weight layout is outside the witness contract.`); }
@@ -926,7 +924,7 @@ function absBigInt(value) { return value < 0n ? -value : value; }
 function maxBigInt(left, right) { return left > right ? left : right; }
 function sum(rows, key) { return rows.reduce((total, row) => total + Number(row[key] || 0), 0); }
 function product(values) { return values.reduce((total, value) => total * value, 1); }
-function equalArray(left, right) { return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value, index) => value === right[index]); }
+
 function asBytes(value) { if (value instanceof Uint8Array) return value; if (ArrayBuffer.isView(value)) return new Uint8Array(value.buffer, value.byteOffset, value.byteLength); if (value instanceof ArrayBuffer) return new Uint8Array(value); throw new Error("Kernel witness verification requires model bytes."); }
 function codeColor(code, range, zeroPoint) { if (code === zeroPoint) return "#7f9296"; const t = (code - range[0]) / Math.max(1, range[1] - range[0]); const low = [33, 181, 177]; const high = [239, 104, 80]; return `rgb(${Math.round(low[0] + (high[0] - low[0]) * t)},${Math.round(low[1] + (high[1] - low[1]) * t)},${Math.round(low[2] + (high[2] - low[2]) * t)})`; }
 function contributionColor(value, maximum) { const intensity = Math.log2(Math.abs(value) + 1) / Math.log2(maximum + 1); const base = value < 0 ? [47, 154, 187] : value > 0 ? [235, 116, 75] : [99, 116, 120]; return `rgb(${Math.round(20 + base[0] * intensity * 0.85)},${Math.round(25 + base[1] * intensity * 0.85)},${Math.round(28 + base[2] * intensity * 0.85)})`; }

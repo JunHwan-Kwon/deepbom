@@ -5,7 +5,7 @@ import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { validateArtifactEvidenceIr } from "./artifact-ir.js";
 import { MODEL_IR_METHOD_VERSION, MODEL_IR_SCHEMA, MODEL_IR_SOURCE_SCHEMA, RELATIONSHIP_KINDS, SHA256 } from "./model-ir/internal/constants.js";
-import { buildProgramModel } from "./model-ir/internal/program.js";
+import { buildProgramModel, validateProgramLinks } from "./model-ir/internal/program.js";
 import { buildModelProfiles } from "./model-ir/internal/profiles.js";
 import { buildModelIrNativeFactLedger, validateModelIrNativeFactLedger } from "./model-ir/internal/native-facts.js";
 import { buildGenericModelIrAnalysis } from "./model-ir-generic-analysis.js";
@@ -355,7 +355,7 @@ function elementCount(shape, rankStatus) {
 function externalStorageStatus(row) { return row.native_source?.external_data ? { status: row.native_source.external_data.verified === true ? "external_bound" : "external_declared_unverified", source: clone(row.native_source.external_data) } : { status: "inline_or_not_exposed", source: null }; }
 
 function validateModelIrBody(value) {
-  if (value?.schema !== MODEL_IR_SCHEMA || !["1.0.0", "1.0.1", MODEL_IR_METHOD_VERSION].includes(value?.method_version)) throw new Error("Model IR schema identity is invalid.");
+  if (value?.schema !== MODEL_IR_SCHEMA || !["1.0.0", "1.0.1", "1.1.0", "1.1.1", MODEL_IR_METHOD_VERSION].includes(value?.method_version)) throw new Error("Model IR schema identity is invalid.");
   if (value?.source_contract?.schema !== MODEL_IR_SOURCE_SCHEMA || !SHA256.test(String(value?.source_contract?.sha256 || ""))) throw new Error("Model IR source contract binding is invalid.");
   validateModelIrNativeFactLedger(value.source_contract.native_fact_ledger, value.source_contract.sha256);
   if (value?.hash_contract?.algorithm !== "SHA-256" || value?.hash_contract?.canonicalization !== "RFC8785-JCS" || JSON.stringify(value?.hash_contract?.excluded_pointers) !== JSON.stringify(["/model_ir_sha256"])) throw new Error("Model IR hash contract is invalid.");
@@ -375,7 +375,7 @@ function validateModelIrBody(value) {
   for (const row of value.tensors_and_storage.storage_objects) {
     for (const key of ["element_count", "serialized_byte_length", "logical_byte_length"]) validateExactInteger(row[key]);
     validateExactInteger(row.external_storage?.source?.file_byte_length);
-    if (value.method_version === MODEL_IR_METHOD_VERSION && canonicalJson(row.element_count) !== canonicalJson(elementCount(row.shape, row.shape_rank_status))) throw new Error("Model IR storage element count contradicts its declared shape.");
+    if (["1.1.0", "1.1.1", MODEL_IR_METHOD_VERSION].includes(value.method_version) && canonicalJson(row.element_count) !== canonicalJson(elementCount(row.shape, row.shape_rank_status))) throw new Error("Model IR storage element count contradicts its declared shape.");
   }
   for (const row of program.operations) for (const key of ["macs", "logical_io_bytes"]) validateExactInteger(row.metrics?.[key]);
   const profileById = new Map(value.profiles.map((profile) => [profile.id, profile]));
@@ -398,7 +398,7 @@ function validateModelIrBody(value) {
     || storage.totals.exact_range_count !== storage.storage_objects.filter(row => row.byte_range?.status === "exact").length
     || storage.totals.payload_digest_count !== storage.storage_objects.filter(row => SHA256.test(String(row.payload_sha256 || ""))).length) throw new Error("Model IR storage count or byte conservation failed.");
   storageIds.forEach((id) => { if (ids.has(id)) throw new Error("Model IR storage identity collides with a program subject."); ids.add(id); });
-  if (value.method_version === MODEL_IR_METHOD_VERSION && value.logical_inventory !== null) {
+  if (["1.1.0", "1.1.1", MODEL_IR_METHOD_VERSION].includes(value.method_version) && value.logical_inventory !== null) {
     validateLogicalInventory(value.logical_inventory, program.values, storage.storage_objects);
     const inventory = new Map(value.logical_inventory.values.map(row => [row.id, row]));
     if (inventory.size !== storage.logical_values.length) throw new Error("Model IR logical inventory count is inconsistent.");
@@ -428,6 +428,10 @@ function validateModelIrBody(value) {
   for (const row of program.ports) if (!operationIds.has(row.operation_ref) || !valueIds.has(row.value_ref)) throw new Error("Model IR port reference is invalid.");
   if (program.status === "not_serialized" && (program.operations.length || program.relationships.length || program.regions.length)) throw new Error("Model IR fabricated a program for a graphless artifact.");
   for (const binding of value.weight_bindings.bindings) if (!operationIds.has(binding.operation_ref) || !valueIds.has(binding.value_ref) || !storageIds.has(binding.storage_ref)) throw new Error("Model IR weight binding reference is invalid.");
+  if (["1.1.0", "1.1.1", MODEL_IR_METHOD_VERSION].includes(value.method_version)) {
+    validateProgramLinks(program);
+    if (canonicalJson(value.weight_bindings) !== canonicalJson(buildBindings(program, storage))) throw new Error("Model IR weight binding contradicts operation ports and storage.");
+  }
   for (const row of value.quantization.records) if (!valueIds.has(row.subject_ref) && !storageIds.has(row.subject_ref)) throw new Error("Model IR quantization subject reference is invalid.");
   const profileIds = new Set();
   for (const profile of value.architecture.model_profiles) {
@@ -448,7 +452,6 @@ function validateModelIrBody(value) {
   if (value.completeness?.unknown_is_zero !== false || !Array.isArray(value.loss_ledger?.entries) || value.loss_ledger.count !== value.loss_ledger.entries.length) throw new Error("Model IR completeness or loss ledger is inconsistent.");
   if (!String(value.interpretation_boundary || "").trim()) throw new Error("Model IR interpretation boundary is missing.");
 }
-
 
 // The source and supplementary ledger must be supplied independently by the caller.
 // A self-consistent document hash alone is never treated as source rederivation.

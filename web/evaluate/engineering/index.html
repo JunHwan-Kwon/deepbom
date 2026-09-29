@@ -83,7 +83,7 @@
     <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/evaluate/">Evaluate</a></li><li><span aria-current="page">Engineering</span></li></ol></nav>
     <p class="eyebrow">Engineering evaluation brief</p>
     <h1>Static deployment evidence with explicit limits.</h1>
-    <p class="lede">DEEPBOM analyzes TFLite, ONNX, Core ML, GGUF, SafeTensors, and ExecuTorch artifacts without executing model code. Web and CLI outputs share the same Artifact Evidence IR.</p>
+    <p class="lede">DEEPBOM analyzes TFLite, ONNX, Core ML, GGUF, SafeTensors, and ExecuTorch artifacts without executing model code. Web and CLI outputs share the same Artifact IR.</p>
     <p class="decision-line">Adopt it where artifact identity, serialized contracts, reproducible derivations, and evidence gaps matter more than speculative performance prediction.</p>
 
     <section class="brief-section">
@@ -93,7 +93,7 @@
           <tr><th>Execution</th><td>Browser-local or CLI-local. Original artifact bytes are not uploaded by the static audit path.</td></tr>
           <tr><th>TFLite</th><td>Rust analyzer compiled to WebAssembly and executed behind Worker RPC.</td></tr>
           <tr><th>Other formats</th><td>Bounded JavaScript parsers and range readers executed in an isolated metadata/static-audit Worker where payload work is heavy.</td></tr>
-          <tr><th>Evidence model</th><td>Artifact Evidence IR separates canonical artifact facts, static projections, and imported runtime observations.</td></tr>
+          <tr><th>Evidence model</th><td>Artifact IR separates canonical artifact facts, static projections, and imported runtime observations.</td></tr>
           <tr><th>Distribution</th><td>npm, PyPI, crates.io launcher, and the browser workspace.</td></tr>
           <tr><th>Maintenance</th><td>Apache-2.0 public core, one primary maintainer, hash-pinned upstream evidence, automated release gates.</td></tr>
         </tbody>

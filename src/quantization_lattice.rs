@@ -1537,16 +1537,8 @@ fn combine_formula(binary_op: BinaryLatticeOp) -> &'static str {
 }
 
 fn quant_contract(tensor: &TensorInfo) -> Result<QuantContract, String> {
-    let (qmin, qmax) = match tensor.dtype.as_str() {
-        "INT8" => (-128, 127),
-        "UINT8" => (0, 255),
-        _ => {
-            return Err(format!(
-                "Tensor {} uses {}; quantization-lattice v1 requires INT8 or UINT8.",
-                tensor.index, tensor.dtype
-            ))
-        }
-    };
+    let (qmin, qmax) = crate::quantization_math::storage_code_range_8bit(&tensor.dtype)
+        .ok_or_else(|| format!("Tensor {} uses {}; quantization-lattice v1 requires INT8 or UINT8.", tensor.index, tensor.dtype))?;
     if tensor.quant_scales != 1 || tensor.scale_sample.len() != 1 {
         return Err(format!(
             "Tensor {} does not expose exactly one per-tensor quantization scale.",

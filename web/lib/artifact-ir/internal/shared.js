@@ -1,5 +1,7 @@
+import { exactInteger as exact, exactInteger } from "../../exact-integer.js";
+export { exactInteger as exact } from "../../exact-integer.js";
 import { buildValueType, valueLogicalBytes } from "../../ir-value-type.js";
-import { exactInteger } from "../../exact-integer.js";
+
 export { exactInteger, validateExactInteger } from "../../exact-integer.js";
 import { SHA256 } from "./constants.js";
 
@@ -79,9 +81,5 @@ export function nonNegativeInteger(value) { const number = optionalInteger(value
 export function positiveInteger(value) { const number = optionalInteger(value); return number !== null && number > 0 ? number : null; }
 
 export function optionalInteger(value) { if (typeof value !== "number" && !(typeof value === "string" && /^-?(0|[1-9][0-9]*)$/.test(value))) return null; const number = Number(value); return Number.isSafeInteger(number) ? number : null; }
-
-
-export function exact(value) { return { decimal: value.toString(), number: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null }; }
-
 
 export function deepFreeze(value) { if (!value || typeof value !== "object" || Object.isFrozen(value)) return value; Object.freeze(value); for (const child of Object.values(value)) deepFreeze(child); return value; }

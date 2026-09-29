@@ -1,3 +1,4 @@
+import { logicalBytesForShape } from "./tensor-size.js";
 import { sha256Hex } from "./hash.js";
 
 export const NUMERICAL_ABI_PROPAGATION_SCHEMA = "deepbom.numerical_abi_propagation.v1.1";
@@ -540,16 +541,7 @@ class BinaryWriter {
 }
 
 function deterministicPayload(tensor) {
-  if (!Array.isArray(tensor.shape) || tensor.shape.some((dim) => !Number.isInteger(dim) || dim < 0)) return null;
-  let elements = 1;
-  for (const dim of tensor.shape || []) {
-    elements *= dim;
-    if (!Number.isSafeInteger(elements)) return null;
-  }
-  if (tensor.dtype === "INT4") return Math.floor((elements + 1) / 2);
-  const width = ({ COMPLEX128: 16, FLOAT64: 8, INT64: 8, UINT64: 8, COMPLEX64: 8, FLOAT32: 4, INT32: 4, UINT32: 4, FLOAT16: 2, BFLOAT16: 2, INT16: 2, UINT16: 2, INT8: 1, UINT8: 1, BOOL: 1 })[tensor.dtype];
-  if (!width || !Number.isSafeInteger(elements * width)) return null;
-  return elements * width;
+  return logicalBytesForShape(tensor.dtype, tensor.shape)?.number ?? null;
 }
 
 function predictedDomain(op) { return Number(op?.xnnpack_chain_id) >= 0 ? `XNNPACK:C${op.xnnpack_chain_id}` : "TFLITE_CPU"; }

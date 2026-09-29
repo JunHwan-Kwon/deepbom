@@ -14,6 +14,21 @@ and bounded ExecuTorch artifacts. Findings distinguish observed and derived
 artifact facts from predicted compatibility, imported runtime evidence, and
 values that cannot be assessed statically.
 
+## Evidence IR
+
+[DEEPBOM Evidence IR](docs/evidence-ir/README.md) is the common representation
+family: Artifact IR, Model IR, optional Weight IR, Activation IR and Provenance
+IR. The draft specification includes a generated schema catalog,
+[compatibility checks](docs/evidence-ir/CONFORMANCE.md) and
+[public maintenance rules](docs/evidence-ir/GOVERNANCE.md).
+
+Search [input → IR → output mappings](https://deepbom.org/guides/evidence-ir/compatibility/)
+or inspect the same [versioned catalog on GitHub](docs/evidence-ir/compatibility/README.md).
+It is a DEEPBOM-maintained specification, not an endorsed external standard.
+Provenance IR uses `deepbom.provenance_ir.v1` and the sole CLI/MCP selector
+`provenance_ir`. The current source contract is unreleased and does not accept
+retired names. See the [migration rules](docs/evidence-ir/MIGRATION.md).
+
 ## Quick start
 
 Run the published CLI without cloning the repository (Node.js 20 or newer):
@@ -32,10 +47,10 @@ is documented separately below.
 Install the repository-local Agent Skill after previewing the managed files:
 
 ```bash
-npx -y deepbom@1.109.0 integrate codex
-npx -y deepbom@1.109.0 integrate codex --apply
-npx -y deepbom@1.109.0 integrate claude-code
-npx -y deepbom@1.109.0 integrate claude-code --apply
+npx -y deepbom@2.0.0 integrate codex
+npx -y deepbom@2.0.0 integrate codex --apply
+npx -y deepbom@2.0.0 integrate claude-code
+npx -y deepbom@2.0.0 integrate claude-code --apply
 ```
 
 The Skill lets a local agent select a contract-compatible analyzer for a
@@ -55,7 +70,7 @@ For persistent tool-call access, run the same local analyzer as an MCP server
 over stdio:
 
 ```bash
-npx -y deepbom@1.109.0 mcp
+npx -y deepbom@2.0.0 mcp
 ```
 
 It exposes `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
@@ -65,7 +80,7 @@ formats and large-model scan depth are explicit. Local paths are restricted to
 the launch directory unless `DEEPBOM_MCP_ALLOWED_ROOTS` is configured.
 Agent-facing usage guidance is in [the DEEPBOM skill](skills/deepbom/SKILL.md).
 Claude Desktop users can instead install the version-matched
-`deepbom-1.109.0.mcpb` asset from the corresponding GitHub Release. The bundle
+`deepbom-2.0.0.mcpb` asset from the corresponding GitHub Release. The bundle
 contains the same CLI and WASM bytes as the npm channel and asks the user to
 select the only local directory it may read.
 
@@ -265,6 +280,6 @@ Please cite:
 
 ## Optional metadata and OMOP connections
 
-After inspecting a model, create a model-bound input with `deepbom audit model.onnx --metadata-template omop -o metadata.json`. Fill the selected OMOP 5.4/5.5 `CDM_SOURCE` row and institution/release identifiers, then use `--metadata metadata.json --evidence-files ./evidence --section evidence_link_ir --json`. A generic template connects non-OMOP datasets, cohorts, code, runs and reports through the same IR.
+After inspecting a model, create a model-bound input with `deepbom audit model.onnx --metadata-template omop -o metadata.json`. Fill the selected OMOP 5.4/5.5 `CDM_SOURCE` row and institution/release identifiers, then use `--metadata metadata.json --evidence-files ./evidence --section provenance_ir --json`. A generic template connects non-OMOP datasets, cohorts, code, runs and reports through the same IR.
 
-The Web **Metadata** workspace provides import, record creation, an interactive relationship diagram and JSON/CycloneDX downloads. Local MCP `deepbom_audit` accepts `metadata_template`, `metadata` and `evidence_files`; ChatGPT/Claude widgets share only explicitly requested counts and digests. Connections remain declarations: file hashes and reference consistency do not authenticate lineage or clinical suitability. See the [OMOP guide](https://deepbom.org/guides/omop-metadata/) and [common IR contract](https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/EVIDENCE_LINK_IR.md).
+The Web **Metadata** workspace provides import, record creation, an interactive relationship diagram and JSON/CycloneDX downloads. Local MCP `deepbom_audit` accepts `metadata_template`, `metadata` and `evidence_files`; ChatGPT/Claude widgets share only explicitly requested counts and digests. Connections remain declarations: file hashes and reference consistency do not authenticate lineage or clinical suitability. See the [OMOP guide](https://deepbom.org/guides/omop-metadata/) and [common IR contract](https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/PROVENANCE_IR.md).

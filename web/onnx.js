@@ -1,3 +1,11 @@
+import { ONNX_TENSOR_TYPES as TENSOR_TYPES } from "./lib/onnx-tensor-types.js";
+import { shapeText } from "./lib/format.js";
+import { arraysEqual as sameShape } from "./lib/array-contract.js";
+import { logicalBytesForElements, safeShapeElementCount as safeExactProduct, safeIntegerCodeRange as inputQuantizedCodeRange } from "./lib/tensor-size.js";
+
+import { canonicalFloatText as canonicalOnnxFloatText } from "./lib/onnx-static-value-evidence.js";
+import { float16ToNumber, bfloat16ToNumber } from "./lib/scalar-numeric.js";
+
 import { compareCanonicalText } from "./lib/report-utils.js";
 import { parameterVectorEvidence } from "./lib/ir-parameter-vector.js";
 import { buildOnnxDomainAnalysis } from "./lib/onnx-domain-analysis.js";
@@ -30,35 +38,6 @@ const MAX_ONNX_EP_CONDITION_INTEGER_ELEMENTS = 4_096;
 const MAX_ONNX_QUANTIZATION_ANNOTATIONS = 100_000;
 const MAX_ONNX_QUANTIZATION_ANNOTATION_ENTRIES = 200_000;
 
-const TENSOR_TYPES = {
-  0: { name: "UNDEFINED", bits: 0 },
-  1: { name: "FLOAT32", bits: 32 },
-  2: { name: "UINT8", bits: 8 },
-  3: { name: "INT8", bits: 8 },
-  4: { name: "UINT16", bits: 16 },
-  5: { name: "INT16", bits: 16 },
-  6: { name: "INT32", bits: 32 },
-  7: { name: "INT64", bits: 64 },
-  8: { name: "STRING", bits: 0 },
-  9: { name: "BOOL", bits: 8 },
-  10: { name: "FLOAT16", bits: 16 },
-  11: { name: "FLOAT64", bits: 64 },
-  12: { name: "UINT32", bits: 32 },
-  13: { name: "UINT64", bits: 64 },
-  14: { name: "COMPLEX64", bits: 64 },
-  15: { name: "COMPLEX128", bits: 128 },
-  16: { name: "BFLOAT16", bits: 16 },
-  17: { name: "FLOAT8E4M3FN", bits: 8 },
-  18: { name: "FLOAT8E4M3FNUZ", bits: 8 },
-  19: { name: "FLOAT8E5M2", bits: 8 },
-  20: { name: "FLOAT8E5M2FNUZ", bits: 8 },
-  21: { name: "UINT4", bits: 4 },
-  22: { name: "INT4", bits: 4 },
-  23: { name: "FLOAT4E2M1", bits: 4 },
-  24: { name: "FLOAT8E8M0", bits: 8 },
-  25: { name: "UINT2", bits: 2 },
-  26: { name: "INT2", bits: 2 },
-};
 const TENSOR_TYPE_BY_NAME = new Map(Object.values(TENSOR_TYPES).map((type) => [type.name, type]));
 const ONNX_TENSOR_TYPE_SOURCE = Object.freeze({
   release: "v1.21.0",
@@ -608,13 +587,6 @@ function inputScalarQuantizedRange(tensor) {
     status: "known_from_artifact_quantization_metadata",
     note: `${tensor.dtype} dequantized code domain [${low.toPrecision(9)}, ${high.toPrecision(9)}] from scalar scale ${scale.toPrecision(9)} and zero point ${zeroPoint}`,
   };
-}
-
-function inputQuantizedCodeRange(dtype) {
-  return ({
-    UINT8: [0, 255], INT8: [-128, 127], UINT16: [0, 65_535], INT16: [-32_768, 32_767],
-    INT32: [-2_147_483_648, 2_147_483_647], INT4: [-8, 7], UINT4: [0, 15], UINT2: [0, 3], INT2: [-2, 1],
-  })[String(dtype || "").toUpperCase()] || null;
 }
 
 function buildOnnxTensorDataTypeContract() {
@@ -1465,17 +1437,6 @@ function tensorContractBlocksDeterministicCost(tensor) {
   return tensor?.contractStatus === "invalid" || tensor?.contract_status === "invalid"
     || tensor?.conditionalShapeContract?.status === "assessed_partial"
     || tensor?.conditional_shape_contract?.status === "assessed_partial";
-}
-
-function safeExactProduct(values) {
-  let product = 1n;
-  const maximum = BigInt(Number.MAX_SAFE_INTEGER);
-  for (const value of values) {
-    if (!Number.isSafeInteger(value) || value < 0) return null;
-    product *= BigInt(value);
-    if (product > maximum) return null;
-  }
-  return Number(product);
 }
 
 function exactNonnegativeProduct(values) {
@@ -2723,11 +2684,7 @@ function dtypeStorageBits(dtype) {
 }
 
 function dtypePayloadBytes(dtype, elements) {
-  const count = Number(elements);
-  const bits = dtypeStorageBits(dtype);
-  if (!Number.isSafeInteger(count) || count < 0 || !(bits > 0) || count > Math.floor(Number.MAX_SAFE_INTEGER / bits)) return null;
-  const payload = Math.ceil(count * bits / 8);
-  return Number.isSafeInteger(payload) ? payload : null;
+  return TENSOR_TYPE_BY_NAME.has(dtype) ? logicalBytesForElements(dtype, elements)?.number ?? null : null;
 }
 
 function readOnnxRawValue(view, offset, dtype) {
@@ -2794,22 +2751,6 @@ function decodePackedCode(code, dtype) {
     return sign * 2 ** (exponent - 1) * (1 + mantissa / 2);
   }
   return code;
-}
-
-function float16ToNumber(bits) {
-  const sign = (bits & 0x8000) ? -1 : 1;
-  const exponent = (bits >> 10) & 0x1f;
-  const fraction = bits & 0x03ff;
-  if (exponent === 0x1f) return fraction ? Number.NaN : sign * Number.POSITIVE_INFINITY;
-  if (exponent === 0) return sign * 2 ** -14 * (fraction / 1024);
-  return sign * 2 ** (exponent - 15) * (1 + fraction / 1024);
-}
-
-function bfloat16ToNumber(bits) {
-  const buffer = new ArrayBuffer(4);
-  const view = new DataView(buffer);
-  view.setUint32(0, bits << 16, true);
-  return view.getFloat32(0, true);
 }
 
 function initializerPayloadHashKey(tensor) {
@@ -3688,14 +3629,6 @@ function canonicalOnnxAttributeTensorValue(value) {
 
 function jsonSafeOnnxFloat(value) {
   return Object.is(value, -0) ? 0 : value;
-}
-
-function canonicalOnnxFloatText(value) {
-  if (Number.isNaN(value)) return "NaN";
-  if (value === Number.POSITIVE_INFINITY) return "Infinity";
-  if (value === Number.NEGATIVE_INFINITY) return "-Infinity";
-  if (Object.is(value, -0)) return "-0";
-  return String(value);
 }
 
 function onnxOpHasQuantSignal(node, inputTensors, outputTensors) {
@@ -4696,10 +4629,6 @@ function toSafeSignedNumber(value, bits) {
   return Number(signed > max ? max : signed < min ? min : signed);
 }
 
-function sameShape(left, right) {
-  return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value, index) => value === right[index]);
-}
-
 function csvCell(value) {
   const text = String(value ?? "");
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
@@ -4711,10 +4640,6 @@ function escapeTableCell(value) {
 
 function escapeMermaid(value) {
   return String(value || "").replaceAll('"', "'");
-}
-
-function shapeText(shape) {
-  return Array.isArray(shape) && shape.length ? `[${shape.join("x")}]` : "[]";
 }
 
 function formatNumberPlain(value) {

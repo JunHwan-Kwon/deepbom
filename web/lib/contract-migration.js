@@ -1,3 +1,4 @@
+import { float64BitsHex as f64Bits } from "./scalar-numeric.js";
 import { formatNumber, padOp } from "./format.js";
 import { sha256Hex } from "./hash.js";
 import { quantizeMultiplier, roundTiesAway } from "./quantization-math.js";
@@ -646,12 +647,6 @@ function migrationClass(name) {
 
 function kernelLedgerRow(opIndex, witness) {
   return `op=${opIndex};channel=${witness.channel_index};weight_scale=${f64Bits(witness.weight_scale)};current_real=${f64Bits(witness.current_real_multiplier)};candidate_real=${f64Bits(witness.candidate_real_multiplier)};current_q=${witness.current_quantized_multiplier};candidate_q=${witness.candidate_quantized_multiplier};current_shift=${witness.current_shift};candidate_shift=${witness.candidate_shift};current_bias=${witness.current_bias_code};candidate_bias=${witness.candidate_bias_code_decimal};overflow=${Number(witness.bias_int32_overflow)};preserved_bias=${f64Bits(witness.preserved_bias_real_value)};candidate_bias_real=${optionalF64Bits(witness.candidate_bias_real_value)};bias_error=${optionalF64Bits(witness.absolute_bias_rebase_error)};current_steps=${optionalF64Bits(witness.absolute_bias_rebase_error_current_steps)};candidate_steps=${optionalF64Bits(witness.absolute_bias_rebase_error_candidate_steps)}\n`;
-}
-
-function f64Bits(value) {
-  const view = new DataView(new ArrayBuffer(8));
-  view.setFloat64(0, value, false);
-  return view.getBigUint64(0, false).toString(16).padStart(16, "0");
 }
 
 function optionalF64Bits(value) {

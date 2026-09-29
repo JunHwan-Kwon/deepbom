@@ -27,6 +27,8 @@ mod residual_contract_distortion;
 mod residual_step_response;
 mod rounding_equivalence;
 mod runtime_version;
+mod scalar_types_generated;
+mod tensor_math;
 mod target_profiles;
 mod tflite_deep_scopes;
 mod tflite_metadata;
@@ -5840,13 +5842,7 @@ fn positive_dim(value: i32) -> Option<usize> {
 }
 
 fn dtype_storage_bytes(dtype: &str) -> Option<usize> {
-    match dtype {
-        "FLOAT64" | "INT64" => Some(8),
-        "FLOAT32" | "INT32" | "UINT32" => Some(4),
-        "FLOAT16" | "BFLOAT16" | "INT16" | "UINT16" => Some(2),
-        "INT8" | "UINT8" | "BOOL" => Some(1),
-        _ => None,
-    }
+    tensor_math::scalar_dtype_bytes(dtype)
 }
 
 fn checked_product_options(values: &[Option<usize>]) -> Option<usize> {
@@ -6011,104 +6007,22 @@ fn estimate_op(
         .map(tensor_bytes)
         .sum::<f64>();
     let estimated_bytes = input_bytes + output_bytes;
-    let mut macs = 0.0;
+    let mut macs = tflite_subgraphs::exact_nominal_macs(name, inputs, outputs, tensors, adjoints)
+        .map(|value| value as f64).unwrap_or(0.0);
+    // Row payload is a separate modeled cache quantity, not another MAC formula.
     let mut row_ws = 0.0;
-
-    if name == "CONV_2D" && inputs.len() >= 2 && !outputs.is_empty() {
-        if let (Some(inp), Some(weight), Some(out)) = (
-            tensors.get(inputs[0] as usize),
-            tensors.get(inputs[1] as usize),
-            tensors.get(outputs[0] as usize),
-        ) {
-            if inp.shape.len() == 4 && weight.shape.len() == 4 && out.shape.len() == 4 {
-                let batch = out.shape[0] as f64;
-                let out_h = out.shape[1] as f64;
-                let out_w = out.shape[2] as f64;
-                let out_c = weight.shape[0] as f64;
-                let kernel_h = weight.shape[1] as f64;
-                let kernel_w = weight.shape[2] as f64;
-                let in_c = weight.shape[3] as f64;
-                macs = batch * out_h * out_w * out_c * kernel_h * kernel_w * in_c;
-                row_ws = kernel_h
-                    * inp.shape[2] as f64
-                    * inp.shape[3] as f64
-                    * bytes_per_type(&inp.dtype);
-            }
-        }
-    } else if name == "DEPTHWISE_CONV_2D" && inputs.len() >= 2 && !outputs.is_empty() {
-        if let (Some(inp), Some(weight), Some(out)) = (
-            tensors.get(inputs[0] as usize),
-            tensors.get(inputs[1] as usize),
-            tensors.get(outputs[0] as usize),
-        ) {
-            if inp.shape.len() == 4 && weight.shape.len() == 4 && out.shape.len() == 4 {
-                let batch = out.shape[0] as f64;
-                let out_h = out.shape[1] as f64;
-                let out_w = out.shape[2] as f64;
-                let out_c = out.shape[3] as f64;
-                let kernel_h = weight.shape[1] as f64;
-                let kernel_w = weight.shape[2] as f64;
-                macs = batch * out_h * out_w * out_c * kernel_h * kernel_w;
-                row_ws = kernel_h
-                    * inp.shape[2] as f64
-                    * inp.shape[3] as f64
-                    * bytes_per_type(&inp.dtype);
-            }
-        }
-    } else if name == "FULLY_CONNECTED" && inputs.len() >= 2 && !outputs.is_empty() {
-        if let (Some(weight), Some(out)) = (
-            tensors.get(inputs[1] as usize),
-            tensors.get(outputs[0] as usize),
-        ) {
-            let in_units = weight.shape.last().copied().unwrap_or(0) as f64;
-            macs = element_count(&out.shape) * in_units;
-            // Weight row working set: each output neuron loads one full input vector.
-            // Weight shape is [out_units, in_units]; row_ws = in_units × bytes.
-            row_ws = in_units * bytes_per_type(&weight.dtype);
-        }
-    } else if name == "BATCH_MATMUL" && inputs.len() >= 2 && !outputs.is_empty() {
-        if let (Some(lhs), Some(rhs), Some(out)) = (
-            tensors.get(inputs[0] as usize),
-            tensors.get(inputs[1] as usize),
-            tensors.get(outputs[0] as usize),
-        ) {
-            // [batch, M, K] × [batch, K, N] → [batch, M, N]
-            if lhs.shape.len() >= 2 && rhs.shape.len() >= 2 && out.shape.len() >= 2 {
-                let n = out.shape.last().copied().unwrap_or(0) as f64;
-                let k = rhs.shape[rhs.shape.len() - if adjoints.1 { 1 } else { 2 }] as f64;
-                let batch_m: f64 = out.shape[..out.shape.len() - 1]
-                    .iter()
-                    .fold(1.0, |a, d| a * *d as f64);
-                macs = batch_m * n * k;
-                row_ws = k * bytes_per_type(&lhs.dtype);
-            }
-        }
-    } else if name == "TRANSPOSE_CONV" && inputs.len() >= 3 && !outputs.is_empty() {
-        // inputs: [output_shape_tensor, filter, input_activation]
-        // filter shape: [out_C, kernel_H, kernel_W, in_C] (OHWI)
-        if let (Some(filter), Some(inp), Some(out)) = (
-            tensors.get(inputs[1] as usize),
-            tensors.get(inputs[2] as usize),
-            tensors.get(outputs[0] as usize),
-        ) {
-            if filter.shape.len() == 4 && inp.shape.len() == 4 && out.shape.len() == 4 {
-                let batch = inp.shape[0] as f64;
-                let in_h = inp.shape[1] as f64;
-                let in_w = inp.shape[2] as f64;
-                let out_c = filter.shape[0] as f64;
-                let kernel_h = filter.shape[1] as f64;
-                let kernel_w = filter.shape[2] as f64;
-                let in_c = filter.shape[3] as f64;
-                // Nominal dense footprint of the serialized scatter operation.
-                // This does not claim the selected runtime evaluates cropped
-                // out-of-bounds contributions or uses this exact kernel path.
-                macs = batch * in_h * in_w * in_c * kernel_h * kernel_w * out_c;
-                row_ws = kernel_h
-                    * inp.shape.get(2).copied().unwrap_or(0) as f64
-                    * inp.shape.get(3).copied().unwrap_or(0) as f64
-                    * bytes_per_type(&inp.dtype);
-            }
-        }
+    let input_slot = if matches!(name, "TRANSPOSE_CONV" | "CONV_3D_TRANSPOSE") { 2 } else { 0 };
+    if let (Some(input), Some(weight)) = (tensor_at(inputs, input_slot), tensor_at(inputs, 1)) {
+        row_ws = match name {
+            "CONV_2D" | "DEPTHWISE_CONV_2D" | "TRANSPOSE_CONV" if input.shape.len() == 4 && weight.shape.len() == 4 =>
+                weight.shape[1] as f64 * input.shape[2] as f64 * input.shape[3] as f64 * bytes_per_type(&input.dtype),
+            "CONV_3D" | "CONV_3D_TRANSPOSE" if input.shape.len() == 5 && weight.shape.len() == 5 =>
+                weight.shape[0] as f64 * weight.shape[1] as f64 * input.shape[3] as f64 * input.shape[4] as f64 * bytes_per_type(&input.dtype),
+            "FULLY_CONNECTED" => weight.shape.last().copied().unwrap_or(0) as f64 * bytes_per_type(&weight.dtype),
+            "BATCH_MATMUL" if weight.shape.len() >= 2 =>
+                weight.shape[weight.shape.len() - if adjoints.1 { 1 } else { 2 }] as f64 * bytes_per_type(&input.dtype),
+            _ => 0.0,
+        };
     }
 
     // ── Non-GEMM ops: ops > 0, macs = 0 ─────────────────────────────────────
@@ -6131,44 +6045,6 @@ fn estimate_op(
         };
 
         extra_ops = match name {
-            // Convolutions (GEMM-like, non-2D)
-            "CONV_3D" | "CONV_3D_TRANSPOSE" => {
-                // Filters are DHWIO for Conv3D and DHWOI for Conv3DTranspose.
-                let transposed = name == "CONV_3D_TRANSPOSE";
-                if let (Some(inp), Some(filt), Some(out)) = (
-                    tensor_at(inputs, if transposed { 2 } else { 0 }),
-                    tensor_at(inputs, 1),
-                    tensor_at(outputs, 0),
-                ) {
-                    if filt.shape.len() == 5 && out.shape.len() == 5 {
-                        let spatial = if transposed { &inp.shape } else { &out.shape };
-                        if spatial.len() != 5 { return (0.0, 0.0, estimated_bytes, 0.0); }
-                        let (n, od, oh, ow) = (spatial[0] as f64, spatial[1] as f64, spatial[2] as f64, spatial[3] as f64);
-                        let (kd, kh, kw, channel_3, channel_4) = (
-                            filt.shape[0] as f64,
-                            filt.shape[1] as f64,
-                            filt.shape[2] as f64,
-                            filt.shape[3] as f64,
-                            filt.shape[4] as f64,
-                        );
-                        let (ic, oc) = if transposed {
-                            (channel_4, channel_3)
-                        } else {
-                            (channel_3, channel_4)
-                        };
-                        // Store in macs for 2× ops convention
-                        macs = n * od * oh * ow * oc * kd * kh * kw * ic;
-                        if inp.shape.len() == 5 {
-                            row_ws = kd
-                                * kh
-                                * inp.shape[3] as f64
-                                * inp.shape[4] as f64
-                                * bytes_per_type(&inp.dtype);
-                        }
-                    }
-                }
-                0.0
-            }
             // StableHLO dot/conv: approximate as matmul over last two dims
             "STABLEHLO_CONVOLUTION" | "STABLEHLO_DOT_GENERAL" => {
                 if let (Some(lhs), Some(rhs), Some(out)) = (
@@ -6313,22 +6189,13 @@ fn element_count(shape: &[i32]) -> f64 {
 }
 
 fn tensor_bytes(tensor: &TensorInfo) -> f64 {
-    element_count(&tensor.shape) * bytes_per_type(&tensor.dtype)
+    if tensor.shape.is_empty() && !tensor.has_rank { return f64::NAN; }
+    tensor_math::shape_payload_bytes(&tensor.dtype, &tensor.shape).map(|bytes| bytes as f64).unwrap_or(f64::NAN)
 }
 
 fn bytes_per_type(dtype: &str) -> f64 {
-    match dtype {
-        "FLOAT32" => 4.0,
-        "FLOAT16" => 2.0,
-        "INT8" => 1.0,
-        "UINT8" => 1.0,
-        "INT16" => 2.0,
-        "INT32" => 4.0,
-        "INT64" => 8.0,
-        "BOOL" => 1.0,
-        "FLOAT64" => 8.0,
-        _ => 4.0,
-    }
+    // Unknown encodings must not silently become FLOAT32.
+    tensor_math::scalar_dtype_bits(dtype).map(|bits| bits as f64 / 8.0).unwrap_or(f64::NAN)
 }
 
 fn static_bound_guess_for_target(
@@ -7271,16 +7138,11 @@ fn classify_model_quantization(
             .entry(op.quantization_state.clone())
             .or_default() += 1;
     }
-    let exact_count = |op: &&OpInfo| -> Option<u128> {
-        if op.macs_status != "assessed_nominal" { return None; }
-        op.macs_decimal.as_ref().and_then(|value| value.parse().ok()).or_else(|| {
-            (op.macs.is_finite() && op.macs >= 0.0 && op.macs.fract() == 0.0 && op.macs <= 9_007_199_254_740_991.0).then_some(op.macs as u128)
-        })
-    };
+    let exact_count = |op: &&OpInfo| exact_nominal_op_macs(op);
     let compute_exact = compute_ops.iter().try_fold(0u128, |sum, op| sum.checked_add(exact_count(op)?));
     let quantized_exact = compute_ops.iter().filter(|op| op.quantized_compute_path)
         .try_fold(0u128, |sum, op| sum.checked_add(exact_count(op)?));
-    let safe_number = |value: u128| (value <= 9_007_199_254_740_991).then_some(value as f64);
+    let safe_number = tensor_math::safe_count_number;
     let compute_macs = compute_exact.and_then(safe_number);
     let quantized_compute_macs = quantized_exact.and_then(safe_number);
     let quantized_tensor_percent = if tensors.is_empty() { 0.0 } else { quantized_tensors as f64 / tensors.len() as f64 };
@@ -9146,17 +9008,19 @@ fn ranges_overlap(a0: usize, a1: usize, b0: usize, b1: usize) -> bool {
     a0 <= b1 && b0 <= a1
 }
 
+fn exact_nominal_op_macs(op: &OpInfo) -> Option<u128> {
+    if op.macs_status != "assessed_nominal" { return None; }
+    op.macs_decimal.as_ref().and_then(|v| v.parse::<u128>().ok())
+        .or_else(|| tensor_math::exact_safe_count(op.macs))
+}
+
 fn exact_mac_sum<'a>(ops: impl Iterator<Item = &'a OpInfo>) -> Option<u128> {
-    ops.map(|op| {
-        if op.macs_status == "not_applicable" { return Some(0); }
-        if op.macs_status != "assessed_nominal" { return None; }
-        op.macs_decimal.as_ref().and_then(|v| v.parse::<u128>().ok())
-            .or_else(|| (op.macs >= 0.0 && op.macs <= 9_007_199_254_740_991.0 && op.macs.fract() == 0.0).then_some(op.macs as u128))
-    }).try_fold(0u128, |sum, value| sum.checked_add(value?))
+    ops.map(|op| if op.macs_status == "not_applicable" { Some(0) } else { exact_nominal_op_macs(op) })
+        .try_fold(0u128, |sum, value| sum.checked_add(value?))
 }
 
 fn safe_mac_number(value: Option<u128>) -> Option<f64> {
-    value.filter(|v| *v <= 9_007_199_254_740_991).map(|v| v as f64)
+    value.and_then(tensor_math::safe_count_number)
 }
 
 fn build_stages(ops: &[OpInfo], total_macs: f64, patterns: &[PatternInfo]) -> Vec<StageInfo> {
@@ -9446,6 +9310,7 @@ mod tests {
             let tensor = read_tensor(&Fb::new_for_test(&bytes), 0, 32, &[]).unwrap();
             assert!(tensor.shape.is_empty());
             assert_eq!(tensor.has_rank, has_rank);
+            assert_eq!(super::tensor_bytes(&tensor).is_nan(), !has_rank);
         }
     }
 

@@ -1,3 +1,5 @@
+import { logicalBytesForElements, safePositiveShapeElementCount as shapeProduct } from "./tensor-size.js";
+import { arraysEqual as sameShape } from "./array-contract.js";
 import { ProtoReader } from "./tflite-runtime-info-adapter.js";
 import {
   COREML_NEURAL_NETWORK_SOURCE, finalizeCoreMlNeuralNetwork, parseCoreMlNeuralNetwork,
@@ -483,38 +485,9 @@ function coreMlInputTensorContract(feature, network) {
   return { shape: [], dtype: "UNKNOWN", shape_source: "coreml_non_tensor_interface" };
 }
 
-function shapeProduct(shape) {
-  if (!Array.isArray(shape) || !shape.length || shape.some((value) => !Number.isSafeInteger(value) || value <= 0)) return null;
-  let product = 1;
-  for (const value of shape) {
-    product *= value;
-    if (!Number.isSafeInteger(product)) return null;
-  }
-  return product;
-}
-
-function safeCountProduct(values) {
-  let product = 1;
-  for (const value of values) {
-    if (!Number.isSafeInteger(value) || value < 0 || (value && product > Math.floor(Number.MAX_SAFE_INTEGER / value))) return null;
-    product *= value;
-  }
-  return product;
-}
-
-const COREML_ELEMENT_BITS = Object.freeze({
-  BOOL: 8, INT4: 4, UINT1: 1, UINT2: 2, UINT3: 3, UINT4: 4, UINT6: 6,
-  INT8: 8, UINT8: 8, FLOAT8E4M3FN: 8, FLOAT8E5M2: 8,
-  FLOAT16: 16, BFLOAT16: 16, INT16: 16, UINT16: 16,
-  FLOAT32: 32, INT32: 32, UINT32: 32, FLOAT64: 64, INT64: 64, UINT64: 64,
-});
-
 function coreMlTensorBytes(tensor) {
   const count = tensor?.rank === 0 ? 1 : shapeProduct(tensor?.shape);
-  const bits = COREML_ELEMENT_BITS[tensor?.dtype];
-  if (count == null || bits == null || count > Math.floor(Number.MAX_SAFE_INTEGER / bits)) return null;
-  const bytes = Math.ceil(count * bits / 8);
-  return Number.isSafeInteger(bytes) ? bytes : null;
+  return logicalBytesForElements(tensor?.dtype, count)?.number ?? null;
 }
 
 function coreMlLivenessState(ops, tensors, inputTensorIndices, outputTensorIndices) {
@@ -779,10 +752,6 @@ export function refreshCoreMlDerivedEvidence(analysis) {
   analysis.tensor_liveness = buildCoreMlMilControlFlowLiveness(analysis);
   analysis.size_breakdown = buildCoreMlSizeBreakdown(analysis);
   return analysis;
-}
-
-function sameShape(left, right) {
-  return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
 function spatialOutput(input, kernel, stride, padding, dilation = 1) {

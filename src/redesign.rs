@@ -1,6 +1,6 @@
 use crate::block_inventory::BlockRecord;
 use crate::{
-    bytes_per_type, compute_bottleneck_estimates, compute_tensor_arena_plan,
+    compute_bottleneck_estimates, compute_tensor_arena_plan,
     compute_tensor_liveness, estimate_op, logical_cache_payload_for_op, Analysis, OpInfo,
     TargetProfile, TensorInfo, L1_WORKING_SET_WATCH_RATIO,
 };
@@ -475,9 +475,19 @@ pub(crate) fn build_redesign_projection(
                 dilation_h,
             );
             op.output_shapes = output_shapes;
+            let (mac_status, _, exact_macs, mac_reason) = crate::tflite_subgraphs::assess_intrinsic_macs(
+                &op.name, &op.inputs, &op.outputs, &tensors, macs, op.batch_matmul_adjoints,
+            );
             op.macs = macs;
+            op.macs_status = mac_status.to_string();
+            op.macs_reason = mac_reason;
+            op.macs_decimal = exact_macs.map(|value| value.to_string());
+            op.reported_macs = exact_macs.and_then(crate::tensor_math::safe_count_number);
             op.ops = operations;
             op.estimated_bytes = estimated_bytes;
+            op.estimated_bytes_status = if crate::tensor_math::exact_safe_count(estimated_bytes).is_some()
+                { "assessed" } else { "not_assessed" }.to_string();
+            op.intensity_ops_per_byte = if estimated_bytes > 0.0 { operations / estimated_bytes } else { 0.0 };
             op.row_working_set_bytes = cache_payload
                 .input_strip_bytes
                 .map(|value| value as f64)
@@ -2686,8 +2696,7 @@ fn aligned_value(value: f64, alignment: usize) -> usize {
 }
 
 fn storage_bytes(dtype: &str) -> Option<usize> {
-    let value = bytes_per_type(dtype);
-    (value.is_finite() && value >= 1.0).then_some(value as usize)
+    crate::tensor_math::scalar_dtype_bytes(dtype)
 }
 
 fn positive(value: i32) -> Option<usize> {

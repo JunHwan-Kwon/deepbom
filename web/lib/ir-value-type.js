@@ -1,3 +1,5 @@
+import { logicalBytesForElements, tensorRankKnown } from "./tensor-size.js";
+export { scalarDtypeBits } from "./tensor-size.js";
 import { canonicalJson } from "./report-utils.js";
 import { exactInteger } from "./exact-integer.js";
 
@@ -26,8 +28,7 @@ function nativeType(type, scope, depth) {
 function tensorType(value, format, scope) {
   const kind = value.value_kind || value.valueKind || "tensor";
   if (!["tensor", "dense_tensor", "sparse_tensor", "unresolved"].includes(kind)) return { kind: "unknown" };
-  const ranked = Array.isArray(value.shape) && value.shape_declared !== false && value.shapeDeclared !== false
-    && (value.shape.length > 0 || value.shape_declared === true || value.shapeDeclared === true || value.has_rank === true || ["safetensors", "gguf"].includes(format));
+  const ranked = tensorRankKnown(value, format);
   const dims = ranked ? value.shape.map((dimension, index) => dimensionType(dimension, value.shapeDimensions?.[index], scope)) : null;
   return { kind: kind === "sparse_tensor" ? kind : "tensor", dtype: String(value.dtype || value.elementTypeName || "UNKNOWN").toUpperCase(),
     rank_status: ranked ? "ranked" : "unknown_rank", dimensions: dims };
@@ -52,14 +53,12 @@ export function valueElementCount(contract) {
   return exactInteger(dims.reduce((product, d) => product * BigInt(d.value.decimal), 1n));
 }
 
+// Fixed-width scalar encodings only. GGUF block encodings need their native block
+// size/overhead contract and must never be interpreted as a scalar bit width.
+
 export function valueLogicalBytes(contract) {
   const elements = valueElementCount(contract);
-  if (!elements) return null;
-  const bits = { BOOL: 8, BOOLEAN: 8, F64: 64, FLOAT64: 64, DOUBLE: 64, F32: 32, FLOAT: 32, FLOAT32: 32,
-    F16: 16, FLOAT16: 16, BF16: 16, BFLOAT16: 16, I64: 64, INT64: 64, U64: 64, UINT64: 64,
-    I32: 32, INT32: 32, U32: 32, UINT32: 32, I16: 16, INT16: 16, U16: 16, UINT16: 16,
-    I8: 8, INT8: 8, U8: 8, UINT8: 8, I4: 4, INT4: 4, U4: 4, UINT4: 4, COMPLEX64: 64, COMPLEX128: 128 }[contract.root.dtype];
-  return bits ? exactInteger((BigInt(elements.decimal) * BigInt(bits) + 7n) / 8n) : null;
+  return elements ? logicalBytesForElements(contract.root.dtype, elements.decimal) : null;
 }
 
 export function validateValueType(contract) {
@@ -70,8 +69,10 @@ export function validateValueType(contract) {
       if (typeof type.dtype !== "string" || !type.dtype || !["ranked", "unknown_rank"].includes(type.rank_status)
         || (type.rank_status === "unknown_rank" ? type.dimensions !== null : !Array.isArray(type.dimensions))) throw new Error("IR tensor rank contract is invalid.");
       for (const dim of type.dimensions || []) {
+        if (!dim || typeof dim !== "object") throw new Error("IR dimension contract is invalid.");
         if (dim.kind === "constant") {
-          if (canonicalJson(exactInteger(dim.value?.decimal)) !== canonicalJson(dim.value)) throw new Error("IR dimension exact count is inconsistent.");
+          const count = exactInteger(dim.value?.decimal);
+          if (!count || canonicalJson(count) !== canonicalJson(dim.value)) throw new Error("IR dimension exact count is inconsistent.");
         } else if (dim.kind === "symbol") {
           if (typeof dim.name !== "string" || !dim.name || typeof dim.scope_ref !== "string" || !dim.scope_ref) throw new Error("IR dimension symbol scope is invalid.");
         } else if (dim.kind !== "unknown") throw new Error("IR dimension kind is invalid.");

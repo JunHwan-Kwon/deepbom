@@ -1,3 +1,4 @@
+import { exactInteger as exact } from "../web/lib/exact-integer.js";
 import { createHash, randomUUID } from "node:crypto";
 import { createReadStream, createWriteStream } from "node:fs";
 import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
@@ -262,7 +263,6 @@ function safeRelativePath(value) {
     && value.split("/").every((part) => part && part !== "." && part !== "..");
 }
 
-function exact(value) { return { decimal: value.toString(), number: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null }; }
 function sha256Text(value) { return createHash("sha256").update(String(value), "utf8").digest("hex"); }
 export function defaultArtifactCacheDir() { return path.join(process.env.LOCALAPPDATA || path.join(homedir(), ".cache"), "deepbom", "artifacts-v1"); }
 function defaultProgress({ stage, label, bytes, total, complete }) {

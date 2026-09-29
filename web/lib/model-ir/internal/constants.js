@@ -1,6 +1,5 @@
-export const MODEL_IR_SCHEMA = "deepbom.model_ir.v1";
-export const MODEL_IR_METHOD_VERSION = "1.1.0";
-export const MODEL_IR_SOURCE_SCHEMA = "deepbom.artifact_ir.v2";
+export { MODEL_IR_SCHEMA, ARTIFACT_IR_SCHEMA as MODEL_IR_SOURCE_SCHEMA } from "../../evidence-ir.js";
+export const MODEL_IR_METHOD_VERSION = "1.1.2";
 export const SHA256 = /^[a-f0-9]{64}$/;
 
 export const EVIDENCE_CLASSES = Object.freeze([

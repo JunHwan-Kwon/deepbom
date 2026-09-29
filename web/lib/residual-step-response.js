@@ -1,7 +1,8 @@
+import { perTensor8BitContract as quantContract, roundTiesAway } from "./quantization-math.js";
+import { arraysEqual as sameArray } from "./array-contract.js";
 import { formatNumber, padOp } from "./format.js";
 import { browserAssetUrl } from "./browser-asset-url.js";
 import { sha256Hex } from "./hash.js";
-import { roundTiesAway } from "./quantization-math.js";
 
 export const RESIDUAL_STEP_RESPONSE_SCHEMA = "deepbom.residual_step_response.v1";
 
@@ -517,17 +518,6 @@ function compareBranch(actual, expected, opIndex, design) {
     || JSON.stringify(actual.first_unclipped_silent ?? null) !== JSON.stringify(expected.first_unclipped_silent ?? null)) throw new Error(`Step-response branch witnesses are invalid at #${opIndex} ${design}.`);
 }
 
-function quantContract(tensors, index) {
-  const tensor = tensors.find((item) => item.index === index);
-  if (!tensor || !["INT8", "UINT8"].includes(tensor.dtype) || tensor.scale_sample?.length !== 1 || tensor.zero_point_sample?.length !== 1) throw new Error(`Tensor T${index} lacks a per-tensor 8-bit contract.`);
-  const qmin = tensor.dtype === "INT8" ? -128 : 0;
-  const qmax = tensor.dtype === "INT8" ? 127 : 255;
-  const scale = Number(tensor.scale_sample[0]);
-  const zeroPoint = Number(tensor.zero_point_sample[0]);
-  if (!(scale > 0) || !Number.isFinite(scale) || zeroPoint < qmin || zeroPoint > qmax) throw new Error(`Tensor T${index} quantization metadata is invalid.`);
-  return { index, qmin, qmax, scale, zeroPoint };
-}
-
 function project(q0, q1, input0, input1, output) {
   const real = (q0 - input0.zeroPoint) * input0.scale + (q1 - input1.zeroPoint) * input1.scale;
   const raw = roundTiesAway(real / output.scale) + output.zeroPoint;
@@ -795,7 +785,7 @@ function number(value) { return Number(value).toPrecision(7); }
 function percent(value) { return value == null ? "N/A" : `${(Number(value) * 100).toFixed(3)}%`; }
 function signed(value) { const numberValue = Number(value || 0); return `${numberValue >= 0 ? "+" : ""}${formatNumber(numberValue)}`; }
 function sum(rows, key) { return rows.reduce((total, row) => total + Number(row[key] || 0), 0); }
-function sameArray(left, right) { return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value, index) => value === right[index]); }
+
 function assertEqual(actual, expected, label) { if (actual !== expected) throw new Error(`${label} mismatch (${actual} != ${expected}).`); }
 function assertNear(actual, expected, label) {
   const tolerance = Math.max(1e-12, Math.abs(Number(expected)) * 1e-11);

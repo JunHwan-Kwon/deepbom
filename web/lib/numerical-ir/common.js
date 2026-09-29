@@ -1,3 +1,4 @@
+import { shapeElementCount } from "../tensor-size.js";
 import { canonicalJson } from "../report-utils.js";
 import { sha256TextHex } from "../sha256-sync.js";
 import { modelEvidenceSource } from "../ir-evidence-contract.js";
@@ -29,8 +30,9 @@ export function decimalCount(value, label = "count") {
   return BigInt(value);
 }
 export function shapeCount(shape) {
-  requireCondition(Array.isArray(shape) && shape.every(v => Number.isSafeInteger(v) && v >= 0), "numeric shape must have exact nonnegative dimensions");
-  return shape.reduce((n, v) => n * BigInt(v), 1n);
+  const count = shapeElementCount(shape);
+  requireCondition(count != null, "numeric shape must have exact nonnegative dimensions");
+  return BigInt(count.decimal);
 }
 export function canonicalValue(value) {
   if (typeof value === "bigint") return value.toString();

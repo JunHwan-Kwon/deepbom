@@ -11,11 +11,16 @@ import {
 const handwrittenRuntimeBudgetKiB = Number(process.env.HANDWRITTEN_RUNTIME_SOURCE_BUDGET_KIB || process.env.SOURCE_BUDGET_KIB || 12928);
 const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_BUDGET_KIB || 1728);
 // Includes the public connection contract, schema and OMOP usage guide.
-const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 896);
+// Includes the hash-addressed common-rule inventory (~138 KiB) and review report.
+// Includes the immutable compatibility baseline and generated GitHub crosswalk.
+const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 1216);
 // Includes metadata tampering, cross-channel and browser regression checks.
-const verificationSourceBudgetKiB = Number(process.env.VERIFICATION_SOURCE_BUDGET_KIB || 3872);
-// Includes the reproducible Evidence Link IR schema generator.
-const devToolingSourceBudgetKiB = Number(process.env.DEV_TOOLING_SOURCE_BUDGET_KIB || 1728);
+// Adds schema/source closure and browser snapshot-integrity regression checks.
+const verificationSourceBudgetKiB = Number(process.env.VERIFICATION_SOURCE_BUDGET_KIB || 3904);
+// Includes the reproducible Provenance IR schema generator.
+// Includes the shared scalar registry/generator and reviewed duplicate exceptions.
+// Retains the four measured 2.0.0 delivery observations alongside prior releases.
+const devToolingSourceBudgetKiB = Number(process.env.DEV_TOOLING_SOURCE_BUDGET_KIB || 1764);
 const nativeToolingSourceBudgetKiB = Number(process.env.NATIVE_TOOLING_SOURCE_BUDGET_KIB || 256);
 const corpusEvidenceSourceBudgetKiB = Number(process.env.CORPUS_EVIDENCE_SOURCE_BUDGET_KIB || 544);
 const runtimeFileBudgetKiB = Number(process.env.RUNTIME_SOURCE_FILE_BUDGET_KIB || 512);

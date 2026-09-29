@@ -1,3 +1,4 @@
+import { safeIntegerCodeRange as dtypeCodeRange } from "./tensor-size.js";
 import {
   canonicalContractSha256,
   contractHashDescriptor,
@@ -528,10 +529,6 @@ function scalarCodeDomain(codeRange, scales, zeroPoints) {
     real_max: (codeRange[1] - zeroPoints[0]) * scales[0],
     formula: "real=(q-zero_point)*scale",
   };
-}
-
-function dtypeCodeRange(dtype) {
-  return ({ UINT8: [0, 255], INT8: [-128, 127], UINT16: [0, 65535], INT16: [-32768, 32767], UINT32: [0, 4294967295], INT32: [-2147483648, 2147483647] })[String(dtype || "").toUpperCase()] || null;
 }
 
 function declaredCount(value, fallback) {

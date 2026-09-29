@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-evidence-ir-v1.schema.json",
+  "title": "DEEPBOM Evidence IR",
+  "description": "Draft DEEPBOM-maintained family entry point for one IR document. This is not an aggregate bundle and does not authenticate evidence. Member semantic validators and exact source bindings remain required.",
+  "oneOf": [
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-artifact-ir-v2.schema.json"
+    },
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-model-ir-v1.schema.json"
+    },
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-numerical-ir-v1.schema.json#/$defs/weight_ir"
+    },
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-numerical-ir-v1.schema.json#/$defs/activation_ir"
+    },
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-provenance-ir-v1.schema.json"
+    }
+  ]
+}

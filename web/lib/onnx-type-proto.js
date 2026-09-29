@@ -1,14 +1,26 @@
+import { ONNX_TENSOR_TYPE_IDS as TENSOR_TYPE_IDS } from "./onnx-tensor-types.js";
 const SOURCE_COMMIT = "be2b5fde82d9c8874f3d19328bdfe3b6962dc67b";
+
+export function exactSequenceLength(value) {
+  return value?.sequenceLengthStatus === "assessed_exact" && Number.isSafeInteger(value.sequenceLength)
+    && value.sequenceLength >= 0 ? value.sequenceLength : null;
+}
+export function exactSequenceInventory(value) {
+  return value?.sequenceElementInventoryStatus === "assessed_exact" && Array.isArray(value.sequenceElementTypes)
+    ? value.sequenceElementTypes.map(cloneOnnxTypeProto) : null;
+}
+export function exactOptionalPresence(value) {
+  return value?.optionalPresenceStatus === "assessed_exact" && typeof value.optionalPresence === "boolean" ? value.optionalPresence : null;
+}
+export function knownDtype(tensor) {
+  const value = String(tensor?.dtype || "");
+  return value && value !== "UNKNOWN" ? value : "";
+}
 const MAX_TYPE_PROTO_NODES = 1_000_000;
 const MAX_TYPE_PROTO_TEXT_BYTES = 4_194_304;
 const MAP_KEY_TYPES = new Set(["UINT8", "INT8", "UINT16", "INT16", "INT32", "INT64", "STRING", "UINT32", "UINT64"]);
 const VALUE_ROLES = new Set(["graph_input", "graph_output", "graph_value_info", "function_value_info"]);
 const TEXT_ENCODER = new TextEncoder();
-const TENSOR_TYPE_IDS = new Map([
-  "FLOAT32", "UINT8", "INT8", "UINT16", "INT16", "INT32", "INT64", "STRING", "BOOL", "FLOAT16",
-  "FLOAT64", "UINT32", "UINT64", "COMPLEX64", "COMPLEX128", "BFLOAT16", "FLOAT8E4M3FN", "FLOAT8E4M3FNUZ",
-  "FLOAT8E5M2", "FLOAT8E5M2FNUZ", "UINT4", "INT4", "FLOAT4E2M1", "FLOAT8E8M0", "UINT2", "INT2",
-].map((name, index) => [name, index + 1]));
 
 export const ONNX_TYPE_PROTO_SOURCE = Object.freeze({
   release: "v1.21.0",

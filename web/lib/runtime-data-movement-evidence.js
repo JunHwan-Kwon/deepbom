@@ -1,3 +1,4 @@
+import { exactIntegerWithValue as exact } from "./exact-integer.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 
@@ -77,5 +78,5 @@ export function validateRuntimeDataMovementEvidence(value, runtimeEvidence) {
 function normalizeOp(value) { return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
 function validSha(value) { return /^[a-f0-9]{64}$/.test(String(value || "")); }
 function exactOrNull(value) { return /^\d+$/.test(String(value ?? "")) ? exact(BigInt(value)) : null; }
-function exact(value) { return { value: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null, decimal: String(value) }; }
+
 function seal(body) { return Object.freeze({ ...body, ledger_sha256: sha256TextHex(canonicalJson(body)) }); }

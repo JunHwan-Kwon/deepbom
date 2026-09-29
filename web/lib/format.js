@@ -1,4 +1,11 @@
+import { arraysEqual as sameShape } from "./array-contract.js";
+export { arraysEqual as sameShape } from "./array-contract.js";
 import { ExactMoments, exactRegressionGain } from "./numerical-ir/exact-moments.js";
+
+export function formatSignedCount(value) {
+  const number = Number(value || 0);
+  return `${number >= 0 ? "+" : ""}${formatNumber(number)}`;
+}
 
 export function formatShapes(shapes) {
   if (!Array.isArray(shapes) || !shapes.length) return "-";
@@ -153,10 +160,6 @@ export function clampInt(value, min, max, fallback) {
 
 export function cloneTypedArray(value) {
   return new value.constructor(value);
-}
-
-export function sameShape(left, right) {
-  return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
 export function maxNumber(values) {

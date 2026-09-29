@@ -49,6 +49,23 @@ const ONNX_RULEPACK_SOURCES = [
 ];
 
 const RULEPACK_SOURCE_SLICES = [
+  { label: "common Evidence IR schema identities", path: "web/lib/evidence-ir.js" },
+  // Rules moved out of format adapters must remain part of rulepack identity.
+  ...[
+    "config/scalar-types.v1.json",
+    "src/scalar_types_generated.rs",
+    "src/tensor_math.rs",
+    "src/tflite_subgraphs.rs",
+    "src/quantization_math.rs",
+    "web/lib/scalar-types.generated.js",
+    "web/lib/tensor-size.js",
+    "web/lib/exact-integer.js",
+    "web/lib/scalar-numeric.js",
+    "web/lib/array-contract.js",
+    "web/lib/quantization-math.js",
+    "web/lib/onnx-tensor-types.js",
+    "web/lib/gguf-storage-types.js",
+  ].map((sourcePath) => ({ label: "common calculation and native storage rules", path: sourcePath })),
   {
     label: "report metadata/provenance",
     path: "web/lib/report-metadata.js",

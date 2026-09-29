@@ -169,3 +169,9 @@ mod tests {
         );
     }
 }
+pub(crate) fn storage_code_range_8bit(dtype: &str) -> Option<(i64, i64)> {
+    if !matches!(dtype, "INT8" | "UINT8") { return None; }
+    let bits = crate::tensor_math::scalar_dtype_bits(dtype)?;
+    let high = 1i64 << if dtype == "INT8" { bits - 1 } else { bits };
+    Some((if dtype == "INT8" { -high } else { 0 }, high - 1))
+}

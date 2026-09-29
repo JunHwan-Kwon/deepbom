@@ -16,12 +16,12 @@
         {
           "type": "application",
           "name": "deepbom",
-          "version": "1.95.0+git.077ceb7533cd.bundle.7fba3e04cd19",
-          "bom-ref": "deepbom-analyzer-deepbom-1.95.0-077ceb7533cdaafe9389634f3c7d36ede346b2dd",
+          "version": "2.0.0+git.3b0c62caeec9.bundle.529d2222dff3",
+          "bom-ref": "deepbom-analyzer-deepbom-2.0.0-3b0c62caeec91c6875f724310c2c7c2bc94733d4",
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "7fba3e04cd19fe4a5eab2c8bb4d639fd1b9e72e39d89bff6f4fe3b07b96299cc"
+              "content": "529d2222dff3890467e4de1c76d1e8fe91034daf41a0d93674c7afd70e41d1aa"
             }
           ],
           "externalReferences": [
@@ -44,11 +44,11 @@
             },
             {
               "name": "deepbom:analyzer:semanticVersion",
-              "value": "1.95.0"
+              "value": "2.0.0"
             },
             {
               "name": "deepbom:analyzer:buildCommit",
-              "value": "077ceb7533cdaafe9389634f3c7d36ede346b2dd"
+              "value": "3b0c62caeec91c6875f724310c2c7c2bc94733d4"
             },
             {
               "name": "deepbom:analyzer:buildSourceState",
@@ -64,7 +64,7 @@
             },
             {
               "name": "deepbom:analyzer:rulepackSha256",
-              "value": "0b74cf5f8157f2aa14c0b26098ff36427c043bc7fc14f517aac9115ac52ae46a"
+              "value": "771d28776486275b1eda24095fce6cdb307cdb9cbc2df449a9e765f2a5afa8de"
             },
             {
               "name": "deepbom:validation:interfaceCorpusProfileId",
@@ -146,7 +146,7 @@
               }
             ],
             "tools": [
-              "deepbom-analyzer-deepbom-1.95.0-077ceb7533cdaafe9389634f3c7d36ede346b2dd"
+              "deepbom-analyzer-deepbom-2.0.0-3b0c62caeec91c6875f724310c2c7c2bc94733d4"
             ]
           }
         ]
@@ -191,7 +191,7 @@
         },
         {
           "name": "deepbom:model:artifactIrSha256",
-          "value": "be88db200dfe7fc3072ad93af50cf3c2a0a8fea98b576749f2ee0259ecc2c121"
+          "value": "82fc953c6057397075caf874f41887cf26fc149d0f1d8d0f905d272c09c1532b"
         },
         {
           "name": "deepbom:model:artifactIrLocation",
@@ -439,7 +439,7 @@
         },
         {
           "name": "deepbom:analyzer:semanticVersion",
-          "value": "1.95.0"
+          "value": "2.0.0"
         },
         {
           "name": "deepbom:analyzer:buildVersion",
@@ -451,7 +451,7 @@
         },
         {
           "name": "deepbom:analyzer:rulepackSha256",
-          "value": "0b74cf5f8157f2aa14c0b26098ff36427c043bc7fc14f517aac9115ac52ae46a"
+          "value": "771d28776486275b1eda24095fce6cdb307cdb9cbc2df449a9e765f2a5afa8de"
         }
       ],
       "externalReferences": [
@@ -462,7 +462,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "8e0d85e41b61acf4fc068e20cfe8b7d34b8eec2f6ec22c39149bf42e6b33a90c"
+              "content": "983b3429d5594802315de3fac087e2fbab8dcb2b89acdea1af4de0153f0af4ec"
             }
           ]
         },
@@ -473,7 +473,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "60d601250f9434dda0a912a816963de685f2b36cbf5dc378f0fa662ca8fce87e"
+              "content": "db8e1eba90a4781ed825c522850d8ee02486e8fa37692b808df2faafca1784d1"
             }
           ]
         },
@@ -484,7 +484,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "1f50cb2352f48ccc75265c69c1bdd5e6759e15d5607a2fb7afc66b4f12d4694d"
+              "content": "bf065ed6c44b5aaf6a705f7600d202dc05f78d830dd9e65d12629a2dbfc99428"
             }
           ]
         },
@@ -495,7 +495,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "a1540f67d7cc3814e37681a7f3ec78ded0735877b403903bf4538d7bbfa1f59d"
+              "content": "2141712f57427ff6086b2e00132cf3491dc069f2423f8002235d4901fa36a7aa"
             }
           ]
         },
@@ -511,7 +511,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "cb3ea94908669e40b3719c52d25f80bcfde93d07eeeb12da8a7de8a083e79837"
+              "content": "d5652a93a362be976a439e0edd639fa69ce00850475fb214947ae29ae8baa72c"
             }
           ]
         },
@@ -522,7 +522,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "aa9abc24eec3eaff3ed154afa583cdde2cd0b9fdfdd05be9f110aa8257d25972"
+              "content": "3a0bdecd245ec733ccf88a8ae663f71858dc6e8c0927c2e4c264dfdb25acbb4f"
             }
           ]
         }
@@ -783,7 +783,7 @@
         "/declarations"
       ],
       "timestamp": "2026-07-29T00:00:00.000Z",
-      "attributedTo": "deepbom-analyzer-deepbom-1.95.0-077ceb7533cdaafe9389634f3c7d36ede346b2dd",
+      "attributedTo": "deepbom-analyzer-deepbom-2.0.0-3b0c62caeec91c6875f724310c2c7c2bc94733d4",
       "note": "Artifact identity, dependency edges, and static claims were projected by the referenced analyzer from the hash-bound evidence envelope."
     }
   ],
@@ -802,7 +802,7 @@
     },
     {
       "name": "deepbom:artifactEvidenceEnvelopeSha256",
-      "value": "13c4994f04ef5573c563ddc703dbade9c5a27d7128a5b0de3bad3c87fbfce8e6"
+      "value": "61ca97e97e213e744462a2f9c3f5c9073238a19077b7b92b4ebd0e4586291c60"
     },
     {
       "name": "deepbom:artifactIrSchema",
@@ -810,7 +810,7 @@
     },
     {
       "name": "deepbom:artifactIrSha256",
-      "value": "be88db200dfe7fc3072ad93af50cf3c2a0a8fea98b576749f2ee0259ecc2c121"
+      "value": "82fc953c6057397075caf874f41887cf26fc149d0f1d8d0f905d272c09c1532b"
     },
     {
       "name": "deepbom:modelIrSchema",
@@ -818,7 +818,7 @@
     },
     {
       "name": "deepbom:modelIrSha256",
-      "value": "06c5d118ff0f1f42b89a2d2703c0e2d042afda5f19f8145625a1511e00da0b76"
+      "value": "d91fae70ff9df4483962c6a91045208b8a4589c9e6dc282aeeeba85b673b3af4"
     },
     {
       "name": "deepbom:modelIrLocation",

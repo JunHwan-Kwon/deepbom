@@ -1,3 +1,4 @@
+import { exactIntegerWithValue as exact, exactCountValue as exactFrom } from "./exact-integer.js";
 export const ON_DEVICE_LLM_RUNTIME_MANIFEST_SCHEMA = "deepbom.on_device_llm_runtime_manifest.v2";
 export const ON_DEVICE_LLM_RUNTIME_MANIFEST_LEGACY_SCHEMA = "deepbom.on_device_llm_runtime_manifest.v1";
 
@@ -15,17 +16,6 @@ const WORKING_MEMORY_CATEGORIES = Object.freeze([
   "backend_private_bytes",
   "other_runtime_bytes",
 ]);
-
-function exactFrom(value) {
-  if (value && typeof value === "object" && /^\d+$/.test(String(value.decimal || ""))) return BigInt(value.decimal);
-  if (typeof value === "string" && /^\d+$/.test(value)) return BigInt(value);
-  if (Number.isSafeInteger(value) && value >= 0) return BigInt(value);
-  return null;
-}
-
-function exact(value) {
-  return { value: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null, decimal: String(value) };
-}
 
 function positive(value) { return Number.isSafeInteger(value) && value > 0 ? value : null; }
 function sha(value) { return typeof value === "string" && /^[a-f0-9]{64}$/.test(value) ? value : null; }

@@ -102,35 +102,16 @@ fn pinned_in_place_registration(op_name: &str) -> Option<InPlaceRegistration> {
 }
 
 pub(super) fn declared_tensor_payload_bytes(tensor: &TensorInfo) -> Result<usize, String> {
+    if tensor.shape.is_empty() && !tensor.has_rank {
+        return Err("Tensor rank is unknown; an empty shape is not a declared scalar.".to_string());
+    }
     if tensor.shape.iter().any(|dim| *dim < 0) {
         return Err("Declared tensor shape contains a dynamic or unknown dimension.".to_string());
     }
-    let elements = tensor
-        .shape
-        .iter()
-        .try_fold(1usize, |product, dim| product.checked_mul(*dim as usize))
-        .ok_or_else(|| "Tensor element count exceeds the analyzer integer range.".to_string())?;
-    if tensor.dtype == "INT4" {
-        return elements
-            .checked_add(1)
-            .map(|value| value / 2)
-            .ok_or_else(|| "Packed INT4 payload exceeds the analyzer integer range.".to_string());
+    if tensor_math::scalar_dtype_bits(&tensor.dtype).is_none() {
+        return Err(format!("{} does not have a fixed inline scalar width for arena projection.", tensor.dtype));
     }
-    let scalar_bytes = match tensor.dtype.as_str() {
-        "COMPLEX128" => 16usize,
-        "FLOAT64" | "INT64" | "UINT64" | "COMPLEX64" => 8,
-        "FLOAT32" | "INT32" | "UINT32" => 4,
-        "FLOAT16" | "BFLOAT16" | "INT16" | "UINT16" => 2,
-        "INT8" | "UINT8" | "BOOL" => 1,
-        _ => {
-            return Err(format!(
-                "{} does not have a fixed inline scalar width for arena projection.",
-                tensor.dtype
-            ))
-        }
-    };
-    elements
-        .checked_mul(scalar_bytes)
+    tensor_math::shape_payload_bytes(&tensor.dtype, &tensor.shape)
         .ok_or_else(|| "Tensor payload exceeds the analyzer integer range.".to_string())
 }
 

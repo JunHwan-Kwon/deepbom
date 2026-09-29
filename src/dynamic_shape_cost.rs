@@ -407,16 +407,7 @@ fn tensor_element_polynomial(
 }
 
 fn dtype_storage_bits(dtype: &str) -> Option<u128> {
-    match dtype {
-        "BOOL" | "UINT8" | "INT8" => Some(8),
-        "UINT16" | "INT16" | "FLOAT16" | "BFLOAT16" => Some(16),
-        "UINT32" | "INT32" | "FLOAT32" => Some(32),
-        "UINT64" | "INT64" | "FLOAT64" | "COMPLEX64" => Some(64),
-        "COMPLEX128" => Some(128),
-        "UINT4" | "INT4" => Some(4),
-        "UINT2" | "INT2" => Some(2),
-        _ => None,
-    }
+    crate::tensor_math::scalar_dtype_bits(dtype).map(u128::from)
 }
 
 fn tensor_payload_polynomials(
@@ -446,14 +437,7 @@ fn tensor_payload_polynomials(
 }
 
 fn declared_shape_projection_bytes(tensor: &TensorInfo) -> Option<usize> {
-    let bits = dtype_storage_bits(&tensor.dtype)?;
-    let elements = tensor.shape.iter().try_fold(1u128, |product, dimension| {
-        (*dimension >= 0).then_some(())?;
-        product.checked_mul(*dimension as u128)
-    })?;
-    let payload_bits = elements.checked_mul(bits)?;
-    let bytes = payload_bits.checked_add(7)?.checked_div(8)?;
-    usize::try_from(bytes).ok()
+    crate::tensor_math::shape_payload_bytes(&tensor.dtype, &tensor.shape)
 }
 
 fn tensor_formula_rows(
@@ -703,9 +687,9 @@ fn tflite_op_mac_polynomial(
 fn exact_projected_macs(op: &OpInfo) -> Option<u64> {
     if op.macs_status != "assessed_nominal" { return None; }
     if let Some(decimal) = &op.macs_decimal {
-        return decimal.parse::<u64>().ok().filter(|value| *value <= 9_007_199_254_740_991);
+        return decimal.parse::<u64>().ok().filter(|value| u128::from(*value) <= crate::tensor_math::MAX_SAFE_INTEGER);
     }
-    (op.macs.is_finite() && op.macs >= 0.0 && op.macs.fract() == 0.0 && op.macs <= 9_007_199_254_740_991.0).then_some(op.macs as u64)
+    crate::tensor_math::exact_safe_count(op.macs).and_then(|value| u64::try_from(value).ok())
 }
 
 fn op_formula_rows(

@@ -27,6 +27,35 @@ export function canonicalFloatText(value) {
   return String(value);
 }
 
+export function staticNumericInput(input, dtype) {
+  if (dtype === "INT64" && input?.initializerIntegerValuesExactComplete === true
+    && Array.isArray(input.initializerIntegerValuesExactDecimals)) {
+    try { return input.initializerIntegerValuesExactDecimals.map(value => BigInt(value)); } catch { return null; }
+  }
+  if (["FLOAT32", "FLOAT64", "INT32"].includes(dtype)
+    && input?.staticValuesComplete === true && Array.isArray(input.staticValues)) return input.staticValues;
+  return null;
+}
+
+export function floatListAttribute(attribute) {
+  if (attribute?.type !== 6 || !Array.isArray(attribute.floats)
+    || !Array.isArray(attribute.valueTypesPresent) || attribute.valueTypesPresent.length !== 1
+    || attribute.valueTypesPresent[0] !== 6) return null;
+  return attribute.floats.map(value => Math.fround(value));
+}
+
+export function numericTokenValue(value) {
+  if (value === "NaN") return Number.NaN;
+  if (value === "Infinity") return Number.POSITIVE_INFINITY;
+  if (value === "-Infinity") return Number.NEGATIVE_INFINITY;
+  if (value === "-0") return -0;
+  return Number(value);
+}
+
+export function duplicateValueCount(values) {
+  return values.length - new Set(values.map(value => typeof value === "bigint" ? `i:${value}` : `s:${value}`)).size;
+}
+
 export function parseCanonicalFloatText(text, { float32 = false } = {}) {
   if (typeof text !== "string" || !text.length) return { ok: false, value: null };
   let value;

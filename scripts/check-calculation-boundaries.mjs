@@ -6,7 +6,8 @@ import { evaluateGuardedIntegerFormula, integerSymbol, serializeGuardedIntegerFo
 import { summarizeOnnxAssessedMacs, projectOnnxCompleteMacTotals } from "../web/onnx.js";
 import { staticTensorPayloadBytes } from "../web/lib/tensor-inventory.js";
 
-assert.equal(staticTensorPayloadBytes({ dtype: "FLOAT32", shape: [] }), 4);
+assert.equal(staticTensorPayloadBytes({ dtype: "FLOAT32", shape: [], shape_declared: true }), 4);
+assert.equal(staticTensorPayloadBytes({ dtype: "FLOAT32", shape: [] }), null);
 assert.equal(staticTensorPayloadBytes({ dtype: "FLOAT32", shape: [0, 10] }), 0);
 assert.equal(staticTensorPayloadBytes({ dtype: "INT4", shape: [3] }), 2);
 assert.equal(staticTensorPayloadBytes({ dtype: "INT4", shape: [0] }), 0);

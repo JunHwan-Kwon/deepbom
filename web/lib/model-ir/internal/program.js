@@ -1,6 +1,49 @@
-import { compareCanonicalText } from "../../report-utils.js";
+import { canonicalJson, compareCanonicalText } from "../../report-utils.js";
+import { validateMetric } from "../../ir-metric.js";
 import { clone, list, sortById } from "./shared.js";
 import { buildStructuralBlocks } from "./blocks.js";
+
+// Validate redundant references within a document. Authenticity still requires
+// independent source rederivation; a valid digest alone cannot establish it.
+export function validateProgramLinks(program) {
+  const ports = new Map(program.ports.map(row => [row.id, row]));
+  const values = new Map(program.values.map(row => [row.id, row]));
+  const operations = new Map(program.operations.map(row => [row.id, row]));
+  const regions = new Set(program.regions.map(row => row.id));
+  const usedPorts = new Set();
+  for (const value of values.values()) if (!regions.has(value.region_ref)) throw new Error("Model IR value region reference is invalid.");
+  for (const operation of operations.values()) {
+    for (const direction of ["input", "output"]) {
+      const refs = operation[`${direction}_port_refs`], positions = new Set();
+      if (!Array.isArray(refs)) throw new Error("Model IR operation port ledger is invalid.");
+      for (const ref of refs) {
+        const port = ports.get(ref), value = values.get(port?.value_ref);
+        if (!port || usedPorts.has(ref) || port.operation_ref !== operation.id || port.direction !== direction
+          || !Number.isSafeInteger(port.position) || port.position < 0 || positions.has(port.position)
+          || !value || value.region_ref !== operation.region_ref) throw new Error("Model IR port contradicts its operation or value region.");
+        usedPorts.add(ref); positions.add(port.position);
+      }
+    }
+    // Older source projections can lack metric contracts entirely.
+    if (operation.metric_contracts) for (const [key, unit] of [["macs", "MAC"], ["logical_io_bytes", "byte"]]) {
+      const metric = operation.metric_contracts[key]; validateMetric(metric);
+      if (metric.unit !== unit || canonicalJson(metric.value) !== canonicalJson(operation.metrics[key])
+        || canonicalJson(metric.source_refs) !== canonicalJson([operation.id])) throw new Error("Model IR metric contradicts its operation projection.");
+    }
+  }
+  if (usedPorts.size !== ports.size) throw new Error("Model IR operation omitted a port.");
+  for (const block of program.blocks) if (block.member_refs.some(ref => operations.get(ref)?.region_ref !== block.region_ref)) throw new Error("Model IR block member belongs to a different region.");
+  for (const relation of program.relationships) {
+    if (relation.kind === "data_dependency") {
+      const from = operations.get(relation.from_ref), to = operations.get(relation.to_ref);
+      if (!from || !to || !from.output_port_refs.some(ref => ports.get(ref).value_ref === relation.value_ref)
+        || !to.input_port_refs.some(ref => ports.get(ref).value_ref === relation.value_ref)) throw new Error("Model IR data relationship contradicts operation ports.");
+    } else if (relation.kind === "storage_binding") {
+      const value = values.get(relation.from_ref);
+      if (!value || relation.value_ref !== value.id || !value.storage_refs.includes(relation.to_ref)) throw new Error("Model IR storage relationship contradicts its value.");
+    }
+  }
+}
 
 export function buildProgramModel(artifactIr, nativeFactLedger = null) {
   const graph = artifactIr.graph;

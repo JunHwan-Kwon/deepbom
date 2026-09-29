@@ -1,3 +1,4 @@
+import { arraysEqual as equalArray } from "./array-contract.js";
 import { sha256Hex } from "./hash.js";
 import { browserAssetUrl } from "./browser-asset-url.js";
 import {
@@ -975,7 +976,7 @@ function spans(minimumValues, maximumValues) { return minimumValues.map((value, 
 function minimum(values) { return values.length ? Math.min(...values) : null; }
 function optionalCompare(left, right) { if (left == null && right == null) return 0; if (left == null) return -1; if (right == null) return 1; return left - right; }
 function sum(rows, key) { return rows.reduce((total, row) => total + Number(row[key] || 0), 0); }
-function equalArray(left, right) { return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value, index) => value === right[index]); }
+
 function validReasonCode(value) { return Number.isInteger(value) && value >= 0 && value < REASON_LABELS.length; }
 function isNumber(value) { return typeof value === "number" && Number.isFinite(value); }
 function clampInteger(value, minimumValue, maximumValue) { const number = Number(value); return Math.min(maximumValue, Math.max(minimumValue, Number.isInteger(number) ? number : minimumValue)); }

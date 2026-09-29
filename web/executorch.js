@@ -1,3 +1,6 @@
+import { scalarDtypeBits, packedBytesForElements } from "./lib/tensor-size.js";
+import { arraysEqual as sameShape } from "./lib/array-contract.js";
+
 import { BoundedFlatBufferReader } from "./lib/flatbuffer-reader.js";
 import { convTransposeAxisPairs } from "./lib/guarded-integer-expression.js";
 import {
@@ -46,14 +49,15 @@ const SHAPE_DYNAMISM = Object.freeze({ 0: "STATIC", 1: "DYNAMIC_BOUND", 2: "DYNA
 const DEVICE_TYPES = Object.freeze({ 0: "CPU", 1: "CUDA" });
 const DATA_LOCATIONS = Object.freeze({ 0: "INLINE", 1: "SEGMENT" });
 const TENSOR_DATA_LOCATIONS = Object.freeze({ 0: "SEGMENT", 1: "EXTERNAL" });
-const SCALAR_TYPES = Object.freeze({
-  0: ["UINT8", 8], 1: ["INT8", 8], 2: ["INT16", 16], 3: ["INT32", 32], 4: ["INT64", 64],
-  5: ["FLOAT16", 16], 6: ["FLOAT32", 32], 7: ["FLOAT64", 64], 11: ["BOOL", 8],
-  12: ["QINT8", 8], 13: ["QUINT8", 8], 14: ["QINT32", 32], 15: ["BFLOAT16", 16],
-  16: ["QUINT4X2", 4], 17: ["QUINT2X4", 2], 22: ["BITS16", 16],
-  23: ["FLOAT8E5M2", 8], 24: ["FLOAT8E4M3FN", 8], 25: ["FLOAT8E5M2FNUZ", 8],
-  26: ["FLOAT8E4M3FNUZ", 8], 27: ["UINT16", 16], 28: ["UINT32", 32], 29: ["UINT64", 64],
-});
+const NATIVE_WIDTH_BASE = Object.freeze({ QINT8: "INT8", QUINT8: "UINT8", QINT32: "INT32", QUINT4X2: "UINT4", QUINT2X4: "UINT2", BITS16: "UINT16" });
+const SCALAR_TYPES = Object.freeze(Object.fromEntries(Object.entries({
+  0: "UINT8", 1: "INT8", 2: "INT16", 3: "INT32", 4: "INT64",
+  5: "FLOAT16", 6: "FLOAT32", 7: "FLOAT64", 11: "BOOL",
+  12: "QINT8", 13: "QUINT8", 14: "QINT32", 15: "BFLOAT16",
+  16: "QUINT4X2", 17: "QUINT2X4", 22: "BITS16",
+  23: "FLOAT8E5M2", 24: "FLOAT8E4M3FN", 25: "FLOAT8E5M2FNUZ",
+  26: "FLOAT8E4M3FNUZ", 27: "UINT16", 28: "UINT32", 29: "UINT64",
+}).map(([code, name]) => [code, [name, scalarDtypeBits(NATIVE_WIDTH_BASE[name] || name)]])));
 
 export function analyzeExecuTorchModel(bytes, filename = "model.pte", options = {}) {
   if (!(bytes instanceof Uint8Array)) throw new TypeError("ExecuTorch analysis requires a Uint8Array.");
@@ -850,7 +854,6 @@ function evalueNonnegativeIntegerList(value) { return evalueIntegerList(value, (
 function exactMac(value, status) { return { macs: safeNumber(value), decimal: value.toString(), status }; }
 function unassessedMac(status) { return { macs: null, decimal: null, status }; }
 function unique(values) { return [...new Set(values)]; }
-function sameShape(left, right) { return left.length === right.length && left.every((value, index) => value === right[index]); }
 
 function parseDelegate(reader, table, planIndex, planName, index, storage) {
   const backendId = reader.stringField(table, 0, `${planName}.delegates[${index}].id`);
@@ -1276,7 +1279,11 @@ function validateDimOrder(order, rank, label) { if (order.length !== rank || new
 function assertUnique(values, label) { const seen = new Set(); for (const value of values) { if (seen.has(value)) throw new Error(`${label} contains duplicate ${JSON.stringify(value)}.`); seen.add(value); } }
 function combineU32(low, high) { return BigInt(low) | BigInt(high) << 32n; }
 function productBigInt(values, label) { let total = 1n; for (const value of values) { if (!Number.isSafeInteger(value) || value < 0) throw new Error(`${label} contains invalid dimension ${value}.`); total *= BigInt(value); } return total; }
-function ceilBitsToBytes(elements, bits) { return (elements * BigInt(bits) + 7n) / 8n; }
+function ceilBitsToBytes(elements, bits) {
+  const bytes = packedBytesForElements(elements, bits);
+  if (!bytes) throw new Error("ExecuTorch tensor payload requires a known positive scalar width and exact element count.");
+  return BigInt(bytes.decimal);
+}
 function sumBigInt(values) { return values.reduce((sum, value) => sum + BigInt(value), 0n); }
 function exactDecimal(value) {
   if (typeof value === "bigint") return value >= 0n ? value : null;

@@ -9,7 +9,7 @@ import { validateBoundConversionReceipt } from "../../conversion-receipt.js";
 import { exact, list, text, uniqueIds, validateExactInteger } from "./shared.js";
 
 export function validateArtifactIrBody(value) {
-  if (value?.schema !== ARTIFACT_IR_SCHEMA || !["2.2.0", "2.2.1", ARTIFACT_IR_METHOD_VERSION].includes(value?.method_version)) throw new Error("Artifact IR schema identity is invalid.");
+  if (value?.schema !== ARTIFACT_IR_SCHEMA || !["2.2.0", "2.2.1", "2.3.0", "2.3.1", ARTIFACT_IR_METHOD_VERSION].includes(value?.method_version)) throw new Error("Artifact IR schema identity is invalid.");
   if (value?.hash_contract?.algorithm !== "SHA-256"
     || value?.hash_contract?.canonicalization !== "RFC8785-JCS"
     || value?.hash_contract?.source_encoding !== "UTF-8"
@@ -106,7 +106,7 @@ export function validateArtifactIrBody(value) {
       if (!storageIds.has(storageRef)) throw new Error("Artifact IR value references an unknown storage object.");
     }
   }
-  if (value.method_version === ARTIFACT_IR_METHOD_VERSION) {
+  if (["2.3.0", "2.3.1", ARTIFACT_IR_METHOD_VERSION].includes(value.method_version)) {
     validateLogicalInventory(value.logical_inventory, graph.values, storage.objects);
     validateArtifactMembers(value.artifact_members, value.artifact, storage);
     for (const row of graph.values) validateValueType(row.type_contract);

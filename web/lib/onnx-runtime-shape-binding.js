@@ -1,16 +1,9 @@
+import { logicalBytesForShape } from "./tensor-size.js";
 import { estimateOnnxMacs } from "../onnx.js";
 import { evaluateDynamicIntegerFormula } from "./dynamic-shape-cost.js";
 import { isOnnxMacBearingOperation } from "./onnx-operation-cost.js";
 
 export const ONNX_RUNTIME_SHAPE_BINDING_SCHEMA = "deepbom.onnx_runtime_shape_binding.v2";
-
-const DTYPE_BITS = Object.freeze({
-  FLOAT4E2M1: 4, INT4: 4, UINT4: 4, INT2: 2, UINT2: 2,
-  FLOAT8E4M3FN: 8, FLOAT8E4M3FNUZ: 8, FLOAT8E5M2: 8, FLOAT8E5M2FNUZ: 8, FLOAT8E8M0: 8,
-  INT8: 8, UINT8: 8, BOOL: 8, FLOAT16: 16, BFLOAT16: 16, INT16: 16, UINT16: 16,
-  FLOAT32: 32, INT32: 32, UINT32: 32, FLOAT64: 64, INT64: 64, UINT64: 64,
-  COMPLEX64: 64, COMPLEX128: 128,
-});
 
 export function buildOnnxRuntimeShapeBinding(analysis, runtimeResult = {}) {
   const artifactSha256 = String(analysis?.model_sha256 || analysis?.sha256 || "").toLowerCase();
@@ -332,10 +325,7 @@ function reconstructOnnxNode(op) {
 }
 
 function payloadBytesDecimal(dtype, shape) {
-  const bits = DTYPE_BITS[normalizeDtype(dtype)];
-  if (!bits || !Array.isArray(shape) || shape.some((dimension) => !Number.isSafeInteger(Number(dimension)) || Number(dimension) < 0)) return null;
-  const elements = shape.reduce((product, dimension) => product * BigInt(dimension), 1n);
-  return ((elements * BigInt(bits) + 7n) / 8n).toString();
+  return logicalBytesForShape(normalizeDtype(dtype), shape)?.decimal ?? null;
 }
 
 function normalizeRuntimeType(value) {

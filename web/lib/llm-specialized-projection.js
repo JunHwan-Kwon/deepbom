@@ -1,10 +1,7 @@
+import { exactIntegerWithValue as exact } from "./exact-integer.js";
 function positive(value, label) {
   if (!Number.isSafeInteger(value) || value <= 0) throw new Error(`${label} must be a positive safe integer`);
   return BigInt(value);
-}
-
-function exact(value) {
-  return { value: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null, decimal: String(value) };
 }
 
 export function buildSparseMoeDecoderProjection({

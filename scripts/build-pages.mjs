@@ -43,6 +43,9 @@ for (const relativePath of [
 
 const buildMetadata = writeBuildMetadata();
 await runNode("scripts/generate-cli-docs.mjs", ["--check"]);
+await runNode("scripts/generate-provenance-schema.mjs", ["--check"]);
+await runNode("scripts/generate-evidence-ir-catalog.mjs", ["--check"]);
+await runNode("scripts/check-evidence-compatibility.mjs");
 
 await rm(dist, { recursive: true, force: true });
 await mkdir(dist, { recursive: true });
@@ -121,7 +124,13 @@ await copyFile(
   path.join(dist, ".well-known", "deepbom-signing-keys.json"),
 );
 await mkdir(path.join(dist, "schemas"), { recursive: true });
-for (const name of ["deepbom-numerical-ir-v1.schema.json", "deepbom-weight-analysis-v1.schema.json", "deepbom-evidence-links-v1.schema.json"]) await copyFile(path.join(root, "docs", "schemas", name), path.join(dist, "schemas", name));
+for (const name of ["deepbom-model-ir-v1.schema.json", "deepbom-numerical-ir-v1.schema.json", "deepbom-weight-analysis-v1.schema.json", "deepbom-provenance-ir-v1.schema.json", "deepbom-evidence-ir-v1.schema.json"]) await copyFile(path.join(root, "docs", "schemas", name), path.join(dist, "schemas", name));
+await copyFile(path.join(root, "docs", "evidence-ir", "catalog.json"), path.join(dist, "schemas", "evidence-ir-catalog.json"));
+await copyFile(path.join(root, "docs", "schemas", "deepbom-evidence-compatibility-v1.schema.json"), path.join(dist, "schemas", "deepbom-evidence-compatibility-v1.schema.json"));
+await mkdir(path.join(dist, "schemas", "compatibility"), { recursive: true });
+for (const name of await readdir(path.join(root, "docs", "evidence-ir", "compatibility"))) {
+  if (name.endsWith(".json")) await copyFile(path.join(root, "docs", "evidence-ir", "compatibility", name), path.join(dist, "schemas", "compatibility", name));
+}
 await copyFile(
   path.join(root, "docs", "schemas", "deepbom-artifact-ir-v2.schema.json"),
   path.join(dist, "schemas", "deepbom-artifact-ir-v2.schema.json"),
@@ -243,6 +252,8 @@ await writeFile(path.join(dist, "llms.txt"), [
   "- [ChatGPT integration](https://deepbom.org/chatgpt/): attached-file analysis in the ChatGPT browser sandbox",
   "- [Claude integration](https://deepbom.org/claude/): separate local Desktop and browser-local remote paths",
   "- [Inspection guides](https://deepbom.org/guides/): problem-focused ONNX, GGUF, and artifact-diff workflows",
+  "- [Evidence IR](https://deepbom.org/guides/evidence-ir/): common IR family, schemas, compatibility and evidence boundaries",
+  "- [Compatibility explorer](https://deepbom.org/guides/evidence-ir/compatibility/): versioned input-to-IR and IR-to-output mappings, schemas and implementation references",
   "- [Evaluate DEEPBOM](https://deepbom.org/evaluate/): choose an engineering, quality, or regulatory evaluation brief",
   "- [Regulatory brief](https://deepbom.org/evaluate/regulatory/): what the records can support in a controlled process, and where they stop",
   "- [Quality brief](https://deepbom.org/evaluate/quality/): validating an installed analyzer before relying on it",
@@ -281,7 +292,7 @@ await writeFile(path.join(dist, "sitemap.xml"), [
   "    <loc>https://deepbom.org/claude/</loc>",
   ...sitemapLastmod("web/claude/index.html", { cwd: root }),
   "  </url>",
-  ...["", "cli/", "cli/reference/", "numerical-evidence/", "omop-metadata/", "inspect-onnx-quantization/", "inspect-gguf-tensor-encodings/", "compare-model-artifacts/"].flatMap((guide) => [
+  ...["", "cli/", "cli/reference/", "numerical-evidence/", "omop-metadata/", "evidence-ir/", "evidence-ir/compatibility/", "inspect-onnx-quantization/", "inspect-gguf-tensor-encodings/", "compare-model-artifacts/"].flatMap((guide) => [
     "  <url>",
     `    <loc>https://deepbom.org/guides/${guide}</loc>`,
     ...sitemapLastmod(`web/guides/${guide}index.html`, { cwd: root }),

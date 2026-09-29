@@ -27,6 +27,11 @@ if (manifest?.schema !== "deepbom.analyzer_build_content_manifest.v1") throw new
 if (!/^[0-9a-f]{40}$/.test(ANALYZER_BUILD_COMMIT)) throw new Error("Analyzer build commit is missing or malformed.");
 if (!manifest.files?.length) throw new Error("Analyzer build-content manifest has no files.");
 const observedRulepack = computeRulepackDigest();
+for (const owner of ["config/scalar-types.v1.json", "src/tensor_math.rs", "src/tflite_subgraphs.rs", "web/lib/tensor-size.js", "web/lib/scalar-numeric.js", "web/lib/onnx-tensor-types.js", "web/lib/gguf-storage-types.js"]) {
+  if (!observedRulepack.basis.some(item => item.startsWith(owner))) {
+    throw new Error(`Common calculation owner is missing from rulepack identity: ${owner}`);
+  }
+}
 if (observedRulepack.sha256 !== RULEPACK_SHA256
   || canonicalJson(publicRulepackHashBasis(observedRulepack.basis)) !== canonicalJson(RULEPACK_HASH_BASIS)) {
   throw new Error("Rulepack SHA-256 or source basis does not match the current pinned rule sources.");

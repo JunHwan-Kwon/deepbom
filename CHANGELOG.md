@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — breaking Provenance IR contract
+
+- Replace the prior connection contract with `deepbom.provenance_ir.v1`, canonical input/summary/export names and a single implementation; retire compatibility aliases.
+- Version remote result envelopes to v2, update widgets and validators together, and reject retired contracts explicitly.
+- Add migration instructions and a pinned TEA architectural review. TEA integration is proposed, not implemented.
+
+
 ## 1.109.0 — 2026-09-28
 
 - Add an optional, model-bound Evidence Link IR shared by Web, CLI and local/remote MCP, with deterministic hashing, typed connections, explicit unverified declarations and separate coverage denominators. Preserve existing Artifact, Model, Weight and Activation IR contracts.

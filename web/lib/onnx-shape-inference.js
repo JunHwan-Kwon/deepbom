@@ -1,3 +1,4 @@
+import { normalizeAxis } from "./scalar-numeric.js";
 import {
   ONNX_BOOL_SAME_SHAPE_OPS as BOOL_SAME_SHAPE,
   ONNX_BROADCAST_BOOL_OPS as BROADCAST_BOOL,
@@ -2911,12 +2912,6 @@ function attrInt(node, name, fallback) {
 }
 function attrString(node, name, fallback = "") { return node.attributes?.get(name)?.s || fallback; }
 
-function normalizeAxis(axis, rank) {
-  let value = Number(axis);
-  if (!Number.isSafeInteger(value) || rank < 0) return null;
-  if (value < 0) value += rank;
-  return value >= 0 && value < rank ? value : null;
-}
 function normalizeAxes(axes, rank) {
   if (!Array.isArray(axes)) return null;
   const normalized = axes.map((axis) => normalizeAxis(axis, rank));

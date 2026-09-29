@@ -1,14 +1,5 @@
-import {
-  canonicalOnnxTypeProto,
-  cloneOnnxTypeProto,
-  makeOnnxOptionalType,
-  makeOnnxSequenceType,
-  makeOnnxTensorType,
-  onnxTypeProtoFromValue,
-  onnxTypeProtoKnown,
-  onnxValueDescriptorFromType,
-  unionOnnxTypeProtos,
-} from "./onnx-type-proto.js";
+import { exactSequenceLength, exactSequenceInventory, exactOptionalPresence, canonicalOnnxTypeProto, cloneOnnxTypeProto, makeOnnxOptionalType, makeOnnxSequenceType, makeOnnxTensorType, onnxTypeProtoFromValue, onnxTypeProtoKnown, onnxValueDescriptorFromType, unionOnnxTypeProtos } from "./onnx-type-proto.js";
+import { normalizeAxis } from "./scalar-numeric.js";
 
 const SOURCE_COMMIT = "be2b5fde82d9c8874f3d19328bdfe3b6962dc67b";
 const MAX_EXACT_SEQUENCE_ELEMENTS = 4_096;
@@ -345,19 +336,6 @@ function sequenceState(length, inventory) {
   };
 }
 
-function exactSequenceLength(value) {
-  return value?.sequenceLengthStatus === "assessed_exact" && Number.isSafeInteger(value.sequenceLength) && value.sequenceLength >= 0 ? value.sequenceLength : null;
-}
-
-function exactSequenceInventory(value) {
-  return value?.sequenceElementInventoryStatus === "assessed_exact" && Array.isArray(value.sequenceElementTypes)
-    ? value.sequenceElementTypes.map(cloneOnnxTypeProto) : null;
-}
-
-function exactOptionalPresence(value) {
-  return value?.optionalPresenceStatus === "assessed_exact" && typeof value.optionalPresence === "boolean" ? value.optionalPresence : null;
-}
-
 function validTensorSequenceType(type) {
   return type?.kind === "sequence" && type.elementType?.kind === "tensor" && onnxTypeProtoKnown(type.elementType);
 }
@@ -424,12 +402,6 @@ function valueDimension(value) { return { kind: "value", value, parameter: "", d
 function unknownDimension() { return { kind: "unknown", value: null, parameter: "", denotation: "", valueFieldCount: 0 }; }
 function concreteDimension(dimension) { return dimension?.kind === "value" && Number.isSafeInteger(dimension.value) && dimension.value >= 0 ? dimension.value : null; }
 function sameDimension(left, right) { return left?.kind === right?.kind && (left?.kind === "value" ? left.value === right.value : left?.kind === "symbolic" ? left.parameter === right.parameter : true); }
-
-function normalizeAxis(axis, rank) {
-  const value = Number(axis);
-  if (!Number.isSafeInteger(value) || !Number.isSafeInteger(rank) || rank < 0 || value < -rank || value >= rank) return null;
-  return value < 0 ? value + rank : value;
-}
 
 function attributeInteger(node, name) {
   const attribute = node.attributes?.get(name);

@@ -1,3 +1,6 @@
+import { GGML_TYPES_BY_NAME } from "./gguf-storage-types.js";
+import { scalarDtypeBytes } from "./tensor-size.js";
+import { float16ToNumber as float16, bfloat16ToNumber as bfloat16 } from "./scalar-numeric.js";
 import { Sha256Accumulator } from "./sha256-sync.js";
 import { ggufCodebookByte, ggufCodebookEntry } from "./gguf-codebooks.generated.js";
 
@@ -48,80 +51,68 @@ export function safeTensorsNumericalSourceEvidence() {
   };
 }
 
-const SAFE_SCALAR_LAYOUTS = Object.freeze({
-  BOOL: { bytes: 1, kind: "bool" },
-  U8: { bytes: 1, kind: "uint" }, I8: { bytes: 1, kind: "int" },
-  U16: { bytes: 2, kind: "uint" }, I16: { bytes: 2, kind: "int" },
-  U32: { bytes: 4, kind: "uint" }, I32: { bytes: 4, kind: "int" },
-  U64: { bytes: 8, kind: "biguint" }, I64: { bytes: 8, kind: "bigint" },
-  F16: { bytes: 2, kind: "f16" }, BF16: { bytes: 2, kind: "bf16" },
-  F32: { bytes: 4, kind: "f32" }, F64: { bytes: 8, kind: "f64" },
-  C64: { bytes: 8, kind: "c64" },
-  F8_E4M3: { bytes: 1, kind: "f8_e4m3fn", levels: 256 },
-  F8_E5M2: { bytes: 1, kind: "f8_e5m2", levels: 256 },
-  F8_E8M0: { bytes: 1, kind: "f8_e8m0fnu", levels: 256 },
-  F8_E4M3FNUZ: { bytes: 1, kind: "f8_e4m3fnuz", levels: 256 },
-  F8_E5M2FNUZ: { bytes: 1, kind: "f8_e5m2fnuz", levels: 256 },
-});
+const SAFE_SCALAR_LAYOUTS = Object.freeze(Object.fromEntries(Object.entries({
+  BOOL: { kind: "bool" },
+  U8: { kind: "uint" }, I8: { kind: "int" },
+  U16: { kind: "uint" }, I16: { kind: "int" },
+  U32: { kind: "uint" }, I32: { kind: "int" },
+  U64: { kind: "biguint" }, I64: { kind: "bigint" },
+  F16: { kind: "f16" }, BF16: { kind: "bf16" },
+  F32: { kind: "f32" }, F64: { kind: "f64" },
+  C64: { kind: "c64" },
+  F8_E4M3: { kind: "f8_e4m3fn", levels: 256 },
+  F8_E5M2: { kind: "f8_e5m2", levels: 256 },
+  F8_E8M0: { kind: "f8_e8m0fnu", levels: 256 },
+  F8_E4M3FNUZ: { kind: "f8_e4m3fnuz", levels: 256 },
+  F8_E5M2FNUZ: { kind: "f8_e5m2fnuz", levels: 256 },
+}).map(([dtype, row]) => [dtype, { ...row, bytes: scalarDtypeBytes(dtype) }])));
 
 const SAFE_PACKED_LAYOUTS = Object.freeze({
   F4: { bytes: 1, elements: 2, kind: "f4_e2m1fn_x2", levels: 16 },
 });
 
-const GGUF_SCALAR_LAYOUTS = Object.freeze({
-  F32: { bytes: 4, kind: "f32" }, F16: { bytes: 2, kind: "f16" },
-  I8: { bytes: 1, kind: "int" }, I16: { bytes: 2, kind: "int" },
-  I32: { bytes: 4, kind: "int" }, I64: { bytes: 8, kind: "bigint" },
-  F64: { bytes: 8, kind: "f64" }, BF16: { bytes: 2, kind: "bf16" },
-});
+const GGUF_SCALAR_LAYOUTS = Object.freeze(Object.fromEntries(Object.entries({
+  F32: { kind: "f32" }, F16: { kind: "f16" },
+  I8: { kind: "int" }, I16: { kind: "int" },
+  I32: { kind: "int" }, I64: { kind: "bigint" },
+  F64: { kind: "f64" }, BF16: { kind: "bf16" },
+}).map(([dtype, row]) => [dtype, { ...row, bytes: scalarDtypeBytes(dtype) }])));
 
-const GGUF_BLOCK_LAYOUTS = Object.freeze({
-  Q1_0: { bytes: 18, elements: 128, levels: 2 },
-  Q2_0: { bytes: 18, elements: 64, levels: 4 },
-  Q4_0: { bytes: 18, elements: 32, levels: 16 },
-  Q4_1: { bytes: 20, elements: 32, levels: 16 },
-  Q5_0: { bytes: 22, elements: 32, levels: 32 },
-  Q5_1: { bytes: 24, elements: 32, levels: 32 },
-  Q8_0: { bytes: 34, elements: 32, levels: 256 },
-  Q8_1: { bytes: 36, elements: 32, levels: 256 },
-  Q2_K: { bytes: 84, elements: 256, levels: 4 },
-  Q3_K: { bytes: 110, elements: 256, levels: 8 },
-  Q4_K: { bytes: 144, elements: 256, levels: 16 },
-  Q5_K: { bytes: 176, elements: 256, levels: 32 },
-  Q6_K: { bytes: 210, elements: 256, levels: 64 },
-  Q8_K: { bytes: 292, elements: 256, levels: 256 },
-  IQ2_XXS: { bytes: 66, elements: 256, codebook: { name: "iq2xxs_grid", entries: 256 } },
-  IQ2_XS: { bytes: 74, elements: 256, codebook: { name: "iq2xs_grid", entries: 512 } },
-  IQ3_XXS: { bytes: 98, elements: 256, codebook: { name: "iq3xxs_grid", entries: 256 } },
-  IQ1_S: { bytes: 50, elements: 256, codebook: { name: "iq1s_grid", entries: 2048 } },
-  IQ4_NL: { bytes: 18, elements: 32, levels: 16 },
-  IQ3_S: { bytes: 110, elements: 256, codebook: { name: "iq3s_grid", entries: 512 } },
-  IQ2_S: { bytes: 82, elements: 256, codebook: { name: "iq2s_grid", entries: 1024 } },
-  IQ4_XS: { bytes: 136, elements: 256, levels: 16 },
-  IQ1_M: { bytes: 56, elements: 256, codebook: { name: "iq1s_grid", entries: 2048 } },
-  TQ1_0: { bytes: 54, elements: 256, levels: 3 },
-  TQ2_0: { bytes: 66, elements: 256, levels: 4 },
-  MXFP4: { bytes: 17, elements: 32, levels: 16 },
-  NVFP4: { bytes: 36, elements: 64, levels: 16 },
-});
+const GGUF_BLOCK_LAYOUTS = Object.freeze(Object.fromEntries(Object.entries({
+  Q1_0: { levels: 2 },
+  Q2_0: { levels: 4 },
+  Q4_0: { levels: 16 },
+  Q4_1: { levels: 16 },
+  Q5_0: { levels: 32 },
+  Q5_1: { levels: 32 },
+  Q8_0: { levels: 256 },
+  Q8_1: { levels: 256 },
+  Q2_K: { levels: 4 },
+  Q3_K: { levels: 8 },
+  Q4_K: { levels: 16 },
+  Q5_K: { levels: 32 },
+  Q6_K: { levels: 64 },
+  Q8_K: { levels: 256 },
+  IQ2_XXS: { codebook: { name: "iq2xxs_grid", entries: 256 } },
+  IQ2_XS: { codebook: { name: "iq2xs_grid", entries: 512 } },
+  IQ3_XXS: { codebook: { name: "iq3xxs_grid", entries: 256 } },
+  IQ1_S: { codebook: { name: "iq1s_grid", entries: 2048 } },
+  IQ4_NL: { levels: 16 },
+  IQ3_S: { codebook: { name: "iq3s_grid", entries: 512 } },
+  IQ2_S: { codebook: { name: "iq2s_grid", entries: 1024 } },
+  IQ4_XS: { levels: 16 },
+  IQ1_M: { codebook: { name: "iq1s_grid", entries: 2048 } },
+  TQ1_0: { levels: 3 },
+  TQ2_0: { levels: 4 },
+  MXFP4: { levels: 16 },
+  NVFP4: { levels: 16 },
+}).map(([name, decoder]) => {
+  const layout = GGML_TYPES_BY_NAME[name];
+  return [name, { ...decoder, bytes: layout.block_bytes, elements: layout.block_elements }];
+})));
 
 const IQ4_NL_VALUES = Object.freeze([-127, -104, -83, -65, -49, -35, -22, -10, 1, 13, 25, 38, 53, 69, 89, 113]);
 const FP4_E2M1_DOUBLED_VALUES = Object.freeze([0, 1, 2, 3, 4, 6, 8, 12, 0, -1, -2, -3, -4, -6, -8, -12]);
-
-function float16(bits) {
-  const sign = bits & 0x8000 ? -1 : 1;
-  const exponent = bits >>> 10 & 0x1f;
-  const fraction = bits & 0x03ff;
-  if (exponent === 0) return fraction ? sign * fraction * 2 ** -24 : sign < 0 ? -0 : 0;
-  if (exponent === 0x1f) return fraction ? Number.NaN : sign * Number.POSITIVE_INFINITY;
-  return sign * (1 + fraction / 1024) * 2 ** (exponent - 15);
-}
-
-const FLOAT32_SCRATCH = new DataView(new ArrayBuffer(4));
-function bfloat16(bits) {
-  FLOAT32_SCRATCH.setUint32(0, bits << 16, false);
-  return FLOAT32_SCRATCH.getFloat32(0, false);
-}
 
 function classifyFloatBits(kind, view, offset, littleEndian) {
   if (kind === "f16") {

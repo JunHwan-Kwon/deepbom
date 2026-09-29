@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" data-analysis-depth="deep">
 <head>
-  <meta name="deepbom-release" content="1.109.0" />
+  <meta name="deepbom-release" content="2.0.0" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta id="themeColor" name="theme-color" content="#fffefa" />
@@ -53,7 +53,7 @@
           "applicationSubCategory": "Machine Learning Tool",
           "operatingSystem": "Web Browser",
           "url": "https://deepbom.org/",
-          "softwareVersion": "1.109.0",
+          "softwareVersion": "2.0.0",
           "identifier": "https://doi.org/10.5281/zenodo.21834508",
           "sameAs": [
             "https://github.com/JunHwan-Kwon/deepbom",
@@ -454,6 +454,7 @@
             <p class="artifact-intro-kicker">Local static audit</p>
             <h2>Inspect the AI model artifact that will actually run.</h2>
             <p class="artifact-intro-lead">Find artifact defects, review cautions, and see which claims still need runtime or process evidence.</p>
+            <p><a href="/guides/evidence-ir/compatibility/?direction=input">Input schemas → Evidence IR: inspect compatibility</a></p>
             <h3 id="artifactContextTitle">Choose a local artifact</h3>
             <p id="artifactContextCopy">Drop a supported file into this panel, or use the controls alongside. Analysis runs on this device.</p>
             <p class="artifact-drop-target">Drop a supported artifact anywhere in this panel</p>
@@ -694,7 +695,7 @@
               <p>Distributions and connections</p>
             </button>
             <button class="workflow-step analysis-tool" type="button" data-workflow-step="metadata" data-navigation-role="tool" data-analysis-depth="deep">
-              <span>Evidence links</span><strong>Metadata</strong><p>OMOP, data and lineage</p>
+              <span>Evidence IR</span><strong>Provenance</strong><p>OMOP, data and lineage</p>
             </button>
             <button class="workflow-step analysis-tool" type="button" data-workflow-step="redesign" data-navigation-role="tool" data-analysis-depth="deep">
               <span>Design</span>
@@ -742,7 +743,7 @@
               <div><dt>Format</dt><dd data-artifact-field="format">Not assessed</dd></div>
               <div><dt>Byte size</dt><dd data-artifact-field="size">Not assessed</dd></div>
               <div><dt>File set</dt><dd data-artifact-field="files">Not assessed</dd></div>
-              <div><dt>Evidence IR</dt><dd data-artifact-field="ir-schema">Not materialized</dd></div>
+              <div><dt>Artifact IR</dt><dd data-artifact-field="ir-schema">Not materialized</dd></div>
             </dl>
             <div class="artifact-scope-grid" aria-label="Evidence available from the current artifact">
               <section>
@@ -1214,6 +1215,7 @@
                   <span>Deployment contract exports</span>
                   <h2>Machine-readable release evidence</h2>
                   <p>Artifact observations remain distinct from declarations, inferred lineage, conditional runtime consequences, and unassessed fields.</p>
+                  <p><a href="/guides/evidence-ir/compatibility/?direction=output">Evidence IR → output schemas: inspect compatibility</a></p>
                 </div>
                 <em id="exportContractStatus">No analyzed artifact</em>
               </header>
@@ -1312,7 +1314,7 @@
                 <ol>
                   <li><strong>CycloneDX artifact evidence</strong><span>Canonical artifact record and evidence references</span></li>
                   <li><strong>Artifact evidence envelope</strong><span>Canonical hash-bound analysis facts</span></li>
-                  <li><strong>Artifact Evidence IR</strong><span>Canonical graph, storage, architecture, quantization, and overlay evidence</span></li>
+                  <li><strong>Artifact IR</strong><span>Canonical graph, storage, architecture, quantization, and overlay evidence</span></li>
                   <li><strong>Interface contract ledger</strong><span>Complete external parameter contract</span></li>
                   <li><strong>Observed formulation BOM</strong><span>Observed and declared formulation evidence</span></li>
                   <li><strong>Runtime requirement manifest</strong><span>Runtime floor and deployment requirements</span></li>
@@ -1324,7 +1326,7 @@
                 <div>
                   <span>Consolidated package</span>
                   <h3>Deployment Contract Pack</h3>
-                  <p>CycloneDX record, Artifact Evidence IR, interface ledger, formulation, runtime, provenance, member digest, and detached ES256 signature.</p>
+                  <p>CycloneDX record, Artifact IR, interface ledger, formulation, runtime, provenance, member digest, and detached ES256 signature.</p>
                 </div>
                 <button id="downloadContractPack" class="bundle-action" type="button" disabled>Contract Pack ZIP</button>
               </section>
@@ -1828,7 +1830,7 @@
         </div>
       </section>
 
-      <section id="metadataWorkspace" aria-label="Metadata and lineage workspace" hidden></section>
+      <section id="metadataWorkspace" aria-label="Provenance IR workspace" hidden></section>
       <section class="weight-workspace" id="weightWorkspace" aria-label="Weight analysis workspace" hidden></section>
       <section class="graph-explorer" id="graphExplorer" hidden>
         <div class="section-head">
@@ -2160,6 +2162,7 @@
         <nav class="product-about-links" aria-label="Learn model inspection">
           <a href="/get-started/">Install or connect DEEPBOM</a>
           <a href="/guides/cli/">CLI commands and examples</a>
+          <a href="/guides/evidence-ir/compatibility/">Evidence IR compatibility explorer</a>
           <a href="/guides/inspect-onnx-quantization/">Inspect ONNX quantization</a>
           <a href="/guides/inspect-gguf-tensor-encodings/">Read GGUF tensor encodings</a>
           <a href="/guides/compare-model-artifacts/">Compare two model artifacts</a>

@@ -1,3 +1,4 @@
+import { float16ToNumber as halfToNumber } from "./scalar-numeric.js";
 import { Sha256Accumulator } from "./sha256-sync.js";
 
 const MAX_LAYERS = 1_000_000;
@@ -114,15 +115,6 @@ function readFloatStats(reader, wire, label, positive = false, allowNonfinite = 
     read(reader.bytes.subarray(start, start + 4));
   } else throw new Error(`${label} has unsupported wire type ${wire}`);
   return result;
-}
-
-function halfToNumber(bits) {
-  const sign = bits & 0x8000 ? -1 : 1;
-  const exponent = bits >>> 10 & 31;
-  const fraction = bits & 1023;
-  if (!exponent) return fraction ? sign * fraction * 2 ** -24 : sign < 0 ? -0 : 0;
-  if (exponent === 31) return fraction ? Number.NaN : sign * Number.POSITIVE_INFINITY;
-  return sign * (1 + fraction / 1024) * 2 ** (exponent - 15);
 }
 
 function byteValueStats(bytes, kind, optionalStatistics = null) {

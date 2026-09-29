@@ -1,3 +1,4 @@
+import { scalarDtypeBits } from "./tensor-size.js";
 import { isOnnxMacBearingOperation } from "./onnx-operation-cost.js";
 import { onnxDimensionExpressionDependencies, parseOnnxDimensionExpression } from "./onnx-dimension-expression.js";
 import { parseOnnxEinsumEquation } from "./onnx-einsum-contract.js";
@@ -14,15 +15,6 @@ import {
 } from "./guarded-integer-expression.js";
 
 export const DYNAMIC_SHAPE_COST_SCHEMA = "deepbom.dynamic_shape_cost_contract.v2.2";
-
-const DTYPE_STORAGE_BITS = new Map([
-  ["BOOL", 8], ["UINT8", 8], ["INT8", 8], ["FLOAT8E4M3FN", 8], ["FLOAT8E4M3FNUZ", 8],
-  ["FLOAT8E5M2", 8], ["FLOAT8E5M2FNUZ", 8], ["FLOAT8E8M0", 8], ["UINT16", 16],
-  ["INT16", 16], ["FLOAT16", 16], ["BFLOAT16", 16], ["UINT32", 32], ["INT32", 32],
-  ["FLOAT32", 32], ["UINT64", 64], ["INT64", 64], ["FLOAT64", 64], ["COMPLEX64", 64],
-  ["COMPLEX128", 128], ["UINT4", 4], ["INT4", 4], ["FLOAT4E2M1", 4], ["UINT2", 2],
-  ["INT2", 2],
-]);
 
 export const ONNX_DYNAMIC_COST_SOURCE = Object.freeze({
   repository: "onnx/onnx",
@@ -723,7 +715,7 @@ function tensorPayloadFormula(tensor, registry) {
   if (!denseTensor(tensor)) return { status: "not_assessed_non_dense_value", element: null, bits: null, bytes: null, byteExpression: "" };
   const elements = monomialForTensor(tensor, registry);
   if (!elements) return { status: "not_assessed_shape_missing", element: null, bits: null, bytes: null, byteExpression: "" };
-  const storageBits = DTYPE_STORAGE_BITS.get(String(tensor?.dtype || ""));
+  const storageBits = scalarDtypeBits(tensor?.dtype);
   if (!storageBits) return { status: "not_assessed_dtype_storage_width", element: elements, bits: null, bytes: null, byteExpression: "" };
   const bits = scalePolynomial(elements, BigInt(storageBits));
   const bytes = scalePolynomial(bits, 1n, 8n);

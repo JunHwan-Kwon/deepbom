@@ -1,7 +1,8 @@
+import { perTensor8BitContract as quantContract, roundTiesAway } from "./quantization-math.js";
+import { arraysEqual as sameArray } from "./array-contract.js";
 import { formatNumber, padOp } from "./format.js";
 import { browserAssetUrl } from "./browser-asset-url.js";
 import { sha256Hex } from "./hash.js";
-import { roundTiesAway } from "./quantization-math.js";
 
 export const RESIDUAL_CONTRACT_DISTORTION_SCHEMA = "deepbom.residual_contract_distortion.v1.1";
 
@@ -607,14 +608,6 @@ function setupCanvas(canvas, logicalWidth, logicalHeight) {
   canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio); const ctx = canvas.getContext("2d"); ctx.setTransform(ratio, 0, 0, ratio, 0, 0); return ctx;
 }
 
-function quantContract(tensors, index) {
-  const tensor = tensors.find((item) => item.index === index);
-  if (!tensor || !["INT8", "UINT8"].includes(tensor.dtype) || tensor.scale_sample?.length !== 1 || tensor.zero_point_sample?.length !== 1) throw new Error(`Tensor T${index} lacks a per-tensor 8-bit contract.`);
-  const qmin = tensor.dtype === "INT8" ? -128 : 0; const qmax = tensor.dtype === "INT8" ? 127 : 255; const scale = Number(tensor.scale_sample[0]); const zeroPoint = Number(tensor.zero_point_sample[0]);
-  if (!(scale > 0) || !Number.isFinite(scale) || zeroPoint < qmin || zeroPoint > qmax) throw new Error(`Tensor T${index} quantization metadata is invalid.`);
-  return { index, qmin, qmax, scale, zeroPoint };
-}
-
 function errorRelation(current, candidate, tolerance) { return candidate + tolerance < current ? -1 : current + tolerance < candidate ? 1 : 0; }
 function signClass(value) { return value > 0 ? 1 : value < 0 ? -1 : 0; }
 function quantile(sorted, probability) { return sorted[Math.min(sorted.length, Math.max(1, Math.ceil(probability * sorted.length))) - 1] || 0; }
@@ -623,7 +616,7 @@ function designLabel(design) { return design === DESIGNS[0] ? "Fixed zero-point"
 function number(value) { return Number(value).toPrecision(7); }
 function signedNumber(value) { const n = Number(value); return `${n >= 0 ? "+" : ""}${number(n)}`; }
 function sum(rows, key) { return rows.reduce((total, row) => total + Number(row[key] || 0), 0); }
-function sameArray(left, right) { return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value, index) => value === right[index]); }
+
 function compareFloatArray(left, right, label) { if (!Array.isArray(left) || left.length !== right.length) throw new Error(`${label} length mismatch.`); left.forEach((value, index) => assertNear(value, right[index], `${label}[${index}]`)); }
 function compareObjectNumbers(left, right, label) { for (const key of Object.keys(right || {})) { if (typeof right[key] === "number") assertNear(left?.[key], right[key], `${label}.${key}`); else assertEqual(left?.[key], right[key], `${label}.${key}`); } }
 function assertEqual(actual, expected, label) { if (actual !== expected) throw new Error(`${label} mismatch (${actual} != ${expected}).`); }

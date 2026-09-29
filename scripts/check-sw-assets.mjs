@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { parse } from "acorn";
 import { readHtmlModuleEntrypoints } from "./html-utils.mjs";
 import { normalizePath } from "./path-utils.mjs";
 import {
@@ -96,17 +97,23 @@ function collectLocalImports(entries) {
 
 function parseStaticImportSpecifiers(source) {
   const specs = [];
-  for (const match of source.matchAll(/import\s+(?:[^"'()]+?\s+from\s+)?["']([^"']+)["']/g)) {
-    specs.push(match[1]);
+  // Re-exports are runtime dependencies too. Parse syntax so comments and
+  // string examples cannot masquerade as imports in the offline cache graph.
+  function visit(node) {
+    if (!node || typeof node !== "object") return;
+    if (["ImportDeclaration", "ExportNamedDeclaration", "ExportAllDeclaration", "ImportExpression"].includes(node.type)
+      && node.source?.type === "Literal" && typeof node.source.value === "string") specs.push(node.source.value);
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) value.forEach(visit);
+      else if (value && typeof value === "object") visit(value);
+    }
   }
-  for (const match of source.matchAll(/import\(\s*["']([^"']+)["']\s*\)/g)) {
-    specs.push(match[1]);
-  }
+  visit(parse(source, { ecmaVersion: "latest", sourceType: "module" }));
   return specs;
 }
 
 function isCacheableLocalSpecifier(specifier) {
-  return specifier.startsWith("./") || specifier.startsWith("../pkg/");
+  return specifier.startsWith("./") || specifier.startsWith("../");
 }
 
 function resolveImportPath(fromFile, specifier) {

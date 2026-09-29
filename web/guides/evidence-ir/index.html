@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Evidence IR: Common Model Evidence | DEEPBOM</title>
+<meta name="description" content="DEEPBOM Evidence IR connects artifact, model, weight, activation and provenance evidence through common identities and explicit evidence boundaries."/>
+<link rel="canonical" href="https://deepbom.org/guides/evidence-ir/"/>
+<link rel="stylesheet" href="../../evaluate/evaluation.css"/>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"DEEPBOM Evidence IR","url":"https://deepbom.org/guides/evidence-ir/","about":{"@id":"https://deepbom.org/#app"},"author":{"@id":"https://deepbom.org/#author"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Guides","item":"https://deepbom.org/guides/"},{"@type":"ListItem","position":2,"name":"Evidence IR","item":"https://deepbom.org/guides/evidence-ir/"}]}</script></head>
+<body class="agent-guide"><header class="brief-header"><a class="brand" href="/">DEEPBOM</a><nav class="brief-nav" aria-label="Main navigation"><a href="/">Workspace</a><a href="/get-started/">Get started</a><a href="/guides/" aria-current="location">Guides</a><a href="/evaluate/">Evaluate</a></nav></header>
+<main class="brief-main"><nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/guides/">Guides</a></li><li><span aria-current="page">Evidence IR</span></li></ol></nav>
+<p class="eyebrow">Common representation · Draft specification</p><h1>One evidence family.<br/>Distinct evidence boundaries.</h1>
+<p class="lede">DEEPBOM Evidence IR connects multiple model formats and optional evidence inputs through shared identities, references and validation rules. Each member answers a different question.</p>
+<section class="brief-section"><h2>Input → common IR → output</h2><p><a href="./compatibility/">Open the compatibility explorer</a> to search versioned field mappings, distinguish implemented and proposed paths, and inspect input/output schemas, source references and evidence limits. The website and GitHub share the same generated catalog.</p></section>
+<section class="brief-section"><h2>The five members</h2><table class="fact-table"><thead><tr><th>Representation</th><th>What it records</th></tr></thead><tbody>
+<tr><th>Artifact IR</th><td>Observed artifact structure, native facts and serialized storage.</td></tr>
+<tr><th>Model IR</th><td>A common model program and contracts derived from the validated Artifact IR.</td></tr>
+<tr><th>Weight IR · optional</th><td>Assessed tensor payload statistics, source bindings and explicit coverage limits.</td></tr>
+<tr><th>Activation IR · optional</th><td>Imported execution captures bound to a model, run and probe. Static inspection does not create runtime measurements.</td></tr>
+<tr><th>Provenance IR · optional</th><td>Connections to datasets, code, runs, reports and external BOMs; supplied-file consistency and declared relationships remain distinct.</td></tr>
+</tbody></table></section>
+<section class="brief-section"><h2>Shared rules</h2><p>Artifact IR is the source for Model IR. Optional members bind to that model without modifying its identity. References, digests, exact counts and coverage must remain consistent. Unknown, unsupported and unassessed values stay explicit.</p><p>The family JSON Schema accepts one member document. It is not a bundle format. JSON Schema checks structure; member validators additionally check source bindings and semantic consistency. A digest alone does not authenticate a publisher or prove a lineage claim.</p></section>
+<section class="brief-section"><h2>Use and inspect the specification</h2><ul class="plain-list">
+<li><a href="/schemas/deepbom-evidence-ir-v1.schema.json">Family JSON Schema</a> · <a href="/schemas/evidence-ir-catalog.json">Machine-readable member catalog</a></li>
+<li><a href="/schemas/deepbom-provenance-ir-v1.schema.json">Provenance IR schema entry point</a></li>
+<li><a href="https://github.com/JunHwan-Kwon/deepbom/tree/main/docs/evidence-ir">Specification, compatibility checks and maintenance process</a></li>
+<li><a href="/guides/numerical-evidence/">Weight and activation workflows</a> · <a href="/guides/omop-metadata/">OMOP metadata connections</a></li>
+</ul><p>These names describe a DEEPBOM-maintained specification. They do not imply endorsement or certification by OMOP, CycloneDX, SPDX or W3C. External mappings retain their source standards and limits.</p></section>
+<section class="brief-section"><h2>Current contract and transition</h2><p>Provenance IR uses <code>deepbom.provenance_ir.v1</code>, <code>provenance_ir_sha256</code>, and the sole <code>--section provenance_ir</code> selector. Retired names are rejected. Regenerate evidence from the model, a current metadata template and supporting files; do not relabel an old hashed document.</p><p>The 2.0.0 release introduces this breaking transition across web assets, CLI and remote MCP validators. <a href="https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/evidence-ir/MIGRATION.md">Read the transition rules</a>.</p></section>
+<section class="brief-section"><h2>Exchange through TEA</h2><p>TEA describes discovery and exchange of transparency documents. It can deliver future exports while Evidence IR continues to define and validate their evidence. A TEA adapter is proposed, not implemented. <a href="https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/evidence-ir/TEA_REVIEW.md">Read the pinned specification review</a>.</p></section>
+</main><footer class="brief-footer">DEEPBOM Evidence IR · Shared contracts, explicit limits and reproducible evidence.</footer></body></html>

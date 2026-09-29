@@ -18,14 +18,18 @@ export function buildLogicalInventory(analysis, graph, storage, format) {
 export function validateLogicalInventory(inventory, graphValues, objects) {
   if (inventory?.schema !== "deepbom.logical_inventory.v1" || !Array.isArray(inventory.values) || inventory.count !== inventory.values.length) throw new Error("IR logical inventory count is invalid.");
   const seen = new Set(), graph = new Map(graphValues.map(row => [row.id, row])), storage = new Set(objects.map(row => row.id));
+  if (graph.size && inventory.values.length !== graph.size) throw new Error("IR logical inventory count contradicts its graph values.");
   for (const row of inventory.values) {
     if (!row.id || seen.has(row.id)) throw new Error("IR logical inventory has duplicate identities.");
     seen.add(row.id); validateValueType(row.type_contract);
     if (canonicalJson(row.element_count) !== canonicalJson(valueElementCount(row.type_contract))) throw new Error("IR logical element count contradicts the type.");
     if (!Array.isArray(row.storage_refs) || row.storage_refs.some(ref => !storage.has(ref))) throw new Error("IR logical storage binding is invalid.");
-    if (row.graph_value_ref !== null) {
+    if (row.graph_value_ref !== null || graph.has(row.id)) {
       const source = graph.get(row.graph_value_ref);
-      if (!source || canonicalJson(row.type_contract) !== canonicalJson(source.type_contract) || canonicalJson(row.storage_refs) !== canonicalJson(source.storage_refs)) throw new Error("IR logical inventory contradicts its graph value.");
+      if (!source || row.id !== source.id || row.name !== source.name || row.dtype !== source.dtype
+        || canonicalJson(row.shape) !== canonicalJson(source.shape)
+        || canonicalJson(row.type_contract) !== canonicalJson(source.type_contract)
+        || canonicalJson(row.storage_refs) !== canonicalJson(source.storage_refs)) throw new Error("IR logical inventory contradicts its graph value.");
     }
   }
   if (graphValues.some(row => !seen.has(row.id))) throw new Error("IR logical inventory omitted a graph value.");

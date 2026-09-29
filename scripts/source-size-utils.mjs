@@ -69,6 +69,8 @@ const GENERATED_RUNTIME_DATA_PATHS = new Set([
   "web/lib/gguf-codebooks.generated.js",
   "web/lib/executorch-operator-signatures.generated.js",
   "web/lib/finding-rule-catalog.generated.js",
+  "web/lib/scalar-types.generated.js",
+  "src/scalar_types_generated.rs",
 ]);
 const VERIFICATION_SOURCE_PREFIXES = [
   "scripts/check-",

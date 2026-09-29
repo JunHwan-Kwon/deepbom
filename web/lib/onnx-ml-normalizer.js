@@ -1,3 +1,7 @@
+import { staticNumericInput, canonicalFloatText } from "./onnx-static-value-evidence.js";
+import { safeShapeElementCount } from "./tensor-size.js";
+
+import { bigintToFloat32, numericToFloat32 as toFloat32 } from "./scalar-numeric.js";
 import {
   canonicalOnnxTypeProto,
   makeOnnxTensorType,
@@ -233,43 +237,6 @@ function integerAbs(value) {
   return typeof value === "bigint" ? (value < 0n ? -value : value) : Math.abs(value);
 }
 
-function toFloat32(value) {
-  return typeof value === "bigint" ? bigintToFloat32(value) : Math.fround(Number(value));
-}
-
-function bigintToFloat32(value) {
-  if (value === 0n) return 0;
-  const negative = value < 0n;
-  let magnitude = negative ? -value : value;
-  let exponent = magnitude.toString(2).length - 1;
-  if (exponent <= 23) return Math.fround(Number(value));
-  let shift = BigInt(exponent - 23);
-  let significand = magnitude >> shift;
-  const remainder = magnitude - (significand << shift);
-  const half = 1n << (shift - 1n);
-  if (remainder > half || remainder === half && (significand & 1n) === 1n) significand += 1n;
-  if (significand === (1n << 24n)) {
-    significand >>= 1n;
-    exponent += 1;
-  }
-  const rounded = Number(significand) * (2 ** (exponent - 23));
-  return Math.fround(negative ? -rounded : rounded);
-}
-
-function staticNumericInput(input, dtype) {
-  if (dtype === "INT64" && input?.initializerIntegerValuesExactComplete === true
-    && Array.isArray(input.initializerIntegerValuesExactDecimals)) {
-    try {
-      return input.initializerIntegerValuesExactDecimals.map((value) => BigInt(value));
-    } catch {
-      return null;
-    }
-  }
-  if (["FLOAT32", "FLOAT64", "INT32"].includes(dtype)
-    && input?.staticValuesComplete === true && Array.isArray(input.staticValues)) return input.staticValues;
-  return null;
-}
-
 function unresolvedStaticResult(input) {
   return {
     status: input?.role === "initializer" ? input.staticValuesStatus || "not_assessed_initializer_values" : "not_assessed_runtime_values",
@@ -286,21 +253,4 @@ function stringScalarAttribute(attribute) {
 
 function knownDimension(value) {
   return Number.isSafeInteger(value) && value >= 0;
-}
-
-function safeShapeElementCount(shape) {
-  let product = 1;
-  for (const dimension of shape) {
-    product *= dimension;
-    if (!Number.isSafeInteger(product) || product < 0) return null;
-  }
-  return product;
-}
-
-function canonicalFloatText(value) {
-  if (Number.isNaN(value)) return "NaN";
-  if (value === Number.POSITIVE_INFINITY) return "Infinity";
-  if (value === Number.NEGATIVE_INFINITY) return "-Infinity";
-  if (Object.is(value, -0)) return "-0";
-  return String(value);
 }

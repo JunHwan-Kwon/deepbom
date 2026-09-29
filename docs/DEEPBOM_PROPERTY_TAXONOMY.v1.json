@@ -11,7 +11,7 @@
     "web/lib/report-mlbom-compat.js",
     "web/lib/safetensors-quantization-export.js",
     "web/lib/tensorrt-cyclonedx-properties.js",
-    "web/lib/evidence-links/cyclonedx.js"
+    "web/lib/provenance/cyclonedx.js"
   ],
   "counts": {
     "total": 356,
@@ -159,111 +159,6 @@
       "name": "deepbom:evidenceBoundary",
       "status": "experimental",
       "reconciliation": "context_or_publisher_declaration"
-    },
-    {
-      "name": "deepbom:evidenceLinks:bomReference",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:checks",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:coverage",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:declaredAttributes",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:digestBasis",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:evidenceClass",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:expectedSha256",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:fieldLedger",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:inputSha256",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:interpretationBoundary",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:irSha256",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:kind",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:nodeId",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:observedFiles",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:relationshipRole",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:relationships",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:relativeFile",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:runNode",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:schema",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:source",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
-    },
-    {
-      "name": "deepbom:evidenceLinks:status",
-      "status": "experimental",
-      "reconciliation": "unsupported_mapping"
     },
     {
       "name": "deepbom:file:byteLength",
@@ -1632,6 +1527,111 @@
     },
     {
       "name": "deepbom:profile",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:bomReference",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:checks",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:coverage",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:declaredAttributes",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:digestBasis",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:evidenceClass",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:expectedSha256",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:fieldLedger",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:inputSha256",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:interpretationBoundary",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:irSha256",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:kind",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:nodeId",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:observedFiles",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:relationshipRole",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:relationships",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:relativeFile",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:runNode",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:schema",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:source",
+      "status": "experimental",
+      "reconciliation": "unsupported_mapping"
+    },
+    {
+      "name": "deepbom:provenance:status",
       "status": "experimental",
       "reconciliation": "unsupported_mapping"
     },

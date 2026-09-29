@@ -5,7 +5,8 @@ import { statisticsOf, validateStatistics } from "./numerical-ir/statistics.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 
-export const ACTIVATION_IR_SCHEMA="deepbom.activation_ir.v1";
+import { ACTIVATION_IR_SCHEMA } from "./evidence-ir.js";
+export { ACTIVATION_IR_SCHEMA };
 const BOUNDARY="Imported execution evidence is consistency-checked, not remotely attested. Statistics describe only the recorded inputs, run and captured values. Synthetic probes do not establish task accuracy, real workload distributions or causal relationships between layers. Configured providers do not establish per-node placement. Instrumented runs do not establish production latency. Raw inputs and activations are not embedded in this IR.";
 function digest(value) { return sha256TextHex(canonicalJson(value)); }
 function nonempty(value,label) { requireCondition(typeof value==="string" && value.length>0 && value.length<=4096,`invalid ${label}`); }

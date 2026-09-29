@@ -1,3 +1,6 @@
+import { floatListAttribute, staticNumericInput, canonicalFloatText as exactValueText } from "./onnx-static-value-evidence.js";
+
+import { safeShapeElementCount } from "./tensor-size.js";
 import {
   canonicalOnnxTypeProto,
   makeOnnxTensorType,
@@ -217,20 +220,6 @@ function evaluateImputer(source, dtype, imputedValues, replacedValue, stride) {
   };
 }
 
-function staticNumericInput(input, dtype) {
-  if (dtype === "INT64" && input?.initializerIntegerValuesExactComplete === true
-    && Array.isArray(input.initializerIntegerValuesExactDecimals)) {
-    try {
-      return input.initializerIntegerValuesExactDecimals.map((value) => BigInt(value));
-    } catch {
-      return null;
-    }
-  }
-  if (["FLOAT32", "FLOAT64", "INT32"].includes(dtype)
-    && input?.staticValuesComplete === true && Array.isArray(input.staticValues)) return input.staticValues;
-  return null;
-}
-
 function unresolvedStaticResult(input) {
   return {
     status: input?.role === "initializer" ? input.staticValuesStatus || "not_assessed_initializer_values" : "not_assessed_runtime_values",
@@ -243,13 +232,6 @@ function unresolvedStaticResult(input) {
     signedZeroOutputCount: null,
     outputPreview: [],
   };
-}
-
-function floatListAttribute(attribute) {
-  if (attribute?.type !== 6 || !Array.isArray(attribute.floats)
-    || !Array.isArray(attribute.valueTypesPresent) || attribute.valueTypesPresent.length !== 1
-    || attribute.valueTypesPresent[0] !== 6) return null;
-  return attribute.floats.map((value) => Math.fround(value));
 }
 
 function floatScalarAttribute(attribute) {
@@ -287,24 +269,6 @@ function intScalarAttribute(attribute) {
   }
 }
 
-function exactValueText(value) {
-  if (typeof value === "bigint") return value.toString();
-  if (Number.isNaN(value)) return "NaN";
-  if (value === Number.POSITIVE_INFINITY) return "Infinity";
-  if (value === Number.NEGATIVE_INFINITY) return "-Infinity";
-  if (Object.is(value, -0)) return "-0";
-  return String(value);
-}
-
 function knownDimension(value) {
   return Number.isSafeInteger(value) && value >= 0;
-}
-
-function safeShapeElementCount(shape) {
-  let product = 1;
-  for (const dimension of shape) {
-    product *= dimension;
-    if (!Number.isSafeInteger(product) || product < 0) return null;
-  }
-  return product;
 }

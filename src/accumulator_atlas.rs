@@ -914,11 +914,7 @@ pub(super) fn raw_code(byte: u8, dtype: &str) -> i64 {
 }
 
 pub(super) fn quantized_code_range(dtype: &str) -> Option<(i64, i64)> {
-    match dtype {
-        "INT8" => Some((-128, 127)),
-        "UINT8" => Some((0, 255)),
-        _ => None,
-    }
+    crate::quantization_math::storage_code_range_8bit(dtype)
 }
 
 fn abs_max(minimum: i128, maximum: i128) -> i128 {

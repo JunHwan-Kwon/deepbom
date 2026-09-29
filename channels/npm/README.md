@@ -7,10 +7,10 @@ For a local Codex or Claude Code project, preview and install the bundled Agent
 Skill without operating an analysis server:
 
 ```console
-npx -y deepbom@1.109.0 integrate codex
-npx -y deepbom@1.109.0 integrate codex --apply
-npx -y deepbom@1.109.0 integrate claude-code
-npx -y deepbom@1.109.0 integrate claude-code --apply
+npx -y deepbom@2.0.0 integrate codex
+npx -y deepbom@2.0.0 integrate codex --apply
+npx -y deepbom@2.0.0 integrate claude-code
+npx -y deepbom@2.0.0 integrate claude-code --apply
 ```
 
 ```console
@@ -28,10 +28,10 @@ npx deepbom explore model.tflite --target-profile target-profile.json
 npx deepbom audit model.pte --executorch-build deepbom.executorch-build.json --compact
 npx deepbom capabilities --format agent-json
 npx deepbom capabilities --format agent-text
-npx -y deepbom@1.109.0 mcp
+npx -y deepbom@2.0.0 mcp
 ```
 
-Claude Desktop can install the version-matched `deepbom-1.109.0.mcpb` asset
+Claude Desktop can install the version-matched `deepbom-2.0.0.mcpb` asset
 from the corresponding GitHub Release as a local desktop extension.
 
 ChatGPT developer-mode users can connect `https://deepbom.org/mcp` for one
@@ -90,6 +90,6 @@ and private rulepack-generation sources are not included.
 
 ## Optional metadata and OMOP connections
 
-After inspecting a model, create a model-bound input with `deepbom audit model.onnx --metadata-template omop -o metadata.json`. Fill the selected OMOP 5.4/5.5 `CDM_SOURCE` row and institution/release identifiers, then use `--metadata metadata.json --evidence-files ./evidence --section evidence_link_ir --json`. A generic template connects non-OMOP datasets, cohorts, code, runs and reports through the same IR.
+After inspecting a model, create a model-bound input with `deepbom audit model.onnx --metadata-template omop -o metadata.json`. Fill the selected OMOP 5.4/5.5 `CDM_SOURCE` row and institution/release identifiers, then use `--metadata metadata.json --evidence-files ./evidence --section provenance_ir --json`. A generic template connects non-OMOP datasets, cohorts, code, runs and reports through the same IR.
 
-The Web **Metadata** workspace provides import, record creation, an interactive relationship diagram and JSON/CycloneDX downloads. Local MCP `deepbom_audit` accepts `metadata_template`, `metadata` and `evidence_files`; ChatGPT/Claude widgets share only explicitly requested counts and digests. Connections remain declarations: file hashes and reference consistency do not authenticate lineage or clinical suitability. See the [OMOP guide](https://deepbom.org/guides/omop-metadata/) and [common IR contract](https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/EVIDENCE_LINK_IR.md).
+The Web **Provenance** workspace provides import, record creation, an interactive relationship diagram and JSON/CycloneDX downloads. Local MCP `deepbom_audit` accepts `metadata_template`, `metadata` and `evidence_files`; ChatGPT/Claude widgets share only explicitly requested counts and digests. Connections remain declarations: file hashes and reference consistency do not authenticate lineage or clinical suitability. See the [OMOP guide](https://deepbom.org/guides/omop-metadata/) and [common IR contract](https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/PROVENANCE_IR.md).

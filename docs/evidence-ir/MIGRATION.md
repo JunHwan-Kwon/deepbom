@@ -1,0 +1,43 @@
+# Transition to the canonical Provenance IR contract
+
+Status: breaking transition in the 2.0.0 release, explicitly requested by the project owner. The earlier presentation-only alias approach is superseded. This does not change the Artifact, Model, Weight or Activation IR contracts.
+
+## One current contract
+
+| Surface | Current contract |
+| --- | --- |
+| Generic input | `deepbom.provenance_input.v1` |
+| OMOP input | `deepbom.omop_metadata_input.v1` (unchanged) |
+| IR identity | `deepbom.provenance_ir.v1` |
+| IR digest and excluded hash pointer | `provenance_ir_sha256`, `/provenance_ir_sha256` |
+| Full analysis and CLI/MCP selection | `provenance_ir` |
+| Bounded summary | `deepbom.provenance_summary.v1` |
+| Remote result member | `provenance_summary` |
+| ChatGPT / browser result envelope | `deepbom.chatgpt_analysis_result.v2` / `deepbom.browser_analysis_result.v2` |
+| JSON export | `deepbom_provenance_ir.json` |
+| CycloneDX extension properties / references | `deepbom:provenance:*` / `deepbom-provenance:*` |
+| Implementation | `web/lib/provenance-ir.js` with helpers in `web/lib/provenance/` |
+| JSON Schema | `docs/schemas/deepbom-provenance-ir-v1.schema.json` |
+
+The schema root validates an IR document. Its `$defs` also expose `generic_input`, `omop_input`, and `summary` for local validation. There is no second compatibility schema or re-export facade.
+
+## Retired documents
+
+The retired `evidence_link_ir` selector, `deepbom.evidence_link_ir.v1` identity, `evidence_link_ir_sha256` digest field, generic input and host summary contracts are not accepted by current consumers. Their identifiers occur only in negative tests, this migration record and historical review records. Old files are not deleted from users' disks or rewritten in Git history.
+
+To produce current evidence:
+
+1. Keep the original model and supporting files, their recorded digests, and the archived old report.
+2. Use the current source CLI to create a fresh `--metadata-template generic` or `--metadata-template omop` input. Transfer the intended declarations into that input and review them. Do not claim observed checks merely by copying old report rows.
+3. Analyze the exact original model with `--metadata`, explicitly supplied `--evidence-files`, and `--section provenance_ir --json`.
+4. Validate the new schema, source bindings and semantic checks. Store the new document independently.
+
+New documents have new digests because their schemas, digest pointer, input identities and possibly source bindings differ. An old digest or signature does not authenticate a renamed/recomputed document. We deliberately provide no silent converter or legacy runtime reader.
+
+## Delivery boundary
+
+The 2.0.0 package release and Agent contract v2 carry this explicitly breaking transition. Do not republish existing package versions or silently overwrite published schema releases. Installed 1.x packages do not understand the new provenance contract.
+
+Deploy web assets and remote MCP validators together. Refresh/reconnect host app metadata and open new widgets; stale widgets using v1 result envelopes will be rejected. Versioned widget asset queries and the service-worker cache revision are updated in this change. Preserve an old release archive for historical verification rather than carrying its implementation in the current runtime.
+
+No TEA endpoints, remote lookup, upload, attestation validation or registry publication are introduced by this transition.

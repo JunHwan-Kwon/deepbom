@@ -274,7 +274,7 @@ try {
   assert.equal(observed.calls.length, 1);
   assert.equal(observed.calls[0].name, "deepbom_publish_analysis");
   const result = observed.calls[0].args.result;
-  assert.equal(result.schema, "deepbom.chatgpt_analysis_result.v1");
+  assert.equal(result.schema, "deepbom.chatgpt_analysis_result.v2");
   assert.equal(result.analysis_location, "chatgpt_browser_sandbox");
   assert.equal(result.transfer_boundary, "model_bytes_not_sent_to_deepbom_service");
   assert.equal(result.artifact.filename, "sample_cnn_float.onnx");

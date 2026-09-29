@@ -1,3 +1,8 @@
+import { arraysEqual as sameStaticShape } from "./array-contract.js";
+import { packedBytesForElements, broadcastStaticShapes as broadcastStatic, scalarDtypeBits, scalarDtypeBytes, safePositiveShapeElementCount as safeProduct } from "./tensor-size.js";
+
+import { float16ToNumber as halfToNumber, bfloat16ToNumber, readPackedUnsigned } from "./scalar-numeric.js";
+
 import { coreMlExactLedger, multiplyCoreMlExactIntegers } from "./coreml-exact-integer.js";
 import { convTransposeAxisPairs } from "./guarded-integer-expression.js";
 
@@ -32,14 +37,6 @@ const DTYPES = Object.freeze({
   21: "INT8", 22: "INT16", 23: "INT32", 24: "INT64", 25: "INT4", 31: "UINT8", 32: "UINT16",
   33: "UINT32", 34: "UINT64", 35: "UINT4", 36: "UINT2", 37: "UINT1", 38: "UINT6", 39: "UINT3",
   40: "FLOAT8E4M3FN", 41: "FLOAT8E5M2",
-});
-
-const DTYPE_BYTES = Object.freeze({ BOOL: 1, FLOAT16: 2, FLOAT32: 4, FLOAT64: 8, BFLOAT16: 2, INT8: 1, INT16: 2, INT32: 4, INT64: 8, UINT8: 1, UINT16: 2, UINT32: 4, UINT64: 8 });
-const DTYPE_BITS = Object.freeze({
-  BOOL: 8, STRING: null, FLOAT16: 16, FLOAT32: 32, FLOAT64: 64, BFLOAT16: 16,
-  FLOAT8E4M3FN: 8, FLOAT8E5M2: 8, INT8: 8, INT16: 16, INT32: 32, INT64: 64,
-  INT4: 4, UINT8: 8, UINT16: 16, UINT32: 32, UINT64: 64, UINT4: 4, UINT2: 2,
-  UINT1: 1, UINT6: 6, UINT3: 3,
 });
 
 function boundedPush(rows, value, label) {
@@ -317,10 +314,10 @@ function parseValue(reader, depth = 0) {
   if (!result.type || !result.storage) throw new Error("Core ML MIL Value is missing type or storage");
   const expected = staticCardinality(result.type);
   if (expected != null && result.immediate?.kind === "bytes") {
-    const bits = DTYPE_BITS[result.type.dtype];
+    const bits = scalarDtypeBits(result.type.dtype);
     if (!Number.isSafeInteger(bits) || bits <= 0) throw new Error(`Core ML MIL byte-backed immediate tensor has unsupported dtype ${result.type.dtype}`);
     const expectedBits = expected * bits;
-    const expectedBytes = Number.isSafeInteger(expectedBits) ? Math.ceil(expectedBits / 8) : null;
+    const expectedBytes = packedBytesForElements(expected, bits)?.number ?? null;
     if (expectedBytes == null || result.immediate.byte_length !== expectedBytes) {
       throw new Error(`Core ML MIL byte-backed immediate tensor has ${result.immediate.byte_length} bytes; expected ${expectedBytes ?? "an exact bounded cardinality"}`);
     }
@@ -480,13 +477,6 @@ export function parseCoreMlMilProgram(reader) {
   return finalizeCoreMlMilProgram(result);
 }
 
-function safeProduct(shape) {
-  if (!shape?.length || shape.some((value) => !Number.isSafeInteger(value) || value <= 0)) return null;
-  let product = 1;
-  for (const value of shape) { if (product > Math.floor(Number.MAX_SAFE_INTEGER / value)) return null; product *= value; }
-  return product;
-}
-
 const MIL_KNOWN_NON_MAC = new Set([
   "const", "identity", "cast", "reshape", "reshape_like", "squeeze", "expand_dims", "flatten2d", "transpose",
   "slice_by_index", "slice_by_size", "split", "concat", "stack", "tile", "pad", "crop", "gather", "gather_nd",
@@ -499,10 +489,6 @@ const MIL_KNOWN_NON_MAC = new Set([
   "inverse", "log", "logical_and", "logical_not", "logical_or", "logical_xor", "round", "rsqrt", "sign", "sin",
   "sinh", "sqrt", "square", "threshold", "quantize", "dequantize",
 ]);
-
-function sameStaticShape(left, right) {
-  return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value, index) => value === right[index]);
-}
 
 const IOS18_BLOCKWISE_DATA_DTYPES = new Set(["INT4", "UINT4", "INT8", "UINT8", "FLOAT16", "FLOAT32"]);
 const IOS18_LUT_INDEX_DTYPES = new Set(["UINT1", "UINT2", "UINT3", "UINT4", "UINT6", "UINT8"]);
@@ -595,7 +581,7 @@ function exactLegacyLutContract(outputShapes, outputIds, inputBindings, tensors,
   }
   const outputElements = safeProduct(outputShape);
   const indexBits = Math.log2(paletteCount);
-  const packedIndexBytes = Math.ceil(indexBits * outputElements / 8);
+  const packedIndexBytes = packedBytesForElements(outputElements, indexBits)?.number ?? null;
   if (indices.shape[0] !== packedIndexBytes) {
     throw new Error(`Core ML MIL CoreML6 constexpr_lut_to_dense packed index length ${indices.shape[0]} contradicts ${packedIndexBytes} bytes derived from shape and palette`);
   }
@@ -798,7 +784,7 @@ function exactCompressionContract(type, outputShapes, outputIds, inputBindings, 
     }
     const paletteCount = lut.shape.at(-2);
     const vectorSize = lut.shape.at(-1);
-    const indexBits = DTYPE_BITS[indices.dtype];
+    const indexBits = scalarDtypeBits(indices.dtype);
     if (!Number.isSafeInteger(paletteCount) || paletteCount <= 0 || (paletteCount & (paletteCount - 1)) !== 0
       || 2 ** indexBits !== paletteCount || !Number.isSafeInteger(vectorSize) || vectorSize <= 0) {
       throw new Error("Core ML MIL constexpr_lut_to_dense palette cardinality contradicts the serialized index dtype");
@@ -881,34 +867,25 @@ function sparseMaskPopulation(tensor) {
   return null;
 }
 
-function halfToNumber(bits) {
-  const sign = bits & 0x8000 ? -1 : 1;
-  const exponent = bits >>> 10 & 31;
-  const fraction = bits & 1023;
-  if (!exponent) return fraction ? sign * fraction * 2 ** -24 : sign < 0 ? -0 : 0;
-  if (exponent === 31) return fraction ? Number.NaN : sign * Number.POSITIVE_INFINITY;
-  return sign * (1 + fraction / 1024) * 2 ** (exponent - 15);
-}
-
 function decodeMilImmediateBytes(tensor) {
   const immediate = tensor?.immediate_value;
   if (immediate?.kind !== "bytes" || immediate.values.length !== immediate.byte_length) return null;
   const bytes = Uint8Array.from(immediate.values);
   const count = tensor.shape?.length === 0 ? 1 : safeProduct(tensor.shape);
   if (!Number.isSafeInteger(count)) return null;
-  const bits = DTYPE_BITS[tensor.dtype];
+  const bits = scalarDtypeBits(tensor.dtype);
   if (Number.isSafeInteger(bits) && bits < 8) {
-    const mask = 2 ** bits - 1;
     const values = [];
-    for (const byte of bytes) for (let shift = 0; shift < 8 && values.length < count; shift += bits) {
-      const code = byte >>> shift & mask;
+    for (let index = 0; index < count; index++) {
+      const code = readPackedUnsigned(bytes, index, bits);
+      if (code == null) return null;
       values.push(tensor.dtype.startsWith("INT") && code & 1 << (bits - 1) ? code - 2 ** bits : code);
     }
     return values.length === count ? values : null;
   }
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const widths = { INT8: 1, UINT8: 1, INT16: 2, UINT16: 2, INT32: 4, UINT32: 4, FLOAT16: 2, BFLOAT16: 2, FLOAT32: 4, FLOAT64: 8 };
-  const width = widths[tensor.dtype];
+  const supported = ["INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32", "FLOAT16", "BFLOAT16", "FLOAT32", "FLOAT64"].includes(tensor.dtype);
+  const width = supported ? scalarDtypeBytes(tensor.dtype) : null;
   if (!width || bytes.length !== count * width) return null;
   const values = [];
   for (let offset = 0; offset < bytes.length; offset += width) {
@@ -919,11 +896,8 @@ function decodeMilImmediateBytes(tensor) {
     else if (tensor.dtype === "INT32") values.push(view.getInt32(offset, true));
     else if (tensor.dtype === "UINT32") values.push(view.getUint32(offset, true));
     else if (tensor.dtype === "FLOAT16") values.push(halfToNumber(view.getUint16(offset, true)));
-    else if (tensor.dtype === "BFLOAT16") {
-      const buffer = new ArrayBuffer(4);
-      new DataView(buffer).setUint32(0, view.getUint16(offset, true) << 16, true);
-      values.push(new DataView(buffer).getFloat32(0, true));
-    } else if (tensor.dtype === "FLOAT32") values.push(view.getFloat32(offset, true));
+    else if (tensor.dtype === "BFLOAT16") values.push(bfloat16ToNumber(view.getUint16(offset, true)));
+    else if (tensor.dtype === "FLOAT32") values.push(view.getFloat32(offset, true));
     else values.push(view.getFloat64(offset, true));
   }
   return values;
@@ -952,20 +926,20 @@ function tensorCodeHistogram(tensor, contract) {
   const immediate = tensor?.immediate_value;
   if (immediate?.kind !== "bytes" || immediate.values.length !== immediate.byte_length) return null;
   const bytes = immediate.values;
-  const tensorBits = DTYPE_BITS[tensor?.dtype];
+  const tensorBits = scalarDtypeBits(tensor?.dtype);
   const packedLogicalCount = Number.isSafeInteger(tensorBits) && tensorBits < 8 ? safeProduct(tensor.shape) : null;
   if ((packedLogicalCount != null || (contract.index_shape?.length === 1 && contract.serialized_index_bytes === bytes.length))
     && contract.index_bits < 8) {
     const histogram = new Array(contract.palette_count).fill(0);
-    let remaining = packedLogicalCount ?? contract.logical_index_elements;
-    const mask = 2 ** contract.index_bits - 1;
-    for (const byte of bytes) for (let shift = 0; shift < 8 && remaining > 0; shift += contract.index_bits) {
-      histogram[byte >>> shift & mask] += 1;
-      remaining -= 1;
+    const count = packedLogicalCount ?? contract.logical_index_elements;
+    for (let index = 0; index < count; index++) {
+      const code = readPackedUnsigned(bytes, index, contract.index_bits);
+      if (code == null || code >= histogram.length) return null;
+      histogram[code] += 1;
     }
-    return remaining === 0 ? histogram : null;
+    return histogram;
   }
-  const capacity = contract.palette_count || 2 ** (DTYPE_BITS[tensor.dtype] || 8);
+  const capacity = contract.palette_count || 2 ** (scalarDtypeBits(tensor.dtype) || 8);
   const histogram = new Array(capacity).fill(0);
   for (const value of bytes) {
     if (value >= histogram.length) return null;
@@ -1177,18 +1151,6 @@ export function refreshCoreMlMilCompressionEvidence(analysis) {
     : ledger.exact_contract_count === ledger.transform_count ? "assessed_exact_serialized_contracts"
       : ledger.transforms.some((row) => row.status.startsWith("not_assessed")) ? "partial" : "assessed_with_explicit_payload_boundary";
   return analysis;
-}
-
-function broadcastStatic(left, right) {
-  const rank = Math.max(left.length, right.length);
-  const result = [];
-  for (let offset = rank; offset > 0; offset -= 1) {
-    const a = left[left.length - offset] ?? 1;
-    const b = right[right.length - offset] ?? 1;
-    if (a !== b && a !== 1 && b !== 1) return null;
-    result.push(Math.max(a, b));
-  }
-  return result;
 }
 
 function exactConvTransposePairs(input, kernel, stride, dilation, padStart, output) {
@@ -1493,7 +1455,7 @@ export function graphFromCoreMlMilProgram(program, preferredFunction = null) {
         if (sum == null) return null;
         const tensor = tensors[id];
         const count = safeProduct(tensor.shape);
-        const width = DTYPE_BYTES[tensor.dtype];
+        const width = scalarDtypeBytes(tensor.dtype);
         return count != null && width && count <= Math.floor((Number.MAX_SAFE_INTEGER - sum) / width) ? sum + count * width : null;
       }, 0);
       const opRow = {

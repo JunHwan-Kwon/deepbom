@@ -1,10 +1,12 @@
 {
   "schema": "deepbom.ir_support_gate.v1",
   "reviewed_source_manifest_sha256": "8c43d934bb5b9bdbf469e92570c6f294e1ec880b03fa60578e9e7d9c10ad3905",
-  "artifact_ir_method": "2.3.0",
-  "model_ir_method": "1.1.0",
-  "reviewed_change": "Preserve logical type trees and empty tensors, scope quantization, distinguish logical bytes from storage, validate source projections and runtime input provenance. Native semantic support remains bounded by each adapter.",
+  "artifact_ir_method": "2.3.2",
+  "model_ir_method": "1.1.2",
+  "reviewed_change": "Centralize logical scalar widths, exact counts, rank and payload rules across JS/Rust and IR consumers; share native nominal MAC and numeric conversion rules; correct packed Core ML values, quantization ranges and Redesign mirrors. Preserve legacy method reads and bounded format-specific applicability.",
   "required_checks": [
+    "scripts/audit-common-rules.mjs",
+    "scripts/check-common-calculation-rules.mjs",
     "scripts/check-common-ir-semantics.mjs",
     "scripts/check-ir-hardening.mjs",
     "scripts/check-artifact-ir.mjs",

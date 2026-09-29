@@ -5,7 +5,8 @@ import { parseMetadataModel } from "../web/lib/metadata-model-adapters.js";
 import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
 import { validateArtifactEvidenceIr } from "../web/lib/artifact-ir.js";
 import { validateModelIr, validateModelIrAgainstSource } from "../web/lib/model-ir.js";
-import { buildValueType, valueElementCount } from "../web/lib/ir-value-type.js";
+import { buildValueType, valueElementCount, valueLogicalBytes, validateValueType } from "../web/lib/ir-value-type.js";
+import { staticTensorPayloadBytes } from "../web/lib/tensor-inventory.js";
 import { integerMetric, aggregateIntegerMetrics } from "../web/lib/ir-metric.js";
 import { parameterVectorEvidence } from "../web/lib/ir-parameter-vector.js";
 import { buildModelSummary, validateModelSummary, validateModelSummaryAgainstSource, renderModelSummaryTable } from "../web/lib/model-summary.js";
@@ -23,6 +24,14 @@ function context(bytes, name = "fixture.onnx", analysis = analyzeOnnxModel(bytes
   return getArtifactIrContext(analysis, { filename: name, format: analysis.format, sha256: sha256BytesHex(bytes), size: bytes.length });
 }
 const base = context(new Uint8Array(readFileSync("web/samples/sample_cnn_float.onnx")));
+
+check("previous IR method documents remain readable without digest rewriting", () => {
+  for (const [layer, method, validate] of [["artifact_ir", "2.3.0", validateArtifactEvidenceIr], ["model_ir", "1.1.0", validateModelIr]]) {
+    const legacy = seal({ ...structuredClone(base[layer]), method_version: method }, `${layer}_sha256`);
+    const original = canonicalJson(legacy);
+    validate(legacy); assert.equal(canonicalJson(legacy), original);
+  }
+});
 
 check("zero-byte SafeTensors remains a logical tensor without fabricated storage or graph", () => {
   const header = new TextEncoder().encode(JSON.stringify({ empty: { dtype: "F32", shape: [0, 3], data_offsets: [0, 0] } }));
@@ -87,6 +96,53 @@ check("logical activation bytes derive from shape, not absent initializer storag
   const unknown = context(model([], [], [valueInfoWithoutShape("x", 1)], [], 13));
   assert.equal(unknown.artifact_ir.graph.values[0].logical_byte_length, null);
 });
+check("all ONNX fixed-width types retain exact packed logical bytes across common IR projections", () => {
+  // Widths are from the pinned ONNX TensorProto enum, independently of the implementation map.
+  for (const [code, bits] of [[1,32],[2,8],[3,8],[4,16],[5,16],[6,32],[7,64],[9,8],[10,16],
+    [11,64],[12,32],[13,64],[14,64],[15,128],[16,16],[17,8],[18,8],[19,8],[20,8],
+    [21,4],[22,4],[23,4],[24,8],[25,2],[26,2]]) {
+    for (const shape of [[], [0], [1], [3], [5], [2, 7]]) {
+      const count = shape.reduce((n, d) => n * d, 1), expected = Math.ceil(count * bits / 8);
+      const c = context(model([], [], [valueInfo("x", code, shape)], [], 25));
+      for (const row of [c.artifact_ir.graph.values[0], c.model_ir.program.values[0]]) {
+        assert.equal(row.logical_byte_length?.decimal, String(expected), `${row.dtype} ${JSON.stringify(shape)}`);
+        assert.equal(staticTensorPayloadBytes({ dtype: row.dtype, shape, shape_declared: true }), expected);
+      }
+    }
+  }
+  for (const [dtype, bits] of [["F4",4],["F6_E2M3",6],["F6_E3M2",6],["F8_E4M3",8],
+    ["F8_E5M2",8],["F8_E8M0",8],["F8_E4M3FNUZ",8],["F8_E5M2FNUZ",8],["C64",64]]) {
+    const value = { dtype, shape: [5] };
+    assert.equal(valueLogicalBytes(buildValueType(value, "safetensors", "s")).number, Math.ceil(5 * bits / 8));
+    assert.equal(staticTensorPayloadBytes(value), Math.ceil(5 * bits / 8));
+  }
+  for (const dtype of ["STRING", "UNKNOWN", "Q4_0", "Q4_K"]) {
+    assert.equal(valueLogicalBytes(buildValueType({ dtype, shape: [3] }, "gguf", "s")), null);
+    assert.equal(staticTensorPayloadBytes({ dtype, shape: [3] }), null);
+  }
+  assert.equal(staticTensorPayloadBytes({ dtype: "FLOAT32", shape: [], shape_declared: false }), null);
+  const huge = valueLogicalBytes(buildValueType({dtype:"FLOAT4E2M1",shape:[Number.MAX_SAFE_INTEGER,3]},"onnx","s"));
+  assert.deepEqual(huge, { decimal: "13510798882111487", number: null });
+});
+check("ranked dimension constants cannot be null, malformed or inconsistent numeric mirrors", () => {
+  for (const value of [null, {}, { decimal: "1", number: 2 }, { decimal: "01", number: 1 }]) {
+    const type = buildValueType({ dtype: "F32", shape: [1] }, "safetensors", "s");
+    type.root.dimensions[0].value = value;
+    assert.throws(() => validateValueType(type), /dimension/);
+  }
+});
+check("rehashed logical inventory cannot misdescribe or redirect an existing graph value", () => {
+  for (const field of ["name", "dtype", "shape", "graph_value_ref", "detached_graph_value_ref"]) {
+    for (const layer of ["artifact_ir", "model_ir"]) {
+      const copy = structuredClone(base[layer]);
+      const row = copy.logical_inventory.values[0];
+      if (field === "detached_graph_value_ref") row.graph_value_ref = null;
+      else row[field] = field === "shape" ? [999] : field === "graph_value_ref" ? copy.logical_inventory.values[1].id : "invented";
+      const verify = layer === "artifact_ir" ? validateArtifactEvidenceIr : validateModelIr;
+      assert.throws(() => verify(seal(copy, `${layer}_sha256`)), /logical inventory|graph value/);
+    }
+  }
+});
 check("repeated native tensor indices in nested scopes cannot redirect primary quantization", () => {
   const analysis = { format: "tflite", filename: "scopes.tflite", model_sha256: "a".repeat(64), file_size_bytes: 100,
     tensors: [{ index: 0, name: "primary", shape: [1], dtype: "INT8", quant_scales: 1, quant_zero_points: 1, scale_sample: [0.5], zero_point_sample: [0] }], ops: [],
@@ -124,6 +180,24 @@ check("source rederivation catches self-consistent fabricated derived explanatio
   const bad = structuredClone(base.model_ir); bad.interpretation_boundary = "changed after derivation";
   const signed = seal(bad, "model_ir_sha256"); validateModelIr(signed);
   assert.throws(() => validateModelIrAgainstSource(signed, base.artifact_ir), /rederived/);
+});
+check("rehashed Model IR cannot redirect ports, weights, relationships or metric mirrors", () => {
+  const cases = [
+    v => { v.program.operations[0].input_port_refs = [v.program.ports.at(-1).id]; },
+    v => { v.program.ports[0].direction = "output"; },
+    v => { v.program.operations[0].input_port_refs = []; },
+    v => { v.weight_bindings.bindings[0].operation_ref = v.program.operations.at(-1).id; },
+    v => { v.weight_bindings.bindings.pop(); },
+    v => { v.program.operations[0].metrics.macs = { decimal: "123", number: 123 }; },
+    v => { v.program.relationships.find(r => r.kind === "data_dependency").from_ref = v.program.operations.at(-1).id; },
+  ];
+  for (const change of cases) {
+    const copy = structuredClone(base.model_ir); change(copy);
+    assert.throws(() => validateModelIr(seal(copy, "model_ir_sha256")), /port|binding|metric|relationship/);
+  }
+  const copy = structuredClone(base.artifact_ir);
+  copy.graph.operators[0].metric_contracts.macs.coverage = { assessed: 0, eligible: 1 };
+  assert.throws(() => validateArtifactEvidenceIr(seal(copy, "artifact_ir_sha256")), /coverage/);
 });
 check("summary source validation and numeric mirrors reject rehashed contradictions", () => {
   validateModelSummaryAgainstSource(base.model_summary, base.model_ir);

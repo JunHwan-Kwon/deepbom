@@ -1,3 +1,7 @@
+import { duplicateValueCount, numericTokenValue as parseCanonicalNumber, canonicalFloatText as valueText } from "./onnx-static-value-evidence.js";
+
+import { safeShapeElementCount, safeCountProduct as safeProduct, safeCountSum as safeSum } from "./tensor-size.js";
+import { typedNumericToFloat32 as toFloat32 } from "./scalar-numeric.js";
 import {
   canonicalOnnxTypeProto,
   makeOnnxTensorType,
@@ -797,34 +801,6 @@ function staticNumericInput(input, dtype) {
   return null;
 }
 
-function parseCanonicalNumber(value) {
-  if (value === "NaN") return Number.NaN;
-  if (value === "Infinity") return Number.POSITIVE_INFINITY;
-  if (value === "-Infinity") return Number.NEGATIVE_INFINITY;
-  if (value === "-0") return -0;
-  return Number(value);
-}
-
-function toFloat32(value, dtype) {
-  if (dtype === "INT64" && typeof value === "bigint") return bigintToFloat32(value);
-  return Math.fround(Number(value));
-}
-
-function bigintToFloat32(value) {
-  if (value === 0n) return 0;
-  const negative = value < 0n;
-  const magnitude = negative ? -value : value;
-  let exponent = magnitude.toString(2).length - 1;
-  if (exponent <= 23) return Math.fround(Number(value));
-  const shift = BigInt(exponent - 23);
-  let significand = magnitude >> shift;
-  const remainder = magnitude - (significand << shift);
-  const half = 1n << (shift - 1n);
-  if (remainder > half || remainder === half && (significand & 1n) === 1n) significand += 1n;
-  if (significand === (1n << 24n)) { significand >>= 1n; exponent += 1; }
-  return Math.fround((negative ? -1 : 1) * Number(significand) * (2 ** (exponent - 23)));
-}
-
 function floatListAttribute(attribute) {
   if (attribute?.type !== 6 || !Array.isArray(attribute.floats)
     || !Array.isArray(attribute.valueTypesPresent) || attribute.valueTypesPresent.length > 1
@@ -879,40 +855,6 @@ function argMax(values) {
   return { index, value: values[index] };
 }
 
-function duplicateValueCount(values) {
-  return values.length - new Set(values.map((value) => typeof value === "bigint" ? `i:${value}` : `s:${value}`)).size;
-}
-
-function valueText(value) {
-  if (typeof value === "bigint") return value.toString();
-  if (Number.isNaN(value)) return "NaN";
-  if (value === Number.POSITIVE_INFINITY) return "Infinity";
-  if (value === Number.NEGATIVE_INFINITY) return "-Infinity";
-  if (Object.is(value, -0)) return "-0";
-  return String(value);
-}
-
 function knownDimension(value) {
   return Number.isSafeInteger(value) && value >= 0;
-}
-
-function safeShapeElementCount(shape) {
-  let product = 1;
-  for (const dimension of shape) {
-    product = safeProduct(product, dimension);
-    if (product == null) return null;
-  }
-  return product;
-}
-
-function safeProduct(left, right) {
-  if (!Number.isSafeInteger(left) || left < 0 || !Number.isSafeInteger(right) || right < 0) return null;
-  const value = left * right;
-  return Number.isSafeInteger(value) && value >= 0 ? value : null;
-}
-
-function safeSum(left, right) {
-  if (!Number.isSafeInteger(left) || left < 0 || !Number.isSafeInteger(right) || right < 0) return null;
-  const value = left + right;
-  return Number.isSafeInteger(value) && value >= 0 ? value : null;
 }

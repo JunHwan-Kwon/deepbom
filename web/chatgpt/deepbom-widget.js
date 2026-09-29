@@ -1,6 +1,7 @@
-import { installEvidenceLinksPanel } from "../lib/evidence-links-panel.js";
-import { evidenceLinkSummary } from "../lib/evidence-link-ir.js";
-import { evidenceLinkSummaryText } from "../lib/evidence-links/summary.js";
+import { PROVENANCE_IR } from "../lib/evidence-ir.js";
+import { installProvenancePanel } from "../lib/provenance-panel.js";
+import { provenanceSummary } from "../lib/provenance-ir.js";
+import { provenanceSummaryText } from "../lib/provenance/summary.js";
 import { buildSingleFileArtifactSet } from "../lib/artifact-set.js";
 import { analyzeOnnxModel } from "../onnx.js";
 import { analyzeExecuTorchModel } from "../executorch.js";
@@ -127,7 +128,7 @@ async function start() {
   const artifact = { filename: remote.name, format, sha256, size: remote.size };
   analysis.artifact_set = buildSingleFileArtifactSet({ filename: remote.name, format, sha256, byteLength: remote.size });
   const artifactIrContext = getArtifactIrContext(analysis, artifact);
-  if (!artifactIrContext) throw new Error("The canonical Artifact Evidence IR could not be constructed for this attachment.");
+  if (!artifactIrContext) throw new Error("The canonical Artifact IR could not be constructed for this attachment.");
   const analysisView = artifactIrContext.primary_view;
   const envelope = buildArtifactEvidenceEnvelope(analysisView, {
     hash: sha256,
@@ -215,7 +216,7 @@ function compactForConversation(summary, modelSummary) {
     ...(Array.isArray(row.affected_tensors) ? { affected_tensors: row.affected_tensors.slice(0, 16).map(String) } : {}),
   }));
   return {
-    schema: "deepbom.chatgpt_analysis_result.v1",
+    schema: "deepbom.chatgpt_analysis_result.v2",
     analyzer_version: ANALYZER_SEMANTIC_VERSION,
     analysis_location: "chatgpt_browser_sandbox",
     artifact: {
@@ -1076,17 +1077,17 @@ function progressText(progress) {
 
 function appendMetadataPanel(container, result, openai, model, exports) {
   const section = document.createElement("details"), title = document.createElement("summary"), host = document.createElement("div"), button = document.createElement("button"), note = document.createElement("p");
-  title.textContent = "Metadata & lineage · OMOP and external evidence"; button.type = "button"; button.textContent = "Report metadata counts in chat"; button.disabled = true;
+  title.textContent = `${PROVENANCE_IR.name} · OMOP and external evidence`; button.type = "button"; button.textContent = "Report metadata counts in chat"; button.disabled = true;
   note.textContent = "Metadata stays in this widget. Reporting shares only counts and digests. Saving a file via ChatGPT shares that generated file with ChatGPT.";
   section.append(title, host, button, note); container.append(section); let latest = null;
-  installEvidenceLinksPanel(host, () => ({ model, cyclonedx: exports.cyclonedx }), { onResult: value => { latest = value; button.disabled = !value; }, onDownload: (blob, name) => exports.offerDownload(blob, name) });
+  installProvenancePanel(host, () => ({ model, cyclonedx: exports.cyclonedx }), { onResult: value => { latest = value; button.disabled = !value; }, onDownload: (blob, name) => exports.offerDownload(blob, name) });
   button.addEventListener("click", async () => {
     if (!latest) return; button.disabled = true; const selected = latest;
     try {
-      const summary = evidenceLinkSummary(selected);
-      await openai.callTool("deepbom_publish_analysis", { result: { ...result, evidence_links: summary } });
+      const summary = provenanceSummary(selected);
+      await openai.callTool("deepbom_publish_analysis", { result: { ...result, provenance_summary: summary } });
       if (selected !== latest || !button.isConnected) return;
-      await openai.sendFollowUpMessage({ prompt: `DEEPBOM returned optional metadata-link counts and digests. Explain the consistency checks and their limits; relationships are declared and have not been authenticated. ${evidenceLinkSummaryText(summary)}`, scrollToBottom: true });
+      await openai.sendFollowUpMessage({ prompt: `DEEPBOM returned optional metadata-link counts and digests. Explain the consistency checks and their limits; relationships are declared and have not been authenticated. ${provenanceSummaryText(summary)}`, scrollToBottom: true });
       note.textContent = "Counts and digests sent. Metadata rows and supporting file bytes were not sent to the DEEPBOM service.";
     } catch (error) { note.textContent = error.message; } finally { button.disabled = !latest; }
   });

@@ -1,3 +1,4 @@
+import { exactInteger as exact, exactCountValue as exactFrom } from "./exact-integer.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { validateNvidiaAcceleratorProfile } from "./nvidia-accelerator-profile.js";
@@ -179,22 +180,10 @@ function layerOffloadProjection(layerStorage, stateValue, capacity) {
   };
 }
 
-function exactFrom(value) {
-  if (value && typeof value === "object" && /^(?:0|[1-9]\d*)$/.test(String(value.decimal || ""))) return BigInt(value.decimal);
-  if (typeof value === "string" && /^(?:0|[1-9]\d*)$/.test(value)) return BigInt(value);
-  if (typeof value === "bigint" && value >= 0n) return value;
-  if (Number.isSafeInteger(value) && value >= 0) return BigInt(value);
-  return null;
-}
-
 function normalizeExact(value) {
   const parsed = exactFrom(value);
   if (parsed == null) throw new Error("NVIDIA accelerator memory value is invalid.");
   return exact(parsed);
-}
-
-function exact(value) {
-  return { decimal: String(value), number: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null };
 }
 
 function validSha(value) {

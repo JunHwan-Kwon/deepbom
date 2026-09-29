@@ -62,7 +62,7 @@ try {
     await run("public-source-verify", process.execPath, ["scripts/verify-public-source-export.mjs"]);
   }
   if (selected("channels")) {
-    await run("channel-build", process.execPath, ["scripts/build-channel-artifacts.mjs"]);
+    await run("channel-build", process.execPath, ["scripts/build-channel-artifacts.mjs", ...(selected("deploy") ? ["--with-dist"] : [])]);
     await run("channel-equivalence", process.execPath, ["scripts/check-channel-equivalence.mjs", "--no-build", "--release-contract"]);
     await run("mcpb", process.execPath, ["scripts/check-mcpb-bundle.mjs"]);
   }

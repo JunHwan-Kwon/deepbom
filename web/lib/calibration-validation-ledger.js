@@ -1,3 +1,4 @@
+import { safeIntegerCodeRange } from "./tensor-size.js";
 import { ExactComparison } from "./numerical-ir/exact-moments.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
@@ -10,14 +11,7 @@ const comparisonAccumulators = new WeakMap();
 const MAX_SAMPLES = 10_000;
 const MAX_VALUES = 20_000_000;
 const SHA256 = /^[a-f0-9]{64}$/;
-const INTEGER_RANGES = Object.freeze({
-  INT8: [-128, 127],
-  UINT8: [0, 255],
-  INT16: [-32768, 32767],
-  UINT16: [0, 65535],
-  INT32: [-2147483648, 2147483647],
-  UINT32: [0, 4294967295],
-});
+const INTEGER_RANGES = Object.freeze(Object.fromEntries(["INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32"].map(dtype => [dtype, safeIntegerCodeRange(dtype)])));
 const FLOAT_DTYPES = new Set(["FLOAT16", "FLOAT32", "FLOAT64", "BFLOAT16"]);
 
 export function buildCalibrationValidationLedger(capture, { expectedArtifactSha256 = null, expectedInterface = null } = {}) {

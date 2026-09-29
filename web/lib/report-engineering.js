@@ -1,6 +1,6 @@
 import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 import { modelQuantizationStatus, predictedPartitionBoundaryInventory, quantizationScopeSummary, quantStateLabel, xnnpackLabel } from "./analysis.js";
-import { formatBytes, formatDrift, formatExactInteger, formatNumber, formatPercent, formatPercentRange, formatUs, padOp, score100, sumNumbers } from "./format.js";
+import { formatBytes, formatDrift, formatExactInteger, formatNumber, formatPercent, formatPercentRange, formatUs, padOp, score100, sumNumbers, formatSignedCount as signedCount } from "./format.js";
 import { FINDING_PRIORITIES, sortFindingsByPriority } from "./finding-contract.js";
 import { ANALYZER_METADATA, RUNTIME_COMPATIBILITY_EVIDENCE_LABEL, TARGET_PROFILE_SOURCE_BASIS, scopeAndEvidenceBoundaryMarkdown } from "./report-metadata.js";
 import { buildFindingsRegister } from "./report-findings.js";
@@ -1309,11 +1309,6 @@ function actionQueueMarkdown(findings) {
 function signedScientific(value) {
   const number = Number(value || 0);
   return `${number >= 0 ? "+" : ""}${number.toExponential(6)}`;
-}
-
-function signedCount(value) {
-  const number = Number(value || 0);
-  return `${number >= 0 ? "+" : ""}${formatNumber(number)}`;
 }
 
 function analyzerTriageMarkdown(analysis) {

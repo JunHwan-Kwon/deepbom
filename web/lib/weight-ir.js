@@ -3,7 +3,8 @@ import { TensorStatistics, validateStatistics } from "./numerical-ir/statistics.
 import { hashSource, numericSources } from "./numerical-ir/weight-sources.js";
 import { canonicalJson } from "./report-utils.js";
 
-export const WEIGHT_IR_SCHEMA = "deepbom.weight_ir.v1";
+import { WEIGHT_IR_SCHEMA } from "./evidence-ir.js";
+export { WEIGHT_IR_SCHEMA };
 const BOUNDARY = "Statistics describe serialized numeric payloads, not trainability, accuracy or execution. Integer codes are not dequantized unless representation explicitly says dequantized_real. Shared storage may have multiple uses; tensor views are not unique physical allocations. Unmapped payloads do not establish layers. Floating moments are rounded binary64; counts are exact decimal integers. No sampling is performed.";
 function coverage(rows, model) {
   return { model_storage_count: model.tensors_and_storage.storage_objects.length, inventory_count: rows.length,
@@ -59,7 +60,7 @@ export function validateWeightIr(document, model) {
     if(row.storage_ref) {
       refs.add(row.storage_ref); const stored=stores.get(row.storage_ref);
       requireCondition(row.dtype===stored.dtype,"weight dtype contradicts Model IR");
-      if(stored.shape.length) requireCondition(canonicalJson(row.shape)===canonicalJson(stored.shape),"weight shape contradicts Model IR");
+      if(stored.shape_rank_status === "ranked" || stored.shape.length) requireCondition(canonicalJson(row.shape)===canonicalJson(stored.shape),"weight shape contradicts Model IR");
     }
     requireCondition(canonicalJson(row.binding_refs)===canonicalJson(model.weight_bindings.bindings.filter(b=>b.storage_ref===row.storage_ref).map(b=>b.id)),"weight bindings do not match Model IR");
     requireCondition(row.payload_sha256===null || SHA256.test(row.payload_sha256),"invalid payload hash");

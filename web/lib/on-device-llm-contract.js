@@ -1,3 +1,5 @@
+import { exactIntegerWithValue as exact, exactCountValue as exactFrom } from "./exact-integer.js";
+import { logicalBytesForShape, tensorRankKnown } from "./tensor-size.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { canonicalJson } from "./report-utils.js";
 import { buildStateStorageScenarios } from "./llm-specialized-projection.js";
@@ -26,17 +28,6 @@ function text(value) {
 
 function positiveInteger(value) {
   return Number.isSafeInteger(value) && value > 0 ? value : null;
-}
-
-function exact(value) {
-  return { value: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null, decimal: String(value) };
-}
-
-function exactFrom(value) {
-  if (value && typeof value === "object" && /^\d+$/.test(String(value.decimal || ""))) return BigInt(value.decimal);
-  if (Number.isSafeInteger(value) && value >= 0) return BigInt(value);
-  if (typeof value === "string" && /^\d+$/.test(value)) return BigInt(value);
-  return null;
 }
 
 function serializedEncodingContract(analysis, storage) {
@@ -278,16 +269,10 @@ function normalizedOpName(value) {
 }
 
 function exactLogicalTensorBytes(tensor) {
-  const bits = {
-    BOOL: 8, INT4: 4, UINT4: 4, INT8: 8, UINT8: 8, FLOAT16: 16, BFLOAT16: 16,
-    INT16: 16, UINT16: 16, FLOAT32: 32, INT32: 32, UINT32: 32, FLOAT64: 64,
-    INT64: 64, UINT64: 64,
-  }[String(tensor?.dtype || "").toUpperCase()];
-  const shape = Array.isArray(tensor?.shape_signature) && tensor.shape_signature.length
-    ? tensor.shape_signature : tensor?.shape;
-  if (!bits || !Array.isArray(shape) || !shape.length || shape.some((value) => !Number.isSafeInteger(Number(value)) || Number(value) < 0)) return null;
-  const elements = shape.reduce((product, value) => product * BigInt(value), 1n);
-  return exact((elements * BigInt(bits) + 7n) / 8n);
+  const shape = Array.isArray(tensor?.shape_signature) && tensor.shape_signature.length ? tensor.shape_signature : tensor?.shape;
+  if (!tensorRankKnown({ ...tensor, shape })) return null;
+  const bytes = logicalBytesForShape(tensor?.dtype, shape);
+  return bytes ? { value: bytes.number, decimal: bytes.decimal } : null;
 }
 
 function graphTensorStorage(analysis) {

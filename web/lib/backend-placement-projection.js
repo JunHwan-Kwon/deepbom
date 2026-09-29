@@ -1,3 +1,4 @@
+import { tensorPayloadAssessment } from "./tensor-size.js";
 export const BACKEND_PLACEMENT_PROJECTION_SCHEMA = "deepbom.backend_placement_projection.v1";
 export const BACKEND_WORKLOAD_ENVELOPE_SCHEMA = "deepbom.backend_workload_envelope.v1";
 
@@ -8,20 +9,6 @@ export const BACKEND_PLACEMENT_STATES = Object.freeze({
 });
 
 const VALID_STATES = new Set(Object.values(BACKEND_PLACEMENT_STATES));
-const DTYPE_BITS = Object.freeze({
-  BOOL: 8,
-  UINT1: 1,
-  UINT2: 2, INT2: 2,
-  UINT3: 3,
-  UINT4: 4, INT4: 4, FLOAT4E2M1: 4,
-  UINT6: 6,
-  INT8: 8, UINT8: 8,
-  FLOAT8E4M3FN: 8, FLOAT8E4M3FNUZ: 8, FLOAT8E5M2: 8, FLOAT8E5M2FNUZ: 8, FLOAT8E8M0: 8,
-  FLOAT16: 16, BFLOAT16: 16, INT16: 16, UINT16: 16,
-  FLOAT32: 32, INT32: 32, UINT32: 32,
-  FLOAT64: 64, INT64: 64, UINT64: 64, COMPLEX64: 64,
-  COMPLEX128: 128,
-});
 
 /**
  * Derive an independent backend eligibility projection from one canonical graph ledger.
@@ -335,24 +322,8 @@ function buildCanonicalGraphLedger(analysis, ops, scopeId) {
 }
 
 function tensorPayload(tensor) {
-  if (!tensor) return { bytes: null, status: "not_assessed", reason: "tensor_descriptor_missing" };
-  if (!Array.isArray(tensor.shape)) return { bytes: null, status: "not_assessed", reason: "shape_not_declared" };
-  if (tensor.shape.some((dim) => !Number.isSafeInteger(Number(dim)) || Number(dim) < 0)) {
-    return { bytes: null, status: "not_assessed", reason: "shape_dynamic_or_invalid" };
-  }
-  if (Array.isArray(tensor.shape_signature) && tensor.shape_signature.length
-    && (tensor.shape_signature.length !== tensor.shape.length
-      || tensor.shape_signature.some((dim, index) => !Number.isSafeInteger(Number(dim))
-        || Number(dim) < 0 || Number(dim) !== Number(tensor.shape[index])))) {
-    return { bytes: null, status: "not_assessed", reason: "shape_signature_not_statically_bound" };
-  }
-  const bits = DTYPE_BITS[String(tensor.dtype || "").toUpperCase()];
-  if (!bits) return { bytes: null, status: "not_assessed", reason: "dtype_width_unknown" };
-  let elements = 1n;
-  for (const dim of tensor.shape) elements *= BigInt(Number(dim));
-  const bytes = (elements * BigInt(bits) + 7n) / 8n;
-  if (bytes > BigInt(Number.MAX_SAFE_INTEGER)) return { bytes: null, status: "not_assessed", reason: "payload_exceeds_safe_integer" };
-  return { bytes: Number(bytes), status: "assessed_serialized_static_shape", reason: null };
+  const result = tensorPayloadAssessment(tensor);
+  return { bytes: result.bytes, status: result.bytes == null ? "not_assessed" : "assessed_serialized_static_shape", reason: result.reason };
 }
 
 function buildSegments(ops, states) {

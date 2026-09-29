@@ -200,7 +200,7 @@ function immediateBytesProgramModel() {
   return concat(uint(1, 8), message(2, description), message(502, program));
 }
 
-function compressionProgramModel(kind, { invalidBlock = false, invalidPalette = false, vector = false, invalidSparse = false, invalidPadding = false, invalidAffineVector = false, invalidAffineAxis = false, opset = "CoreML8" } = {}) {
+function compressionProgramModel(kind, { invalidBlock = false, invalidPalette = false, vector = false, invalidSparse = false, invalidPadding = false, invalidAffineVector = false, invalidAffineAxis = false, opset = "CoreML8", indexBits = 2 } = {}) {
   let op;
   let outputShape;
   let outputDtype;
@@ -225,13 +225,22 @@ function compressionProgramModel(kind, { invalidBlock = false, invalidPalette = 
     outputDtype = 11;
   } else if (kind === "lut") {
     const vectorSize = vector ? 2 : 1;
-    const paletteCount = invalidPalette ? 2 : 4;
+    const paletteCount = invalidPalette ? 2 : 2 ** indexBits;
     const lutShape = [1, 1, paletteCount, vectorSize];
     const outputAxis = vector ? 1 : null;
     outputShape = vector ? [2, 4] : [2, 2];
     outputDtype = 10;
     op = operation("constexpr_lut_to_dense", [
-      ["indices", valueBinding(immediateBytesValue(36, [2, 2], Buffer.from([0x1b])))],
+      ["indices", valueBinding(immediateBytesValue({ 2: 36, 3: 39, 6: 38 }[indexBits], [2, 2], (() => {
+        // Independent fixture writer: place individual bits in the stream.
+        const payload = Buffer.alloc(Math.ceil(4 * indexBits / 8));
+        [paletteCount - 1, paletteCount - 2, paletteCount - 3, 0].forEach((code, index) => {
+          for (let bit = 0; bit < indexBits; bit++) {
+            if (code & 2 ** bit) payload[Math.floor((index * indexBits + bit) / 8)] |= 2 ** ((index * indexBits + bit) % 8);
+          }
+        });
+        return payload;
+      })()))],
       ["lut", valueBinding(immediateBytesValue(10, lutShape, Buffer.alloc(paletteCount * vectorSize * 2)))],
       ...(outputAxis == null ? [] : [["vector_axis", valueBinding(int32Value(outputAxis))]]),
     ], [["output", outputDtype, outputShape]]);
@@ -406,6 +415,19 @@ assert(lutRow?.representation === "blockwise_lut_palettization" && lutRow.index_
   && lutRow.lut_usage?.status === "assessed_exact_full_index_payload"
   && lutRow.lut_usage.palette_entries_used === 4 && lutRow.lut_usage.index_count === 4,
 `Core ML iOS 18 LUT palette/vector cardinality contract is incorrect: ${JSON.stringify(lutRow)}`);
+
+for (const indexBits of [3, 6]) {
+  const parsed = (await readCoreMlModelFile(new File([compressionProgramModel("lut", { indexBits })], `uint${indexBits}-lut.mlmodel`))).analysis;
+  const row = parsed.coreml.mil_compression_contract.transforms[0];
+  const expected = Array(2 ** indexBits).fill(0);
+  [expected.length - 1, expected.length - 2, expected.length - 3, 0].forEach(code => expected[code]++);
+  assert(JSON.stringify(row.lut_usage.code_histogram) === JSON.stringify(expected),
+    `UINT${indexBits} LUT codes crossing byte boundaries must preserve exact palette counts`);
+  if (indexBits === 3) assert(row.reconstruction.value_count === 4 && row.reconstruction.zero_count === 4,
+    "UINT3 packed-index reconstruction must retain all four values");
+  else assert(row.reconstruction.status === "not_materialized_grouped_or_large_payload",
+    "A truncated UINT6 palette must not be presented as fully reconstructed");
+}
 
 const sparseCompressionModel = compressionProgramModel("sparse");
 const sparseCompression = (await readCoreMlModelFile(new File([sparseCompressionModel], "sparse.mlmodel"))).analysis;

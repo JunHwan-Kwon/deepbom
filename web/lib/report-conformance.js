@@ -1,3 +1,4 @@
+import { safeIntegerCodeRange as inputCodeRange } from "./tensor-size.js";
 import { ANALYZER_METADATA } from "./report-metadata.js";
 import { validateFindingEvidenceBindings } from "./finding-contract.js";
 import { validateQuantizationLattice } from "./quantization-lattice.js";
@@ -97,13 +98,6 @@ const ONNX_INPUT_LAYOUT_OPS = new Set([
   "GlobalLpPool", "GlobalMaxPool", "InstanceNormalization", "LpPool", "MaxPool",
   "QLinearConv",
 ]);
-
-function inputCodeRange(dtype) {
-  return ({
-    UINT8: [0, 255], INT8: [-128, 127], UINT16: [0, 65_535], INT16: [-32_768, 32_767],
-    INT32: [-2_147_483_648, 2_147_483_647], INT4: [-8, 7], UINT4: [0, 15], UINT2: [0, 3], INT2: [-2, 1],
-  })[String(dtype || "").toUpperCase()] || null;
-}
 
 function independentlyReconstructInputContract(tensor, ops, onnx) {
   const shape = Array.isArray(tensor?.shape) ? [...tensor.shape] : [];

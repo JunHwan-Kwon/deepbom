@@ -71,7 +71,7 @@ assert.equal(capabilities.structuredContent.remote_browser_path.service_receives
 assert.match(capabilities.structuredContent.evidence_boundary, /Static serialized-artifact evidence only/);
 
 const validResult = {
-  schema: "deepbom.browser_analysis_result.v1",
+  schema: "deepbom.browser_analysis_result.v2",
   analyzer_version: ANALYZER_SEMANTIC_VERSION,
   analysis_location: "mcp_app_browser_sandbox",
   artifact: { filename: "model.onnx", format: "onnx", sha256: "a".repeat(64), byte_length: 1024, artifact_ir_sha256: "b".repeat(64) },
@@ -87,11 +87,21 @@ const validResult = {
 };
 const published = await rpc("tools/call", { name: "deepbom_publish_browser_analysis", arguments: { result: validResult } });
 assert.deepEqual(published.structuredContent, validResult);
-const linkSummary = { schema: "deepbom.evidence_link_summary.v1", artifact_sha256: validResult.artifact.sha256, model_ir_sha256: "b".repeat(64), evidence_link_ir_sha256: "c".repeat(64), status: "incomplete", node_count: 2, relationship_count: 1, observed_file_count: 0, check_count: 2, check_counts: { match: 1, mismatch: 0, not_assessed: 1, unresolved: 0, unsupported: 0 }, field_count: 1, mapped_declared_field_count: 1, unsupported_field_count: 0, attested_relationship_count: 0, metadata_truth_verified: false, publisher_authenticity: "not_verified" };
-const withLinks = { ...validResult, model_summary: { ...validResult.model_summary, model_ir_sha256: "b".repeat(64) }, evidence_links: linkSummary };
+const linkSummary = { schema: "deepbom.provenance_summary.v1", artifact_sha256: validResult.artifact.sha256, model_ir_sha256: "b".repeat(64), provenance_ir_sha256: "c".repeat(64), status: "incomplete", node_count: 2, relationship_count: 1, observed_file_count: 0, check_count: 2, check_counts: { match: 1, mismatch: 0, not_assessed: 1, unresolved: 0, unsupported: 0 }, field_count: 1, mapped_declared_field_count: 1, unsupported_field_count: 0, attested_relationship_count: 0, metadata_truth_verified: false, publisher_authenticity: "not_verified" };
+const withLinks = { ...validResult, model_summary: { ...validResult.model_summary, model_ir_sha256: "b".repeat(64) }, provenance_summary: linkSummary };
 const publishedLinks = await rpc("tools/call", { name: "deepbom_publish_browser_analysis", arguments: { result: withLinks } });
-assert.deepEqual(publishedLinks.structuredContent.evidence_links, linkSummary);
+assert.deepEqual(publishedLinks.structuredContent.provenance_summary, linkSummary);
 assert.match(publishedLinks.content[0].text, /Relationship truth and publisher authenticity remain unverified/);
+for (const retired of [
+  { ...withLinks, schema: "deepbom.browser_analysis_result.v1" },
+  { ...withLinks, provenance_summary: { ...linkSummary, schema: "deepbom.evidence_link_summary.v1" } },
+  { ...validResult, evidence_links: linkSummary },
+  { ...withLinks, provenance_summary: { ...linkSummary, evidence_link_ir_sha256: linkSummary.provenance_ir_sha256 } },
+]) {
+  const rejected = await rawRpc("tools/call", { name: "deepbom_publish_browser_analysis", arguments: { result: retired } });
+  assert.equal(rejected.error.code, -32602, "retired remote provenance contracts are rejected");
+}
+
 
 assert.match(published.content[0].text, /0 artifact defect\(s\), 1 caution\(s\), and 2 evidence gap\(s\)/);
 assert.match(published.content[0].text, /2 format-neutral operation summary row\(s\)/);

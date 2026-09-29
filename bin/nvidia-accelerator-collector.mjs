@@ -1,3 +1,4 @@
+import { exactInteger as exact } from "../web/lib/exact-integer.js";
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { basename } from "node:path";
@@ -170,10 +171,6 @@ function required(value, label) {
   const text = String(value || "").trim();
   if (!text || /^n\/a$/i.test(text)) throw new Error(`nvidia-smi ${label} is unavailable.`);
   return text;
-}
-
-function exact(value) {
-  return { decimal: value.toString(), number: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null };
 }
 
 function sha256Text(value) { return createHash("sha256").update(String(value), "utf8").digest("hex"); }

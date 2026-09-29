@@ -1,0 +1,61 @@
+{
+  "schema": "deepbom.evidence_ir_catalog.v1",
+  "name": "DEEPBOM Evidence IR",
+  "status": "draft",
+  "catalog_version": "1.0.0",
+  "json_schema": "https://deepbom.org/schemas/deepbom-evidence-ir-v1.schema.json",
+  "layers": [
+    {
+      "id": "artifact",
+      "name": "Artifact IR",
+      "schema": "deepbom.artifact_ir.v2",
+      "section": "artifact_ir",
+      "digest_field": "artifact_ir_sha256",
+      "optional": false,
+      "json_schema": "https://deepbom.org/schemas/deepbom-artifact-ir-v2.schema.json"
+    },
+    {
+      "id": "model",
+      "name": "Model IR",
+      "schema": "deepbom.model_ir.v1",
+      "section": "model_ir",
+      "digest_field": "model_ir_sha256",
+      "optional": false,
+      "json_schema": "https://deepbom.org/schemas/deepbom-model-ir-v1.schema.json"
+    },
+    {
+      "id": "weight",
+      "name": "Weight IR",
+      "schema": "deepbom.weight_ir.v1",
+      "section": "weight_ir",
+      "digest_field": "weight_ir_sha256",
+      "optional": true,
+      "json_schema": "https://deepbom.org/schemas/deepbom-numerical-ir-v1.schema.json#/$defs/weight_ir"
+    },
+    {
+      "id": "activation",
+      "name": "Activation IR",
+      "schema": "deepbom.activation_ir.v1",
+      "section": "activation_ir",
+      "digest_field": "activation_ir_sha256",
+      "optional": true,
+      "json_schema": "https://deepbom.org/schemas/deepbom-numerical-ir-v1.schema.json#/$defs/activation_ir"
+    },
+    {
+      "id": "provenance",
+      "name": "Provenance IR",
+      "schema": "deepbom.provenance_ir.v1",
+      "section": "provenance_ir",
+      "digest_field": "provenance_ir_sha256",
+      "optional": true,
+      "json_schema": "https://deepbom.org/schemas/deepbom-provenance-ir-v1.schema.json"
+    }
+  ],
+  "compatibility_catalog": {
+    "index": "https://deepbom.org/schemas/compatibility/index.json",
+    "schema": "https://deepbom.org/schemas/deepbom-evidence-compatibility-v1.schema.json",
+    "explorer": "https://deepbom.org/guides/evidence-ir/compatibility/"
+  },
+  "compatibility": "Current contracts only; no retired schema, hash-field or selector aliases. Preserve archived evidence separately and regenerate new documents from original inputs.",
+  "validation": "JSON Schema checks structure. Member validators additionally check digests, source bindings, references, exact counts and semantic consistency. Authenticity and external standards conformance are separate."
+}

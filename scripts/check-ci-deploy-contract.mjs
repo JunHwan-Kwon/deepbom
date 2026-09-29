@@ -286,8 +286,8 @@ for (const snippet of ["--untracked-files=all", "RELEASE_GENERATED_TRACKED_ARTIF
   expect(releaseBuildSource.includes(snippet), `Release build gate should contain: ${snippet}`);
 }
 expect(buildMetadataSource.includes("RELEASE_GENERATED_TRACKED_ARTIFACTS"), "Build metadata clean-tree gate should share the release-generated artifact inventory.");
-expect(releaseValidationSource.includes('run("channel-build", process.execPath, ["scripts/build-channel-artifacts.mjs"])'),
-  "Local release validation must record channel construction as its own measured stage.");
+expect(releaseValidationSource.includes('run("channel-build", process.execPath, ["scripts/build-channel-artifacts.mjs", ...(selected("deploy") ? ["--with-dist"] : [])])'),
+  "Local release validation must measure channel construction using the formal Web build when selected.");
 expect(releaseValidationSource.includes('["scripts/check-channel-equivalence.mjs", "--no-build", "--release-contract"]'),
   "Local release validation must not rebuild channel artifacts inside the equivalence stage.");
 expect(

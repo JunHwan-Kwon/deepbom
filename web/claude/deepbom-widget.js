@@ -1,6 +1,7 @@
-import { installEvidenceLinksPanel } from "../lib/evidence-links-panel.js";
-import { evidenceLinkSummary } from "../lib/evidence-link-ir.js";
-import { evidenceLinkSummaryText } from "../lib/evidence-links/summary.js";
+import { PROVENANCE_IR } from "../lib/evidence-ir.js";
+import { installProvenancePanel } from "../lib/provenance-panel.js";
+import { provenanceSummary } from "../lib/provenance-ir.js";
+import { provenanceSummaryText } from "../lib/provenance/summary.js";
 import { buildSingleFileArtifactSet } from "../lib/artifact-set.js";
 import { McpAppClient } from "../lib/mcp-app-client.js";
 import { analyzeOnnxModel } from "../onnx.js";
@@ -134,7 +135,7 @@ async function analyzeSelectedFile(file) {
     const artifact = { filename: safeName, format, sha256, size: file.size };
     analysis.artifact_set = buildSingleFileArtifactSet({ filename: safeName, format, sha256, byteLength: file.size });
     const artifactIrContext = getArtifactIrContext(analysis, artifact);
-    if (!artifactIrContext) throw new Error("The canonical Artifact Evidence IR could not be constructed for this file.");
+    if (!artifactIrContext) throw new Error("The canonical Artifact IR could not be constructed for this file.");
     const analysisView = artifactIrContext.primary_view;
     const envelope = buildArtifactEvidenceEnvelope(analysisView, {
       hash: sha256,
@@ -208,7 +209,7 @@ function compactForConversation(summary, modelSummary) {
     ...(Array.isArray(row.affected_tensors) ? { affected_tensors: row.affected_tensors.slice(0, 16).map(String) } : {}),
   }));
   return {
-    schema: "deepbom.browser_analysis_result.v1",
+    schema: "deepbom.browser_analysis_result.v2",
     analyzer_version: ANALYZER_SEMANTIC_VERSION,
     analysis_location: "mcp_app_browser_sandbox",
     artifact: {
@@ -315,17 +316,17 @@ function renderResult(result, modelSummary, weightEvidence, context) {
 
 function appendMetadataPanel(result, context) {
   const section = document.createElement("details"), title = document.createElement("summary"), host = document.createElement("div"), report = document.createElement("button"), note = document.createElement("p");
-  title.textContent = "Metadata & lineage · OMOP and external evidence"; report.type = "button"; report.textContent = "Report metadata counts to Claude"; report.disabled = true;
+  title.textContent = `${PROVENANCE_IR.name} · OMOP and external evidence`; report.type = "button"; report.textContent = "Report metadata counts to Claude"; report.disabled = true;
   note.textContent = "Metadata stays in this widget. Only counts and digests are shared when you report. File downloads depend on the host's permissions.";
   section.append(title, host, report, note); root.querySelector("#result").prepend(section); let latest = null;
-  installEvidenceLinksPanel(host, () => context, { onResult: value => { latest = value; report.disabled = !value; } });
+  installProvenancePanel(host, () => context, { onResult: value => { latest = value; report.disabled = !value; } });
   report.addEventListener("click", async () => {
     if (!latest) return; report.disabled = true; const selected = latest;
     try {
-      const summary = evidenceLinkSummary(selected), extended = { ...result, evidence_links: summary };
+      const summary = provenanceSummary(selected), extended = { ...result, provenance_summary: summary };
       await app.callServerTool({ name: "deepbom_publish_browser_analysis", arguments: { result: extended } });
       if (selected !== latest || !report.isConnected) return;
-      await app.updateModelContext({ content: [{ type: "text", text: evidenceLinkSummaryText(summary) }], structuredContent: extended });
+      await app.updateModelContext({ content: [{ type: "text", text: provenanceSummaryText(summary) }], structuredContent: extended });
       note.textContent = "Counts and digests shared. Metadata rows and supporting file bytes remain in this widget.";
     } catch (error) { note.textContent = error.message; } finally { report.disabled = !latest; }
   });

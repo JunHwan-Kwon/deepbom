@@ -26,6 +26,7 @@ for (const [key, filenameOut] of Object.entries(set.files)) {
     cyclonedx: "cyclonedx_evidence",
     artifactEnvelope: "artifact_evidence_envelope",
     artifactIr: "artifact_ir",
+    modelIr: "model_ir",
     interfaceContracts: "interface_contract_ledger",
     formulation: "observed_formulation",
     runtime: "runtime_requirement_manifest",

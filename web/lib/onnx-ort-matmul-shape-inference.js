@@ -1,5 +1,5 @@
+import { knownDtype, makeOnnxTensorTypeFromDimensions, onnxShapeDimensionsFromValue } from "./onnx-type-proto.js";
 import { assessOnnxAttributeProto } from "./onnx-schema-legality.js";
-import { makeOnnxTensorTypeFromDimensions, onnxShapeDimensionsFromValue } from "./onnx-type-proto.js";
 
 const ATTRIBUTES = Object.freeze(new Map([
   ["alpha", 1],
@@ -134,7 +134,7 @@ function inputTensor(tensors, name) {
   return tensor && tensor.shapeDeclared !== true ? { ...tensor, shape: null } : tensor;
 }
 function tensorRankKnown(tensor) { return tensor?.shapeDeclared === true && Array.isArray(tensor.shape); }
-function knownDtype(tensor) { const value = String(tensor?.dtype || ""); return value && value !== "UNKNOWN" ? value : ""; }
+
 function attributeInt(node, name, fallback) { const value = node.attributes?.get(name)?.i; return Number.isSafeInteger(value) ? value : fallback; }
 function normalizeDomain(value) { const domain = String(value || "").trim(); return domain || "ai.onnx"; }
 function valueDimension(value) { return { kind: "value", value, parameter: "", denotation: "", valueFieldCount: 1 }; }

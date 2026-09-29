@@ -1,3 +1,4 @@
+import { exactInteger as exact, exactCountValue as exactValue } from "./exact-integer.js";
 export const GRAPH_HIERARCHY_SCHEMA = "deepbom.graph_hierarchy.v1";
 
 export function buildHierarchicalGraphProjection(graph, { maximumGroups = 256, chunkSize = 64 } = {}) {
@@ -165,15 +166,6 @@ function sumComplete(values) {
   return values.every((value) => exactValue(value) != null) ? exact(values.reduce((sum, value) => sum + exactValue(value), 0n)) : null;
 }
 function sumAssessed(values) { return exact(values.reduce((sum, value) => sum + (exactValue(value) ?? 0n), 0n)); }
-function exactValue(value) {
-  const raw = value?.decimal ?? value?.number ?? value;
-  if (raw == null || raw === "") return null;
-  if (typeof raw === "bigint" && raw >= 0n) return raw;
-  if (typeof raw === "string" && /^\d+$/.test(raw)) return BigInt(raw);
-  if (Number.isSafeInteger(Number(raw)) && Number(raw) >= 0) return BigInt(Number(raw));
-  return null;
-}
-function exact(value) { return { decimal: value.toString(), number: value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null }; }
 function clean(value) { const text = String(value ?? "").trim(); return text && text !== "?" ? text : ""; }
 function firstPosition(members) { return minimum(members.map((node) => Number(node.topo_depth ?? node.index))); }
 function minimum(values) { const finite = values.map(Number).filter(Number.isFinite); return finite.length ? Math.min(...finite) : 0; }

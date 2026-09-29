@@ -1,3 +1,4 @@
+import { canonicalFloatText } from "./onnx-static-value-evidence.js";
 import { assessOnnxAttributeProto } from "./onnx-schema-legality.js";
 import {
   canonicalOnnxTypeProto,
@@ -1362,14 +1363,6 @@ function stringScalarAttribute(attribute) {
 
 function floatScalarAttribute(attribute) {
   return attribute && typeof attribute.f === "number" ? attribute.f : null;
-}
-
-function canonicalFloatText(value) {
-  if (Number.isNaN(value)) return "NaN";
-  if (value === Number.POSITIVE_INFINITY) return "Infinity";
-  if (value === Number.NEGATIVE_INFINITY) return "-Infinity";
-  if (Object.is(value, -0)) return "-0";
-  return String(value);
 }
 
 function tensorElementDtype(type) {

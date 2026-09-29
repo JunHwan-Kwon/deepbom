@@ -1,8 +1,53 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-28T02:54:55.781657+00:00",
+  "recorded_at": "2026-09-29T05:40:23.199360+00:00",
   "scope": "Public installation channels and private web delivery",
   "observations": [
+    {
+      "kind": "private_web_preflight_basis",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 221.371,
+      "observed_at": "2026-09-29T05:32:33.683572+00:00",
+      "version": "2.0.0",
+      "source_commit": "594d16c53c5c344f260bef57ee590a4be1e6380c",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean Evidence IR 2.0.0 candidate. No GitHub Actions. Validation only; final artifact publication is verified separately.",
+      "check_count": 98
+    },
+    {
+      "kind": "local_channel_build",
+      "command": "node scripts/build-channel-artifacts.mjs --with-dist",
+      "elapsed_seconds": 12.703,
+      "observed_at": "2026-09-29T05:36:50.595105+00:00",
+      "version": "2.0.0",
+      "source_commit": "594d16c53c5c344f260bef57ee590a4be1e6380c",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean Evidence IR 2.0.0 candidate. No GitHub Actions. Validation only; final artifact publication is verified separately."
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --platform-smoke",
+      "elapsed_seconds": 47.101,
+      "observed_at": "2026-09-29T05:37:37.696416+00:00",
+      "version": "2.0.0",
+      "source_commit": "594d16c53c5c344f260bef57ee590a4be1e6380c",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean Evidence IR 2.0.0 candidate. No GitHub Actions. Validation only; final artifact publication is verified separately."
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --release-contract",
+      "elapsed_seconds": 149.24,
+      "observed_at": "2026-09-29T05:40:06.937473+00:00",
+      "version": "2.0.0",
+      "source_commit": "594d16c53c5c344f260bef57ee590a4be1e6380c",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean Evidence IR 2.0.0 candidate. No GitHub Actions. Validation only; final artifact publication is verified separately."
+    },
     {
       "kind": "private_web_preflight_basis",
       "command": "node scripts/check-deploy.mjs --establish-observation",

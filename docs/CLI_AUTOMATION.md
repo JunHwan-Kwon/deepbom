@@ -29,7 +29,7 @@ schema.
 
 The capability document publishes the supported compatibility tier for every
 machine surface under `public_product_contracts.machine_contracts`. The
-cross-format envelope, Artifact Evidence IR v2, CLI capabilities, stable SARIF
+cross-format envelope, Artifact IR v2, CLI capabilities, stable SARIF
 finding fingerprints, and CycloneDX 1.7 projection retain their declared schema
 semantics. Rich format-specific analysis is a compatibility surface and may add
 or refine fields; automation should use the envelope or Artifact IR.
