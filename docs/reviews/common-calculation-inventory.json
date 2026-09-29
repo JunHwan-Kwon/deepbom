@@ -21,7 +21,7 @@
     ],
     "boundary": "All application source files in these roots are enumerated. JS functions/tables are parsed; Rust/Python/C++ candidates also require semantic review. Textual equality is a candidate, not proof of equivalent contracts."
   },
-  "source_file_count": 493,
+  "source_file_count": 496,
   "files": [
     {
       "file": "bin/deepbom-agent-contract.mjs",
@@ -601,10 +601,10 @@
     },
     {
       "file": "web/chatgpt/deepbom-widget.js",
-      "sha256": "5dfae9caf72e8883c9a79d4169826e080d4353277ce2d5c5c0f99fe440ed218e",
+      "sha256": "5bec5d7c74ad35b85a1cfd4f03d37e8706d31d43a907ddb2634625f9109af430",
       "language": "js",
       "role": "runtime",
-      "functions": 100,
+      "functions": 103,
       "calculation_candidates": 3
     },
     {
@@ -1049,7 +1049,7 @@
     },
     {
       "file": "web/lib/build-metadata.js",
-      "sha256": "bd3ffff7ad10fcd91f176827671f62d6de9f6917adb60f413132bdf4e5350eec",
+      "sha256": "2044b9fc7d2090a265b6fee330750b2441ed8b2729cdb0d5fdfc18349b38554e",
       "language": "js",
       "role": "runtime",
       "functions": 0,
@@ -1422,6 +1422,30 @@
       "role": "runtime",
       "functions": 4,
       "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-query-contract.js",
+      "sha256": "f317b237bbbb2fa96545392da3c8747d9bc1f8e6058551331f7664f485999d56",
+      "language": "js",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-query-view.js",
+      "sha256": "82d7d3dbda45cbaa7068e3509e0ee67e05947e08490308247b8a2c9f9a32dfc1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 25,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-query.js",
+      "sha256": "73a1173f620fd270ba6ccf92628854033714083dba202bb82cb8369f9d706e4a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 42,
+      "calculation_candidates": 1
     },
     {
       "file": "web/lib/evidence-treemap.js",
@@ -4122,7 +4146,7 @@
         {
           "file": "web/chatgpt/deepbom-widget.js",
           "name": "formatBytes",
-          "line": 1061
+          "line": 1106
         },
         {
           "file": "web/claude/deepbom-widget.js",

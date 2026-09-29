@@ -47,12 +47,12 @@
   },
   "surfaces": {
     "openai": {
-      "fingerprint": "7a681fc7dc2ca89757218c3986d4be6337c7bd0ff95d9e15ce1e9c4767e52938",
+      "fingerprint": "72e3f5a21b189bc28074f758ffed932948bc051111435a677be11910c9440d10",
       "sections": {
         "endpoint": "65d495bd038797ad035c1c8d302f1c3d8cdb925acc605134d7a4ad72e1b2c066",
-        "plugin_package": "9c26e564eb0f3678a8845147ab91f215fa7cdef2161d4418378b6eec36f01c09",
-        "privacy_and_transfer": "95cd61f124544a0946c1dfc1601a28d6cfa045d24d9c4ff7c597b6c7ec5dea30",
-        "mcp_metadata": "6b820c919127ab4764c57b7b1330b61d13af463d7af7748ca224e53d19f72831"
+        "plugin_package": "8c154c4180ebf562991395687b7a520a07d396d6d4b98659146075603e154b34",
+        "privacy_and_transfer": "7e148f905d0ed906542d4fa8e499d7a03aefb27604b85860074f749c61c1c150",
+        "mcp_metadata": "7cfdb526e380fc9722936812b010a0f4b01d48b0b1636cbfa5e2bd191424c39d"
       }
     },
     "claude_remote": {

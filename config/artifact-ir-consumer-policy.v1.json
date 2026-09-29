@@ -146,6 +146,17 @@
         "buildMlBomDocument(analysisView"
       ],
       "forbidden_patterns": []
+    },
+    "web/lib/evidence-query.js": {
+      "required_fragments": [
+        "artifactIrOperators(artifactIrContext.primary_view)",
+        "const all = modelSummary.rows;",
+        "const ref = match.subject_ref;"
+      ],
+      "forbidden_patterns": [
+        "analysis\\.ops",
+        "analysis\\.tensors"
+      ]
     }
   }
 }

@@ -20,4 +20,21 @@ An existing approved version can be published while later tool updates undergo c
 
 `scripts/fixtures/chatgpt-tools-20260916.json` pins the source commit and source digest of the historical four-tool definition. It is not an authenticated export of the approved portal snapshot. Server tests validate input and output against that frozen definition, the intervening v2-only definition and the updated union. Browser tests apply the historical schema on both sides of the actual result bridge, analyze ONNX and TFLite, test file exports, and exercise the v2-only retry. No portal approval is inferred from these tests. After publishing, run one attachment through the actual listed plugin and request its report in chat.
 
-This repair changes the ChatGPT widget and remote bridge. It does not change the analysis engine, CLI package, canonical IR, numeric calculations or Claude result contract.
+## Additive conversational review update
+
+The 2.0.0 review candidate adds `deepbom_query_file` and the component-only
+`deepbom_publish_query`. The four original tools and their basic reporting
+compatibility remain available. Query completion requires the new tools to be
+available in the connection; a cached four-tool connection must be refreshed
+in Developer Mode or await its reviewed directory metadata. A rejected query
+publication is shown as undelivered, never fabricated as an accepted answer.
+
+This update also revises the imported Skill, description and multi-turn test
+cases. Replace the Skill ZIP and submit the new directory draft. The source
+baseline is a review candidate, not a record of approval. See
+[Conversational evidence queries](INTERACTIVE_REVIEW.md) for the data flow,
+profile limits and recording sequence.
+
+These changes affect the ChatGPT widget and remote bridge. They do not change
+the analysis engine, CLI package, canonical IR, numeric calculations or Claude
+result contract.

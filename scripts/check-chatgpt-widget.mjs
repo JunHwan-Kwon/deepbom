@@ -19,7 +19,8 @@ const schemaValidator = new Ajv({ strict: false, allowUnionTypes: true });
 let hostDefinition = "historical";
 async function installToolBridge(page) {
   await page.exposeFunction("__deepbomTestToolCall", async (name, args) => {
-    let tool = historicalTools.find(row => row.name === name);
+    let tool = (hostDefinition === "current" ? CHATGPT_MCP_CONTRACT.tools : historicalTools).find(row => row.name === name);
+    if (!tool) throw new Error("This host has not enabled the requested tool definition yet.");
     if (hostDefinition === "v2" && name === "deepbom_publish_analysis") {
       const schema = CHATGPT_MCP_CONTRACT.tools.find(row => row.name === name).outputSchema.anyOf[1];
       tool = { inputSchema: { type: "object", properties: { result: schema }, required: ["result"], additionalProperties: false }, outputSchema: schema };
@@ -748,6 +749,67 @@ try {
   const retried = await page.evaluate(() => window.__deepbomToolCalls);
   assert.deepEqual(retried.map(call => call.args.result?.schema), ["deepbom.chatgpt_analysis_result.v1", "deepbom.chatgpt_analysis_result.v2"]);
   assert.equal(retried[1].args.result.artifact.sha256, expectedSha256);
+  hostDefinition = "current";
+  for (const scenario of ["success", "wrong_hash", "unavailable_profile"]) {
+    const queryPage = await browser.newPage({ viewport: { width: 900, height: 900 } });
+    await installToolBridge(queryPage);
+    await queryPage.route(tfliteUrl, (route, request) => fulfillAttachmentRoute(route, request, tfliteArtifact, []));
+    await queryPage.addInitScript(({ tfliteUrl, expected, scenario }) => {
+      window.__queryCalls = []; window.__queryFollowUps = [];
+      window.openai = {
+        toolInput: { file: { file_id: "same_tflite", file_name: "model.tflite", download_url: tfliteUrl }, expected_sha256: scenario === "wrong_hash" ? "0".repeat(64) : expected,
+          query: { section: "placement", profile_ids: scenario === "unavailable_profile" ? ["invented_delegate"] : ["xnnpack_cpu", "tflite_coreml_delegate"], limit: 10, target: "android_mid_a55" } },
+        async callTool(name, args) { window.__queryCalls.push({ name, args }); return window.__deepbomTestToolCall(name, args); },
+        async sendFollowUpMessage(message) { window.__queryFollowUps.push(message); },
+        widgetState: null,
+        setWidgetState(state) { this.widgetState = state; },
+      };
+    }, { tfliteUrl, expected: expectedTfliteSha256, scenario });
+    await queryPage.goto(`${origin}/host.html`, { waitUntil: "networkidle" });
+    const queryFrame = queryPage.frame({ name: "widget" });
+    await queryFrame.waitForFunction(() => ["Requested evidence ready", "Analysis could not be completed"].includes(document.querySelector("#status")?.textContent), null, { timeout: 90_000 });
+    const state = await queryFrame.evaluate(() => ({ calls: window.__queryCalls, replies: window.__queryFollowUps, text: document.body.innerText }));
+    if (scenario !== "success") {
+      assert.match(state.text, scenario === "wrong_hash" ? /SHA-256 differs/ : /Unknown or unavailable static profile/);
+      assert(state.calls.every(call => call.name === "deepbom_publish_error"));
+      assert.equal(state.calls[0].args.error.code, scenario === "wrong_hash" ? "artifact_identity_mismatch" : "query_not_supported");
+      assert(!state.text.includes("Requested evidence ready"));
+    } else {
+      assert.equal(state.calls.length, 1, state.text);
+      assert.equal(state.calls[0].name, "deepbom_publish_query", state.text);
+      const result = state.calls[0].args.result;
+      assert.equal(result.artifact.sha256, expectedTfliteSha256);
+      assert.equal(result.context.cpu_cost_target_binding.binding_source, "explicit_id");
+      assert.equal(result.context.cpu_cost_target_binding.profile_id, "android_mid_a55");
+      assert.equal(result.context.scan_policy.resolved_mode, "structure");
+      assert.equal(result.coverage.total_rows, 130);
+      assert.equal(result.coverage.returned_rows, 10);
+      assert.equal(state.replies.length, 1, "One automatic reply request for an explicit follow-up query");
+      assert.equal(await queryFrame.locator(".query-viewport [data-row-index]").count(), 10);
+      assert(await queryFrame.locator(".query-viewport").evaluate(node => node.scrollHeight > node.clientHeight));
+      await queryFrame.locator('[data-action="next-evidence-page"]').click();
+      await queryFrame.waitForFunction(() => window.__queryCalls.length === 2 && window.__queryFollowUps.length === 2);
+      assert.equal(await queryFrame.evaluate(() => window.__queryCalls[1].args.result.query.offset), 10);
+      await queryFrame.getByLabel("Evidence section", { exact: true }).selectOption("fusion");
+      await queryFrame.locator('[data-action="run-evidence-query"]').click();
+      await queryFrame.waitForFunction(() => window.__queryCalls.length === 3 && window.__queryFollowUps.length === 3);
+      const f = await queryFrame.evaluate(() => window.__queryCalls[2].args.result);
+      assert(f.rows.every(row => row.details.runtime_fusion === "not_observed"));
+      await queryFrame.locator(".query-viewport [data-row-index]").first().click();
+      assert.match(await queryFrame.locator(".query-detail").innerText(), /serialized_fused_activation/);
+      const svgDownload = queryPage.waitForEvent("download");
+      await queryFrame.locator('[data-action="export-query-svg"]').click();
+      const svgFile = await svgDownload;
+      assert.match(await readFile(await svgFile.path(), "utf8"), new RegExp(expectedTfliteSha256));
+      const pngDownload = queryPage.waitForEvent("download");
+      await queryFrame.locator('[data-action="export-query-png"]').click();
+      const pngFile = await pngDownload;
+      const png = await readFile(await pngFile.path());
+      assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+      if (process.env.DEEPBOM_QUERY_SCREENSHOT) await queryFrame.locator('[data-testid="evidence-query"]').screenshot({ path: process.env.DEEPBOM_QUERY_SCREENSHOT });
+    }
+    await queryPage.close();
+  }
   console.log(`ChatGPT widget E2E passed (cross-origin assets: ${assetOrigin}, nested iframe with blob-only worker CSP, ONNX/TFLite evidence, analyzer delivery failure, file authorization, narrow-panel controls, SVG/PNG/ZIP downloads, schema-valid CycloneDX/SPDX files, blocked iframe download and host file handoff, upload/URL failures, safe retry, and reusable follow-ups).`);
 } finally {
   await browser?.close();

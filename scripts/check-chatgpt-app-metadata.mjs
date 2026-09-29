@@ -67,8 +67,8 @@ assertPng(directoryIcon, 512, "directory icon");
 assertPng(composerIcon, 256, "composer icon", 10_000);
 
 const toolNames = CHATGPT_MCP_CONTRACT.tools.map((tool) => tool.name);
-assert.deepEqual(toolNames, ["deepbom_analyze_file", "deepbom_capabilities", "deepbom_publish_analysis", "deepbom_publish_error"]);
-for (const tool of CHATGPT_MCP_CONTRACT.tools.slice(2)) {
+assert.deepEqual(toolNames, ["deepbom_analyze_file", "deepbom_capabilities", "deepbom_publish_analysis", "deepbom_publish_error", "deepbom_query_file", "deepbom_publish_query"]);
+for (const tool of CHATGPT_MCP_CONTRACT.tools.filter(tool => tool.name.startsWith("deepbom_publish_"))) {
   assert.deepEqual(tool._meta.ui.visibility, ["app"]);
   assert.equal(tool._meta["openai/visibility"], "private");
 }
@@ -111,6 +111,11 @@ for (const testCase of portalSubmission.negative_test_cases) {
   assert.match(testCase.expected_output, /\S/);
 }
 assert.doesNotMatch(JSON.stringify(portalSubmission), forbiddenStandardsText);
+assert.match(portalSubmission.app_info.description, /follow-up/i);
+assert(portalSubmission.test_cases.some(test => test.tools_triggered.includes("deepbom_query_file")));
+const chatGptSkill = await readFile("docs/chatgpt-app/skills/deepbom-artifact-evidence/SKILL.md", "utf8");
+assert.match(chatGptSkill, /deepbom_query_file/);
+assert.match(chatGptSkill, /next_offset/);
 
 console.log("ChatGPT app metadata passed (listing copy, legal/support pages, eval prompts, discovery boundary, and public/private tool visibility).\n");
 

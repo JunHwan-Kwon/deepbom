@@ -11,7 +11,7 @@ The existing approved portal version is managed separately. Do not replace or wi
 - Directory icon: `assets/deepbom-directory-icon-512.png`
 - Composer icon: `assets/deepbom-composer-icon-256.png` (256 x 256 PNG, no more than 10 KB)
 - Name: `DEEPBOM Artifact Evidence`
-- Version: select a version greater than the published portal version when submitting changed listing information or Skills. The existing approved `1.0.0` and engine `2.0.0` are separate version axes.
+- Version: `2.0.0` for this update draft, following the published `1.0.0`. Set this in the portal; the import JSON does not set the version. Directory and engine versions have separate lifecycles.
 - Subtitle: `Inspect AI model artifacts`
 - Category: `Developer Tools`
 - Website: `https://deepbom.org/`
@@ -23,18 +23,7 @@ The existing approved portal version is managed separately. Do not replace or wi
 
 Description:
 
-> Inspect attached AI model deployment files without executing model code.
-> DEEPBOM analyzes supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and
-> ExecuTorch files in the browser and reports SHA-256, serialized structure,
-> tensor encodings, quantization evidence, and static findings. Explore Model IR
-> tables and visualizations, and export SVG, PNG, Word-ready bundles, CycloneDX
-> 1.7 artifact evidence, or SPDX 2.3 artifact inventories. Use Send PNG to chat to
-> share a selected visualization or Save via ChatGPT to obtain a download link
-> for a generated file when supported by the host. These actions share the
-> generated export, not the model file. Results separate artifact defects,
-> cautions, and evidence gaps, and explain what static analysis cannot establish.
-> Use the local CLI or local MCP for confidential, very large, sharded, or
-> multi-file artifacts.
+> Inspect attached AI model deployment files without executing model code. DEEPBOM analyzes supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files in the browser and reports SHA-256, serialized structure, tensor encodings, quantization evidence, and static findings. Ask follow-up questions to inspect a layer, search and page through model evidence, investigate improvement priorities, or compare available static delegate profiles. Inspect encoded activation fusion while keeping runtime fusion unobserved. Explore Model IR tables and visualizations, and export SVG, PNG, Word-ready bundles, CycloneDX 1.7 artifact evidence, or SPDX 2.3 artifact inventories. Use Send PNG to chat to share a selected visualization or Save via ChatGPT to obtain a download link for a generated file when supported by the host. These actions share the generated export, not the model file. Results separate artifact defects, cautions, and evidence gaps, and explain what static analysis cannot establish. Use the local CLI or local MCP for confidential, very large, sharded, or multi-file artifacts.
 
 Select the verified individual or business identity that legally owns this
 submission. The Plugin Author value must exactly match that verified identity;
@@ -60,7 +49,7 @@ export or the deeper payload-integrity test. The scenarios in
 
 After the portal issues a token, expose exactly that token at
 `https://deepbom.org/.well-known/openai-apps-challenge`, then run **Scan Tools**.
-Review all four discovered tools and confirm that every annotation matches
+Review all six discovered tools and confirm that every annotation matches
 `chatgpt-app-submission.json`.
 
 ## Skills
@@ -109,16 +98,17 @@ and account-owned decision and is intentionally not preselected in source.
 
 Release notes:
 
-> Initial submission of DEEPBOM Artifact Evidence. The plugin performs bounded,
-> browser-local static inspection of one ChatGPT-authorized TFLite, ONNX, GGUF,
-> SafeTensors, Core ML, or ExecuTorch deployment artifact. It returns only a
-> validated, hash-bound result to the conversation and does not send model bytes
-> to or retain them on the DEEPBOM service. The widget provides Model IR views,
-> SVG, PNG, Word-ready bundles, CycloneDX 1.7 artifact evidence, and SPDX 2.3
-> artifact inventories. Explicit controls can share a selected PNG or generated
-> export with ChatGPT when the host supports file sharing. No authentication or
-> demo account is required. Local CLI and MCP paths remain separate for
-> confidential, large, or multi-file artifacts.
+> Added follow-up model evidence queries: inspect layers, search and page through
+> operations and findings, compare available static delegate profiles, and review
+> serialized activation fusion and improvement priorities. Query results retain
+> artifact identity, source references, and coverage limits, with interactive
+> diagrams and SVG/PNG exports. Existing analysis and export workflows remain
+> compatible. Static results do not establish runtime placement or performance.
+
+This update changes the ChatGPT Skill. Replace the previous skill ZIP and wait
+for its new portal scan. The earlier video covers the basic analysis/export path;
+record the follow-up sequence in INTERACTIVE_REVIEW.md before representing the
+new workflow as demonstrated by a review recording.
 
 Complete policy attestations only after the Info, MCP, Skills, Prompts, Testing,
 Global, and Submit tabs have been read back from the portal and the Developer

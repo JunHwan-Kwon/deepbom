@@ -8,8 +8,8 @@ no CycloneDX development-branch claims.
 
 - Streamable HTTP MCP: `https://deepbom.org/mcp`
 - Authentication: none
-- Public tools: `deepbom_analyze_file`, `deepbom_capabilities`
-- Component-only tools: `deepbom_publish_analysis`, `deepbom_publish_error`
+- Public tools: `deepbom_analyze_file`, `deepbom_capabilities`, `deepbom_query_file`
+- Component-only tools: `deepbom_publish_analysis`, `deepbom_publish_error`, `deepbom_publish_query`
 - Widget resource: `ui://deepbom/analyzer-v2.html`
 - Privacy: `https://deepbom.org/privacy`
 - Terms: `https://deepbom.org/terms`
@@ -115,3 +115,7 @@ file makes no trademark-clearance claim.
 
 The submission itself is a manual account and attestation action. It must not
 be automated from a source checkout.
+
+## Follow-up evidence queries
+
+`deepbom_query_file` adds identity-checked layer queries, paginated search, finding and improvement investigations, static backend comparisons and encoded activation-fusion inspection. See [interactive review](INTERACTIVE_REVIEW.md) for the contract, validation and submission update.

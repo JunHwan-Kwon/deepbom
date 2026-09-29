@@ -33,6 +33,10 @@ export async function buildAgentContractSnapshot({ root = process.cwd(), remoteM
       path: relative,
       sha256: sha256(await readFile(path.join(root, relative))),
     }))),
+    chatgpt_skill: {
+      path: "docs/chatgpt-app/skills/deepbom-artifact-evidence/SKILL.md",
+      sha256: sha256(await readFile(path.join(root, "docs/chatgpt-app/skills/deepbom-artifact-evidence/SKILL.md"))),
+    },
   };
   const openAiPrivacy = {
     privacy_url: chatGptProfile.privacy_url,

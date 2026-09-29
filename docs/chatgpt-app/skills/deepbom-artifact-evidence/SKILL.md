@@ -1,6 +1,6 @@
 ---
 name: deepbom-artifact-evidence
-description: Inspect attached AI deployment artifacts with the DEEPBOM ChatGPT plugin. Use for static model structure, tensor encodings, quantization evidence, Model IR visualizations, and CycloneDX or SPDX artifact exports from supported TFLite, ONNX, GGUF, SafeTensors, Core ML, or ExecuTorch files. This workflow does not execute models or establish measured performance, accuracy, or regulatory compliance.
+description: Inspect attached AI deployment artifacts and follow up with layer, finding, optimization-investigation, static delegate, and serialized activation-fusion queries. Use DEEPBOM Evidence IR, Model IR visualizations, and CycloneDX or SPDX exports for supported TFLite, ONNX, GGUF, SafeTensors, Core ML, or ExecuTorch files. Does not execute models or establish measured performance, accuracy, or regulatory compliance.
 ---
 
 # Inspect an attached artifact with DEEPBOM
@@ -53,6 +53,52 @@ bytes are not measured latency or runtime memory. Static evidence alone does
 not establish actual hardware placement, accuracy, clinical validity, safety,
 regulatory approval, or standards compliance. If requested, use the returned
 reproduction command and hash rather than guessing an engine version.
+
+## Follow-up analysis
+
+Use `deepbom_query_file` when the user's next question needs evidence missing
+from the bounded initial summary. Reuse the same ChatGPT-authorized attachment
+and set `expected_sha256` to the full hash already returned by DEEPBOM. Do not
+invent a file reference. If attachment authorization has expired, ask the host
+for renewed access or request the attachment again. The server stores no model
+or analysis session; the component revalidates and analyzes the authorized file.
+Preserve `analysis_depth: payload_integrity` for follow-ups about payload
+findings when the user already requested that inspection. Otherwise use
+`structure`. The returned `context.scan_policy` states the actual scan scope;
+do not interpret findings absent from a structure scan as cleared payload checks.
+
+- `operators`: search or page through the common operation/storage table.
+- `operator`: use an exact `subject_ref` returned by the table. A native
+  `source_index` is acceptable only when unambiguous; display order is different.
+- `findings`: retrieve uncapped finding pages with reasons and recommendations.
+- `improvements`: prioritize existing findings and exact workload/storage facts.
+  These are investigation priorities, not established gains in speed or accuracy.
+- `profiles`: discover available source-pinned backend IDs for this artifact.
+- `placement`: pass returned `profile_ids` to compare independent static
+  eligibility profiles. Preserve conditional eligibility, definite exclusion,
+  unresolved predicates, rule source identities and per-profile coverage.
+- `fusion`: inspect encoded fused activation and the existing engine's review
+  hints. Depthwise/pointwise adjacency does not establish runtime fusion or a
+  backend-supported fusion pattern.
+
+`query.target` is a TFLite CPU planning profile from `deepbom_capabilities`,
+not a GPU selector or detected hardware. A hardware name alone does not prove
+delegate support. Do not collapse available static eligibility into "all
+unknown" merely because runtime placement was not observed.
+
+`browser_query_started` is pending. Wait for the component-only
+`deepbom_publish_query` result; do not fabricate it or poll by repeating the
+query. The component requests one chat reply after validating completion.
+If no reply appears, use **Report query in chat**. Interpret the completed
+result, not its startup message. Continue with `coverage.next_offset` when
+needed; keep section/filter/profile/target unchanged while paging. State
+`detail_truncations` and unavailable evidence. Stop paging once the user's
+question is answered. Never infer complete coverage from the first page.
+
+Query diagrams show the returned page and source-linked relationships within
+that page. Click a row for details; **Download query SVG/PNG** prepares the
+selected query export. Use **Save via ChatGPT** and **Send link to chat** to
+share it. The original full-model views remain available below the query.
 
 ## Visualizations and exported files
 

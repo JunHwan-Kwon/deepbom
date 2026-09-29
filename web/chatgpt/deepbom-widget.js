@@ -26,6 +26,11 @@ import { sha256FileHex } from "../lib/hash.js";
 import { ANALYZER_SEMANTIC_VERSION } from "../lib/app-config.js";
 import { createChatGptUsage, mountUsageControls } from "../lib/chatgpt-usage.js";
 import { CHATGPT_RESULT_V2, publishConversationResult } from "../lib/chatgpt-result-transport.js";
+import { normalizeEvidenceQuery, validateEvidenceQueryResult } from "../lib/evidence-query-contract.js";
+import { queryEvidence } from "../lib/evidence-query.js";
+import { mountEvidenceQuery } from "../lib/evidence-query-view.js";
+import { BROWSER_TARGET_PROFILES } from "../lib/target-profiles.generated.js";
+import { buildCpuCostTargetBinding } from "../lib/cpu-target-binding.js";
 
 const FULL_FILE_LIMIT = 128 * 1024 * 1024;
 const RANGE_CHUNK_BYTES = 4 * 1024 * 1024;
@@ -92,6 +97,7 @@ async function start() {
   const bridge = await waitForOpenAi();
   observeWidgetHeight(bridge);
   const { openai, input, supplied } = await waitForAuthorizedFile(bridge);
+  const inspection = input.query ? normalizeEvidenceQuery(input.query) : null;
   const file = await resolveOpenAiFile(openai, supplied);
   const depth = input.analysis_depth === "payload_integrity" ? "payload_integrity" : "structure";
 
@@ -106,14 +112,22 @@ async function start() {
 
   setStatus("Computing artifact identity", `${remote.name} · ${format.toUpperCase()} · ${formatBytes(remote.size)}. SHA-256 may require reading the complete attachment.`);
   const sha256 = await sha256FileHex(remote, RANGE_CHUNK_BYTES);
+  if (inspection && (!/^[a-f0-9]{64}$/.test(input.expected_sha256 || "") || sha256 !== input.expected_sha256)) {
+    throw new Error("The attachment SHA-256 differs from the requested model. Query cancelled; analyze the intended attachment before continuing.");
+  }
+  if (inspection?.target && format !== "tflite") throw new Error("CPU planning targets currently apply to TFLite; this artifact was not analyzed under the requested target.");
 
   setStatus("Running static analysis", depth === "payload_integrity"
     ? "Inspecting serialized tensor payload evidence where the format supports it."
     : "Reading structure, metadata, interfaces, and tensor encodings without executing the model.");
-  let analysis = await analyzeRemoteArtifact(remote, format, depth);
+  let analysis = await analyzeRemoteArtifact(remote, format, depth, inspection?.target || null);
   analysis = normalizeAnalysisSummaryContract(analysis);
   analysis.model_sha256 = sha256;
   analysis.file_size_bytes = remote.size;
+  if (inspection && format === "tflite") {
+    const profile = BROWSER_TARGET_PROFILES.find(row => row.id === analysis.target_profile?.id);
+    if (profile) analysis.cpu_cost_target_binding = buildCpuCostTargetBinding(profile, { bindingSource: inspection?.target ? "explicit_id" : "default_assumption" });
+  }
   analysis.cli_scan_policy = {
     schema: "deepbom.scan_policy.v1",
     requested_mode: depth === "payload_integrity" ? "integrity" : "structure",
@@ -148,10 +162,10 @@ async function start() {
   const result = compactForConversation(summary, artifactIrContext.model_summary);
 
   setStatus("Returning the bounded result", "Only the evidence summary below is sent to the conversation; model bytes remain outside the DEEPBOM service.");
-  const returned = await publishConversationResult(openai, result);
+  const returned = inspection ? result : await publishConversationResult(openai, result);
   usage.track("analysis_completed", { format: usageFormat });
-  const reportDelivery = createReportDelivery(openai, resultFollowUpPrompt(returned));
-  renderResult(returned, openai, artifactIrContext.model_ir, artifactIrContext.model_summary, reportDelivery, {
+  const reportDelivery = inspection ? null : createReportDelivery(openai, resultFollowUpPrompt(returned));
+  const exportActions = {
     cyclonedx: () => buildPublicCycloneDx17ArtifactContract(analysisView, {
       hash: sha256, fileSizeBytes: remote.size, artifactIr: artifactIrContext.artifact_ir,
     }),
@@ -163,7 +177,27 @@ async function start() {
       const file = new Blob([await remote.slice(0, remote.size).arrayBuffer()]);
       return staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.WEIGHT_IR, { file, analysis, model: artifactIrContext.model_ir, advanced: true });
     },
-  });
+  };
+  renderResult(returned, openai, artifactIrContext.model_ir, artifactIrContext.model_summary, reportDelivery, exportActions);
+  if (inspection) {
+    const context = { analysis: analysisView, artifactIrContext, summary, envelope };
+    const queryContainer = document.createElement("section");
+    root.querySelector("#result").prepend(queryContainer);
+    const publish = async (queryResult) => {
+      const response = await openai.callTool("deepbom_publish_query", { result: queryResult });
+      if (response?.isError || response?.error) throw new Error("ChatGPT did not accept the requested evidence. Retry Report query in chat after refreshing the development connection.");
+      const accepted = response?.structuredContent;
+      validateEvidenceQueryResult(accepted);
+      if (accepted.result_sha256 !== queryResult.result_sha256) throw new Error("The query acknowledgement belongs to a different result.");
+      return accepted;
+    };
+    await mountEvidenceQuery(queryContainer, {
+      initialQuery: inspection,
+      execute: query => queryEvidence(context, query),
+      publish, openai, offerDownload: exportActions.offerDownload,
+    });
+    setStatus("Requested evidence ready", `${remote.name} · ${inspection.section} · identity verified`);
+  }
 }
 
 function observeWidgetHeight(openai) {
@@ -179,7 +213,7 @@ function observeWidgetHeight(openai) {
   window.addEventListener("pagehide", () => observer.disconnect(), { once: true });
 }
 
-async function analyzeRemoteArtifact(file, format, depth) {
+async function analyzeRemoteArtifact(file, format, depth, targetId = null) {
   if (["gguf", "safetensors"].includes(format)) {
     return (await readMetadataModelFile(file, format, {
       scanMode: depth === "payload_integrity" ? "integrity" : "structure",
@@ -198,7 +232,7 @@ async function analyzeRemoteArtifact(file, format, depth) {
     return staticAuditWorkerClient.run(STATIC_AUDIT_OPERATION.TFLITE_ANALYZE, {
       bytes,
       filename: file.name,
-      targetId: null,
+      targetId,
       onStatus: (phase) => setStatus("Running isolated TFLite analysis", phase),
     });
   }
@@ -401,6 +435,7 @@ function authorizedFileInput(openai) {
     input: {
       ...input,
       analysis_depth: input.analysis_depth || output.analysis_depth,
+      ...(input.query || output.query ? { query: input.query || output.query, expected_sha256: input.expected_sha256 || output.expected_sha256 } : {}),
     },
     supplied,
   };
@@ -700,7 +735,11 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
     link.click();
     status.textContent = `${filename} prepared. If no local file appears, select Save via ChatGPT.`;
   };
-  exports.offerDownload = (blob, name) => { offerDownload(blob, name, name.endsWith(".cdx.json") ? "cyclonedx" : "evidence_package"); downloads.scrollIntoView({ block: "nearest" }); };
+  exports.offerDownload = (blob, name) => {
+    const kind = name.endsWith(".cdx.json") ? "cyclonedx" : name.endsWith(".svg") ? "svg" : name.endsWith(".png") ? "png" : "evidence_package";
+    offerDownload(name, blob, kind);
+    downloads.scrollIntoView({ block: "nearest" });
+  };
   window.addEventListener("pagehide", () => {
     for (const { url } of preparedDownloads.values()) URL.revokeObjectURL(url);
   }, { once: true });
@@ -1001,7 +1040,13 @@ function structuredFailure(error) {
   const fileName = String(window.openai?.toolInput?.file?.file_name || "").slice(0, 512) || null;
   let code = "analysis_failed";
   let suggestedAction = "Retry with a supported single-file deployment artifact. Use the local DEEPBOM CLI or MCP if the failure persists.";
-  if (/did not provide an authorized file|download URL/i.test(message)) {
+  if (/attachment SHA-256 differs/i.test(message)) {
+    code = "artifact_identity_mismatch";
+    suggestedAction = "Select the intended attachment and confirm its full SHA-256 in a new analysis before requesting follow-up evidence.";
+  } else if (/Unknown.*profile|Unknown.*target|CPU planning targets currently|Unknown evidence query|did not resolve exactly one subject|native index occurs in multiple scopes|planning target was not analyzed/i.test(message)) {
+    code = "query_not_supported";
+    suggestedAction = "Use the profile IDs and subject references returned for this attachment. Query available profiles before requesting a comparison.";
+  } else if (/did not provide an authorized file|download URL/i.test(message)) {
     code = "file_authorization_missing";
     suggestedAction = "Attach one supported model file in ChatGPT and run DEEPBOM again.";
   } else if (/unsupported or unsafe serialized format|No ChatGPT browser analyzer/i.test(message)) {

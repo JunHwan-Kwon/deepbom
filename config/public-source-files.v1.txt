@@ -176,6 +176,7 @@ docs/agent-evaluation/README.md
 docs/agent-evaluation/host-evaluation-cases.v1.json
 docs/agent-evaluation/host-evaluation-run.template.json
 docs/chatgpt-app/DEMO_RECORDING_SCRIPT.md
+docs/chatgpt-app/INTERACTIVE_REVIEW.md
 docs/chatgpt-app/PORTAL_VALUES.md
 docs/chatgpt-app/PUBLICATION_COMPATIBILITY.md
 docs/chatgpt-app/README.md
@@ -409,6 +410,7 @@ scripts/check-evidence-compatibility.mjs
 scripts/check-evidence-ir-family.mjs
 scripts/check-evidence-package-profile-ui.mjs
 scripts/check-evidence-package-profiles.mjs
+scripts/check-evidence-query.mjs
 scripts/check-evidence-treemap.mjs
 scripts/check-evidence-ui-contract.mjs
 scripts/check-evidence-workbench.mjs
@@ -942,6 +944,9 @@ web/lib/evidence-ir.js
 web/lib/evidence-level-report.js
 web/lib/evidence-package-profiles.js
 web/lib/evidence-package-rights.js
+web/lib/evidence-query-contract.js
+web/lib/evidence-query-view.js
+web/lib/evidence-query.js
 web/lib/evidence-treemap.js
 web/lib/evidence-visual-contract.js
 web/lib/evidence-why-drawer.js

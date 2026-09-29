@@ -1,8 +1,20 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-29T05:40:23.199360+00:00",
+  "recorded_at": "2026-09-29T08:27:14.186157+00:00",
   "scope": "Public installation channels and private web delivery",
   "observations": [
+    {
+      "kind": "private_web_preflight_basis",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 246.14,
+      "observed_at": "2026-09-29T08:27:14.186157+00:00",
+      "version": "2.0.0",
+      "source_commit": "0c230def5d01ec0be5f5d8e2e9296002b79e9eb4",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally for the additive ChatGPT conversational Evidence IR review candidate. Existing CLI and canonical IR contracts are unchanged. No GitHub Actions. This is validation evidence, not host approval or deployment confirmation.",
+      "check_count": 99
+    },
     {
       "kind": "private_web_preflight_basis",
       "command": "node scripts/check-deploy.mjs --establish-observation",

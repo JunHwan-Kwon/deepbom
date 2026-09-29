@@ -5,7 +5,12 @@
       "class": "direct",
       "prompt": "Use DEEPBOM to inspect and visualize this attached ONNX deployment model. Keep defects, cautions, and evidence gaps separate.",
       "expected_tool": "deepbom_analyze_file",
-      "fixture": "valid supported ONNX attachment"
+      "fixture": "valid supported ONNX attachment",
+      "follow_up": {
+        "prompt": "Show the first two operators, the next page, and the details of one returned subject reference.",
+        "expected_tool": "deepbom_query_file",
+        "expected_behavior": "Reuse the authorized attachment and full SHA-256; preserve the cursor and return matched/total counts."
+      }
     },
     {
       "class": "indirect",
@@ -29,8 +34,18 @@
       "class": "indirect",
       "prompt": "Inspect tensor payload integrity in this attached TFLite file.",
       "expected_tool": "deepbom_analyze_file",
-      "expected_arguments": { "analysis_depth": "payload_integrity" },
-      "fixture": "valid supported TFLite attachment"
+      "expected_arguments": {
+        "analysis_depth": "payload_integrity"
+      },
+      "fixture": "valid supported TFLite attachment",
+      "follow_up": {
+        "prompt": "List available static delegate profiles, compare two returned profiles, and inspect serialized activation fusion.",
+        "expected_tool": "deepbom_query_file",
+        "expected_arguments": {
+          "analysis_depth": "payload_integrity"
+        },
+        "expected_behavior": "Preserve payload inspection depth, source profile identities, conditions, and runtime evidence limits."
+      }
     }
   ],
   "negative": [
@@ -61,6 +76,9 @@
     "Do not turn an evidence gap into an artifact defect.",
     "Preserve the static evidence boundary.",
     "Treat Model IR diagrams as traceable static projections and do not claim they are observed runtime graphs.",
-    "On failure, report the structured code and suggested_action without inventing a partial success."
+    "On failure, report the structured code and suggested_action without inventing a partial success.",
+    "Use actual static support evidence when available; do not report everything unknown merely because execution was not observed.",
+    "Do not invent a missing delegate profile, artifact identity, query result, image attachment, or download link.",
+    "A query failure is not completed evidence. Preserve pagination, detail truncation and the actual scan scope."
   ]
 }

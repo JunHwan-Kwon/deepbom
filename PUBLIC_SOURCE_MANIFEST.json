@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "337300106b389b844f10622e8776cbec4d43cefe",
+  "source_commit": "e00ea23b27f7c13bb0e84afef43b3846eaeeafaf",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 1292,
+  "file_count": 1297,
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -292,13 +292,13 @@
     },
     {
       "path": "chatgpt-app-submission.json",
-      "byte_length": 13723,
-      "sha256": "4f3a9e9e90c4eec967a73bec579f0c7045ac0db8d1f3f33a167e38ca93b21330"
+      "byte_length": 18625,
+      "sha256": "1ab147a8b3eff5c7361b6a6a11f7754783f8b2a74004f954c4e4b9e396573b63"
     },
     {
       "path": "config/artifact-ir-consumer-policy.v1.json",
-      "byte_length": 5515,
-      "sha256": "e0822f8b6efd24019b44f41ad579866e40c96c909e05f4e20a5312e8adc2f554"
+      "byte_length": 5835,
+      "sha256": "8f256364a571e4bca79ab92b27a4f5fe7d1292ea382428ceca9e4d96ab1da10d"
     },
     {
       "path": "config/artifact-ir-import-policy.v2.json",
@@ -312,8 +312,8 @@
     },
     {
       "path": "config/delivery-operations.v1.json",
-      "byte_length": 131485,
-      "sha256": "d38fe4acb800bcf361fc50e05bf413e4fe66507486182edf6f8e056abaa834e4"
+      "byte_length": 132148,
+      "sha256": "1b7b830261665121607cd9569398c5e0ef229c0d66803bb778548acc1e0003e9"
     },
     {
       "path": "config/evidence-compatibility.mjs",
@@ -347,8 +347,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 47600,
-      "sha256": "565903aa40343cc1b1dd58d2e91fced3aa74da84f14eb23171d5b395df85c8b2"
+      "byte_length": 47764,
+      "sha256": "4351cefa4a2cbc4e10688f643f4570c7a1289bb52c1d6957a413880c3ed4c48a"
     },
     {
       "path": "config/scalar-types.v1.json",
@@ -717,8 +717,8 @@
     },
     {
       "path": "deepbom-artifact-evidence-skill.zip",
-      "byte_length": 2387,
-      "sha256": "e436766d70b152d6ec710beaccce2711e8d216394bccbfd3b3187ea918278baa"
+      "byte_length": 3574,
+      "sha256": "a92475885a5d90c7290aa6e4a09ae787c2e4a0f88abf9bcd3f9ed9bc06c08439"
     },
     {
       "path": "docs/AGENT_CONTRACT_1_1_0.md",
@@ -901,19 +901,24 @@
       "sha256": "258770d2af7d02c8cf2e906e0b29c5572cc6dd3003764a27ebf5e6d4ea5423a8"
     },
     {
+      "path": "docs/chatgpt-app/INTERACTIVE_REVIEW.md",
+      "byte_length": 6362,
+      "sha256": "5de672f840b10c97c2c43d94f2b141559b37a77b2149a816f3bc7fd98a16d0ad"
+    },
+    {
       "path": "docs/chatgpt-app/PORTAL_VALUES.md",
-      "byte_length": 6350,
-      "sha256": "bcd2fa9efa890e34cf23f1080cdcc824f2e4d12c20007b45fad94cf593bd30a0"
+      "byte_length": 6582,
+      "sha256": "6352637abd71f92c7215e816ad8330b1becdc100400d9b9dbdc37fa4eb910cbc"
     },
     {
       "path": "docs/chatgpt-app/PUBLICATION_COMPATIBILITY.md",
-      "byte_length": 3305,
-      "sha256": "275b7ca15feb41c6fb2f51f14341efcac5483804ea83e2409ca6509e16579e2b"
+      "byte_length": 4140,
+      "sha256": "c0ba6961357a98bff1ceadd3395d360550563ac43752650524b348d761e1e85d"
     },
     {
       "path": "docs/chatgpt-app/README.md",
-      "byte_length": 6836,
-      "sha256": "a0ac4c31fa2c8369111fe7d99542da6b4f0b8eb592b857e0f739f5997c8423da"
+      "byte_length": 7200,
+      "sha256": "81efafbf34509a63dd7b49838b1cc4240bd0e3b6f98a36f962d8bf72dd076a32"
     },
     {
       "path": "docs/chatgpt-app/USAGE_METRICS.md",
@@ -937,18 +942,18 @@
     },
     {
       "path": "docs/chatgpt-app/evals.json",
-      "byte_length": 2930,
-      "sha256": "db03e940ca1999da0e47f49992ebc2e6453b5dd4ab6eb4f05c05b26db9304758"
+      "byte_length": 4077,
+      "sha256": "bb0f21a824b89a08a69542e360920c0d03f5367716b5105f2b2443d06506b303"
     },
     {
       "path": "docs/chatgpt-app/skills/deepbom-artifact-evidence/SKILL.md",
-      "byte_length": 4837,
-      "sha256": "85d86c599dae62973ea92c6494fdeee1eea4a7b241210891935189988e091140"
+      "byte_length": 7808,
+      "sha256": "f023e8afcf36fb1ff5fd62c5f7240e688ae130527aa63deaa201e3c6954bb318"
     },
     {
       "path": "docs/chatgpt-app/submission-profile.json",
-      "byte_length": 4408,
-      "sha256": "5b113d5e74453ac10403c271cb7dbb132c1698f32bd18e4a9de41701a1ac8ade"
+      "byte_length": 4839,
+      "sha256": "4602f2b29732508ba4a1973ae95820a67939cbcfab3408c8492191def408c4cb"
     },
     {
       "path": "docs/chatgpt-app/usage-review-change.json",
@@ -1062,8 +1067,8 @@
     },
     {
       "path": "docs/reviews/common-calculation-inventory.json",
-      "byte_length": 134504,
-      "sha256": "ab421cd77596bf6ee1c0f6833c9dfbc3b4820c0e2e0d8d3c062f77c4fd6ef44e"
+      "byte_length": 135255,
+      "sha256": "86776f04670c42fea81bba47a5724c4da9ba301ac9c4fb60c07843e187bebafb"
     },
     {
       "path": "docs/schemas/deepbom-artifact-ir-v2.schema.json",
@@ -1272,8 +1277,8 @@
     },
     {
       "path": "package.json",
-      "byte_length": 26901,
-      "sha256": "4a0506e0ce34cf60b6a828da906eb24ba346caf664e9e727ba3bf31cedcdaa6a"
+      "byte_length": 26970,
+      "sha256": "de786d81b2680a2e2c3d7215b1079b5b2b442dec687f2b2f3285daef5a14e469"
     },
     {
       "path": "pkg/LICENSE",
@@ -1493,7 +1498,7 @@
     {
       "path": "release/agent-contract-baseline.v1.json",
       "byte_length": 2746,
-      "sha256": "9faee3f6a861aacccf60f29808765b9ef51cfaae629d8a2513ae438d9d052961"
+      "sha256": "b222c6deca7c994e8ecf250fbe57d3276a251a0324bf16c6f82ef1aa44352b6b"
     },
     {
       "path": "release/version.json",
@@ -1507,8 +1512,8 @@
     },
     {
       "path": "scripts/agent-contract-snapshot.mjs",
-      "byte_length": 11603,
-      "sha256": "c91b870a179c1eb36fc59391b558da5d176e956203cf1db0d2a14a4fbd46d836"
+      "byte_length": 11822,
+      "sha256": "626217a1aae9f292f94e0025095a6d4706818eedee56e4116e029da4ddf1519d"
     },
     {
       "path": "scripts/audit-common-rules.mjs",
@@ -1712,8 +1717,8 @@
     },
     {
       "path": "scripts/check-all.mjs",
-      "byte_length": 13398,
-      "sha256": "4d123a319238c99310e32a8c7afa2c54ea22019dba74d6ae9e16e03626e147c1"
+      "byte_length": 13436,
+      "sha256": "d3a0d6fe9d27d237d5e54e0b935f9dfba78502ef9e422a66d77d265fb7d5f3d3"
     },
     {
       "path": "scripts/check-analysis-invariants.mjs",
@@ -1817,18 +1822,18 @@
     },
     {
       "path": "scripts/check-chatgpt-app-metadata.mjs",
-      "byte_length": 7605,
-      "sha256": "722b47a908c973073216750130746fefca004ea980e64cc790e255c2192d2a00"
+      "byte_length": 8070,
+      "sha256": "621fa243bc3f3c584cbdd167fbf88f21168bed37d33615ef3d30b286489b1e04"
     },
     {
       "path": "scripts/check-chatgpt-mcp.mjs",
-      "byte_length": 18479,
-      "sha256": "98c0153bec14f58b0855821e0b2f484e6907d3558e83c699258a6730cc562e5a"
+      "byte_length": 18530,
+      "sha256": "8f555698ea561150f72901f30f16c679b111bd8530f009d49c961392c0fe3d96"
     },
     {
       "path": "scripts/check-chatgpt-widget.mjs",
-      "byte_length": 45303,
-      "sha256": "982ad9d8ad4a112736ee043d1135192122e11883a84981740ce88bbc066e4cba"
+      "byte_length": 50348,
+      "sha256": "6f306ba6609a2f2d8904417a008ebe93375da471da4bb6d9972354b8376313e0"
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
@@ -1982,8 +1987,8 @@
     },
     {
       "path": "scripts/check-deploy.mjs",
-      "byte_length": 5082,
-      "sha256": "b097ec097684b813ccccfed6aaec5295638e50333b09563595b0ee499b880ac2"
+      "byte_length": 5120,
+      "sha256": "b6ed97370bea619da99273958de2ac171af5d95cf4ff57367881b68b8889cae0"
     },
     {
       "path": "scripts/check-deployment-delta-viewer.mjs",
@@ -2017,8 +2022,8 @@
     },
     {
       "path": "scripts/check-dist-budget.mjs",
-      "byte_length": 1897,
-      "sha256": "9a59b1792c9e9056e812dc5b57cd0357081b58b03a44e89abc83de11d1c7cb9e"
+      "byte_length": 2051,
+      "sha256": "ec38cbb4f2e23c47c7dd36e747b220be765b45e351e306b4a4e711bd3b5791be"
     },
     {
       "path": "scripts/check-dom-contract.mjs",
@@ -2064,6 +2069,11 @@
       "path": "scripts/check-evidence-package-profiles.mjs",
       "byte_length": 7556,
       "sha256": "13798faafbdd284f63da8a157bcebc58c34845a9e66d62028cb9629f4ea4cbb2"
+    },
+    {
+      "path": "scripts/check-evidence-query.mjs",
+      "byte_length": 11045,
+      "sha256": "ccc7373e432cae038c2228376e69b00a457f9a6c5cd3aeb2d49d52043e1a1b27"
     },
     {
       "path": "scripts/check-evidence-treemap.mjs",
@@ -4062,13 +4072,13 @@
     },
     {
       "path": "web/chatgpt/deepbom-widget.js",
-      "byte_length": 60373,
-      "sha256": "5dfae9caf72e8883c9a79d4169826e080d4353277ce2d5c5c0f99fe440ed218e"
+      "byte_length": 63759,
+      "sha256": "5bec5d7c74ad35b85a1cfd4f03d37e8706d31d43a907ddb2634625f9109af430"
     },
     {
       "path": "web/chatgpt/index.html",
-      "byte_length": 7238,
-      "sha256": "432754369fbaf9c7bd8d67afe1ff6d4975c9c497b0d159d3105dcbb67c5113f3"
+      "byte_length": 8035,
+      "sha256": "d3a4d8b376058620dddd0c886f8626a06a3550dfdac423e1dcce4a6cefab6d32"
     },
     {
       "path": "web/claude/deepbom-widget.js",
@@ -4502,8 +4512,8 @@
     },
     {
       "path": "web/lib/build-metadata.js",
-      "byte_length": 99388,
-      "sha256": "bd3ffff7ad10fcd91f176827671f62d6de9f6917adb60f413132bdf4e5350eec"
+      "byte_length": 99881,
+      "sha256": "2044b9fc7d2090a265b6fee330750b2441ed8b2729cdb0d5fdfc18349b38554e"
     },
     {
       "path": "web/lib/bundle.js",
@@ -4734,6 +4744,21 @@
       "path": "web/lib/evidence-package-rights.js",
       "byte_length": 3080,
       "sha256": "9b1d76628179f09e9d93b9d0eb214222063ec0c8ae0abcc8cd37f8c54cf1305c"
+    },
+    {
+      "path": "web/lib/evidence-query-contract.js",
+      "byte_length": 9941,
+      "sha256": "f317b237bbbb2fa96545392da3c8747d9bc1f8e6058551331f7664f485999d56"
+    },
+    {
+      "path": "web/lib/evidence-query-view.js",
+      "byte_length": 14989,
+      "sha256": "82d7d3dbda45cbaa7068e3509e0ee67e05947e08490308247b8a2c9f9a32dfc1"
+    },
+    {
+      "path": "web/lib/evidence-query.js",
+      "byte_length": 13403,
+      "sha256": "73a1173f620fd270ba6ccf92628854033714083dba202bb82cb8369f9d706e4a"
     },
     {
       "path": "web/lib/evidence-treemap.js",

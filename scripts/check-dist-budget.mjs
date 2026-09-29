@@ -8,7 +8,9 @@ const dist = path.resolve("dist");
 // deploy-time overrides that would make the budget non-reproducible.
 // The compatibility snapshot, schema and standalone explorer add about 70 KiB.
 // Retain a bounded 128 KiB increment; the 16 MiB per-file ceiling is unchanged.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 66.625);
+// Conversational queries add 99,113 bytes to the widget bundle and 27,968
+// bytes of shared query modules. Reserve a further 128 KiB for these features.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 66.75);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

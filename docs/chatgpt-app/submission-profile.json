@@ -7,7 +7,7 @@
   "authentication": "none",
   "category": "Developer tools",
   "short_description": "Inspect AI model artifacts",
-  "description": "Inspect attached AI model deployment files without executing model code. DEEPBOM analyzes supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files in the browser and reports SHA-256, serialized structure, tensor encodings, quantization evidence, and static findings. Explore Model IR tables and visualizations, and export SVG, PNG, Word-ready bundles, CycloneDX 1.7 artifact evidence, or SPDX 2.3 artifact inventories. Use Send PNG to chat to share a selected visualization or Save via ChatGPT to obtain a download link for a generated file when supported by the host. These actions share the generated export, not the model file. Results separate artifact defects, cautions, and evidence gaps, and explain what static analysis cannot establish. Use the local CLI or local MCP for confidential, very large, sharded, or multi-file artifacts.",
+  "description": "Inspect attached AI model deployment files without executing model code. DEEPBOM analyzes supported TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch files in the browser and reports SHA-256, serialized structure, tensor encodings, quantization evidence, and static findings. Ask follow-up questions to inspect a layer, search and page through model evidence, investigate improvement priorities, or compare available static delegate profiles. Inspect encoded activation fusion while keeping runtime fusion unobserved. Explore Model IR tables and visualizations, and export SVG, PNG, Word-ready bundles, CycloneDX 1.7 artifact evidence, or SPDX 2.3 artifact inventories. Use Send PNG to chat to share a selected visualization or Save via ChatGPT to obtain a download link for a generated file when supported by the host. These actions share the generated export, not the model file. Results separate artifact defects, cautions, and evidence gaps, and explain what static analysis cannot establish. Use the local CLI or local MCP for confidential, very large, sharded, or multi-file artifacts.",
   "privacy_url": "https://deepbom.org/privacy",
   "terms_url": "https://deepbom.org/terms",
   "support_url": "https://deepbom.org/support",
@@ -24,7 +24,8 @@
       "bounded artifact defects, cautions, and evidence gaps",
       "evidence and transfer boundaries",
       "an explicitly user-selected derived visualization PNG when Send PNG to chat is used",
-      "a generated export uploaded to ChatGPT by an explicit Save via ChatGPT action, with a host-issued HTTPS download URL that Send link to chat can return to the conversation"
+      "a generated export uploaded to ChatGPT by an explicit Save via ChatGPT action, with a host-issued HTTPS download URL that Send link to chat can return to the conversation",
+      "bounded follow-up query pages, selected static profiles and rule references, source-bound layer details, coverage and consistency digests; no server model or query-session storage"
     ],
     "server_persistence": "none for model bytes or submitted analysis results",
     "usage_statistics": "Daily aggregate MCP counts without identifiers; separate opt-in widget event records with keyed-hash browser IDs for up to 90 days, followed by daily deletion. Withdrawal, browser-record deletion, test exclusion, and aggregate administrator exports are described at /privacy. No model contents, filenames, artifact hashes, or conversation text enter usage records."

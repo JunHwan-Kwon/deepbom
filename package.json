@@ -332,7 +332,8 @@
     "report:source-size": "node scripts/report-source-size.mjs",
     "check:pre-interaction-shell": "node scripts/check-pre-interaction-shell.mjs",
     "generate:scalar-types": "node scripts/generate-scalar-types.mjs",
-    "check:common-calculations": "node scripts/audit-common-rules.mjs && node scripts/check-common-calculation-rules.mjs"
+    "check:common-calculations": "node scripts/audit-common-rules.mjs && node scripts/check-common-calculation-rules.mjs",
+    "check:evidence-query": "node scripts/check-evidence-query.mjs"
   },
   "keywords": [],
   "author": "",
