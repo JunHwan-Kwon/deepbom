@@ -130,6 +130,7 @@ export function classifyAgentContractChange(current, baseline) {
     }
   }
   const openAiChanged = changed.some((value) => value.startsWith("openai."));
+  const openAiMetadataOnly = openAiChanged && changed.filter(value => value.startsWith("openai.")).every(value => value === "openai.mcp_metadata");
   const claudeChanged = changed.some((value) => value.startsWith("claude_remote."));
   const evidenceChanged = changed.some((value) => value.startsWith("evidence."));
   return {
@@ -141,7 +142,9 @@ export function classifyAgentContractChange(current, baseline) {
     changed_sections: changed,
     openai: {
       review_required: openAiChanged,
-      action: openAiChanged ? "create_new_plugin_version_scan_review_and_publish" : "host_smoke_test_only",
+      new_plugin_version_required: openAiChanged && !openAiMetadataOnly,
+      continuous_tool_review: openAiMetadataOnly,
+      action: openAiMetadataOnly ? "preserve_published_contract_while_continuous_tool_review_runs" : openAiChanged ? "review_plugin_information_skills_and_endpoint_changes_for_new_version" : "host_smoke_test_only",
     },
     claude_remote: {
       resubmission_required: false,

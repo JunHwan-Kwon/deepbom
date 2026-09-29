@@ -53,7 +53,12 @@ assert.deepEqual(engineOnlyMutation.changed_sections, [], "Engine version alone 
 const openAiMutation = structuredClone(current);
 openAiMutation.surfaces.openai.sections.mcp_metadata = "0".repeat(64);
 assert.equal(classifyAgentContractChange(openAiMutation, baseline).openai.review_required, true,
-  "An OpenAI tool-contract mutation must require a reviewed plugin version.");
+  "An OpenAI tool-contract mutation must require continuous tool review.");
+assert.equal(classifyAgentContractChange(openAiMutation, baseline).openai.new_plugin_version_required, false);
+assert.equal(classifyAgentContractChange(openAiMutation, baseline).openai.continuous_tool_review, true);
+const skillMutation = structuredClone(current);
+skillMutation.surfaces.openai.sections.plugin_package = "3".repeat(64);
+assert.equal(classifyAgentContractChange(skillMutation, baseline).openai.new_plugin_version_required, true);
 const claudeMutation = structuredClone(current);
 claudeMutation.surfaces.claude_remote.sections.mcp_metadata = "1".repeat(64);
 const claudeClassification = classifyAgentContractChange(claudeMutation, baseline);

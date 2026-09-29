@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { ANALYZER_SEMANTIC_VERSION } from "../web/lib/app-config.js";
 import { CHATGPT_MCP_CONTRACT, routeChatGptMcp } from "../worker/chatgpt-mcp.js";
+import Ajv from "ajv";
+import { CHATGPT_RESULT_V1, CHATGPT_RESULT_V2, conversationTransport, publishConversationResult } from "../web/lib/chatgpt-result-transport.js";
 
 const endpoint = "https://deepbom.org/mcp";
 let id = 0;
@@ -59,7 +61,7 @@ const read = await rpc("resources/read", { uri: CHATGPT_MCP_CONTRACT.widgetUri }
 assert.equal(read.contents[0].mimeType, "text/html;profile=mcp-app");
 assert.match(read.contents[0].text, /deepbom-widget\.js/);
 assert.equal(CHATGPT_MCP_CONTRACT.widgetUri, "ui://deepbom/analyzer-v2.html");
-assert(read.contents[0].text.includes(`deepbom-widget.js?v=${ANALYZER_SEMANTIC_VERSION}-20260929.1`));
+assert(read.contents[0].text.includes(`deepbom-widget.js?v=${ANALYZER_SEMANTIC_VERSION}-20260929.2`));
 assert.equal(read.contents[0]._meta.ui.domain, "https://deepbom.org");
 assert.ok(read.contents[0]._meta.ui.csp.connectDomains.some((domain) => domain.includes("oaiusercontent")));
 assert.match(read.contents[0]._meta["openai/widgetDescription"], /format-neutral Model IR table/);
@@ -128,11 +130,55 @@ const published = await rpc("tools/call", {
   arguments: { result: validResult },
 });
 assert.deepEqual(published.structuredContent, validResult);
+const historical = JSON.parse(await readFile("scripts/fixtures/chatgpt-tools-20260916.json", "utf8"));
+const ajv = new Ajv({ strict: false, allowUnionTypes: true });
+for (const contract of [historical.tools, tools]) {
+  for (const [name, response] of [["deepbom_capabilities", capabilities], ["deepbom_analyze_file", started]]) {
+    const validate = ajv.compile(contract.find(tool => tool.name === name).outputSchema);
+    assert(validate(response.structuredContent), JSON.stringify(validate.errors));
+  }
+}
+const liveBridge = tools.find(tool => tool.name === "deepbom_publish_analysis");
+const historicalBridge = historical.tools.find(tool => tool.name === liveBridge.name);
+const v2OnlyBridge = { ...liveBridge, inputSchema: { ...liveBridge.inputSchema, properties: { result: liveBridge.outputSchema.anyOf[1] } }, outputSchema: liveBridge.outputSchema.anyOf[1] };
+for (const [label, contract, expectedSchema, expectedCalls] of [["historical", historicalBridge, CHATGPT_RESULT_V1, 1], ["v2 cached", v2OnlyBridge, CHATGPT_RESULT_V2, 2], ["updated", liveBridge, CHATGPT_RESULT_V1, 1]]) {
+  const validateInput = ajv.compile(contract.inputSchema), validateOutput = ajv.compile(contract.outputSchema);
+  let calls = 0;
+  const bridge = { async callTool(name, args) {
+    calls++;
+    if (!validateInput(args)) throw new Error("Input schema validation failed: " + JSON.stringify(validateInput.errors));
+    const response = await rpc("tools/call", { name, arguments: args });
+    assert(validateOutput(response.structuredContent), JSON.stringify(validateOutput.errors));
+    return response;
+  } };
+  const response = await publishConversationResult(bridge, validResult);
+  assert.deepEqual(response, { ...validResult, schema: expectedSchema }, label);
+  assert.equal(calls, expectedCalls, label);
+}
+for (const schema of [CHATGPT_RESULT_V1, CHATGPT_RESULT_V2]) {
+  const cached = { ...validResult, schema, analyzer_version: "1.101.0" };
+  const response = await rpc("tools/call", { name: "deepbom_publish_analysis", arguments: { result: cached } });
+  assert.deepEqual(response.structuredContent, cached, "Preserve the declared producer version; never relabel cached evidence.");
+}
+for (const badVersion of [null, "", "2.0.0<script>", "02.0.0", "x".repeat(65)]) {
+  const response = await rawRpc("tools/call", { name: "deepbom_publish_analysis", arguments: { result: { ...validResult, analyzer_version: badVersion } } });
+  assert.equal(response.error.code, -32602);
+}
+for (const failure of [new Error("Network timeout"), new Error("Not authorized"), { isError: true, content: [{ type: "text", text: "Tool unavailable" }] }, {}, { structuredContent: { ...validResult, schema: CHATGPT_RESULT_V1, artifact: { ...validResult.artifact, sha256: "f".repeat(64) } } }]) {
+  let calls = 0;
+  await assert.rejects(publishConversationResult({ async callTool() { calls++; if (failure instanceof Error) throw failure; return failure; } }, validResult));
+  assert.equal(calls, 1, "Non-schema failures must neither retry nor claim successful reporting.");
+}
 const linkSummary = { schema: "deepbom.provenance_summary.v1", artifact_sha256: validResult.artifact.sha256, model_ir_sha256: "b".repeat(64), provenance_ir_sha256: "c".repeat(64), status: "incomplete", node_count: 2, relationship_count: 1, observed_file_count: 0, check_count: 2, check_counts: { match: 1, mismatch: 0, not_assessed: 1, unresolved: 0, unsupported: 0 }, field_count: 1, mapped_declared_field_count: 1, unsupported_field_count: 0, attested_relationship_count: 0, metadata_truth_verified: false, publisher_authenticity: "not_verified" };
 const withLinks = { ...validResult, model_summary: { ...validResult.model_summary, model_ir_sha256: "b".repeat(64) }, provenance_summary: linkSummary };
 const publishedLinks = await rpc("tools/call", { name: "deepbom_publish_analysis", arguments: { result: withLinks } });
 assert.deepEqual(publishedLinks.structuredContent.provenance_summary, linkSummary);
 assert.match(publishedLinks.content[0].text, /Relationship truth and publisher authenticity remain unverified/);
+assert.throws(() => conversationTransport(withLinks, CHATGPT_RESULT_V1), /cannot be omitted or renamed/);
+let metadataCalls = 0;
+await assert.rejects(publishConversationResult({ async callTool() { metadataCalls++; throw new Error("Input schema validation failed"); } }, withLinks), /Save the Provenance IR JSON/);
+assert.equal(metadataCalls, 1, "Unsupported provenance must not be silently dropped into v1.");
+assert.deepEqual(await publishConversationResult({ callTool: (name, args) => rpc("tools/call", { name, arguments: args }) }, withLinks), withLinks);
 for (const retired of [
   { ...withLinks, schema: "deepbom.chatgpt_analysis_result.v1" },
   { ...withLinks, provenance_summary: { ...linkSummary, schema: "deepbom.evidence_link_summary.v1" } },
@@ -169,6 +215,10 @@ const publishedError = await rpc("tools/call", {
   arguments: { error: errorResult },
 });
 assert.deepEqual(publishedError.structuredContent, errorResult);
+const cachedError = { ...errorResult, analyzer_version: "1.101.0" };
+const acknowledgedCachedError = await rpc("tools/call", { name: "deepbom_publish_error", arguments: { error: cachedError } });
+assert.deepEqual(acknowledgedCachedError.structuredContent, cachedError);
+assert(ajv.compile(historical.tools.find(tool => tool.name === "deepbom_publish_error").outputSchema)(acknowledgedCachedError.structuredContent));
 assert.match(publishedError.content[0].text, /Suggested action: Re-download/);
 
 const oversizedBatch = Array.from({ length: CHATGPT_MCP_CONTRACT.maxBatchItems + 1 }, (_, index) => ({
@@ -200,7 +250,7 @@ const widget = await readFile("web/chatgpt/deepbom-widget.js", "utf8");
 for (const contract of [
   "window.openai",
   "getFileDownloadUrl",
-  "deepbom_publish_analysis",
+  "publishConversationResult",
   "deepbom_publish_error",
   "sendFollowUpMessage",
   "Report in chat",

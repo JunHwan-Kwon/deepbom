@@ -13,7 +13,7 @@ Status: breaking transition in the 2.0.0 release, explicitly requested by the pr
 | Full analysis and CLI/MCP selection | `provenance_ir` |
 | Bounded summary | `deepbom.provenance_summary.v1` |
 | Remote result member | `provenance_summary` |
-| ChatGPT / browser result envelope | `deepbom.chatgpt_analysis_result.v2` / `deepbom.browser_analysis_result.v2` |
+| ChatGPT / browser result envelope | ChatGPT v1 base transport and v2 provenance transport; `deepbom.browser_analysis_result.v2` |
 | JSON export | `deepbom_provenance_ir.json` |
 | CycloneDX extension properties / references | `deepbom:provenance:*` / `deepbom-provenance:*` |
 | Implementation | `web/lib/provenance-ir.js` with helpers in `web/lib/provenance/` |
@@ -38,6 +38,8 @@ New documents have new digests because their schemas, digest pointer, input iden
 
 The 2.0.0 package release and Agent contract v2 carry this explicitly breaking transition. Do not republish existing package versions or silently overwrite published schema releases. Installed 1.x packages do not understand the new provenance contract.
 
-Deploy web assets and remote MCP validators together. Refresh/reconnect host app metadata and open new widgets; stale widgets using v1 result envelopes will be rejected. Versioned widget asset queries and the service-worker cache revision are updated in this change. Preserve an old release archive for historical verification rather than carrying its implementation in the current runtime.
+Deploy web assets and remote MCP validators together. The September 29 ChatGPT compatibility repair preserves the original basic `deepbom.chatgpt_analysis_result.v1` transport alongside v2 while published tool metadata is reviewed. This is only a conversation-envelope adapter: it does not accept retired provenance schemas, rename old evidence, or convert old IR digests. v1 cannot carry `provenance_summary`; v2 is required for that explicit optional action. Cached results retain their declared producer version instead of being relabeled as the current engine.
+
+The base widget tries v1 first and retries v2 only on an explicit schema rejection, accommodating both historical v1 and cached v2-only host definitions. A successful matching acknowledgement is required. Unsupported provenance reporting offers the canonical JSON export without discarding its evidence. Browser/Claude result envelopes remain v2. Preserve an old release archive for historical IR verification. See [ChatGPT publication compatibility](../chatgpt-app/PUBLICATION_COMPATIBILITY.md).
 
 No TEA endpoints, remote lookup, upload, attestation validation or registry publication are introduced by this transition.

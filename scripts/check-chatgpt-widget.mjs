@@ -11,6 +11,34 @@ import { launchChromium } from "./browser-launch.mjs";
 import AdmZip from "adm-zip";
 import { assertCycloneDx17 } from "./cyclonedx-17-schema.mjs";
 import { assertSpdx23 } from "./spdx-23-schema.mjs";
+import Ajv from "ajv";
+import { CHATGPT_MCP_CONTRACT, routeChatGptMcp } from "../worker/chatgpt-mcp.js";
+
+const historicalTools = JSON.parse(await readFile("scripts/fixtures/chatgpt-tools-20260916.json", "utf8")).tools;
+const schemaValidator = new Ajv({ strict: false, allowUnionTypes: true });
+let hostDefinition = "historical";
+async function installToolBridge(page) {
+  await page.exposeFunction("__deepbomTestToolCall", async (name, args) => {
+    let tool = historicalTools.find(row => row.name === name);
+    if (hostDefinition === "v2" && name === "deepbom_publish_analysis") {
+      const schema = CHATGPT_MCP_CONTRACT.tools.find(row => row.name === name).outputSchema.anyOf[1];
+      tool = { inputSchema: { type: "object", properties: { result: schema }, required: ["result"], additionalProperties: false }, outputSchema: schema };
+    }
+    const input = schemaValidator.compile(tool.inputSchema);
+    if (!input(args)) throw new Error("Input schema validation failed: " + JSON.stringify(input.errors));
+    const request = new Request(process.env.DEEPBOM_WIDGET_MCP_ENDPOINT || "https://deepbom.org/mcp", {
+      method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } }),
+    });
+    const response = await (process.env.DEEPBOM_WIDGET_MCP_ENDPOINT ? fetch(request) : routeChatGptMcp(request));
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    if (body.error) throw new Error(body.error.message);
+    const output = schemaValidator.compile(tool.outputSchema);
+    assert(output(body.result.structuredContent), JSON.stringify(output.errors));
+    return body.result;
+  });
+}
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const artifactPath = path.join(root, "web", "samples", "sample_cnn_float.onnx");
@@ -140,6 +168,7 @@ try {
   const fileUrl = "https://chatgpt-files.example/artifact.onnx";
   browser = await launchChromium(chromium);
   const page = await browser.newPage();
+  await installToolBridge(page);
   const browserErrors = [];
   page.on("pageerror", (error) => browserErrors.push(`pageerror: ${error.message}`));
   page.on("console", (message) => {
@@ -194,7 +223,7 @@ try {
       toolInput: null,
       async callTool(name, args) {
         window.__deepbomToolCalls.push({ name, args });
-        return { structuredContent: args.result };
+        return window.__deepbomTestToolCall(name, args);
       },
       async sendFollowUpMessage(message) {
         window.__deepbomFollowUpAttempts += 1;
@@ -274,7 +303,7 @@ try {
   assert.equal(observed.calls.length, 1);
   assert.equal(observed.calls[0].name, "deepbom_publish_analysis");
   const result = observed.calls[0].args.result;
-  assert.equal(result.schema, "deepbom.chatgpt_analysis_result.v2");
+  assert.equal(result.schema, "deepbom.chatgpt_analysis_result.v1");
   assert.equal(result.analysis_location, "chatgpt_browser_sandbox");
   assert.equal(result.transfer_boundary, "model_bytes_not_sent_to_deepbom_service");
   assert.equal(result.artifact.filename, "sample_cnn_float.onnx");
@@ -413,6 +442,7 @@ try {
   assert(requests.filter((row) => row.range).length >= 3, "analysis should use explicit bounded range reads");
 
   const metadataPage = await browser.newPage();
+  await installToolBridge(metadataPage);
   await metadataPage.route(fileUrl, async (route, request) => fulfillAttachmentRoute(route, request, artifact, requests));
   await metadataPage.addInitScript(({ fileUrl }) => {
     window.__deepbomToolCalls = [];
@@ -441,7 +471,7 @@ try {
       },
       async callTool(name, args) {
         window.__deepbomToolCalls.push({ name, args });
-        return { structuredContent: args.result };
+        return window.__deepbomTestToolCall(name, args);
       },
       async sendFollowUpMessage(message) { window.__deepbomFollowUps.push(message); },
     };
@@ -460,6 +490,7 @@ try {
   await metadataPage.close();
 
   const tflitePage = await browser.newPage();
+  await installToolBridge(tflitePage);
   const tfliteErrors = [];
   tflitePage.on("pageerror", (error) => tfliteErrors.push(error.message));
   tflitePage.on("console", (message) => { if (message.type() === "error") tfliteErrors.push(message.text()); });
@@ -485,7 +516,7 @@ try {
       },
       async callTool(name, args) {
         window.__deepbomToolCalls.push({ name, args });
-        return { structuredContent: args.result };
+        return window.__deepbomTestToolCall(name, args);
       },
       async sendFollowUpMessage(message) { window.__deepbomFollowUps.push(message); },
     };
@@ -711,6 +742,12 @@ try {
   assert.equal(usageRequests.at(-1).pathname, '/api/usage/forget');
   assert.equal(await page.isChecked('[data-action="usage-consent"]'), false);
   assert.equal(await page.locator('[data-action="usage-forget"]').isDisabled(), true);
+  hostDefinition = "v2";
+  await page.reload();
+  await page.waitForFunction(() => document.querySelector("#status")?.textContent === "Static evidence ready", null, { timeout: 90_000 });
+  const retried = await page.evaluate(() => window.__deepbomToolCalls);
+  assert.deepEqual(retried.map(call => call.args.result?.schema), ["deepbom.chatgpt_analysis_result.v1", "deepbom.chatgpt_analysis_result.v2"]);
+  assert.equal(retried[1].args.result.artifact.sha256, expectedSha256);
   console.log(`ChatGPT widget E2E passed (cross-origin assets: ${assetOrigin}, nested iframe with blob-only worker CSP, ONNX/TFLite evidence, analyzer delivery failure, file authorization, narrow-panel controls, SVG/PNG/ZIP downloads, schema-valid CycloneDX/SPDX files, blocked iframe download and host file handoff, upload/URL failures, safe retry, and reusable follow-ups).`);
 } finally {
   await browser?.close();

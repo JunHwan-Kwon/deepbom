@@ -20,7 +20,8 @@ const verificationSourceBudgetKiB = Number(process.env.VERIFICATION_SOURCE_BUDGE
 // Includes the reproducible Provenance IR schema generator.
 // Includes the shared scalar registry/generator and reviewed duplicate exceptions.
 // Retains the four measured 2.0.0 delivery observations alongside prior releases.
-const devToolingSourceBudgetKiB = Number(process.env.DEV_TOOLING_SOURCE_BUDGET_KIB || 1764);
+// Includes the 9.4 KiB pinned historical ChatGPT contract fixture.
+const devToolingSourceBudgetKiB = Number(process.env.DEV_TOOLING_SOURCE_BUDGET_KIB || 1780);
 const nativeToolingSourceBudgetKiB = Number(process.env.NATIVE_TOOLING_SOURCE_BUDGET_KIB || 256);
 const corpusEvidenceSourceBudgetKiB = Number(process.env.CORPUS_EVIDENCE_SOURCE_BUDGET_KIB || 544);
 const runtimeFileBudgetKiB = Number(process.env.RUNTIME_SOURCE_FILE_BUDGET_KIB || 512);

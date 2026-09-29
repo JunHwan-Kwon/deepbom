@@ -177,6 +177,7 @@ docs/agent-evaluation/host-evaluation-cases.v1.json
 docs/agent-evaluation/host-evaluation-run.template.json
 docs/chatgpt-app/DEMO_RECORDING_SCRIPT.md
 docs/chatgpt-app/PORTAL_VALUES.md
+docs/chatgpt-app/PUBLICATION_COMPATIBILITY.md
 docs/chatgpt-app/README.md
 docs/chatgpt-app/USAGE_METRICS.md
 docs/chatgpt-app/assets/deepbom-composer-icon-128.png
@@ -623,6 +624,7 @@ scripts/download-google-modern-comparators.mjs
 scripts/download-huggingface-community-corpus.mjs
 scripts/download-public-multiformat-corpus.mjs
 scripts/fetch-pinned-source.mjs
+scripts/fixtures/chatgpt-tools-20260916.json
 scripts/fixtures/derive-quant-scale-diff-fixture.mjs
 scripts/fixtures/executorch-fixtures.mjs
 scripts/fixtures/generate-external-review-coreml.py
@@ -899,6 +901,7 @@ web/lib/calibration-validation-ledger.js
 web/lib/calibration-validation-view.js
 web/lib/channel-vitality-worker.js
 web/lib/channel-vitality.js
+web/lib/chatgpt-result-transport.js
 web/lib/chatgpt-usage.js
 web/lib/citation-ui.js
 web/lib/clipboard.js

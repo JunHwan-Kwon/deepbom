@@ -25,6 +25,7 @@ import { STATIC_AUDIT_OPERATION } from "../lib/static-audit-worker-protocol.js";
 import { sha256FileHex } from "../lib/hash.js";
 import { ANALYZER_SEMANTIC_VERSION } from "../lib/app-config.js";
 import { createChatGptUsage, mountUsageControls } from "../lib/chatgpt-usage.js";
+import { CHATGPT_RESULT_V2, publishConversationResult } from "../lib/chatgpt-result-transport.js";
 
 const FULL_FILE_LIMIT = 128 * 1024 * 1024;
 const RANGE_CHUNK_BYTES = 4 * 1024 * 1024;
@@ -147,8 +148,7 @@ async function start() {
   const result = compactForConversation(summary, artifactIrContext.model_summary);
 
   setStatus("Returning the bounded result", "Only the evidence summary below is sent to the conversation; model bytes remain outside the DEEPBOM service.");
-  const published = await openai.callTool("deepbom_publish_analysis", { result });
-  const returned = published?.structuredContent || result;
+  const returned = await publishConversationResult(openai, result);
   usage.track("analysis_completed", { format: usageFormat });
   const reportDelivery = createReportDelivery(openai, resultFollowUpPrompt(returned));
   renderResult(returned, openai, artifactIrContext.model_ir, artifactIrContext.model_summary, reportDelivery, {
@@ -216,7 +216,7 @@ function compactForConversation(summary, modelSummary) {
     ...(Array.isArray(row.affected_tensors) ? { affected_tensors: row.affected_tensors.slice(0, 16).map(String) } : {}),
   }));
   return {
-    schema: "deepbom.chatgpt_analysis_result.v2",
+    schema: CHATGPT_RESULT_V2,
     analyzer_version: ANALYZER_SEMANTIC_VERSION,
     analysis_location: "chatgpt_browser_sandbox",
     artifact: {
@@ -1085,7 +1085,7 @@ function appendMetadataPanel(container, result, openai, model, exports) {
     if (!latest) return; button.disabled = true; const selected = latest;
     try {
       const summary = provenanceSummary(selected);
-      await openai.callTool("deepbom_publish_analysis", { result: { ...result, provenance_summary: summary } });
+      await publishConversationResult(openai, { ...result, provenance_summary: summary });
       if (selected !== latest || !button.isConnected) return;
       await openai.sendFollowUpMessage({ prompt: `DEEPBOM returned optional metadata-link counts and digests. Explain the consistency checks and their limits; relationships are declared and have not been authenticated. ${provenanceSummaryText(summary)}`, scrollToBottom: true });
       note.textContent = "Counts and digests sent. Metadata rows and supporting file bytes were not sent to the DEEPBOM service.";

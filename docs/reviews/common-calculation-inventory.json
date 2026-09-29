@@ -21,7 +21,7 @@
     ],
     "boundary": "All application source files in these roots are enumerated. JS functions/tables are parsed; Rust/Python/C++ candidates also require semantic review. Textual equality is a candidate, not proof of equivalent contracts."
   },
-  "source_file_count": 492,
+  "source_file_count": 493,
   "files": [
     {
       "file": "bin/deepbom-agent-contract.mjs",
@@ -601,7 +601,7 @@
     },
     {
       "file": "web/chatgpt/deepbom-widget.js",
-      "sha256": "e0cbd0996d280c1e22c4f96beccabbcfb59992537bb33ed73e0290590dc9cb0e",
+      "sha256": "5dfae9caf72e8883c9a79d4169826e080d4353277ce2d5c5c0f99fe440ed218e",
       "language": "js",
       "role": "runtime",
       "functions": 100,
@@ -1049,7 +1049,7 @@
     },
     {
       "file": "web/lib/build-metadata.js",
-      "sha256": "76b1f353204325cac4cf2bdfb98d999602963adb0faf894e46159a54f6e408e0",
+      "sha256": "bd3ffff7ad10fcd91f176827671f62d6de9f6917adb60f413132bdf4e5350eec",
       "language": "js",
       "role": "runtime",
       "functions": 0,
@@ -1094,6 +1094,14 @@
       "role": "runtime",
       "functions": 120,
       "calculation_candidates": 4
+    },
+    {
+      "file": "web/lib/chatgpt-result-transport.js",
+      "sha256": "f3256301a7bd19a0b09499589daa954d7a598f18e4003828ba038fd67fb447c9",
+      "language": "js",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/chatgpt-usage.js",
