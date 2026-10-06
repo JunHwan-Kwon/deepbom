@@ -11,6 +11,7 @@ const guidePaths = [
   "web/guides/inspect-gguf-tensor-encodings/index.html",
   "web/guides/compare-model-artifacts/index.html",
   "web/guides/omop-metadata/index.html",
+  "web/guides/jetson-orin-optimization/index.html",
 ];
 const guidePages = guidePaths.map((file) => readFileSync(file, "utf8"));
 const packageVersion = JSON.parse(readFileSync("package.json", "utf8")).version;
@@ -63,7 +64,7 @@ for (const [condition, message] of [
   [buildPages.includes('"    <loc>https://deepbom.org/</loc>"') && buildPages.includes('"    <loc>https://deepbom.org/verify</loc>"'), "generated sitemap lists the canonical app and report verifier"],
   [buildPages.includes('"    <loc>https://deepbom.org/for-agents/</loc>"'), "generated sitemap lists the local agent guide"],
   [buildPages.includes("https://deepbom.org/guides/${guide}")
-    && ["inspect-onnx-quantization/", "inspect-gguf-tensor-encodings/", "compare-model-artifacts/"].every((slug) => buildPages.includes(slug)),
+    && ["inspect-onnx-quantization/", "inspect-gguf-tensor-encodings/", "compare-model-artifacts/", "jetson-orin-optimization/"].every((slug) => buildPages.includes(slug)),
     "generated sitemap lists all problem-focused inspection guides"],
   [["regulatory", "quality", "engineering"].every((brief) => buildPages.includes(`"${brief}"`))
     && buildPages.includes("https://deepbom.org/evaluate/${brief}/"), "generated sitemap lists all evaluation briefs"],

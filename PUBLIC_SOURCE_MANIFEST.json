@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "45bf3058a7d1c3b69e7f64a7ba0178bde941fc38",
+  "source_commit": "4880f6496442c9cdaeaed0d907ae1b5447f55317",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 1302,
+  "file_count": 1303,
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -347,8 +347,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 47920,
-      "sha256": "93eee1ea38d64e9c34c759499ad5b9993442e402c4132658d0a30fcfbf1516e3"
+      "byte_length": 47967,
+      "sha256": "de88ff0c0ae1af83b52c4c167f4f4840d0f72c300949dabe99c1606fd06289dd"
     },
     {
       "path": "config/scalar-types.v1.json",
@@ -822,8 +822,8 @@
     },
     {
       "path": "docs/PROJECT_STATUS.md",
-      "byte_length": 114479,
-      "sha256": "f21e56c9e3f5e47804140593cc18bc77aa4ae428a4c8b0490494cc84a932abc1"
+      "byte_length": 119287,
+      "sha256": "cb9adf8cdcfd48540ef045ed051be39f518e5e46fa341d0d5a3ccd1a8e865a49"
     },
     {
       "path": "docs/PROVENANCE_IR.md",
@@ -987,8 +987,8 @@
     },
     {
       "path": "docs/evidence-ir/CHANGELOG.md",
-      "byte_length": 1065,
-      "sha256": "276cf2cba9c80296dbce7874165092cfb73bee86e34f6a72b5db3fea656a0013"
+      "byte_length": 1653,
+      "sha256": "3199ede53ef918c780555c6698b26cc0c5d77c91541e7071e236dfaef8c61de6"
     },
     {
       "path": "docs/evidence-ir/COMPATIBILITY.md",
@@ -1007,18 +1007,18 @@
     },
     {
       "path": "docs/evidence-ir/MIGRATION.md",
-      "byte_length": 4143,
-      "sha256": "39f80e8cc9cfb2cc5d341444c1efc2ef31330feff224cd5b6d4006b6753c3ddf"
+      "byte_length": 4232,
+      "sha256": "9870babdbffd83c0341c20f69e6f26a942588d7c2694b771e382c8513995a923"
     },
     {
       "path": "docs/evidence-ir/README.md",
-      "byte_length": 5483,
-      "sha256": "582d9685260aa84ced8a96b9b9e2bdc1425554ae79f32ce4700bc72c7aa78327"
+      "byte_length": 5782,
+      "sha256": "1b23fd317d2f9a57080d77c92ff5b44313c2aa1b8b7ca00406663715cb21d323"
     },
     {
       "path": "docs/evidence-ir/RELEASE_2_0_0.md",
-      "byte_length": 2099,
-      "sha256": "caed604a6662848e8ba1509a2ebfb5d24c74d70600e4eba6ee7f2f04a3f740ac"
+      "byte_length": 2529,
+      "sha256": "04324936bff1027a783ff4b7acdd12d51e197d81ac25939effdb381d1298c27f"
     },
     {
       "path": "docs/evidence-ir/TEA_REVIEW.md",
@@ -1068,7 +1068,7 @@
     {
       "path": "docs/reviews/common-calculation-inventory.json",
       "byte_length": 136256,
-      "sha256": "c701b3256033fe741bb7a4d010205c9107d3be01a3eb3f37b2f2dbb98d32d0ee"
+      "sha256": "b92b4f02073ef7afccfe6084994c5e8bfa0b10971d665d5eb01abe6ff012d297"
     },
     {
       "path": "docs/schemas/deepbom-artifact-ir-v2.schema.json",
@@ -1577,8 +1577,8 @@
     },
     {
       "path": "scripts/build-pages.mjs",
-      "byte_length": 32534,
-      "sha256": "d5a4bf29d57b8cfbcf6f5dba0b024d05d84a6c3f64e544d150cdaa3b5a5203bb"
+      "byte_length": 32563,
+      "sha256": "cfa723d72b2298824017808373b4d6202b200db8733422d501f68c611a90066f"
     },
     {
       "path": "scripts/build-public-multiformat-corpus-manifest.mjs",
@@ -2012,8 +2012,8 @@
     },
     {
       "path": "scripts/check-discovery-metadata.mjs",
-      "byte_length": 12462,
-      "sha256": "2e6917b16e2c1829ee75aa05591ee4f88eb2e63fa2b505d6d0ab5f3025f1a502"
+      "byte_length": 12543,
+      "sha256": "db97e42908b20e5c3a4966ed0eaf9cb6005162205adbb7b1ed3f147d3b680202"
     },
     {
       "path": "scripts/check-dist-assets.mjs",
@@ -4222,8 +4222,8 @@
     },
     {
       "path": "web/guides/index.html",
-      "byte_length": 4163,
-      "sha256": "c88d59926a6a4e87b9bf285dfc966ded9339699809088981e0d698f0dca2479f"
+      "byte_length": 4274,
+      "sha256": "beedc6ea95b16d4d229712a083a55143b6f0bda792d24fa939c636429682abd5"
     },
     {
       "path": "web/guides/inspect-gguf-tensor-encodings/index.html",
@@ -4234,6 +4234,11 @@
       "path": "web/guides/inspect-onnx-quantization/index.html",
       "byte_length": 4017,
       "sha256": "58465e26cda6a0e46429975c2be8d846d0e71e052cab5168ed05273d027f3246"
+    },
+    {
+      "path": "web/guides/jetson-orin-optimization/index.html",
+      "byte_length": 10326,
+      "sha256": "b13ed9c4dd7fc8c3a90a8d0f0d33ec88c742b179b25fa61f954e91a8d6947e13"
     },
     {
       "path": "web/guides/numerical-evidence/index.html",
@@ -4517,8 +4522,8 @@
     },
     {
       "path": "web/lib/build-metadata.js",
-      "byte_length": 100538,
-      "sha256": "de82a895ac4d6e5a51f538b2652b838b66563718bae8a11af1a4a1054e4fd52d"
+      "byte_length": 100719,
+      "sha256": "9eb526fe655a369d860bec9d83035749d2e154c2f1993d3ca111833c8a57cbf1"
     },
     {
       "path": "web/lib/bundle.js",

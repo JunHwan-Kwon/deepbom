@@ -1,6 +1,6 @@
 # Transition to the canonical Provenance IR contract
 
-Status: breaking transition in the 2.0.0 release, explicitly requested by the project owner. The earlier presentation-only alias approach is superseded. This does not change the Artifact, Model, Weight or Activation IR contracts.
+Status: released with DEEPBOM 2.0.0 on September 29, 2026. This is a breaking provenance transition; the earlier presentation-only alias approach is superseded. It does not change the Artifact, Model, Weight or Activation IR contracts. The Evidence IR specification remains a project-maintained draft.
 
 ## One current contract
 
@@ -28,7 +28,7 @@ The retired `evidence_link_ir` selector, `deepbom.evidence_link_ir.v1` identity,
 To produce current evidence:
 
 1. Keep the original model and supporting files, their recorded digests, and the archived old report.
-2. Use the current source CLI to create a fresh `--metadata-template generic` or `--metadata-template omop` input. Transfer the intended declarations into that input and review them. Do not claim observed checks merely by copying old report rows.
+2. Use DEEPBOM 2.0.0 or a later compatible CLI to create a fresh `--metadata-template generic` or `--metadata-template omop` input. Transfer the intended declarations into that input and review them. Do not claim observed checks merely by copying old report rows.
 3. Analyze the exact original model with `--metadata`, explicitly supplied `--evidence-files`, and `--section provenance_ir --json`.
 4. Validate the new schema, source bindings and semantic checks. Store the new document independently.
 

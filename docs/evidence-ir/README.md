@@ -2,7 +2,9 @@
 
 [Compatibility explorer](https://deepbom.org/guides/evidence-ir/compatibility/) · [Generated mapping table and snapshots](compatibility/README.md) · [Compatibility baseline and maintenance](COMPATIBILITY.md)
 
-**Status: draft DEEPBOM-maintained specification. Naming update: unreleased.**
+**Status: draft DEEPBOM-maintained specification, implemented and released in DEEPBOM 2.0.0.**
+
+The package release does not make this an externally approved standard. The family catalog is version 1.0.0; the current compatibility catalog is 0.2.0. These catalog versions are independent of the package version. See the [release record](RELEASE_2_0_0.md) and [migration rules](MIGRATION.md).
 
 DEEPBOM Evidence IR is a family of interoperable intermediate representations for artifact, structural, numerical, runtime, and provenance evidence. It is maintained by the DEEPBOM project; no external standards-body approval or independent adoption is claimed.
 
@@ -48,7 +50,7 @@ The machine-readable naming and identity owner is [`web/lib/evidence-ir.js`](../
 The current implementation uses only `deepbom.provenance_ir.v1`, the digest field `provenance_ir_sha256`, and the `provenance_ir` CLI/MCP section. `provenance-ir.js` owns the implementation directly. The generic input and bounded summary have their own identities: `deepbom.provenance_input.v1` and `deepbom.provenance_summary.v1`. No retired-name aliases are supported. See [the explicit transition rules](MIGRATION.md) before using older documents.
 
 ```sh
-# Run from a source checkout containing the new contract.
+# Run from a DEEPBOM 2.0.0 source checkout.
 node bin/deepbom.mjs audit model.onnx --metadata metadata.json \
   --section provenance_ir --output-format json
 ```

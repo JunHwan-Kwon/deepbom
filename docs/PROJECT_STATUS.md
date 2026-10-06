@@ -1,12 +1,28 @@
 # DEEPBOM Project Status
 
-Last updated: 2026-08-24 KST
+Current release and development baseline reviewed: 2026-10-06 KST.
+
+The release snapshot and development rules below are current. The detailed implementation inventory records accumulated feature work; it is not a claim that every format, runtime or target device was measured again on this date.
 
 Public-safe operating plan for DEEPBOM. Private implementation strategy and
 unreleased research notes belong in `LOCAL_PRIVATE_ROADMAP.local.md`, which is
 ignored by git.
 
 ## Snapshot
+
+The published analyzer baseline is **DEEPBOM 2.0.0**, shared by the CLI, local MCP and hosted analysis engine. A documentation deployment does not require republishing that npm version. Public source is generated from the reviewed allowlist; the deployment repository also contains private modules and service bindings that are not public export inputs.
+
+| Surface | Current contract and boundary |
+| --- | --- |
+| Evidence IR | Artifact IR v2; Model, Weight, Activation and Provenance IR v1. The implementation is released; the project-maintained specification remains draft. Family catalog 1.0.0 and compatibility catalog 0.2.0 have independent version histories. |
+| ChatGPT MCP | Seven tools, including conversational queries and workflow guidance. Base result transports v1 and v2 are accepted; optional provenance requires v2. Host tool availability and directory review are separate from server deployment. |
+| Browser/Claude MCP | Four tools for browser-local analysis and bounded result/error return. The result envelope is v2; the ChatGPT conversational query tools are not implied here. |
+| Local analysis | CLI and local MCP inspect supported artifacts without executing model code. Explicit numerical analysis is optional; imported activation/runtime captures retain their external evidence boundary. |
+| Interchange | CycloneDX 1.7 artifact evidence and SPDX 2.3 artifact inventories; the compatibility explorer states each mapping's limits. TEA exchange remains proposed, not implemented. |
+| Jetson/Orin guidance | The [optimization guide](https://deepbom.org/guides/jetson-orin-optimization/) separates QAT, target-device measurement and evidence review. It does not certify Orin execution or performance. |
+| Candidate review | The separate DEEPBOM Review v0.1.0 preview uses analyzer 1.103.0. Its MLflow/Olive imports and narrower model support must not be described as part of the DEEPBOM 2.0.0 IR contract. |
+
+See [release details](evidence-ir/RELEASE_2_0_0.md), [migration](evidence-ir/MIGRATION.md), [transport compatibility](chatgpt-app/PUBLICATION_COMPATIBILITY.md) and the [versioned compatibility catalog](evidence-ir/compatibility/README.md). These are the current contract references; historical review records are preserved rather than rewritten.
 
 DEEPBOM is the primary product name for this browser-local engineering workbench for deployment
 artifacts. It covers local model inspection, static on-device audit, graph and
@@ -17,9 +33,12 @@ Engineering Bundle.
 
 `/medical` reuses the same shell and adds the Medical AI evidence workspace.
 Its watermarked Regulatory Support Report is login-free; the full Regulatory
-Bundle remains authorization-controlled. The app does not upload model bytes, weights,
-tensors, inputs, outputs, reports, or local filenames. Server scope is auth,
-authorization, admin, feedback, research consent, and opt-in structure/timing
+Bundle remains authorization-controlled. The web workbench keeps model bytes, weights,
+tensors and local evaluation data in the browser. ChatGPT and Claude components
+return bounded result/error messages through their remote MCP bridges; explicit
+host export actions can share a generated file with that host. These are separate
+from uploading the original model to DEEPBOM. Other server functions include auth,
+authorization, admin, feedback, research consent and opt-in usage/structure/timing
 metadata. Runtime/backend/delegate signals are assumptions, predictions, or
 local measurements; they are not clinical validation, certification, Hessian or
 PAC-Bayes evidence, or generalization proof.
@@ -1281,7 +1300,27 @@ Regression guardrails:
   calibration suitability, task accuracy, runtime assignment, or executed
   microkernel evidence.
 
-## Verification
+## Development and verification
+
+Use one current development checkout for source edits and deployment. Before beginning work, check its branch, upstream, package version and pending changes with `git status --short --branch`, `git log -1 --oneline` and `node -p "require('./package.json').version"`. A worktree left on an older release is a historical snapshot, not an interchangeable build directory. Preserve its tracked edits and untracked local research before switching it.
+
+Keep contract identities and generated catalogs under their existing common owners. Update source owners first, regenerate their outputs, then run the corresponding checks. Do not change schema/catalog versions merely to correct explanatory prose. Do not label a draft specification as externally approved when its implementation is released.
+
+For a documentation or guide deployment:
+
+```bash
+npm run check:discovery-metadata
+node scripts/generate-cli-docs.mjs --check
+node scripts/check-evidence-ir-family.mjs
+node scripts/check-evidence-compatibility.mjs
+npm run check:deploy
+```
+
+Build the web distribution using the release build procedure, check public source allowlist coverage, and inspect changed pages in a browser, including narrow layouts and links. Verify the deployed URL, canonical link, sitemap entry and build identity after deployment. An updated guide must be present in navigation, the sitemap and the public source export, not only in a local working file.
+
+Current delivery is performed locally without dispatching GitHub Actions. Commit with `[skip ci]`, push the deployment source and the separately generated public export to their respective repositories, then deploy the verified distribution. Never push the private source tree to the public export repository. Keep local research, recordings, credentials and validation output outside the public allowlist.
+
+The following broader checks apply when the affected functional surfaces require them:
 
 Before functional pushes:
 
@@ -1295,11 +1334,12 @@ npm run verify:local -- --target android_mid_a55 <representative.tflite> <second
 ```
 
 `npm run check:deployable` checks the current working tree against `HEAD` and
-reports whether the change should trigger Cloudflare deploy work, Rust-only
-quality checks, or check-only CI. Use it before committing when deciding whether
-to bump the service worker and run live deployment verification.
+reports whether the change requires web deployment, Rust-only quality checks,
+or other validation. It classifies changes; it does not authorize or initiate
+an Actions run. The web build stamps the service-worker cache with the build
+content identity; run live deployment verification after delivery.
 
-After deployable pushes:
+After deployment:
 
 ```bash
 npm run wait:live-sw

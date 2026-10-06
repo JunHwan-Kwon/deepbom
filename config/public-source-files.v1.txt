@@ -843,6 +843,7 @@ web/guides/evidence-ir/index.html
 web/guides/index.html
 web/guides/inspect-gguf-tensor-encodings/index.html
 web/guides/inspect-onnx-quantization/index.html
+web/guides/jetson-orin-optimization/index.html
 web/guides/numerical-evidence/index.html
 web/guides/omop-metadata/index.html
 web/index.html

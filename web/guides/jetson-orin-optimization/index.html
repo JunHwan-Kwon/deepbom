@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Review CUDA and Jetson Orin Optimizations | DEEPBOM</title>
+  <meta name="description" content="Measure model candidates on the target Jetson Orin, record GPU execution evidence in MLflow, and review model changes against fixed criteria with DEEPBOM." />
+  <link rel="canonical" href="https://deepbom.org/guides/jetson-orin-optimization/" />
+  <meta property="og:title" content="Review CUDA and Jetson Orin Optimizations" />
+  <meta property="og:description" content="A target-device workflow for model evidence, CUDA evaluation, MLflow records and candidate review." />
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Review CUDA and Jetson Orin Optimizations","url":"https://deepbom.org/guides/jetson-orin-optimization/","about":{"@id":"https://deepbom.org/#app"},"author":{"@id":"https://deepbom.org/#author"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Guides","item":"https://deepbom.org/guides/"},{"@type":"ListItem","position":2,"name":"Jetson Orin optimization","item":"https://deepbom.org/guides/jetson-orin-optimization/"}]}</script>
+  <link rel="stylesheet" href="../../evaluate/evaluation.css" />
+</head>
+<body class="agent-guide">
+  <header class="brief-header"><a class="brand" href="/">DEEPBOM</a><nav class="brief-nav" aria-label="Main navigation"><a href="/">Workspace</a><a href="/get-started/">Get started</a><a href="/guides/" aria-current="location">Guides</a><a href="/evaluate/">Evaluate</a></nav></header>
+  <main class="brief-main">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/guides/">Guides</a></li><li><span aria-current="page">Jetson Orin optimization</span></li></ol></nav>
+    <p class="eyebrow">GPU evaluation &amp; candidate review</p>
+    <h1>Optimize for the device.<br />Keep the evidence.</h1>
+    <p class="lede">Measure each candidate on the actual Jetson Orin. Preserve the model, dataset, evaluator and environment hashes in MLflow, then apply a fixed review policy with the separate DEEPBOM Review companion.</p>
+    <section class="brief-section"><h2>Choose the target first</h2>
+      <p>Record the exact Orin Nano, Orin NX or AGX Orin module, memory, JetPack/L4T, CUDA, TensorRT, power mode and cooling. A workstation measurement does not establish Orin performance. Orin shares system memory between CPU and GPU; available RAM is not dedicated VRAM.</p>
+      <p>Use an ARM64 runtime compatible with the installed JetPack. For example, <a href="https://developer.nvidia.com/embedded/jetpack-sdk-622">JetPack 6.2.2</a> includes CUDA 12.6, TensorRT 10.3 and cuDNN 9.3. The server's x86 CUDA installation recipe is not a Jetson recipe.</p>
+    </section>
+    <section class="brief-section"><h2>Follow one measured change at a time</h2><ol class="plain-list">
+      <li><strong>Freeze criteria.</strong> Specify representative data, preprocessing, output interpretation, quality limits, p95 latency, memory and power budgets before generating candidates.</li>
+      <li><strong>Measure the original.</strong> Keep power mode, shapes, batch size, runtime and cooling comparable. Retain warm-up settings, individual timings, runtime placement and thermal observations.</li>
+      <li><strong>Simplify the graph.</strong> Check constant folding, redundant transposes and casts. Use DEEPBOM to compare structure and preserve public interfaces.</li>
+      <li><strong>Evaluate FP16, then INT8.</strong> Build TensorRT engines on the target stack. Check numerical error and task quality. Start INT8 with PTQ; consider GPU QAT when the quality budget is not met and training inputs are available.</li>
+      <li><strong>Measure the full pipeline.</strong> Include decoding, preprocessing, copies and postprocessing. Report isolated GPU timing separately from application latency. Orin Nano has no DLA; other modules require their own DLA placement and fallback evidence.</li>
+      <li><strong>Retain each decision.</strong> MLflow records measurements; Review binds them to exact artifacts and saves accept, reject or hold against the unchanged policy.</li>
+    </ol></section>
+    <section class="brief-section" id="qat"><h2>Train with quantization on the GPU</h2>
+      <p>For a PyTorch vision model, use a workstation CUDA GPU and NVIDIA Model Optimizer to calibrate INT8 quantizers and fine-tune the model with simulated quantization. Preserve the model weights and quantizer state. This requires the trainable model, training data and task loss; a deployment ONNX file alone is not that training pipeline.</p>
+      <p>Export the chosen checkpoint as ONNX with explicit QuantizeLinear/DequantizeLinear nodes. Build and measure the TensorRT engine on the actual Orin. QAT training memory is not reduced to INT8 inference memory, and successful workstation training does not establish Orin performance.</p>
+      <p>Use separate MLflow training and deployment-evaluation records. DEEPBOM inspects the exported model; Review compares supplied measurements. Neither performs QAT or proves training provenance from Q/DQ nodes. ONNX Runtime CUDA and TensorRT are different execution paths: record and evaluate the backend that will actually ship.</p>
+      <p>Follow the <a href="https://nvidia.github.io/Model-Optimizer/guides/_pytorch_quantization.html#quantization-aware-training-qat">NVIDIA ModelOpt QAT procedure</a>, including checkpoint restoration with quantizer state. Pin the toolchain and verify that the exported quantization operators and precisions are supported by the selected TensorRT release.</p>
+      <p>This is a workflow guide, not an executed QAT experiment or an Orin performance result.</p>
+    </section>
+    <section class="brief-section"><h2>Record measurements, then review the candidate</h2>
+      <p>Run your own CUDA or TensorRT evaluator explicitly. Retain the target configuration, representative inputs, warm-up and timing samples, task-quality results and runtime placement observations. Merely enabling a CUDA provider does not prove that every operation executed on the GPU; inspect runtime events and any CPU fallback.</p>
+      <p>The separate <a href="https://github.com/JunHwan-Kwon/deepbom-review/tree/v0.1.0">DEEPBOM Review v0.1.0 preview</a> imports externally recorded evidence. It uses DEEPBOM 1.103.0 internally and has its own release cycle. It supports same-format, single-file ONNX with embedded weights or TFLite, up to 128 MiB per model; this is not the full DEEPBOM 2.0.0 format or IR surface.</p>
+      <pre><code>npm install -g github:JunHwan-Kwon/deepbom-review#v0.1.0
+deepbom-review capabilities</code></pre>
+      <p>Node.js 20+ is required. Follow the <a href="https://github.com/JunHwan-Kwon/deepbom-review/blob/v0.1.0/README.md#bind-external-measurements">evaluation binding</a> and <a href="https://github.com/JunHwan-Kwon/deepbom-review/blob/v0.1.0/README.md#mlflow">MLflow import</a> instructions to create <code>baseline.receipt.json</code> and <code>candidate.receipt.json</code>. Use actual evaluation-time hashes; missing historical evidence requires re-evaluation or a hold decision. After choosing your own <code>policy.json</code> criteria, run:</p>
+      <pre><code>deepbom-review prepare \
+  --baseline baseline.onnx --candidate candidate.onnx \
+  --policy policy.json \
+  --baseline-evaluation baseline.receipt.json \
+  --candidate-evaluation candidate.receipt.json \
+  --change "Describe the candidate transformation" \
+  --out request.json
+deepbom-review run request.json --out review-001.zip
+deepbom-review verify review-001.zip --expected-sha256 SHA256_PRINTED_BY_RUN</code></pre>
+      <p>Replace the uppercase hash placeholder with the full hash printed by <code>run</code>. Review does not execute the models. Without evaluation receipts, a valid structural review is saved with <code>hold</code>; an internally consistent ZIP is not itself an acceptance decision. TensorRT engine bytes are outside this preview's artifact formats: retain them with their source-model/build bindings in external experiment records.</p>
+    </section>
+    <section class="brief-section"><h2>What the result establishes</h2><table class="fact-table"><tbody>
+      <tr><th>Static evidence</th><td>Artifact identity, serialized structure, interface changes, findings and evidence coverage.</td></tr>
+      <tr><th>Observed CUDA placement</th><td>Provider events for executed runtime nodes in the profiled inputs. Fused runtime nodes are not a one-to-one count of original ONNX operators.</td></tr>
+      <tr><th>External measurement</th><td>Results supplied by an explicitly run evaluator. Hash binding is not an attestation that measurements are truthful.</td></tr>
+      <tr><th>Comparison limits</th><td>Review requires identical dataset, evaluator and environment hashes. Changing devices, runtime, power mode or provider requires a separate experiment.</td></tr>
+      <tr><th>Unmeasured outcomes</th><td>This guide does not establish application accuracy, successful QAT export, a speedup or Orin performance. Those require observations from the actual experiment.</td></tr>
+    </tbody></table></section>
+    <section class="brief-section"><h2>Continue</h2><ul class="plain-list">
+      <li><a href="/get-started/#candidate-review">Install and connect the candidate-review tools</a></li>
+      <li><a href="https://github.com/JunHwan-Kwon/deepbom-review/blob/v0.1.0/README.md#first-review">Review CLI walkthrough and fixed-policy decisions</a></li>
+      <li><a href="https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html">ONNX Runtime CUDA configuration</a></li>
+      <li><a href="https://docs.nvidia.com/deeplearning/tensorrt/10.x.x/performance/benchmarking.html">NVIDIA TensorRT benchmarking</a></li>
+      <li><a href="https://www.nvidia.com/en-us/autonomous-machines/embedded-systems/jetson-orin/">NVIDIA Orin module specifications</a></li>
+    </ul></section>
+  </main>
+  <footer class="brief-footer">An accepted review applies the supplied policy. It does not approve deployment or prove a performance improvement.</footer>
+</body>
+</html>
