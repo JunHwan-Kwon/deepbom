@@ -7,7 +7,7 @@ import { validateArtifactSet } from "./artifact-set.js";
 import { validateNvidiaAcceleratorProfileBinding } from "./accelerator-profile-binding.js";
 import { collectAcceleratorBindings, validateAcceleratorBinding } from "./accelerator-binding.js";
 import { validateCpuCostTargetBinding } from "./cpu-target-binding.js";
-import { deriveMacCoverage } from "./mac-coverage.js";
+import { coverageComplete, deriveMacCoverage } from "./mac-coverage.js";
 import { EVIDENCE_CLASSES, normalizeEvidenceClass } from "./evidence-class.js";
 import { validateBoundConversionReceipt } from "./conversion-receipt.js";
 import { FINDING_KINDS } from "./finding-contract.js";
@@ -164,17 +164,21 @@ function capabilityManifest(analysis, format) {
   check("artifact_identity", analysis);
   check("graph", artifactIrOperators(analysis) && artifactIrValues(analysis));
   check("interfaces", analysis?.inputs && analysis?.outputs);
-  if (format === "onnx") {
+  if (analysis?.tensor_numerical_integrity) {
+    // A structure-only scan has a coverage document, but no payload scan.
+    checkStatus("tensor_payloads", analysis.tensor_numerical_integrity, analysis.tensor_numerical_integrity.status);
+  } else if (format === "tflite") {
     const weights = analysis?.weight_integrity;
-    check("tensor_payloads", weights || analysis?.onnx_external_data_structure_binding,
-      weights?.status === "assessed" && weights?.coverage_status === "complete");
+    checkStatus("tensor_payloads", weights, weights?.constant_value_coverage_status);
+  } else if (format === "onnx") {
+    const weights = analysis?.weight_integrity;
+    checkStatus("tensor_payloads", weights || analysis?.onnx_external_data_structure_binding,
+      weights?.status === "assessed" ? weights.coverage_status : weights?.status || "partial_external_structure_only");
   } else {
-    check("tensor_payloads", analysis?.weight_integrity || analysis?.tensor_numerical_integrity || artifactIrValues(analysis),
-      analysis?.tensor_numerical_integrity ? analysis.tensor_numerical_integrity.status === "assessed"
-        : format === "coreml" ? analysis?.weight_integrity?.status === "assessed" : true);
+    checkStatus("tensor_payloads", analysis?.weight_integrity, analysis?.weight_integrity?.status);
   }
   check("affine_quantization", artifactIrValues(analysis));
-  check("metadata", analysis?.metadata_presence);
+  check("metadata", analysis?.metadata_presence || analysis?.metadata);
   if (format === "onnx" && Number(analysis?.onnx_external_data?.tensor_count || 0) === 0) {
     check("external_data", analysis?.onnx_external_data, true);
   } else if (analysis?.onnx_external_data_structure_binding) {
@@ -185,8 +189,10 @@ function capabilityManifest(analysis, format) {
   check("associated_files", analysis?.metadata_presence, analysis?.metadata_presence?.associated_file_archive_status !== "partial");
   checkStatus("runtime_floor", analysis?.runtime_compat || analysis?.ort_compatibility_evidence,
     analysis?.runtime_compat?.status || analysis?.runtime_compat?.assessment_status || analysis?.ort_compatibility_evidence?.status);
+  // The presence of an assessment object does not establish a complete MAC total.
+  // Reuse the same coverage rule as the graph summary, including dynamic shapes.
   check("static_cost", analysis?.mac_assessment || (format === "tflite" && finite(analysis?.total_macs) != null ? artifactIrOperators(analysis) : null),
-    format === "coreml" ? analysis?.mac_assessment?.status === "assessed_all_decoded_compute_ops" && finite(analysis?.total_macs) != null : true);
+    coverageComplete(deriveMacCoverage(analysis)) && finite(analysis?.total_macs) != null);
   checkStatus("tflite_arena", analysis?.tensor_arena_plan, analysis?.tensor_arena_plan?.status);
   checkStatus("xnnpack_contracts", analysis?.xnnpack_selector_assessment_status, analysis?.xnnpack_selector_assessment_status);
   checkStatus("quantization_proofs", analysis?.quant_research_coverage || analysis?.channel_vitality,
@@ -199,7 +205,6 @@ function capabilityManifest(analysis, format) {
   check("tensor_inventory", artifactIrValues(analysis) || analysis?.tensor_inventory);
   checkStatus("block_quantization", analysis?.gguf?.quantization || analysis?.quantization_status,
     analysis?.gguf?.quantization?.status || analysis?.quantization_status?.status);
-  check("metadata", analysis?.metadata_presence || analysis?.metadata);
   check("package_inventory", analysis?.artifact_bundle);
   checkStatus("runtime_requirements", analysis?.runtime_compat || analysis?.runtime_requirements || analysis?.gguf?.backend_compatibility,
     analysis?.runtime_compat?.status || analysis?.runtime_requirements?.status || analysis?.gguf?.backend_compatibility?.status);
@@ -246,14 +251,11 @@ function assessmentState(status, value) {
 function findingRows(analysis, options) {
   let findings = Array.isArray(options?.findings) ? options.findings : null;
   if (!findings) {
-    try {
-      findings = buildFindingsRegister(analysis, {
-        runtimeEvidence: options?.runtimeEvidence || null,
-        analyzerMetadata: options?.analyzerMetadata,
-      });
-    } catch {
-      findings = [];
-    }
+    // A failed finding calculation must never become a clean, empty register.
+    findings = buildFindingsRegister(analysis, {
+      runtimeEvidence: options?.runtimeEvidence || null,
+      analyzerMetadata: options?.analyzerMetadata,
+    });
   }
   return findings.map((finding, index) => ({
     id: text(finding.finding_id || finding.id || finding.code || `finding-${index + 1}`),

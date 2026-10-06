@@ -70,14 +70,21 @@ await copyFile(path.join(root, "scripts", "capture-activation-evidence.py"), pat
 await copyFile(path.join(root, "channels", "npm", "README.md"), path.join(npmRoot, "README.md"));
 await copyFile(publicLicense, path.join(npmRoot, "LICENSE"));
 await cp(path.join(root, "skills", "deepbom"), path.join(npmRoot, "skills", "deepbom"), { recursive: true });
+await mkdir(path.join(npmRoot, "sdk"));
+for (const file of ["index.mjs", "index.d.mts"]) {
+  await copyFile(path.join(root, "sdk", file), path.join(npmRoot, "sdk", file));
+}
 await writeFile(path.join(npmRoot, "package.json"), `${JSON.stringify({
   name: "deepbom",
   version: packageDocument.version,
   mcpName: packageDocument.mcpName,
   description: "Local multi-format deployment-artifact analysis for on-device AI models",
   type: "module",
+  main: "./sdk/index.mjs",
+  types: "./sdk/index.d.mts",
+  exports: { ".": { types: "./sdk/index.d.mts", import: "./sdk/index.mjs" }, "./package.json": "./package.json" },
   bin: { deepbom: "bin/deepbom.mjs" },
-  files: ["bin/", "pkg/", "skills/deepbom/", "README.md", "LICENSE"],
+  files: ["bin/", "pkg/", "sdk/", "skills/deepbom/", "README.md", "LICENSE"],
   engines: { node: ">=20" },
   license: "Apache-2.0",
   homepage: "https://deepbom.org",

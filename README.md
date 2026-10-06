@@ -26,10 +26,16 @@ Search [input → IR → output mappings](https://deepbom.org/guides/evidence-ir
 or inspect the same [versioned catalog on GitHub](docs/evidence-ir/compatibility/README.md).
 It is a DEEPBOM-maintained specification, not an endorsed external standard.
 Provenance IR uses `deepbom.provenance_ir.v1` and the sole CLI/MCP selector
-`provenance_ir`. The current source contract is unreleased and does not accept
+`provenance_ir`. The released 2.0.0 contract does not accept
 retired names. See the [migration rules](docs/evidence-ir/MIGRATION.md).
 
 ## Quick start
+
+For export pipelines, experiment tracking and release checks, see the new
+[Node/TypeScript and Python SDK contract](docs/SDK_CONTRACT.md) and
+[three executable integration examples](examples/integrations/README.md).
+The supported SDK begins with DEEPBOM 2.1.0; earlier npm 2.0.0 packages do not
+include this entry point. Install it with `npm install deepbom@2.1.0`.
 
 Run the published CLI without cloning the repository (Node.js 20 or newer):
 
@@ -47,10 +53,10 @@ is documented separately below.
 Install the repository-local Agent Skill after previewing the managed files:
 
 ```bash
-npx -y deepbom@2.0.0 integrate codex
-npx -y deepbom@2.0.0 integrate codex --apply
-npx -y deepbom@2.0.0 integrate claude-code
-npx -y deepbom@2.0.0 integrate claude-code --apply
+npx -y deepbom@2.1.0 integrate codex
+npx -y deepbom@2.1.0 integrate codex --apply
+npx -y deepbom@2.1.0 integrate claude-code
+npx -y deepbom@2.1.0 integrate claude-code --apply
 ```
 
 The Skill lets a local agent select a contract-compatible analyzer for a
@@ -61,7 +67,7 @@ and the [independent engine/Agent/evidence version policy](docs/AGENT_CONTRACT_V
 
 The installed Skill first checks `DEEPBOM_BIN`, its package-bundled analyzer,
 and a `deepbom` already on `PATH`. It accepts a runtime only after the declared
-`deepbom.agent_contract.v1` and evidence contract match and its self-test binds
+`deepbom.agent_contract.v2` and evidence contract match and its self-test binds
 the exact observed engine version. The verifier does not contact npm unless
 `--allow-download` is explicitly supplied. This keeps a blocked registry lookup
 from being mistaken for a failed artifact analysis.
@@ -70,7 +76,7 @@ For persistent tool-call access, run the same local analyzer as an MCP server
 over stdio:
 
 ```bash
-npx -y deepbom@2.0.0 mcp
+npx -y deepbom@2.1.0 mcp
 ```
 
 It exposes `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
@@ -80,7 +86,7 @@ formats and large-model scan depth are explicit. Local paths are restricted to
 the launch directory unless `DEEPBOM_MCP_ALLOWED_ROOTS` is configured.
 Agent-facing usage guidance is in [the DEEPBOM skill](skills/deepbom/SKILL.md).
 Claude Desktop users can instead install the version-matched
-`deepbom-2.0.0.mcpb` asset from the corresponding GitHub Release. The bundle
+`deepbom-2.1.0.mcpb` asset from the corresponding GitHub Release. The bundle
 contains the same CLI and WASM bytes as the npm channel and asks the user to
 select the only local directory it may read.
 

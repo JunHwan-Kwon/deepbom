@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "mcpName": "io.github.JunHwan-Kwon/deepbom",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
   "homepage": "https://deepbom.org",
@@ -18,7 +18,7 @@
   "engines": {
     "node": ">=20"
   },
-  "main": "index.js",
+  "main": "./sdk/index.mjs",
   "scripts": {
     "generate:evidence-ir": "node scripts/generate-evidence-ir-catalog.mjs",
     "check:evidence-ir": "node scripts/check-evidence-ir-family.mjs",
@@ -333,7 +333,9 @@
     "check:pre-interaction-shell": "node scripts/check-pre-interaction-shell.mjs",
     "generate:scalar-types": "node scripts/generate-scalar-types.mjs",
     "check:common-calculations": "node scripts/audit-common-rules.mjs && node scripts/check-common-calculation-rules.mjs",
-    "check:evidence-query": "node scripts/check-evidence-query.mjs"
+    "check:evidence-query": "node scripts/check-evidence-query.mjs",
+    "check:sdk": "node scripts/check-sdk.mjs",
+    "check:integration-examples": "node scripts/run-sdk-integration-examples.mjs"
   },
   "keywords": [],
   "author": "",
@@ -354,7 +356,8 @@
     "esbuild": "0.28.1",
     "onnxruntime-node": "1.26.0",
     "playwright": "^1.61.1",
-    "postject": "1.0.0-alpha.6"
+    "postject": "1.0.0-alpha.6",
+    "typescript": "5.9.3"
   },
   "overrides": {
     "onnxruntime-node": {
@@ -363,5 +366,13 @@
   },
   "directories": {
     "doc": "docs"
+  },
+  "types": "./sdk/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./sdk/index.d.mts",
+      "import": "./sdk/index.mjs"
+    },
+    "./package.json": "./package.json"
   }
 }

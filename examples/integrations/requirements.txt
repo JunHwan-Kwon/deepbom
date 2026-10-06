@@ -1,0 +1,4 @@
+# Example-only dependencies; the DEEPBOM Python wheel has no Python dependencies.
+# These examples require Python >=3.10 (the SDK itself supports >=3.9).
+onnx==1.19.0
+mlflow==3.10.1

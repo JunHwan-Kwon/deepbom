@@ -1,21 +1,28 @@
-# DEEPBOM Python launcher
+# DEEPBOM Python SDK and launcher
 
 This package is a zero-analysis-logic launcher for the same platform-specific
 DEEPBOM engine used by the npm CLI release. Each wheel binds its operating
 system, architecture, engine SHA-256, and canonical TFLite WASM SHA-256 in an
 installed manifest. No parser or numerical rule is reimplemented in Python.
 
-An experimental typed facade invokes that same verified engine and converts its
+The public SDK invokes that same verified engine and converts its
 JSON and exit-code contracts into Python values and exceptions:
+
+The `inspect()` method and supported SDK policy are included from **2.1.0**.
+Install the matching wheel for your platform from the release assets, or build
+from source. Previously published 2.0.0 wheels do not include these additions. See the
+[SDK contract](https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/SDK_CONTRACT.md)
+and [three runnable examples](https://github.com/JunHwan-Kwon/deepbom/blob/main/examples/integrations/README.md).
 
 ```python
 from deepbom import (
-    DeepBomPolicyBlocked, audit, capabilities, capture_contract, diff,
+    DeepBomPolicyBlocked, audit, inspect, capabilities, capture_contract, diff,
     tensor_inventory, tensors, verify_bom, verify_contract,
 )
 
 caps = capabilities()
 envelope = audit("model.gguf")
+summary = inspect("model.gguf")
 selected = audit("model.gguf", sections=["summary", "findings"])
 try:
     gated = audit("model.safetensors", gate="defects")
@@ -23,7 +30,7 @@ except DeepBomPolicyBlocked as blocked:
     gated = blocked.document
 rows = tensors("model.gguf")
 inventory = tensor_inventory("model.gguf")
-comparison = diff("baseline.gguf", "candidate.gguf", tensors=True)
+comparison = diff("baseline.gguf", "candidate.gguf", tensors_only=True)
 baseline = capture_contract("model.onnx")
 contract_result = verify_contract("candidate.onnx", "baseline.interface-contract.json")
 bom_result = verify_bom("model.onnx", "supplied.cdx.json")
@@ -39,8 +46,12 @@ raises `DeepBomPolicyBlocked`, and exit 3 raises
 exceptions retain any completed JSON result
 as `.document`. `tensors()` converts exact counts to Python `int` and decimal
 ratios to `decimal.Decimal`; `tensor_inventory()` preserves the raw JSON document.
-The facade is experimental in 1.96.x, and the CLI schemas remain
-the compatibility contract.
+The SDK follows package semantic versioning from its first supported release;
+native CLI/IR schemas retain their independent compatibility contracts.
+`inspect()` returns the engine's `deepbom.review_summary.v1` unchanged, including
+identity, coverage, separate finding classes and a hash-bound reinspection
+command. Python dictionaries preserve the native JSON keys and null values.
+The package includes `py.typed`; it does not provide separate parser logic.
 
 ```console
 deepbom audit model.tflite --compact

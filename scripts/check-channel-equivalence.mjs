@@ -41,6 +41,12 @@ const engine = path.join(releaseRoot, manifest.artifacts.standalone_engine.path)
 const cargoManifest = path.join(releaseRoot, "cargo", "Cargo.toml");
 const npmCli = platformSmoke ? null : await installNpmPackage(manifest);
 const python = platformSmoke || releaseContract ? await installPythonWheel(manifest) : null;
+if (npmCli) {
+  const sdkPackage = path.dirname(path.dirname(npmCli));
+  const consumer = path.dirname(path.dirname(sdkPackage));
+  run(process.execPath, ["scripts/check-sdk.mjs", "--package", sdkPackage, "--consumer", consumer,
+    ...(python ? ["--python", python] : [])]);
+}
 const fixtures = await packageFixtures();
 const spacedOnnx = path.join(releaseRoot, "install-probe", "artifact path with spaces", "tiny decoder model.onnx");
 await mkdir(path.dirname(spacedOnnx), { recursive: true });

@@ -1,8 +1,53 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-09-29T08:27:14.186157+00:00",
+  "recorded_at": "2026-10-06T14:27:51.373080+00:00",
   "scope": "Public installation channels and private web delivery",
   "observations": [
+    {
+      "kind": "private_web_preflight_basis",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 240.43,
+      "observed_at": "2026-10-06T14:17:41.109214+00:00",
+      "version": "2.1.0",
+      "source_commit": "9fc31bc2b0f76a96e42842a41208e86e7f8bdd0a",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.1.0 SDK and common evidence correctness release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately.",
+      "check_count": 100
+    },
+    {
+      "kind": "local_channel_build",
+      "command": "node scripts/build-channel-artifacts.mjs --with-dist",
+      "elapsed_seconds": 12.134,
+      "observed_at": "2026-10-06T14:23:46.581016+00:00",
+      "version": "2.1.0",
+      "source_commit": "9fc31bc2b0f76a96e42842a41208e86e7f8bdd0a",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.1.0 SDK and common evidence correctness release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately."
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --platform-smoke",
+      "elapsed_seconds": 47.822,
+      "observed_at": "2026-10-06T14:24:34.404055+00:00",
+      "version": "2.1.0",
+      "source_commit": "9fc31bc2b0f76a96e42842a41208e86e7f8bdd0a",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.1.0 SDK and common evidence correctness release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately."
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --release-contract",
+      "elapsed_seconds": 160.319,
+      "observed_at": "2026-10-06T14:27:14.723468+00:00",
+      "version": "2.1.0",
+      "source_commit": "9fc31bc2b0f76a96e42842a41208e86e7f8bdd0a",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.1.0 SDK and common evidence correctness release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately."
+    },
     {
       "kind": "private_web_preflight_basis",
       "command": "node scripts/check-deploy.mjs --establish-observation",

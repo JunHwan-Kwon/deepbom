@@ -115,7 +115,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "2.0.0";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "2.1.0";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 const EXPECTED_SELF_TEST_SHA256 = typeof __DEEPBOM_SELF_TEST_SHA256__ === "string" ? __DEEPBOM_SELF_TEST_SHA256__ : "";
 
@@ -1726,7 +1726,7 @@ function buildHumanSummary(summary) {
     if (findings.length > 2) lines.push(`  ${label}: ${findings.length - 2} more; use --section findings`);
   }
   lines.push("");
-  lines.push(`Coverage: ${summary.coverage.assessed} assessed | ${summary.coverage.partial} partial | ${summary.coverage.needs_external_evidence} need external evidence`);
+  lines.push(`Coverage: ${summary.coverage.assessed} assessed | ${summary.coverage.partial} partial | ${summary.coverage.unavailable} unavailable in this analysis`);
   if (["risk", "warn"].includes(summary.quantization?.max_risk)) {
     lines.push(`Quantization: ${summary.quantization.max_risk} at #${summary.quantization.max_risk_op_index ?? "?"} ${summary.quantization.max_risk_op_name || "operator"}`);
   }

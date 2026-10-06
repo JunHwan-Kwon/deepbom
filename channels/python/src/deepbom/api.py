@@ -1,4 +1,4 @@
-"""Experimental typed Python facade over the verified DEEPBOM engine.
+"""Public Python SDK over the verified DEEPBOM engine.
 
 The analysis remains in the packaged engine. This module only constructs a
 bounded subprocess invocation, reads one JSON result, and maps documented CLI
@@ -25,6 +25,8 @@ DEFAULT_MAX_OUTPUT_BYTES = 64 * 1024 * 1024
 class DeepBomError(RuntimeError):
     """Base class for Python-facade failures."""
 
+    code = "DEEPBOM_ERROR"
+
     def __init__(self, message: str, *, exit_code: Optional[int] = None,
                  document: Optional[dict[str, Any]] = None) -> None:
         super().__init__(message)
@@ -34,26 +36,32 @@ class DeepBomError(RuntimeError):
 
 class DeepBomInvocationError(DeepBomError):
     """The CLI rejected the invocation or could not analyze/write output."""
+    code = "INVOCATION_FAILED"
 
 
 class DeepBomPolicyBlocked(DeepBomError):
     """Analysis completed, but the requested policy blocked it (exit 2)."""
+    code = "POLICY_BLOCKED"
 
 
 class DeepBomIncompleteBinding(DeepBomError):
     """Verification could not establish a complete release binding (exit 3)."""
+    code = "INCOMPLETE_BINDING"
 
 
 class DeepBomIdentityMismatch(DeepBomError):
     """An independently supplied artifact SHA-256 did not match (exit 4)."""
+    code = "IDENTITY_MISMATCH"
 
 
 class DeepBomTimeout(DeepBomError):
     """The verified engine exceeded the caller's timeout."""
+    code = "TIMEOUT"
 
 
 class DeepBomOutputTooLarge(DeepBomError):
     """The JSON result exceeded the caller's output-size bound."""
+    code = "OUTPUT_TOO_LARGE"
 
 
 def capabilities(*, timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
@@ -101,6 +109,36 @@ def audit(path: os.PathLike[str] | str, *, output: Optional[str] = None,
     if expected_sha256 is not None:
         argv.extend(["--expected-sha256", _sha256_text(expected_sha256)])
     return _invoke_json(argv, timeout_seconds, max_output_bytes)
+
+
+def inspect(path: os.PathLike[str] | str, *, scan: str = "auto",
+            expected_sha256: Optional[str] = None,
+            gate: Optional[str] = None, policy: Optional[str] = None,
+            timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+            max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> dict[str, Any]:
+    """Return the engine's existing ``deepbom.review_summary.v1`` unchanged.
+
+    This is a bounded static summary, not deployment approval. Policy rejection
+    retains this same summary shape in ``DeepBomPolicyBlocked.document``.
+    """
+    try:
+        selection = audit(path, sections=["summary"], scan=scan,
+                          expected_sha256=expected_sha256, gate=gate, policy=policy,
+                          timeout_seconds=timeout_seconds, max_output_bytes=max_output_bytes)
+    except DeepBomPolicyBlocked as error:
+        if error.document is not None:
+            error.document = _review_summary(error.document)
+        raise
+    return _review_summary(selection)
+
+
+def _review_summary(selection: dict[str, Any]) -> dict[str, Any]:
+    sections = selection.get("sections")
+    summary = sections.get("summary") if isinstance(sections, dict) else None
+    if (selection.get("schema") != "deepbom.analysis_selection.v1"
+            or not isinstance(summary, dict) or summary.get("schema") != "deepbom.review_summary.v1"):
+        raise DeepBomInvocationError("The engine returned an incompatible review summary.")
+    return summary
 
 
 def model_ir(path: os.PathLike[str] | str, *, scan: str = "auto",
@@ -236,6 +274,8 @@ def diff(baseline: os.PathLike[str] | str, candidate: os.PathLike[str] | str, *,
          timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
          max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> dict[str, Any]:
     """Compare two same-format artifacts, optionally returning the tensor-encoding projection."""
+    if not isinstance(tensors_only, bool):
+        raise ValueError("tensors_only must be boolean")
     argv = ["diff", _path_text(baseline), _path_text(candidate), "--compact"]
     if tensors_only:
         argv.append("--tensors")
@@ -245,22 +285,35 @@ def diff(baseline: os.PathLike[str] | str, candidate: os.PathLike[str] | str, *,
 def _invoke_json(argv: list[str], timeout_seconds: float, max_output_bytes: int) -> dict[str, Any]:
     timeout = _positive_number(timeout_seconds, "timeout_seconds")
     output_limit = _positive_integer(max_output_bytes, "max_output_bytes")
-    engine, asset_root = _verified_engine()
+    try:
+        engine, asset_root = _verified_engine()
+    except (OSError, RuntimeError) as error:
+        raise DeepBomInvocationError(f"Could not resolve the verified DEEPBOM engine: {error}") from error
     environment = os.environ.copy()
     if asset_root is not None:
         environment["DEEPBOM_RUNTIME_ASSET_DIR"] = str(asset_root)
 
     # A temporary output permits a size check before Python allocates the
     # complete JSON string. The engine writes it atomically.
-    with tempfile.TemporaryDirectory(prefix="deepbom-python-") as directory:
+    try:
+        return _run_engine_json(engine, environment, argv, timeout, output_limit)
+    except DeepBomError:
+        raise
+    except OSError as error:
+        raise DeepBomInvocationError(f"Could not create, read or clean up DEEPBOM temporary output: {error}") from error
+
+
+def _run_engine_json(engine, environment, argv, timeout, output_limit):
+    with tempfile.TemporaryDirectory(prefix="deepbom-python-") as directory, tempfile.TemporaryFile() as diagnostic_stream:
         output_path = Path(directory) / "result.json"
         command = [str(engine), *argv, "--output", str(output_path)]
         try:
             completed = subprocess.run(
                 command,
                 check=False,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=diagnostic_stream,
                 env=environment,
                 timeout=timeout,
                 text=True,
@@ -271,9 +324,17 @@ def _invoke_json(argv: list[str], timeout_seconds: float, max_output_bytes: int)
             raise DeepBomTimeout(
                 f"DEEPBOM exceeded timeout_seconds={timeout:g}.", exit_code=None
             ) from error
+        except OSError as error:
+            raise DeepBomInvocationError(f"Could not start the verified DEEPBOM engine: {error}") from error
 
-        document = _read_bounded_json(output_path, output_limit)
-        diagnostic = (completed.stderr or completed.stdout or "").strip()
+        diagnostic_stream.seek(0, os.SEEK_END)
+        diagnostic_stream.seek(max(0, diagnostic_stream.tell() - 16_384))
+        diagnostic = diagnostic_stream.read().decode("utf-8", errors="replace").strip()
+        try:
+            document = _read_bounded_json(output_path, output_limit)
+        except DeepBomError as error:
+            error.exit_code = completed.returncode
+            raise
         if completed.returncode == 0:
             if document is None:
                 raise DeepBomInvocationError(
@@ -314,12 +375,27 @@ def _read_bounded_json(path: Path, maximum: int) -> Optional[dict[str, Any]]:
             f"DEEPBOM result is {size} bytes; max_output_bytes is {maximum}."
         )
     try:
-        document = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        with path.open("rb") as stream:
+            raw = stream.read(maximum + 1)
+        if len(raw) > maximum:
+            raise DeepBomOutputTooLarge(f"DEEPBOM result grew beyond max_output_bytes={maximum}.")
+        document = json.loads(raw.decode("utf-8"), parse_constant=_invalid_json_constant, parse_float=_finite_json_float)
+    except (OSError, UnicodeError, ValueError) as error:
         raise DeepBomInvocationError(f"DEEPBOM returned invalid JSON: {error}") from error
     if not isinstance(document, dict):
         raise DeepBomInvocationError("DEEPBOM JSON result must be an object.")
     return document
+
+
+def _invalid_json_constant(value: str) -> None:
+    raise ValueError(f"non-JSON numeric constant: {value}")
+
+
+def _finite_json_float(value: str) -> float:
+    result = float(value)
+    if not math.isfinite(result):
+        raise ValueError("JSON number exceeds the finite floating-point range")
+    return result
 
 
 def _choice(value: str, field: str, allowed: set[str]) -> str:
@@ -331,9 +407,11 @@ def _choice(value: str, field: str, allowed: set[str]) -> str:
 
 def _path_text(value: os.PathLike[str] | str) -> str:
     text = os.fspath(value)
-    if not text or "\x00" in text:
+    if not isinstance(text, str) or not text or "\x00" in text:
         raise ValueError("path must be a non-empty path or immutable remote source")
-    return text
+    # Preserve the existing CLI remote-source path; local leading '-' names
+    # must never be interpreted as engine options.
+    return text if "://" in text else str(Path(text).absolute())
 
 
 def _sections(values: Optional[Iterable[str]]) -> list[str]:
@@ -359,6 +437,8 @@ def _sha256_text(value: str) -> str:
 
 
 def _positive_number(value: float, field: str) -> float:
+    if isinstance(value, bool):
+        raise ValueError(f"{field} must be finite and positive")
     number = float(value)
     if not math.isfinite(number) or number <= 0:
         raise ValueError(f"{field} must be finite and positive")

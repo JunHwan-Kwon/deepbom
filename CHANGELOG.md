@@ -1,6 +1,17 @@
 # Changelog
 
-## Unreleased — breaking Provenance IR contract
+## 2.1.0 — 2026-10-06 — supported SDK and evidence correctness
+
+- Add a Node ESM SDK with explicit exports and TypeScript declarations, invoking the packaged common engine.
+- Add Python `inspect`, stable error codes and a typed-package marker; preserve native result schemas and separate findings from deployment policy.
+- Provide runnable export, local MLflow evidence storage and baseline/candidate review examples, including installation and result verification.
+- Check SDK/CLI/Python equivalence, hash binding, defect gating, process bounds and package contents during channel validation.
+- Correct common semantic diffs to include native operator attributes and recursive interface types, separate payload evidence coverage from equal weights, and compare tiny quantization-scale ratios with relative tolerance.
+- Mark incomplete MAC assessments as partial capability coverage; distinguish unavailable capabilities from evidence-gap findings. Preserve the legacy summary alias.
+- Propagate finding-construction failures instead of silently emitting an empty findings register; mark deliberately skipped payload scans as unavailable.
+- Reject malformed/non-finite SDK JSON, bound diagnostic memory, verify MLflow readback and retain separate, hash-bound example review bundles. Preserve catalog snapshots with compatibility catalog 0.2.1.
+
+## 2.0.0 — breaking Provenance IR contract
 
 - Replace the prior connection contract with `deepbom.provenance_ir.v1`, canonical input/summary/export names and a single implementation; retire compatibility aliases.
 - Version remote result envelopes to v2, update widgets and validators together, and reject retired contracts explicitly.

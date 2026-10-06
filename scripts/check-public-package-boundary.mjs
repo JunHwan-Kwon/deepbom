@@ -16,6 +16,8 @@ const expectedMembers = [
   "package.json",
   "pkg/release-manifest.json",
   "pkg/tflite_wasm_audit_bg.wasm",
+  "sdk/index.d.mts",
+  "sdk/index.mjs",
   "skills/deepbom/SKILL.md",
   "skills/deepbom/agents/openai.yaml",
   "skills/deepbom/references/capability-selection.md",
@@ -41,6 +43,8 @@ assert(packageDocument.homepage === "https://deepbom.org", "npm homepage identit
 assert(packageDocument.bugs?.url === "https://github.com/JunHwan-Kwon/deepbom/issues", "npm issue-tracker identity drifted.");
 assert(packageDocument.publishConfig?.access === "public", "npm package access must be explicit.");
 assert(packageDocument.bin?.deepbom === "bin/deepbom.mjs", "npm CLI entry point drifted.");
+assert(packageDocument.exports?.["."]?.import === "./sdk/index.mjs", "Public SDK entry point is missing.");
+assert(packageDocument.exports?.["."]?.types === "./sdk/index.d.mts", "Public SDK declarations are missing.");
 for (const keyword of ["static-analysis", "agent-skills", "model-context-protocol"]) {
   assert(packageDocument.keywords?.includes(keyword), `npm discovery keyword is missing: ${keyword}`);
 }

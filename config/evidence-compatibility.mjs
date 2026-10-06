@@ -3,7 +3,7 @@ import { EVIDENCE_IR_LAYERS, PROVENANCE_INPUT_SCHEMA } from "../web/lib/evidence
 import { PUBLIC_PRODUCT_CONTRACTS } from "../web/lib/public-product-contracts.js";
 import { AUDIT_OUTPUT_CONTRACTS } from "../web/lib/audit-output-contracts.js";
 
-export const CATALOG_VERSION = "0.2.0";
+export const CATALOG_VERSION = "0.2.1";
 const native = {
   tflite: ["TFLite", "Model / SubGraph / Tensor / Buffer", "src/lib.rs", "scripts/check-artifact-ir.mjs"],
   onnx: ["ONNX", "ModelProto.graph / NodeProto / ValueInfoProto / TensorProto", "web/onnx.js", "scripts/check-model-ir-source-contracts.mjs"],

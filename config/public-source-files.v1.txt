@@ -54,6 +54,7 @@ channels/python/src/deepbom/__init__.py
 channels/python/src/deepbom/__main__.py
 channels/python/src/deepbom/_engine.py
 channels/python/src/deepbom/api.py
+channels/python/src/deepbom/py.typed
 chatgpt-app-submission.json
 config/artifact-ir-consumer-policy.v1.json
 config/artifact-ir-import-policy.v2.json
@@ -167,6 +168,7 @@ docs/PUBLIC_PRIVATE_BOUNDARY.md
 docs/PUBLIC_README.md
 docs/REPRESENTATIVE_DATASET_CAPTURE.md
 docs/REPRODUCIBILITY.md
+docs/SDK_CONTRACT.md
 docs/SOFTWARE_RECORD.md
 docs/SUPPORT_MATRIX.md
 docs/TERMINOLOGY_AND_NUMERIC_CONTRACT.md
@@ -204,6 +206,7 @@ docs/evidence-ir/TEA_REVIEW.md
 docs/evidence-ir/catalog.json
 docs/evidence-ir/compatibility/0.1.0.json
 docs/evidence-ir/compatibility/0.2.0.json
+docs/evidence-ir/compatibility/0.2.1.json
 docs/evidence-ir/compatibility/README.md
 docs/evidence-ir/compatibility/index.json
 docs/native-runtime-capture.md
@@ -224,6 +227,11 @@ docs/zenodo-validation-metadata.json
 examples/expected-output/README.md
 examples/expected-output/gpu-partition-probe.expected.json
 examples/expected-output/gpu-partition-probe.human.txt
+examples/integrations/README.md
+examples/integrations/after_export.py
+examples/integrations/mlflow_evidence.py
+examples/integrations/release_review.mjs
+examples/integrations/requirements.txt
 integrations/README.md
 integrations/bom-authoring/deepbom-evidence-adapter.mjs
 integrations/bom-authoring/evidence-reference-template.json
@@ -577,6 +585,7 @@ scripts/check-safetensors-architecture-corpus.mjs
 scripts/check-safetensors-quantization-contract.mjs
 scripts/check-safetensors-quantization-corpus.mjs
 scripts/check-safetensors-quantization-viewer.mjs
+scripts/check-sdk.mjs
 scripts/check-semantic-artifact-diff.mjs
 scripts/check-service-worker-lifecycle.mjs
 scripts/check-size-utils.mjs
@@ -698,6 +707,7 @@ scripts/run-native-capture.mjs
 scripts/run-public-model-corpus-sweep.mjs
 scripts/run-quant-policy-boundary-corpus-sweep.mjs
 scripts/run-release-validation.mjs
+scripts/run-sdk-integration-examples.mjs
 scripts/run-utils.mjs
 scripts/rust-source-utils.mjs
 scripts/safetensors-architecture-corpus-lib.mjs
@@ -748,6 +758,8 @@ scripts/write-build-metadata.mjs
 scripts/write-cloudflare-deploy-config.mjs
 scripts/write-google-corpus-measurement-baseline.mjs
 scripts/zenodo-release-lib.mjs
+sdk/index.d.mts
+sdk/index.mjs
 server.json
 skills/deepbom/SKILL.md
 skills/deepbom/agents/openai.yaml

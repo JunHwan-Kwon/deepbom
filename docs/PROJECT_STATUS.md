@@ -10,11 +10,11 @@ ignored by git.
 
 ## Snapshot
 
-The published analyzer baseline is **DEEPBOM 2.0.0**, shared by the CLI, local MCP and hosted analysis engine. A documentation deployment does not require republishing that npm version. Public source is generated from the reviewed allowlist; the deployment repository also contains private modules and service bindings that are not public export inputs.
+The analyzer release baseline is **DEEPBOM 2.1.0**, shared by the CLI, local MCP and hosted analysis engine. A documentation deployment does not require republishing that npm version. Public source is generated from the reviewed allowlist; the deployment repository also contains private modules and service bindings that are not public export inputs.
 
 | Surface | Current contract and boundary |
 | --- | --- |
-| Evidence IR | Artifact IR v2; Model, Weight, Activation and Provenance IR v1. The implementation is released; the project-maintained specification remains draft. Family catalog 1.0.0 and compatibility catalog 0.2.0 have independent version histories. |
+| Evidence IR | Artifact IR v2; Model, Weight, Activation and Provenance IR v1. The implementation is released; the project-maintained specification remains draft. Family catalog 1.0.0 and compatibility catalog 0.2.1 have independent version histories. |
 | ChatGPT MCP | Seven tools, including conversational queries and workflow guidance. Base result transports v1 and v2 are accepted; optional provenance requires v2. Host tool availability and directory review are separate from server deployment. |
 | Browser/Claude MCP | Four tools for browser-local analysis and bounded result/error return. The result envelope is v2; the ChatGPT conversational query tools are not implied here. |
 | Local analysis | CLI and local MCP inspect supported artifacts without executing model code. Explicit numerical analysis is optional; imported activation/runtime captures retain their external evidence boundary. |
@@ -23,6 +23,14 @@ The published analyzer baseline is **DEEPBOM 2.0.0**, shared by the CLI, local M
 | Candidate review | The separate DEEPBOM Review v0.1.0 preview uses analyzer 1.103.0. Its MLflow/Olive imports and narrower model support must not be described as part of the DEEPBOM 2.0.0 IR contract. |
 
 See [release details](evidence-ir/RELEASE_2_0_0.md), [migration](evidence-ir/MIGRATION.md), [transport compatibility](chatgpt-app/PUBLICATION_COMPATIBILITY.md) and the [versioned compatibility catalog](evidence-ir/compatibility/README.md). These are the current contract references; historical review records are preserved rather than rewritten.
+
+Release 2.1.0 adds an explicit Node/TypeScript SDK entry point, Python
+`inspect`, shared review-summary consumption and three runnable
+export/MLflow/candidate-review integrations. It also corrects common semantic
+comparisons, assessment coverage and failure propagation. See the
+[SDK contract](SDK_CONTRACT.md), [examples](../examples/integrations/README.md)
+and [changelog](../CHANGELOG.md). Agent metadata versions remain independent
+of this engine release; server deployment is not directory approval.
 
 DEEPBOM is the primary product name for this browser-local engineering workbench for deployment
 artifacts. It covers local model inspection, static on-device audit, graph and

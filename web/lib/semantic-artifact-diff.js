@@ -41,6 +41,10 @@ export function validateSemanticArtifactDiff(document) {
   assertAlignmentCounts(document.graph_delta?.operator_alignment, document.graph_delta, "operator");
   assertAlignmentCounts(document.storage_delta?.object_alignment, document.storage_delta, "object");
   assertAlignmentCounts(document.quantization_delta?.record_alignment, document.quantization_delta, "record");
+  if (document.storage_delta.payload_comparison
+      && canonicalJson(document.storage_delta.payload_comparison) !== canonicalJson(payloadComparison(document.storage_delta.object_alignment))) {
+    throw new Error("Semantic diff payload comparison counts are inconsistent.");
+  }
   const { semantic_diff_sha256: observed, ...body } = document;
   const expected = sha256TextHex(canonicalJson(body));
   if (observed !== expected) throw new Error("Semantic diff SHA-256 is invalid.");
@@ -57,12 +61,19 @@ function graphDelta(baseline, candidate) {
   const rightOutputs = (candidate?.outputs || []).map((id) => valueContract((candidate?.values || []).find((row) => row.id === id)));
   const inputChanged = canonicalJson(leftInputs) !== canonicalJson(rightInputs);
   const outputChanged = canonicalJson(leftOutputs) !== canonicalJson(rightOutputs);
+  const topologyFields = ["op_type", "domain", "version", "inputs", "outputs"];
+  const topologyChanged = operatorRows.some(row => ["added", "removed"].includes(row.status)
+    || row.changed_fields.some(field => topologyFields.includes(field)));
   const leftMacs = baseline?.totals?.macs?.decimal ?? null;
   const rightMacs = candidate?.totals?.macs?.decimal ?? null;
   return {
     executable_graph_status: transition(baseline?.executable_graph_status, candidate?.executable_graph_status),
     input_contract_changed: inputChanged,
     output_contract_changed: outputChanged,
+    interface_comparison_status: baseline?.executable_graph_status === "serialized_artifact_graph"
+      && candidate?.executable_graph_status === "serialized_artifact_graph"
+      && [...leftInputs, ...rightInputs, ...leftOutputs, ...rightOutputs].every(Boolean)
+      ? "assessed_serialized_contracts" : "not_assessable",
     baseline_inputs: leftInputs,
     candidate_inputs: rightInputs,
     baseline_outputs: leftOutputs,
@@ -73,13 +84,15 @@ function graphDelta(baseline, candidate) {
     added_operator_count: operatorRows.filter((row) => row.status === "added").length,
     removed_operator_count: operatorRows.filter((row) => row.status === "removed").length,
     total_macs: { baseline_decimal: leftMacs, candidate_decimal: rightMacs, changed: leftMacs !== rightMacs },
-    topology_changed: inputChanged || outputChanged || operatorRows.some((row) => row.status !== "unchanged"),
+    topology_changed: topologyChanged,
+    operator_attributes_changed: operatorRows.some(row => row.changed_fields.includes("attributes")),
   };
 }
 
 function storageDelta(baseline, candidate) {
   const rows = compareRows(keyed(baseline?.objects, (row) => row.id), keyed(candidate?.objects, (row) => row.id), storageContract);
   const payloadChanges = rows.filter((row) => row.status === "changed" && row.changed_fields.includes("payload_sha256"));
+  const payload = payloadComparison(rows);
   const layoutChanges = rows.filter((row) => row.status !== "unchanged"
     && (row.status !== "changed" || row.changed_fields.some((field) => field !== "payload_sha256")));
   return {
@@ -88,13 +101,31 @@ function storageDelta(baseline, candidate) {
     changed_object_count: rows.filter((row) => row.status === "changed").length,
     added_object_count: rows.filter((row) => row.status === "added").length,
     removed_object_count: rows.filter((row) => row.status === "removed").length,
-    payload_digest_change_count: payloadChanges.length,
+    payload_digest_change_count: payload.different_object_count,
+    payload_digest_evidence_change_count: payloadChanges.length,
+    payload_comparison: payload,
     layout_change_count: layoutChanges.length,
     serialized_bytes: {
       baseline_decimal: baseline?.totals?.serialized_object_bytes_sum?.decimal ?? null,
       candidate_decimal: candidate?.totals?.serialized_object_bytes_sum?.decimal ?? null,
       changed: baseline?.totals?.serialized_object_bytes_sum?.decimal !== candidate?.totals?.serialized_object_bytes_sum?.decimal,
     },
+  };
+}
+
+function payloadComparison(rows) {
+  const matched = rows.filter(row => row.baseline && row.candidate);
+  const digest = value => /^[a-f0-9]{64}$/.test(String(value || ""));
+  const comparable = matched.filter(row => digest(row.baseline.payload_sha256) && digest(row.candidate.payload_sha256));
+  const different = comparable.filter(row => row.baseline.payload_sha256 !== row.candidate.payload_sha256).length;
+  return {
+    status: matched.length === 0 ? "not_applicable" : comparable.length === matched.length ? "complete" : comparable.length ? "partial" : "not_assessable",
+    matched_object_count: matched.length,
+    compared_object_count: comparable.length,
+    unassessed_object_count: matched.length - comparable.length,
+    equal_object_count: comparable.length - different,
+    different_object_count: different,
+    boundary: "Equality is established only for paired payload digests. Unchanged storage projections without two digests do not establish equal weights. Added and removed objects are outside the matched-object denominator.",
   };
 }
 
@@ -138,13 +169,16 @@ function operatorContract(row) {
     version: row?.version ?? null,
     inputs: (row?.inputs || []).map((port) => port.value_ref),
     outputs: (row?.outputs || []).map((port) => port.value_ref),
+    attributes: row?.attributes ?? null,
     macs_decimal: row?.metrics?.macs?.decimal ?? null,
     mac_assessment_status: row?.metrics?.mac_assessment_status || null,
   };
 }
 
 function valueContract(row) {
-  return row ? { dtype: row.dtype, shape: row.shape, shape_signature: row.shape_signature, shape_contract_status: row.shape_contract_status } : null;
+  return row ? { name: row.name ?? null, value_kind: row.value_kind ?? null,
+    type_contract: row.type_contract?.root ?? null,
+    dtype: row.dtype, shape: row.shape, shape_signature: row.shape_signature, shape_contract_status: row.shape_contract_status } : null;
 }
 
 function storageContract(row) {
@@ -177,10 +211,12 @@ function classifyImpact({ graph, storage, quantization, artifactBytesChanged }) 
   if (graph.input_contract_changed) integration.push("external_input_contract_changed");
   if (graph.output_contract_changed) integration.push("external_output_contract_changed");
   if (graph.topology_changed) integration.push("serialized_operator_topology_changed");
+  if (graph.operator_attributes_changed) integration.push("serialized_operator_attributes_changed");
   if (quantization.contract_changed) integration.push("serialized_quantization_contract_changed");
   if (graph.total_macs.changed) deployment.push("nominal_compute_changed");
   if (storage.layout_change_count || storage.serialized_bytes.changed) deployment.push("serialized_storage_layout_changed");
   if (storage.payload_digest_change_count) task.push("serialized_parameter_payload_changed");
+  if (artifactBytesChanged && storage.payload_comparison.unassessed_object_count) task.push("serialized_parameter_payload_comparison_incomplete");
   if (artifactBytesChanged && !integration.length && !deployment.length && !task.length) task.push("artifact_bytes_changed_semantic_cause_unclassified");
   const categories = [
     impactCategory("integration_revalidation", integration),
@@ -220,22 +256,24 @@ function quantizationKey(row) {
 function scaleRatio(baseline, candidate) {
   const left = baseline?.inline_values;
   const right = candidate?.inline_values;
-  if (!Array.isArray(left) || !Array.isArray(right) || !left.length || left.length !== right.length) return null;
-  const candidateOverBaseline = [];
+  if (baseline?.inline_status !== "complete" || candidate?.inline_status !== "complete"
+      || !Array.isArray(left) || !Array.isArray(right) || !left.length || left.length !== right.length
+      || baseline.count !== left.length || candidate.count !== right.length) return null;
+  let minimum = Infinity, maximum = -Infinity, first = null, uniform = true;
   for (let index = 0; index < left.length; index += 1) {
-    const a = Math.abs(Number(left[index]));
-    const b = Math.abs(Number(right[index]));
-    if (!Number.isFinite(a) || !Number.isFinite(b) || a === 0 || b === 0) return null;
-    candidateOverBaseline.push(b / a);
+    const a = left[index], b = right[index];
+    if (!Number.isFinite(a) || !Number.isFinite(b) || a <= 0 || b <= 0) return null;
+    const ratio = b / a;
+    if (!Number.isFinite(ratio) || ratio <= 0 || !Number.isFinite(1 / ratio)) return null;
+    minimum = Math.min(minimum, ratio); maximum = Math.max(maximum, ratio);
+    if (first === null) first = ratio;
+    // Relative tolerance must not merge distinct ratios merely because both are small.
+    if (Math.abs(ratio - first) > Math.max(Math.abs(first), Math.abs(ratio)) * 1e-12) uniform = false;
   }
-  const minimum = Math.min(...candidateOverBaseline);
-  const maximum = Math.max(...candidateOverBaseline);
-  const uniform = candidateOverBaseline.every((value) => Math.abs(value - candidateOverBaseline[0]) <= Math.max(1, Math.abs(value)) * 1e-12)
-    ? candidateOverBaseline[0] : null;
   return {
-    compared_value_count: candidateOverBaseline.length,
-    candidate_over_baseline: { minimum, maximum, uniform_factor: uniform },
-    baseline_over_candidate: { minimum: 1 / maximum, maximum: 1 / minimum, uniform_factor: uniform == null ? null : 1 / uniform },
+    compared_value_count: left.length,
+    candidate_over_baseline: { minimum, maximum, uniform_factor: uniform ? first : null },
+    baseline_over_candidate: { minimum: 1 / maximum, maximum: 1 / minimum, uniform_factor: uniform ? 1 / first : null },
   };
 }
 

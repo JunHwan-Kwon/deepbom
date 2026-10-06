@@ -30,7 +30,7 @@ expect(callable(deepbom.visualization_manifest), "visualization_manifest must be
 with patch.object(api, "_invoke_json", return_value={"schema": "deepbom.artifact_evidence_envelope.v1"}) as invoke:
     result = deepbom.audit("model.gguf")
     expect(result["schema"].endswith("envelope.v1"), "audit must return the parsed document")
-    expect(invoke.call_args.args[0] == ["audit", "model.gguf", "--scan", "auto", "--output-format", "envelope", "--compact"],
+    expect(invoke.call_args.args[0] == ["audit", str(Path("model.gguf").absolute()), "--scan", "auto", "--output-format", "envelope", "--compact"],
            "audit must build the canonical envelope invocation")
 
 with patch.object(api, "_invoke_json", return_value={
@@ -39,12 +39,12 @@ with patch.object(api, "_invoke_json", return_value={
 }) as invoke:
     document = deepbom.model_ir("model.onnx")
     expect(document["schema"] == "deepbom.model_ir.v1", "model_ir must unwrap the selected section")
-    expect(invoke.call_args.args[0] == ["audit", "model.onnx", "--scan", "auto", "--section", "model_ir", "--compact"],
+    expect(invoke.call_args.args[0] == ["audit", str(Path("model.onnx").absolute()), "--scan", "auto", "--section", "model_ir", "--compact"],
            "model_ir must use the public bounded section contract")
 
 with patch.object(api, "_invoke_json", return_value={"schema": "deepbom.model_ir_visualization_manifest.v1"}) as invoke:
     deepbom.visualization_manifest("model.onnx", views=["architecture-overview"], orientation="landscape")
-    expect(invoke.call_args.args[0] == ["visualize", "model.onnx", "--view", "architecture-overview", "--orientation", "landscape", "--output-format", "json", "--compact"],
+    expect(invoke.call_args.args[0] == ["visualize", str(Path("model.onnx").absolute()), "--view", "architecture-overview", "--orientation", "landscape", "--output-format", "json", "--compact"],
            "visualization_manifest must use the deterministic JSON projection")
 
 with patch.object(api, "_invoke_json", return_value={"schema": "deepbom.tensor_table.v1", "tensors": [{
@@ -53,12 +53,12 @@ with patch.object(api, "_invoke_json", return_value={"schema": "deepbom.tensor_t
     rows = deepbom.tensors("model.gguf")
     expect(rows == [{"name": "w", "element_count": 16, "effective_bits_per_element": Decimal("4.5"), "byte_length": 9}],
            "tensors must return Python-native exact values")
-    expect(invoke.call_args.args[0] == ["gguf", "model.gguf", "--tensors", "--compact"],
+    expect(invoke.call_args.args[0] == ["gguf", str(Path("model.gguf").absolute()), "--tensors", "--compact"],
            "tensors must use the bounded CLI projection")
 
 with patch.object(api, "_invoke_json", return_value={"schema": "deepbom.analysis_selection.v1"}) as invoke:
     deepbom.audit("model.gguf", sections=["summary", "findings"])
-    expect(invoke.call_args.args[0] == ["audit", "model.gguf", "--scan", "auto", "--section", "summary,findings", "--compact"],
+    expect(invoke.call_args.args[0] == ["audit", str(Path("model.gguf").absolute()), "--scan", "auto", "--section", "summary,findings", "--compact"],
            "sections without an explicit output must select analysis")
 
 with patch.object(api, "_invoke_json", return_value={"schema": "deepbom.artifact_evidence_envelope.v1"}) as invoke:
@@ -116,4 +116,62 @@ with tempfile.TemporaryDirectory(prefix="deepbom-policy-test-") as directory:
         else:
             raise AssertionError("a gate exit 2 must raise DeepBomPolicyBlocked")
 
-print("Python facade contract checks passed.")
+summary = {"schema": "deepbom.review_summary.v1", "graph": {"total_macs": None}}
+selection = {"schema": "deepbom.analysis_selection.v1", "sections": {"summary": summary}}
+with patch.object(api, "_invoke_json", return_value=selection):
+    expect(deepbom.inspect("model.onnx") is summary, "inspect must forward the engine summary without recomputing it")
+with patch.object(api, "_invoke_json", side_effect=deepbom.DeepBomPolicyBlocked("blocked", exit_code=2, document=selection)):
+    try:
+        deepbom.inspect("model.onnx", gate="defects")
+    except deepbom.DeepBomPolicyBlocked as error:
+        expect(error.document is summary and error.code == "POLICY_BLOCKED", "inspect policy failure must retain the summary")
+    else:
+        raise AssertionError("expected policy failure")
+with patch.object(api, "_verified_engine", side_effect=RuntimeError("checksum mismatch")):
+    try:
+        deepbom.capabilities()
+    except deepbom.DeepBomInvocationError as error:
+        expect(error.code == "INVOCATION_FAILED", "engine-resolution error must be typed")
+    else:
+        raise AssertionError("invalid engine must fail")
+with tempfile.TemporaryDirectory(prefix="deepbom-sdk-json-") as directory:
+    invalid = Path(directory) / "invalid.json"
+    invalid.write_text('{"value": NaN}', encoding="utf-8")
+    try:
+        api._read_bounded_json(invalid, 1024)
+    except deepbom.DeepBomInvocationError:
+        pass
+    else:
+        raise AssertionError("non-JSON numeric constants must be rejected consistently with Node")
+expect(api._path_text("-model.onnx") == str(Path("-model.onnx").absolute()), "leading '-' filenames must not become options")
+with tempfile.TemporaryDirectory(prefix="deepbom-sdk-strict-json-") as directory:
+    invalid = Path(directory) / "invalid.json"
+    for raw in [b'{"value": 1e999}', b'{"value": "\xff"}', b'[]']:
+        invalid.write_bytes(raw)
+        try:
+            api._read_bounded_json(invalid, 1024)
+        except deepbom.DeepBomInvocationError:
+            pass
+        else:
+            raise AssertionError("non-finite, invalid UTF-8 and non-object results must fail")
+
+def noisy_run(command, **kwargs):
+    kwargs["stderr"].write(b"x" * 100000 + b" diagnostic-tail")
+    return CompletedProcess(command, 1)
+
+with patch.object(api, "_verified_engine", return_value=(Path(sys.executable), None)), patch.object(api.subprocess, "run", side_effect=noisy_run):
+    try:
+        deepbom.capabilities()
+    except deepbom.DeepBomInvocationError as error:
+        expect(len(str(error)) <= 16384 and str(error).endswith("diagnostic-tail"), "retain a bounded diagnostic tail")
+        expect(error.exit_code == 1, "retain engine exit status")
+    else:
+        raise AssertionError("failed engine must not succeed")
+with patch.object(api, "_verified_engine", return_value=(Path(sys.executable), None)), patch.object(api.tempfile, "TemporaryDirectory", side_effect=OSError("disk unavailable")):
+    try:
+        deepbom.capabilities()
+    except deepbom.DeepBomInvocationError:
+        pass
+    else:
+        raise AssertionError("temporary filesystem failures need the public exception contract")
+print("Python SDK contract checks passed.")

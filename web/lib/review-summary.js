@@ -56,6 +56,8 @@ export function buildReviewSummary({ analysis = {}, envelope, artifactIrContext 
     coverage: {
       assessed: Array.isArray(capabilities.assessed) ? capabilities.assessed.length : 0,
       partial: Array.isArray(capabilities.partial) ? capabilities.partial.length : 0,
+      unavailable: Array.isArray(capabilities.unavailable) ? capabilities.unavailable.length : 0,
+      // Retained for v1 consumers; unavailable also includes unselected analyses.
       needs_external_evidence: Array.isArray(capabilities.unavailable) ? capabilities.unavailable.length : 0,
       declared: Number(capabilities?.conservation?.declared || 0),
       applicability: applicabilityCounts,
@@ -87,6 +89,14 @@ export function validateReviewSummary(summary) {
   if (count("artifact_defect_count") !== (summary?.findings?.artifact_defects || []).length) errors.push("artifact_defect_count_mismatch");
   if (count("caution_count") !== (summary?.findings?.cautions || []).length) errors.push("caution_count_mismatch");
   if (count("evidence_needed_count") !== (summary?.findings?.evidence_needed || []).length) errors.push("evidence_needed_count_mismatch");
+  const coverage = summary?.coverage;
+  if (coverage) {
+    const unavailable = coverage.unavailable ?? coverage.needs_external_evidence;
+    if (![coverage.assessed, coverage.partial, unavailable, coverage.declared].every(value => Number.isSafeInteger(value) && value >= 0)
+        || coverage.assessed + coverage.partial + unavailable !== coverage.declared) errors.push("capability_coverage_count_mismatch");
+    if (coverage.unavailable != null && coverage.needs_external_evidence != null
+        && coverage.unavailable !== coverage.needs_external_evidence) errors.push("capability_coverage_alias_mismatch");
+  }
   if (summary?.graph?.total_macs != null && !Number.isFinite(Number(summary.graph.total_macs))) errors.push("graph_total_macs_invalid");
   if (!["exact", "symbolic", "partial", "not_applicable"].includes(summary?.graph?.mac_confidence)) errors.push("graph_mac_confidence_invalid");
   if (!summary?.quantization || typeof summary.quantization.max_risk !== "string") errors.push("quantization_summary_missing");

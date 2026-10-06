@@ -50,6 +50,8 @@ await updateRegex("channels/container/Dockerfile", /^ARG DEEPBOM_VERSION=[^\r\n]
   `ARG DEEPBOM_VERSION=${contract.displayVersion}`);
 await updateRegex("channels/container/README.md", /deepbom:\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?/g,
   `deepbom:${contract.displayVersion}`);
+await updateRegex("channels/container/README.md", /--build-arg DEEPBOM_VERSION=\S+/g,
+  `--build-arg DEEPBOM_VERSION=${contract.displayVersion}`);
 await updateRegex("bin/deepbom.mjs", /const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" \? __DEEPBOM_RELEASE_VERSION__ : "[^"]+";/,
   `const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "${contract.displayVersion}";`);
 await updateRegex("web/lib/app-config.js", /^export const ANALYZER_SEMANTIC_VERSION\s*=\s*"[^"]+";/m,

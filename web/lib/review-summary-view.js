@@ -119,12 +119,12 @@ function coverageCopy(summary) {
   const coverage = summary.coverage || {};
   const assessed = Number(coverage.assessed || 0);
   const partial = Number(coverage.partial || 0);
-  const external = Number(coverage.needs_external_evidence || 0);
+  const external = Number(coverage.unavailable ?? coverage.needs_external_evidence ?? 0);
   const total = assessed + partial + external;
   if (!total) return "";
   const parts = [`${assessed} assessed`];
   if (partial) parts.push(`${partial} partial`);
-  parts.push(`${external} ${external === 1 ? "needs" : "need"} external evidence`);
+  parts.push(`${external} unavailable in this analysis`);
   return `Evidence capabilities: ${total} in scope — ${parts.join(", ")}.`;
 }
 

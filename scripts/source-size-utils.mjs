@@ -29,6 +29,7 @@ export const DEFAULT_IGNORED_FILE_SUFFIXES = [".local.md"];
 export const BUDGET_SOURCE_EXTENSIONS = new Set([
   ".js",
   ".mjs",
+  ".mts",
   ".ts",
   ".tsx",
   ".rs",
@@ -43,6 +44,7 @@ export const BUDGET_SOURCE_EXTENSIONS = new Set([
 
 const RUNTIME_SOURCE_PREFIXES = [
   "bin/",
+  "sdk/",
   "web/",
   "worker/",
   "src/",

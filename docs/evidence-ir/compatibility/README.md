@@ -1,6 +1,6 @@
 # Evidence IR compatibility catalog
 
-Catalog **0.2.0** · draft. Generated from [one mapping definition](../../../config/evidence-compatibility.mjs); do not edit this table.
+Catalog **0.2.1** · draft. Generated from [one mapping definition](../../../config/evidence-compatibility.mjs); do not edit this table.
 
 Core input-to-IR crosswalk and principal evidence exports. Field groups are navigation aids, not an exhaustive native-format field inventory or a claim of round-trip equivalence. Auxiliary CLI commands and runtime-specific profile fields are outside this catalog.
 

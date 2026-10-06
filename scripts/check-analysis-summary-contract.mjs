@@ -7,6 +7,10 @@ import {
   normalizeAnalysisSummaryContract,
 } from "../web/lib/analysis-summary-contract.js";
 import { buildMetricCoverageManifest } from "../web/lib/metric-coverage.js";
+import { buildArtifactEvidenceEnvelope } from "../web/lib/artifact-evidence-envelope.js";
+import { analyzeOnnxModel } from "../web/onnx.js";
+import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 
 assert.deepEqual(MAC_CONFIDENCE_VALUES, ["exact", "symbolic", "partial", "not_applicable"]);
 
@@ -48,3 +52,21 @@ for (const [path, expected] of [
 }
 
 console.log("Analysis summary contract verified: MAC confidence is explicit and normalized across executable graphs and weight containers.");
+
+const bytes = await readFile("web/samples/mnist-8.onnx"), sha = createHash("sha256").update(bytes).digest("hex");
+const analysis = analyzeOnnxModel(bytes, "mnist-8.onnx"); analysis.model_sha256 = sha;
+const options = { filename: "mnist-8.onnx", sha256: sha };
+assert(buildArtifactEvidenceEnvelope(analysis, options).capabilities.assessed.includes("static_cost"));
+analysis.total_macs = null;
+analysis.mac_assessment = { status: "partially_assessed", compute_ops: 3, assessed_compute_ops: 2 };
+const incomplete = buildArtifactEvidenceEnvelope(analysis, options);
+assert(!incomplete.capabilities.assessed.includes("static_cost"), "assessment presence does not establish complete numerical cost");
+assert(incomplete.capabilities.partial.includes("static_cost"));
+assert.equal(incomplete.graph.total_macs, null, "unknown cost must remain unknown");
+analysis.weight_integrity = { status: "not_assessed", coverage_status: "not_assessed" };
+assert(buildArtifactEvidenceEnvelope(analysis, options).capabilities.unavailable.includes("tensor_payloads"));
+analysis.weight_integrity = { status: "assessed", coverage_status: "partial" };
+assert(buildArtifactEvidenceEnvelope(analysis, options).capabilities.partial.includes("tensor_payloads"));
+Object.defineProperty(analysis, "preprocessing_realizability", { get() { throw new Error("injected finding-construction failure"); } });
+assert.throws(() => buildArtifactEvidenceEnvelope(analysis, options), /injected finding-construction failure/,
+  "an internal finding failure must not produce zero defects and a successful envelope");

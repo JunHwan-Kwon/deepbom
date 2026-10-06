@@ -3,14 +3,47 @@
 Local deployment-artifact analysis for TFLite, ONNX, GGUF, SafeTensors, Core ML,
 and ExecuTorch.
 
+## Programmatic integration
+
+The Node/TypeScript SDK is available from version **2.1.0**:
+
+```sh
+npm install deepbom@2.1.0
+```
+
+Follow the [integration walkthrough](https://github.com/JunHwan-Kwon/deepbom/blob/main/examples/integrations/README.md)
+for runnable exporter, MLflow and release-review examples.
+
+```js
+import { inspect, audit, DeepBomPolicyBlocked } from "deepbom";
+
+const summary = await inspect("model.onnx");
+console.log(summary.artifact.sha256, summary.coverage);
+try {
+  const evidence = await audit("model.onnx", { gate: "defects" });
+  // Store this native evidence; apply deployment policy separately.
+} catch (error) {
+  if (!(error instanceof DeepBomPolicyBlocked)) throw error;
+  console.log(error.code, error.document);
+}
+```
+
+This is an asynchronous ESM API for Node >=20 that invokes the bundled CLI
+without a shell or engine download. It reuses the common analysis engine and
+ships TypeScript declarations. Python uses the same engine in its wheel.
+See the [SDK contract](https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/SDK_CONTRACT.md)
+for supported options, structured errors and independent IR versioning.
+
+## Command line
+
 For a local Codex or Claude Code project, preview and install the bundled Agent
 Skill without operating an analysis server:
 
 ```console
-npx -y deepbom@2.0.0 integrate codex
-npx -y deepbom@2.0.0 integrate codex --apply
-npx -y deepbom@2.0.0 integrate claude-code
-npx -y deepbom@2.0.0 integrate claude-code --apply
+npx -y deepbom@2.1.0 integrate codex
+npx -y deepbom@2.1.0 integrate codex --apply
+npx -y deepbom@2.1.0 integrate claude-code
+npx -y deepbom@2.1.0 integrate claude-code --apply
 ```
 
 ```console
@@ -28,10 +61,10 @@ npx deepbom explore model.tflite --target-profile target-profile.json
 npx deepbom audit model.pte --executorch-build deepbom.executorch-build.json --compact
 npx deepbom capabilities --format agent-json
 npx deepbom capabilities --format agent-text
-npx -y deepbom@2.0.0 mcp
+npx -y deepbom@2.1.0 mcp
 ```
 
-Claude Desktop can install the version-matched `deepbom-2.0.0.mcpb` asset
+Claude Desktop can install the version-matched `deepbom-2.1.0.mcpb` asset
 from the corresponding GitHub Release as a local desktop extension.
 
 ChatGPT developer-mode users can connect `https://deepbom.org/mcp` for one
