@@ -1,4 +1,6 @@
 import { buildActivationIr, buildNumericalEvidenceBundle } from "./activation-ir.js";
+import { activationInventory, buildNumericalDetails } from "./numerical-details.js";
+import { distributionDetailsView, activationFlowView, activationComparisonView, FLOW_PAGE_SIZE } from "./numerical-details-view.js";
 import { WEIGHT_VIEWS, renderWeightAnalysisView } from "./weight-analysis-view.js";
 import { installPruningView } from "./weight-pruning-view.js";
 import { weightAnalysisOptions } from "./weight-analysis.js";
@@ -23,12 +25,13 @@ export function installNumericalPanel(host, getContext) {
       <span class="weight-local">Local analysis · no model execution</span>
     </header>
     <div class="weight-toolbar">
-      <div class="weight-run-actions"><button type="button" data-action="weights" class="weight-primary">Analyze weights</button><button type="button" data-action="cancel" hidden>Cancel</button><button type="button" data-action="baseline">Choose original model</button><input type="file" data-baseline-file hidden aria-label="Choose original model"><button type="button" data-action="options">Analysis options</button><input type="file" data-options-file accept="application/json,.json" hidden aria-label="Import weight analysis options"><button type="button" data-action="import">Import activation capture</button><input type="file" accept="application/json,.json" hidden aria-label="Import activation capture"></div>
+      <div class="weight-run-actions"><button type="button" data-action="weights" class="weight-primary">Analyze weights</button><button type="button" data-action="cancel" hidden>Cancel</button><button type="button" data-action="baseline">Choose original model</button><input type="file" data-baseline-file hidden aria-label="Choose original model"><button type="button" data-action="options">Analysis options</button><input type="file" data-options-file accept="application/json,.json" hidden aria-label="Import weight analysis options"><button type="button" data-action="import">Import activation capture</button><input type="file" accept="application/json,.json" hidden aria-label="Import activation capture"><button type="button" data-action="activation-baseline" disabled>Compare reference capture</button><input type="file" accept="application/json,.json" hidden aria-label="Import reference activation capture"><button type="button" data-action="clear-activation-baseline" hidden>Clear reference capture</button></div>
       <div class="weight-export-actions"><button type="button" data-action="svg" disabled>Save SVG</button><button type="button" data-action="png" disabled>Save PNG</button><button type="button" data-action="save" disabled>Save evidence JSON</button></div>
     </div>
     <div class="weight-status-line"><p role="status" aria-live="polite">Select and audit a model to begin.</p><progress hidden aria-label="Weight analysis progress"></progress></div>
     <p data-baseline-label class="weight-baseline-label" hidden></p><dl class="weight-overview" data-overview></dl>
     <details class="weight-method" data-feature-coverage hidden></details>
+    <details class="weight-method" data-activation-flow hidden><summary>Activation flow · inputs, captures and gaps</summary><div data-flow-content></div></details>
     <div class="weight-view-controls"><div class="weight-segmented" role="group" aria-label="Numeric evidence source"><button type="button" data-source="weight" aria-pressed="true">Stored weights</button><button type="button" data-source="activation" aria-pressed="false">Imported activations <span data-activation-count>0</span></button></div><span data-subject class="weight-subject"></span></div>
     <div class="weight-layout">
       <aside class="weight-inventory" aria-label="Tensor inventory">
@@ -50,6 +53,7 @@ export function installNumericalPanel(host, getContext) {
   const status = $('[role="status"]'), fileInput = $('[aria-label="Import activation capture"]'), search = $('[type="search"]');
   let model = null, weight = null, activation = null, worker = null, generation = 0, source = "weight", selected = null, page = 0;
   let advanced = null, comparison = null, baseline = null, options = {}, mapping = [], inspection = "distribution";
+  let activationBaseline = null, details = null, detailsKey = "", flowPage = 0, captureImportGeneration = 0;
   let appliedOptions = {}, pruningView = null, pruningPreview = null, mapMode = "distribution";
   const pruningStates = new Map();
   let logCount = false, allRows = [], filtered = [], visible = [], index = new Map(), lastSvg = null;
@@ -65,6 +69,7 @@ export function installNumericalPanel(host, getContext) {
     if (next?.model_ir_sha256 === model?.model_ir_sha256) return false;
     pruningView?.destroy(); pruningView = null; pruningPreview = null; pruningStates.clear(); appliedOptions = {};
     stopWorker(); model = next; weight = null; activation = null; advanced = null; comparison = null; options = {}; mapping = []; inspection = "distribution"; selected = null; page = 0; source = "weight";
+    activationBaseline = null; details = null; detailsKey = ""; flowPage = 0; captureImportGeneration++;
     search.value = ""; $('[data-filter="status"]').value = ""; $('[data-sort]').value = "source";
     button("weights").disabled = !model; button("model").disabled = !model; button("import").disabled = !model;
     setStatus(model ? "Structure is ready. Analyze weights to inspect stored numeric values; the model will not run." : "Select and audit a model to begin.");
@@ -73,7 +78,7 @@ export function installNumericalPanel(host, getContext) {
   function requireContext() { sync(); const context = getContext(); if (!model || !context?.model) throw new Error("Analyze a model first."); return context; }
   function rebuild() {
     const connectionIndex = createConnectionIndex(model);
-    allRows = source === "activation" ? (activation?.tensors || []).map(row => ({...row,status:"assessed"}))
+    allRows = source === "activation" ? activationInventory(model, activation)
       : weight?.tensors || (model?.tensors_and_storage.storage_objects || []).map(row => ({...row,storage_ref:row.id,native_locator:row.native_source?.path || row.id,status:"not_analyzed",statistics:null,binding_refs:connectionIndex.bindingsByStorage.get(row.id) || []}));
     index = new Map(allRows.map(row => [row.id,{row,links:linkedOperations(row,model,connectionIndex)}]));
     for (const entry of index.values()) entry.query = [rowName(entry.row),entry.row.id,entry.row.storage_ref,entry.row.dtype,...entry.links.map(link => operationLabel(link.operation))].join(" ").toLowerCase();
@@ -83,21 +88,34 @@ export function installNumericalPanel(host, getContext) {
     for (const tab of host.querySelectorAll('[data-source]')) tab.setAttribute("aria-pressed",String(tab.dataset.source === source));
     $('[data-activation-count]').textContent = activation?.coverage.captured_count || "0";
     $('[data-subject]').textContent = model?.artifact?.filename || "";
+    const key = [weight?.weight_ir_sha256, activation?.activation_ir_sha256, activationBaseline?.activation_ir_sha256].join(":");
+    if (key !== detailsKey) {
+      details = weight || activation ? buildNumericalDetails(model, { weightIr: weight, activationIr: activation, baselineActivationIr: activationBaseline }) : null;
+      detailsKey = key;
+    }
+    button("activation-baseline").disabled = !activation;
+    button("clear-activation-baseline").hidden = !activationBaseline;
+    $('[data-activation-flow]').hidden = source !== "activation" || !activation;
+    renderFlow();
     renderOverview(); renderInventory(); renderMethod();
     button("save").disabled = !weight && !activation;
   }
   function renderOverview() {
     const doc = source === "weight" ? weight : activation, stats = (doc?.tensors || []).filter(row => row.statistics).map(row => row.statistics);
     const sum = get => stats.reduce((total,row) => total + BigInt(get(row)),0n);
-    const total = sum(row => row.value_count), zero = sum(row => row.zero_count), unsafe = sum(row => row.unsafe_integer_count);
+    const total = sum(row => row.value_count), zero = sum(row => row.zero_count);
     const nonfinite = sum(row => Object.values(row.nonfinite).reduce((n,c) => n + BigInt(c),0n));
     const assessed = source === "weight" ? weight?.coverage.assessed_count : activation?.coverage.captured_count;
     const missing = source === "weight" ? weight?.coverage.not_assessed_count : activation?.coverage.missing_count;
-    $('[data-overview]').innerHTML = metric(source === "weight" ? "Stored payloads" : "Captured tensors",String(allRows.length),source === "weight" ? "Model IR inventory" : "Imported execution")
+    $('[data-overview]').innerHTML = metric(source === "weight" ? "Stored payloads" : "Value inventory",String(allRows.length),source === "weight" ? "Model IR inventory" : "Includes inputs and capture gaps")
       + metric("Assessed values",doc ? countLabel(total) : "Not analyzed",doc ? "Exact count · no sampling" : "Optional payload inspection")
-      + metric("Exact zeros",stats.length && !unsafe ? countLabel(zero) : "Not assessed",unsafe ? "Unsafe integer arithmetic" : "Within assessed tensors")
+      + metric("Exact zeros",stats.length ? countLabel(zero) : "Not assessed","Within assessed tensors")
       + metric("Non-finite values",stats.length ? countLabel(nonfinite) : "Not assessed","Within assessed tensors")
-      + metric("Coverage",doc ? `${assessed} / ${source === "weight" ? weight.coverage.inventory_count : activation.coverage.requested_count}` : "Pending",doc ? `${missing} ${source === "weight" ? "not assessed" : "missing"}` : "Explicit opt-in");
+      + metric("Coverage",doc ? `${assessed} / ${source === "weight" ? weight.coverage.inventory_count : activation.coverage.requested_count}` : "Pending",doc ? `${missing} ${source === "weight" ? "not assessed" : "missing; totals exclude inputs and gaps"}` : "Explicit opt-in");
+  }
+  function renderFlow() {
+    flowPage = Math.min(flowPage, Math.max(0, Math.ceil((details?.activation?.flow.length || 0) / FLOW_PAGE_SIZE) - 1));
+    $('[data-flow-content]').innerHTML = activationFlowView(details, flowPage);
   }
   function renderInventory() {
     const query = search.value.trim().toLowerCase(), dtype = $('[data-filter="dtype"]').value, state = $('[data-filter="status"]').value, sort = $('[data-sort]').value;
@@ -122,15 +140,18 @@ export function installNumericalPanel(host, getContext) {
     const detail = $('[data-detail]');
     if (!row) {detail.innerHTML = empty("No tensor selected","Select a tensor from the inventory or distribution map."); lastSvg = null; button("svg").disabled = button("png").disabled = true; return;}
     const links = index.get(row.id).links, s = row.statistics;
+    const profile = source === "weight" ? details?.weights.find(t => t.weight_ref === row.id)?.distribution : details?.activation?.tensors.find(t => t.tensor_ref === row.id)?.distribution;
     lastSvg = histogramSvg(row,colors,{logCount});
     const connections = connectionsSvg(row,links,colors);
-    detail.innerHTML = `<header class="weight-section-head"><div><span class="weight-eyebrow">02 / Selected tensor</span><h3>${esc(rowName(row))}</h3><p class="weight-tensor-contract">${esc(row.dtype)} <span>·</span> ${esc(shapeLabel(row))} <span>·</span> ${esc(phrase(row.representation || (source === "activation" ? "runtime capture" : row.status)))}</p></div><span class="weight-badge ${esc(row.status)}">${esc(phrase(row.status))}</span></header>
-      <p class="weight-chart-note">${source === "weight" ? "Stored payload statistics; restored real-value analysis is labeled separately below." : "Captured runtime values."}</p><dl class="weight-stat-grid">${metric("Mean",numberLabel(s?.mean))}${metric("Standard deviation",numberLabel(s?.population_stddev),"Population")}${metric("RMS",numberLabel(s?.rms))}${metric("Zero fraction",zeroLabel(s),"Among finite values")}${metric("Minimum",s?.integer_minimum != null && s?.precision === "not_assessed_unsafe_integer_arithmetic" ? s.integer_minimum : numberLabel(s?.minimum))}${metric("Maximum",s?.integer_maximum != null && s?.precision === "not_assessed_unsafe_integer_arithmetic" ? s.integer_maximum : numberLabel(s?.maximum))}</dl>
+    detail.innerHTML = `<header class="weight-section-head"><div><span class="weight-eyebrow">02 / Selected tensor</span><h3>${esc(rowName(row))}</h3><p class="weight-tensor-contract">${esc(row.dtype)} <span>·</span> ${esc(shapeLabel(row))} <span>·</span> ${esc(phrase(row.representation || (source === "activation" ? row.capture_status : row.status)))}</p></div><span class="weight-badge ${esc(row.status)}">${esc(phrase(row.status))}</span></header>
+      <p class="weight-chart-note">${source === "weight" ? "Stored payload statistics; restored real-value analysis is labeled separately below." : row.statistics ? "Captured runtime values; integer codes are not implicitly dequantized." : "No numeric values were captured for this entry. This is not a zero tensor."}</p><dl class="weight-stat-grid">${metric("Mean",numberLabel(s?.mean))}${metric("Standard deviation",numberLabel(s?.population_stddev),"Population")}${metric("RMS",numberLabel(s?.rms))}${metric("Zero fraction",zeroLabel(s),"Among finite values")}${metric("Minimum",s?.integer_minimum != null && s?.precision === "not_assessed_unsafe_integer_arithmetic" ? s.integer_minimum : numberLabel(s?.minimum))}${metric("Maximum",s?.integer_maximum != null && s?.precision === "not_assessed_unsafe_integer_arithmetic" ? s.integer_maximum : numberLabel(s?.maximum))}</dl>
       ${source === "weight" ? `<label class="weight-inspection-label">Inspection <select data-inspection>${Object.entries(INSPECTION_VIEWS).map(([id,label]) => `<option value="${id}" ${inspection === id ? "selected" : ""}>${label}</option>`).join("")}</select></label><nav class="weight-inspection-tabs" aria-label="Weight inspection views">${Object.entries(INSPECTION_VIEWS).map(([id,label]) => `<button type="button" data-inspection-tab="${id}" aria-pressed="${inspection === id}">${label}</button>`).join("")}</nav>` : ""}
       <div class="weight-plot-head"><strong>Value distribution</strong><label><input type="checkbox" data-log-count ${logCount ? "checked" : ""}> Log count axis</label></div>
       <div class="weight-histogram" data-histogram>${lastSvg || empty(row.status === "not_analyzed" ? "Numeric values have not been read" : "Histogram unavailable",row.reason ? phrase(row.reason) : s?.unsafe_integer_count !== "0" && s ? "Exact integer extrema are preserved. Floating statistics and histogram are not assessed for unsafe integer arithmetic." : s ? "No finite values are available for a histogram." : "Run optional weight analysis to populate this view.")}</div>
       <p class="weight-bin-readout" data-bin-readout>Hover or select a bin for its exact interval and count. Unequal numeric intervals are drawn with equal screen width; this is a count histogram, not density.</p>
       ${s ? `<div class="weight-integrity"><span>NaN <b>${countLabel(s.nonfinite.nan)}</b></span><span>+∞ <b>${countLabel(s.nonfinite.positive_infinity)}</b></span><span>−∞ <b>${countLabel(s.nonfinite.negative_infinity)}</b></span><span>Negative zero <b>${countLabel(s.negative_zero_count)}</b></span><span>Values <b>${countLabel(s.value_count)}</b></span></div>` : ""}
+      ${distributionDetailsView(profile)}
+      ${source === "activation" ? activationComparisonView(details, row, activationBaseline, colors) : ""}
       <div class="weight-connections"><header class="weight-section-head"><div><span class="weight-eyebrow">03 / Serialized structure</span><h3>Operation connections</h3></div><span>${links.length} connected operation${links.length === 1 ? "" : "s"}</span></header>${connections || `<p class="weight-connection-empty">${source === "activation" ? "No serialized operation port is bound to this captured value." : "No serialized operation binding is available for this tensor. A name alone does not establish a layer relationship."}</p>`}
       ${links.length ? `<details><summary>All ${links.length} operation connections${links.length > 12 ? " · diagram shows first 12" : ""}</summary><ul>${links.map(({operation:op,ports}) => `<li><strong>${esc(operationLabel(op))}</strong> · ${esc(op.native_op?.name || op.kind)}<code>${esc(op.id)}</code><span>${esc(ports.join(", "))}</span></li>`).join("")}</ul></details>` : ""}<p class="weight-chart-note">Connections come from serialized references. They do not measure correlation or causal importance, and do not identify training layers or runtime scheduling.</p></div>
       <details class="weight-raw"><summary>Exact tensor evidence</summary><pre>${esc(JSON.stringify(row,null,2))}</pre></details>`;
@@ -217,6 +238,14 @@ export function installNumericalPanel(host, getContext) {
       const state = pruningStates.get(selected) || {}; state.channel = Number(channelTarget.dataset.weightChannel); pruningStates.set(selected,state);
       inspection = "pruning"; renderCharts(); return;
     }
+    const flowPaging = event.target.closest("[data-flow-page]");
+    if (flowPaging) { flowPage = Math.max(0, flowPage + (flowPaging.dataset.flowPage === "next" ? 1 : -1)); renderFlow(); return; }
+    const flowTensor = event.target.closest("[data-flow-tensor]");
+    if (flowTensor && index.has(flowTensor.dataset.flowTensor)) {
+      search.value = ""; $('[data-filter="dtype"]').value = ""; $('[data-filter="status"]').value = ""; $('[data-sort]').value = "source";
+      selected = flowTensor.dataset.flowTensor; page = Math.floor(allRows.findIndex(row => row.id === selected) / PAGE_SIZE);
+      renderInventory(); $('[data-detail]').scrollIntoView({ block: "start", behavior: "instant" }); return;
+    }
     const tensor = event.target.closest("[data-tensor-id]");
     if (tensor && index.has(tensor.dataset.tensorId)) {
       const section = tensor.closest('[data-inventory]') ? '[data-inventory]' : '[data-map]';
@@ -262,18 +291,28 @@ export function installNumericalPanel(host, getContext) {
   };
   host.addEventListener('click', event => { if (!event.target.closest('[data-action="kernel-apply"]')) return; const channel = Number($('[data-kernel-channel]').value); if (!Number.isSafeInteger(channel) || channel < 0) {setStatus('Choose a nonnegative channel index.',true); return;} stopWorker(); options = {...options,axes:{...options.axes,[selected]:{...options.axes?.[selected],kernel_channel:channel}}}; analyzeWeights(); });
   button("import").onclick = () => fileInput.click();
-  fileInput.onchange = async () => {
+  button("activation-baseline").onclick = () => $('[aria-label="Import reference activation capture"]').click();
+  button("clear-activation-baseline").onclick = () => { captureImportGeneration++; activationBaseline = null; rebuild(); setStatus("Reference capture cleared. Current evidence is retained."); };
+  async function importCapture(input, reference) {
+    let ticket;
     try {
-      requireContext(); const file = fileInput.files[0]; if (!file) return;
+      requireContext(); const file = input.files[0]; if (!file) return;
+      ticket = ++captureImportGeneration;
+      if (reference && !activation) throw new Error("Import the current activation capture first.");
       if (file.size > 16*1024*1024) throw new Error("Activation capture exceeds 16 MiB.");
       const boundModel = model, digest = model.model_ir_sha256, text = await file.text();
+      if (ticket !== captureImportGeneration) return;
       if (getContext()?.model?.model_ir_sha256 !== digest) throw new Error("Model changed during import. Select a capture for the current artifact.");
-      activation = buildActivationIr(boundModel,parseStrictJson(text,"activation capture")); source = "activation"; selected = null; page = 0;
-      setStatus(`${activation.coverage.captured_count}/${activation.coverage.requested_count} requested values captured · ${activation.coverage.missing_count} missing. Imported capture; no execution performed here.`);
+      const document = buildActivationIr(boundModel,parseStrictJson(text,"activation capture"));
+      if (reference) activationBaseline = document; else activation = document;
+      source = "activation"; selected = null; page = 0;
+      setStatus(reference ? "Reference capture loaded. Compare distributions and recorded execution context below." : `${activation.coverage.captured_count}/${activation.coverage.requested_count} requested values captured · ${activation.coverage.missing_count} missing. Imported capture; no execution performed here.`);
       rebuild();
-    } catch (error) {sync(); setStatus(error.message,true);} finally {fileInput.value = "";}
-  };
-  button("save").onclick = () => {try {requireContext(); if (!weight && !activation) throw new Error("No numeric evidence is available for this artifact."); saveJson("deepbom-numerical-evidence.json",{bundle:buildNumericalEvidenceBundle(model,weight,activation),model_ir:model,weight_ir:weight,activation_ir:activation,weight_analysis:advanced,weight_comparison:comparison,pruning_preview:pruningPreview});} catch (error) {setStatus(error.message,true);}};
+    } catch (error) { if (ticket != null && ticket !== captureImportGeneration) return; sync(); setStatus(error.message,true); } finally {input.value = "";}
+  }
+  fileInput.onchange = () => importCapture(fileInput, false);
+  $('[aria-label="Import reference activation capture"]').onchange = event => importCapture(event.target, true);
+  button("save").onclick = () => {try {requireContext(); if (!weight && !activation) throw new Error("No numeric evidence is available for this artifact."); saveJson("deepbom-numerical-evidence.json",{bundle:buildNumericalEvidenceBundle(model,weight,activation),model_ir:model,weight_ir:weight,activation_ir:activation,activation_baseline_ir:activationBaseline,numerical_details:details,weight_analysis:advanced,weight_comparison:comparison,pruning_preview:pruningPreview});} catch (error) {setStatus(error.message,true);}};
   button("model").onclick = () => {try {requireContext(); saveJson("deepbom-model-ir.json",model);} catch (error) {setStatus(error.message,true);}};
   for (const type of ["svg","png"]) button(type).onclick = () => exportFigure(type).catch(error => setStatus(error.message,true));
   const themeObserver = new MutationObserver(() => { if (pruningView) { pruningView.repaint(); const colors=palette(); const entry=index.get(selected); const diagram=$(".weight-connections > svg"); if (diagram && entry) diagram.outerHTML=connectionsSvg(entry.row,entry.links,colors); $("[data-map]").innerHTML=mapMode==="distribution"?distributionMapSvg(visible,selected,colors):tensorMetricMapSvg(visible,selected,colors,mapMode); } else renderCharts(); });

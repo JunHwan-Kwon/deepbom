@@ -57,10 +57,12 @@ await copyDir(path.join(root, "web", "evaluate"), path.join(dist, "evaluate"));
 await copyDir(path.join(root, "web", "for-agents"), path.join(dist, "for-agents"));
 await copyDir(path.join(root, "web", "get-started"), path.join(dist, "get-started"));
 await copyDir(path.join(root, "web", "guides"), path.join(dist, "guides"));
+await copyDir(path.join(root, "web", "reports"), path.join(dist, "reports"));
 await rm(path.join(dist, "web", "evaluate"), { recursive: true, force: true });
 await rm(path.join(dist, "web", "for-agents"), { recursive: true, force: true });
 await rm(path.join(dist, "web", "get-started"), { recursive: true, force: true });
 await rm(path.join(dist, "web", "guides"), { recursive: true, force: true });
+await rm(path.join(dist, "web", "reports"), { recursive: true, force: true });
 for (const file of deploymentExcludedWebFiles) {
   await rm(path.join(dist, "web", file), { force: true });
 }
@@ -124,8 +126,9 @@ await copyFile(
   path.join(dist, ".well-known", "deepbom-signing-keys.json"),
 );
 await mkdir(path.join(dist, "schemas"), { recursive: true });
-for (const name of ["deepbom-model-ir-v1.schema.json", "deepbom-numerical-ir-v1.schema.json", "deepbom-weight-analysis-v1.schema.json", "deepbom-provenance-ir-v1.schema.json", "deepbom-evidence-ir-v1.schema.json"]) await copyFile(path.join(root, "docs", "schemas", name), path.join(dist, "schemas", name));
+for (const name of ["deepbom-model-ir-v1.schema.json", "deepbom-numerical-ir-v1.schema.json", "deepbom-weight-analysis-v1.schema.json", "deepbom-provenance-ir-v1.schema.json", "deepbom-evidence-ir-v1.schema.json", "deepbom-numerical-details-v1.schema.json", "deepbom-native-evidence-v1.schema.json", "deepbom-evidence-ir-v2.schema.json", "deepbom-optimization-report-v1.schema.json", "deepbom-optimization-diff-v1.schema.json", "deepbom-optimization-report-access-v1.schema.json"]) await copyFile(path.join(root, "docs", "schemas", name), path.join(dist, "schemas", name));
 await copyFile(path.join(root, "docs", "evidence-ir", "catalog.json"), path.join(dist, "schemas", "evidence-ir-catalog.json"));
+await copyFile(path.join(root, "docs", "evidence-ir", "native-catalog.json"), path.join(dist, "schemas", "native-evidence-catalog.json"));
 await copyFile(path.join(root, "docs", "schemas", "deepbom-evidence-compatibility-v1.schema.json"), path.join(dist, "schemas", "deepbom-evidence-compatibility-v1.schema.json"));
 await mkdir(path.join(dist, "schemas", "compatibility"), { recursive: true });
 for (const name of await readdir(path.join(root, "docs", "evidence-ir", "compatibility"))) {

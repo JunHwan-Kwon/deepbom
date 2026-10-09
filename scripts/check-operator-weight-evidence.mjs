@@ -1,0 +1,61 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {analyzeOnnxModel} from '../web/onnx.js';
+import {initSync,analyze_tflite,compute_weight_histogram} from '../pkg/tflite_wasm_audit.js';
+import {getArtifactIrContext,requireArtifactIrConsumerView} from '../web/lib/artifact-ir-context.js';
+import {sha256BytesHex} from '../web/lib/sha256-sync.js';
+import {buildWeightIr} from '../web/lib/weight-ir.js';
+import {buildWeightEvidence} from '../web/lib/weight-analysis.js';
+import {operatorWeightSelection,operatorWeightView,createOperatorWeightReader} from '../web/lib/operator-weight-evidence.js';
+import {describeDistribution} from '../web/lib/numerical-ir/distribution.js';
+
+const context=(bytes,analysis)=>{
+  analysis.model_sha256=sha256BytesHex(bytes);
+  return getArtifactIrContext(analysis,{filename:analysis.filename,format:analysis.format,sha256:analysis.model_sha256,size:bytes.length});
+};
+const bytes=new Uint8Array(await readFile('web/samples/sample_cnn_float.onnx'));
+const analysis=analyzeOnnxModel(bytes,'sample.onnx'),ctx=context(bytes,analysis),model=ctx.model_ir;
+assert.throws(()=>requireArtifactIrConsumerView(analysis),/common IR context/);
+assert.equal(requireArtifactIrConsumerView(ctx.primary_view),ctx.primary_view);
+const calls=[];
+let current={model,analysis,source:bytes};
+const reader=createOperatorWeightReader({getContext:()=>current,runWeight:async p=>{
+  calls.push(p);return p.advanced ? buildWeightEvidence(p.model,p.analysis,p.file,{weightIr:p.weightIr,options:p.options}) : buildWeightIr(p.model,p.analysis,p.file);
+}});
+const bound=model.program.operations.filter(op=>operatorWeightSelection(model,op.native_index).storage.size);
+const first=bound[0].native_index;
+const [a,b]=await Promise.all([reader(first),reader(first)]);
+assert.equal(a,b);assert.equal(calls.length,2,'concurrent requests share basic and advanced evidence');
+const independent=await buildWeightIr(model,analysis,bytes);
+assert.equal(a.weight_ir_sha256,independent.weight_ir_sha256);
+for(const row of a.rows) assert.deepEqual(row.tensor,independent.tensors.find(t=>t.id===row.tensor.id));
+assert(a.rows.length>0);
+const stored=new Set(model.weight_bindings.bindings.filter(b=>b.operation_ref===a.operation_ref).map(b=>b.storage_ref));
+assert(a.rows.every(r=>stored.has(r.tensor.storage_ref)));
+await reader(bound[1].native_index);assert.equal(calls.filter(p=>!p.advanced).length,1);
+await assert.rejects(()=>reader(999999),/unambiguous/);
+const unbound=model.program.operations.find(op=>!operatorWeightSelection(model,op.native_index).storage.size);
+const n=calls.length;assert.deepEqual((await reader(unbound.native_index)).rows,[]);assert.equal(calls.length,n);
+const different=bytes.slice();different[different.length-1]^=1;
+current={model,analysis,source:different};await assert.rejects(()=>reader(first),/SHA-256/);
+current={model,analysis,source:bytes};assert((await reader(first)).rows.length);
+const changed=structuredClone(independent);changed.source.artifact_sha256='0'.repeat(64);
+assert.throws(()=>operatorWeightView(model,first,{weight_ir:changed}),/source|binding|digest/);
+
+initSync({module:await readFile('pkg/tflite_wasm_audit_bg.wasm')});
+const tf=new Uint8Array(await readFile('web/samples/mobilenet_v2_1.0_224_quant.tflite'));
+const original=analyze_tflite(tf,'zero.tflite');
+const tensor=original.tensors.find(t=>t.constant_buffer&&t.dtype==='UINT8');
+const zeroed=tf.slice();zeroed.fill(0,tensor.buffer_data_offset,tensor.buffer_data_offset+tensor.buffer_data_length);
+const zeroAnalysis=analyze_tflite(zeroed,'zero.tflite'),zeroModel=context(zeroed,zeroAnalysis).model_ir;
+const weight=await buildWeightIr(zeroModel,zeroAnalysis,zeroed);
+const row=weight.tensors.find(r=>r.name===tensor.name);
+assert(row);assert.equal(row.statistics.minimum,0);assert.equal(row.statistics.maximum,0);
+for(const q of describeDistribution(row.statistics).quantiles.intervals){assert.equal(q.lower,0);assert.equal(q.upper,0);assert.equal(q.exact,true);}
+const op=zeroModel.weight_bindings.bindings.find(b=>b.storage_ref===row.storage_ref).operation_ref;
+const index=zeroModel.program.operations.find(o=>o.id===op).native_index;
+const advanced=await buildWeightEvidence(zeroModel,zeroAnalysis,zeroed,{weightIr:weight,options:{tensor_ids:[row.id]}});
+const view=operatorWeightView(zeroModel,index,advanced);
+assert.deepEqual(view.rows.find(r=>r.tensor.id===row.id).tensor.statistics,row.statistics);
+assert.throws(()=>compute_weight_histogram(zeroed,'zero.tflite',tensor.index,'android_mid_a55'),/retired.*Weight IR/);
+console.log('Operator Weight flow passed: ONNX and TFLite, exact Model IR bindings, common statistics, zero quantiles, cache/digest isolation, unavailable evidence and retired bypass.');

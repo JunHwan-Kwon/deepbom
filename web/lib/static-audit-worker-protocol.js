@@ -14,7 +14,6 @@ export const STATIC_AUDIT_OPERATION = Object.freeze({
   TFLITE_INPUT_INFLUENCE: "tflite_input_influence",
   TFLITE_OUTPUT_INFLUENCE: "tflite_output_influence",
   TFLITE_RUNTIME_CALIBRATION: "tflite_runtime_calibration",
-  TFLITE_WEIGHT_HISTOGRAM: "tflite_weight_histogram",
   TFLITE_REDESIGN_PROJECT: "tflite_redesign_project",
   TFLITE_REDESIGN_PARETO: "tflite_redesign_pareto",
   TFLITE_MODEL_TOMOGRAPHY: "tflite_model_tomography",

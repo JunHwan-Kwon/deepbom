@@ -130,7 +130,7 @@
     "web/app.js": {
       "required_fragments": [
         "function currentAnalysisView()",
-        "const artifactView = currentArtifactIrContext?.primary_view || analysis;",
+        "const artifactView = requireArtifactIrConsumerView(currentArtifactIrContext?.primary_view);",
         "explorerDecisionController.render(artifactView",
         "renderGraphExplorer(artifactView)"
       ],
@@ -141,7 +141,7 @@
     },
     "bin/deepbom.mjs": {
       "required_fragments": [
-        "const analysisView = artifactIrContext?.primary_view || analysis;",
+        "const analysisView = requireArtifactIrConsumerView(artifactIrContext?.primary_view);",
         "runExploreCommand(parsed, analysisView",
         "buildMlBomDocument(analysisView"
       ],
@@ -151,12 +151,54 @@
       "required_fragments": [
         "artifactIrOperators(artifactIrContext.primary_view)",
         "const all = modelSummary.rows;",
-        "const ref = match.subject_ref;"
+        "const ref = match.subject_ref;",
+        "validateWeightAnalysis(advanced, weight, model)"
       ],
       "forbidden_patterns": [
         "analysis\\.ops",
         "analysis\\.tensors"
       ]
+    },
+    "web/lib/app-graph-workspace.js": {
+      "required_fragments": [
+        "requireArtifactIrConsumerView",
+        "readOperatorWeightEvidence(opIndex)"
+      ],
+      "forbidden_patterns": []
+    },
+    "web/lib/operator-weight-evidence.js": {
+      "required_fragments": [
+        "validateModelIr(model)",
+        "validateWeightIr(evidence.weight_ir, model)",
+        "validateWeightAnalysis(evidence.weight_analysis, weight, model)"
+      ],
+      "forbidden_patterns": []
+    },
+    "web/lib/native-optimization-diff.js": {
+      "required_fragments": [
+        "validateNativeTensorComparison(comparison.tensors, baseline.storage, candidate.storage)"
+      ],
+      "forbidden_patterns": []
+    },
+    "web/lib/native-evidence.js": {
+      "required_fragments": [
+        "compareNativeTensorIdentities(baseline.snapshot.tensors, candidate.snapshot.tensors)"
+      ],
+      "forbidden_patterns": []
+    },
+    "web/lib/weight-hist.js": {
+      "required_fragments": [
+        "histogramSvg(tensor, colors)",
+        "describeDistribution(s)",
+        "renderWeightAnalysisView(view, advanced, null, colors)"
+      ],
+      "forbidden_patterns": []
+    },
+    "web/lib/weight-query-visual.js": {
+      "required_fragments": [
+        "validateWeightAnalysis(evidence.weight_analysis, evidence.weight_ir, model)"
+      ],
+      "forbidden_patterns": []
     }
   }
 }

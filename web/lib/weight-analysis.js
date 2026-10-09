@@ -2,7 +2,7 @@ import { buildWeightIr, validateWeightIr } from "./weight-ir.js";
 import { numericSources, hashSource } from "./numerical-ir/weight-sources.js";
 import { requireCondition, sourceContract, seal, checkDigest, exactKeys, parseNumeric } from "./numerical-ir/common.js";
 import { axisContract, quantizationContracts, tensorQuantization, dequantize } from "./numerical-ir/weight-contracts.js";
-import { assessed, notAssessed, matrixView, channelStatistics, similarityAnalysis, spectrumAnalysis, sparsityAnalysis, tileProjection, kernelProjection, compareValues } from "./numerical-ir/weight-math.js";
+import { assessed, notAssessed, matrixView, channelStatistics, similarityAnalysis, spectrumAnalysis, spectrumSummary, sparsityAnalysis, tileProjection, kernelProjection, compareValues } from "./numerical-ir/weight-math.js";
 import { statisticsOf, validateStatistics } from "./numerical-ir/statistics.js";
 import { canonicalJson } from "./report-utils.js";
 
@@ -87,24 +87,40 @@ export function validateWeightAnalysis(doc,weight,model) {
     for(const key of ["channel_axis","sparsity_axis"])requireCondition(Number.isSafeInteger(row.axes[key])&&row.axes[key]>=0&&row.axes[key]<Math.max(1,row.shape.length),"invalid assessed tensor axis");
     requireCondition(row.value_count===original.statistics.value_count&&row.reason===null,"advanced value count mismatch");validateStatistics(row.statistics);
     requireCondition(row.statistics.value_count===row.value_count,"advanced statistics count mismatch");
-    if(row.channels.status==="assessed") {
-      requireCondition(row.channels.count===row.channels.channels.length&&row.channels.count*row.channels.values_per_channel===Number(row.value_count),"channel count conservation failed");
-      for(const [channelIndex,c] of row.channels.channels.entries()){validateStatistics(c.statistics);requireCondition(c.index===channelIndex&&Number(c.statistics.value_count)===row.channels.values_per_channel,"channel identity/count mismatch");}
-    }
-    if(row.similarity.status==="assessed") {const s=row.similarity;requireCondition(s.values.length===s.size*s.size&&s.values.every(v=>v===null||Number.isFinite(v)&&v>=-1&&v<=1),"invalid similarity matrix");}
-    if(row.spectrum.status==="assessed") {const s=row.spectrum;requireCondition(s.singular_values.length===Math.min(s.rows,s.columns)&&s.normalized_singular_values.every(v=>Number.isFinite(v)&&v>=0)&&s.numerical_rank>=0&&s.numerical_rank<=s.singular_values.length&&s.energy_relative_residual<=1e-10,"invalid SVD result");}
-    const sp=row.sparsity,b=sp.block,g=sp.structured_2_4,n=Number(row.value_count);
-    requireCondition(sp.status==="assessed"&&Number.isSafeInteger(b.size)&&b.size>0&&b.complete_blocks*b.size+b.trailing_values===n&&b.all_zero_blocks<=b.complete_blocks&&g.groups*4+g.trailing_values===n&&g.compliant_groups<=g.groups,"sparsity group conservation failed");
-    requireCondition(g.pattern_satisfied===(g.groups>0&&g.trailing_values===0?g.compliant_groups===g.groups:null),"2:4 conclusion mismatch");
-    requireCondition(row.sparsity.value_count===row.value_count&&row.sparsity.zero_count===row.statistics.zero_count,"sparsity count mismatch");
-    const validateProjection=(projection,count)=>{requireCondition(projection.status==="assessed"&&projection.cells.length===projection.rows*projection.columns&&projection.source_rows*projection.source_columns===count,"projection shape mismatch");requireCondition(projection.cells.every(c=>Number.isSafeInteger(c.count)&&c.count>0&&Number.isSafeInteger(c.zero_count)&&c.zero_count>=0&&c.zero_count<=c.count&&Number.isFinite(c.mean)&&c.minimum<=c.maximum)&&projection.cells.reduce((n,c)=>n+c.count,0)===count,"projection count conservation failed");};
-    validateProjection(row.projection,n);
+    validateWeightMathFeatures(row);
+    const n=Number(row.value_count);
     if(row.kernel.status==="assessed") {requireCondition(row.kernel.channel_count===(row.shape[row.axes.channel_axis]||1)&&row.kernel.channel_index>=0&&row.kernel.channel_index<row.kernel.channel_count,"kernel binding mismatch");validateProjection(row.kernel.image,n/row.kernel.channel_count);}
     if(row.quantization.status==="assessed") {const q=row.quantization;requireCondition(row.representation==="dequantized_real"&&q.scales.length>0&&q.scales.every(x=>Number.isFinite(x)&&x>0)&&q.zero_points.every(x=>Number.isSafeInteger(x)&&x>=q.encoding_minimum&&x<=q.encoding_maximum)&&q.range_utilization>=0&&q.range_utilization<=1&&q.lower_endpoint_count+q.upper_endpoint_count<=n,"invalid affine quantization report");}
   }
   requireCondition(doc.tensors.reduce((sum,r)=>sum+(r.channels.status==="assessed"?r.channels.count:0),0)<=doc.options.max_channels,"channel budget mismatch");
   requireCondition(doc.tensors.reduce((sum,r)=>sum+(r.spectrum.status==="assessed"?r.spectrum.work_count:0),0)<=doc.options.max_svd_work,"SVD budget mismatch");
   requireCondition(canonicalJson(doc.coverage)===canonicalJson(coverage(doc.tensors))&&Number(doc.coverage.decoded_value_count)<=doc.options.max_values,"advanced coverage mismatch");return doc;
+}
+
+const validateProjection=(projection,count)=>{requireCondition(projection.status==="assessed"&&projection.cells.length===projection.rows*projection.columns&&projection.source_rows*projection.source_columns===count,"projection shape mismatch");requireCondition(projection.cells.every(c=>Number.isSafeInteger(c.count)&&c.count>0&&Number.isSafeInteger(c.zero_count)&&c.zero_count>=0&&c.zero_count<=c.count&&Number.isFinite(c.mean)&&c.minimum<=c.maximum)&&projection.cells.reduce((n,c)=>n+c.count,0)===count,"projection count conservation failed");};
+export function validateWeightMathFeatures(row) {
+    if(row.channels.status==="assessed") {
+      requireCondition(row.channels.count===row.channels.channels.length&&row.channels.count*row.channels.values_per_channel===Number(row.value_count),"channel count conservation failed");
+      for(const [channelIndex,c] of row.channels.channels.entries()){validateStatistics(c.statistics);requireCondition(c.index===channelIndex&&Number(c.statistics.value_count)===row.channels.values_per_channel,"channel identity/count mismatch");}
+    }
+    if(row.similarity.status==="assessed") {const s=row.similarity;requireCondition(s.values.length===s.size*s.size&&s.values.every(v=>v===null||Number.isFinite(v)&&v>=-1&&v<=1),"invalid similarity matrix");}
+    if(row.spectrum.status==="assessed") {
+      const s=row.spectrum, ordered=values=>Array.isArray(values)&&values.every((v,i)=>Number.isFinite(v)&&v>=0&&(!i||values[i-1]>=v));
+      requireCondition(Number.isSafeInteger(s.rows)&&s.rows>0&&Number.isSafeInteger(s.columns)&&s.columns>0&&s.rows*s.columns===Number(row.value_count),"invalid SVD dimensions");
+      requireCondition(s.singular_values.length===Math.min(s.rows,s.columns)&&s.normalized_singular_values.length===s.singular_values.length&&ordered(s.normalized_singular_values)&&Number.isFinite(s.scale)&&s.scale>=0,"invalid SVD spectrum");
+      requireCondition(ordered(s.singular_values.map(v=>v===null?Number.MAX_VALUE:v))&&canonicalJson(s.overflowed_singular_value_indices)===canonicalJson(s.singular_values.flatMap((v,i)=>v===null?[i]:[])),"invalid SVD singular values");
+      requireCondition([s.work_count,s.sweeps].every(v=>Number.isSafeInteger(v)&&v>=0)&&[s.orthogonality_residual,s.energy_relative_residual].every(v=>Number.isFinite(v)&&v>=0)&&s.energy_relative_residual<=1e-10,"invalid SVD residual or work count");
+      const expected=spectrumSummary(s.normalized_singular_values,s.scale,s.rows,s.columns);
+      requireCondition(Object.entries(expected).every(([key,value])=>canonicalJson(s[key])===canonicalJson(value)),"SVD summary contradicts its spectrum");
+    }
+    const sp=row.sparsity,b=sp.block,g=sp.structured_2_4,n=Number(row.value_count);
+    requireCondition([b.complete_blocks,b.trailing_values,b.all_zero_blocks,g.groups,g.trailing_values,g.compliant_groups].every(v=>Number.isSafeInteger(v)&&v>=0),"invalid sparsity counts");
+    requireCondition(sp.status==="assessed"&&Number.isSafeInteger(b.size)&&b.size>0&&b.complete_blocks*b.size+b.trailing_values===n&&b.all_zero_blocks<=b.complete_blocks&&g.groups*4+g.trailing_values===n&&g.compliant_groups<=g.groups,"sparsity group conservation failed");
+    requireCondition(g.pattern_satisfied===(g.groups>0&&g.trailing_values===0?g.compliant_groups===g.groups:null),"2:4 conclusion mismatch");
+    requireCondition(row.sparsity.value_count===row.value_count&&row.sparsity.zero_count===row.statistics.zero_count,"sparsity count mismatch");
+
+    validateProjection(row.projection,n);
+
 }
 
 function canonicalValues(record, permutation=null) {

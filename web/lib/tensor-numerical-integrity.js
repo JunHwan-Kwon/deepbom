@@ -1209,6 +1209,19 @@ export async function visitSerializedTensorValues(source, analysis, tensor, visi
   if (decoder.status !== "assessed") return decoder;
   if (tensor.storage_status && /invalid/.test(tensor.storage_status)) return { status: "not_assessed", reason: tensor.storage_status };
   const range = tensorRange(analysis, tensor), expected = expectedTensorValueCount(tensor);
+  return visitDecodedRange(source, tensor, decoder, range, expected, visitor, { maxValues, signal });
+}
+
+// Native tensor transport uses the same scalar decoder as file inspection. No
+// synthetic artifact identity or file header is constructed for a RAM tensor.
+export async function visitDenseTensorValues(source, tensor, visitor, { maxValues = 100_000_000, signal } = {}) {
+  if (!SAFE_SCALAR_LAYOUTS[tensor.dtype]) return { status: "not_assessed", reason: "unsupported_native_scalar_encoding" };
+  if (tensor.byte_order !== "little") throw new Error("Native tensor transport requires explicit little-endian bytes.");
+  const decoder = tensorDecoder({ format: "safetensors" }, tensor);
+  return visitDecodedRange(source, tensor, decoder, { start: 0, end: sourceLength(source) }, expectedTensorValueCount(tensor), visitor, { maxValues, signal });
+}
+
+async function visitDecodedRange(source, tensor, decoder, range, expected, visitor, { maxValues, signal }) {
   if (expected > maxValues) return { status: "not_assessed", reason: "value_budget_exceeded" };
   if (![range.start, range.end].every(Number.isSafeInteger) || range.start < 0 || range.end < range.start || range.end > sourceLength(source)) throw new Error("Numeric tensor payload is outside the source artifact.");
   const unit = decoder.layout.bytes;

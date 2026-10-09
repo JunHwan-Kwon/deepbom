@@ -6,26 +6,35 @@ import {
   sourceTotals,
 } from "./source-size-utils.mjs";
 
+// Saved report import adds a 123 KiB generated validator and one immutable catalog snapshot.
 // Budget history belongs in git/CHANGELOG; this executable keeps only current policy.
 // Includes the optional common metadata/OMOP adapters and interactive workspace.
 // Shared conversational workflow routing and weight query/plot projections add
 // about 58 KiB; reserve a bounded 96 KiB increment without raising per-file caps.
-const handwrittenRuntimeBudgetKiB = Number(process.env.HANDWRITTEN_RUNTIME_SOURCE_BUDGET_KIB || process.env.SOURCE_BUDGET_KIB || 13024);
-const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_BUDGET_KIB || 1728);
+// Native numerical transport and detailed views add ~65 KiB; allocate 128 KiB.
+const handwrittenRuntimeBudgetKiB = Number(process.env.HANDWRITTEN_RUNTIME_SOURCE_BUDGET_KIB || process.env.SOURCE_BUDGET_KIB || 13152);
+const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_BUDGET_KIB || 1856);
 // Includes the public connection contract, schema and OMOP usage guide.
 // Includes the hash-addressed common-rule inventory (~138 KiB) and review report.
 // Includes the immutable compatibility baseline and generated GitHub crosswalk.
-const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 1216);
+// Native schemas, guides and immutable 0.3–0.11 crosswalk archives are retained.
+// Preserve the immutable 0.12 compatibility snapshot (~61 KiB), diff schema and review.
+// Common-flow review and two immutable 0.14 catalog snapshots add ~136 KiB.
+// These are documentation/history, not additional runtime implementations.
+// Retain the immutable 0.15.0 compatibility snapshot and channel/rule review.
+const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 2688);
 // Includes metadata tampering, cross-channel and browser regression checks.
 // Workflow routing and weight-query regression coverage add a measured 18 KiB;
 // reserve 32 KiB for tests and 16 KiB for the expanded review contract snapshot.
 // Adds schema/source closure and browser snapshot-integrity regression checks.
-const verificationSourceBudgetKiB = Number(process.env.VERIFICATION_SOURCE_BUDGET_KIB || 3936);
+const verificationSourceBudgetKiB = Number(process.env.VERIFICATION_SOURCE_BUDGET_KIB || 4096);
 // Includes the reproducible Provenance IR schema generator.
 // Includes the shared scalar registry/generator and reviewed duplicate exceptions.
 // Retains the four measured 2.0.0 delivery observations alongside prior releases.
 // Includes the 9.4 KiB pinned historical ChatGPT contract fixture.
-const devToolingSourceBudgetKiB = Number(process.env.DEV_TOOLING_SOURCE_BUDGET_KIB || 1796);
+// Native schema generation and channel/integration guides; local ignored studies
+// are excluded by source-size-utils rather than inflating the product allowance.
+const devToolingSourceBudgetKiB = Number(process.env.DEV_TOOLING_SOURCE_BUDGET_KIB || 2016);
 const nativeToolingSourceBudgetKiB = Number(process.env.NATIVE_TOOLING_SOURCE_BUDGET_KIB || 256);
 const corpusEvidenceSourceBudgetKiB = Number(process.env.CORPUS_EVIDENCE_SOURCE_BUDGET_KIB || 544);
 const runtimeFileBudgetKiB = Number(process.env.RUNTIME_SOURCE_FILE_BUDGET_KIB || 512);

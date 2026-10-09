@@ -4,6 +4,8 @@ import {
 } from "./evidence-treemap.js";
 import { buildOverviewDomainMap } from "./overview-domain-map.js";
 import { staticTensorPayloadBytes } from "./tensor-inventory.js";
+import { requireArtifactIrConsumerView } from "./artifact-ir-context.js";
+import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
 
 export function createGraphWorkspace(workspace) {
   const {
@@ -34,7 +36,7 @@ export function createGraphWorkspace(workspace) {
     compute_input_influence,
     compute_output_influence,
     compute_static_runtime_calibration,
-    compute_weight_histogram,
+    readOperatorWeightEvidence,
     downloadTextArtifact,
     ensureLiteRtRuntime,
     evidenceCursor,
@@ -151,7 +153,7 @@ let opDetailRequestToken = 0;
 
 function artifactIrAnalysisView(analysis) {
   const context = workspace.currentArtifactIrContext;
-  return context && analysis === workspace.current ? context.primary_view : analysis;
+  return requireArtifactIrConsumerView(context && analysis === workspace.current ? context.primary_view : analysis);
 }
 
 function isCurrentAnalysisView(analysis) {
@@ -159,13 +161,11 @@ function isCurrentAnalysisView(analysis) {
 }
 
 function graphOps(analysis) {
-  const view = artifactIrAnalysisView(analysis);
-  return Array.isArray(view?.ops) ? view.ops : [];
+  return artifactIrOperators(artifactIrAnalysisView(analysis));
 }
 
 function graphTensors(analysis) {
-  const view = artifactIrAnalysisView(analysis);
-  return Array.isArray(view?.tensors) ? view.tensors : [];
+  return artifactIrValues(artifactIrAnalysisView(analysis));
 }
 
 function renderSummary(analysis) {
@@ -1638,44 +1638,31 @@ function deferGraphMap(analysis, opIndex) {
 async function renderOpDetail(analysis, opIndex) {
   const requestToken = ++opDetailRequestToken;
   const op = graphOps(analysis).find(o => o.index === opIndex);
-  let weightHistograms = null;
+  let weightEvidence = null;
+  let weightError = null;
   let influence = null;
   let outputInfluence = null;
-  renderOpDetailPanel(opDetail, analysis, opIndex, {
-    weightHistograms,
-    influence,
-    outputInfluence,
+  const render = loading => renderOpDetailPanel(opDetail, analysis, opIndex, {
+    weightEvidence, weightError, weightLoading: loading, influence, outputInfluence,
     runtimeAssignment: workspace.runtimeAssignmentEvidence,
   });
-  if (op && workspace.currentModelBytes) {
-    // Determine if this op consumes a model input tensor (first-layer detection)
-    const inputTensorSet = new Set(analysis.input_tensor_indices ?? []);
-    const isInputLayer = op.inputs.some(idx => idx >= 0 && inputTensorSet.has(idx));
-
-    // Weight histograms computed in the Rust/WASM core.
-    const histsPromise = Promise.all(op.inputs
-      .filter(idx => idx >= 0 && graphTensors(analysis)[idx]?.constant_buffer)
-      .map(async (idx) => {
-        try {
-          const h = await compute_weight_histogram(workspace.currentModelBytes, analysis.filename, idx, selectedTargetId());
-          if (h) h.isInputLayer = isInputLayer;
-          return h;
-        } catch { return null; }
-      }));
-    const [hists, nextInfluence, nextOutputInfluence] = await Promise.all([
-      histsPromise,
-      Promise.resolve(compute_input_influence(workspace.currentModelBytes, analysis.filename, opIndex, selectedTargetId())).catch(() => null),
-      Promise.resolve(compute_output_influence(workspace.currentModelBytes, analysis.filename, opIndex, selectedTargetId())).catch(() => null),
+  render(Boolean(op));
+  if (op) {
+    const tflitePayload = analysis.format === "tflite" && workspace.currentModelBytes;
+    const [weights, nextInfluence, nextOutputInfluence] = await Promise.all([
+      readOperatorWeightEvidence(opIndex).then(value => ({ value }), error => ({ error: error.message })),
+      tflitePayload ? Promise.resolve(compute_input_influence(workspace.currentModelBytes, analysis.filename, opIndex, selectedTargetId())).catch(() => null) : null,
+      tflitePayload ? Promise.resolve(compute_output_influence(workspace.currentModelBytes, analysis.filename, opIndex, selectedTargetId())).catch(() => null) : null,
     ]);
     if (requestToken !== opDetailRequestToken
       || workspace.selectedOpIndex !== opIndex
       || !isCurrentAnalysisView(analysis)) return;
-    const resolvedHistograms = hists.filter(Boolean);
-    if (resolvedHistograms.length > 0) weightHistograms = resolvedHistograms;
+    weightEvidence = weights.value ?? null;
+    weightError = weights.error ?? null;
     influence = nextInfluence || null;
     outputInfluence = nextOutputInfluence || null;
   }
-  renderOpDetailPanel(opDetail, analysis, opIndex, { weightHistograms, influence, outputInfluence, runtimeAssignment: workspace.runtimeAssignmentEvidence });
+  render(false);
 }
 
 function renderGraphMap(analysis, opIndex) {

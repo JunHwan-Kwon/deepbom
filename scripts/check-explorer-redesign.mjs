@@ -107,6 +107,7 @@ expect(
 const structureFiles = buildRedesignImplementationFiles({ analysis, projection: noOp, request: noOpRequest });
 for (const expected of [
   "manifest.json",
+  "structure-code.md",
   "implementation_plan.json",
   "pytorch/model.py",
   "pytorch/smoke_test.py",
@@ -125,6 +126,26 @@ for (const file of structureFiles.filter((item) => item.name.endsWith(".py"))) {
     encoding: "utf8",
   });
   expectEqual(parsed.status, 0, `${file.name} should parse as Python: ${parsed.stderr || ""}`);
+}
+const structureMarkdown = structureFiles.find((file) => file.name === "structure-code.md").data;
+const codeBlocks = [...structureMarkdown.matchAll(/^### (.+\.py)\n\n(`{3,})python\n([\s\S]*?)^\2\n/gm)];
+expectEqual(codeBlocks.length, 4, "Markdown should contain all four generated Python files.");
+for (const [, name, , source] of codeBlocks) {
+  expectEqual(source, structureFiles.find((file) => file.name === name)?.data, `${name} Markdown source must match its Python file exactly.`);
+}
+const implementationManifest = JSON.parse(structureFiles.find((file) => file.name === "manifest.json").data);
+expectEqual(JSON.stringify([...implementationManifest.generated_files].sort()),
+  JSON.stringify(structureFiles.map((file) => file.name).sort()), "Manifest should list every generated file including Markdown.");
+expect(structureMarkdown.includes(noOp.source.sha256_before) && structureMarkdown.includes("Weights included: **no**"),
+  "Copyable Markdown should retain source identity and the weight-free boundary.");
+const fenceProjection = structuredClone(noOp);
+fenceProjection.implementation_plan.nodes[0].source_layer_ref = "artifact path with ```` backticks and <script>literal text</script>";
+const fenceFiles = buildRedesignImplementationFiles({ analysis, projection: fenceProjection, request: noOpRequest });
+const fenceMarkdown = fenceFiles.find((file) => file.name === "structure-code.md").data;
+const fenceBlocks = [...fenceMarkdown.matchAll(/^### (.+\.py)\n\n(`{3,})python\n([\s\S]*?)^\2\n/gm)];
+expectEqual(fenceBlocks.length, 4, "Source comments containing backticks must preserve all four Markdown blocks.");
+for (const [, name, , source] of fenceBlocks) {
+  expectEqual(source, fenceFiles.find((file) => file.name === name)?.data, `${name} source backticks must not terminate its Markdown code block.`);
 }
 const deterministicZipTimestamp = new Date(1980, 0, 1, 0, 0, 0);
 const structureZipA = new Uint8Array(await createZipBlob(structureFiles, { timestamp: deterministicZipTimestamp }).arrayBuffer());

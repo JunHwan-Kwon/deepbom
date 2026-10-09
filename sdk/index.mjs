@@ -68,6 +68,31 @@ export async function diff(baseline, candidate, options = {}) {
   return invoke(["diff", localPath(baseline), localPath(candidate), "--compact", ...(options.tensorsOnly ? ["--tensors"] : [])], options);
 }
 
+/** Explicit numerical inspection of stored weights and/or imported captures. */
+export async function numericalEvidence(artifact, options = {}) {
+  checkOptions(options, [...limitKeys, "weights", "weightBaseline", "weightOptions", "weightMapping", "activationCapture", "activationBaseline", "expectedSha256"]);
+  if (options.weights != null && typeof options.weights !== "boolean") throw new TypeError("weights must be boolean");
+  const weights = options.weights === true || ["weightBaseline", "weightOptions", "weightMapping"].some(key => options[key] != null);
+  if (!weights && options.activationCapture == null) throw new TypeError("Select weights or provide activationCapture");
+  if (options.activationBaseline != null && options.activationCapture == null) throw new TypeError("activationBaseline requires activationCapture");
+  if (options.weightMapping != null && options.weightBaseline == null) throw new TypeError("weightMapping requires weightBaseline");
+  const argv = ["audit", localPath(artifact), "--compact"];
+  const sections = ["model_ir", "numerical_evidence_bundle", "numerical_details"];
+  if (weights) { argv.push("--weight-analysis"); sections.push("weight_ir", "weight_analysis"); }
+  if (options.weightBaseline != null) sections.push("weight_comparison");
+  if (options.activationCapture != null) sections.push("activation_ir");
+  if (options.activationBaseline != null) sections.push("activation_baseline_ir");
+  for (const [key, flag] of Object.entries({ weightBaseline: "--weight-baseline", weightOptions: "--weight-options", weightMapping: "--weight-mapping", activationCapture: "--activation-evidence", activationBaseline: "--activation-baseline" })) {
+    if (options[key] != null) argv.push(flag, localPath(options[key]));
+  }
+  if (options.expectedSha256 != null) {
+    if (typeof options.expectedSha256 !== "string" || !/^[0-9a-f]{64}$/i.test(options.expectedSha256)) throw new TypeError("expectedSha256 must contain 64 hexadecimal characters");
+    argv.push("--expected-sha256", options.expectedSha256.toLowerCase());
+  }
+  argv.push("--section", sections.join(","));
+  return invoke(argv, options);
+}
+
 export async function captureContract(artifact, options = {}) {
   checkOptions(options, limitKeys);
   return invoke(["contract", "capture", localPath(artifact), "--compact"], options);

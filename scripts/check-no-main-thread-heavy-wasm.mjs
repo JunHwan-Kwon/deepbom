@@ -16,7 +16,6 @@ const HEAVY_EXPORTS = new Set([
   "compute_model_tomography",
   "compute_output_influence",
   "compute_static_runtime_calibration",
-  "compute_weight_histogram",
   "explore_tflite_redesign_pareto",
   "landscape_directions",
   "landscape_tomography",
@@ -34,6 +33,7 @@ const browserFiles = (await collectFileSizes("web", {
 
 for (const file of browserFiles) {
   const source = readFileSync(file, "utf8");
+  if (/\bcompute_weight_histogram\b/.test(source)) failures.push(`${file}: retired histogram ABI must not be called; use Weight IR`);
   const imported = wasmImports(source);
   if (file !== "web/workers/static-audit-worker.js") {
     for (const name of imported) {

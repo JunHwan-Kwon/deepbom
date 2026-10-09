@@ -1,0 +1,70 @@
+{
+  "schema": "deepbom.native_evidence_catalog.v1",
+  "status": "experimental",
+  "catalog_version": "0.3.0",
+  "family_schema": "https://deepbom.org/schemas/deepbom-evidence-ir-v2.schema.json",
+  "json_schema": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json",
+  "contracts": {
+    "input": {
+      "schema": "deepbom.native_evidence_input.v1",
+      "json_schema": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/input"
+    },
+    "training_input": {
+      "schema": "deepbom.training_input.v1",
+      "json_schema": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/training_input"
+    },
+    "candidate": {
+      "schema": "deepbom.model_candidate_manifest.v1",
+      "json_schema": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/candidate"
+    },
+    "comparison": {
+      "schema": "deepbom.native_model_comparison.v1",
+      "json_schema": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/comparison"
+    },
+    "result": {
+      "schema": "deepbom.training_result_manifest.v1",
+      "json_schema": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/result"
+    },
+    "snapshot": {
+      "schema": "deepbom.model_state_snapshot.v1",
+      "json_schema": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/snapshot"
+    },
+    "model": {
+      "schema": "deepbom.model_ir.v2",
+      "json_schema": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/model"
+    },
+    "weight": {
+      "schema": "deepbom.weight_ir.v2",
+      "json_schema": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/weight"
+    },
+    "activation": {
+      "schema": "deepbom.activation_ir.v2",
+      "json_schema": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/activation"
+    },
+    "training": {
+      "schema": "deepbom.training_ir.v1",
+      "json_schema": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/training"
+    },
+    "chunk": {
+      "schema": "deepbom.training_chunk.v1",
+      "json_schema": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/chunk"
+    },
+    "optimization_report": {
+      "schema": "deepbom.optimization_report.v1",
+      "json_schema": "https://deepbom.org/schemas/deepbom-optimization-report-v1.schema.json"
+    },
+    "optimization_diff": {
+      "schema": "deepbom.optimization_diff.v1",
+      "json_schema": "https://deepbom.org/schemas/deepbom-optimization-diff-v1.schema.json"
+    },
+    "optimization_report_query": {
+      "schema": "deepbom.optimization_report_query.v1",
+      "json_schema": "https://deepbom.org/schemas/deepbom-optimization-report-access-v1.schema.json#/$defs/query"
+    },
+    "optimization_report_export": {
+      "schema": "deepbom.optimization_report_export.v1",
+      "json_schema": "https://deepbom.org/schemas/deepbom-optimization-report-access-v1.schema.json#/$defs/export"
+    }
+  },
+  "scope": "Qualified CPU native adapters. Snapshot and chunk are supporting documents, not extra IR layers. Artifact-based family v1 is preserved."
+}

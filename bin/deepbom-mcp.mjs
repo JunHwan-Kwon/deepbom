@@ -34,6 +34,22 @@ const CACHE_WRITING_ANNOTATIONS = Object.freeze({
 
 const TOOLS = Object.freeze([
   {
+    name: "deepbom_optimization_report",
+    title: "Inspect a saved optimization report",
+    description: "Read one local deepbom.optimization_report.v1 JSON. Query before/after structure, changed fields, rule reasons and static metrics without loading or executing the model. Results are paginated; use the returned report_sha256 as expected_sha256 for follow-ups. A self-consistent report is not producer attestation or proof of quality/speed. Open the same JSON at https://deepbom.org/reports/optimization/ for interactive exploration.",
+    inputSchema: {type:"object",properties:{path:{type:"string"},expected_sha256:{type:"string",pattern:"^[a-fA-F0-9]{64}$"},section:{type:"string",enum:["summary","changes","structure","subject"]},subject:{type:"string"},search:{type:"string",maxLength:512},offset:{type:"integer",minimum:0},limit:{type:"integer",minimum:1,maximum:100}},required:["path"],additionalProperties:false},
+    outputSchema:{type:"object",properties:{schema:{const:"deepbom.optimization_report_query.v1"}},required:["schema"],additionalProperties:true},
+    annotations:READ_ONLY_ANNOTATIONS,
+  },
+  {
+    name: "deepbom_export_optimization_report",
+    title: "Export a saved optimization report",
+    description: "Return a generated JSON, machine-readable diff, HTML or monochrome PDF as an embedded MCP resource. Requires the canonical report digest from the report query. Does not write user files or execute model code. PDF needs the matching local Python deepbom[report] installation (DEEPBOM_REPORT_PYTHON). File saving/display depends on the MCP host; oversized files should be exported with the CLI.",
+    inputSchema:{type:"object",properties:{path:{type:"string"},expected_sha256:{type:"string",pattern:"^[a-fA-F0-9]{64}$"},format:{type:"string",enum:["json","diff","html","pdf"]}},required:["path","expected_sha256","format"],additionalProperties:false},
+    outputSchema:{type:"object",properties:{schema:{const:"deepbom.optimization_report_export.v1"}},required:["schema"],additionalProperties:true},
+    annotations:READ_ONLY_ANNOTATIONS,
+  },
+  {
     name: "deepbom_capabilities",
     title: "Inspect DEEPBOM capabilities",
     description: "Return deepbom.cli_capabilities.v1: supported artifact formats, output contracts, scan policies, target profiles, and exit codes. Call this before assuming an option exists.",
@@ -59,6 +75,7 @@ const TOOLS = Object.freeze([
         weight_mapping: { type: "string", description: "Local JSON array of baseline/candidate weight references and optional candidate_axis_permutation; requires weight_baseline." },
         weight_analysis: { type: "boolean", description: "Opt in to common Weight IR and advanced channels, cosine similarity, SVD, sparsity and quantization. JSON sections: weight_ir, weight_analysis, weight_comparison. No model execution." },
         activation_evidence: { type: "string", description: "Local hash-bound activation capture JSON under allowed roots. Imports execution evidence; does not execute a model. Use output_format=json and section=activation_ir." },
+        activation_baseline: { type: "string", description: "Reference activation capture JSON under allowed roots; requires activation_evidence for the same Model IR. Compare distributions and run identity in numerical_details. No model execution or task-quality inference." },
         metadata: { type: "string", description: `Local deepbom.provenance_input.v1 or deepbom.omop_metadata_input.v1 JSON under allowed roots. Adds ${PROVENANCE_IR.name}; select ${PROVENANCE_IR.section}. Declarations are not execution attestation.` },
         evidence_files: { type: "string", description: "Local directory under allowed roots containing files explicitly mapped by metadata. No remote links are fetched. Requires metadata." },
         metadata_template: { type: "string", enum: ["omop", "generic"], description: "Return a metadata template bound to this model; fill institution/release identity before importing. Mutually exclusive with metadata." },
@@ -128,6 +145,8 @@ const TOOLS = Object.freeze([
     annotations: READ_ONLY_ANNOTATIONS,
   },
 ]);
+
+export const LOCAL_MCP_TOOL_NAMES=Object.freeze(TOOLS.map(tool=>tool.name));
 
 export async function runMcpServer({ cliEntry, version }) {
   const state = {
@@ -283,6 +302,12 @@ async function callTool(params, state, signal) {
   const result = { content: [{ type: "text", text }] };
   const structured = parseStructuredObject(text);
   if (structured) result.structuredContent = structured;
+  if(name === "deepbom_export_optimization_report" && structured && run.code === 0) {
+    const {data_base64,...metadata}=structured;
+    if(typeof data_base64 !== "string")return toolError("Report exporter did not return a file resource.");
+    result.structuredContent=metadata;
+    result.content=[{type:"text",text:JSON.stringify(metadata)},{type:"resource",resource:{uri:`deepbom://optimization-report/${metadata.report_sha256}/${metadata.filename}`,mimeType:metadata.mime_type,blob:data_base64}}];
+  }
   if (run.code === 2) {
     result.content.push({ type: "text", text: args.metadata ? "A metadata consistency check or requested gate blocked this run (exit 2). The first content block preserves the complete result; inspect metadata checks and policy findings separately." : "The requested gate policy blocked this run (exit 2). The first content block remains the complete, unmodified result; treat this as a policy outcome, not an analysis failure." });
     result._meta = { deepbom: { exit_code: 2, policy_status: args.metadata ? "blocked_or_metadata_contradiction" : "blocked", analysis_completed: true } };
@@ -298,6 +323,13 @@ async function callTool(params, state, signal) {
 }
 
 function commandArguments(name, args, roots) {
+  if (["deepbom_optimization_report","deepbom_export_optimization_report"].includes(name)) {
+    const argv=["optimization-report",requiredLocalPath(args.path,"path",roots)];
+    for(const k of ["section","subject","search","offset","limit","format"])if(Object.hasOwn(args,k))argv.push(`--${k}`,String(args[k]));
+    if(args.expected_sha256)argv.push("--expected-sha256",args.expected_sha256);
+    if(name === "deepbom_export_optimization_report")argv.push("--mcp-export");
+    return argv;
+  }
   if (name === "deepbom_capabilities") return ["capabilities", "--json"];
   if (name === "deepbom_explain_rule") return ["explain-rule", requiredRuleId(args.rule), "--compact"];
   if (name === "deepbom_audit") {
@@ -311,7 +343,7 @@ function commandArguments(name, args, roots) {
     } else if (Object.hasOwn(args, "pointer")) {
       argv.push("--pointer", String(args.pointer));
     } else {
-      const format = args.output_format || (args.section || args.metadata || args.metadata_template || args.weight_analysis || args.weight_baseline || args.weight_options ? "json-compact" : AUDIT_DEFAULT_OUTPUT_FORMAT);
+      const format = args.output_format || (args.section || args.metadata || args.metadata_template || args.weight_analysis || args.weight_baseline || args.weight_options || args.weight_mapping || args.activation_evidence || args.activation_baseline ? "json-compact" : AUDIT_DEFAULT_OUTPUT_FORMAT);
       argv.push("--output-format", format);
       if (args.section) argv.push("--section", String(args.section));
     }
@@ -322,6 +354,7 @@ function commandArguments(name, args, roots) {
     if (args.weight_analysis) argv.push("--weight-analysis");
     for (const [key, flag] of [["weight_baseline", "--weight-baseline"], ["weight_options", "--weight-options"], ["weight_mapping", "--weight-mapping"]]) if (args[key]) argv.push(flag, requiredLocalPath(args[key], key, roots));
     if (args.activation_evidence) argv.push("--activation-evidence", requiredLocalPath(args.activation_evidence, "activation_evidence", roots));
+    if (args.activation_baseline) argv.push("--activation-baseline", requiredLocalPath(args.activation_baseline, "activation_baseline", roots));
     if (args.metadata) argv.push("--metadata", requiredLocalPath(args.metadata, "metadata", roots));
     if (args.evidence_files) argv.push("--evidence-files", requiredLocalPath(args.evidence_files, "evidence_files", roots));
     if (args.metadata_template) argv.push("--metadata-template", args.metadata_template);
@@ -356,8 +389,10 @@ function appendRemoteControls(argv, args, roots) {
 function validateToolArguments(name, args) {
   if (!args || typeof args !== "object" || Array.isArray(args)) throw new Error("Tool arguments must be a JSON object.");
   const allowed = {
+    deepbom_optimization_report: ["path","expected_sha256","section","subject","search","offset","limit"],
+    deepbom_export_optimization_report: ["path","expected_sha256","format"],
     deepbom_capabilities: [],
-    deepbom_audit: ["metadata", "evidence_files", "metadata_template", "weight_baseline", "weight_options", "weight_mapping", "weight_analysis", "activation_evidence", "path", "output_format", "scan", "section", "tensors", "tensor_offset", "tensor_limit", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
+    deepbom_audit: ["metadata", "evidence_files", "metadata_template", "weight_baseline", "weight_options", "weight_mapping", "weight_analysis", "activation_evidence", "activation_baseline", "path", "output_format", "scan", "section", "tensors", "tensor_offset", "tensor_limit", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
     deepbom_diff: ["baseline", "candidate", "target", "expected_sha256", "cache_dir", "offline", "max_download_gib", "tensors", "tensor_offset", "tensor_limit"],
     deepbom_explain_rule: ["rule"],
   }[name];
@@ -366,7 +401,7 @@ function validateToolArguments(name, args) {
   if (extra.length) throw new Error(`Undeclared tool argument${extra.length === 1 ? "" : "s"}: ${extra.sort().join(", ")}.`);
 
   const booleanFields = ["weight_analysis", "tensors", "list_sections", "offline"];
-  const integerFields = ["max_download_gib", "tensor_offset", "tensor_limit"];
+  const integerFields = ["max_download_gib", "tensor_offset", "tensor_limit", "offset", "limit"];
   for (const key of allowed.filter((key) => !booleanFields.includes(key) && !integerFields.includes(key))) {
     if (Object.hasOwn(args, key) && typeof args[key] !== "string") throw new Error(`The ${key} argument must be a string.`);
   }
@@ -387,6 +422,12 @@ function validateToolArguments(name, args) {
   }
   if (Object.hasOwn(args, "expected_sha256") && !/^[a-f0-9]{64}$/i.test(args.expected_sha256)) {
     throw new Error("The expected_sha256 argument must contain exactly 64 hexadecimal characters.");
+  }
+  if(["deepbom_optimization_report","deepbom_export_optimization_report"].includes(name)) {
+    if(Object.hasOwn(args,"offset")&&(!Number.isSafeInteger(args.offset)||args.offset<0))throw Error("offset must be a non-negative integer");
+    if(Object.hasOwn(args,"limit")&&(!Number.isSafeInteger(args.limit)||args.limit<1||args.limit>100))throw Error("limit must be 1–100");
+    if(name==="deepbom_export_optimization_report"&&(!args.expected_sha256||!args.format))throw Error("Export requires format and expected_sha256");
+    return;
   }
   if (name === "deepbom_capabilities") return;
   if (name === "deepbom_explain_rule") {

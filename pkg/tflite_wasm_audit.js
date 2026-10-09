@@ -354,24 +354,25 @@ export function compute_static_runtime_calibration(bytes, filename, target_id, m
 }
 
 /**
- * Compute weight histogram + filter stats for a specific tensor by index.
- * Returns null if the tensor is not a constant buffer or is unsupported dtype.
- * @param {Uint8Array} bytes
- * @param {string} filename
- * @param {number} tensor_index
- * @param {string} target_id
+ * Retired ABI entry point. Numerical consumers must use the common Weight IR.
+ * Keep an explicit error for cached/older clients rather than returning a
+ * second statistics contract with different percentile and rank semantics.
+ * @param {Uint8Array} _bytes
+ * @param {string} _filename
+ * @param {number} _tensor_index
+ * @param {string} _target_id
  * @returns {any}
  */
-export function compute_weight_histogram(bytes, filename, tensor_index, target_id) {
+export function compute_weight_histogram(_bytes, _filename, _tensor_index, _target_id) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        const ptr0 = passArray8ToWasm0(bytes, wasm.__wbindgen_export);
+        const ptr0 = passArray8ToWasm0(_bytes, wasm.__wbindgen_export);
         const len0 = WASM_VECTOR_LEN;
-        const ptr1 = passStringToWasm0(filename, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const ptr1 = passStringToWasm0(_filename, wasm.__wbindgen_export, wasm.__wbindgen_export2);
         const len1 = WASM_VECTOR_LEN;
-        const ptr2 = passStringToWasm0(target_id, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const ptr2 = passStringToWasm0(_target_id, wasm.__wbindgen_export, wasm.__wbindgen_export2);
         const len2 = WASM_VECTOR_LEN;
-        wasm.compute_weight_histogram(retptr, ptr0, len0, ptr1, len1, tensor_index, ptr2, len2);
+        wasm.compute_weight_histogram(retptr, ptr0, len0, ptr1, len1, _tensor_index, ptr2, len2);
         var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
         var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
         var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);

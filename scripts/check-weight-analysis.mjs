@@ -53,6 +53,18 @@ await assert.rejects(()=>collect(onnx,analyzeOnnxModel(onnx,'a.onnx'),'a.onnx',{
 await assert.rejects(()=>collect(onnx,analyzeOnnxModel(onnx,'a.onnx'),'a.onnx',{tensor_ids:['weight:900']}),/unknown weight reference/);
 const changed=structuredClone(a.weight_analysis);changed.coverage.assessed_count=99;delete changed.weight_analysis_sha256;
 assert.throws(()=>validateWeightAnalysis(seal(changed,'weight_analysis_sha256'),a.weight_ir,a.ir),/coverage/);
+for (const edit of [
+  row => { row.spectrum.singular_values[0] = -1; },
+  row => { row.spectrum.numerical_rank = 0; },
+  row => { row.spectrum.cumulative_energy[0] = 2; },
+  row => { row.spectrum.normalized_singular_values.pop(); },
+  row => { row.spectrum.work_count = -1; },
+  row => { row.sparsity.structured_2_4.compliant_groups = -1; },
+  row => { row.sparsity.block.all_zero_blocks = 0.5; },
+]) {
+  const forged=structuredClone(a.weight_analysis);edit(forged.tensors[0]);delete forged.weight_analysis_sha256;
+  assert.throws(()=>validateWeightAnalysis(seal(forged,'weight_analysis_sha256'),a.weight_ir,a.ir),/SVD|sparsity/);
+}
 function safetensors(shape,values){const payload=Buffer.from(float32(values));const header=Buffer.from(JSON.stringify({w:{dtype:'F32',shape,data_offsets:[0,payload.length]}})),length=Buffer.alloc(8);length.writeBigUInt64LE(BigInt(header.length));return new Uint8Array(Buffer.concat([length,header,payload]));}
 const st=safetensors([2,2],[1,2,3,4]),safe=await collect(st,parseMetadataModel(st,'a.safetensors',st.length,'safetensors'),'a.safetensors');
 assert.equal(compareWeightAnalyses(a,safe).tensors[0].metrics.rmse,0,'cross-format decoded values');

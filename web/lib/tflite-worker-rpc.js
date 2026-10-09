@@ -33,8 +33,6 @@ export function createTfliteWorkerRpc(client, { resolveTarget, getCurrentModel =
       (bytes, filename, opIndex, targetId) => ({ bytes, filename, targetId, opIndex })),
     runtimeCalibration: bound(STATIC_AUDIT_OPERATION.TFLITE_RUNTIME_CALIBRATION,
       (bytes, filename, targetId, measuredMs) => ({ bytes, filename, targetId, measuredMs })),
-    weightHistogram: bound(STATIC_AUDIT_OPERATION.TFLITE_WEIGHT_HISTOGRAM,
-      (bytes, filename, tensorIndex, targetId) => ({ bytes, filename, targetId, tensorIndex })),
     modelTomography: bound(STATIC_AUDIT_OPERATION.TFLITE_MODEL_TOMOGRAPHY,
       (bytes, filename, targetId) => ({ bytes, filename, targetId })),
     layerLandscape: bound(STATIC_AUDIT_OPERATION.TFLITE_LAYER_LANDSCAPE,

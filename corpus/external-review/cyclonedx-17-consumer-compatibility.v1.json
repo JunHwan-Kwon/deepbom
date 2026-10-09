@@ -2,7 +2,7 @@
   "schema": "deepbom.external_review_cyclonedx_consumer_compatibility.v1",
   "source": {
     "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_cyclonedx_evidence.cdx.json",
-    "sha256": "01d9b0bff2fba4a53a41b7dca22ff26eb93610c313e9157b9066635927571eff"
+    "sha256": "45418904c4f6e8fd7757907a3ca1e206359914e35d95b39714b17b84d14d2a37"
   },
   "expected": {
     "spec_version": "1.7",
@@ -13,6 +13,7 @@
     "schema_aware_visible_component_count": 1,
     "components_only_visible_component_count": 0
   },
+  "revision_note": "On 2026-10-07, aligned the pin with the reference fixture already committed in ee44e53. The previous 01d9b0bff2fba4a53a41b7dca22ff26eb93610c313e9157b9066635927571eff fixture remains in commit 7b77e2f. The root component identity, property count and consumer expectations below are unchanged; schema and exact digest checks remain required.",
   "disposition": "The DEEPBOM export remains a valid root-only CycloneDX 1.7 BOM. Consumers that inspect only components[] omit the BOM root and are not compatible with this fixture; the root is not duplicated to accommodate that behavior.",
   "interpretation_boundary": "This record verifies one hash-identified DEEPBOM fixture and the component-discovery contract. It does not claim compatibility with every third-party CycloneDX consumer or version."
 }

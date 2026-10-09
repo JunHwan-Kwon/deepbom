@@ -189,6 +189,12 @@ export function isArtifactIrConsumerView(analysis) {
     && analysis?.artifact_ir?.schema === "deepbom.artifact_ir.v2";
 }
 
+export function requireArtifactIrConsumerView(analysis) {
+  if (!isArtifactIrConsumerView(analysis) || !analysis.model_ir || !analysis.model_summary)
+    throw new Error("Artifact consumer requires the common IR context; raw analysis is not a presentation contract.");
+  return analysis;
+}
+
 function canonicalOperatorFallback(operator, values) {
   const valueById = new Map(values.map((row) => [row.id, row]));
   return {

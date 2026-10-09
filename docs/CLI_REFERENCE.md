@@ -22,6 +22,7 @@ asset verification, and equivalence checks are documented in
 
 | Command | Artifact inputs | Declared outputs |
 | --- | ---: | --- |
+| `optimization-report` | 1 | `deepbom.optimization_report_query.v1`<br>`deepbom.optimization_report.v1`<br>`deepbom.optimization_diff.v1`<br>`html`<br>`pdf` |
 | `audit` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
 | `gguf` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
 | `batch` | 1 | `summary`<br>`deepbom.batch_result.v1` |
@@ -58,10 +59,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`2.1.0`:
+`2.2.0`:
 
 ```console
-DEEPBOM 2.1.0
+DEEPBOM 2.2.0
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -122,6 +123,8 @@ Options:
                           Explicit tensor pairs and candidate axis permutations
   --activation-evidence <json>
                           Import hash-bound runtime captures as Activation IR; no execution
+  --activation-baseline <json>
+                          Compare a reference capture for the same artifact; requires --activation-evidence
   --section <names>      Emit selected analysis sections; use --list-sections to discover names
   --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity
   --list-sections        List selectable analysis sections for this artifact
@@ -210,6 +213,8 @@ Compiled accelerator evidence:
 Conversion provenance:
   --conversion-receipt <json>
                           Bind a self-hashed source/converter/environment receipt to the observed output artifact. Source .pt/.pth/.h5 files are identified by digest only and are never deserialized.
+
+Saved optimization reports: deepbom optimization-report <report.json> --help
 
 NVIDIA accelerator observation:
   deepbom accelerator collect nvidia [--device <index>] [--json|--compact]

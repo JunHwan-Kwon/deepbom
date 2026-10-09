@@ -12,6 +12,7 @@ import { clonePublicProductContracts } from "../web/lib/public-product-contracts
 import { findFindingRule } from "../web/lib/finding-rule-catalog.js";
 import { evaluateGatePolicyProfile, listGatePolicyProfiles } from "../web/lib/gate-policy-profiles.js";
 
+import { LOCAL_MCP_TOOL_NAMES } from "./deepbom-mcp.mjs";
 export const CLI_CAPABILITIES_SCHEMA = "deepbom.cli_capabilities.v1";
 export const CLI_ERROR_SCHEMA = "deepbom.cli_error.v1";
 export const CLI_POLICY_RESULT_SCHEMA = "deepbom.cli_finding_policy_result.v1";
@@ -27,9 +28,10 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
     cli_version: String(version),
     evidence_ir: { name: EVIDENCE_IR_NAME, layers: EVIDENCE_IR_LAYERS, specification_status: "draft", json_schema: "https://deepbom.org/schemas/deepbom-evidence-ir-v1.schema.json" },
     optional_provenance: { name: PROVENANCE_IR.name, schema: PROVENANCE_IR.schema, input_schemas: ["deepbom.provenance_input.v1", "deepbom.omop_metadata_input.v1"], flag: "--metadata", template_flag: "--metadata-template", evidence_files_flag: "--evidence-files", section: PROVENANCE_IR.section, omop_cdm_versions: ["5.4", "5.5"], export: "CycloneDX 1.7", scope: "model-bound metadata, references and provided-file consistency", remote_fetch: false, model_execution: false, metadata_truth_verified: false },
-    optional_numerical_ir: { weight: { schema: WEIGHT_IR_SCHEMA, flag: "--weight-analysis", section: "weight_ir", analysis_schema: "deepbom.weight_analysis.v1", analysis_section: "weight_analysis", comparison_schema: "deepbom.weight_comparison.v1", comparison_section: "weight_comparison", baseline_flag: "--weight-baseline", options_flag: "--weight-options", mapping_flag: "--weight-mapping", features: ["channels", "signed_cosine_similarity", "singular_spectrum", "sparsity_2_4", "affine_quantization", "aligned_baseline_comparison"], formats: ["onnx", "tflite", "gguf", "safetensors", "coreml", "executorch"], coverage: "decoder-dependent; every storage object is accounted for", execution: false }, activation: { schema: ACTIVATION_IR_SCHEMA, capture_schema: "deepbom.activation_capture.v1", flag: "--activation-evidence", section: "activation_ir", execution: false, trust: "imported evidence; consistency checked, not attested" }, default_enabled: false, output: "json", maximum_weight_values: 100_000_000, maximum_capture_values: 1_000_000 },
+    optional_numerical_ir: { weight: { schema: WEIGHT_IR_SCHEMA, flag: "--weight-analysis", section: "weight_ir", analysis_schema: "deepbom.weight_analysis.v1", analysis_section: "weight_analysis", comparison_schema: "deepbom.weight_comparison.v1", comparison_section: "weight_comparison", baseline_flag: "--weight-baseline", options_flag: "--weight-options", mapping_flag: "--weight-mapping", features: ["channels", "signed_cosine_similarity", "singular_spectrum", "sparsity_2_4", "affine_quantization", "aligned_baseline_comparison"], formats: ["onnx", "tflite", "gguf", "safetensors", "coreml", "executorch"], coverage: "decoder-dependent; every storage object is accounted for", execution: false }, activation: { schema: ACTIVATION_IR_SCHEMA, capture_schema: "deepbom.activation_capture.v1", flag: "--activation-evidence", section: "activation_ir", baseline_flag: "--activation-baseline", baseline_section: "activation_baseline_ir", execution: false, trust: "imported evidence; consistency checked, not attested" }, details: { schema: "deepbom.numerical_details.v1", section: "numerical_details", features: ["exact_sign_counts", "finite_percentile_bounds", "capture_port_coverage", "same_model_activation_comparison"], boundary: "Derived projection; no runtime execution, causal inference or training-quality verdict" }, default_enabled: false, output: "json", maximum_weight_values: 100_000_000, maximum_capture_values: 1_000_000 },
     analysis_engine: "shared_browser_cli_javascript_and_tflite_wasm",
     commands: [
+      { name: "optimization-report", input_count: 1, input: "deepbom.optimization_report.v1 JSON", outputs: ["deepbom.optimization_report_query.v1", "deepbom.optimization_report.v1", "deepbom.optimization_diff.v1", "html", "pdf"], sections: ["summary", "changes", "structure", "subject"], model_execution: false, pdf_requirement: "Matching Python deepbom[report]; optional DEEPBOM_REPORT_PYTHON interpreter", web_viewer: "https://deepbom.org/reports/optimization/" },
       { name: "audit", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },
       { name: "gguf", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },
       { name: "batch", input_count: 1, outputs: ["summary", "deepbom.batch_result.v1"], manifest_schema: "deepbom.batch_manifest.v1" },
@@ -155,7 +157,7 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
         invocation: "deepbom mcp",
         transport: "stdio_jsonrpc",
         protocol_versions: ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"],
-        tools: ["deepbom_capabilities", "deepbom_audit", "deepbom_diff", "deepbom_explain_rule"],
+        tools: [...LOCAL_MCP_TOOL_NAMES],
         default_audit_output: AUDIT_DEFAULT_OUTPUT_FORMAT,
         detailed_outputs_are_explicit: true,
         local_path_policy: "DEEPBOM_MCP_ALLOWED_ROOTS_or_launch_directory",

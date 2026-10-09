@@ -13,6 +13,11 @@ import {
   sourceTotals,
 } from "./source-size-utils.mjs";
 import { stripRustTests } from "./rust-source-utils.mjs";
+import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { execFileSync } from "node:child_process";
+import { collectSourceFiles } from "./source-size-utils.mjs";
 import { createCheck } from "./check-assert.mjs";
 
 const { done, expectEqual } = createCheck("Size utility contract check");
@@ -86,4 +91,26 @@ mod tests {
 `);
 expectEqual(stripped, `fn live() -> &'static str { "}" }`, "stripRustTests should remove cfg(test) modules without touching live code.");
 
-done("Size utility contract passed (bytes, budgets, runtime paths, and Rust test stripping).");
+const work = await mkdtemp(path.join(tmpdir(), "deepbom-source-budget-"));
+try {
+  execFileSync("git", ["init", "-q", work]);
+  await writeFile(path.join(work, ".gitignore"), "/local-study/\n/retained/\n");
+  for (const dir of ["local-study", "retained", "source"]) {
+    await mkdir(path.join(work, dir));
+    await writeFile(path.join(work, dir, "model.js"), "export const model = 1;\n");
+  }
+  execFileSync("git", ["-C", work, "add", "-f", "retained/model.js"]);
+  await mkdir(path.join(work, "source", "local-study"));
+  await writeFile(path.join(work, "source", "local-study", "tracked.js"), "export const value = 1;\n");
+  execFileSync("git", ["-C", work, "add", "source/local-study/tracked.js"]);
+  const files = await collectSourceFiles({ cwd: work });
+  expectEqual(files.some(file => file.path === "local-study/model.js"), false, "Ignored local studies must not enter product source budgets.");
+  expectEqual(files.some(file => file.path === "retained/model.js"), true, "Tracked content in an ignored root must remain counted.");
+  expectEqual(files.some(file => file.path === "source/model.js"), true, "New non-ignored product source must remain counted.");
+  expectEqual(files.some(file => file.path === "source/local-study/tracked.js"), true, "An ignored root name must not hide tracked directories with that name elsewhere.");
+  const direct = await collectSourceFiles({ cwd: work, roots: ["local-study"] });
+  expectEqual(direct.length, 0, "Direct traversal of an ignored local root must also be excluded.");
+} finally {
+  await rm(work, { recursive: true, force: true });
+}
+done("Size utility contract passed (bytes, budgets, runtime paths, local-only scope and Rust test stripping).");

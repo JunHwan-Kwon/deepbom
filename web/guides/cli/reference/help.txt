@@ -1,4 +1,4 @@
-DEEPBOM 2.1.0
+DEEPBOM 2.2.0
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -59,6 +59,8 @@ Options:
                           Explicit tensor pairs and candidate axis permutations
   --activation-evidence <json>
                           Import hash-bound runtime captures as Activation IR; no execution
+  --activation-baseline <json>
+                          Compare a reference capture for the same artifact; requires --activation-evidence
   --section <names>      Emit selected analysis sections; use --list-sections to discover names
   --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity
   --list-sections        List selectable analysis sections for this artifact
@@ -147,6 +149,8 @@ Compiled accelerator evidence:
 Conversion provenance:
   --conversion-receipt <json>
                           Bind a self-hashed source/converter/environment receipt to the observed output artifact. Source .pt/.pth/.h5 files are identified by digest only and are never deserialized.
+
+Saved optimization reports: deepbom optimization-report <report.json> --help
 
 NVIDIA accelerator observation:
   deepbom accelerator collect nvidia [--device <index>] [--json|--compact]

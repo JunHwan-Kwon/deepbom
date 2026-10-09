@@ -15,6 +15,12 @@ Thumbs.db
 
 # Local runtime outputs
 reports/
+# Product report viewer source; generated report directories remain ignored.
+!web/reports/
+web/reports/*
+!web/reports/optimization/
+web/reports/optimization/*
+!web/reports/optimization/index.html
 reference/
 !reference/
 reference/*

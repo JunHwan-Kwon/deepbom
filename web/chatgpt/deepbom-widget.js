@@ -202,7 +202,7 @@ async function start() {
         if (query.section === "weights") context.weightEvidence = await exportActions.weightIr();
         return queryEvidence(context, query);
       },
-      weightVisual: (ref, view) => buildWeightQueryVisual(weightEvidence, ref, view),
+      weightVisual: (ref, view) => buildWeightQueryVisual(weightEvidence, ref, view, artifactIrContext.model_ir),
       publish, openai, offerDownload: exportActions.offerDownload,
     });
     setStatus("Requested evidence ready", `${remote.name} · ${requestedQuery.section} · identity verified`);

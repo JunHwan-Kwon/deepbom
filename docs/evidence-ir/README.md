@@ -4,7 +4,7 @@
 
 **Status: draft DEEPBOM-maintained specification, implemented and released in DEEPBOM 2.0.0.**
 
-The package release does not make this an externally approved standard. The family catalog is version 1.0.0; the current compatibility catalog is 0.2.0. These catalog versions are independent of the package version. See the [release record](RELEASE_2_0_0.md) and [migration rules](MIGRATION.md).
+The package release does not make this an externally approved standard. The family catalog is version 1.0.0; compatibility catalog versions are listed in the [version index](compatibility/index.json). These catalog versions are independent of the package version. A newer checkout snapshot does not establish a deployed release. See the [release record](RELEASE_2_0_0.md) and [migration rules](MIGRATION.md).
 
 DEEPBOM Evidence IR is a family of interoperable intermediate representations for artifact, structural, numerical, runtime, and provenance evidence. It is maintained by the DEEPBOM project; no external standards-body approval or independent adoption is claimed.
 
@@ -57,6 +57,46 @@ node bin/deepbom.mjs audit model.onnx --metadata metadata.json \
 
 Generic associations, BOM references and documentation links are contextual relationships; they are not all derivation claims. Hash agreement establishes byte identity, not the truth of a training claim or the authenticity of a publisher.
 
+## Training and immutable model-state evidence
+
+The [training lifecycle design](TRAINING_LIFECYCLE.md) separates a training process
+from the particular model states it produces. It proposes **Training IR** as an
+immutable snapshot of the observed training lifecycle, temporal coordinates,
+training-specific evidence and time-bound model-state references. It retains the
+same IR type after a run ends; each changed snapshot has its own digest. An optional
+**Training Result Manifest** references a selected
+checkpoint, existing IRs and evaluation evidence. The manifest is a linking
+document and is not required to use Training IR. There is no separate **Trained IR**;
+Artifact, Model, Weight and Activation IR retain their existing responsibilities.
+
+Model optimization returns a selected model structure and state for use with a
+new user-owned optimizer. Training IR records observations, rather than requiring
+training replay or a resumable checkpoint. The [consumer adapter design](TRAINING_LIFECYCLE.md#85-하나의-근거-선택-가능한-표시저장-대상)
+keeps common evidence independent of the DeepBoard viewer and external
+MLflow, TensorBoard or W&B presentations. Missing state binding remains explicit.
+
+The additive experimental native family implements CPU-qualified PyTorch and
+TensorFlow collectors, including eager GradientTape observations and Keras fit
+callbacks. Native Model/Weight/Activation v2 bind to an immutable Model State
+Snapshot; Training IR v1 references ordered observations and their available
+state bindings. The artifact-bound v1 members keep their original contracts.
+A snapshot digest must never be substituted for an artifact-file digest.
+
+Run completion, checkpoint selection, evaluation and release decisions remain
+independent. A missing state binding stays explicit. The current Provenance
+builder and existing BOM projections support artifact-bound Model IR; they do not
+automatically cover native Training records. See the [qualified APIs](../NATIVE_MODEL_TRAINING_GUIDE.md).
+
+Saved optimization reports share state-identity correspondence validation with
+native bundle comparison. Distribution claims still require their original
+numerical evidence for independent recomputation. Explorer weight views use
+Model IR bindings and the common Weight IR/statistics/advanced-analysis owners;
+legacy WASM histogram calls return an explicit retirement error.
+
+The [2026-10-07 compatibility review](TRAINABLE_COMPATIBILITY_REVIEW_2026-10-07.md)
+records tested current boundaries and the remaining native-framework acceptance
+conditions, including immutable candidates, transformation modes and export projections.
+
 ## External standards boundary
 
 - **W3C PROV:** entity/activity/agent concepts provide useful comparison points. Model/data records and runs have conceptual correspondences, but this release does not provide a complete PROV-DM mapping, PROV-O export or PROV conformance claim. [PROV-DM](https://www.w3.org/TR/prov-dm/)
@@ -65,3 +105,7 @@ Generic associations, BOM references and documentation links are contextual rela
 - **TEA:** discovery and exchange belong outside the IR calculation layer. See the [pinned TEA review and proposed adapter boundary](TEA_REVIEW.md). No TEA client/server is implemented by this change.
 
 Public source exports of these documents, schemas and examples use the repository's [Apache-2.0 distribution license](../../channels/LICENSE). Reuse should identify the schema URI, supported method versions and exact release or commit. Schema validity alone is not evidence authenticity, model quality or regulatory compliance.
+
+## Native model state and Training extension
+
+The additive experimental [native catalog](native-catalog.json) and [family v2 schema](../schemas/deepbom-evidence-ir-v2.schema.json) add explicitly versioned native Model/Weight/Activation contracts and Training IR. The five-member artifact family v1 above remains unchanged. Supporting snapshots and chunks are not analytical IR layers. See [implementation and qualified APIs](../NATIVE_MODEL_TRAINING_GUIDE.md).

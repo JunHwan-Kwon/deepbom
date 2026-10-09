@@ -12,6 +12,7 @@ import { canonicalJson } from "../web/lib/report-utils.js";
 import { TensorStatistics, statisticsOf, validateStatistics, HISTOGRAM_EDGES } from "../web/lib/numerical-ir/statistics.js";
 import { seal } from "../web/lib/numerical-ir/common.js";
 import { buildWeightIr, validateWeightIr } from "../web/lib/weight-ir.js";
+import { buildNumericalDetails, validateNumericalDetails } from "../web/lib/numerical-details.js";
 import { buildActivationIr, validateActivationIr, buildNumericalEvidenceBundle } from "../web/lib/activation-ir.js";
 import { buildCoreMlPerChannelLinearFixture } from "./coreml-legacy-quantization-corpus-lib.mjs";
 import { model, node, tensor, valueInfo, float32 } from "./onnx-proto-fixture.mjs";
@@ -56,6 +57,11 @@ const capture={schema:"deepbom.activation_capture.v1",source:w.source,run:{id:"r
 const a=buildActivationIr(ir,capture);assert.equal(a.coverage.completeness,"partial_requested_capture");assert.equal(a.coverage.missing_count,1);assert.equal(a.tensors[0].statistics.mean,1.5);validateActivationIr(a,ir);assert(!JSON.stringify(a).includes('"values":'));
 for(const change of [c=>c.source.artifact_sha256="0".repeat(64),c=>c.missing=[],c=>c.inputs=[],c=>c.captures[0].shape=[3],c=>c.captures[0].dtype="INT8",c=>c.captures[0].values=[1e100,1,2,4],c=>c.requested_value_refs.push(c.requested_value_refs[0]),c=>c.run.execution.configuration.optimization="enabled"]) { const copy=structuredClone(capture);change(copy);assert.throws(()=>buildActivationIr(ir,copy)); }
 const bundle=buildNumericalEvidenceBundle(ir,w,a);assert.equal(bundle.weight_ir_sha256,w.weight_ir_sha256);assert.equal(bundle.activation_ir_sha256,a.activation_ir_sha256);
+for (const [model, weight] of [[ir,w],[ci,cw],[pi,pw],[si,sw],[ei,ew],[scalarIr,scalarWeight]]) {
+  const evidence = {weightIr:weight}; const detail = buildNumericalDetails(model,evidence);
+  validateNumericalDetails(detail,model,evidence);
+  assert.equal(detail.weights.length,weight.tensors.length,'detail accounts for every tensor across formats');
+}
 console.log("Numerical IR: exact counts, stable moments, unsafe integers, all inventory rows, shared bindings, ONNX/Core ML/ExecuTorch/SafeTensors decoders, runtime identity, capture coverage and tamper checks passed.");
 
 const schema=JSON.parse(await readFile(new URL("../docs/schemas/deepbom-numerical-ir-v1.schema.json",import.meta.url),"utf8"));

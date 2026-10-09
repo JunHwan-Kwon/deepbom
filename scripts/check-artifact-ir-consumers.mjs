@@ -1,6 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
-import { parse } from "acorn";
+import assert from "node:assert/strict";
+import { directAnalysisLedgerReads } from "./artifact-consumer-analysis.mjs";
 
 const root = path.resolve(".");
 const policy = JSON.parse(await readFile(path.join(root, "config", "artifact-ir-consumer-policy.v1.json"), "utf8"));
@@ -45,9 +46,16 @@ if (retiredCompatibilityReaders.some((file) => compatibilitySet.has(file))) {
   throw new Error("An Artifact IR surface cannot be both active compatibility debt and retired migration evidence.");
 }
 
+for (const source of [
+  "analysis.ops", "const x=analysis; x['tensors']", "const a=analysis; const b=a; b?.ops",
+  "const {tensors: values}=analysis", "let a; a=analysis; const {ops}=a || {}",
+]) assert(directAnalysisLedgerReads(source).length, `Missed native read: ${source}`);
+assert.equal(directAnalysisLedgerReads("const ops = model.program.operations").length, 0);
 const directReaders = [];
 for (const file of await javascriptFiles(path.join(root, "web"))) {
   const source = await readFile(file, "utf8");
+  if (/\b(?:compute_weight_histogram|weightHistogram|TFLITE_WEIGHT_HISTOGRAM)\b/.test(source))
+    throw new Error(`${file}: retired weight statistics bypass; use common Weight IR.`);
   if (directAnalysisLedgerReads(source, file).length) {
     directReaders.push(portable(path.relative(root, file)));
   }
@@ -80,34 +88,6 @@ for (const [file, contract] of Object.entries(policy.orchestration_contracts || 
 const counts = Object.fromEntries(categories.map((category) => [category, policy[category].length]));
 const groupSummary = Object.entries(policy.compatibility_surface_groups || {}).map(([name, files]) => `${name}=${files.length}`).join(", ");
 console.log(`Artifact IR consumer policy passed (${directReaders.length} classified readers: ${counts.native_ledger_readers} native producers, ${counts.canonical_ir_modules} canonical modules, ${counts.compatibility_facade_modules} compatibility facade, ${counts.compatibility_surface_readers}/${compatibilityBudget} direct surface readers; ${retiredCompatibilityReaders.length} migrated surfaces${groupSummary ? `; ${groupSummary}` : ""}).`);
-
-function directAnalysisLedgerReads(source, filename) {
-  let tree;
-  try {
-    tree = parse(source, { ecmaVersion: "latest", sourceType: "module", allowHashBang: true });
-  } catch (error) {
-    throw new Error(`${portable(path.relative(root, filename))}: cannot parse JavaScript for Artifact IR consumer policy: ${error.message}`);
-  }
-  const hits = [];
-  visit(tree, (node) => {
-    if (node.type !== "MemberExpression" || node.object?.type !== "Identifier" || node.object.name !== "analysis") return;
-    const property = node.computed
-      ? (node.property?.type === "Literal" ? node.property.value : null)
-      : (node.property?.type === "Identifier" ? node.property.name : null);
-    if (property === "ops" || property === "tensors") hits.push({ property, start: node.start, end: node.end });
-  });
-  return hits;
-}
-
-function visit(node, callback) {
-  if (!node || typeof node !== "object") return;
-  callback(node);
-  for (const [key, value] of Object.entries(node)) {
-    if (["start", "end", "loc", "range"].includes(key)) continue;
-    if (Array.isArray(value)) value.forEach((child) => visit(child, callback));
-    else if (value && typeof value === "object" && typeof value.type === "string") visit(value, callback);
-  }
-}
 
 async function javascriptFiles(directory) {
   const files = [];

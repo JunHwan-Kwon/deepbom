@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-evidence-ir-v2.schema.json",
+  "title": "DEEPBOM Evidence IR family with native state and training",
+  "oneOf": [
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-evidence-ir-v1.schema.json"
+    },
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/model"
+    },
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/weight"
+    },
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/activation"
+    },
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/training"
+    }
+  ]
+}

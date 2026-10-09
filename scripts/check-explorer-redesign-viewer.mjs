@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -956,6 +957,7 @@ try {
     || redesign.overflow > 1) {
     throw new Error(`Redesign source binding or no-op projection failed: ${JSON.stringify(redesign)}`);
   }
+  await checkImplementationPreview(page);
   await page.locator("#redesignPanel .xr-scenario-lab button", { hasText: "Explore Pareto" }).click();
   await page.waitForFunction(() => {
     const panel = document.querySelector("#redesignPanel .xr-scenario-lab");
@@ -1143,8 +1145,21 @@ try {
   }
   const outputChannels = page.locator("#redesignPanel label", { hasText: "Output channels" }).locator("input");
   const sourceChannels = Number(await outputChannels.inputValue());
-  await outputChannels.fill(String(sourceChannels + 8));
-  await outputChannels.evaluate((input) => input.dispatchEvent(new Event("input", { bubbles: true })));
+  await page.locator("#redesignPanel .xr-scenario-lab").getByRole("button", { name: "View code", exact: true }).click();
+  await page.locator(".xr-code-file").selectOption("pytorch/model.py");
+  const priorCode = await page.locator(".xr-code-source code").textContent();
+  const staleCode = await outputChannels.evaluate((input, value) => {
+    input.focus();
+    input.value = value;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    return {
+      disabled: [...document.querySelectorAll("#redesignPanel [data-redesign-implementation]")].every((control) => control.disabled),
+      code: document.querySelector(".xr-code-source code")?.textContent,
+    };
+  }, String(sourceChannels + 8));
+  if (!staleCode.disabled || !staleCode.code?.includes("Recalculate")) {
+    throw new Error(`Changing the scenario exposed stale code: ${JSON.stringify(staleCode)}`);
+  }
   await page.waitForFunction(() =>
     document.querySelectorAll("#redesignPanel .nv-node-redesign-direct").length > 0
     && document.querySelectorAll("#redesignPanel .nv-node-redesign-propagated").length > 0
@@ -1158,6 +1173,11 @@ try {
   const activeField = await page.evaluate(() => document.activeElement?.dataset?.redesignField || "");
   if (activeField !== "output_channels") {
     throw new Error(`Redesign automatic projection did not preserve the active numeric control: ${activeField}`);
+  }
+  const updatedCode = await page.locator(".xr-code-source code").textContent();
+  if (updatedCode === priorCode || !updatedCode?.includes("import torch")
+    || await page.locator(".xr-code-preview").getByRole("button", { name: "Copy code", exact: true }).isDisabled()) {
+    throw new Error("The current code did not become available after scenario recalculation.");
   }
   const redesignNodeEdited = await page.locator("#redesignPanel").evaluate((panel) => ({
     direct: panel.querySelectorAll(".nv-node-redesign-direct").length,
@@ -1730,6 +1750,89 @@ async function assertMobileExplorerTabs(page) {
   if (!(await page.locator('[data-explorer-tab="resource"]').evaluate((button) => button.classList.contains("active") && button.getAttribute("aria-selected") === "true"))) {
     throw new Error("Explorer roving keyboard navigation did not activate the next tab.");
   }
+}
+
+async function checkImplementationPreview(page) {
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.locator("#redesignPanel .xr-scenario-lab").getByRole("button", { name: "View code", exact: true }).click();
+  const preview = page.locator(".xr-code-preview");
+  await preview.locator(".xr-code-source code").filter({ hasText: "import torch" }).waitFor();
+  const files = {};
+  for (const name of ["pytorch/model.py", "pytorch/smoke_test.py", "keras/model.py", "keras/convert_litert.py"]) {
+    await preview.locator("select").selectOption(name);
+    const source = await preview.locator(".xr-code-source code").textContent();
+    if (!source || source.length < 100) throw new Error(`Missing ${name} source in preview.`);
+    files[name] = source;
+    await preview.getByRole("button", { name: "Copy code", exact: true }).click();
+    if (await page.evaluate(() => navigator.clipboard.readText()) !== source) throw new Error(`Clipboard differs from ${name}.`);
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      preview.getByRole("button", { name: "Download .py", exact: true }).click(),
+    ]);
+    if (!download.suggestedFilename().endsWith(name.replaceAll("/", "_"))
+      || await readFile(await download.path(), "utf8") !== source) throw new Error(`Downloaded ${name} differs from preview.`);
+  }
+  await preview.getByRole("button", { name: "Copy Markdown", exact: true }).click();
+  const markdown = await page.evaluate(() => navigator.clipboard.readText());
+  files["structure-code.md"] = markdown;
+  for (const [name, source] of Object.entries(files).filter(([name]) => name.endsWith(".py"))) {
+    if (!markdown.includes(`### ${name}\n\n\x60\x60\x60python\n${source}\x60\x60\x60\n`)) {
+      throw new Error(`Copied Markdown omits or changes ${name}.`);
+    }
+  }
+  if (!markdown.includes("Weights included: **no**")) throw new Error("Markdown lost the weight-free boundary.");
+  const [markdownDownload] = await Promise.all([
+    page.waitForEvent("download"),
+    preview.getByRole("button", { name: "Download Markdown", exact: true }).click(),
+  ]);
+  if (await readFile(await markdownDownload.path(), "utf8") !== markdown) throw new Error("Markdown copy and download differ.");
+  const [zipDownload] = await Promise.all([
+    page.waitForEvent("download"),
+    page.locator("#redesignPanel .xr-scenario-lab").getByRole("button", { name: "Export structure code", exact: true }).click(),
+  ]);
+  const zipCheck = spawnSync("python", ["-c", "import json,sys,zipfile\nexpected=json.load(sys.stdin)\nwith zipfile.ZipFile(sys.argv[1]) as z:\n for name,text in expected.items():\n  assert z.read(name).decode('utf-8') == text, name\n assert sorted(json.loads(z.read('manifest.json'))['generated_files']) == sorted(z.namelist())", await zipDownload.path()], {
+    input: JSON.stringify(files), encoding: "utf8",
+  });
+  if (zipCheck.status !== 0) throw new Error(`ZIP differs from displayed/copied files: ${zipCheck.stderr}`);
+
+  // A denied clipboard must leave a usable download/manual-copy path.
+  await page.evaluate(() => {
+    const writeText = navigator.clipboard.writeText;
+    const execCommand = document.execCommand;
+    navigator.clipboard.writeText = async () => { throw new Error("Clipboard denied by test"); };
+    document.execCommand = () => false;
+    window.restoreRedesignClipboard = () => {
+      navigator.clipboard.writeText = writeText;
+      document.execCommand = execCommand;
+    };
+  });
+  await preview.getByRole("button", { name: "Copy code", exact: true }).click();
+  await preview.locator('[role="status"]').filter({ hasText: "Clipboard unavailable" }).waitFor();
+  await page.evaluate(() => { window.restoreRedesignClipboard(); delete window.restoreRedesignClipboard; });
+  await preview.locator("select").selectOption("pytorch/model.py");
+  for (const theme of ["light", "dark"]) {
+    if (await page.locator("html").getAttribute("data-theme") !== theme) await page.locator("#themeToggle").click();
+    await assertReadableState(page, ".xr-code-source", "code", `${theme} source preview`);
+    await preview.screenshot({ path: path.join(output, `redesign-code-${theme}.png`) });
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator("#redesignPanel .xr-scenario-lab").getByRole("button", { name: "View code", exact: true }).click();
+  if (await page.locator("#redesignPanel .nv-detail").isVisible()) {
+    throw new Error("The floating graph inspector obscures the mobile code preview.");
+  }
+  const geometry = await preview.evaluate((panel) => {
+    const source = panel.querySelector("pre");
+    return { overflow: panel.scrollWidth - panel.clientWidth, height: source.getBoundingClientRect().height,
+      scrollable: source.scrollHeight > source.clientHeight && getComputedStyle(source).overflowY === "auto" };
+  });
+  if (geometry.overflow > 1 || geometry.height > 421 || !geometry.scrollable) {
+    throw new Error(`Mobile code preview must scroll within its panel: ${JSON.stringify(geometry)}`);
+  }
+  await preview.screenshot({ path: path.join(output, "redesign-code-mobile.png") });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.locator("#themeToggle").click();
+  await preview.locator("summary").click();
+  await page.locator("#redesignPanel .nv-view-controls").getByRole("button", { name: "Inspector", exact: true }).click();
 }
 
 async function assertReadableState(page, containerSelector, textSelector, label) {

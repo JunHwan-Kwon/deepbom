@@ -4,6 +4,10 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
+import { sourceContract } from "../web/lib/numerical-ir/common.js";
+import { sha256TextHex } from "../web/lib/sha256-sync.js";
+import { buildActivationIr } from "../web/lib/activation-ir.js";
+import { buildNumericalDetails } from "../web/lib/numerical-details.js";
 
 // The MCP surface is read by a model, not a person. These checks exercise the
 // live transport so cancellation, control-message responsiveness, bounded
@@ -34,6 +38,8 @@ async function checkRealServerContract() {
     session.request(2, "tools/list");
     const tools = (await session.response(2)).result.tools;
     assert.deepEqual(tools.map((tool) => tool.name), [
+      "deepbom_optimization_report",
+      "deepbom_export_optimization_report",
       "deepbom_capabilities",
       "deepbom_audit",
       "deepbom_diff",
@@ -277,6 +283,17 @@ async function checkRealServerContract() {
     const cliLinked = spawnSync(process.execPath, ["bin/deepbom.mjs", "audit", onnxPath, "--metadata", metadataFile, "--section", "provenance_ir", "--output-format", "json-compact"], { encoding: "utf8" });
     assert.equal(cliLinked.status, 0, cliLinked.stderr);
     assert.deepEqual(linked.structuredContent, JSON.parse(cliLinked.stdout));
+    const omopFile = path.join(scratch, "omop-metadata.json");
+    const omop = { ...template, schema: "deepbom.omop_metadata_input.v1", omop: {
+      cdm_version: "5.5", instance_id: "synthetic:cdm", release_id: "release-1",
+      cdm_source: { cdm_source_name: "Synthetic CDM", cdm_source_abbreviation: "SYN", cdm_holder: "Example", source_release_date: "2026-09-01", cdm_release_date: "2026-09-02", cdm_version: "5.5", cdm_version_concept_id: 0, vocabulary_version: "test-v1", cdm_release_identifier: "release-1" },
+    } };
+    await writeFile(omopFile, JSON.stringify(omop));
+    session.request(140, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, metadata: omopFile, section: "provenance_ir" } });
+    const omopResult = (await session.response(140)).result;
+    const omopCli = spawnSync(process.execPath, ["bin/deepbom.mjs", "audit", onnxPath, "--metadata", omopFile, "--section", "provenance_ir", "--output-format", "json-compact"], { encoding: "utf8" });
+    assert.equal(omopCli.status, 0, omopCli.stderr);
+    assert.deepEqual(omopResult.structuredContent, JSON.parse(omopCli.stdout), "OMOP MCP and CLI must preserve the same IR, checks and digest");
     session.request(44, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, metadata: metadataFile, section: "evidence_link_ir" } });
     assert((await session.response(44)).result.isError, "retired MCP selection must be rejected");
     template.relationships.push({ id: "missing", from: "artifact:primary", to: "absent", role: "documented_by" });
@@ -288,6 +305,24 @@ async function checkRealServerContract() {
     assert((await session.response(43)).result.isError, "metadata respects allowed roots");
     session.request(31, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, output_format: "json", activation_evidence: path.resolve("..", "outside-capture.json"), section: "activation_ir" } });
     assert.equal((await session.response(31)).result.isError, true, "Capture inputs must obey allowed roots");
+    const captureModel = modelIrSelection.sections.model_ir, entry = captureModel.program.programs[0].entry_region_refs[0];
+    const eligible = captureModel.program.values.filter(v => !v.storage_refs.length && !v.roles.includes("graph_input"));
+    const capture = { schema: "deepbom.activation_capture.v1", source: sourceContract(captureModel).source,
+      run: { id: "mcp-fixture", started_at: "2026-10-07T00:00:00Z", entry_region_ref: entry,
+        runtime: { name: "fixture", version: "1", configured_providers: [], device: null }, collector: { name: "fixture", version: "1", sha256: "a".repeat(64) },
+        execution: { artifact_sha256: envelope.identity.sha256, instrumented_artifact_sha256: null, configuration: {}, configuration_sha256: sha256TextHex("{}") },
+        probe: { kind: "synthetic_zeros", description: "Test fixture, not a measured execution" }, runtime_evidence: null },
+      inputs: captureModel.program.values.filter(v => v.roles.includes("graph_input") && !v.storage_refs.length && v.region_ref === entry).map(v => ({ value_ref: v.id, native_locator: v.name, dtype: v.dtype, shape: v.shape, values: Array(v.shape.reduce((n, d) => n * d, 1)).fill(0) })),
+      requested_value_refs: eligible.map(v => v.id), captures: [], missing: eligible.map(v => ({ value_ref: v.id, reason: "not_preserved" })) };
+    const capturePath = path.join(scratch, "activation.json"); await writeFile(capturePath, JSON.stringify(capture));
+    // No explicit format or section: an activation-only request must default to JSON.
+    session.request(45, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, activation_evidence: capturePath, activation_baseline: capturePath } });
+    const activationResult = (await session.response(45)).result;
+    assert.equal(activationResult.isError, undefined, JSON.stringify(activationResult));
+    const activation = buildActivationIr(captureModel, capture);
+    assert.deepEqual(activationResult.structuredContent.numerical_details, buildNumericalDetails(captureModel, { activationIr: activation, baselineActivationIr: activation }));
+    session.request(46, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, activation_evidence: capturePath, activation_baseline: path.resolve("..", "outside-reference.json") } });
+    assert.equal((await session.response(46)).result.isError, true, "Reference captures obey allowed roots");
 
   } finally {
     await session.close();

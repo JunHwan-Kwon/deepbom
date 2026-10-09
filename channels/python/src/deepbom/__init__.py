@@ -1,6 +1,6 @@
 """Public Python SDK and launcher for the verified DEEPBOM engine."""
 
-__version__ = "2.1.0"
+__version__ = "2.2.0"
 
 from .api import (  # noqa: E402
     DeepBomError,
@@ -16,6 +16,7 @@ from .api import (  # noqa: E402
     diff,
     inspect,
     model_ir,
+    numerical_evidence,
     tensor_inventory,
     tensors,
     visualization_manifest,
@@ -31,6 +32,7 @@ __all__ = [
     "diff",
     "inspect",
     "model_ir",
+    "numerical_evidence",
     "tensors",
     "tensor_inventory",
     "visualization_manifest",

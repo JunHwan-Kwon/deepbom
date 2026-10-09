@@ -2,7 +2,7 @@ import { ANALYZER_SEMANTIC_VERSION } from "./app-config.js";
 import { BROWSER_TARGET_PROFILES } from "./target-profiles.generated.js";
 import { buildExecutionPlacementEvidence } from "./execution-placement-evidence.js";
 import { artifactIrOperators } from "./artifact-ir-selectors.js";
-import { bindSource, checkDigest } from "./numerical-ir/common.js";
+import { validateWeightAnalysis } from "./weight-analysis.js";
 import { workflowUrl } from "./workflow-catalog.js";
 import { canonicalJson, compareCanonicalText } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
@@ -57,9 +57,7 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
   } else if (query.section === "weights") {
     if (!weightEvidence) throw new Error("Weight analysis must complete before a weight query is projected.");
     const { weight_ir: weight, weight_analysis: advanced } = weightEvidence;
-    bindSource(weight.source, model); bindSource(advanced.source, model);
-    checkDigest(weight, "weight_ir_sha256"); checkDigest(advanced, "weight_analysis_sha256");
-    if (advanced.weight_ir_sha256 !== weight.weight_ir_sha256) throw new Error("Weight analysis identity mismatch.");
+    validateWeightAnalysis(advanced, weight, model);
     const view = query.weight_view || "distribution";
     context.weight_evidence = { weight_ir_sha256: weight.weight_ir_sha256, weight_analysis_sha256: advanced.weight_analysis_sha256, coverage: advanced.coverage, options: advanced.options, view, interpretation_boundary: advanced.interpretation_boundary };
     const weightsByRef = new Map(weight.tensors.map(row => [row.id, row]));

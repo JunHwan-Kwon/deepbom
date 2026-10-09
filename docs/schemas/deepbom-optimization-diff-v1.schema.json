@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-optimization-diff-v1.schema.json",
+  "title": "DEEPBOM optimization report diff projection",
+  "description": "Supporting output projection, not an additional Evidence IR layer. Field rows use canonical JSON equality. Report identities are not independent attestations of model state or performance.",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "report_sha256", "before_sha256", "after_sha256", "counts", "changed_entries", "entries", "rules", "boundary"],
+  "properties": {
+    "schema": {"const": "deepbom.optimization_diff.v1"},
+    "report_sha256": {"$ref": "#/$defs/hash"},
+    "before_sha256": {"$ref": "#/$defs/hash"},
+    "after_sha256": {"$ref": "#/$defs/hash"},
+    "counts": {"type": "object", "additionalProperties": false, "required": ["added", "removed", "changed", "unchanged"], "properties": {"added": {"$ref": "#/$defs/count"}, "removed": {"$ref": "#/$defs/count"}, "changed": {"$ref": "#/$defs/count"}, "unchanged": {"$ref": "#/$defs/count"}}},
+    "changed_entries": {"$ref": "#/$defs/count"},
+    "entries": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "status", "tags", "before", "after", "rules", "fields"], "properties": {
+      "id": {"type": "string"},
+      "status": {"enum": ["added", "removed", "changed", "unchanged", "context"]},
+      "tags": {"type": "array", "uniqueItems": true, "items": {"enum": ["structure", "state", "connections", "observations", "context"]}},
+      "before": {}, "after": {},
+      "rules": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+      "fields": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "before_present", "after_present", "before", "after"], "properties": {
+        "path": {"type": "string", "pattern": "^(?:/(?:[^~/]|~[01])*)*$"},
+        "before_present": {"type": "boolean"}, "after_present": {"type": "boolean"}, "before": {}, "after": {}
+      }}}
+    }}},
+    "rules": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["index", "title", "subject", "reason", "description", "tradeoff", "state", "rule", "rule_version"], "properties": {
+      "index": {"type": "integer", "minimum": 1}, "title": {"type": "string"}, "subject": {"type": "string"}, "reason": {"type": "string"}, "description": {"type": ["string", "null"]}, "tradeoff": {"type": ["string", "null"]}, "state": {"type": "string"}, "rule": {"type": "string"}, "rule_version": {"type": "string"}
+    }}},
+    "boundary": {"type": "string"}
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "count": {"type": "integer", "minimum": 0}}
+}

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deepbom"
-version = "2.1.0"
+version = "2.2.0"
 description = "Local deployment-artifact analysis for on-device AI models"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -24,6 +24,13 @@ classifiers = [
   "Topic :: Software Development :: Testing",
 ]
 
+[project.optional-dependencies]
+report = ["reportlab>=4.4,<5", "rfc8785==0.1.4"]
+native = ["numpy>=1.26,<3", "rfc8785==0.1.4"]
+torch = ["numpy>=1.26,<3", "rfc8785==0.1.4", "torch>=2.8,<2.9"]
+tensorflow = ["numpy>=1.26,<3", "rfc8785==0.1.4", "tensorflow>=2.20,<2.21", "keras>=3.11,<3.12"]
+tracking = ["numpy>=1.26,<3", "rfc8785==0.1.4", "mlflow-skinny>=3.17,<4", "tensorboard>=2.20,<3", "wandb>=0.30,<0.31"]
+
 [project.urls]
 Homepage = "https://deepbom.org"
 Repository = "https://github.com/JunHwan-Kwon/deepbom"
@@ -37,4 +44,4 @@ deepbom = "deepbom.__main__:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-deepbom = ["py.typed", "SKILL.md", "_engine/*", "_engine/pkg/*"]
+deepbom = ["py.typed", "SKILL.md", "_engine/*", "_engine/pkg/*", "training/board.js", "optimization/report-diff.js", "optimization/report-diff.css"]

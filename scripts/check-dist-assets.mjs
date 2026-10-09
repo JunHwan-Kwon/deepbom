@@ -219,6 +219,12 @@ if (blockedDistPaths.length) {
   throw new Error(`dist contains private/generated local artifacts:\n${blockedDistPaths.map((file) => `  - ${file}`).join("\n")}`);
 }
 
+const reportPage = path.join(distRoot, "reports", "optimization", "index.html");
+if (!existsSync(reportPage)
+  || !readFileSync(reportPage, "utf8").includes('/web/lib/optimization-report-page.js')) {
+  throw new Error("dist is missing the public optimization report viewer.");
+}
+
 checkProtectedSelectorBoundary();
 
 console.log(`Dist service-worker asset check passed (${expected.length} cacheable assets, ${blockedDistPaths.length} private artifacts).`);
@@ -356,7 +362,7 @@ function isBlockedDistPath(filePath) {
     return !publicSampleModelPaths.has(normalized);
   }
   return privateDistLeakNeedles.some((needle) => normalized.includes(needle))
-    || normalized.includes("/reports/")
+    || (normalized.includes("/reports/") && normalized !== "dist/reports/optimization/index.html")
     || normalized.includes("/docs/private/")
     || normalized.endsWith(".local.md")
     || normalized.includes("LOCAL_PRIVATE_ROADMAP")

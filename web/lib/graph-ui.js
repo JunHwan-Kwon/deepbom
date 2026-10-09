@@ -145,7 +145,7 @@ function buildOpInsights(op, b, analysis) {
   return items.slice(0, 3);
 }
 
-export function renderOpDetailPanel(container, analysis, opIndex, { weightHistograms = null, influence = null, outputInfluence = null, runtimeAssignment = null } = {}) {
+export function renderOpDetailPanel(container, analysis, opIndex, { weightEvidence = null, weightError = null, weightLoading = false, influence = null, outputInfluence = null, runtimeAssignment = null } = {}) {
   const op = artifactIrOperators(analysis).find((item) => item.index === opIndex);
   container.replaceChildren();
   if (!op) {
@@ -401,16 +401,21 @@ export function renderOpDetailPanel(container, analysis, opIndex, { weightHistog
     if (row.children.length > 0) { section.append(row); container.append(section); }
   }
 
-  if (Array.isArray(weightHistograms) && weightHistograms.length > 0) {
+  if (weightEvidence?.rows.length || weightError || weightLoading) {
     const section = document.createElement("div");
     section.className = "op-detail-weight-section";
     const secTitle = document.createElement("h4");
     secTitle.className = "op-detail-weight-title";
-    secTitle.textContent = "Weight Distributions";
+    secTitle.textContent = "Weight evidence";
     section.append(secTitle);
     const grid = document.createElement("div");
     grid.className = "whist-grid whist-grid-explorer";
-    for (const h of weightHistograms) grid.append(renderWeightHistogram(h));
+    if (weightError || weightLoading) {
+      const status = document.createElement("p");
+      status.textContent = weightError ? `Weight evidence unavailable: ${weightError}` : "Reading common Weight IR…";
+      grid.append(status);
+    }
+    for (const row of weightEvidence?.rows || []) grid.append(renderWeightHistogram(row, weightEvidence));
     section.append(grid);
     container.append(section);
   }

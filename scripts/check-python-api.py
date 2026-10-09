@@ -25,6 +25,7 @@ expect(callable(deepbom.audit), "audit must be exported")
 expect(callable(deepbom.tensors), "tensors must be exported")
 expect(callable(deepbom.capabilities), "capabilities must be exported")
 expect(callable(deepbom.model_ir), "model_ir must be exported")
+expect(callable(deepbom.numerical_evidence), "numerical_evidence must be exported")
 expect(callable(deepbom.visualization_manifest), "visualization_manifest must be exported")
 
 with patch.object(api, "_invoke_json", return_value={"schema": "deepbom.artifact_evidence_envelope.v1"}) as invoke:
@@ -68,6 +69,11 @@ with patch.object(api, "_invoke_json", return_value={"schema": "deepbom.artifact
     expect(invoke.call_args.args[0][-2:] == ["--policy", "regulatory"], "policy must reach the engine")
 
 for callable_value in (
+    lambda: deepbom.numerical_evidence("model.onnx"),
+    lambda: deepbom.numerical_evidence("model.onnx", weights="yes"),
+    lambda: deepbom.numerical_evidence("model.onnx", weights=True, activation_baseline="missing.json"),
+    lambda: deepbom.numerical_evidence("model.onnx", weight_mapping="mapping.json"),
+    lambda: deepbom.numerical_evidence("model.onnx", weights=True, expected_sha256="bad"),
     lambda: deepbom.audit("model.gguf", output="summary"),
     lambda: deepbom.audit("model.gguf", sections=["bad/name"]),
     lambda: deepbom.audit("model.gguf", expected_sha256="0"),

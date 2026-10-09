@@ -93,13 +93,17 @@ try {
   assert.equal(run(process.execPath, ["--input-type=module", "-e", "import { inspect } from 'deepbom'; console.log(typeof inspect)"], { cwd: consumer }).trim(), "function");
   const typeFile = path.join(consumer, `.deepbom-sdk-types-${process.pid}.mts`);
   try {
-    await writeFile(typeFile, `import { audit, inspect, diff, type EvidenceEnvelope, type ReviewSummary } from 'deepbom';
+    await writeFile(typeFile, `import { audit, inspect, diff, numericalEvidence, type EvidenceEnvelope, type ReviewSummary } from 'deepbom';
 const envelope: EvidenceEnvelope = await audit('model.onnx');
 const summary: ReviewSummary = await inspect('model.onnx', { expectedSha256: 'a'.repeat(64) });
 const count: number = summary.verdict.artifact_defect_count;
 const cost: number | null = summary.graph.total_macs;
 const digest: string = envelope.identity.sha256;
 await diff('a.onnx', 'b.onnx', { tensorsOnly: true });
+const numerical = await numericalEvidence('model.onnx', { weights: true, activationCapture: 'run.json', activationBaseline: 'prior.json' });
+const numericalDigest: string = numerical.sections.numerical_details.numerical_details_sha256;
+// @ts-expect-error Numeric evidence never accepts model execution options.
+await numericalEvidence('model.onnx', { execute: true });
 // @ts-expect-error Unknown option must be rejected.
 await inspect('model.onnx', { scann: 'full' });
 // @ts-expect-error Alternative projection must not masquerade as a canonical envelope.

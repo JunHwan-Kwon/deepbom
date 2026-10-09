@@ -1,8 +1,53 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-10-06T14:27:51.373080+00:00",
+  "recorded_at": "2026-10-09T03:25:09.071855+00:00",
   "scope": "Public installation channels and private web delivery",
   "observations": [
+    {
+      "kind": "private_web_preflight_basis",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 247.774,
+      "observed_at": "2026-10-09T03:08:52.025947+00:00",
+      "version": "2.2.0",
+      "source_commit": "7be1d8b8ed9e95d1c0b5e3bfc315e656b7cbca31",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.2.0 common channel flow, native training and numerical validation release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately.",
+      "check_count": 100
+    },
+    {
+      "kind": "local_channel_build",
+      "command": "node scripts/build-channel-artifacts.mjs --with-dist",
+      "elapsed_seconds": 12.513,
+      "observed_at": "2026-10-09T03:20:57.727453+00:00",
+      "version": "2.2.0",
+      "source_commit": "7ca83bebd07e5323d343dfa6046b4c9f91fdeeb9",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.2.0 common channel flow, native training and numerical validation release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately."
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --platform-smoke",
+      "elapsed_seconds": 47.228,
+      "observed_at": "2026-10-09T03:22:16.081647+00:00",
+      "version": "2.2.0",
+      "source_commit": "7ca83bebd07e5323d343dfa6046b4c9f91fdeeb9",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.2.0 common channel flow, native training and numerical validation release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately."
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --release-contract",
+      "elapsed_seconds": 167.558,
+      "observed_at": "2026-10-09T03:25:03.640157+00:00",
+      "version": "2.2.0",
+      "source_commit": "7ca83bebd07e5323d343dfa6046b4c9f91fdeeb9",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.2.0 common channel flow, native training and numerical validation release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately."
+    },
     {
       "kind": "private_web_preflight_basis",
       "command": "node scripts/check-deploy.mjs --establish-observation",

@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-optimization-report-access-v1.schema.json",
+  "title": "DEEPBOM saved optimization report access",
+  "description": "Read-only query and export receipts. Not a new Evidence IR layer or authentication of a report producer.",
+  "$defs": {
+    "sha": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "report_sha256",
+        "before_sha256",
+        "after_sha256",
+        "section",
+        "boundary"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.optimization_report_query.v1"
+        },
+        "report_sha256": {
+          "$ref": "#/$defs/sha"
+        },
+        "before_sha256": {
+          "$ref": "#/$defs/sha"
+        },
+        "after_sha256": {
+          "$ref": "#/$defs/sha"
+        },
+        "section": {
+          "enum": [
+            "summary",
+            "changes",
+            "structure",
+            "subject"
+          ]
+        },
+        "boundary": {
+          "type": "string"
+        },
+        "context": {
+          "type": "object"
+        },
+        "counts": {
+          "type": "object"
+        },
+        "changed_entries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totals": {
+          "type": "object"
+        },
+        "static_deltas": {
+          "type": "object"
+        },
+        "cost": {
+          "type": "object"
+        },
+        "rule_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "matched": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "returned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "next_offset": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "https://deepbom.org/schemas/deepbom-optimization-diff-v1.schema.json#/properties/entries/items"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "https://deepbom.org/schemas/deepbom-optimization-diff-v1.schema.json#/properties/rules/items"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "section": {
+                "const": "summary"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "context",
+              "counts",
+              "changed_entries",
+              "totals",
+              "static_deltas",
+              "cost",
+              "rule_count"
+            ],
+            "properties": {
+              "context": {},
+              "counts": {},
+              "changed_entries": {},
+              "totals": {},
+              "static_deltas": {},
+              "cost": {},
+              "rule_count": {}
+            }
+          },
+          "else": {
+            "required": [
+              "total",
+              "matched",
+              "returned",
+              "offset",
+              "next_offset",
+              "rows",
+              "rules"
+            ],
+            "properties": {
+              "total": {},
+              "matched": {},
+              "returned": {},
+              "offset": {},
+              "next_offset": {},
+              "rows": {},
+              "rules": {}
+            }
+          }
+        }
+      ]
+    },
+    "export": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "report_sha256",
+        "filename",
+        "mime_type",
+        "byte_length",
+        "file_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.optimization_report_export.v1"
+        },
+        "report_sha256": {
+          "$ref": "#/$defs/sha"
+        },
+        "filename": {
+          "enum": [
+            "report.json",
+            "report.diff.json",
+            "report.html",
+            "report.pdf"
+          ]
+        },
+        "mime_type": {
+          "enum": [
+            "application/json",
+            "text/html",
+            "application/pdf"
+          ]
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "file_sha256": {
+          "$ref": "#/$defs/sha"
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/query"
+    },
+    {
+      "$ref": "#/$defs/export"
+    }
+  ]
+}

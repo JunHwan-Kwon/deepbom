@@ -1,0 +1,773 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-numerical-details-v1.schema.json",
+  "title": "DEEPBOM numerical detail projection",
+  "description": "Derived analysis, not an additional Evidence IR member. Shape validation must be followed by validateNumericalDetails against the exact Model, Weight and Activation IR inputs. Percentile intervals are histogram bounds; comparisons do not establish training progress or task quality.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "method_version",
+    "source",
+    "weight_ir_sha256",
+    "activation_ir_sha256",
+    "weights",
+    "activation",
+    "activation_comparison",
+    "interpretation_boundary",
+    "numerical_details_sha256"
+  ],
+  "properties": {
+    "schema": {
+      "const": "deepbom.numerical_details.v1"
+    },
+    "method_version": {
+      "const": "1.0.0"
+    },
+    "source": {
+      "$ref": "deepbom-numerical-ir-v1.schema.json#/$defs/source"
+    },
+    "weight_ir_sha256": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "activation_ir_sha256": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "weights": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "weight_ref",
+          "storage_ref",
+          "status",
+          "reason",
+          "representation",
+          "distribution"
+        ],
+        "properties": {
+          "weight_ref": {
+            "type": "string"
+          },
+          "storage_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "assessed",
+              "not_assessed"
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "representation": {
+            "anyOf": [
+              {
+                "enum": [
+                  "stored_scalar",
+                  "dequantized_real",
+                  "complex_magnitude"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "distribution": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/distribution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "activation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/activation"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "activation_comparison": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/comparison"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "interpretation_boundary": {
+      "type": "string"
+    },
+    "numerical_details_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "$defs": {
+    "ratio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "numerator",
+        "denominator",
+        "value"
+      ],
+      "properties": {
+        "numerator": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "denominator": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "quantile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "percent",
+        "rank",
+        "lower",
+        "upper",
+        "upper_closed",
+        "exact"
+      ],
+      "properties": {
+        "percent": {
+          "enum": [
+            1,
+            5,
+            25,
+            50,
+            75,
+            95,
+            99
+          ]
+        },
+        "rank": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "lower": {
+          "type": "number"
+        },
+        "upper": {
+          "type": "number"
+        },
+        "upper_closed": {
+          "type": "boolean"
+        },
+        "exact": {
+          "type": "boolean"
+        }
+      }
+    },
+    "distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finite_fraction",
+        "nonfinite_fraction",
+        "zero_fraction_of_finite",
+        "sign_counts",
+        "constant_finite_value",
+        "all_values_zero",
+        "all_values_finite",
+        "quantiles"
+      ],
+      "properties": {
+        "finite_fraction": {
+          "$ref": "#/$defs/ratio"
+        },
+        "nonfinite_fraction": {
+          "$ref": "#/$defs/ratio"
+        },
+        "zero_fraction_of_finite": {
+          "$ref": "#/$defs/ratio"
+        },
+        "sign_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "negative",
+            "zero",
+            "positive"
+          ],
+          "properties": {
+            "negative": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "zero": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            "positive": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "constant_finite_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "all_values_zero": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "all_values_finite": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quantiles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "method",
+            "status",
+            "reason",
+            "intervals"
+          ],
+          "properties": {
+            "method": {
+              "const": "finite_nearest_rank_bounds_from_fixed_bins_v1"
+            },
+            "status": {
+              "enum": [
+                "assessed",
+                "not_assessed"
+              ]
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "intervals": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/quantile"
+              }
+            }
+          }
+        }
+      }
+    },
+    "flow_port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "port_ref",
+        "direction",
+        "position",
+        "value_ref",
+        "tensor_ref",
+        "capture_status",
+        "reason"
+      ],
+      "properties": {
+        "port_ref": {
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "input",
+            "output"
+          ]
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value_ref": {
+          "type": "string"
+        },
+        "tensor_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "capture_status": {
+          "enum": [
+            "captured",
+            "input",
+            "missing",
+            "not_requested",
+            "unmapped_capture",
+            "stored_value",
+            "not_captured"
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run",
+        "coverage",
+        "tensors",
+        "flow"
+      ],
+      "properties": {
+        "run": {
+          "$ref": "deepbom-numerical-ir-v1.schema.json#/$defs/run"
+        },
+        "coverage": {
+          "$ref": "deepbom-numerical-ir-v1.schema.json#/$defs/activation_ir/properties/coverage"
+        },
+        "tensors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "tensor_ref",
+              "value_ref",
+              "capture_status",
+              "status",
+              "reason",
+              "distribution"
+            ],
+            "properties": {
+              "tensor_ref": {
+                "type": "string"
+              },
+              "value_ref": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "capture_status": {
+                "enum": [
+                  "captured",
+                  "input",
+                  "missing",
+                  "not_requested",
+                  "unmapped_capture"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "assessed",
+                  "not_assessed"
+                ]
+              },
+              "reason": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "distribution": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/distribution"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "flow": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "operation_ref",
+              "name",
+              "native_index",
+              "ports"
+            ],
+            "properties": {
+              "operation_ref": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "native_index": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "ports": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/flow_port"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseline_activation_ir_sha256",
+        "candidate_activation_ir_sha256",
+        "baseline_run_id",
+        "candidate_run_id",
+        "same_inputs",
+        "same_runtime",
+        "same_collector",
+        "same_configuration",
+        "same_instrumentation",
+        "same_probe",
+        "same_entry_region",
+        "coverage",
+        "tensors"
+      ],
+      "properties": {
+        "baseline_activation_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "candidate_activation_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "baseline_run_id": {
+          "type": "string"
+        },
+        "candidate_run_id": {
+          "type": "string"
+        },
+        "same_inputs": {
+          "type": "boolean"
+        },
+        "same_runtime": {
+          "type": "boolean"
+        },
+        "same_collector": {
+          "type": "boolean"
+        },
+        "same_configuration": {
+          "type": "boolean"
+        },
+        "same_instrumentation": {
+          "type": "boolean"
+        },
+        "same_probe": {
+          "type": "boolean"
+        },
+        "same_entry_region": {
+          "type": "boolean"
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "union_requested_count",
+            "compared_count",
+            "not_assessed_count",
+            "baseline_unmapped_count",
+            "candidate_unmapped_count"
+          ],
+          "properties": {
+            "union_requested_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "compared_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "not_assessed_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "baseline_unmapped_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "candidate_unmapped_count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "tensors": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/compared"
+              },
+              {
+                "$ref": "#/$defs/skipped"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "compared": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value_ref",
+        "baseline_ref",
+        "candidate_ref",
+        "status",
+        "reason",
+        "histogram_total_variation",
+        "baseline_finite_count",
+        "candidate_finite_count",
+        "mean_delta",
+        "rms_delta",
+        "population_stddev_delta",
+        "boundary"
+      ],
+      "properties": {
+        "value_ref": {
+          "type": "string"
+        },
+        "baseline_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "candidate_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "const": "assessed"
+        },
+        "reason": {
+          "type": "null"
+        },
+        "histogram_total_variation": {
+          "$ref": "#/$defs/ratio"
+        },
+        "baseline_finite_count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "candidate_finite_count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "mean_delta": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rms_delta": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "population_stddev_delta": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boundary": {
+          "type": "string"
+        }
+      }
+    },
+    "skipped": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value_ref",
+        "baseline_ref",
+        "candidate_ref",
+        "status",
+        "reason"
+      ],
+      "properties": {
+        "value_ref": {
+          "type": "string"
+        },
+        "baseline_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "candidate_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "const": "not_assessed"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

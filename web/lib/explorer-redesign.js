@@ -1,5 +1,6 @@
 import { artifactIrOperators } from "./artifact-ir-selectors.js";
 import { downloadBlob, downloadText } from "./download.js";
+import { copyTextToClipboard } from "./clipboard.js";
 import { formatBytes, formatNumber, padOp } from "./format.js";
 import { opSteadyStateUs } from "./analysis.js";
 import {
@@ -1068,11 +1069,16 @@ function renderScenarioLab(analysis, state, actions) {
   pareto.disabled = state.paretoRunning || state.running || state.dirty || !state.projection || !actions.paretoAvailable;
   pareto.addEventListener("click", actions.runPareto);
   const implementation = button("Export structure code", "primary-action");
+  implementation.dataset.redesignImplementation = "zip";
   implementation.disabled = !state.projection || state.dirty || state.running
     || !state.projection?.implementation_plan?.exportable;
   implementation.title = "Export weight-free PyTorch/Keras structure code and the bound implementation ledger.";
   implementation.addEventListener("click", () => actions.exportImplementation?.());
-  commands.append(save, exportScenarios, pareto, implementation);
+  const viewCode = button("View code", "secondary-action");
+  viewCode.dataset.redesignImplementation = "preview";
+  viewCode.disabled = implementation.disabled;
+  viewCode.addEventListener("click", actions.openImplementationPreview);
+  commands.append(save, exportScenarios, pareto, viewCode, implementation);
   head.append(title, commands);
   section.append(head);
 
@@ -1460,6 +1466,7 @@ function renderImplementationHandoff(projection, state, actions) {
   );
   const commands = element("div", "xr-command-row");
   const exportCode = button("Export structure code", "primary-action");
+  exportCode.dataset.redesignImplementation = "zip";
   exportCode.disabled = !plan.exportable || state.dirty || state.running;
   exportCode.title = plan.exportable
     ? "Export weight-free PyTorch/Keras structure code."
@@ -1493,8 +1500,106 @@ function renderImplementationHandoff(projection, state, actions) {
   table.append(tableHead, body);
   wrap.append(table);
   ledger.append(wrap);
-  section.append(summary, commands, ledger, element("p", "xr-note", plan.interpretation_boundary || ""));
+  section.append(summary, commands, renderImplementationPreview(projection, state, actions),
+    ledger, element("p", "xr-note", plan.interpretation_boundary || ""));
   return section;
+}
+
+function renderImplementationPreview(projection, state, actions) {
+  const panel = element("details", "xr-code-preview");
+  const heading = element("summary", "", "Code and Markdown");
+  heading.addEventListener("click", () => {
+    if (!panel.open) actions.dismissFloatingInspector();
+  });
+  panel.append(heading);
+  const content = element("div", "xr-code-content");
+  content.append(element("p", "xr-code-boundary",
+    "Weight-free structure scaffold. Original weights are not included; parameters initialize randomly. Review the implementation ledger, then train and validate before use."));
+  content.append(element("p", "xr-note",
+    "Markdown includes all source files. The ZIP preserves their directories and imports; save individual downloads at the paths shown here."));
+  const binding = element("p", "xr-note",
+    `Source SHA-256: ${projection.source?.sha256_before || "unknown"} · Scenario: ${scenarioFingerprint(state.request)}`);
+  content.append(binding);
+  const toolbar = element("div", "xr-code-toolbar");
+  const label = element("label", "xr-code-file-label", "Source file");
+  const select = element("select", "xr-code-file");
+  select.dataset.redesignImplementation = "file";
+  label.append(select);
+  const commands = element("div", "xr-command-row");
+  const status = element("p", "xr-code-status");
+  status.setAttribute("role", "status");
+  const pre = element("pre", "xr-code-source");
+  pre.tabIndex = 0;
+  pre.setAttribute("aria-label", "Generated Python source code");
+  const code = element("code");
+  pre.append(code);
+  const showSelectedFile = () => {
+    const file = actions.getImplementationFiles(projection)?.find((item) => item.name === select.value);
+    code.textContent = file?.data || "Recalculate the scenario to view its generated code.";
+    state.codePreviewFile = select.value;
+    status.textContent = "";
+    pre.scrollTop = 0;
+    pre.scrollLeft = 0;
+  };
+  select.addEventListener("change", showSelectedFile);
+  for (const [title, markdown, copy] of [
+    ["Copy code", false, true], ["Download .py", false, false],
+    ["Copy Markdown", true, true], ["Download Markdown", true, false],
+  ]) {
+    const control = button(title, "secondary-action");
+    control.dataset.redesignImplementation = "file-action";
+    control.addEventListener("click", async () => {
+      const name = markdown ? "structure-code.md" : select.value;
+      const file = actions.getImplementationFiles(projection)?.find((item) => item.name === name);
+      if (!file) return;
+      if (!copy) {
+        actions.downloadImplementationFile(name, projection);
+        return;
+      }
+      try {
+        await copyTextToClipboard(file.data);
+        if (actions.getImplementationFiles(projection)) status.textContent = `${name} copied.`;
+      } catch {
+        if (actions.getImplementationFiles(projection)) {
+          status.textContent = "Clipboard unavailable. Download the file, or select and copy the displayed code.";
+        }
+      }
+    });
+    commands.append(control);
+  }
+  toolbar.append(label, commands);
+  content.append(toolbar, status, pre);
+  panel.append(content);
+  let populated = false;
+  const populate = () => {
+    if (!panel.open) return;
+    const files = actions.getImplementationFiles(projection);
+    for (const control of content.querySelectorAll("[data-redesign-implementation]")) control.disabled = !files;
+    if (!files) {
+      code.textContent = "Recalculate an exportable scenario to view its generated code.";
+      return;
+    }
+    if (populated) return;
+    for (const file of files.filter((item) => item.name.endsWith(".py"))) {
+      const option = element("option", "", file.name);
+      option.value = file.name;
+      select.append(option);
+    }
+    if (files.some((item) => item.name === state.codePreviewFile && item.name.endsWith(".py"))) {
+      select.value = state.codePreviewFile;
+    }
+    showSelectedFile();
+    populated = true;
+  };
+  panel.addEventListener("toggle", () => {
+    // A toggle queued before a projection rerender must not overwrite the new view state.
+    if (!panel.isConnected) return;
+    state.codePreviewOpen = panel.open;
+    populate();
+  });
+  panel.open = state.codePreviewOpen;
+  populate();
+  return panel;
 }
 
 function evidenceLabel(value) {
@@ -1542,6 +1647,7 @@ function ensureRedesignState(analysis, state) {
       ?? 0;
     state.projection = null;
     state.dirty = false;
+    state.codePreviewOpen = false;
     state.requestRevision = Number(state.requestRevision || 0) + 1;
     state.error = "";
     if (priorBinding) {
@@ -1792,6 +1898,14 @@ function updateProjectionActivity(root, state, analysis) {
   }
   const reset = root?.querySelector('[data-redesign-action="reset-all"]');
   if (reset instanceof HTMLButtonElement) reset.disabled = activeScenarioChangeCount(analysis, state) === 0;
+  const unavailable = state.dirty || state.running || !state.projection?.implementation_plan?.exportable;
+  for (const control of root?.querySelectorAll("[data-redesign-implementation]") || []) control.disabled = unavailable;
+  if (unavailable) {
+    const code = root?.querySelector(".xr-code-source code");
+    if (code) code.textContent = "Recalculate an exportable scenario to view its generated code.";
+    const status = root?.querySelector(".xr-code-status");
+    if (status) status.textContent = "Code is unavailable while this scenario is changing.";
+  }
 }
 
 export function createExplorerRedesignController({
@@ -1834,10 +1948,13 @@ export function createExplorerRedesignController({
     paretoRunning: false,
     paretoError: "",
     paretoRevision: 0,
+    codePreviewOpen: false,
+    codePreviewFile: "pytorch/model.py",
   };
   let analysis = null;
   let projectionTimer = null;
   let redesignNodeController = null;
+  let implementationCache = null;
 
   const actions = {
     paretoAvailable: typeof explorePareto === "function",
@@ -2026,13 +2143,41 @@ export function createExplorerRedesignController({
         }
       }
     },
+    openImplementationPreview() {
+      const preview = redesignRoot?.querySelector(".xr-code-preview");
+      if (!preview || !actions.getImplementationFiles()) return;
+      actions.dismissFloatingInspector();
+      state.codePreviewOpen = true;
+      preview.open = true;
+      preview.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    dismissFloatingInspector() {
+      if (window.matchMedia("(max-width: 680px)").matches) {
+        redesignRoot?.querySelector(".nv-detail-close")?.click();
+      }
+    },
+    getImplementationFiles(projection = state.projection) {
+      if (!analysis || !projection || projection !== state.projection || state.dirty || state.running
+        || !projection.implementation_plan?.exportable) return null;
+      const scenarioId = scenarioFingerprint(state.request);
+      if (implementationCache?.projection !== projection || implementationCache?.analysis !== analysis
+        || implementationCache?.scenarioId !== scenarioId) {
+        implementationCache = {
+          analysis, projection, scenarioId,
+          files: buildRedesignImplementationFiles({ analysis, projection, request: state.request }),
+        };
+      }
+      return implementationCache.files;
+    },
+    downloadImplementationFile(name, projection) {
+      const file = actions.getImplementationFiles(projection)?.find((item) => item.name === name);
+      if (!file) return;
+      downloadText(filenameForExport(`redesign_${name.replaceAll("/", "_")}`), file.data,
+        name.endsWith(".md") ? "text/markdown" : "text/x-python");
+    },
     exportImplementation(projection = state.projection) {
-      if (!analysis || !projection || state.dirty || !projection.implementation_plan?.exportable) return;
-      const files = buildRedesignImplementationFiles({
-        analysis,
-        projection,
-        request: state.request,
-      });
+      const files = actions.getImplementationFiles(projection);
+      if (!files) return;
       downloadBlob(
         filenameForExport("redesign_structure_package.zip"),
         createZipBlob(files, { timestamp: new Date(1980, 0, 1, 0, 0, 0) }),
@@ -2089,6 +2234,9 @@ export function createExplorerRedesignController({
       state.paretoRunning = false;
       state.paretoError = "";
       state.paretoRevision += 1;
+      state.codePreviewOpen = false;
+      state.codePreviewFile = "pytorch/model.py";
+      implementationCache = null;
       analysis = null;
       blocksRoot?.replaceChildren();
       cacheRoot?.replaceChildren();

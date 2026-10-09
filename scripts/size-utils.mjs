@@ -16,10 +16,11 @@ export function formatBytes(bytes) {
   return `${bytes} B`;
 }
 
-export async function collectFileSizes(root, { relativeRoot = root, extensions = null, ignoredDirs = new Set() } = {}) {
+export async function collectFileSizes(root, { relativeRoot = root, extensions = null, ignoredDirs = new Set(), ignoredPaths = new Set() } = {}) {
   const rootPath = path.resolve(root);
   const relativeRootPath = path.resolve(relativeRoot);
-  const files = await walkFileSizes(rootPath, { relativeRootPath, extensions, ignoredDirs });
+  if (ignoredPaths.has(rootPath)) return [];
+  const files = await walkFileSizes(rootPath, { relativeRootPath, extensions, ignoredDirs, ignoredPaths });
   return files.sort((a, b) => a.path.localeCompare(b.path));
 }
 
@@ -29,7 +30,7 @@ async function walkFileSizes(dir, options) {
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      if (options.ignoredDirs.has(entry.name)) continue;
+      if (options.ignoredDirs.has(entry.name) || options.ignoredPaths.has(fullPath)) continue;
       files.push(...await walkFileSizes(fullPath, options));
       continue;
     }

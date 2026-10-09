@@ -48,10 +48,11 @@ export function compute_quick_low_norm_stat(bytes: Uint8Array, filename: string,
 export function compute_static_runtime_calibration(bytes: Uint8Array, filename: string, target_id: string, measured_ms: number): any;
 
 /**
- * Compute weight histogram + filter stats for a specific tensor by index.
- * Returns null if the tensor is not a constant buffer or is unsupported dtype.
+ * Retired ABI entry point. Numerical consumers must use the common Weight IR.
+ * Keep an explicit error for cached/older clients rather than returning a
+ * second statistics contract with different percentile and rank semantics.
  */
-export function compute_weight_histogram(bytes: Uint8Array, filename: string, tensor_index: number, target_id: string): any;
+export function compute_weight_histogram(_bytes: Uint8Array, _filename: string, _tensor_index: number, _target_id: string): any;
 
 export function explore_tflite_redesign_pareto(bytes: Uint8Array, filename: string, target_id: string, request: any): any;
 

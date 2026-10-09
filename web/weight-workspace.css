@@ -216,7 +216,20 @@
 .weight-table-scroll table { width:100%; border-collapse:collapse; font:11px var(--mono); }
 .weight-table-scroll th,.weight-table-scroll td { padding:8px 12px; text-align:right; border-bottom:1px solid var(--line); }
 .weight-table-scroll th:first-child,.weight-table-scroll td:first-child { text-align:left; }
+.weight-workspace [data-flow-content] table { min-width:640px; }
+.weight-workspace [data-flow-content] td { vertical-align:top; }
+.weight-workspace [data-flow-content] td:first-child { max-width:260px; overflow-wrap:anywhere; }
+.weight-workspace [data-flow-content] code { font-size:9px; color:var(--muted); }
+.weight-workspace [data-flow-content] button { margin:2px 0; white-space:nowrap; }
+.weight-workspace [data-activation-comparison] h3 { margin:14px 0; font:500 18px/1.4 var(--ui-sans); }
 .weight-kernel-choice { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:14px 0; }
 .weight-kernel-choice input { width:85px; }
 
 .weight-workspace [hidden]{display:none!important}
+
+/* Explorer consumes the same evidence views inside narrower detail panels. */
+.weight-explorer-evidence { min-width: 0; overflow-wrap: anywhere; }
+.weight-explorer-evidence > svg, .weight-explorer-evidence details svg { width: 100%; height: auto; }
+.weight-explorer-evidence h5 { margin: 0 0 .5rem; font: 600 1rem var(--font-sans, sans-serif); }
+.weight-explorer-evidence details { margin-block: .6rem; }
+.weight-explorer-evidence .weight-stat-grid { grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); }

@@ -1,0 +1,2013 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json",
+  "title": "DEEPBOM native state and training evidence",
+  "description": "Additive native source contracts. Not aliases or replacements for artifact-based v1 model/numerical IR. Semantic validators check digests, counts and exact bindings. Config, context and event payload retain declared metadata; schema validity is not authenticity.",
+  "$defs": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "definition",
+        "tensors",
+        "capture",
+        "options"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.native_evidence_input.v1"
+        },
+        "definition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "framework",
+            "nodes",
+            "relationships",
+            "inputs",
+            "scope",
+            "limitations"
+          ],
+          "properties": {
+            "framework": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "version",
+                "backend"
+              ],
+              "properties": {
+                "name": {
+                  "enum": [
+                    "pytorch",
+                    "tensorflow"
+                  ]
+                },
+                "version": {
+                  "type": "string"
+                },
+                "backend": {
+                  "type": "string"
+                }
+              }
+            },
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "kind",
+                  "config",
+                  "state_refs",
+                  "mode"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string"
+                  },
+                  "config": {
+                    "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                    "type": "object"
+                  },
+                  "state_refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "mode": {
+                    "enum": [
+                      "train",
+                      "eval",
+                      "call_dependent"
+                    ]
+                  }
+                }
+              }
+            },
+            "relationships": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "from",
+                  "to",
+                  "kind"
+                ],
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "enum": [
+                      "contains",
+                      "data_dependency"
+                    ]
+                  }
+                }
+              }
+            },
+            "inputs": {
+              "description": "Explicit framework/user metadata, never inferred domain semantics.",
+              "type": "object"
+            },
+            "scope": {
+              "enum": [
+                "module_tree",
+                "functional_graph",
+                "fx_graph"
+              ]
+            },
+            "limitations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tensors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "role",
+              "trainable",
+              "aliases",
+              "dtype",
+              "shape",
+              "byte_order",
+              "data_base64"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "role": {
+                "enum": [
+                  "parameter",
+                  "buffer",
+                  "variable",
+                  "activation",
+                  "gradient"
+                ]
+              },
+              "trainable": {
+                "type": "boolean"
+              },
+              "aliases": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "dtype": {
+                "enum": [
+                  "F16",
+                  "BF16",
+                  "F32",
+                  "F64",
+                  "I8",
+                  "U8",
+                  "I16",
+                  "U16",
+                  "I32",
+                  "U32",
+                  "I64",
+                  "U64",
+                  "BOOL"
+                ]
+              },
+              "shape": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "byte_order": {
+                "const": "little"
+              },
+              "data_base64": {
+                "type": "string",
+                "contentEncoding": "base64"
+              }
+            }
+          }
+        },
+        "capture": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "context",
+                "values"
+              ],
+              "properties": {
+                "context": {
+                  "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                  "type": "object"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "subject_ref",
+                      "invocation",
+                      "tensor"
+                    ],
+                    "properties": {
+                      "subject_ref": {
+                        "type": "string"
+                      },
+                      "invocation": {
+                        "type": "string"
+                      },
+                      "tensor": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "id",
+                          "name",
+                          "role",
+                          "trainable",
+                          "aliases",
+                          "dtype",
+                          "shape",
+                          "byte_order",
+                          "data_base64"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "enum": [
+                              "parameter",
+                              "buffer",
+                              "variable",
+                              "activation",
+                              "gradient"
+                            ]
+                          },
+                          "trainable": {
+                            "type": "boolean"
+                          },
+                          "aliases": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "uniqueItems": true
+                          },
+                          "dtype": {
+                            "enum": [
+                              "F16",
+                              "BF16",
+                              "F32",
+                              "F64",
+                              "I8",
+                              "U8",
+                              "I16",
+                              "U16",
+                              "I32",
+                              "U32",
+                              "I64",
+                              "U64",
+                              "BOOL"
+                            ]
+                          },
+                          "shape": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "byte_order": {
+                            "const": "little"
+                          },
+                          "data_base64": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "max_values",
+            "advanced"
+          ],
+          "properties": {
+            "max_values": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000000
+            },
+            "advanced": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "training_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "run_id",
+        "segment_id",
+        "lifecycle",
+        "events",
+        "previous"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.training_input.v1"
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "segment_id": {
+          "type": "string"
+        },
+        "lifecycle": {
+          "enum": [
+            "running",
+            "ended",
+            "failed",
+            "interrupted",
+            "collector_closed"
+          ]
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "sequence",
+              "kind",
+              "at",
+              "payload"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "sequence": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "at": {
+                "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                "type": "object"
+              },
+              "payload": {
+                "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "previous": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/training"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "snapshot_sha256",
+        "baseline_sha256",
+        "parent_sha256",
+        "evidence",
+        "files",
+        "optimizer_state",
+        "manifest_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.model_candidate_manifest.v1"
+        },
+        "snapshot_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "baseline_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "parent_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "snapshot",
+            "model_ir",
+            "weight_ir"
+          ],
+          "properties": {
+            "snapshot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "model_ir": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "weight_ir": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          }
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "optimizer_state": {
+          "const": "not_restored"
+        },
+        "manifest_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "baseline",
+        "candidate",
+        "tensors",
+        "nodes",
+        "totals",
+        "structure_equal",
+        "boundary",
+        "comparison_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.native_model_comparison.v1"
+        },
+        "baseline": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "candidate": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "tensors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "status",
+              "matching_basis",
+              "payload_equal",
+              "distribution"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "added",
+                  "removed",
+                  "aligned_native_id",
+                  "shape_or_dtype_changed"
+                ]
+              },
+              "matching_basis": {
+                "const": "native_id_not_semantic_equivalence"
+              },
+              "payload_equal": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "distribution": {
+                "anyOf": [
+                  {
+                    "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "added",
+                  "removed",
+                  "unchanged",
+                  "changed"
+                ]
+              }
+            }
+          }
+        },
+        "totals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "baseline",
+            "candidate"
+          ],
+          "properties": {
+            "baseline": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "state_elements",
+                "state_bytes",
+                "trainable_elements"
+              ],
+              "properties": {
+                "state_elements": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                },
+                "state_bytes": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                },
+                "trainable_elements": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                }
+              }
+            },
+            "candidate": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "state_elements",
+                "state_bytes",
+                "trainable_elements"
+              ],
+              "properties": {
+                "state_elements": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                },
+                "state_bytes": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                },
+                "trainable_elements": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                }
+              }
+            }
+          }
+        },
+        "structure_equal": {
+          "type": "boolean"
+        },
+        "boundary": {
+          "type": "string"
+        },
+        "comparison_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "method_version",
+        "boundary",
+        "training_ir_sha256",
+        "snapshot_sha256",
+        "selected_event_id",
+        "selection_rule",
+        "evidence",
+        "training_lifecycle",
+        "training_result_manifest_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.training_result_manifest.v1"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "boundary": {
+          "type": "string"
+        },
+        "training_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "snapshot_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "selected_event_id": {
+          "type": "string"
+        },
+        "selection_rule": {
+          "const": "latest_recorded_capture_of_requested_state"
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "snapshot",
+            "model_ir",
+            "weight_ir"
+          ],
+          "properties": {
+            "snapshot": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "model_ir": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "weight_ir": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "properties": {
+                "schema": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          }
+        },
+        "training_lifecycle": {
+          "enum": [
+            "running",
+            "ended",
+            "failed",
+            "interrupted",
+            "collector_closed"
+          ]
+        },
+        "training_result_manifest_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "method_version",
+        "boundary",
+        "definition",
+        "tensors",
+        "completeness",
+        "snapshot_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.model_state_snapshot.v1"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "boundary": {
+          "type": "string"
+        },
+        "definition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "framework",
+            "nodes",
+            "relationships",
+            "inputs",
+            "scope",
+            "limitations"
+          ],
+          "properties": {
+            "framework": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "version",
+                "backend"
+              ],
+              "properties": {
+                "name": {
+                  "enum": [
+                    "pytorch",
+                    "tensorflow"
+                  ]
+                },
+                "version": {
+                  "type": "string"
+                },
+                "backend": {
+                  "type": "string"
+                }
+              }
+            },
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "kind",
+                  "config",
+                  "state_refs",
+                  "mode"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string"
+                  },
+                  "config": {
+                    "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                    "type": "object"
+                  },
+                  "state_refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "mode": {
+                    "enum": [
+                      "train",
+                      "eval",
+                      "call_dependent"
+                    ]
+                  }
+                }
+              }
+            },
+            "relationships": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "from",
+                  "to",
+                  "kind"
+                ],
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "enum": [
+                      "contains",
+                      "data_dependency"
+                    ]
+                  }
+                }
+              }
+            },
+            "inputs": {
+              "description": "Explicit framework/user metadata, never inferred domain semantics.",
+              "type": "object"
+            },
+            "scope": {
+              "enum": [
+                "module_tree",
+                "functional_graph",
+                "fx_graph"
+              ]
+            },
+            "limitations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tensors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "role",
+              "trainable",
+              "aliases",
+              "dtype",
+              "shape",
+              "byte_order",
+              "element_count",
+              "byte_length",
+              "payload_sha256"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "role": {
+                "enum": [
+                  "parameter",
+                  "buffer",
+                  "variable",
+                  "activation",
+                  "gradient"
+                ]
+              },
+              "trainable": {
+                "type": "boolean"
+              },
+              "aliases": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "dtype": {
+                "enum": [
+                  "F16",
+                  "BF16",
+                  "F32",
+                  "F64",
+                  "I8",
+                  "U8",
+                  "I16",
+                  "U16",
+                  "I32",
+                  "U32",
+                  "I64",
+                  "U64",
+                  "BOOL"
+                ]
+              },
+              "shape": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "byte_order": {
+                "const": "little"
+              },
+              "element_count": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "byte_length": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "payload_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "completeness": {
+          "const": "adapter_declared_scope"
+        },
+        "snapshot_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "method_version",
+        "boundary",
+        "source",
+        "program",
+        "storage",
+        "model_ir_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.model_ir.v2"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "boundary": {
+          "type": "string"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "snapshot_sha256"
+          ],
+          "properties": {
+            "kind": {
+              "const": "model_state_snapshot"
+            },
+            "snapshot_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "program": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "framework",
+            "nodes",
+            "relationships",
+            "inputs",
+            "scope",
+            "limitations"
+          ],
+          "properties": {
+            "framework": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "version",
+                "backend"
+              ],
+              "properties": {
+                "name": {
+                  "enum": [
+                    "pytorch",
+                    "tensorflow"
+                  ]
+                },
+                "version": {
+                  "type": "string"
+                },
+                "backend": {
+                  "type": "string"
+                }
+              }
+            },
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "kind",
+                  "config",
+                  "state_refs",
+                  "mode"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string"
+                  },
+                  "config": {
+                    "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                    "type": "object"
+                  },
+                  "state_refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "mode": {
+                    "enum": [
+                      "train",
+                      "eval",
+                      "call_dependent"
+                    ]
+                  }
+                }
+              }
+            },
+            "relationships": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "from",
+                  "to",
+                  "kind"
+                ],
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "enum": [
+                      "contains",
+                      "data_dependency"
+                    ]
+                  }
+                }
+              }
+            },
+            "inputs": {
+              "description": "Explicit framework/user metadata, never inferred domain semantics.",
+              "type": "object"
+            },
+            "scope": {
+              "enum": [
+                "module_tree",
+                "functional_graph",
+                "fx_graph"
+              ]
+            },
+            "limitations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "storage": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "name",
+              "role",
+              "trainable",
+              "aliases",
+              "dtype",
+              "shape",
+              "byte_order",
+              "element_count",
+              "byte_length",
+              "payload_sha256"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "role": {
+                "enum": [
+                  "parameter",
+                  "buffer",
+                  "variable",
+                  "activation",
+                  "gradient"
+                ]
+              },
+              "trainable": {
+                "type": "boolean"
+              },
+              "aliases": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "dtype": {
+                "enum": [
+                  "F16",
+                  "BF16",
+                  "F32",
+                  "F64",
+                  "I8",
+                  "U8",
+                  "I16",
+                  "U16",
+                  "I32",
+                  "U32",
+                  "I64",
+                  "U64",
+                  "BOOL"
+                ]
+              },
+              "shape": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "byte_order": {
+                "const": "little"
+              },
+              "element_count": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "byte_length": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "payload_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "model_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "weight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "method_version",
+        "boundary",
+        "source",
+        "tensors",
+        "coverage",
+        "weight_ir_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.weight_ir.v2"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "boundary": {
+          "type": "string"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "snapshot_sha256",
+            "model_ir_sha256"
+          ],
+          "properties": {
+            "kind": {
+              "const": "model_state_snapshot"
+            },
+            "snapshot_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "model_ir_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "tensors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "identity",
+              "status",
+              "reason",
+              "statistics",
+              "distribution",
+              "features"
+            ],
+            "properties": {
+              "identity": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "name",
+                  "role",
+                  "trainable",
+                  "aliases",
+                  "dtype",
+                  "shape",
+                  "byte_order",
+                  "element_count",
+                  "byte_length",
+                  "payload_sha256"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "enum": [
+                      "parameter",
+                      "buffer",
+                      "variable",
+                      "activation",
+                      "gradient"
+                    ]
+                  },
+                  "trainable": {
+                    "type": "boolean"
+                  },
+                  "aliases": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "uniqueItems": true
+                  },
+                  "dtype": {
+                    "enum": [
+                      "F16",
+                      "BF16",
+                      "F32",
+                      "F64",
+                      "I8",
+                      "U8",
+                      "I16",
+                      "U16",
+                      "I32",
+                      "U32",
+                      "I64",
+                      "U64",
+                      "BOOL"
+                    ]
+                  },
+                  "shape": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "byte_order": {
+                    "const": "little"
+                  },
+                  "element_count": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)$"
+                  },
+                  "byte_length": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)$"
+                  },
+                  "payload_sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              "status": {
+                "enum": [
+                  "assessed",
+                  "not_assessed"
+                ]
+              },
+              "reason": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "statistics": {
+                "anyOf": [
+                  {
+                    "$ref": "https://deepbom.org/schemas/deepbom-numerical-ir-v1.schema.json#/$defs/statistics"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "distribution": {
+                "anyOf": [
+                  {
+                    "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "features": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "axis",
+                      "axis_meaning",
+                      "channels",
+                      "spectrum",
+                      "sparsity",
+                      "similarity",
+                      "projection"
+                    ],
+                    "properties": {
+                      "axis": {
+                        "const": 0
+                      },
+                      "axis_meaning": {
+                        "const": "native_storage_axis_not_inferred_output_channel"
+                      },
+                      "channels": {
+                        "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                        "type": "object"
+                      },
+                      "spectrum": {
+                        "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                        "type": "object"
+                      },
+                      "sparsity": {
+                        "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                        "type": "object"
+                      },
+                      "similarity": {
+                        "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                        "type": "object"
+                      },
+                      "projection": {
+                        "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                        "type": "object"
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "total",
+            "assessed"
+          ],
+          "properties": {
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "assessed": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "weight_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "method_version",
+        "boundary",
+        "source",
+        "context",
+        "tensors",
+        "activation_ir_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.activation_ir.v2"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "boundary": {
+          "type": "string"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "snapshot_sha256",
+            "model_ir_sha256"
+          ],
+          "properties": {
+            "kind": {
+              "const": "model_state_snapshot"
+            },
+            "snapshot_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "model_ir_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "context": {
+          "type": "object",
+          "required": [
+            "mode",
+            "input_identity",
+            "state_boundary"
+          ],
+          "properties": {
+            "mode": {
+              "type": "string"
+            },
+            "input_identity": {},
+            "state_boundary": {
+              "type": "string"
+            }
+          }
+        },
+        "tensors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "identity",
+              "status",
+              "reason",
+              "statistics",
+              "distribution",
+              "features",
+              "subject_ref",
+              "invocation"
+            ],
+            "properties": {
+              "identity": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "name",
+                  "role",
+                  "trainable",
+                  "aliases",
+                  "dtype",
+                  "shape",
+                  "byte_order",
+                  "element_count",
+                  "byte_length",
+                  "payload_sha256"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "enum": [
+                      "parameter",
+                      "buffer",
+                      "variable",
+                      "activation",
+                      "gradient"
+                    ]
+                  },
+                  "trainable": {
+                    "type": "boolean"
+                  },
+                  "aliases": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "uniqueItems": true
+                  },
+                  "dtype": {
+                    "enum": [
+                      "F16",
+                      "BF16",
+                      "F32",
+                      "F64",
+                      "I8",
+                      "U8",
+                      "I16",
+                      "U16",
+                      "I32",
+                      "U32",
+                      "I64",
+                      "U64",
+                      "BOOL"
+                    ]
+                  },
+                  "shape": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "byte_order": {
+                    "const": "little"
+                  },
+                  "element_count": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)$"
+                  },
+                  "byte_length": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)$"
+                  },
+                  "payload_sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              "status": {
+                "enum": [
+                  "assessed",
+                  "not_assessed"
+                ]
+              },
+              "reason": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "statistics": {
+                "anyOf": [
+                  {
+                    "$ref": "https://deepbom.org/schemas/deepbom-numerical-ir-v1.schema.json#/$defs/statistics"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "distribution": {
+                "anyOf": [
+                  {
+                    "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "features": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "axis",
+                      "axis_meaning",
+                      "channels",
+                      "spectrum",
+                      "sparsity",
+                      "similarity",
+                      "projection"
+                    ],
+                    "properties": {
+                      "axis": {
+                        "const": 0
+                      },
+                      "axis_meaning": {
+                        "const": "native_storage_axis_not_inferred_output_channel"
+                      },
+                      "channels": {
+                        "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                        "type": "object"
+                      },
+                      "spectrum": {
+                        "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                        "type": "object"
+                      },
+                      "sparsity": {
+                        "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                        "type": "object"
+                      },
+                      "similarity": {
+                        "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                        "type": "object"
+                      },
+                      "projection": {
+                        "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                        "type": "object"
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "subject_ref": {
+                "type": "string"
+              },
+              "invocation": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "activation_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "training": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "method_version",
+        "boundary",
+        "run_id",
+        "segment_id",
+        "lifecycle",
+        "event_count",
+        "chunks",
+        "previous_ir_sha256",
+        "training_ir_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.training_ir.v1"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "boundary": {
+          "type": "string"
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "segment_id": {
+          "type": "string"
+        },
+        "lifecycle": {
+          "enum": [
+            "running",
+            "ended",
+            "failed",
+            "interrupted",
+            "collector_closed"
+          ]
+        },
+        "event_count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "chunks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sha256",
+              "offset",
+              "count"
+            ],
+            "properties": {
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "offset": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "count": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              }
+            }
+          }
+        },
+        "previous_ir_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "training_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "chunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "run_id",
+        "segment_id",
+        "events",
+        "chunk_sha256"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.training_chunk.v1"
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "segment_id": {
+          "type": "string"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "sequence",
+              "kind",
+              "at",
+              "payload"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "sequence": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "at": {
+                "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                "type": "object"
+              },
+              "payload": {
+                "description": "Explicit framework/user metadata, never inferred domain semantics.",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "chunk_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/input"
+    },
+    {
+      "$ref": "#/$defs/training_input"
+    },
+    {
+      "$ref": "#/$defs/candidate"
+    },
+    {
+      "$ref": "#/$defs/comparison"
+    },
+    {
+      "$ref": "#/$defs/result"
+    },
+    {
+      "$ref": "#/$defs/snapshot"
+    },
+    {
+      "$ref": "#/$defs/model"
+    },
+    {
+      "$ref": "#/$defs/weight"
+    },
+    {
+      "$ref": "#/$defs/activation"
+    },
+    {
+      "$ref": "#/$defs/training"
+    },
+    {
+      "$ref": "#/$defs/chunk"
+    }
+  ]
+}

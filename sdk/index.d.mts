@@ -11,6 +11,29 @@ export interface AuditOptions extends InspectOptions {
   output?: "analysis" | "envelope" | "cyclonedx" | "sarif";
   sections?: string[];
 }
+export interface NumericalEvidenceOptions extends Limits {
+  weights?: boolean;
+  weightBaseline?: string;
+  weightOptions?: string;
+  weightMapping?: string;
+  activationCapture?: string;
+  activationBaseline?: string;
+  expectedSha256?: string;
+}
+/** A selection of native numerical documents; no automatic model execution. */
+export interface NumericalEvidenceResult extends JsonDocument {
+  schema: "deepbom.analysis_selection.v1";
+  sections: {
+    model_ir: JsonDocument;
+    numerical_evidence_bundle: JsonDocument;
+    numerical_details: JsonDocument & { schema: "deepbom.numerical_details.v1"; numerical_details_sha256: string };
+    weight_ir?: JsonDocument;
+    weight_analysis?: JsonDocument;
+    weight_comparison?: JsonDocument;
+    activation_ir?: JsonDocument;
+    activation_baseline_ir?: JsonDocument;
+  };
+}
 export interface Finding extends JsonDocument {
   id: string; title: string; severity: string; evidence_class: string;
   source_pointers: string[]; recommendation: string | null;
@@ -53,6 +76,7 @@ export class DeepBomIdentityMismatch extends DeepBomError {}
 export class DeepBomTimeout extends DeepBomError {}
 export class DeepBomOutputTooLarge extends DeepBomError {}
 export function capabilities(options?: Limits): Promise<JsonDocument>;
+export function numericalEvidence(artifact: string, options: NumericalEvidenceOptions): Promise<NumericalEvidenceResult>;
 export function inspect(artifact: string, options?: InspectOptions): Promise<ReviewSummary>;
 export function audit(artifact: string, options?: InspectOptions & { output?: "envelope"; sections?: never }): Promise<EvidenceEnvelope>;
 export function audit(artifact: string, options: AuditOptions): Promise<JsonDocument>;

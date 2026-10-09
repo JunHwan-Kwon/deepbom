@@ -12,7 +12,15 @@ const dist = path.resolve("dist");
 // bytes of shared query modules. Reserve a further 128 KiB for these features.
 // Workflow navigation and reused weight visual encoders raise measured dist to
 // 66.76 MiB; reserve 128 KiB. The per-file ceiling remains unchanged.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 66.875);
+// Native/numerical schemas, views and preserved 0.3–0.11 compatibility archives
+// add 604,459 bytes before the shared native engine and updated bundles.
+// Measured dist is 67.45 MiB; allocate a bounded 768 KiB feature increment.
+// Saved-report workspace, compiled schema validator and immutable 0.12–0.13.1
+// catalogs add about 380 KiB; retain the existing per-file ceiling.
+// Native model/report support and immutable 0.14–0.15 catalogs bring the
+// measured 2.2.0 release to 71,323,627 bytes (68.02 MiB). Reserve 128 KiB
+// above the previous total budget; keep the 16 MiB per-file limit unchanged.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 68.125);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

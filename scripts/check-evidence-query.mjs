@@ -15,6 +15,7 @@ import { sha256BytesHex } from "../web/lib/sha256-sync.js";
 import { decodeFixtureBase64, EXECUTORCH_ADD_PTE_BASE64 } from "./fixtures/executorch-fixtures.mjs";
 import { buildWeightEvidence } from "../web/lib/weight-analysis.js";
 import { buildWeightQueryVisual } from "../web/lib/weight-query-visual.js";
+import { seal } from "../web/lib/numerical-ir/common.js";
 
 const ajv = new Ajv({ strict: false, allowUnionTypes: true });
 const schema = ajv.compile(EVIDENCE_QUERY_RESULT_JSON_SCHEMA);
@@ -82,14 +83,27 @@ for (const view of ["distribution", "channels", "similarity", "spectrum", "spars
     assert.deepEqual(row.details.statistics, source.statistics);
     assert.equal(row.details.value_count, source.value_count);
     if (!row.detail_truncations.length && view !== "distribution") assert.deepEqual(row.details.feature, source[view]);
-    const visual = buildWeightQueryVisual(weightContext.weightEvidence, row.subject_ref, view);
+    const visual = buildWeightQueryVisual(weightContext.weightEvidence, row.subject_ref, view, weightContext.artifactIrContext.model_ir);
     if (visual) { assert(visual.svg.includes(result.artifact.sha256)); assert(visual.render_model.page.width_mm > 0); }
   }
 }
 assert.throws(() => queryEvidence({ ...weightContext, weightEvidence: undefined }, { section: "weights" }), /must complete/);
 const wrongWeight = structuredClone(weightContext.weightEvidence);
 wrongWeight.weight_analysis.source.artifact_sha256 = "0".repeat(64);
-assert.throws(() => queryEvidence({ ...weightContext, weightEvidence: wrongWeight }, { section: "weights" }), /source does not match/);
+assert.throws(() => queryEvidence({ ...weightContext, weightEvidence: wrongWeight }, { section: "weights" }), /source.*match|sha256 mismatch/);
+// A recomputed digest must not bypass the common numerical and binding rules.
+for (const mutate of [
+  evidence => { evidence.weight_analysis.tensors[0].storage_ref = "storage:foreign"; },
+  evidence => { evidence.weight_analysis.coverage.assessed_count += 1; },
+  evidence => { evidence.weight_analysis.tensors[0].value_count = "999999"; },
+]) {
+  const altered = structuredClone(weightContext.weightEvidence);
+  mutate(altered);
+  delete altered.weight_analysis.weight_analysis_sha256;
+  altered.weight_analysis = seal(altered.weight_analysis, "weight_analysis_sha256");
+  assert.throws(() => queryEvidence({ ...weightContext, weightEvidence: altered }, { section: "weights" }), /binding|coverage|count/);
+  assert.throws(() => buildWeightQueryVisual(altered, altered.weight_analysis.tensors[0].weight_ref, "distribution", weightContext.artifactIrContext.model_ir), /binding|coverage|count/);
+}
 assert.throws(() => normalizeEvidenceQuery({ section: "operators", weight_view: "distribution" }), /Invalid weight/);
 assert.throws(() => normalizeEvidenceQuery({ section: "weights", source_index: 0 }), /weight subject_ref/);
 const placement = buildExecutionPlacementEvidence(tflite.analysis);

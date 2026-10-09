@@ -200,7 +200,7 @@ import {
   renderGraphMapContent,
   renderOpDetailPanel,
 } from "./lib/graph-ui.js";
-import { getArtifactIrContext, invalidateArtifactIrContext } from "./lib/artifact-ir-context.js";
+import { getArtifactIrContext, invalidateArtifactIrContext, requireArtifactIrConsumerView, isArtifactIrConsumerView } from "./lib/artifact-ir-context.js";
 import { renderArtifactDossier } from "./lib/artifact-dossier-view.js";
 import { buildArtifactEvidenceEnvelope } from "./lib/artifact-evidence-envelope.js";
 import { buildReviewSummary } from "./lib/review-summary.js";
@@ -354,6 +354,7 @@ import { visualPngSpecs } from "./lib/visual-export.js";
 import { bindAppElements } from "./lib/elements.js";
 import { installQuantEvidenceChains, renderQuantEvidenceChains } from "./lib/quant-evidence-chains.js";
 import { ensureQuantResearchCoverage } from "./lib/quant-research-applicability.js";
+import { createOperatorWeightReader } from "./lib/operator-weight-evidence.js";
 import { createGraphWorkspace } from "./lib/app-graph-workspace.js";
 import { createEvidenceCursor } from "./lib/evidence-cursor.js";
 import { buildOnnxRuntimeShapeBinding } from "./lib/onnx-runtime-shape-binding.js";
@@ -807,11 +808,13 @@ const metadataWorkspace = document.getElementById("metadataWorkspace");
 const weightWorkspace = document.getElementById("weightWorkspace");
 
 function currentAnalysisView() {
-  return currentArtifactIrContext?.primary_view || current;
+  return current ? requireArtifactIrConsumerView(currentArtifactIrContext?.primary_view) : null;
 }
 
 function artifactIrBackedView(analysis) {
-  return analysis === current ? currentAnalysisView() : analysis;
+  if (!analysis) return null;
+  if (analysis === current) return currentAnalysisView();
+  return requireArtifactIrConsumerView(isArtifactIrConsumerView(analysis) ? analysis : getArtifactIrContext(analysis)?.primary_view);
 }
 let selectedAcceleratorProfileId = "";
 let selectedPlacementProfileIds = [];
@@ -1744,7 +1747,11 @@ graphWorkspace = createGraphWorkspace({
   compute_input_influence: tfliteWorkerRpc.inputInfluence,
   compute_output_influence: tfliteWorkerRpc.outputInfluence,
   compute_static_runtime_calibration: tfliteWorkerRpc.runtimeCalibration,
-  compute_weight_histogram: tfliteWorkerRpc.weightHistogram,
+  readOperatorWeightEvidence: createOperatorWeightReader({
+    getContext: () => ({ model: currentArtifactIrContext?.model_ir, analysis: current,
+      source: pendingModelFile || currentModelBytes }),
+    runWeight: payload => staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.WEIGHT_IR, payload),
+  }),
   downloadTextArtifact,
   ensureLiteRtRuntime,
   evidenceCursor,
@@ -2004,7 +2011,7 @@ function updateProductionInterfaceFinding(comparison) {
       actions: ["Block release until every named external parameter and the implementation SHA-256 are bound to the audited artifact."],
     });
   }
-  renderFindings(findingsBody, currentArtifactIrContext?.primary_view || current);
+  renderFindings(findingsBody, currentAnalysisView());
 }
 
 downloadVisualPngs.addEventListener("click", async () => {
@@ -4483,7 +4490,7 @@ function handleEvidenceSelection(selection) {
 async function render(analysis, { keepTab = false, keepModule = false } = {}) {
   if (pendingConversionReceiptInput && analysis?.model_sha256) applyPendingConversionReceipt(analysis);
   rebuildCurrentArtifactIrContext(analysis);
-  const artifactView = currentArtifactIrContext?.primary_view || analysis;
+  const artifactView = requireArtifactIrConsumerView(currentArtifactIrContext?.primary_view);
   const modelFormat = String(analysis?.format || "tflite").toLowerCase();
   if (nodeEdgeEvidenceOverlay?.artifact_sha256 === analysis?.model_sha256) {
     analysis.external_node_edge_evidence_overlay = nodeEdgeEvidenceOverlay;
@@ -4492,6 +4499,7 @@ async function render(analysis, { keepTab = false, keepModule = false } = {}) {
     evidenceCursor.reset(analysis.model_sha256, { source: "artifact-render" });
   }
   ensureQuantResearchCoverage(analysis);
+  if (!analysis._markdown) analysis._markdown = buildStaticAuditMarkdown(artifactView, analysis.model_sha256);
   document.body.dataset.modelFormat = modelFormat;
   renderAuditClaimBoundary(modelFormat, artifactView);
   syncFormatWorkflowVisibility(artifactView);
@@ -4602,12 +4610,6 @@ async function ensureModelHash() {
       byteLength: current.file_size_bytes ?? current.file_size ?? currentModelBytes.byteLength,
     });
   }
-  if (!current._markdown) {
-    current._markdown = current.format === "onnx" && current.markdown
-      ? current.markdown
-      : buildStaticAuditMarkdown(currentAnalysisView(), current.model_sha256);
-  }
-  renderReportPanel();
   return current.model_sha256;
 }
 

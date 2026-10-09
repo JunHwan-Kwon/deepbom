@@ -208,6 +208,13 @@ export function buildRedesignImplementationFiles({ analysis, projection, request
     throw new Error("Structure code export is blocked because the projected repeat topology was not materialized in the WASM tensor graph.");
   }
   const scenario = canonicalScenario(request);
+  const codeFiles = [
+    textFile("pytorch/model.py", renderPytorch(plan)),
+    textFile("pytorch/smoke_test.py", renderPytorchSmokeTest(plan)),
+    textFile("keras/model.py", renderKeras(plan)),
+    textFile("keras/convert_litert.py", renderLiteRtConverter()),
+  ];
+  const readme = packageReadme(analysis, projection, scenario);
   const manifest = {
     schema: PACKAGE_SCHEMA,
     status: plan.status,
@@ -219,6 +226,7 @@ export function buildRedesignImplementationFiles({ analysis, projection, request
     generated_files: [
       "manifest.json",
       "README.md",
+      "structure-code.md",
       "implementation_plan.md",
       "implementation_plan.json",
       "scenario.json",
@@ -231,17 +239,23 @@ export function buildRedesignImplementationFiles({ analysis, projection, request
     verification_boundary: plan.interpretation_boundary,
   };
   return [
-    textFile("README.md", packageReadme(analysis, projection, scenario)),
+    textFile("README.md", readme),
+    textFile("structure-code.md", structureCodeMarkdown(readme, codeFiles)),
     textFile("implementation_plan.md", implementationMarkdown(projection, scenario)),
     textFile("implementation_plan.json", json(plan)),
     textFile("scenario.json", json(scenario)),
     textFile("projection.json", json(projection)),
     textFile("manifest.json", json(manifest)),
-    textFile("pytorch/model.py", renderPytorch(plan)),
-    textFile("pytorch/smoke_test.py", renderPytorchSmokeTest(plan)),
-    textFile("keras/model.py", renderKeras(plan)),
-    textFile("keras/convert_litert.py", renderLiteRtConverter()),
+    ...codeFiles,
   ];
+}
+
+function structureCodeMarkdown(readme, codeFiles) {
+  return `${readme}\n## Generated source files\n\nSave each code block at the indicated relative path. The blocks contain the same source as the Python files in the ZIP; this document contains no model weights.\n\n${codeFiles.map(({ name, data }) => {
+    // Source comments can contain backticks. Keep them inside the Python block.
+    const fence = "`".repeat((data.match(/`+/g) || []).reduce((length, run) => Math.max(length, run.length + 1), 3));
+    return `### ${name}\n\n${fence}python\n${data}${data.endsWith("\n") ? "" : "\n"}${fence}\n`;
+  }).join("\n")}`;
 }
 
 function renderPytorch(plan) {

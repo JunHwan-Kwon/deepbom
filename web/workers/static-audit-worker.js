@@ -45,7 +45,10 @@ async function runFileScopedOperation(id, operation, payload) {
       return buildWeightIr(payload.model, payload.analysis, payload.file, { onProgress: progress => metadataProgress(id, progress) });
     }
     const { buildWeightEvidence } = await import("../lib/weight-analysis.js");
-    return buildWeightEvidence(payload.model, payload.analysis, payload.file, { onProgress: progress => metadataProgress(id, progress) });
+    return buildWeightEvidence(payload.model, payload.analysis, payload.file, {
+      weightIr: payload.weightIr ?? null, options: payload.options ?? {},
+      onProgress: progress => metadataProgress(id, progress),
+    });
   }
   if (operation === STATIC_AUDIT_OPERATION.ARTIFACT_BUNDLE_ANALYZE) {
     const { readArtifactBundle } = await import("../lib/artifact-bundle.js");
@@ -128,9 +131,6 @@ self.addEventListener("message", async ({ data }) => {
     } else if (operation === STATIC_AUDIT_OPERATION.TFLITE_RUNTIME_CALIBRATION) {
       status(id, "Binding measured runtime to the static projection");
       result = tflite.compute_static_runtime_calibration(requestModelBytes, requestFilename, payload.targetId, payload.measuredMs);
-    } else if (operation === STATIC_AUDIT_OPERATION.TFLITE_WEIGHT_HISTOGRAM) {
-      status(id, "Decoding the selected constant tensor");
-      result = tflite.compute_weight_histogram(requestModelBytes, requestFilename, payload.tensorIndex, payload.targetId);
     } else if (operation === STATIC_AUDIT_OPERATION.TFLITE_REDESIGN_PROJECT) {
       status(id, "Projecting the requested artifact redesign");
       result = tflite.project_tflite_redesign(requestModelBytes, requestFilename, payload.targetId, payload.request);

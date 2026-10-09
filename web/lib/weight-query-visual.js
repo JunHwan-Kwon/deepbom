@@ -1,10 +1,13 @@
 import { histogramSvg, escapeXml } from "./weight-visuals.js";
 import { renderWeightAnalysisView } from "./weight-analysis-view.js";
+import { validateWeightAnalysis } from "./weight-analysis.js";
 
 const palette = Object.freeze({ surface: "#ffffff", ink: "#182d29", muted: "#53625f", line: "#d2ddd9", accent: "#216b59", blue: "#426eac" });
 // Render the complete in-browser tensor feature, never the bounded/truncated
 // conversation projection. Use the same visual encoders as the web workbench.
-export function buildWeightQueryVisual(evidence, ref, view = "distribution") {
+export function buildWeightQueryVisual(evidence, ref, view = "distribution", model) {
+  if (!evidence) return null;
+  validateWeightAnalysis(evidence.weight_analysis, evidence.weight_ir, model);
   const row = evidence?.weight_analysis.tensors.find(item => item.weight_ref === ref);
   if (!row || row.status !== "assessed") return null;
   const plot = view === "distribution" ? histogramSvg(row, palette) : renderWeightAnalysisView(view, row, null, palette).svg;

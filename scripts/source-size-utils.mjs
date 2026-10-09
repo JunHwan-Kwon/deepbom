@@ -1,5 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { readdirSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { normalizePath } from "./path-utils.mjs";
 import { privateModuleSourcePrefixes } from "./private-wasm-modules.mjs";
@@ -64,6 +66,7 @@ const DOCS_SOURCE_FILES = new Set([
 ]);
 const CORPUS_EVIDENCE_SOURCE_EXTENSIONS = new Set([".json", ".jsonc", ".yml", ".yaml"]);
 const GENERATED_RUNTIME_DATA_PATHS = new Set([
+  "web/lib/optimization-report-validator.js",
   "protected/deepbom_wasm/src/ort_rulepack_generated.rs",
   "protected/deepbom_wasm/src/tflite_delegate_rulepack_generated.rs",
   "src/xnnpack_rulepack_generated.rs",
@@ -87,6 +90,20 @@ export async function collectSourceFiles({
   cwd = ".",
 } = {}) {
   const rootDir = path.resolve(cwd);
+  // Local experiments outside version control are not product source. Retain
+  // any root with tracked content, including deliberately retained private code.
+  const ignoredPaths = new Set();
+  const tracked = spawnSync("git", ["-C", rootDir, "ls-files", "-z"], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+  if (tracked.status === 0) {
+    const trackedRoots = new Set(tracked.stdout.split("\0").filter(Boolean).map(name => name.split("/")[0]));
+    const candidates = readdirSync(rootDir, { withFileTypes: true }).filter(entry => entry.isDirectory() && !trackedRoots.has(entry.name)).map(entry => entry.name + "/");
+    if (candidates.length) {
+      const ignored = spawnSync("git", ["-C", rootDir, "check-ignore", "--stdin", "-z"], { input: candidates.join("\0") + "\0", encoding: "utf8" });
+      if (ignored.status === 0 || ignored.status === 1) {
+        for (const name of ignored.stdout.split("\0").filter(Boolean)) ignoredPaths.add(path.resolve(rootDir, name));
+      }
+    }
+  }
   const files = [];
   for (const root of roots) {
     const fullRoot = path.resolve(rootDir, root);
@@ -95,6 +112,7 @@ export async function collectSourceFiles({
       relativeRoot: rootDir,
       extensions,
       ignoredDirs,
+      ignoredPaths,
     })).filter((file) => !isIgnoredSourceFile(file.path)));
   }
   return files.sort((a, b) => a.path.localeCompare(b.path));

@@ -111,6 +111,51 @@ def audit(path: os.PathLike[str] | str, *, output: Optional[str] = None,
     return _invoke_json(argv, timeout_seconds, max_output_bytes)
 
 
+def numerical_evidence(path: os.PathLike[str] | str, *, weights: bool = False,
+                       weight_baseline: Optional[os.PathLike[str] | str] = None,
+                       weight_options: Optional[os.PathLike[str] | str] = None,
+                       weight_mapping: Optional[os.PathLike[str] | str] = None,
+                       activation_capture: Optional[os.PathLike[str] | str] = None,
+                       activation_baseline: Optional[os.PathLike[str] | str] = None,
+                       expected_sha256: Optional[str] = None,
+                       timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+                       max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> dict[str, Any]:
+    """Inspect weights or import captures through the common engine; never execute a model.
+
+    Returns an analysis selection containing Model IR, numerical detail and the
+    requested source documents. A reference capture must bind to the same model.
+    """
+    if not isinstance(weights, bool):
+        raise ValueError("weights must be boolean")
+    inspect_weights = weights or any(value is not None for value in (weight_baseline, weight_options, weight_mapping))
+    if not inspect_weights and activation_capture is None:
+        raise ValueError("Select weights or provide activation_capture")
+    if activation_baseline is not None and activation_capture is None:
+        raise ValueError("activation_baseline requires activation_capture")
+    if weight_mapping is not None and weight_baseline is None:
+        raise ValueError("weight_mapping requires weight_baseline")
+    argv = ["audit", _path_text(path), "--compact"]
+    sections = ["model_ir", "numerical_evidence_bundle", "numerical_details"]
+    if inspect_weights:
+        argv.append("--weight-analysis")
+        sections.extend(["weight_ir", "weight_analysis"])
+    if weight_baseline is not None:
+        sections.append("weight_comparison")
+    if activation_capture is not None:
+        sections.append("activation_ir")
+    if activation_baseline is not None:
+        sections.append("activation_baseline_ir")
+    for flag, value in (("--weight-baseline", weight_baseline), ("--weight-options", weight_options),
+                        ("--weight-mapping", weight_mapping), ("--activation-evidence", activation_capture),
+                        ("--activation-baseline", activation_baseline)):
+        if value is not None:
+            argv.extend([flag, _path_text(value)])
+    if expected_sha256 is not None:
+        argv.extend(["--expected-sha256", _sha256_text(expected_sha256)])
+    argv.extend(["--section", ",".join(sections)])
+    return _invoke_json(argv, timeout_seconds, max_output_bytes)
+
+
 def inspect(path: os.PathLike[str] | str, *, scan: str = "auto",
             expected_sha256: Optional[str] = None,
             gate: Optional[str] = None, policy: Optional[str] = None,

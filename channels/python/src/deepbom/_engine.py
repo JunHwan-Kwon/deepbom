@@ -26,7 +26,7 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _strict_json(path: Path) -> dict:
+def _strict_json(path: Path, *, expected_type=dict, label="engine manifest"):
     def reject_duplicates(pairs):
         result = {}
         for key, value in pairs:
@@ -37,8 +37,9 @@ def _strict_json(path: Path) -> dict:
 
     with path.open("r", encoding="utf-8") as stream:
         document = json.load(stream, object_pairs_hook=reject_duplicates)
-    if not isinstance(document, dict):
-        raise ValueError("engine manifest must be a JSON object")
+    if not isinstance(document, expected_type):
+        kind = "array" if expected_type is list else "object"
+        raise ValueError(f"{label} must be a JSON {kind}")
     return document
 
 

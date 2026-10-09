@@ -1,6 +1,6 @@
 # DEEPBOM SDK contract
 
-Introduced in DEEPBOM **2.1.0**. Install the Node SDK with `npm install deepbom@2.1.0`.
+Introduced in DEEPBOM **2.1.0**. Install the Node SDK with `npm install deepbom@2.2.0`.
 The Python SDK uses the corresponding platform wheel; platform availability
 is determined by the published release assets, not by this API description.
 See the [installation and integration walkthrough](../examples/integrations/README.md)
@@ -41,6 +41,7 @@ native engine and WASM manifest. Neither requires an analysis server.
 | `captureContract(path)` | `capture_contract(path)` | Artifact-derived interface declaration, bound to that artifact |
 | `verifyContract(path, contract)` | `verify_contract(path, contract)` | Native external-interface verification |
 | `verifyBom(path, bom, options?)` | `verify_bom(path, bom, **options)` | Bounded BOM reconciliation, not universal standards conformance |
+| `numericalEvidence(path, options)` | `numerical_evidence(path, **options)` | Explicit Weight/Activation IR, numerical detail and reference comparison; added in 2.2.0 |
 
 Node supports Node.js >=20, ESM imports and CommonJS dynamic `import()`. The
 package root is the supported entry point; internal file imports are private.
@@ -65,9 +66,12 @@ Unsupported combinations fail instead of silently changing scan depth.
 Legacy Python remote-source forwarding remains available but is outside this
 stable local subset; remote retrieval and advanced sidecars use the CLI.
 
-Advanced target profiles, weight-analysis budgets, runtime/activation imports,
-custom policy files and image/bundle exports remain explicit CLI/MCP/Web
-workflows. An SDK method's existence does not imply these options are exposed.
+Version 2.2.0 adds an explicit numerical API for weights, analysis
+budgets, alignment sidecars and activation imports; see the
+[numerical evidence guide](NUMERICAL_EVIDENCE_GUIDE.md). It shares the CLI engine
+and requires a 2.2.0 or later package. Advanced target profiles, other runtime
+imports, custom policy files and image/bundle exports remain CLI/MCP/Web
+workflows. An SDK method's existence does not imply all CLI options are exposed.
 There is intentionally no arbitrary `extraArgs` escape hatch.
 
 ## Options

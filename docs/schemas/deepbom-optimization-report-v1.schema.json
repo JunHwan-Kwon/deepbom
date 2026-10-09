@@ -1,0 +1,773 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-optimization-report-v1.schema.json",
+  "title": "DEEPBOM model optimization report",
+  "description": "Output projection, not a new analytical IR. Native semantic validators and the report digest bind the represented facts; schema validity does not attest a producer or prove performance.",
+  "$defs": {
+    "structure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_sha256",
+        "model_ir_sha256",
+        "framework",
+        "scope",
+        "limitations",
+        "inputs",
+        "outputs",
+        "nodes",
+        "relationships",
+        "storage",
+        "shape_observation_status",
+        "invocations",
+        "cost"
+      ],
+      "properties": {
+        "snapshot_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "model_ir_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "framework": {
+          "$ref": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/input/properties/definition/properties/framework"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "shape",
+              "dtype"
+            ],
+            "properties": {
+              "shape": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              },
+              "dtype": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "shape",
+              "dtype"
+            ],
+            "properties": {
+              "shape": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              },
+              "dtype": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "nodes": {
+          "$ref": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/input/properties/definition/properties/nodes"
+        },
+        "relationships": {
+          "$ref": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/input/properties/definition/properties/relationships"
+        },
+        "storage": {
+          "$ref": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/snapshot/properties/tensors"
+        },
+        "shape_observation_status": {
+          "enum": [
+            "observed",
+            "not_requested"
+          ]
+        },
+        "invocations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "subject",
+              "invocation",
+              "inputs",
+              "outputs",
+              "macs"
+            ],
+            "properties": {
+              "subject": {
+                "type": "string"
+              },
+              "invocation": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "inputs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "shape",
+                    "dtype"
+                  ],
+                  "properties": {
+                    "shape": {
+                      "type": "array",
+                      "items": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ],
+                        "minimum": 0
+                      }
+                    },
+                    "dtype": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "shape",
+                    "dtype",
+                    "logical_bytes"
+                  ],
+                  "properties": {
+                    "shape": {
+                      "type": "array",
+                      "items": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ],
+                        "minimum": 0
+                      }
+                    },
+                    "dtype": {
+                      "type": "string"
+                    },
+                    "logical_bytes": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^(0|[1-9][0-9]*)$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "macs": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "status",
+                  "value_decimal",
+                  "reason"
+                ],
+                "properties": {
+                  "status": {
+                    "enum": [
+                      "assessed",
+                      "not_assessed",
+                      "not_applicable"
+                    ]
+                  },
+                  "value_decimal": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]*)$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "mapping": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "cost": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "macs",
+            "assessed_invocations",
+            "unmapped_invocations",
+            "observed_invocations",
+            "scope"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "assessed_subtotal",
+                "not_applicable",
+                "not_assessed"
+              ]
+            },
+            "macs": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "assessed_invocations": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unmapped_invocations": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "observed_invocations": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "scope": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "objective",
+        "target",
+        "selection",
+        "user_rationale",
+        "probes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "objective": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "selection": {
+          "enum": [
+            "automatic_rules",
+            "explicit_rules",
+            "not_recorded"
+          ]
+        },
+        "user_rationale": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4096
+        },
+        "probes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "baseline",
+            "candidate"
+          ],
+          "properties": {
+            "baseline": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "status",
+                "invocations",
+                "inputs",
+                "outputs"
+              ],
+              "properties": {
+                "status": {
+                  "enum": [
+                    "observed",
+                    "not_requested"
+                  ]
+                },
+                "invocations": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "subject",
+                      "invocation",
+                      "inputs",
+                      "outputs"
+                    ],
+                    "properties": {
+                      "subject": {
+                        "type": "string"
+                      },
+                      "invocation": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "inputs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "shape",
+                            "dtype"
+                          ],
+                          "properties": {
+                            "shape": {
+                              "type": "array",
+                              "items": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 0
+                              }
+                            },
+                            "dtype": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "outputs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "shape",
+                            "dtype"
+                          ],
+                          "properties": {
+                            "shape": {
+                              "type": "array",
+                              "items": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 0
+                              }
+                            },
+                            "dtype": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "inputs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "shape",
+                      "dtype"
+                    ],
+                    "properties": {
+                      "shape": {
+                        "type": "array",
+                        "items": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 0
+                        }
+                      },
+                      "dtype": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "outputs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "shape",
+                      "dtype"
+                    ],
+                    "properties": {
+                      "shape": {
+                        "type": "array",
+                        "items": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 0
+                        }
+                      },
+                      "dtype": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "candidate": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "status",
+                "invocations",
+                "inputs",
+                "outputs"
+              ],
+              "properties": {
+                "status": {
+                  "enum": [
+                    "observed",
+                    "not_requested"
+                  ]
+                },
+                "invocations": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "subject",
+                      "invocation",
+                      "inputs",
+                      "outputs"
+                    ],
+                    "properties": {
+                      "subject": {
+                        "type": "string"
+                      },
+                      "invocation": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "inputs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "shape",
+                            "dtype"
+                          ],
+                          "properties": {
+                            "shape": {
+                              "type": "array",
+                              "items": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 0
+                              }
+                            },
+                            "dtype": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "outputs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "shape",
+                            "dtype"
+                          ],
+                          "properties": {
+                            "shape": {
+                              "type": "array",
+                              "items": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 0
+                              }
+                            },
+                            "dtype": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "inputs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "shape",
+                      "dtype"
+                    ],
+                    "properties": {
+                      "shape": {
+                        "type": "array",
+                        "items": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 0
+                        }
+                      },
+                      "dtype": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "outputs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "shape",
+                      "dtype"
+                    ],
+                    "properties": {
+                      "shape": {
+                        "type": "array",
+                        "items": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 0
+                        }
+                      },
+                      "dtype": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "rule",
+        "rule_version",
+        "subject",
+        "scope",
+        "state",
+        "request",
+        "title",
+        "reason",
+        "description",
+        "tradeoff",
+        "reason_basis",
+        "affected_nodes"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rule": {
+          "type": "string"
+        },
+        "rule_version": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "request": {
+          "type": "object"
+        },
+        "title": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tradeoff": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason_basis": {
+          "type": "string"
+        },
+        "affected_nodes": {
+          "$ref": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/comparison/properties/nodes"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "template",
+    "baseline",
+    "candidate",
+    "context",
+    "validation",
+    "changes",
+    "comparison",
+    "static_deltas",
+    "cost_delta",
+    "boundary",
+    "report_sha256"
+  ],
+  "properties": {
+    "schema": {
+      "const": "deepbom.optimization_report.v1"
+    },
+    "template": {
+      "const": "monochrome.v1"
+    },
+    "baseline": {
+      "$ref": "#/$defs/structure"
+    },
+    "candidate": {
+      "$ref": "#/$defs/structure"
+    },
+    "context": {
+      "$ref": "#/$defs/context"
+    },
+    "validation": {
+      "type": "object"
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/change"
+      }
+    },
+    "comparison": {
+      "$ref": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/comparison"
+    },
+    "static_deltas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state_elements",
+        "state_bytes",
+        "trainable_elements"
+      ],
+      "properties": {
+        "state_elements": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        "state_bytes": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        "trainable_elements": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        }
+      }
+    },
+    "cost_delta": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "boundary": {
+      "type": "string"
+    },
+    "report_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

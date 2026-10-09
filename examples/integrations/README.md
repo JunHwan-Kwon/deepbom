@@ -4,6 +4,44 @@ These examples implement **export → evidence → external decision**, using th
 same analysis engine as the CLI. Read the [SDK contract](../../docs/SDK_CONTRACT.md)
 for formats, errors, output semantics and version policy.
 
+The current checkout also includes the [Weight and activation detail guide](../../docs/NUMERICAL_EVIDENCE_GUIDE.md),
+with executable capture/import steps and Node/Python numerical API examples.
+
+For development-time use, start with the
+[fusion and inverted-residual experiment (Korean)](MLFLOW_ARCHITECTURE_SCENARIO.ko.md)
+or the
+[Weight IR → local redesign → MLflow scenario (Korean)](MLFLOW_DEVELOPMENT_SCENARIO.ko.md).
+`mlflow_development.py` runs the checkout example, proposes two small internal
+channel changes using the common workbench engines, and records the evidence,
+plots and untrained structure scaffolds. It does not train or deploy a model.
+
+For the proposed trainable-model interface, see
+[file, factory and Python-object entry points (Korean)](TRAINABLE_ENTRY_POINTS.ko.md).
+Its `deepbom.optimization` and `deepbom.training` commands and APIs are design examples, **not implemented
+or available in the released SDK**. It specifies both PyTorch and TensorFlow/Keras
+inputs, the call point before optimizer construction, and the common before/after
+comparison output. Candidate comparison, constraint revision, regeneration and
+selection form an independent loop before training; the same proposal includes
+CLI/API examples for that loop. Model optimization produces a selected structure
+and model state for training with a new user-owned optimizer. The separate
+training observation path records evidence; it does not optimize the training
+procedure or require a resumable checkpoint.
+
+The [training lifecycle design](../../docs/evidence-ir/TRAINING_LIFECYCLE.md)
+owns the proposed Training IR terminology, generation/reference diagrams and
+binding rules. It distinguishes run observations from checkpoint-bound numerical
+evidence and defines the shared observation semantics for Keras `fit`, TensorFlow
+`GradientTape` and PyTorch loops. This extension is not implemented yet.
+The same design provides optional presentation/storage adapters for DeepBoard
+(the proposed local evidence viewer), MLflow, TensorBoard and W&B. Existing
+MLflow artifact examples below do not imply that those full adapters or the
+live training collector already exist.
+
+For a separate model-replacement scenario with three comparable MLflow runs,
+see [the MLflow release-review walkthrough (Korean)](MLFLOW_RELEASE_SCENARIO.ko.md).
+`mlflow_release_review.py` consumes a completed bundle from the examples below,
+logs the existing evidence and decisions, and verifies them by reading them back.
+
 **Minimum SDK version: 2.1.0.** Install the Node SDK with
 `npm install deepbom@2.1.0` and use the matching Python platform wheel from the
 release assets. The source walkthrough below builds and verifies both packages
@@ -118,3 +156,7 @@ node .local-validation/sdk-consumer/release_review.mjs .local-validation/sdk-exa
 The first command replaces generated toy inputs; the third creates a fresh
 review bundle. MLflow creates a new run each time. Do not point these demo commands
 at a production release directory.
+
+### Native optimization and training
+
+[Executable API guide](../../docs/NATIVE_MODEL_TRAINING_GUIDE.md): independent PyTorch/TensorFlow candidates, frozen package export, manual GradientTape and PyTorch optimizer observations, DeepBoard and logger projections. The older trainable design examples remain historical proposals; use this guide for current signatures.

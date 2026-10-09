@@ -119,12 +119,19 @@ export function spectrumAnalysis(matrix, maxWork=30_000_000) {
   const singularValues=diagonal||factors.map(f=>scaledMagnitude(f.mantissa*scaleMantissa,f.exponent+scaleExponent));
   const total=sigma.reduce((sum,x)=>sum+x*x,0),energyError=initialEnergy?Math.abs(total-initialEnergy)/initialEnergy:0;
   if(energyError>1e-10)return notAssessed("svd_energy_residual_exceeded");
-  const cutoff=Math.max(m,n)*Number.EPSILON*sigma[0], rank=sigma.filter(x=>x>cutoff).length;
+  return assessed({method:diagonal?"diagonal_closed_form_binary64":"scaled_one_sided_jacobi_binary64",rows,columns,singular_values:singularValues.map(safe),normalized_singular_values:sigma,overflowed_singular_value_indices:singularValues.flatMap((x,i)=>Number.isFinite(x)?[]:[i]),scale,...spectrumSummary(sigma,scale,rows,columns),sweeps,orthogonality_residual:residual,energy_relative_residual:energyError,work_count:work,scope:"declared_axis_unfolding_not_full_convolution_operator"});
+}
+
+// One owner for derived spectrum metrics, shared by production and import validation.
+// This validates consistency with the recorded spectrum, not with absent source values.
+export function spectrumSummary(sigma, scale, rows, columns) {
+  const n=sigma.length,total=sigma.reduce((sum,x)=>sum+x*x,0);
+  const cutoff=Math.max(rows,columns)*Number.EPSILON*sigma[0], rank=sigma.filter(x=>x>cutoff).length;
   let cumulative=0;
   const retained=sigma.map(x=>{cumulative+=x*x;return total?Math.min(1,cumulative/total):null;});
   // Tail accumulation avoids subtracting nearly equal energies.
   const errors=Array(n+1).fill(0);let tail=0;for(let k=n-1;k>=0;k--){tail=Math.hypot(tail,sigma[k]);errors[k]=total?tail/Math.sqrt(total):null;}if(!total)errors[n]=null;
-  return assessed({method:diagonal?"diagonal_closed_form_binary64":"scaled_one_sided_jacobi_binary64",rows,columns,singular_values:singularValues.map(safe),normalized_singular_values:sigma,overflowed_singular_value_indices:singularValues.flatMap((x,i)=>Number.isFinite(x)?[]:[i]),scale,numerical_rank:rank,rank_tolerance:safe(cutoff*scale),rank_tolerance_normalized:cutoff,condition_number:rank===n && sigma[n-1]>0?safe(sigma[0]/sigma[n-1]):null,condition_status:rank<n?"numerically_rank_deficient":Number.isFinite(sigma[0]/sigma[n-1])?"finite":"overflow",cumulative_energy:retained,relative_frobenius_error_by_rank:errors,sweeps,orthogonality_residual:residual,energy_relative_residual:energyError,work_count:work,scope:"declared_axis_unfolding_not_full_convolution_operator"});
+  return {numerical_rank:rank,rank_tolerance:safe(cutoff*scale),rank_tolerance_normalized:cutoff,condition_number:rank===n && sigma[n-1]>0?safe(sigma[0]/sigma[n-1]):null,condition_status:rank<n?"numerically_rank_deficient":Number.isFinite(sigma[0]/sigma[n-1])?"finite":"overflow",cumulative_energy:retained,relative_frobenius_error_by_rank:errors};
 }
 
 export function tileProjection(matrix, maximum=48) {

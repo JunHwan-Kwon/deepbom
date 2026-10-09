@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "mcpName": "io.github.JunHwan-Kwon/deepbom",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
   "homepage": "https://deepbom.org",
@@ -261,6 +261,7 @@
     "check:rounding-equivalence-viewer": "node scripts/check-rounding-equivalence-viewer.mjs",
     "check:accumulator-reachability": "node scripts/check-accumulator-reachability.mjs",
     "check:accumulator-reachability-viewer": "node scripts/check-accumulator-reachability-viewer.mjs",
+    "check:numerical-details": "node scripts/check-numerical-details.mjs",
     "check:numerical-abi-propagation": "node scripts/check-numerical-abi-propagation.mjs",
     "check:numerical-abi-propagation-viewer": "node scripts/check-numerical-abi-propagation-viewer.mjs",
     "check:input-counterexample": "node scripts/check-input-counterexample.mjs",
@@ -335,7 +336,11 @@
     "check:common-calculations": "node scripts/audit-common-rules.mjs && node scripts/check-common-calculation-rules.mjs",
     "check:evidence-query": "node scripts/check-evidence-query.mjs",
     "check:sdk": "node scripts/check-sdk.mjs",
-    "check:integration-examples": "node scripts/run-sdk-integration-examples.mjs"
+    "check:integration-examples": "node scripts/run-sdk-integration-examples.mjs",
+    "check:native-evidence": "node scripts/check-native-evidence.mjs",
+    "check:native-training": "python scripts/check-native-training.py",
+    "check:optimization-report": "python scripts/check-optimization-report.py",
+    "check:training-board": "node scripts/check-training-board.mjs"
   },
   "keywords": [],
   "author": "",

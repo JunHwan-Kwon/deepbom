@@ -1,13 +1,5 @@
 use super::*;
 
-pub(super) fn uf_find(parent: &mut [i32], mut x: i32) -> i32 {
-    while parent[x as usize] != x {
-        parent[x as usize] = parent[parent[x as usize] as usize]; // path halving
-        x = parent[x as usize];
-    }
-    x
-}
-
 // Spatial influence computation implemented in the Rust/WASM analysis core.
 // Ports the JS computeInputInfluence / computeOutputInfluence BFS algorithms.
 
