@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-evidence-ir-v3.schema.json",
+  "title": "Evidence IR with fixed Snapshot and typed Provenance",
+  "oneOf": [
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-evidence-ir-v2.schema.json"
+    },
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-evidence-workflow-v1.schema.json#/$defs/snapshot"
+    },
+    {
+      "$ref": "https://deepbom.org/schemas/deepbom-evidence-workflow-v1.schema.json#/$defs/provenance"
+    }
+  ]
+}

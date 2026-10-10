@@ -1,6 +1,9 @@
 import { runNode } from "./run-utils.mjs";
 
 const CHECKS = [
+  "scripts/generate-evidence-workflow-schema.mjs --check",
+  "scripts/check-evidence-workflow.mjs",
+  "scripts/check-evidence-workflow-channels.mjs",
   "scripts/sync-version.mjs --check",
   "scripts/write-build-metadata.mjs",
   "scripts/check-build-metadata.mjs",

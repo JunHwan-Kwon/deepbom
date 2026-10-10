@@ -52,7 +52,47 @@ def framework_of(model):
     raise TypeError("Expected torch.nn.Module or TensorFlow backend keras.Model")
 
 
+def require_supported_execution(model):
+    """One boundary for capture, cloning, rewriting and package restoration.
+
+    Class definitions remain scoped adapter evidence, not a proof of arbitrary
+    Python execution equivalence. Instance overrides/hooks cannot be represented
+    by the existing declarative constructors and are rejected before copying.
+    """
+    if framework_of(model) == "pytorch":
+        import torch
+        modules = model.modules()
+        from torch.nn.modules import module as module_runtime
+        if any(getattr(module_runtime, key, {}) for key in (
+            "_global_forward_hooks", "_global_forward_pre_hooks",
+            "_global_backward_hooks", "_global_backward_pre_hooks",
+        )):
+            raise ValueError("Native capture cannot represent global module hooks")
+        for module in modules:
+            if any(key in module.__dict__ for key in ("forward", "_call_impl", "_compiled_call_impl")) and (
+                "forward" in module.__dict__ or "_call_impl" in module.__dict__
+                or module.__dict__.get("_compiled_call_impl") is not None
+            ):
+                raise ValueError("Native capture cannot represent an instance execution override")
+            if any(getattr(module, key, {}) for key in (
+                "_forward_hooks", "_forward_pre_hooks", "_backward_hooks", "_backward_pre_hooks",
+            )):
+                raise ValueError("Native capture cannot represent arbitrary module hooks")
+    else:
+        seen = set()
+        def visit(layer):
+            if id(layer) in seen:
+                return
+            seen.add(id(layer))
+            if "call" in layer.__dict__:
+                raise ValueError("Native capture cannot represent an instance call override")
+            for child in getattr(layer, "layers", ()):
+                visit(child)
+        visit(model)
+
+
 def independent_copy(model):
+    require_supported_execution(model)
     framework = framework_of(model)
     if framework == "pytorch":
         import torch
@@ -86,6 +126,7 @@ def independent_copy(model):
 
 
 def snapshot_input(model, *, input_spec=None, max_values=1_000_000, advanced=False):
+    require_supported_execution(model)
     framework = framework_of(model)
     nodes = []
     edges = []

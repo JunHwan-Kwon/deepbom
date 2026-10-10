@@ -3,7 +3,7 @@ import { EVIDENCE_IR_LAYERS, PROVENANCE_INPUT_SCHEMA } from "../web/lib/evidence
 import { PUBLIC_PRODUCT_CONTRACTS } from "../web/lib/public-product-contracts.js";
 import { AUDIT_OUTPUT_CONTRACTS } from "../web/lib/audit-output-contracts.js";
 
-export const CATALOG_VERSION = "0.15.0";
+export const CATALOG_VERSION = "0.16.0";
 const native = {
   tflite: ["TFLite", "Model / SubGraph / Tensor / Buffer", "src/lib.rs", "scripts/check-artifact-ir.mjs"],
   onnx: ["ONNX", "ModelProto.graph / NodeProto / ValueInfoProto / TensorProto", "web/onnx.js", "scripts/check-model-ir-source-contracts.mjs"],
@@ -108,9 +108,9 @@ for(const id of ["native-model","native-weight","native-activation","training"])
 nodes.push(node("output-optimization-report","output","Native optimization report","deepbom.optimization_report.v1","Read-only report projection; native module hierarchy, not a complete execution graph.","https://deepbom.org/schemas/deepbom-optimization-report-v1.schema.json"));
 nodes.push(node("output-optimization-diff","output","Optimization report diff","deepbom.optimization_diff.v1","Supporting projection, not another IR layer. Canonical field changes from bound Before/After records.","https://deepbom.org/schemas/deepbom-optimization-diff-v1.schema.json"));
 const reportChecks=["scripts/check-optimization-report.mjs","scripts/check-optimization-report.py","scripts/check-report-diff-browser.mjs"];
-map("native-model-optimization-report","native-model","output-optimization-report","preview",[field("/program","/baseline /candidate nodes and relationships")],["web/lib/native-optimization-report.js","web/lib/native-evidence.js","channels/python/src/deepbom/optimization/report.py"],reportChecks,"Uses before/after native bundles, saved rule receipts and optional shape observations. MACs are mapped contraction subtotals, not latency.");
+map("native-model-optimization-report","native-model","output-optimization-report","preview",[field("/program","/baseline /candidate nodes and relationships")],["web/lib/native-optimization-report.js","web/lib/native-evidence.js","channels/python/src/deepbom/optimization/report.py","channels/python/src/deepbom/_report_fonts.py"],reportChecks,"Uses before/after native bundles, saved rule receipts and optional shape observations. MACs are mapped contraction subtotals, not latency.");
 map("native-state-optimization-report","native-snapshot","output-optimization-report","preview",[field("/tensors","/baseline /candidate storage and exact state counts")],["web/lib/native-optimization-report.js","web/lib/native-evidence.js"],reportChecks,"Shared state and trainable counts; snapshot identities are not standalone artifact file hashes.");
-map("optimization-report-diff","output-optimization-report","output-optimization-diff","preview",[field("/comparison /baseline /candidate /changes","/entries /fields /rules")],["web/lib/native-optimization-diff.js","channels/python/src/deepbom/optimization/_report_diff.py","channels/python/src/deepbom/optimization/report.py"],reportChecks,"Same common verdicts and field changes feed HTML/PDF. No inferred renames, numerical recomputation or remote Python execution.");
+map("optimization-report-diff","output-optimization-report","output-optimization-diff","preview",[field("/comparison /baseline /candidate /changes","/entries /fields /rules")],["web/lib/native-optimization-diff.js","channels/python/src/deepbom/optimization/_report_diff.py","channels/python/src/deepbom/optimization/report.py","channels/python/src/deepbom/_report_fonts.py"],reportChecks,"Same common verdicts and field changes feed HTML/PDF. No inferred renames, numerical recomputation or remote Python execution.");
 nodes.push(node("output-optimization-report-access","output","Saved optimization report access","deepbom.optimization_report_query.v1 / deepbom.optimization_report_export.v1","Web and local CLI/MCP only; hosted remote tools unchanged.","https://deepbom.org/schemas/deepbom-optimization-report-access-v1.schema.json"));
 map("optimization-report-access","output-optimization-report","output-optimization-report-access","preview",[field("validated report JSON + canonical report digest","paged subject evidence / complete file resource")],["web/lib/optimization-report-access.js","web/lib/optimization-report-validator.js","web/lib/optimization-report-html.js","web/lib/optimization-report-page.js","web/workers/optimization-report-worker.js","bin/optimization-report.mjs","bin/deepbom-mcp.mjs","channels/python/src/deepbom/optimization/render.py"],["scripts/generate-optimization-report-validator.mjs","scripts/check-optimization-report-channels.mjs","scripts/check-mcp-server.mjs"],"Common schema/digest/quantity and tensor-correspondence checks; no model execution. Distribution claims cannot be independently recomputed without their source statistics. Browser PDF is print-to-PDF; local PDF requires matching Python report extra. MCP files are embedded resources subject to host and size limits.");
 
@@ -126,6 +126,41 @@ for (const [from, source] of [["model", "/program /weight_bindings"], ["weight",
     ["scripts/check-operator-weight-evidence.mjs", "scripts/check-operator-weight-browser.mjs", "scripts/check-artifact-ir-consumers.mjs"],
     "Original bytes are hash checked. Stored-code distributions and dequantized advanced features retain separate representations and explicit budgets. No inferred trainability or measured performance; the legacy WASM histogram path is retired.");
 }
+
+// Additive Snapshot/workflow contracts; historical member schemas are unchanged.
+const workflowSchema="https://deepbom.org/schemas/deepbom-evidence-workflow-v1.schema.json";
+for(const [id,kind,name,contract,definition] of [
+  ["snapshot-ir","ir","Snapshot IR","deepbom.snapshot_ir.v1","snapshot"],
+  ["typed-provenance","ir","Typed Provenance IR","deepbom.provenance_ir.v2","provenance"],
+  ["workflow-request","input","Evidence workflow request","deepbom.evidence_workflow_request.v1","request"],
+  ["input-omop-snapshot","input","OMOP dataset snapshot connection","deepbom.omop_snapshot_input.v1","omop_input"],
+  ["input-state-manifest","input","Dataset or configuration manifest","deepbom.dataset_release_input.v1 / deepbom.configuration_input.v1","manifest"],
+  ["workflow-result","output","Evidence workflow result","deepbom.evidence_workflow_result.v1","result"],
+  ["evaluation-protocol","context","Evaluation protocol","deepbom.evaluation_protocol.v1","protocol"],
+  ["evaluation-record","context","External evaluation record","deepbom.evaluation_record.v1","evaluation"],
+  ["change-review","context","Model change review","deepbom.change_review.v1","review"],
+  ["deployment-context","context","Deployment declarations","deepbom.deployment_context.v1","deployment"],
+])nodes.push(node(id,kind,name,contract,"Typed subject and exact scope; document identity is not authenticity or clinical approval.",workflowSchema+"#/$defs/"+definition));
+const workflowChecks=["scripts/check-evidence-workflow.mjs","scripts/check-evidence-workflow-channels.mjs"];
+for(const [from,to,owner] of [
+  ["native-snapshot","snapshot-ir","web/lib/snapshot-ir.js"],
+  ["workflow-request","snapshot-ir","web/lib/snapshot-ir.js"],
+  ["input-state-manifest","snapshot-ir","web/lib/snapshot-ir.js"],
+  ["snapshot-ir","typed-provenance","web/lib/provenance-v2.js"],
+  ["input-omop-snapshot","typed-provenance","web/lib/evidence-workflow-omop.js"],
+  ["workflow-request","evaluation-protocol","web/lib/evaluation-evidence.js"],
+  ["workflow-request","evaluation-record","web/lib/evaluation-evidence.js"],
+  ["evaluation-protocol","change-review","web/lib/change-review.js"],
+  ["evaluation-record","change-review","web/lib/change-review.js"],
+  ["workflow-request","deployment-context","web/lib/deployment-evidence.js"],
+  ...["snapshot-ir","typed-provenance","change-review","deployment-context","training","native-model","native-weight","native-activation"].map(from=>[from,"workflow-result","web/lib/evidence-workflow.js"]),
+])map(`${from}-${to}`,from,to,"conditional",[field(({"snapshot-ir":"/contents","typed-provenance":"/input","training":"/chunks","native-model":"/program","native-weight":"/tensors","native-activation":"/tensors"})[from]||"typed source references and supplied documents",({"snapshot-ir":"/contents","typed-provenance":"/input"})[to]||"validated common evidence context / operation result")],[owner,"web/lib/evidence-context.js"],workflowChecks,"Source records and bytes are distinct. Missing references stay unresolved; supplied contradictions fail. Recorded measurements are not recomputed from patient data. Original native snapshot digests are preserved.");
+map("workflow-channels","workflow-request","workflow-result","conditional",[field("request + explicit local files","same core result and paginated checks")],["bin/evidence-workflow.mjs","bin/deepbom-mcp.mjs","sdk/index.mjs","channels/python/src/deepbom/api.py","web/lib/evidence-workflow-worker.js","web/lib/evidence-workflow-page.js","web/lib/evidence-workflow-report.js"],workflowChecks,"Web/CLI/SDK/local MCP share the engine. Hosted ChatGPT/Claude provide continuation guidance; remote tools do not run arbitrary evaluation requests or fetch local files.");
+map("workflow-standard-projection","workflow-result","output-cyclonedx","conditional",[field("serialized evidence result","CycloneDX file identity + explicit loss ledger")],["web/lib/evidence-standard-projection.js"],workflowChecks,"Companion document inventory only. Snapshot/evaluation semantics remain in the source JSON; does not introduce regulatory or clinical assertions into CycloneDX.");
+map("workflow-spdx-projection","workflow-result","output-spdx","conditional",[field("serialized evidence result","SPDX FILE-purpose package + explicit loss ledger")],["web/lib/evidence-standard-projection.js","web/lib/spdx-artifact-export.js"],workflowChecks,"Companion evidence-file inventory. Extract the wrapper's document for standards consumers; retain the original source JSON.");
+nodes.push(node("output-evidence-report","output","Evidence review HTML / PDF","deepbom.evidence_report_view.v1","Renders validated common checks; HTML/PDF do not recalculate criteria."));
+map("workflow-report","workflow-result","output-evidence-report","conditional",[field("validated checks / exact deltas / source documents","monochrome report")],["web/lib/evidence-workflow-report.js","channels/python/src/deepbom/evidence_render.py","channels/python/src/deepbom/_report_fonts.py"],workflowChecks,"HTML in Web and CLI; browser print or matching Python report extra for PDF.");
+map("workflow-loggers","workflow-result","output-deepboard","conditional",[field("whole result / already-calculated values","MLflow/W&B artifact / TensorBoard scalar projection")],["channels/python/src/deepbom/evidence.py"],["scripts/check-evidence-workflow-python.py"],"Complete source JSON retained. Explicit MLflow run or W&B run required; TensorBoard step zero means one review, not training time. No cloud W&B qualification is implied.");
 
 export function compatibilityDefinition() {
   return {

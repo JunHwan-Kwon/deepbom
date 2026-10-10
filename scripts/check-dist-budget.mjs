@@ -20,7 +20,10 @@ const dist = path.resolve("dist");
 // Native model/report support and immutable 0.14–0.15 catalogs bring the
 // measured 2.2.0 release to 71,323,627 bytes (68.02 MiB). Reserve 128 KiB
 // above the previous total budget; keep the 16 MiB per-file limit unchanged.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 68.125);
+// Snapshot/workflow modules, schemas, the 0.16 catalog and public review page
+// bring the measured 2.3.0 artifact to 71,532,074 bytes (68.22 MiB).
+// Reserve a bounded 256 KiB increment; preserve the 16 MiB per-file ceiling.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 68.375);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

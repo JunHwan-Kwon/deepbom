@@ -47,9 +47,11 @@ try {
   assert.match(await page.locator("#mapping-detail").textContent(), /No field mapping is implemented/);
   await page.locator("#reset").click();
   await page.locator("#query").fill("SPDX-2.3");
-  assert.equal(await page.locator(".mapping-row").count(), 1);
-  await page.locator(".mapping-row").focus(); await page.keyboard.press("Enter");
+  assert.equal(await page.locator(".mapping-row").count(), catalog.mappings.filter(row=>row.to==='output-spdx').length);
+  await page.locator('[data-mapping="envelope-spdx"]').focus(); await page.keyboard.press("Enter");
   assert.match(await page.locator("#mapping-detail").textContent(), /NOASSERTION/);
+  await page.locator('[data-mapping="workflow-spdx-projection"]').click();
+  assert.match(await page.locator("#mapping-detail").textContent(), /loss ledger|source JSON/);
   await page.locator("#query").fill("__absent__ <img src=x onerror=alert(1)>");
   assert.equal(await page.locator(".mapping-row").count(), 0);
   assert(await page.locator("#empty").isVisible()); assert.equal(await page.locator("img").count(), 0);

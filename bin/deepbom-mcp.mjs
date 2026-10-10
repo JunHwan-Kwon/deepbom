@@ -34,6 +34,12 @@ const CACHE_WRITING_ANNOTATIONS = Object.freeze({
 
 const TOOLS = Object.freeze([
   {
+    name:"deepbom_evidence_workflow", title:"Review model change evidence",
+    description:"Run a local evidence request or read a saved workflow result using the same core as Web and SDK. Supports Snapshot, provenance, external evaluation and before/after review. Does not execute model code, fetch URLs or infer clinical approval. Files are optional explicit SHA-256/local-path pairs; missing originals stay unresolved. Return a page of checks with exact total and result digest. Open the request or result at https://deepbom.org/reports/evidence/ for JSON, HTML and print/PDF.",
+    inputSchema:{type:"object",properties:{path:{type:"string"},files:{type:"array",maxItems:256,items:{type:"object",properties:{sha256:{type:"string",pattern:"^[a-f0-9]{64}$"},path:{type:"string"}},required:["sha256","path"],additionalProperties:false}},expected_sha256:{type:"string",pattern:"^[a-f0-9]{64}$"},offset:{type:"integer",minimum:0},limit:{type:"integer",minimum:1,maximum:100}},required:["path"],additionalProperties:false},
+    outputSchema:{type:"object",properties:{schema:{const:"deepbom.evidence_workflow_query.v1"}},required:["schema"],additionalProperties:true},annotations:READ_ONLY_ANNOTATIONS,
+  },
+  {
     name: "deepbom_optimization_report",
     title: "Inspect a saved optimization report",
     description: "Read one local deepbom.optimization_report.v1 JSON. Query before/after structure, changed fields, rule reasons and static metrics without loading or executing the model. Results are paginated; use the returned report_sha256 as expected_sha256 for follow-ups. A self-consistent report is not producer attestation or proof of quality/speed. Open the same JSON at https://deepbom.org/reports/optimization/ for interactive exploration.",
@@ -323,6 +329,12 @@ async function callTool(params, state, signal) {
 }
 
 function commandArguments(name, args, roots) {
+  if(name==="deepbom_evidence_workflow"){
+    const argv=["evidence-workflow",requiredLocalPath(args.path,"path",roots),"--offset",String(args.offset??0),"--limit",String(args.limit??25)];
+    for(const f of args.files||[])argv.push("--file",f.sha256+":"+requiredLocalPath(f.path,"file",roots));
+    if(args.expected_sha256)argv.push("--expected-sha256",args.expected_sha256);
+    return argv;
+  }
   if (["deepbom_optimization_report","deepbom_export_optimization_report"].includes(name)) {
     const argv=["optimization-report",requiredLocalPath(args.path,"path",roots)];
     for(const k of ["section","subject","search","offset","limit","format"])if(Object.hasOwn(args,k))argv.push(`--${k}`,String(args[k]));
@@ -389,6 +401,7 @@ function appendRemoteControls(argv, args, roots) {
 function validateToolArguments(name, args) {
   if (!args || typeof args !== "object" || Array.isArray(args)) throw new Error("Tool arguments must be a JSON object.");
   const allowed = {
+    deepbom_evidence_workflow:["path","files","expected_sha256","offset","limit"],
     deepbom_optimization_report: ["path","expected_sha256","section","subject","search","offset","limit"],
     deepbom_export_optimization_report: ["path","expected_sha256","format"],
     deepbom_capabilities: [],
@@ -400,9 +413,12 @@ function validateToolArguments(name, args) {
   const extra = Object.keys(args).filter((key) => !allowed.includes(key));
   if (extra.length) throw new Error(`Undeclared tool argument${extra.length === 1 ? "" : "s"}: ${extra.sort().join(", ")}.`);
 
+  if(Object.hasOwn(args,"files")){
+    if(!Array.isArray(args.files)||args.files.length>256||args.files.some(f=>!f||Object.keys(f).some(k=>!["sha256","path"].includes(k))||typeof f.sha256!=="string"||!/^[a-f0-9]{64}$/.test(f.sha256)||typeof f.path!=="string"))throw Error("files requires bounded SHA-256/local-path pairs");
+  }
   const booleanFields = ["weight_analysis", "tensors", "list_sections", "offline"];
   const integerFields = ["max_download_gib", "tensor_offset", "tensor_limit", "offset", "limit"];
-  for (const key of allowed.filter((key) => !booleanFields.includes(key) && !integerFields.includes(key))) {
+  for (const key of allowed.filter((key) => !booleanFields.includes(key) && !integerFields.includes(key) && key!=="files")) {
     if (Object.hasOwn(args, key) && typeof args[key] !== "string") throw new Error(`The ${key} argument must be a string.`);
   }
   for (const key of booleanFields) {
@@ -423,7 +439,7 @@ function validateToolArguments(name, args) {
   if (Object.hasOwn(args, "expected_sha256") && !/^[a-f0-9]{64}$/i.test(args.expected_sha256)) {
     throw new Error("The expected_sha256 argument must contain exactly 64 hexadecimal characters.");
   }
-  if(["deepbom_optimization_report","deepbom_export_optimization_report"].includes(name)) {
+  if(["deepbom_evidence_workflow","deepbom_optimization_report","deepbom_export_optimization_report"].includes(name)) {
     if(Object.hasOwn(args,"offset")&&(!Number.isSafeInteger(args.offset)||args.offset<0))throw Error("offset must be a non-negative integer");
     if(Object.hasOwn(args,"limit")&&(!Number.isSafeInteger(args.limit)||args.limit<1||args.limit>100))throw Error("limit must be 1–100");
     if(name==="deepbom_export_optimization_report"&&(!args.expected_sha256||!args.format))throw Error("Export requires format and expected_sha256");

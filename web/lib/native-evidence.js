@@ -1,7 +1,7 @@
 // Common owner for native snapshot evidence. Existing artifact-based v1 IRs
 // remain immutable contracts. Framework adapters supply facts, never statistics.
 import { canonicalJson } from "./report-utils.js";
-import { sha256BytesHex, sha256TextHex } from "./sha256-sync.js";
+import { sha256BytesHex } from "./sha256-sync.js";
 import {
   exactKeys,
   requireCondition as need,
@@ -28,6 +28,7 @@ import {
 import { validateWeightMathFeatures } from "./weight-analysis.js";
 import { visitDenseTensorValues } from "./tensor-numerical-integrity.js";
 import { scalarDtypeBytes } from "./tensor-size.js";
+import { canonicalEvidenceDigest, sealDocument } from "./evidence-identity.js";
 
 export const NATIVE_SCHEMAS = Object.freeze({
   snapshot: "deepbom.model_state_snapshot.v1",
@@ -36,9 +37,9 @@ export const NATIVE_SCHEMAS = Object.freeze({
   activation: "deepbom.activation_ir.v2",
   training: "deepbom.training_ir.v1",
 });
-export const nativeDigest = (value) => sha256TextHex(canonicalJson(value));
+export const nativeDigest = canonicalEvidenceDigest;
 export function sealNative(body, field) {
-  return { ...body, [field]: nativeDigest(body) };
+  return sealDocument(body, field);
 }
 function text(x, label) {
   need(
@@ -600,6 +601,9 @@ export function validateNativeDocument(doc) {
         ),
         "missing activation context",
       );
+      for (const key of ["mode", "input_identity", "state_boundary"]) {
+        need(doc.context[key] != null && doc.context[key] !== "", `activation ${key} needs explicit context or an explicit unknown declaration`);
+      }
     }
   }
   if (doc.source) {
@@ -895,6 +899,20 @@ export function validateTrainingIr(doc) {
   return doc;
 }
 
+export function validateTrainingChunk(chunk) {
+  exactKeys(chunk,["schema","run_id","segment_id","events","chunk_sha256"],"training chunk");
+  need(chunk.schema === "deepbom.training_chunk.v1", "unknown training chunk");
+  text(chunk.run_id,"training run");text(chunk.segment_id,"training segment");
+  need(Array.isArray(chunk.events),"training events must be an array");
+  for(const event of chunk.events){
+    exactKeys(event,["id","sequence","kind","at","payload"],"training event");
+    text(event.id,"training event ID");text(event.kind,"training event kind");
+    need(typeof event.sequence === "string" && /^(0|[1-9][0-9]*)$/.test(event.sequence),"invalid event sequence");
+    record(event.at,"event coordinates");record(event.payload,"event payload");
+  }
+  checkSeal(chunk,"chunk_sha256");return chunk;
+}
+
 export function validateTrainingBundle(bundle) {
   exactKeys(bundle, ["training", "events", "objects"], "training bundle");
   validateTrainingIr(bundle.training);
@@ -907,12 +925,7 @@ export function validateTrainingBundle(bundle) {
   for (const ref of doc.chunks) {
     const chunk = bundle.objects[ref.sha256];
     need(chunk, "missing training chunk");
-    exactKeys(
-      chunk,
-      ["schema", "run_id", "segment_id", "events", "chunk_sha256"],
-      "training chunk",
-    );
-    checkSeal(chunk, "chunk_sha256");
+    validateTrainingChunk(chunk);
     need(
       chunk.schema === "deepbom.training_chunk.v1" &&
         chunk.run_id === doc.run_id &&
@@ -1124,6 +1137,7 @@ export function validateTrainingBundle(bundle) {
             a.source.snapshot_sha256 === event.payload.snapshot_sha256,
           "activation event binding mismatch",
         );
+        need(canonicalJson(a.context.at ?? {}) === canonicalJson(event.at), "activation event coordinates mismatch");
         const model = bundle.objects[a.source.model_ir_sha256];
         need(
           model && model.source.snapshot_sha256 === a.source.snapshot_sha256,

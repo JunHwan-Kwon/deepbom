@@ -10,6 +10,9 @@ import { analyzeExecuTorchModel } from "../web/executorch.js";
 import { analyzeOnnxModel } from "../web/onnx.js";
 import { buildGraphDiffSnapshot } from "../web/lib/artifact-diff.js";
 import { validateArtifactEvidenceIr } from "../web/lib/artifact-ir.js";
+import {createEvidenceContext} from "../web/lib/evidence-context.js";
+import {subjectReference} from "../web/lib/evidence-identity.js";
+import {buildSingleFileArtifactSet} from "../web/lib/artifact-set.js";
 import { getArtifactIrContext, isArtifactIrConsumerView, resolveArtifactIrContext } from "../web/lib/artifact-ir-context.js";
 import { buildEngineeringEvidenceDocument, buildRawDataArtifactFiles } from "../web/lib/report-evidence.js";
 import { buildDeploymentContractDocuments, DEPLOYMENT_CONTRACT_FILES } from "../web/lib/report-export-contracts.js";
@@ -43,6 +46,19 @@ for (const entry of cases) {
   const output = runGraph(entry.file);
   const artifactIr = output.artifact_ir;
   const graphIr = output.graph_ir;
+  const model=output.model_ir;
+  const ref=subjectReference('evidence_document',model.model_ir_sha256,{schema:model.schema});
+  const fileRef=subjectReference('artifact_file',artifactIr.artifact.sha256);
+  const a=artifactIr.artifact;
+  const artifactSet=buildSingleFileArtifactSet({filename:a.filename,format:a.format,sha256:a.sha256,byteLength:a.byte_length.decimal});
+  assert.equal(artifactSet.artifact_set_sha256,a.artifact_set_sha256);
+  // Fresh byte binding is distinct from merely supplying a hash-valid document.
+  assert.equal(createEvidenceContext([artifactIr,model]).resolve(ref).status,'unresolved');
+  const evidence=createEvidenceContext([artifactIr,model,artifactSet],{files:[{ref:fileRef,bytes:await readFile(entry.file)}]});
+  assert.equal(evidence.resolve(ref).status,'matched');
+  const internal=model.program.operations[0]||model.tensors_and_storage.storage_objects[0];
+  if(internal)assert.equal(evidence.resolve({...ref,subject_ref:internal.id}).status,'matched');
+  assert.throws(()=>evidence.resolve({...ref,subject_ref:'missing-subject'}),/internal subject/);
   outputs.set(entry.format, output);
 
   assert.equal(artifactIr.schema, "deepbom.artifact_ir.v2", `${entry.format} Artifact IR schema`);

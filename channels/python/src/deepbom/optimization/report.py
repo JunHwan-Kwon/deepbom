@@ -635,12 +635,10 @@ document.querySelectorAll('a[data-bytes]').forEach(a=>a.addEventListener('click'
 
 def _pdf(data):
     require_pdf()
-    import reportlab
     from reportlab.lib import colors
     from reportlab.lib.styles import ParagraphStyle
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.platypus import (
         SimpleDocTemplate,
         Paragraph,
@@ -652,28 +650,9 @@ def _pdf(data):
     from reportlab.graphics.shapes import Drawing, Rect, Line, String
     from reportlab.pdfgen.canvas import Canvas
 
-    fonts = Path(reportlab.__file__).parent / "fonts"
-    for name, file in [
-        ("DeepbomReport", "Vera.ttf"),
-        ("DeepbomReportBold", "VeraBd.ttf"),
-    ]:
-        if name not in pdfmetrics.getRegisteredFontNames():
-            pdfmetrics.registerFont(TTFont(name, str(fonts / file)))
-    regular = pdfmetrics.getFont("DeepbomReport").face.charWidths
-    bold_coverage = pdfmetrics.getFont("DeepbomReportBold").face.charWidths
-    escaped = False
-
-    def safe(value):
-        nonlocal escaped
-        text = str(value)
-        out = []
-        for c in text:
-            if c in "\n\t" or ord(c) in regular and ord(c) in bold_coverage:
-                out.append(c)
-            else:
-                escaped = True
-                out.append(c.encode("unicode_escape").decode("ascii"))
-        return html.escape("".join(out)).replace("\n", "<br/>")
+    from .._report_fonts import ReportText, UNICODE_NOTE
+    report_text = ReportText()
+    safe = report_text.safe
 
     body = ParagraphStyle(
         "body",
@@ -802,10 +781,10 @@ def _pdf(data):
                 )
             )
             story.extend([table, Spacer(1, 9)])
-    if escaped:
+    if report_text.escaped:
         story.append(
             Paragraph(
-                "Identifiers outside the embedded font coverage use explicit Unicode escapes. The JSON and HTML preserve their original Unicode strings.",
+                UNICODE_NOTE,
                 body,
             )
         )

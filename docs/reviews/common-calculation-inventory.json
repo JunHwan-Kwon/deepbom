@@ -21,7 +21,7 @@
     ],
     "boundary": "All application source files in these roots are enumerated. JS functions/tables are parsed; Rust/Python/C++ candidates also require semantic review. Textual equality is a candidate, not proof of equivalent contracts."
   },
-  "source_file_count": 531,
+  "source_file_count": 549,
   "files": [
     {
       "file": "bin/deepbom-agent-contract.mjs",
@@ -49,7 +49,7 @@
     },
     {
       "file": "bin/deepbom-automation.mjs",
-      "sha256": "4f2e80e389b267c39e66cbbbbebb58125d3c0e367d192d74a52c4066bf6c5e07",
+      "sha256": "5eba25b9675f07d93f6b9b515e48bc6323be76e8d634747057d7f63b470e2c41",
       "language": "mjs",
       "role": "runtime",
       "functions": 35,
@@ -65,10 +65,10 @@
     },
     {
       "file": "bin/deepbom-mcp.mjs",
-      "sha256": "26fbd9e67d3a0c77ebad3bd5ed6e0cf3e4c80bdbc5a2c6d57b69ef1d992ae70e",
+      "sha256": "a3cbc1d616975b1522316f3aff952f23092ea4d9809ef4ba3288f188b6c94e7c",
       "language": "mjs",
       "role": "runtime",
-      "functions": 58,
+      "functions": 60,
       "calculation_candidates": 1
     },
     {
@@ -97,11 +97,19 @@
     },
     {
       "file": "bin/deepbom.mjs",
-      "sha256": "e63e15ecb72ca0165548e4a8703c58bff302f31d12f9577bf94a02e407fee63f",
+      "sha256": "c461986d88b71ba4cb0f54d6504fb043697b454c1b0a1300dedb9056026fe645",
       "language": "mjs",
       "role": "runtime",
       "functions": 205,
       "calculation_candidates": 23
+    },
+    {
+      "file": "bin/evidence-workflow.mjs",
+      "sha256": "b022f5bfc2bf41b4b359afd4671ee19c863106e04a0f70833cc89ed141855f74",
+      "language": "mjs",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
     },
     {
       "file": "bin/graph-png-export.mjs",
@@ -177,7 +185,7 @@
     },
     {
       "file": "channels/python/src/deepbom/__init__.py",
-      "sha256": "064b23840724c103978f111930d7b3d711672e3acc8daf12f2c1dbc6d7ad3177",
+      "sha256": "2198218eb8ed8bfd1842e7dfe9276f34a8c3f1dced636d73feca365b298126b5",
       "language": "py",
       "role": "runtime",
       "functions": 0,
@@ -209,10 +217,10 @@
     },
     {
       "file": "channels/python/src/deepbom/_native/adapters.py",
-      "sha256": "f72a03099d25b46954ac64e58d4ecf97a9cdf5df634bfbad694e8c77aebe5658",
+      "sha256": "e3f8d1519d1b0cc328e47780ce1faa2850971fa6ec4bf85c9f717dd76136b796",
       "language": "py",
       "role": "runtime",
-      "functions": 8,
+      "functions": 10,
       "calculation_candidates": 0
     },
     {
@@ -224,16 +232,40 @@
       "calculation_candidates": 0
     },
     {
-      "file": "channels/python/src/deepbom/api.py",
-      "sha256": "81f76075e915cdc5fa65d048c90e67550bee2e12a9a443ad79e2e8d2f9e608fb",
+      "file": "channels/python/src/deepbom/_report_fonts.py",
+      "sha256": "e03357ac62b5f964040e734564fa6e77d60c397b5bf9402b6073f9ec2a89ac37",
       "language": "py",
       "role": "runtime",
-      "functions": 26,
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/api.py",
+      "sha256": "6e2d7da5cf5685d5b1f491bb28e7ab8b1388219ddaf011f7f21373c5e2cae6c7",
+      "language": "py",
+      "role": "runtime",
+      "functions": 27,
       "calculation_candidates": 1
     },
     {
+      "file": "channels/python/src/deepbom/evidence.py",
+      "sha256": "42620802c36f29acf25223f289e8e4ce82ff133f626af000915f5a47d8c82be6",
+      "language": "py",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/evidence_render.py",
+      "sha256": "29e803fe214cbd990f028a26a56435e48e9d8e49542a0504f55ceac7cada0a5d",
+      "language": "py",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
       "file": "channels/python/src/deepbom/optimization/__init__.py",
-      "sha256": "c8069b5a383a8f292601873011956988463b42c45374ca4bed5e1d6c388da10d",
+      "sha256": "87ef481a77bb7efe73807f2db2ef35846ec3f87a2e4d9b3a49609a73927ef3c8",
       "language": "py",
       "role": "runtime",
       "functions": 18,
@@ -249,10 +281,10 @@
     },
     {
       "file": "channels/python/src/deepbom/optimization/_models.py",
-      "sha256": "954561194687dbd0de6909b90ee0579df4f63585aadd8bec77696722e9d04c08",
+      "sha256": "cc8fa4c1cbc0bb7265bd401151d51de1bb1495523840147f130d475c5e66e829",
       "language": "py",
       "role": "runtime",
-      "functions": 9,
+      "functions": 10,
       "calculation_candidates": 0
     },
     {
@@ -289,10 +321,10 @@
     },
     {
       "file": "channels/python/src/deepbom/optimization/report.py",
-      "sha256": "eee8ae2ec761f75c33689539acb5d2b28e07e6e955326f03c61fe0cc050e5ed9",
+      "sha256": "4c5a5a52e0af4d9eacb6e13a38bbc4a21f36797d887b5d045ddd017f1104d2a7",
       "language": "py",
       "role": "runtime",
-      "functions": 16,
+      "functions": 15,
       "calculation_candidates": 0
     },
     {
@@ -321,7 +353,7 @@
     },
     {
       "file": "channels/python/src/deepbom/training/collector.py",
-      "sha256": "4d4fc4f16db70182a7a1a78a265da69e552964f36f16b0f38f6caed9db46cc3a",
+      "sha256": "d53dfe55782ab92c56418493e153f600a1738234398c2f5be9395a2fbe15f364",
       "language": "py",
       "role": "runtime",
       "functions": 18,
@@ -329,7 +361,7 @@
     },
     {
       "file": "channels/python/src/deepbom/training/integrations.py",
-      "sha256": "a43c3d17af8978008df395fefc70e19e251214a85e4d671a82904308d7935358",
+      "sha256": "c94e367956c45cdf3f5947518e25507d857d55fbb06c4dd5b33ab1e41219e507",
       "language": "py",
       "role": "runtime",
       "functions": 3,
@@ -729,7 +761,7 @@
     },
     {
       "file": "web/app.js",
-      "sha256": "5c6c359e558df033d09eb77909af65c5e94a37a09322ce55e51739e79c5f9e43",
+      "sha256": "a0aeeabdd7a09dcce5ecc239f15ae63f65f3aee184879b3f4bcfe455385611cc",
       "language": "js",
       "role": "runtime",
       "functions": 596,
@@ -753,7 +785,7 @@
     },
     {
       "file": "web/chatgpt/deepbom-widget.js",
-      "sha256": "db489a5099fa09e6938cf31c1b6c29655a6d2ed39b81b88de07a86364794a2ed",
+      "sha256": "afbfc713f10db9b825295cd2d61d39896fd2e5f03ab45487ece6280d4596391d",
       "language": "js",
       "role": "runtime",
       "functions": 105,
@@ -761,7 +793,7 @@
     },
     {
       "file": "web/claude/deepbom-widget.js",
-      "sha256": "7356b15f312bd970045a6d96f251be56d454e45a845025b7071699ad6bd3698f",
+      "sha256": "d511a8c13dca3d5095130c646bace578ed47423cf0dfd92a4d7027baa8e39d20",
       "language": "js",
       "role": "runtime",
       "functions": 33,
@@ -921,7 +953,7 @@
     },
     {
       "file": "web/lib/app-config.js",
-      "sha256": "4a04e9411496aad7ed2ffb3fa67d74574354b6fda8cac405921a9781a274266a",
+      "sha256": "bb8861ffc28ee67b07948536b8ba5ee769b4bd0168b795694ff50c82e9b2e109",
       "language": "js",
       "role": "runtime",
       "functions": 15,
@@ -1006,6 +1038,14 @@
       "role": "runtime",
       "functions": 34,
       "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/artifact-evidence-workflow.js",
+      "sha256": "d6b33b52b4c12f1e92a7d1ae012fe35d98f82eded9340952f0a9fd8ccd3731f1",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/artifact-ir-context.js",
@@ -1201,7 +1241,7 @@
     },
     {
       "file": "web/lib/build-metadata.js",
-      "sha256": "8e5f29b087f8f8fcb34a99e4321a74e5c16901f3f75733d763e29704c9f0f54f",
+      "sha256": "e9ed65bf4c0eaa2b8f29fec2680b7754d699f496ed91b470514bdb4567a7ce73",
       "language": "js",
       "role": "runtime",
       "functions": 0,
@@ -1226,6 +1266,14 @@
     {
       "file": "web/lib/calibration-validation-view.js",
       "sha256": "014851d6a1d9e1d021e7c5c042bdc72d72fe83651e9d0e9e5ab852fff31aa94c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/change-review.js",
+      "sha256": "461ff2f313d2dbfbad6a5988c030382ea5e5343bb412008cf14290364ebab8a7",
       "language": "js",
       "role": "runtime",
       "functions": 18,
@@ -1464,6 +1512,14 @@
       "calculation_candidates": 2
     },
     {
+      "file": "web/lib/deployment-evidence.js",
+      "sha256": "f4323cfbab36e221249c45000c46dd4027a57c2660bdc6b4aa2163628eab6f81",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
       "file": "web/lib/deployment-frontier.js",
       "sha256": "b6bcd9cc3ea79a0142ec3b5c89dc70f9b1ded1d4e72b82145a1f3b2b0273f30e",
       "language": "js",
@@ -1520,6 +1576,14 @@
       "calculation_candidates": 0
     },
     {
+      "file": "web/lib/evaluation-evidence.js",
+      "sha256": "491d99db6c05de345f0cc0b76d0d8a0e5352dc7d0ec4c77dbf8a05ec8dc28786",
+      "language": "js",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 1
+    },
+    {
       "file": "web/lib/evidence-applicability.js",
       "sha256": "52532f4c39378ba9907af6a88ecb2d94bf488c391a0a6801ccb72559247dbb1d",
       "language": "js",
@@ -1536,6 +1600,14 @@
       "calculation_candidates": 0
     },
     {
+      "file": "web/lib/evidence-context.js",
+      "sha256": "971b418b9eec746cf164a888339201c9741705efb4ff3c10218bffcedcaef278",
+      "language": "js",
+      "role": "runtime",
+      "functions": 29,
+      "calculation_candidates": 0
+    },
+    {
       "file": "web/lib/evidence-cursor.js",
       "sha256": "1d4c8c586f66a872ef4a5eb8ad00b01059cbb0b4d80413483d4d20b4ee940931",
       "language": "js",
@@ -1544,8 +1616,16 @@
       "calculation_candidates": 0
     },
     {
+      "file": "web/lib/evidence-identity.js",
+      "sha256": "3813559fef49956c1352a3ebd6b7db8ee1cad1aa83eb728d705540b64babd4b7",
+      "language": "js",
+      "role": "runtime",
+      "functions": 17,
+      "calculation_candidates": 1
+    },
+    {
       "file": "web/lib/evidence-ir.js",
-      "sha256": "7543ccab58880bac318b697e2b55ecac208eaaff1fc59ee345fdb55a3c2ced79",
+      "sha256": "9f998d5b697b1d13662b9e673b9b36e664c43ee8ede3060dae982611a4ac0957",
       "language": "js",
       "role": "runtime",
       "functions": 2,
@@ -1600,6 +1680,14 @@
       "calculation_candidates": 1
     },
     {
+      "file": "web/lib/evidence-standard-projection.js",
+      "sha256": "cd91245c0e0eeda391a3d3702acca312cb301633039e7181b6c54b318405ec3f",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
       "file": "web/lib/evidence-treemap.js",
       "sha256": "c566dc324ae69967b44b20e1c98fa363a4cfbf6c0a8f4da41e6131651f126da5",
       "language": "js",
@@ -1624,6 +1712,46 @@
       "calculation_candidates": 0
     },
     {
+      "file": "web/lib/evidence-workflow-omop.js",
+      "sha256": "6374eb958ff71dddd3ba21d4e5b46237a924eb3aef61e23c7411952355a55562",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-workflow-page.js",
+      "sha256": "cbd1007e4e2f25f0bed1883ea382d77941702132043a8db2486452b4ff1734fb",
+      "language": "js",
+      "role": "runtime",
+      "functions": 15,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-workflow-report.js",
+      "sha256": "ec0619fdeb0252d2ce51806ad6b7f3d13e43359d7126cc869e560421e13bcc45",
+      "language": "js",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-workflow-worker.js",
+      "sha256": "d551d12e9e8b3c6037239b909b352dae39a4be257d7533ccae1d46ef249e900a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/evidence-workflow.js",
+      "sha256": "e8707dee299f8ab79f209599e586d67d468667545afda9a85900275e62475e3a",
+      "language": "js",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
+    },
+    {
       "file": "web/lib/exact-integer.js",
       "sha256": "9bc3b0e87fd01c86dfa516ae90f572b724f7a0b86f79f972361e0950b060fbef",
       "language": "js",
@@ -1633,11 +1761,11 @@
     },
     {
       "file": "web/lib/exact-rational.js",
-      "sha256": "38d8f710054cce4d4d12c68634c557d431e6719ce68b149b7e3214ef126243c4",
+      "sha256": "b6f6c089241914fa1973266bd760f39d66f0c86a5a2adff9882b7cd3df9733b8",
       "language": "js",
       "role": "runtime",
-      "functions": 2,
-      "calculation_candidates": 1
+      "functions": 10,
+      "calculation_candidates": 8
     },
     {
       "file": "web/lib/execution-placement-evidence.js",
@@ -1961,7 +2089,7 @@
     },
     {
       "file": "web/lib/ir-evidence-contract.js",
-      "sha256": "fe3e5f6daf8411ce81860755a6dc3717fdd8b530f6e5709fa8989f467b3cd757",
+      "sha256": "c7f352d49920d0a0d3070aa60254d89aebd3d84af644c7d2490839b0518e2fe1",
       "language": "js",
       "role": "runtime",
       "functions": 5,
@@ -2241,7 +2369,7 @@
     },
     {
       "file": "web/lib/native-evidence.js",
-      "sha256": "270054cfdb502ce905b236763adc5b78877478a8529a058b7239b5de3725f522",
+      "sha256": "2a91bde14da0f4c4c5bef8f073e17bab813ff47c25822105722ebb9e27420de2",
       "language": "js",
       "role": "runtime",
       "functions": 76,
@@ -2976,6 +3104,14 @@
       "calculation_candidates": 0
     },
     {
+      "file": "web/lib/provenance-v2.js",
+      "sha256": "a4604de4d1552fb69ea9f43bec9939c8440f410d6469432e8cfda639152e1283",
+      "language": "js",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 0
+    },
+    {
       "file": "web/lib/provenance/bom-reference.js",
       "sha256": "cd15d21aeed8463d85bce8144b326560b8d33cad755a6ed28f40318dd297c129",
       "language": "js",
@@ -3569,7 +3705,7 @@
     },
     {
       "file": "web/lib/review-policy.js",
-      "sha256": "4547d33de6fdacae604cca47b22a0953e7bf0bd5fc0e9bfa4d0672b7b13f29c0",
+      "sha256": "36b30e3404642e03c904c1441961613fc820d670beedaf10fa21c8aebf32dde0",
       "language": "js",
       "role": "runtime",
       "functions": 25,
@@ -3657,7 +3793,7 @@
     },
     {
       "file": "web/lib/runtime-evidence-sidecar.js",
-      "sha256": "72771618980755a16a9f3c591077a4a3cf749016c39e4997ded5c5d0570ddcce",
+      "sha256": "e75de192bfdc9c694f7071dfd51cd51d316d5b5416d37f43ff647213f6510b1b",
       "language": "js",
       "role": "runtime",
       "functions": 21,
@@ -3824,11 +3960,19 @@
       "calculation_candidates": 0
     },
     {
-      "file": "web/lib/spdx-artifact-export.js",
-      "sha256": "668ef678cd44950115cbb4d53ac1611490766b646f29d129c7f39280ac0f9ef0",
+      "file": "web/lib/snapshot-ir.js",
+      "sha256": "1547b6f9d1c87efa37a31ee252c81a1d7740bbf9b090221eb9797f8ce070f4b8",
       "language": "js",
       "role": "runtime",
-      "functions": 3,
+      "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/spdx-artifact-export.js",
+      "sha256": "35d71a337543bf98d28a9ae344c749075374efce0ae4ac7f45f89a926dcace36",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
       "calculation_candidates": 0
     },
     {
@@ -4137,7 +4281,7 @@
     },
     {
       "file": "web/lib/workflow-catalog.js",
-      "sha256": "dc3011ba9c4732e173b8dd7750a928c9a807b2e8ae4f285776516e852affdfa9",
+      "sha256": "8c3029c5b591ef36a74ed399d026519bbce37ff84bd0635558cf5799e225d2db",
       "language": "js",
       "role": "runtime",
       "functions": 10,
@@ -4217,7 +4361,7 @@
     },
     {
       "file": "web/sw.js",
-      "sha256": "fe5fa366430b6c5795e8f1fe921aca4eb5f1968ed50767128660b93d0fd0bf3b",
+      "sha256": "dc10621611832110cc36743b1c9a04b9245b87089163f14a29c8c37c0093565a",
       "language": "js",
       "role": "runtime",
       "functions": 18,
@@ -4426,12 +4570,12 @@
         {
           "file": "web/chatgpt/deepbom-widget.js",
           "name": "formatBytes",
-          "line": 1117
+          "line": 1114
         },
         {
           "file": "web/claude/deepbom-widget.js",
           "name": "formatBytes",
-          "line": 400
+          "line": 398
         }
       ],
       "disposition": {

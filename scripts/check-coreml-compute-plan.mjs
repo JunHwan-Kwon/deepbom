@@ -60,6 +60,7 @@ assert.deepEqual(parsed.runtime.available_compute_devices.map((device) => device
 assert.match(parsed.normalized_manifest_sha256, /^[a-f0-9]{64}$/);
 
 const runtime = buildRuntimeEvidence({ analysis, runtimeAssignmentEvidence: parsed });
+assert.ok(runtime.runtime_evidence_sidecar, "validated runtime evidence must project through the common sidecar");
 assert.equal(runtime.runtime_assignment, null);
 assert.equal(runtime.coreml_compute_plan.structure.operation_count, 2);
 assert.equal(runtime.assessments.coreml_compute_plan.status, "assessed");

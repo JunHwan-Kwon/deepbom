@@ -3,6 +3,8 @@ import { runNode } from "./run-utils.mjs";
 // Keep the production gate deterministic and fast. Browser matrices, corpus
 // sweeps, and exhaustive research checks run in the Full Quality workflow.
 const CHECKS = [
+  "scripts/generate-evidence-workflow-schema.mjs --check",
+  "scripts/check-evidence-workflow.mjs",
   "scripts/write-build-metadata.mjs",
   "scripts/check-build-metadata.mjs",
   "scripts/check-js.mjs",

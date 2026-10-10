@@ -47,7 +47,7 @@ The machine-readable naming and identity owner is [`web/lib/evidence-ir.js`](../
 
 ## Provenance contract
 
-The current implementation uses only `deepbom.provenance_ir.v1`, the digest field `provenance_ir_sha256`, and the `provenance_ir` CLI/MCP section. `provenance-ir.js` owns the implementation directly. The generic input and bounded summary have their own identities: `deepbom.provenance_input.v1` and `deepbom.provenance_summary.v1`. No retired-name aliases are supported. See [the explicit transition rules](MIGRATION.md) before using older documents.
+The artifact metadata path uses `deepbom.provenance_ir.v1`, the digest field `provenance_ir_sha256`, and the `provenance_ir` CLI/MCP section. `provenance-ir.js` owns the implementation directly. The generic input and bounded summary have their own identities: `deepbom.provenance_input.v1` and `deepbom.provenance_summary.v1`. No retired-name aliases are supported. See [the explicit transition rules](MIGRATION.md) before using older documents.
 
 ```sh
 # Run from a DEEPBOM 2.0.0 source checkout.
@@ -82,10 +82,19 @@ Snapshot; Training IR v1 references ordered observations and their available
 state bindings. The artifact-bound v1 members keep their original contracts.
 A snapshot digest must never be substituted for an artifact-file digest.
 
+The additive **Snapshot IR** and typed Provenance v2 workflow is implemented in
+[the shared evidence workflow](SNAPSHOT_WORKFLOW.md). It links existing native
+state, dataset/configuration manifests and external evaluations without changing
+older member digests. The additive family entry point is
+`deepbom-evidence-ir-v3.schema.json`. See the implementation guide for exact
+Web/CLI/SDK/local-MCP support and hosted continuation limits. These are
+DEEPBOM-maintained contracts, not an externally approved standard.
+
 Run completion, checkpoint selection, evaluation and release decisions remain
-independent. A missing state binding stays explicit. The current Provenance
-builder and existing BOM projections support artifact-bound Model IR; they do not
-automatically cover native Training records. See the [qualified APIs](../NATIVE_MODEL_TRAINING_GUIDE.md).
+independent. A missing state binding stays explicit. The existing artifact Provenance v1/BOM route and the new typed Provenance v2
+route have explicit contracts. Native Training records retain their ordered
+chunk and source dependencies. New standard projections preserve the full source
+document separately and report mapping loss. See the [qualified APIs](../NATIVE_MODEL_TRAINING_GUIDE.md).
 
 Saved optimization reports share state-identity correspondence validation with
 native bundle comparison. Distribution claims still require their original

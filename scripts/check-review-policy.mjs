@@ -13,7 +13,7 @@ const policy = {
   exceptions: [{
     id: "accepted-EA-1",
     finding_id: "EA-1",
-    subject_ref: "op:7",
+    subject_ref: null,
     reason: "Accepted until the pinned deployment is replaced.",
     owner: "release-owner",
     created_at: "2026-08-01T00:00:00.000Z",
@@ -37,6 +37,16 @@ const envelope = {
 const pass = evaluateReviewPolicy(envelope, policy, { analyzerVersion: "1.96.0", rulepackVersion: "1.96.0", evaluatedAt: "2026-08-31T00:00:00.000Z" });
 assert.equal(pass.status, "pass");
 assert.equal(pass.finding_policy.exception_suppressed_finding_count, 1);
+const evaluation = { analyzerVersion: "1.96.0", rulepackVersion: "1.96.0", evaluatedAt: "2026-08-31T00:00:00.000Z" };
+for (const subject_ref of ["op:7", "nonexistent-subject"]) {
+  const scoped = evaluateReviewPolicy(envelope, { ...policy, exceptions: [{ ...policy.exceptions[0], subject_ref }] }, evaluation);
+  assert.equal(scoped.status, "block");
+  assert.equal(scoped.exceptions[0].status, "unsupported_subject_scope");
+}
+const future = evaluateReviewPolicy(envelope, policy, { ...evaluation, evaluatedAt: "2026-07-01T00:00:00Z" });
+assert.equal(future.exceptions[0].status, "not_yet_effective");
+assert.equal(future.status, "block");
+assert.equal(evaluateReviewPolicy(envelope, policy, { ...evaluation, evaluatedAt: null }).exceptions[0].status, "time_not_assessed");
 
 const expired = evaluateReviewPolicy(envelope, policy, { analyzerVersion: "1.96.0", rulepackVersion: "1.96.0", evaluatedAt: "2026-09-01T00:00:00.000Z" });
 assert.equal(expired.status, "block");
@@ -57,6 +67,7 @@ const conditionBound = validateReviewPolicy({
   exceptions: [{ ...policy.exceptions[0], expires_at: null, expires_when: "The bound target profile is replaced." }],
 });
 assert.equal(conditionBound.exceptions[0].expires_when, "The bound target profile is replaced.");
+assert.equal(evaluateReviewPolicy(envelope, conditionBound, evaluation).exceptions[0].status, "condition_not_assessed");
 assert.throws(() => validateReviewPolicy({
   ...policy,
   exceptions: [{ ...policy.exceptions[0], expires_at: null }],

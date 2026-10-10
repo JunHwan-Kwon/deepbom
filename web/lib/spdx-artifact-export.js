@@ -3,6 +3,11 @@ import { ANALYZER_SEMANTIC_VERSION } from "./app-config.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 
+export function spdxFilePurposePackage({id, name, sha256, licenseComments}) {
+  if (!/^SPDXRef-[A-Za-z0-9.-]+$/.test(id) || typeof name !== "string" || !name || !/^[a-f0-9]{64}$/.test(sha256)) throw new Error("SPDX file-purpose package requires a valid identifier, filename and SHA-256.");
+  return {SPDXID:id,name,packageFileName:name,primaryPackagePurpose:"FILE",downloadLocation:"NOASSERTION",filesAnalyzed:false,checksums:[{algorithm:"SHA256",checksumValue:sha256}],licenseConcluded:"NOASSERTION",licenseDeclared:"NOASSERTION",copyrightText:"NOASSERTION",...(licenseComments?{licenseComments}:{})};
+}
+
 // SPDX 2.3 FILE-purpose packages: file-level license scanning is not performed.
 // These preserve the measured SHA-256 without inventing the SHA-1 required by
 // SPDX File records, an SPDX 3 AI profile, or runtime software dependencies.
@@ -16,17 +21,10 @@ export function buildSpdxArtifactDocument(envelope, { generatedAt = new Date().t
   const identity = envelope.identity;
   const boundary = "Inventory of the selected serialized model artifact and verified external files only. Software dependencies, training data, runtime placement, model quality, and license conclusions are not inferred. Static findings are DEEPBOM annotations, not SPDX AI-profile fields.";
   const packages = [{ path: identity.filename, sha256: identity.sha256 }, ...(envelope.external_files || [])]
-    .map((file, index) => ({
-      SPDXID: index === 0 ? "SPDXRef-Artifact" : `SPDXRef-File-${sha256TextHex(file.path)}`,
+    .map((file, index) => spdxFilePurposePackage({
+      id: index === 0 ? "SPDXRef-Artifact" : `SPDXRef-File-${sha256TextHex(file.path)}`,
       name: file.path,
-      packageFileName: file.path,
-      primaryPackagePurpose: "FILE",
-      downloadLocation: "NOASSERTION",
-      filesAnalyzed: false,
-      checksums: [{ algorithm: "SHA256", checksumValue: file.sha256 }],
-      licenseConcluded: "NOASSERTION",
-      licenseDeclared: "NOASSERTION",
-      copyrightText: "NOASSERTION",
+      sha256: file.sha256,
       licenseComments: "DEEPBOM static artifact inspection does not determine the file's license or copyright.",
     }));
   const document = {

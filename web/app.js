@@ -203,7 +203,7 @@ import {
 import { getArtifactIrContext, invalidateArtifactIrContext, requireArtifactIrConsumerView, isArtifactIrConsumerView } from "./lib/artifact-ir-context.js";
 import { renderArtifactDossier } from "./lib/artifact-dossier-view.js";
 import { buildArtifactEvidenceEnvelope } from "./lib/artifact-evidence-envelope.js";
-import { buildReviewSummary } from "./lib/review-summary.js";
+import { finishArtifactEvidenceWorkflow } from "./lib/artifact-evidence-workflow.js";
 import { bindReviewSummaryActions, renderReviewSummary } from "./lib/review-summary-view.js";
 import { buildSingleFileArtifactSet } from "./lib/artifact-set.js";
 import { exportGraphVisualization } from "./lib/graph-export.js";
@@ -4573,16 +4573,12 @@ async function render(analysis, { keepTab = false, keepModule = false } = {}) {
 }
 
 function renderCurrentReviewSummary(analysis) {
-  const envelope = buildArtifactEvidenceEnvelope(analysis, {
+  const { summary } = finishArtifactEvidenceWorkflow(currentArtifactIrContext, {
     hash: analysis?.model_sha256,
     fileSizeBytes: analysis?.file_size_bytes ?? analysis?.file_size,
     runtimeEvidence: runtimeAssignmentEvidence,
   });
-  renderReviewSummary(reviewSummaryPanel, buildReviewSummary({
-    analysis,
-    envelope,
-    artifactIrContext: currentArtifactIrContext,
-  }));
+  renderReviewSummary(reviewSummaryPanel, summary);
 }
 
 function applyPendingConversionReceipt(analysis) {

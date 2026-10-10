@@ -21,6 +21,9 @@ web/reports/*
 !web/reports/optimization/
 web/reports/optimization/*
 !web/reports/optimization/index.html
+!web/reports/evidence/
+web/reports/evidence/*
+!web/reports/evidence/index.html
 reference/
 !reference/
 reference/*

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { finishArtifactEvidenceWorkflow } from "../web/lib/artifact-evidence-workflow.js";
 import { shapeElementCount } from "../web/lib/tensor-size.js";
 
 import { createHash } from "node:crypto";
@@ -115,11 +116,12 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "2.2.0";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "2.3.0";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 const EXPECTED_SELF_TEST_SHA256 = typeof __DEEPBOM_SELF_TEST_SHA256__ === "string" ? __DEEPBOM_SELF_TEST_SHA256__ : "";
 
 async function main(argv) {
+  if(argv[0]==="evidence-workflow") { const {runEvidenceCommand}=await import("./evidence-workflow.mjs");return runEvidenceCommand(argv.slice(1)); }
   if(argv[0]==="optimization-report") { const {runOptimizationReport}=await import("./optimization-report.mjs");return runOptimizationReport(argv.slice(1)); }
   if(argv[0]==="evidence-native") { const { runNativeEvidence }=await import("./deepbom-native-evidence.mjs");return runNativeEvidence(argv.slice(1)); }
   const parsed = parseArguments(argv);
@@ -481,7 +483,7 @@ async function main(argv) {
   if (parsed.command === "explore") return runExploreCommand(parsed, analysisView, artifact, input, targetBinding.value);
 
   const generatedAt = resolveGenerationTimestamp(parsed.timestamp);
-  const envelope = buildArtifactEvidenceEnvelope(analysisView, {
+  const { envelope, summary: reviewSummary } = finishArtifactEvidenceWorkflow(artifactIrContext, {
         hash: artifactSha256,
         fileSizeBytes: artifact.size,
         filename: artifact.filename,
@@ -493,9 +495,6 @@ async function main(argv) {
           target_profile_id: analysis.target_profile?.id || null,
         },
       });
-  const validation = validateArtifactEvidenceEnvelope(envelope);
-  if (!validation.valid) throw new Error(`Canonical evidence envelope validation failed: ${validation.errors.join(", ")}`);
-  const reviewSummary = buildReviewSummary({ analysis: analysisView, envelope, artifactIrContext });
   const policyResult = reviewPolicy
     ? evaluateReviewPolicy(envelope, reviewPolicy, {
         analyzerVersion: VERSION,
@@ -2923,6 +2922,7 @@ function printHelp(command) {
   process.stdout.write("\nN-way placement comparison:\n  deepbom placement <artifact> [--profiles <id,id|all>] [--json|--compact]\n  --profiles <ids|all>   Compare selected independent profiles (default: all available profiles)\n");
   process.stdout.write("\nCompiled accelerator evidence:\n  --coreml-compute-plan <json>\n                          Import an artifact- and compiled-model-bound MLComputePlan estimate; not executed placement\n  --edgetpu-compiler-evidence <json>\n                          Import an artifact/compiler/invocation/compiled-artifact-bound Edge TPU operation ledger\n  --litert-qualcomm-evidence <json>\n                          Import an artifact/source/compiler/QNN-plan-bound operation ledger\n");
   process.stdout.write("\nConversion provenance:\n  --conversion-receipt <json>\n                          Bind a self-hashed source/converter/environment receipt to the observed output artifact. Source .pt/.pth/.h5 files are identified by digest only and are never deserialized.\n");
+  process.stdout.write("\nSnapshot, provenance, evaluation and change review: deepbom evidence-workflow --help\n");
   process.stdout.write("\nSaved optimization reports: deepbom optimization-report <report.json> --help\n");
   process.stdout.write("\nNVIDIA accelerator observation:\n  deepbom accelerator collect nvidia [--device <index>] [--json|--compact]\n  --device <index>        Collect one NVIDIA device index (default: all devices)\n  --include-device-identifiers\n                          Include raw GPU UUID and PCI bus ID; hashes are always emitted\n");
   process.stdout.write("\nRemote immutable artifact input:\n  hf://owner/repo@<40-hex-commit>/path\n  gs://bucket/object#generation=<generation>\n  https://host/path#sha256=<64-hex>\n  --expected-sha256 <hex> Add an independent content digest requirement\n  --cache-dir <directory> Use a content-addressed cache directory\n  --offline               Refuse network access and require a verified cache receipt\n  --max-download-gib <n>  Bound one remote download (default: 50, maximum: 1024)\n");

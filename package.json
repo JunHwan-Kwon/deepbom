@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "mcpName": "io.github.JunHwan-Kwon/deepbom",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
   "homepage": "https://deepbom.org",
@@ -340,7 +340,9 @@
     "check:native-evidence": "node scripts/check-native-evidence.mjs",
     "check:native-training": "python scripts/check-native-training.py",
     "check:optimization-report": "python scripts/check-optimization-report.py",
-    "check:training-board": "node scripts/check-training-board.mjs"
+    "check:training-board": "node scripts/check-training-board.mjs",
+    "check:evidence-workflow": "node scripts/check-evidence-workflow.mjs && node scripts/check-evidence-workflow-channels.mjs",
+    "check:native-correctness": "python scripts/check-native-correctness-regressions.py"
   },
   "keywords": [],
   "author": "",

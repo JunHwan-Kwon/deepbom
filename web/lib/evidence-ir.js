@@ -19,3 +19,12 @@ export const EVIDENCE_IR_LAYERS = Object.freeze([
   { id: "provenance", name: "Provenance IR", schema: PROVENANCE_IR_SCHEMA, section: "provenance_ir", digest_field: PROVENANCE_DIGEST_FIELD, optional: true, json_schema: schema("deepbom-provenance-ir-v1.schema.json") },
 ].map(Object.freeze));
 export const PROVENANCE_IR = EVIDENCE_IR_LAYERS.find(layer => layer.id === "provenance");
+
+// Additive family: preserve the historical v1/v2 family documents and identifiers.
+export const SNAPSHOT_IR_SCHEMA = "deepbom.snapshot_ir.v1";
+export const TYPED_PROVENANCE_IR_SCHEMA = "deepbom.provenance_ir.v2";
+export const CURRENT_EVIDENCE_IR_FAMILY = schema("deepbom-evidence-ir-v3.schema.json");
+export const ADDITIONAL_EVIDENCE_IR_LAYERS = Object.freeze([
+  Object.freeze({id:"snapshot",name:"Snapshot IR",schema:SNAPSHOT_IR_SCHEMA,digest_field:"snapshot_ir_sha256",optional:true,json_schema:schema("deepbom-evidence-workflow-v1.schema.json#/$defs/snapshot")}),
+  Object.freeze({id:"typed-provenance",name:"Typed Provenance IR",schema:TYPED_PROVENANCE_IR_SCHEMA,digest_field:"provenance_ir_sha256",optional:true,json_schema:schema("deepbom-evidence-workflow-v1.schema.json#/$defs/provenance")}),
+]);

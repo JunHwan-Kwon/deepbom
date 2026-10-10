@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+from urllib.parse import quote
 from pathlib import Path
 from .collector import Recorder
 from .._native.core import EvidenceStore, read_json, atomic_json, content_hash, engine
@@ -86,15 +87,23 @@ def import_logs(
             for tag in accumulator.Tags().get("tensors", []):
                 from tensorboard.util.tensor_util import make_ndarray
 
+                name, phase = tag, None
+                try:
+                    metadata = json.loads(accumulator.SummaryMetadata(tag).summary_description)
+                    if metadata.get("schema") == "deepbom.tensorboard_metric.v1" and isinstance(metadata.get("name"), str) and (metadata.get("phase") is None or isinstance(metadata.get("phase"), str)):
+                        name, phase = metadata["name"], metadata.get("phase")
+                except (ValueError, TypeError, KeyError, AttributeError):
+                    pass
                 for event in accumulator.Tensors(tag):
                     array = make_ndarray(event.tensor_proto)
                     if array.size == 1 and array.dtype.kind in "fiub":
                         recorder.record_metrics(
-                            {tag: array.item()},
+                            {name: array.item()},
                             at={
                                 "native_step": str(event.step),
                                 "wall_time": event.wall_time,
                                 "step_meaning": "logger_defined",
+                                **({"phase":phase} if phase is not None else {}),
                             },
                             definition="TensorBoard tensor scalar",
                         )
@@ -208,7 +217,7 @@ def export(
             "run_id": run_id,
             "logdir": str(logdir) if logdir else None,
             "digest": digest,
-            "projection": "2.0.0",
+            "projection": "2.1.0",
         }
     )
     receipt = root / "exports" / (key + ".json")
@@ -263,12 +272,13 @@ def export(
                                     summary=Summary(
                                         value=[
                                             Summary.Value(
-                                                tag=name,
+                                                tag=(quote(str(event["at"].get("phase", "unspecified")), safe="") + "/" + quote(name, safe="")),
                                                 tensor=TensorProto(
                                                     dtype=DT_DOUBLE,
                                                     double_val=[float(value)],
                                                 ),
                                                 metadata=SummaryMetadata(
+                                                    summary_description=json.dumps({"schema":"deepbom.tensorboard_metric.v1","name":name,"phase":event["at"].get("phase")},allow_nan=False),
                                                     plugin_data=SummaryMetadata.PluginData(
                                                         plugin_name="scalars"
                                                     )
@@ -302,7 +312,9 @@ def export(
         "destination": destination,
         "status": "submitted",
         "remote_exactly_once": False,
-        "projection": "2.0.0",
+        "projection": "2.1.0",
+        "metric_axis": "training_event_sequence",
+        "metric_series": "phase/name; original coordinates retained in evidence JSON",
         "event_logdir": (
             str(Path(logdir) / "deepbom" / digest)
             if destination == "tensorboard"

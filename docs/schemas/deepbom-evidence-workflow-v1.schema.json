@@ -1,0 +1,1938 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-evidence-workflow-v1.schema.json",
+  "title": "DEEPBOM evidence workflow contracts",
+  "description": "Structural contract. Source bindings, exact counts, arithmetic and digests require the common semantic workflow. Document consistency does not authenticate declarations.",
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "artifact_file",
+            "artifact_set",
+            "native_state",
+            "snapshot",
+            "evidence_document"
+          ]
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "digest_scope": {
+          "enum": [
+            "file_bytes",
+            "canonical_document"
+          ]
+        },
+        "subject_ref": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "schema",
+        "sha256",
+        "digest_scope",
+        "subject_ref"
+      ],
+      "additionalProperties": false
+    },
+    "identity": {
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "namespace",
+        "name",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "fixed_aspects": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true
+        },
+        "excluded_aspects": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true
+        },
+        "consistency": {
+          "enum": [
+            "adapter_declared_scope",
+            "manifest_declared_scope"
+          ]
+        }
+      },
+      "required": [
+        "fixed_aspects",
+        "excluded_aspects",
+        "consistency"
+      ],
+      "additionalProperties": false
+    },
+    "content": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "ref": {
+          "$ref": "#/$defs/subject"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "ref"
+      ],
+      "additionalProperties": false
+    },
+    "snapshot": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.snapshot_ir.v1"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "kind": {
+          "enum": [
+            "model_state",
+            "dataset_release",
+            "configuration"
+          ]
+        },
+        "identity": {
+          "$ref": "#/$defs/identity"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "contents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/content"
+          },
+          "minItems": 1,
+          "maxItems": 10000
+        },
+        "completeness": {
+          "const": "declared_scope_only"
+        },
+        "boundary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "snapshot_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "schema",
+        "method_version",
+        "kind",
+        "identity",
+        "scope",
+        "contents",
+        "completeness",
+        "boundary",
+        "snapshot_ir_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "manifest": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "enum": [
+            "deepbom.dataset_release_input.v1",
+            "deepbom.configuration_input.v1"
+          ]
+        },
+        "identity": {
+          "$ref": "#/$defs/identity"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "contents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/content"
+          },
+          "minItems": 1,
+          "maxItems": 10000
+        }
+      },
+      "required": [
+        "schema",
+        "identity",
+        "scope",
+        "contents"
+      ],
+      "additionalProperties": false
+    },
+    "metric_definition": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "analysis_unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "higher_is_better": {
+          "type": "boolean"
+        },
+        "max_regression": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "range": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "aggregation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "missing_policy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "repeated_observations": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "id",
+        "unit",
+        "analysis_unit",
+        "higher_is_better",
+        "max_regression",
+        "range",
+        "aggregation",
+        "missing_policy",
+        "repeated_observations"
+      ],
+      "additionalProperties": false
+    },
+    "protocol_input": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.evaluation_protocol.v1"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "comparison": {
+          "enum": [
+            "paired",
+            "unpaired",
+            "descriptive"
+          ]
+        },
+        "data_policy": {
+          "const": "same_release"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/metric_definition"
+          },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "required_populations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "boundary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "schema",
+        "id",
+        "comparison",
+        "data_policy",
+        "metrics",
+        "required_populations",
+        "boundary"
+      ],
+      "additionalProperties": false
+    },
+    "protocol": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.evaluation_protocol.v1"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "comparison": {
+          "enum": [
+            "paired",
+            "unpaired",
+            "descriptive"
+          ]
+        },
+        "data_policy": {
+          "const": "same_release"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/metric_definition"
+          },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "required_populations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "boundary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "protocol_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "schema",
+        "id",
+        "comparison",
+        "data_policy",
+        "metrics",
+        "required_populations",
+        "boundary",
+        "protocol_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "ci": {
+      "type": "object",
+      "properties": {
+        "low": {
+          "type": "number"
+        },
+        "high": {
+          "type": "number"
+        },
+        "level": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "resampling_unit": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repetitions": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "low",
+        "high",
+        "level",
+        "method",
+        "resampling_unit",
+        "repetitions"
+      ],
+      "additionalProperties": false
+    },
+    "measurement": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "analysis_unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "denominator": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$",
+          "maxLength": 100
+        },
+        "missing_count": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 100
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ci": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ci"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "value",
+        "unit",
+        "analysis_unit",
+        "denominator",
+        "missing_count",
+        "resolution",
+        "ci"
+      ],
+      "additionalProperties": false
+    },
+    "evaluation_input": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.evaluation_record.v1"
+        },
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "protocol": {
+          "$ref": "#/$defs/subject"
+        },
+        "dataset": {
+          "$ref": "#/$defs/subject"
+        },
+        "cohort": {
+          "$ref": "#/$defs/subject"
+        },
+        "run": {
+          "$ref": "#/$defs/subject"
+        },
+        "code": {
+          "$ref": "#/$defs/subject"
+        },
+        "environment": {
+          "$ref": "#/$defs/subject"
+        },
+        "configuration": {
+          "$ref": "#/$defs/subject"
+        },
+        "population": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "origin": {
+          "const": "externally_reported"
+        },
+        "comparison": {
+          "enum": [
+            "paired",
+            "unpaired",
+            "descriptive"
+          ]
+        },
+        "pair_set": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/subject"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/measurement"
+          },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "boundary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "schema",
+        "subject",
+        "protocol",
+        "dataset",
+        "cohort",
+        "run",
+        "code",
+        "environment",
+        "configuration",
+        "population",
+        "origin",
+        "comparison",
+        "pair_set",
+        "metrics",
+        "boundary"
+      ],
+      "additionalProperties": false
+    },
+    "evaluation": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.evaluation_record.v1"
+        },
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "protocol": {
+          "$ref": "#/$defs/subject"
+        },
+        "dataset": {
+          "$ref": "#/$defs/subject"
+        },
+        "cohort": {
+          "$ref": "#/$defs/subject"
+        },
+        "run": {
+          "$ref": "#/$defs/subject"
+        },
+        "code": {
+          "$ref": "#/$defs/subject"
+        },
+        "environment": {
+          "$ref": "#/$defs/subject"
+        },
+        "configuration": {
+          "$ref": "#/$defs/subject"
+        },
+        "population": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "origin": {
+          "const": "externally_reported"
+        },
+        "comparison": {
+          "enum": [
+            "paired",
+            "unpaired",
+            "descriptive"
+          ]
+        },
+        "pair_set": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/subject"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/measurement"
+          },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "boundary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "evaluation_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "schema",
+        "subject",
+        "protocol",
+        "dataset",
+        "cohort",
+        "run",
+        "code",
+        "environment",
+        "configuration",
+        "population",
+        "origin",
+        "comparison",
+        "pair_set",
+        "metrics",
+        "boundary",
+        "evaluation_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "provenance_input": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.provenance_input.v2"
+        },
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "kind": {
+                "enum": [
+                  "model_artifact",
+                  "dataset",
+                  "data_release",
+                  "manifest",
+                  "cohort_definition",
+                  "feature_contract",
+                  "software",
+                  "environment",
+                  "run",
+                  "evaluation_report",
+                  "quality_report",
+                  "protocol",
+                  "bom",
+                  "document",
+                  "model_state",
+                  "configuration"
+                ]
+              },
+              "ref": {
+                "$ref": "#/$defs/subject"
+              },
+              "attributes": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "ref"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 256
+        },
+        "relationships": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "from": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "role": {
+                "enum": [
+                  "associated_with",
+                  "uses_training_data",
+                  "uses_evaluation_data",
+                  "uses_calibration_data",
+                  "derived_from",
+                  "generated_by",
+                  "uses_code",
+                  "uses_environment",
+                  "defined_by",
+                  "uses_features",
+                  "evaluated_by",
+                  "has_quality_report",
+                  "references_bom",
+                  "documented_by"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "from",
+              "to",
+              "role"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 1024
+        }
+      },
+      "required": [
+        "schema",
+        "subject",
+        "nodes",
+        "relationships"
+      ],
+      "additionalProperties": false
+    },
+    "binding": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "$ref": "#/$defs/subject"
+            },
+            "status": {
+              "const": "matched"
+            },
+            "verification": {
+              "enum": [
+                "supplied_file_bytes",
+                "document_semantics_and_digest"
+              ]
+            },
+            "authenticity": {
+              "const": "not_verified"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          },
+          "required": [
+            "ref",
+            "status",
+            "verification",
+            "authenticity"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "$ref": "#/$defs/subject"
+            },
+            "status": {
+              "const": "unresolved"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          },
+          "required": [
+            "ref",
+            "status",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.provenance_ir.v2"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "input": {
+          "$ref": "#/$defs/provenance_input"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/binding"
+          },
+          "minItems": 0,
+          "maxItems": 257
+        },
+        "counts": {
+          "type": "object",
+          "properties": {
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "matched": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unresolved": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "total",
+            "matched",
+            "unresolved"
+          ],
+          "additionalProperties": false
+        },
+        "context_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "relationships_status": {
+          "const": "declared_unverified"
+        },
+        "attributes_status": {
+          "const": "preserved_not_semantically_assessed"
+        },
+        "status": {
+          "enum": [
+            "incomplete",
+            "no_contradiction_observed"
+          ]
+        },
+        "provenance_ir_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "schema",
+        "method_version",
+        "input",
+        "checks",
+        "counts",
+        "context_sha256",
+        "relationships_status",
+        "attributes_status",
+        "status",
+        "provenance_ir_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "review_input": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.change_review_input.v1"
+        },
+        "before": {
+          "$ref": "#/$defs/subject"
+        },
+        "after": {
+          "$ref": "#/$defs/subject"
+        },
+        "change_kind": {
+          "enum": [
+            "preserving_transformation",
+            "approximate_transformation",
+            "model_change",
+            "configuration_change"
+          ]
+        },
+        "protocol": {
+          "$ref": "#/$defs/subject"
+        },
+        "evaluations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/subject"
+          },
+          "minItems": 0,
+          "maxItems": 512
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/subject"
+          },
+          "minItems": 0,
+          "maxItems": 512
+        }
+      },
+      "required": [
+        "schema",
+        "before",
+        "after",
+        "change_kind",
+        "protocol",
+        "evaluations",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "check": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "population": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "metric": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "rule_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "rule_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "status": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_assessed"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "before": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "after": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "delta": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "delta_exact": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "delta_ci": {
+          "type": "null"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "analysis_unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "evaluation_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "pointer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            },
+            "required": [
+              "evaluation_sha256",
+              "pointer"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 2
+        },
+        "rounding_uncertainty": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rounding_uncertainty_exact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "id",
+        "population",
+        "metric",
+        "rule_id",
+        "rule_version",
+        "status",
+        "reason",
+        "before",
+        "after",
+        "delta",
+        "delta_exact",
+        "delta_ci",
+        "unit",
+        "analysis_unit",
+        "source_refs"
+      ],
+      "additionalProperties": false
+    },
+    "rule": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "owner",
+        "purpose"
+      ],
+      "additionalProperties": false
+    },
+    "review": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.change_review.v1"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "input": {
+          "$ref": "#/$defs/review_input"
+        },
+        "protocol": {
+          "$ref": "#/$defs/protocol"
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/binding"
+          },
+          "minItems": 0,
+          "maxItems": 1027
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/check"
+          },
+          "minItems": 0,
+          "maxItems": 4096
+        },
+        "counts": {
+          "type": "object",
+          "properties": {
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "pass": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fail": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "not_assessed": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "total",
+            "pass",
+            "fail",
+            "not_assessed"
+          ],
+          "additionalProperties": false
+        },
+        "structural_evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "$ref": "#/$defs/subject"
+              },
+              "status": {
+                "const": "validated_record"
+              },
+              "summary": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "ref",
+              "status",
+              "summary"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 512
+        },
+        "structural_coverage": {
+          "enum": [
+            "supplied_record",
+            "not_supplied"
+          ]
+        },
+        "criterion_scope": {
+          "const": "externally_reported_evaluations"
+        },
+        "transformation_equivalence": {
+          "const": "not_established"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "status": {
+          "enum": [
+            "criteria_met",
+            "criteria_not_met",
+            "incomplete"
+          ]
+        },
+        "decision": {
+          "const": "not_made"
+        },
+        "boundary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "review_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "schema",
+        "method_version",
+        "input",
+        "protocol",
+        "bindings",
+        "checks",
+        "counts",
+        "structural_evidence",
+        "structural_coverage",
+        "criterion_scope",
+        "transformation_equivalence",
+        "rules",
+        "status",
+        "decision",
+        "boundary",
+        "review_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "omop_input": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.omop_snapshot_input.v1"
+        },
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/subject"
+        },
+        "omop": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "subject",
+        "snapshot",
+        "omop"
+      ],
+      "additionalProperties": false
+    },
+    "deployment_input": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.deployment_context_input.v1"
+        },
+        "evaluated_configuration": {
+          "$ref": "#/$defs/subject"
+        },
+        "deployments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "configuration": {
+                "$ref": "#/$defs/subject"
+              },
+              "site": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "start": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "end": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4096
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source": {
+                "$ref": "#/$defs/subject"
+              }
+            },
+            "required": [
+              "id",
+              "configuration",
+              "site",
+              "start",
+              "end",
+              "source"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 10000
+        },
+        "execution": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "event_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                "site": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                "at": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                "clock_uncertainty_ms": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "configuration": {
+                  "$ref": "#/$defs/subject"
+                },
+                "output_state": {
+                  "enum": [
+                    "generated",
+                    "displayed",
+                    "used"
+                  ]
+                },
+                "source": {
+                  "$ref": "#/$defs/subject"
+                }
+              },
+              "required": [
+                "event_id",
+                "site",
+                "at",
+                "clock_uncertainty_ms",
+                "configuration",
+                "output_state",
+                "source"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "evaluated_configuration",
+        "deployments",
+        "execution"
+      ],
+      "additionalProperties": false
+    },
+    "deployment": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.deployment_context.v1"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "input": {
+          "$ref": "#/$defs/deployment_input"
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/binding"
+          },
+          "minItems": 0,
+          "maxItems": 20004
+        },
+        "candidate_deployments": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minItems": 0,
+          "maxItems": 10000
+        },
+        "status": {
+          "enum": [
+            "execution_not_provided",
+            "unresolved_evidence",
+            "ambiguous_or_conflicting_deployment",
+            "consistent_declared_execution"
+          ]
+        },
+        "same_as_evaluated": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boundary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "deployment_context_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "schema",
+        "method_version",
+        "input",
+        "bindings",
+        "candidate_deployments",
+        "status",
+        "same_as_evaluated",
+        "boundary",
+        "deployment_context_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "request": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.evidence_workflow_request.v1"
+        },
+        "operation": {
+          "enum": [
+            "snapshot",
+            "omop",
+            "protocol",
+            "evaluation",
+            "provenance",
+            "review",
+            "deployment",
+            "verify"
+          ]
+        },
+        "input": {
+          "type": "object"
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "minItems": 0,
+          "maxItems": 512
+        }
+      },
+      "required": [
+        "schema",
+        "operation",
+        "input",
+        "documents"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "snapshot"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "input": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/manifest"
+                  },
+                  {
+                    "$ref": "https://deepbom.org/schemas/deepbom-native-evidence-v1.schema.json#/$defs/snapshot"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "omop"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "input": {
+                "$ref": "#/$defs/omop_input"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "protocol"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "input": {
+                "$ref": "#/$defs/protocol_input"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "evaluation"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "input": {
+                "$ref": "#/$defs/evaluation_input"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "provenance"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "input": {
+                "$ref": "#/$defs/provenance_input"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "review"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "input": {
+                "$ref": "#/$defs/review_input"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "deployment"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "input": {
+                "$ref": "#/$defs/deployment_input"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "verify"
+              }
+            },
+            "required": [
+              "operation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "input": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/snapshot"
+                  },
+                  {
+                    "$ref": "#/$defs/protocol"
+                  },
+                  {
+                    "$ref": "#/$defs/evaluation"
+                  },
+                  {
+                    "$ref": "#/$defs/provenance"
+                  },
+                  {
+                    "$ref": "#/$defs/review"
+                  },
+                  {
+                    "$ref": "#/$defs/deployment"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "deepbom.evidence_workflow_result.v1"
+        },
+        "operation": {
+          "enum": [
+            "snapshot",
+            "omop",
+            "protocol",
+            "evaluation",
+            "provenance",
+            "review",
+            "deployment",
+            "verify"
+          ]
+        },
+        "request": {
+          "$ref": "#/$defs/request"
+        },
+        "file_observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/subject"
+          },
+          "minItems": 0,
+          "maxItems": 256
+        },
+        "request_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "context_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "execution_status": {
+          "const": "completed"
+        },
+        "document": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/snapshot"
+            },
+            {
+              "$ref": "#/$defs/protocol"
+            },
+            {
+              "$ref": "#/$defs/evaluation"
+            },
+            {
+              "$ref": "#/$defs/provenance"
+            },
+            {
+              "$ref": "#/$defs/review"
+            },
+            {
+              "$ref": "#/$defs/deployment"
+            }
+          ]
+        },
+        "content_checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/binding"
+          },
+          "minItems": 0,
+          "maxItems": 10000
+        },
+        "boundary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "result_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "schema",
+        "operation",
+        "request",
+        "file_observations",
+        "request_sha256",
+        "context_sha256",
+        "execution_status",
+        "document",
+        "content_checks",
+        "boundary",
+        "result_sha256"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/snapshot"
+    },
+    {
+      "$ref": "#/$defs/protocol"
+    },
+    {
+      "$ref": "#/$defs/evaluation"
+    },
+    {
+      "$ref": "#/$defs/provenance"
+    },
+    {
+      "$ref": "#/$defs/review"
+    },
+    {
+      "$ref": "#/$defs/deployment"
+    },
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/result"
+    }
+  ]
+}

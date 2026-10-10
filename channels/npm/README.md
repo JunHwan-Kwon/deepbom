@@ -8,7 +8,7 @@ and ExecuTorch.
 The Node/TypeScript SDK is available from version **2.1.0**:
 
 ```sh
-npm install deepbom@2.2.0
+npm install deepbom@2.3.0
 ```
 
 Follow the [integration walkthrough](https://github.com/JunHwan-Kwon/deepbom/blob/main/examples/integrations/README.md)
@@ -36,14 +36,27 @@ for supported options, structured errors and independent IR versioning.
 
 ## Command line
 
+For typed snapshots, lineage and model-change evaluation records:
+
+```console
+deepbom evidence-workflow request.json --file SHA256:./model.onnx --output result.json
+deepbom evidence-workflow result.json --format html --output report.html
+```
+
+The SDK's `evidenceWorkflow(request, {files: [{sha256, path}]})` and local MCP's
+`deepbom_evidence_workflow` use the same engine. Follow the
+[complete synthetic example](https://github.com/JunHwan-Kwon/deepbom/tree/main/examples/evidence-workflow)
+or open the [browser review](https://deepbom.org/reports/evidence/).
+Missing bindings stay unresolved; external measurements are not recomputed.
+
 For a local Codex or Claude Code project, preview and install the bundled Agent
 Skill without operating an analysis server:
 
 ```console
-npx -y deepbom@2.2.0 integrate codex
-npx -y deepbom@2.2.0 integrate codex --apply
-npx -y deepbom@2.2.0 integrate claude-code
-npx -y deepbom@2.2.0 integrate claude-code --apply
+npx -y deepbom@2.3.0 integrate codex
+npx -y deepbom@2.3.0 integrate codex --apply
+npx -y deepbom@2.3.0 integrate claude-code
+npx -y deepbom@2.3.0 integrate claude-code --apply
 ```
 
 ```console
@@ -61,10 +74,10 @@ npx deepbom explore model.tflite --target-profile target-profile.json
 npx deepbom audit model.pte --executorch-build deepbom.executorch-build.json --compact
 npx deepbom capabilities --format agent-json
 npx deepbom capabilities --format agent-text
-npx -y deepbom@2.2.0 mcp
+npx -y deepbom@2.3.0 mcp
 ```
 
-Claude Desktop can install the version-matched `deepbom-2.2.0.mcpb` asset
+Claude Desktop can install the version-matched `deepbom-2.3.0.mcpb` asset
 from the corresponding GitHub Release as a local desktop extension.
 
 ChatGPT developer-mode users can connect `https://deepbom.org/mcp` for one

@@ -27,6 +27,7 @@ bin/deepbom-native-evidence.mjs
 bin/deepbom-provenance.mjs
 bin/deepbom-public-contract-versions.mjs
 bin/deepbom.mjs
+bin/evidence-workflow.mjs
 bin/graph-png-export.mjs
 bin/model-ir-png-export.mjs
 bin/nvidia-accelerator-collector.mjs
@@ -58,7 +59,10 @@ channels/python/src/deepbom/_engine.py
 channels/python/src/deepbom/_native/__init__.py
 channels/python/src/deepbom/_native/adapters.py
 channels/python/src/deepbom/_native/core.py
+channels/python/src/deepbom/_report_fonts.py
 channels/python/src/deepbom/api.py
+channels/python/src/deepbom/evidence.py
+channels/python/src/deepbom/evidence_render.py
 channels/python/src/deepbom/optimization/__init__.py
 channels/python/src/deepbom/optimization/__main__.py
 channels/python/src/deepbom/optimization/_models.py
@@ -231,6 +235,7 @@ docs/evidence-ir/OPTIMIZATION_REPORT_CHANNELS_2026-10-09.md
 docs/evidence-ir/OPTIMIZATION_REPORT_DIFF_REVIEW_2026-10-08.md
 docs/evidence-ir/README.md
 docs/evidence-ir/RELEASE_2_0_0.md
+docs/evidence-ir/SNAPSHOT_WORKFLOW.md
 docs/evidence-ir/SYSTEM_FLOW_REVIEW_2026-10-09.md
 docs/evidence-ir/TEA_REVIEW.md
 docs/evidence-ir/TRAINABLE_COMPATIBILITY_REVIEW_2026-10-07.md
@@ -245,6 +250,7 @@ docs/evidence-ir/compatibility/0.13.1.json
 docs/evidence-ir/compatibility/0.14.0.json
 docs/evidence-ir/compatibility/0.14.1.json
 docs/evidence-ir/compatibility/0.15.0.json
+docs/evidence-ir/compatibility/0.16.0.json
 docs/evidence-ir/compatibility/0.2.0.json
 docs/evidence-ir/compatibility/0.2.1.json
 docs/evidence-ir/compatibility/0.3.0.json
@@ -266,6 +272,8 @@ docs/schemas/deepbom-conversion-receipt-v1.schema.json
 docs/schemas/deepbom-evidence-compatibility-v1.schema.json
 docs/schemas/deepbom-evidence-ir-v1.schema.json
 docs/schemas/deepbom-evidence-ir-v2.schema.json
+docs/schemas/deepbom-evidence-ir-v3.schema.json
+docs/schemas/deepbom-evidence-workflow-v1.schema.json
 docs/schemas/deepbom-model-ir-v1.schema.json
 docs/schemas/deepbom-model-summary-v1.schema.json
 docs/schemas/deepbom-native-evidence-v1.schema.json
@@ -278,6 +286,9 @@ docs/schemas/deepbom-optimization-report-v1.schema.json
 docs/schemas/deepbom-provenance-ir-v1.schema.json
 docs/schemas/deepbom-weight-analysis-v1.schema.json
 docs/zenodo-validation-metadata.json
+examples/evidence-workflow/README.md
+examples/evidence-workflow/synthetic.mjs
+examples/evidence-workflow/write-synthetic.mjs
 examples/expected-output/README.md
 examples/expected-output/gpu-partition-probe.expected.json
 examples/expected-output/gpu-partition-probe.human.txt
@@ -486,6 +497,9 @@ scripts/check-evidence-query.mjs
 scripts/check-evidence-treemap.mjs
 scripts/check-evidence-ui-contract.mjs
 scripts/check-evidence-workbench.mjs
+scripts/check-evidence-workflow-channels.mjs
+scripts/check-evidence-workflow-python.py
+scripts/check-evidence-workflow.mjs
 scripts/check-execution-placement-evidence.mjs
 scripts/check-execution-placement-viewer.mjs
 scripts/check-executorch-analysis.mjs
@@ -552,8 +566,10 @@ scripts/check-model-ir-visualization.mjs
 scripts/check-model-ir.mjs
 scripts/check-model-summary.mjs
 scripts/check-native-capture-pipeline.mjs
+scripts/check-native-correctness-regressions.py
 scripts/check-native-evidence.mjs
 scripts/check-native-training.py
+scripts/check-native-workflow.mjs
 scripts/check-no-main-thread-heavy-wasm.mjs
 scripts/check-numerical-abi-propagation-viewer.mjs
 scripts/check-numerical-abi-propagation.mjs
@@ -732,6 +748,7 @@ scripts/generate-cyclonedx-17-example.mjs
 scripts/generate-deepbom-property-taxonomy.mjs
 scripts/generate-evidence-compatibility.mjs
 scripts/generate-evidence-ir-catalog.mjs
+scripts/generate-evidence-workflow-schema.mjs
 scripts/generate-executorch-operator-signatures.mjs
 scripts/generate-finding-rule-catalog.mjs
 scripts/generate-gguf-backend-contract.mjs
@@ -965,6 +982,7 @@ web/lib/artifact-diff-view.js
 web/lib/artifact-diff.js
 web/lib/artifact-dossier-view.js
 web/lib/artifact-evidence-envelope.js
+web/lib/artifact-evidence-workflow.js
 web/lib/artifact-ir-context.js
 web/lib/artifact-ir-runtime.js
 web/lib/artifact-ir-selectors.js
@@ -992,6 +1010,7 @@ web/lib/browser-asset-url.js
 web/lib/bundle.js
 web/lib/calibration-validation-ledger.js
 web/lib/calibration-validation-view.js
+web/lib/change-review.js
 web/lib/channel-vitality-worker.js
 web/lib/channel-vitality.js
 web/lib/chatgpt-result-transport.js
@@ -1021,6 +1040,7 @@ web/lib/deepbom-property-taxonomy.js
 web/lib/deepbom-worker-client.js
 web/lib/delegation-repair.js
 web/lib/deployment-delta.js
+web/lib/deployment-evidence.js
 web/lib/deployment-frontier.js
 web/lib/dom.js
 web/lib/download.js
@@ -1028,9 +1048,12 @@ web/lib/dynamic-shape-cost-conformance.js
 web/lib/dynamic-shape-cost.js
 web/lib/edgetpu-compiler-evidence.js
 web/lib/elements.js
+web/lib/evaluation-evidence.js
 web/lib/evidence-applicability.js
 web/lib/evidence-class.js
+web/lib/evidence-context.js
 web/lib/evidence-cursor.js
+web/lib/evidence-identity.js
 web/lib/evidence-ir.js
 web/lib/evidence-level-report.js
 web/lib/evidence-package-profiles.js
@@ -1038,9 +1061,15 @@ web/lib/evidence-package-rights.js
 web/lib/evidence-query-contract.js
 web/lib/evidence-query-view.js
 web/lib/evidence-query.js
+web/lib/evidence-standard-projection.js
 web/lib/evidence-treemap.js
 web/lib/evidence-visual-contract.js
 web/lib/evidence-why-drawer.js
+web/lib/evidence-workflow-omop.js
+web/lib/evidence-workflow-page.js
+web/lib/evidence-workflow-report.js
+web/lib/evidence-workflow-worker.js
+web/lib/evidence-workflow.js
 web/lib/exact-integer.js
 web/lib/exact-rational.js
 web/lib/execution-placement-evidence.js
@@ -1210,6 +1239,7 @@ web/lib/preprocessing-realizability.js
 web/lib/protocols.js
 web/lib/provenance-ir.js
 web/lib/provenance-panel.js
+web/lib/provenance-v2.js
 web/lib/provenance/bom-reference.js
 web/lib/provenance/contracts.js
 web/lib/provenance/cyclonedx.js
@@ -1316,6 +1346,7 @@ web/lib/service-worker.js
 web/lib/session-evidence.js
 web/lib/sha256-sync.js
 web/lib/signing-key-trust.js
+web/lib/snapshot-ir.js
 web/lib/spdx-artifact-export.js
 web/lib/static-audit-worker-client.js
 web/lib/static-audit-worker-protocol.js
@@ -1373,6 +1404,7 @@ web/optimization-report.css
 web/provenance.css
 web/reference/quant-policy-boundary-validation.v1.json
 web/report-workspace.css
+web/reports/evidence/index.html
 web/reports/optimization/index.html
 web/research-labs.css
 web/research-theme.css

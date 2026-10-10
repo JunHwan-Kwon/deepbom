@@ -9,6 +9,7 @@ from .._native.adapters import (
     independent_copy,
     snapshot_input,
     restore_rows,
+    require_supported_execution,
 )
 from .._native.core import json_value
 
@@ -89,6 +90,7 @@ TORCH_ARGUMENTS = {
 def has_sequential_call_path(model, subject):
     """Only built-in Sequential ancestors establish the serialized call order."""
     import torch
+    require_supported_execution(model)
 
     parent = model
     for name in subject.split(".")[:-1]:
@@ -99,6 +101,7 @@ def has_sequential_call_path(model, subject):
 
 
 def model_spec(model, factory=None):
+    require_supported_execution(model)
     fw = framework_of(model)
     if factory:
         if not isinstance(factory, str) or factory.count(":") != 1:
@@ -170,6 +173,121 @@ def construct(spec):
     return decode(spec["model"])
 
 
+def require_rule_applicability(candidate, rule):
+    """One structural precondition owner; never executes or mutates a model."""
+    kind, name = rule["kind"], rule["subject"]
+    if framework_of(candidate) == "pytorch":
+        import torch
+        conv = candidate.get_submodule(name)
+        if type(conv) is not torch.nn.Conv2d:
+            raise ValueError("Rule requires torch Conv2d")
+        if (
+            sum(
+                m is conv
+                for _, m in candidate.named_modules(remove_duplicate=False)
+            )
+            != 1
+        ):
+            raise ValueError(
+                "Shared Conv module requires explicit multi-call transformation mapping"
+            )
+        if kind == "inverted":
+            if any(not p.requires_grad for p in conv.parameters()):
+                raise ValueError(
+                    "Architecture replacement of frozen state requires an explicit training policy"
+                )
+            all_parameters = list(
+                candidate.named_parameters(remove_duplicate=False)
+            )
+            if any(
+                sum(p is q for _, q in all_parameters) > 1
+                for p in conv.parameters()
+            ):
+                raise ValueError(
+                    "Tied convolution state requires explicit transformation mapping"
+                )
+            if conv.groups != 1 or conv.padding_mode != "zeros":
+                raise ValueError(
+                    "Inverted replacement requires dense zero-padded Conv2d"
+                )
+        else:
+            bnname = rule.get("batchnorm", "")
+            bn = candidate.get_submodule(bnname or "")
+            if (
+                conv.training
+                or bn.training
+                or type(bn) is not torch.nn.BatchNorm2d
+                or bn.running_mean is None
+                or bn.running_var is None
+            ):
+                raise ValueError(
+                    "Conv-BN folding requires eval modules and running buffers"
+                )
+            if (
+                sum(
+                    m is bn
+                    for _, m in candidate.named_modules(remove_duplicate=False)
+                )
+                != 1
+            ):
+                raise ValueError(
+                    "Shared BatchNorm requires explicit call-use analysis"
+                )
+            # Only proven adjacent Sequential children; arbitrary graph rewrites need call-use analysis.
+            parent_path = name.rpartition(".")[0]
+            parent = candidate.get_submodule(parent_path)
+            names = list(parent._modules)
+            if (
+                not has_sequential_call_path(candidate, name)
+                or bnname.rpartition(".")[0] != parent_path
+                or names.index(bnname.rpartition(".")[2])
+                != names.index(name.rpartition(".")[2]) + 1
+            ):
+                raise ValueError(
+                    "Conv-BN folding requires adjacent children on a built-in Sequential call path"
+                )
+    else:
+        import keras
+        conv = candidate.get_layer(name)
+        if len(conv._inbound_nodes) != 1:
+            raise ValueError("Shared Keras calls require explicit call-use transformation mapping")
+        if (
+            type(conv) is not keras.layers.Conv2D
+            or conv.groups != 1
+            or conv.data_format != "channels_last"
+        ):
+            raise ValueError("Rule requires dense channels-last Keras Conv2D")
+        bn = None
+        if kind == "inverted" and not conv.trainable:
+            raise ValueError(
+                "Architecture replacement of frozen state requires an explicit training policy"
+            )
+        if kind == "fold_conv_bn":
+            bn = candidate.get_layer(rule.get("batchnorm", ""))
+            if (
+                type(bn) is not keras.layers.BatchNormalization
+                or bn.axis not in (-1, 3)
+                or keras.activations.serialize(conv.activation) != "linear"
+            ):
+                raise ValueError(
+                    "Keras folding requires linear Conv2D and last-axis BatchNormalization"
+                )
+            if (
+                getattr(
+                    getattr(bn.input, "_keras_history", None), "operation", None
+                )
+                is not conv
+                or len(conv._outbound_nodes) != 1
+            ):
+                raise ValueError("Folding requires a unique direct Conv-BN edge")
+            if len(bn._inbound_nodes) != 1 or any(
+                output is conv.output for output in candidate.outputs
+            ):
+                raise ValueError(
+                    "Folding cannot change a separately exposed convolution output"
+                )
+
+
 def apply_rules(model, rules):
     candidate = independent_copy(model)
     fw = framework_of(candidate)
@@ -197,41 +315,12 @@ def apply_rules(model, rules):
             or not 1 <= expansion <= 16
         ):
             raise ValueError("expansion must be an integer in [1,16]")
+        require_rule_applicability(candidate, rule)
         if fw == "pytorch":
             import torch
 
             conv = candidate.get_submodule(name)
-            if type(conv) is not torch.nn.Conv2d:
-                raise ValueError("Rule requires torch Conv2d")
-            if (
-                sum(
-                    m is conv
-                    for _, m in candidate.named_modules(remove_duplicate=False)
-                )
-                != 1
-            ):
-                raise ValueError(
-                    "Shared Conv module requires explicit multi-call transformation mapping"
-                )
             if kind == "inverted":
-                if any(not p.requires_grad for p in conv.parameters()):
-                    raise ValueError(
-                        "Architecture replacement of frozen state requires an explicit training policy"
-                    )
-                all_parameters = list(
-                    candidate.named_parameters(remove_duplicate=False)
-                )
-                if any(
-                    sum(p is q for _, q in all_parameters) > 1
-                    for p in conv.parameters()
-                ):
-                    raise ValueError(
-                        "Tied convolution state requires explicit transformation mapping"
-                    )
-                if conv.groups != 1 or conv.padding_mode != "zeros":
-                    raise ValueError(
-                        "Inverted replacement requires dense zero-padded Conv2d"
-                    )
                 hidden = conv.in_channels * expansion
                 replacement = torch.nn.Sequential(
                     OrderedDict(
@@ -273,39 +362,6 @@ def apply_rules(model, rules):
             else:
                 bnname = rule.get("batchnorm")
                 bn = candidate.get_submodule(bnname or "")
-                if (
-                    conv.training
-                    or bn.training
-                    or type(bn) is not torch.nn.BatchNorm2d
-                    or bn.running_mean is None
-                    or bn.running_var is None
-                ):
-                    raise ValueError(
-                        "Conv-BN folding requires eval modules and running buffers"
-                    )
-                if (
-                    sum(
-                        m is bn
-                        for _, m in candidate.named_modules(remove_duplicate=False)
-                    )
-                    != 1
-                ):
-                    raise ValueError(
-                        "Shared BatchNorm requires explicit call-use analysis"
-                    )
-                # Only proven adjacent Sequential children; arbitrary graph rewrites need call-use analysis.
-                parent_path = name.rpartition(".")[0]
-                parent = candidate.get_submodule(parent_path)
-                names = list(parent._modules)
-                if (
-                    not has_sequential_call_path(candidate, name)
-                    or bnname.rpartition(".")[0] != parent_path
-                    or names.index(bnname.rpartition(".")[2])
-                    != names.index(name.rpartition(".")[2]) + 1
-                ):
-                    raise ValueError(
-                        "Conv-BN folding requires adjacent children on a built-in Sequential call path"
-                    )
                 replacement = torch.nn.utils.fuse_conv_bn_eval(conv, bn)
                 candidate.set_submodule(bnname, torch.nn.Identity())
             candidate.set_submodule(name, replacement)
@@ -313,41 +369,7 @@ def apply_rules(model, rules):
             import keras, numpy as np
 
             conv = candidate.get_layer(name)
-            if (
-                type(conv) is not keras.layers.Conv2D
-                or conv.groups != 1
-                or conv.data_format != "channels_last"
-            ):
-                raise ValueError("Rule requires dense channels-last Keras Conv2D")
-            bn = None
-            if kind == "inverted" and not conv.trainable:
-                raise ValueError(
-                    "Architecture replacement of frozen state requires an explicit training policy"
-                )
-            if kind == "fold_conv_bn":
-                bn = candidate.get_layer(rule.get("batchnorm", ""))
-                if (
-                    type(bn) is not keras.layers.BatchNormalization
-                    or bn.axis not in (-1, 3)
-                    or keras.activations.serialize(conv.activation) != "linear"
-                ):
-                    raise ValueError(
-                        "Keras folding requires linear Conv2D and last-axis BatchNormalization"
-                    )
-                if (
-                    getattr(
-                        getattr(bn.input, "_keras_history", None), "operation", None
-                    )
-                    is not conv
-                    or len(conv._outbound_nodes) != 1
-                ):
-                    raise ValueError("Folding requires a unique direct Conv-BN edge")
-                if len(bn._inbound_nodes) != 1 or any(
-                    output is conv.output for output in candidate.outputs
-                ):
-                    raise ValueError(
-                        "Folding cannot change a separately exposed convolution output"
-                    )
+            bn = candidate.get_layer(rule["batchnorm"]) if kind == "fold_conv_bn" else None
             in_channels = int(conv.kernel.shape[-2])
             hidden = in_channels * expansion
 

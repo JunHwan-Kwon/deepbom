@@ -494,3 +494,30 @@ def _positive_integer(value: int, field: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
         raise ValueError(f"{field} must be a positive integer")
     return value
+
+
+def evidence_workflow(request: dict[str, Any], *, files: Optional[dict[str, os.PathLike[str] | str]] = None,
+                      timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+                      max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> dict[str, Any]:
+    """Run the shared Snapshot/provenance/evaluation/review workflow without model execution.
+
+    ``files`` maps exact file SHA-256 values to local paths. Missing originals remain unresolved.
+    """
+    import re
+    if not isinstance(request, dict):
+        raise TypeError("request must be a JSON object")
+    payload = json.dumps(request, allow_nan=False).encode("utf-8")
+    if len(payload) > 16 * 1024 * 1024:
+        raise ValueError("Request exceeds 16 MiB")
+    with tempfile.TemporaryDirectory(prefix="deepbom-evidence-") as directory:
+        filename = Path(directory) / "request.json"
+        filename.write_bytes(payload)
+        argv = ["evidence-workflow", str(filename)]
+        if files is not None:
+            if not isinstance(files, dict) or len(files) > 256:
+                raise ValueError("files must be a bounded hash-to-path map")
+            for digest, path in files.items():
+                if not isinstance(digest, str) or not re.fullmatch(r"[a-f0-9]{64}", digest):
+                    raise ValueError("Invalid file SHA-256")
+                argv.extend(["--file", digest + ":" + str(Path(path).resolve())])
+        return _invoke_json(argv, timeout_seconds, max_output_bytes)

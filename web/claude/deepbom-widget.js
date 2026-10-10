@@ -1,3 +1,4 @@
+import { finishArtifactEvidenceWorkflow } from "../lib/artifact-evidence-workflow.js";
 import { PROVENANCE_IR } from "../lib/evidence-ir.js";
 import { installProvenancePanel } from "../lib/provenance-panel.js";
 import { provenanceSummary } from "../lib/provenance-ir.js";
@@ -13,8 +14,6 @@ import { normalizeAnalysisSummaryContract } from "../lib/analysis-summary-contra
 import { attachOnnxContractConflictCapsule } from "../lib/onnx-contract-conflict.js";
 import { buildOnDeviceLlmContract } from "../lib/on-device-llm-contract.js";
 import { getArtifactIrContext } from "../lib/artifact-ir-context.js";
-import { buildArtifactEvidenceEnvelope, validateArtifactEvidenceEnvelope } from "../lib/artifact-evidence-envelope.js";
-import { buildReviewSummary } from "../lib/review-summary.js";
 import { createStaticAuditWorkerClient } from "../lib/static-audit-worker-client.js";
 import { STATIC_AUDIT_OPERATION } from "../lib/static-audit-worker-protocol.js";
 import { sha256FileHex } from "../lib/hash.js";
@@ -137,7 +136,7 @@ async function analyzeSelectedFile(file) {
     const artifactIrContext = getArtifactIrContext(analysis, artifact);
     if (!artifactIrContext) throw new Error("The canonical Artifact IR could not be constructed for this file.");
     const analysisView = artifactIrContext.primary_view;
-    const envelope = buildArtifactEvidenceEnvelope(analysisView, {
+    const { envelope, summary } = finishArtifactEvidenceWorkflow(artifactIrContext, {
       hash: sha256,
       fileSizeBytes: file.size,
       filename: safeName,
@@ -148,9 +147,7 @@ async function analyzeSelectedFile(file) {
         execution_location: "mcp_app_browser_sandbox",
       },
     });
-    const validation = validateArtifactEvidenceEnvelope(envelope);
-    if (!validation.valid) throw new Error(`Evidence envelope validation failed: ${validation.errors.join(", ")}`);
-    const summary = buildReviewSummary({ analysis: analysisView, envelope, artifactIrContext });
+
     const result = compactForConversation(summary, artifactIrContext.model_summary);
 
     setStatus("Returning a bounded result", "Only the evidence summary is sent to Claude; the selected model bytes are not sent to the DEEPBOM service.");
@@ -316,9 +313,10 @@ function renderResult(result, modelSummary, weightEvidence, context) {
 
 function appendMetadataPanel(result, context) {
   const section = document.createElement("details"), title = document.createElement("summary"), host = document.createElement("div"), report = document.createElement("button"), note = document.createElement("p");
+  const reviewLink=document.createElement("a");reviewLink.href="https://deepbom.org/reports/evidence/";reviewLink.target="_blank";reviewLink.rel="noopener noreferrer";reviewLink.textContent="Review Snapshot and evaluation records on deepbom.org (select files locally)";host.append(reviewLink);
   title.textContent = `${PROVENANCE_IR.name} · OMOP and external evidence`; report.type = "button"; report.textContent = "Report metadata counts to Claude"; report.disabled = true;
   note.textContent = "Metadata stays in this widget. Only counts and digests are shared when you report. File downloads depend on the host's permissions.";
-  section.append(title, host, report, note); root.querySelector("#result").prepend(section); let latest = null;
+  section.append(title, host, report, note, reviewLink); root.querySelector("#result").prepend(section); let latest = null;
   installProvenancePanel(host, () => context, { onResult: value => { latest = value; report.disabled = !value; } });
   report.addEventListener("click", async () => {
     if (!latest) return; report.disabled = true; const selected = latest;

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.3.0 — 2026-10-11 — scoped snapshots and model-change evidence
+
+- Add typed Snapshot/Provenance, evaluation protocols and records, exact-decimal before/after checks, and bounded deployment-declaration consistency through one Web/CLI/SDK/local MCP workflow.
+- Preserve original native state identities; add the v3 family entry point without rewriting prior contracts. Connect OMOP using its existing metadata profile and preserve standard-export mapping losses.
+- Add a local browser review, JSON/HTML/monochrome PDF reports, explicit logger exports and a public two-population synthetic example. Hosted MCP retains attachment contracts and provides Web continuation guidance.
+- Reject unsupported native execution overrides, shared-call transformations and nonfinite post-update state. Unify proposal/application eligibility, preserve training phase in TensorBoard, and validate gradient, optimizer and activation bindings.
+- Reject future or unassessed subject-scoped policy exemptions; validate runtime sidecars through existing format importers. Reconstruct saved checks from preserved source records rather than trusting a recomputed outer digest.
+- Finalize artifact envelopes and review summaries through a shared owner across Web, CLI, ChatGPT and Claude.
+
 ## 2.1.0 — 2026-10-06 — supported SDK and evidence correctness
 
 - Add a Node ESM SDK with explicit exports and TypeScript declarations, invoking the packaged common engine.

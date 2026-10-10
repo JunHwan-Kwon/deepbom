@@ -12,7 +12,8 @@ import {
 // Shared conversational workflow routing and weight query/plot projections add
 // about 58 KiB; reserve a bounded 96 KiB increment without raising per-file caps.
 // Native numerical transport and detailed views add ~65 KiB; allocate 128 KiB.
-const handwrittenRuntimeBudgetKiB = Number(process.env.HANDWRITTEN_RUNTIME_SOURCE_BUDGET_KIB || process.env.SOURCE_BUDGET_KIB || 13152);
+// Snapshot/context/evaluation owners and their bounded report adapters add ~80 KiB.
+const handwrittenRuntimeBudgetKiB = Number(process.env.HANDWRITTEN_RUNTIME_SOURCE_BUDGET_KIB || process.env.SOURCE_BUDGET_KIB || 13312);
 const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_BUDGET_KIB || 1856);
 // Includes the public connection contract, schema and OMOP usage guide.
 // Includes the hash-addressed common-rule inventory (~138 KiB) and review report.
@@ -22,7 +23,8 @@ const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_
 // Common-flow review and two immutable 0.14 catalog snapshots add ~136 KiB.
 // These are documentation/history, not additional runtime implementations.
 // Retain the immutable 0.15.0 compatibility snapshot and channel/rule review.
-const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 2688);
+// Adds strict workflow/family schemas, migration guide and immutable 0.16 catalog.
+const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 2944);
 // Includes metadata tampering, cross-channel and browser regression checks.
 // Workflow routing and weight-query regression coverage add a measured 18 KiB;
 // reserve 32 KiB for tests and 16 KiB for the expanded review contract snapshot.

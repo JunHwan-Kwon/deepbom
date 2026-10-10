@@ -1,5 +1,8 @@
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
+import { parseGgufRuntimeEnvironmentDocument } from "./gguf-runtime-environment.js";
+import { parseCoreMlComputePlanDocument } from "./coreml-compute-plan.js";
+import { parseRuntimeAssignmentDocument } from "./kernel-inspector.js";
 
 export const RUNTIME_EVIDENCE_SIDECAR_SCHEMA = "deepbom.runtime_evidence_sidecar.v1";
 
@@ -11,12 +14,20 @@ export function buildRuntimeEvidenceSidecar(analysis, sourceEvidence) {
   const format = requiredFormat(analysis?.format);
   const artifactSha256 = requiredSha(analysis?.model_sha256, "active artifact SHA-256");
   const sourceSchema = requiredText(sourceEvidence.schema, "source evidence schema");
+  let validatedSource = sourceEvidence;
+  if (ASSIGNMENT_SCHEMA.test(sourceSchema)) {
+    // The projector is also an import boundary. Digest reconstruction alone
+    // cannot validate duplicate assignments, timing types or active targets.
+    validatedSource = parseRuntimeAssignmentDocument(JSON.stringify(sourceEvidence), analysis, {fileSha256: sourceEvidence.source?.import_file_sha256 || sha256TextHex(canonicalJson(sourceEvidence))});
+  }
+  if(sourceSchema === "deepbom.gguf_runtime_environment.v2") validatedSource = parseGgufRuntimeEnvironmentDocument(sourceEvidence,analysis);
+  if(sourceSchema === "deepbom.coreml_compute_plan.v1") validatedSource = parseCoreMlComputePlanDocument(sourceEvidence,analysis);
   const normalized = ASSIGNMENT_SCHEMA.test(sourceSchema)
-    ? normalizeAssignment(format, artifactSha256, analysis, sourceEvidence)
+    ? normalizeAssignment(format, artifactSha256, analysis, validatedSource)
     : sourceSchema === "deepbom.gguf_runtime_environment.v2"
-      ? normalizeGguf(format, artifactSha256, sourceEvidence)
+      ? normalizeGguf(format, artifactSha256, validatedSource)
       : sourceSchema === "deepbom.coreml_compute_plan.v1"
-        ? normalizeCoreMl(format, artifactSha256, sourceEvidence)
+        ? normalizeCoreMl(format, artifactSha256, validatedSource)
         : null;
   if (!normalized) throw new Error(`Runtime evidence schema ${sourceSchema} has no common sidecar adapter.`);
   const sourceEvidenceSha256 = sha256TextHex(canonicalJson(sourceEvidence));

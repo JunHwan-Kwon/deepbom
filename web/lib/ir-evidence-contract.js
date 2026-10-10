@@ -1,6 +1,7 @@
 import { validateModelIr } from "./model-ir.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
+import { sealDocument } from "./evidence-identity.js";
 
 // Shared by optional evidence layers. Adding a sidecar must not change Model IR.
 export function modelEvidenceSource(input) {
@@ -13,7 +14,7 @@ export function evidenceHashContract(field) {
 }
 
 export function sealEvidence(body, field) {
-  return { ...body, [field]: sha256TextHex(canonicalJson(body)) };
+  return sealDocument(body, field);
 }
 
 export function assertEvidenceDigest(document, field) {

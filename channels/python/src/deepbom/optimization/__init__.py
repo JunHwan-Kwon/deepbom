@@ -8,7 +8,7 @@ from pathlib import Path
 import shutil
 import time
 import uuid
-from .._native.adapters import framework_of, independent_copy, snapshot, snapshot_input
+from .._native.adapters import framework_of, independent_copy, snapshot, snapshot_input, require_supported_execution
 from .._native.core import (
     engine,
     atomic_json,
@@ -17,11 +17,12 @@ from .._native.core import (
     verify_document,
     EvidenceStore,
 )
-from ._models import apply_rules, model_spec, restore_model, has_sequential_call_path
+from ._models import apply_rules, model_spec, restore_model, has_sequential_call_path, require_rule_applicability
 
 
 def suggest(model, *, objective="cpu_inference"):
     """Return bounded candidates, not measured optimization benefits."""
+    require_supported_execution(model)
     fw = framework_of(model)
     proposals = []
     if objective not in ("cpu_inference", "structure"):
@@ -32,7 +33,7 @@ def suggest(model, *, objective="cpu_inference"):
         for path, parent in model.named_modules():
             if not isinstance(parent, torch.nn.Sequential):
                 continue
-            items = list(parent.named_children())
+            items = list(parent._modules.items())
             for i, (name, layer) in enumerate(items):
                 subject = path + "." + name if path else name
                 if type(layer) is not torch.nn.Conv2d:
@@ -71,6 +72,7 @@ def suggest(model, *, objective="cpu_inference"):
                 type(layer) is not keras.layers.Conv2D
                 or layer.groups != 1
                 or layer.data_format != "channels_last"
+                or len(layer._inbound_nodes) != 1
             ):
                 continue
             if objective == "structure" and layer.kernel_size != (1, 1):
@@ -98,7 +100,14 @@ def suggest(model, *, objective="cpu_inference"):
                                 "batchnorm": bn.name,
                             }
                         )
-    return proposals
+    applicable = []
+    for proposal in proposals:
+        try:
+            require_rule_applicability(model, proposal)
+        except ValueError:
+            continue
+        applicable.append(proposal)
+    return applicable
 
 
 class Candidate:
@@ -230,6 +239,9 @@ def _validate(model, example_args, example_kwargs, loss_fn=None):
             }
             if trainable:
                 torch.optim.SGD(trainable, lr=1e-4).step()
+                if any((p.is_floating_point() or p.is_complex()) and not torch.isfinite(p).all()
+                       for p in [*test.parameters(), *test.buffers()]):
+                    raise ValueError("Candidate smoke update produced nonfinite state")
                 report["smoke_update"] = "passed"
     else:
         import tensorflow as tf
@@ -277,6 +289,9 @@ def _validate(model, example_args, example_kwargs, loss_fn=None):
         ]
         if pairs:
             tf.keras.optimizers.SGD(1e-4).apply_gradients(pairs)
+            for variable in test.weights:
+                if tf.as_dtype(variable.dtype).is_floating:
+                    tf.debugging.assert_all_finite(variable, "Candidate smoke update produced nonfinite state")
             report["smoke_update"] = "passed"
     report["loss_scope"] = "user_supplied" if loss_fn else "synthetic_not_task_quality"
     return report
@@ -307,19 +322,7 @@ def optimize(
     if fw == "pytorch":
         import torch
 
-        for module in model.modules():
-            if any(
-                getattr(module, name, {})
-                for name in (
-                    "_forward_hooks",
-                    "_forward_pre_hooks",
-                    "_backward_hooks",
-                    "_backward_pre_hooks",
-                )
-            ):
-                raise ValueError(
-                    "Native optimization cannot preserve arbitrary module hooks; remove them or use an explicit supported model definition"
-                )
+        require_supported_execution(model)
         if any(
             isinstance(p, torch.nn.parameter.UninitializedParameter)
             for p in model.parameters()

@@ -1,3 +1,4 @@
+import { finishArtifactEvidenceWorkflow } from "../lib/artifact-evidence-workflow.js";
 import { PROVENANCE_IR } from "../lib/evidence-ir.js";
 import { installProvenancePanel } from "../lib/provenance-panel.js";
 import { provenanceSummary } from "../lib/provenance-ir.js";
@@ -12,8 +13,6 @@ import { normalizeAnalysisSummaryContract } from "../lib/analysis-summary-contra
 import { attachOnnxContractConflictCapsule } from "../lib/onnx-contract-conflict.js";
 import { buildOnDeviceLlmContract } from "../lib/on-device-llm-contract.js";
 import { getArtifactIrContext } from "../lib/artifact-ir-context.js";
-import { buildArtifactEvidenceEnvelope, validateArtifactEvidenceEnvelope } from "../lib/artifact-evidence-envelope.js";
-import { buildReviewSummary } from "../lib/review-summary.js";
 import { buildPublicCycloneDx17ArtifactContract } from "../lib/public-cyclonedx-export.js";
 import { buildSpdxArtifactDocument } from "../lib/spdx-artifact-export.js";
 import { artifactFilename } from "../lib/download.js";
@@ -147,7 +146,7 @@ async function start() {
   const artifactIrContext = getArtifactIrContext(analysis, artifact);
   if (!artifactIrContext) throw new Error("The canonical Artifact IR could not be constructed for this attachment.");
   const analysisView = artifactIrContext.primary_view;
-  const envelope = buildArtifactEvidenceEnvelope(analysisView, {
+  const { envelope, summary } = finishArtifactEvidenceWorkflow(artifactIrContext, {
     hash: sha256,
     fileSizeBytes: remote.size,
     filename: remote.name,
@@ -158,9 +157,7 @@ async function start() {
       execution_location: "chatgpt_browser_sandbox",
     },
   });
-  const validation = validateArtifactEvidenceEnvelope(envelope);
-  if (!validation.valid) throw new Error(`Evidence envelope validation failed: ${validation.errors.join(", ")}`);
-  const summary = buildReviewSummary({ analysis: analysisView, envelope, artifactIrContext });
+
   const result = compactForConversation(summary, artifactIrContext.model_summary);
 
   setStatus("Returning the bounded result", "Only the evidence summary below is sent to the conversation; model bytes remain outside the DEEPBOM service.");

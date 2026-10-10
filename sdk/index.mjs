@@ -1,6 +1,6 @@
 /** Public Node SDK. All analysis and policy evaluation run in the packaged CLI. */
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -194,4 +194,22 @@ async function invoke(argv, options) {
       catch (cause) { if (!failure) throw new DeepBomInvocationError("Could not clean up DEEPBOM temporary output.", { cause }); }
     }
   }
+}
+
+/** The request and result contracts are shared with browser workers and MCP. */
+export async function evidenceWorkflow(request, options = {}) {
+  checkOptions(options, [...limitKeys, "files"]);
+  if (!request || typeof request !== "object" || Array.isArray(request)) throw new TypeError("request must be a document");
+  const directory=await mkdtemp(path.join(tmpdir(),"deepbom-evidence-"));
+  try {
+    const filename=path.join(directory,"request.json");
+    const text=JSON.stringify(request);if(Buffer.byteLength(text)>16*1024*1024)throw new TypeError("Request exceeds 16 MiB");
+    await writeFile(filename,text,{mode:0o600});
+    const argv=["evidence-workflow",filename];
+    if(options.files!==undefined){
+      if(!Array.isArray(options.files)||options.files.length>256)throw new TypeError("files must be a bounded list");
+      for(const f of options.files){if(!f||Object.keys(f).some(k=>!["sha256","path"].includes(k))||!/^[a-f0-9]{64}$/.test(f.sha256))throw new TypeError("File needs sha256 and local path");argv.push("--file",f.sha256+":"+localPath(f.path));}
+    }
+    return await invoke(argv,options);
+  } finally { await rm(directory,{recursive:true,force:true}); }
 }

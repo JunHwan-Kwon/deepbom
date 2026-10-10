@@ -473,7 +473,10 @@ def contract_edges():
     )
     frozen = torch.nn.Sequential(torch.nn.Conv2d(3, 8, 3))
     frozen[0].weight.requires_grad_(False)
-    rejected(lambda: optimize(frozen, objective="structure"))
+    rejected(lambda: optimize(frozen, rules=[{"kind": "inverted", "subject": "0"}]))
+    unchanged = optimize(frozen, objective="structure")
+    assert unchanged.validation["candidate_status"] == "no_applicable_transformation"
+    assert unchanged.evidence["snapshot"]["snapshot_sha256"] == unchanged.baseline["snapshot"]["snapshot_sha256"]
     x = torch.ones(1, 2, requires_grad=True)
     optimize(torch.nn.Sequential(torch.nn.Linear(2, 2)), rules=[], example_args=(x,))
     assert x.grad is None
@@ -687,15 +690,15 @@ def compatibility_edges():
         )
     from tensorboard.util.tensor_util import make_ndarray
 
-    first_values = EventAccumulator(first["event_logdir"]).Reload().Tensors("loss")
-    second_values = EventAccumulator(second["event_logdir"]).Reload().Tensors("loss")
+    first_values = EventAccumulator(first["event_logdir"]).Reload().Tensors("unspecified/loss")
+    second_values = EventAccumulator(second["event_logdir"]).Reload().Tensors("unspecified/loss")
     assert [make_ndarray(v.tensor_proto).item() for v in first_values] == [2.0]
     assert [make_ndarray(v.tensor_proto).item() for v in second_values] == [2.0, 1.0]
     accumulator = EventAccumulator(second["event_logdir"]).Reload()
     for name, value in precise.items():
-        observed = make_ndarray(accumulator.Tensors(name)[-1].tensor_proto)
+        observed = make_ndarray(accumulator.Tensors("unspecified/" + name)[-1].tensor_proto)
         assert observed.dtype == np.dtype("float64") and observed.item() == value
-        assert accumulator.SummaryMetadata(name).plugin_data.plugin_name == "scalars"
+        assert accumulator.SummaryMetadata("unspecified/" + name).plugin_data.plugin_name == "scalars"
     import_logs(
         "tensorboard", output=root / "progress-import", logdir=second["event_logdir"]
     )
@@ -778,6 +781,10 @@ check(
     "Real serialized native inputs, candidates, result and all IR schemas",
     serialized_schema_contracts,
 )
+
+check("Native outputs in the common evidence workflow", lambda: subprocess.run(
+    ["node", str(ROOT / "scripts/check-native-workflow.mjs"), str(root)], check=True,
+))
 
 print(
     json.dumps(

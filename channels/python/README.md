@@ -53,6 +53,14 @@ identity, coverage, separate finding classes and a hash-bound reinspection
 command. Python dictionaries preserve the native JSON keys and null values.
 The package includes `py.typed`; it does not provide separate parser logic.
 
+From 2.3.0, `evidence_workflow(request, files={sha256: local_path})` connects
+Snapshot IR, provenance, evaluation conditions and before/after checks through
+the same common engine. `deepbom.evidence.export` explicitly sends the resulting
+JSON to an existing MLflow or W&B run, or projects values into TensorBoard.
+See the [workflow guide](https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/evidence-ir/SNAPSHOT_WORKFLOW.md)
+and [synthetic example](https://github.com/JunHwan-Kwon/deepbom/tree/main/examples/evidence-workflow).
+Native model execution remains a separate, explicit local operation.
+
 ```console
 deepbom audit model.tflite --compact
 deepbom audit model.onnx --format cyclonedx

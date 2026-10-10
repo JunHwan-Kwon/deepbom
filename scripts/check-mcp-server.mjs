@@ -38,6 +38,7 @@ async function checkRealServerContract() {
     session.request(2, "tools/list");
     const tools = (await session.response(2)).result.tools;
     assert.deepEqual(tools.map((tool) => tool.name), [
+      "deepbom_evidence_workflow",
       "deepbom_optimization_report",
       "deepbom_export_optimization_report",
       "deepbom_capabilities",

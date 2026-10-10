@@ -146,6 +146,7 @@ assert.equal(parsedPostLoadFailure.observations.model_load_status, "observed_suc
 assert.equal(parsedPostLoadFailure.compatibility_conclusion, "runtime_model_load_observed_inference_not_established");
 
 const runtime = buildRuntimeEvidence({ analysis, runtimeAssignmentEvidence: parsed });
+assert.ok(runtime.runtime_evidence_sidecar, "validated runtime evidence must project through the common sidecar");
 assert.equal(runtime.runtime_assignment, null);
 assert.equal(runtime.runtime_assignment_comparison, null);
 assert.equal(runtime.runtime_environment.runtime.binary_sha256, BINARY_SHA);

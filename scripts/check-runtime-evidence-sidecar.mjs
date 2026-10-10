@@ -25,35 +25,23 @@ const assignment = {
   target_profile_id: "android_mid_a55",
   target_profile_sha256: targetSha256,
   graph_op_count: 2,
-  runtime: { name: "TensorFlow Lite", version: "2.21.0", backend: "XNNPACK", binary_sha256: binarySha256 },
-  source: { kind: "deepbom_native_runtime_capture", collected_at: "2026-08-18T00:00:00.000Z", capture_id: "capture-1", collector: { name: "deepbom-runtime-collector", version: "1.1" } },
-  selector_context: {
-    device: { architecture: "aarch64", cpu_features: ["neon"] },
-    build: { xnnpack_source_commit: sourceCommit, runtime_binary_sha256: binarySha256, microkernel_build_identifier_sha256: "e".repeat(64) },
-  },
-  selector_observation: {
-    collector_attestation_status: "not_attested",
-    lowering_observed_op_count: 0,
-    microkernel_observed_op_count: 0,
-    selector_ambiguity_closed_op_count: 0,
-    graph_op_count: 2,
-    status: "partial",
-  },
+  runtime: { name: "TensorFlow Lite", version: "2.21.0", backend: "XNNPACK", build: "synthetic-runtime-test", binary_sha256: binarySha256 },
+  source: { kind: "interpreter_plan_export", assignment_semantics: "original_graph_op_assignment", partition_semantics: "partition_id_identifies_runtime_partition_when_present", duration_semantics: "per_original_op_exclusive", collected_at: "2026-08-18T00:00:00.000Z", capture_id: "capture-1" },
   assignments: [
-    { op_index: 0, duration_us: 10 },
-    { op_index: 1, duration_us: 20 },
+    { op_index: 0, provider: "CPU", duration_us: 10 },
+    { op_index: 1, provider: "CPU", duration_us: 20 },
   ],
-  runtime_memory: { status: "assessed", snapshot_count: 2 },
+
 };
 
 const normalized = buildRuntimeEvidenceSidecar(analysis, assignment);
 assert.equal(normalized.schema, RUNTIME_EVIDENCE_SIDECAR_SCHEMA);
 assert.equal(normalized.artifact.sha256, artifactSha256);
 assert.equal(normalized.runtime.family, "tensorflow_lite");
-assert.equal(normalized.build.status, "source_and_binary_bound");
+assert.equal(normalized.build.status, "binary_bound_source_unbound");
 assert.equal(normalized.observations.placement.status, "complete");
 assert.equal(normalized.observations.timing.status, "complete");
-assert.equal(normalized.observations.memory.status, "observed");
+assert.equal(normalized.observations.memory.status, "not_collected");
 assert.equal(verifyRuntimeEvidenceSidecar(normalized, analysis, assignment), normalized);
 
 const tampered = structuredClone(normalized);
@@ -71,11 +59,11 @@ assert.match(report, new RegExp(normalized.sidecar_sha256));
 const onnx = buildRuntimeEvidenceSidecar({ ...analysis, format: "onnx" }, {
   ...assignment,
   runtime: { ...assignment.runtime, name: "ONNX Runtime", backend: "CPUExecutionProvider" },
-  source: { ...assignment.source, adapter: { schema: "deepbom.ort_profile_adapter.v2.1", source_commit: `microsoft/onnxruntime@${sourceCommit}` } },
+  source: { ...assignment.source },
 });
 assert.equal(onnx.runtime.family, "onnxruntime");
 
-const gguf = buildRuntimeEvidenceSidecar({ format: "gguf", model_sha256: artifactSha256 }, {
+assert.throws(() => buildRuntimeEvidenceSidecar({ format: "gguf", model_sha256: artifactSha256 }, {
   schema: "deepbom.gguf_runtime_environment.v2",
   artifact: { sha256: artifactSha256 },
   runtime: { repository: "https://github.com/ggml-org/llama.cpp", source_commit: sourceCommit, binary_sha256: binarySha256, version_output: "llama-cli" },
@@ -84,11 +72,9 @@ const gguf = buildRuntimeEvidenceSidecar({ format: "gguf", model_sha256: artifac
   capture: { capture_id: "gguf-1", collected_at: "2026-08-18T00:00:00.000Z", collector: { name: "deepbom-gguf-runtime-collector", version: "2" } },
   observations: { model_load_status: "observed_success", elapsed_ms: 42 },
   compute_graph: { graph_count: 1, scheduled_node_count: 3, dispatched_graph_count: 1 },
-});
-assert.equal(gguf.runtime.family, "llama_cpp");
-assert.equal(gguf.observations.execution.status, "observed_dispatch");
+}), /active artifact|decoded NeuralNetwork/);
 
-const coreml = buildRuntimeEvidenceSidecar({ format: "coreml", model_sha256: artifactSha256 }, {
+assert.throws(() => buildRuntimeEvidenceSidecar({ format: "coreml", model_sha256: artifactSha256 }, {
   schema: "deepbom.coreml_compute_plan.v1",
   artifact: { sha256: artifactSha256 },
   runtime: {
@@ -106,15 +92,11 @@ const coreml = buildRuntimeEvidenceSidecar({ format: "coreml", model_sha256: art
   capture: { capture_id: "coreml-1", collected_at: "2026-08-18T00:00:00.000Z", collector: { name: "deepbom-coreml-plan", version: "2", source_sha256: "f".repeat(64) } },
   structure: { rows: [{ estimated_cost_weight: 1 }] },
   execution_status: "not_observed_compute_plan_only",
-});
-assert.equal(coreml.runtime.family, "coreml");
-assert.equal(coreml.observations.placement.evidence_class, "RUNTIME_PLAN_ESTIMATE");
-assert.equal(coreml.observations.execution.status, "not_observed");
-assert.equal(coreml.capture.host.os_build, "24G84");
-assert.equal(coreml.capture.collector_source_sha256, "f".repeat(64));
+}), /active artifact|decoded NeuralNetwork/);
+
 assert.throws(() => buildRuntimeEvidenceSidecar({ format: "coreml", model_sha256: artifactSha256 }, {
   schema: "deepbom.coreml_compute_plan.v1", artifact: { sha256: artifactSha256 }, runtime: { compiled_model_content_sha256: binarySha256 },
-}), /estimate-only operation rows|compute-plan source/);
+}), /decoded NeuralNetwork|active artifact|estimate-only operation rows|compute-plan source/);
 
 assert.equal(buildRuntimeEvidenceSidecar(analysis, null), null);
-console.log("Runtime evidence sidecar check passed (TFLite, ONNX, GGUF, Core ML normalization, hash binding, report, and tamper rejection).");
+console.log("Runtime evidence sidecar check passed (TFLite/ONNX normalization and rejection of incomplete GGUF/Core ML sources, hash binding, report, and tamper rejection).");

@@ -224,6 +224,11 @@ if (!existsSync(reportPage)
   || !readFileSync(reportPage, "utf8").includes('/web/lib/optimization-report-page.js')) {
   throw new Error("dist is missing the public optimization report viewer.");
 }
+const evidenceReportPage = path.join(distRoot, "reports", "evidence", "index.html");
+if (!existsSync(evidenceReportPage)
+  || !readFileSync(evidenceReportPage, "utf8").includes('/web/lib/evidence-workflow-page.js')) {
+  throw new Error("dist is missing the public evidence review viewer.");
+}
 
 checkProtectedSelectorBoundary();
 
@@ -362,7 +367,7 @@ function isBlockedDistPath(filePath) {
     return !publicSampleModelPaths.has(normalized);
   }
   return privateDistLeakNeedles.some((needle) => normalized.includes(needle))
-    || (normalized.includes("/reports/") && normalized !== "dist/reports/optimization/index.html")
+    || (normalized.includes("/reports/") && !["dist/reports/optimization/index.html", "dist/reports/evidence/index.html"].includes(normalized))
     || normalized.includes("/docs/private/")
     || normalized.endsWith(".local.md")
     || normalized.includes("LOCAL_PRIVATE_ROADMAP")

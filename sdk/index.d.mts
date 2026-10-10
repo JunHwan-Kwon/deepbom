@@ -84,3 +84,18 @@ export function diff(baseline: string, candidate: string, options?: Limits & { t
 export function captureContract(artifact: string, options?: Limits): Promise<JsonDocument>;
 export function verifyContract(artifact: string, contract: string, options?: Limits): Promise<JsonDocument>;
 export function verifyBom(artifact: string, bom: string, options?: Limits & { componentRef?: string }): Promise<JsonDocument>;
+
+export interface EvidenceWorkflowRequest extends JsonDocument {
+  schema: "deepbom.evidence_workflow_request.v1";
+  operation: "snapshot" | "omop" | "protocol" | "evaluation" | "provenance" | "review" | "deployment" | "verify";
+  input: JsonDocument;
+  documents: JsonDocument[];
+}
+export interface EvidenceWorkflowResult extends JsonDocument {
+  schema: "deepbom.evidence_workflow_result.v1";
+  result_sha256: string;
+  document: JsonDocument;
+  request: EvidenceWorkflowRequest;
+  execution_status: "completed";
+}
+export function evidenceWorkflow(request: EvidenceWorkflowRequest | EvidenceWorkflowResult, options?: Limits & {files?: {sha256:string;path:string}[]}): Promise<EvidenceWorkflowResult>;

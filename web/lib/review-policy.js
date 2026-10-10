@@ -1,3 +1,4 @@
+import { evidenceTimestamp } from "./evidence-identity.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 
@@ -123,12 +124,21 @@ function exceptionState(exception, identity, now) {
   for (const key of ["artifact_sha256", "cpu_target_profile_sha256", "analyzer_version", "rulepack_version"]) {
     if (exception.scope[key] != null && exception.scope[key] !== identity[key]) mismatches.push(key);
   }
-  const expired = exception.expires_at != null && (now == null || Date.parse(now) >= Date.parse(exception.expires_at));
+  const expired = exception.expires_at != null && now != null && Date.parse(now) >= Date.parse(exception.expires_at);
+  // v1 envelopes do not identify individual finding occurrences. A subject
+  // restriction must never become an artifact-wide exemption by matching ID.
+  const status = exception.subject_ref != null ? "unsupported_subject_scope"
+    : mismatches.length ? "scope_mismatch"
+    : now == null ? "time_not_assessed"
+    : Date.parse(now) < Date.parse(exception.created_at) ? "not_yet_effective"
+    : expired ? "expired"
+    : exception.expires_when != null ? "condition_not_assessed"
+    : "applicable";
   return {
     id: exception.id,
     finding_id: exception.finding_id,
     subject_ref: exception.subject_ref,
-    status: expired ? "expired" : mismatches.length ? "scope_mismatch" : "applicable",
+    status,
     scope_mismatches: mismatches,
     expires_at: exception.expires_at,
     expires_when: exception.expires_when,
@@ -158,7 +168,7 @@ function requiredText(value, label, maximum) {
 }
 function optionalText(value, maximum) { return value == null ? null : requiredText(value, "scope text", maximum); }
 function normalizeTimestamp(value, label) {
-  const time = Date.parse(String(value || ""));
+  const time = evidenceTimestamp(value);
   if (!Number.isFinite(time)) throw new Error(`Review policy ${label} is invalid.`);
   return new Date(time).toISOString();
 }

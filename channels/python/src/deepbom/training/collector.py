@@ -248,6 +248,8 @@ class Recorder:
             raise ValueError(
                 "Activation context needs mode, input_identity and state_boundary"
             )
+        if "at" in context and json_value(context["at"]) != json_value(at):
+            raise ValueError("Activation context.at conflicts with event coordinates")
         raw = copy.deepcopy(self._snapshots[snapshot_sha256])
         rows = []
         for i, (subject, value) in enumerate(values.items()):
@@ -259,7 +261,7 @@ class Recorder:
                 }
             )
         raw["capture"] = {
-            "context": {"at": json_value(at), **json_value(context)},
+            "context": {**json_value(context), "at": json_value(at)},
             "values": rows,
         }
         result = engine("snapshot", raw)
@@ -295,11 +297,28 @@ class Recorder:
         token = uuid.uuid4().hex
         if optimizer is not self.optimizer:
             raise ValueError("Unknown optimizer; use its own collector")
+        observation_context = dict(context or {})
+        if "optimizer_binding" in observation_context:
+            raise ValueError("optimizer_binding is assigned by the collector")
+        if framework_of(self.model) == "pytorch":
+            members = {id(v): n for n, v in self.model.named_parameters()}
+            selected = [v for group in optimizer.param_groups for v in group["params"]]
+            if not selected or any(id(v) not in members for v in selected):
+                raise ValueError("Optimizer parameters do not belong to the selected model")
+            if len({id(v) for v in selected}) != len(selected):
+                raise ValueError("Optimizer repeats a model parameter")
+            observation_context["optimizer_binding"] = {"status":"model_parameter_subset", "native_state_refs":[members[id(v)] for v in selected], "model_parameter_count":len(members)}
+        else:
+            members = {id(v): getattr(v, "path", v.name) for v in self.model.weights}
+            selected = getattr(optimizer, "_trainable_variables", ())
+            if selected and any(id(v) not in members for v in selected):
+                raise ValueError("Optimizer variables do not belong to the selected model")
+            observation_context["optimizer_binding"] = {"status":"model_variable_subset" if selected else "not_observable_before_optimizer_build", "native_state_refs":[members[id(v)] for v in selected], "model_variable_count":len(members)}
         attempt_index = self.attempts
         payload = {
             "token": token,
             "gradient_stage": gradient_stage,
-            "context": context or {},
+            "context": observation_context,
             "effect": "not_yet_observed",
         }
         if loss is not None and "metrics" in self.capture:
@@ -318,6 +337,8 @@ class Recorder:
                 gradients = tuple(v.grad for v in variables)
             if gradients is None or len(variables) != len(gradients):
                 raise ValueError("Gradient/variable arity mismatch")
+            if len({id(v) for v in variables}) != len(variables):
+                raise ValueError("Gradient variables must be unique")
             gradient_rows = []
             transport_rows = []
             destinations = []
@@ -345,6 +366,8 @@ class Recorder:
                     indices = json_value(g.indices)
                     g = g.values
                     scope = "indexed_slices_values_not_dense_gradient"
+                if scope == "dense_tensor" and list(g.shape) != dense_shape:
+                    raise ValueError("Dense gradient shape does not match its model variable")
                 row = tensor_row(g, f"gradient:{i}", role="gradient")
                 transport_rows.append(row)
                 destinations.append(len(gradient_rows))

@@ -22,6 +22,7 @@ asset verification, and equivalence checks are documented in
 
 | Command | Artifact inputs | Declared outputs |
 | --- | ---: | --- |
+| `evidence-workflow` | 1 | `deepbom.evidence_workflow_result.v1`<br>`deepbom.evidence_workflow_query.v1`<br>`html`<br>`pdf`<br>`deepbom.evidence_standard_projection.v1` |
 | `optimization-report` | 1 | `deepbom.optimization_report_query.v1`<br>`deepbom.optimization_report.v1`<br>`deepbom.optimization_diff.v1`<br>`html`<br>`pdf` |
 | `audit` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
 | `gguf` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
@@ -59,10 +60,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`2.2.0`:
+`2.3.0`:
 
 ```console
-DEEPBOM 2.2.0
+DEEPBOM 2.3.0
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -213,6 +214,8 @@ Compiled accelerator evidence:
 Conversion provenance:
   --conversion-receipt <json>
                           Bind a self-hashed source/converter/environment receipt to the observed output artifact. Source .pt/.pth/.h5 files are identified by digest only and are never deserialized.
+
+Snapshot, provenance, evaluation and change review: deepbom evidence-workflow --help
 
 Saved optimization reports: deepbom optimization-report <report.json> --help
 
