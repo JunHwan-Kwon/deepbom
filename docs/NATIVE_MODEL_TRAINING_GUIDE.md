@@ -3,8 +3,10 @@
 Status: implemented experimental local extension, qualified on CPU with PyTorch
 2.8.0, TensorFlow 2.20.0 and Keras 3.11.3. This is an additive Python entry point;
 the existing artifact CLI, SDK and public remote MCP contracts remain unchanged.
-The extension is packaged starting with 2.2.0. Native platform availability is
-determined by published wheel/release assets, not by this CPU qualification.
+The extension is packaged starting with 2.2.0; the current documented package is
+2.3.0. Native platform availability is determined by published wheel/release
+assets, not by this CPU qualification. For a small runnable model-editing loop,
+start with [model development from Python](MODEL_DEVELOPMENT_WORKFLOW.md).
 
 The [implementation validation record](evidence-ir/NATIVE_IMPLEMENTATION_VALIDATION_2026-10-07.md)
 lists the executed source, installed-package, schema, browser and compatibility
@@ -32,9 +34,12 @@ There is no optimizer, RNG, sampler or training-resume restoration.
 There is no Trained IR. Artifact-based Model/Weight/Activation v1 documents and
 Evidence IR family v1 remain unchanged. Native documents use explicit new schema
 identities; they are not silently accepted by artifact-only consumers. Family v2
-is an additive union. Snapshot and chunk documents support the family and are not
-new analytical layers. See [native catalog](evidence-ir/native-catalog.json) and
-[schemas](schemas/deepbom-native-evidence-v1.schema.json).
+remains the native additive union. In 2.3.0, family v3 additionally accepts scoped
+Snapshot IR and typed Provenance v2; the original native state digest remains
+unchanged. Supporting state/chunk documents do not duplicate analytical layers.
+See [native catalog](evidence-ir/native-catalog.json),
+[schemas](schemas/deepbom-native-evidence-v1.schema.json) and
+[Snapshot workflow](evidence-ir/SNAPSHOT_WORKFLOW.md).
 
 Hash normalization uses the common JavaScript canonical JSON owner. JSON numeric
 statistics use binary64; exact counts and large integer extrema use decimal
@@ -46,7 +51,7 @@ A content digest detects changes, not truthfulness or source authenticity.
 For the qualified Linux x86-64 release wheel:
 
 ```sh
-python -m pip install 'deepbom[torch,tensorflow] @ https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v2.2.0/deepbom-2.2.0-py3-none-linux_x86_64.whl'
+python -m pip install 'deepbom[torch,tensorflow] @ https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v2.3.0/deepbom-2.3.0-py3-none-linux_x86_64.whl'
 # Install only the framework extra you use. GPU/OS wheel choice is your environment's responsibility.
 python -m deepbom.optimization --help
 python -m deepbom.training --help
@@ -231,6 +236,10 @@ histograms, singular spectra, storage-axis slices, similarity and value/zero map
 have explicit unavailable states. SVG and PNG can be downloaded. Refresh reads a
 new complete head; a failed/truncated object is not displayed as valid evidence.
 The candidate report separately presents structure/state correspondence and code.
+
+The current viewer refreshes on request. It has no code editor, automatic
+save-to-rebuild loop, graph-to-source editor or in-place model rewrite. Those
+interactions are proposed separately in the [development workflow](MODEL_DEVELOPMENT_WORKFLOW.md#proposed-interactive-workspace).
 
 MLflow uploads only selected evidence to the explicitly specified existing run.
 TensorBoard charts use event sequence, with original coordinates in sidecars.

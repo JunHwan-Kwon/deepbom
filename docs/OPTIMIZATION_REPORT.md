@@ -3,16 +3,17 @@
 The native optimization workflow exports an official monochrome report from
 the actual before and after model evidence. It is a product-generated deliverable,
 not a separately authored experiment narrative. This workflow is part of the
-native development extension; availability in a published package depends on
-that release including the extension.
+native development extension, shipped since 2.2.0. The current documented release
+is 2.3.0; the published native wheel is qualified on Linux x86-64 CPU.
 
 ## CLI
 
-Install the framework extra needed to create models, and the optional PDF extra:
+Install the framework extra needed to create models, and the optional PDF extra
+from the matching release wheel. This does not assume publication on PyPI:
 
 ```bash
-pip install "deepbom[torch,report]"
-# Or: pip install "deepbom[tensorflow,report]"
+python -m pip install 'deepbom[torch,report] @ https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v2.3.0/deepbom-2.3.0-py3-none-linux_x86_64.whl'
+# Use tensorflow,report instead of torch,report for the Keras workflow.
 ```
 
 Create a candidate and all three official report files:

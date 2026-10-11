@@ -23,7 +23,10 @@ const dist = path.resolve("dist");
 // Snapshot/workflow modules, schemas, the 0.16 catalog and public review page
 // bring the measured 2.3.0 artifact to 71,532,074 bytes (68.22 MiB).
 // Reserve a bounded 256 KiB increment; preserve the 16 MiB per-file ceiling.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 68.375);
+// Structure IDE, its shared editor and immutable 0.17–0.20 compatibility
+// snapshots bring the measured Web artifact to 68.68 MiB. Allocate 384 KiB
+// for this delivery; retain the 16 MiB per-file limit and explicit total gate.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 68.75);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

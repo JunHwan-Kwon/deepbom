@@ -309,7 +309,7 @@ export function syncFormatWorkflowVisibilityView({
 function workflowApplicabilityReason(workspace, format) {
   const id = String(format || "artifact").toUpperCase();
   if (workspace === "graph") return `${id} does not expose a serialized executable graph for this explorer.`;
-  if (workspace === "redesign") return "Redesign scenarios currently require the TFLite graph and target-cost contract.";
+  if (workspace === "redesign") return "Structure editing requires a serialized operation graph. TFLite block-cost scenarios are a separate mode.";
   if (workspace === "runtime") return `${id} runtime execution is not available in the browser benchmark adapter; imported evidence remains available.`;
   if (workspace === "deepbom") return `${id} does not have a source-bound protected analysis adapter in this build.`;
   if (["runtime_basin", "offline_test", "deployment_sensitivity"].includes(workspace)) {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v603";
+const CACHE_NAME = "tflite-wasm-static-audit-v607";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -15,6 +15,7 @@ const APP_ASSETS = [
   "./device-workspace.css",
   "./report-workspace.css",
   "./explorer-redesign.css",
+  "./structure-ide.css",
   "./explorer-evidence.css",
   "./explorer-question.css",
   "./execution-placement.css",
@@ -62,6 +63,8 @@ const APP_ASSETS = [
   "./lib/artifact-ir/internal/validation.js",
   "./lib/artifact-ir-context.js",
   "./lib/model-ir.js",
+  "./lib/model-structure.js",
+  "./lib/model-structure-editor.js",
   "./lib/model-ir/internal/blocks.js",
   "./lib/model-ir/internal/constants.js",
   "./lib/model-ir/internal/native-facts.js",

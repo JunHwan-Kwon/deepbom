@@ -13,6 +13,9 @@ import { clone, deepFreeze, evidenceClass, exact, list, unique } from "./model-i
 import { validateExactInteger } from "./exact-integer.js";
 
 export { MODEL_IR_METHOD_VERSION, MODEL_IR_SCHEMA };
+// Shared structural checks also serve source-bound editing proposals. This
+// validates references only; it does not validate an evidence document/digest.
+export { validateProgramLinks as validateModelProgramLinks };
 
 export { buildModelIrNativeFactLedger };
 

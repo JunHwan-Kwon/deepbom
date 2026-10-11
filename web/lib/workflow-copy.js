@@ -132,7 +132,7 @@ export function workflowActionCopyFor(workspace, fallback = {}, format = "tflite
     graph: ["Inspect serialized graph", "Search decoded ops, tensors, and producer/consumer links without treating unobserved runtime order as fact."],
     weight: ["Inspect weight distributions", "Inspect stored values, compare tensor distributions, and trace their serialized operation bindings. Activation evidence can be imported separately."],
     metadata: ["Connect metadata and lineage", "Bind OMOP releases, cohorts, code and evaluation records to this model. Inspect declared relationships, file hashes and unresolved references."],
-    redesign: ["Review projection", "Compare an isolated, untrained structural scenario against the immutable source audit."],
+    redesign: ["Edit structure", "Connect layer ports, refine a draft and compare it with the original model. TFLite block scenarios are also available."],
     runtime: ["Run benchmark", "Prepare local inputs and measure browser runtime timing."],
     deepbom: ["Run Artifact Geometry", "Execute the controlled local WASM module and review the artifact-derived weight and topology descriptors."],
     perturbation: ["Run Perturbation", "Execute local input perturbation and output drift evidence for the deployment artifact."],

@@ -156,6 +156,8 @@
     "check:nvidia-accelerator": "node scripts/check-nvidia-accelerator-profile.mjs",
     "check:remote-artifact-resolver": "node scripts/check-remote-artifact-resolver.mjs",
     "check:artifact-ir": "node scripts/check-artifact-ir.mjs",
+    "check:model-structure": "node scripts/check-model-structure.mjs",
+    "check:model-structure-viewer": "node scripts/check-model-structure-viewer.mjs",
     "check:model-ir": "node scripts/check-model-ir.mjs",
     "check:model-summary": "node scripts/check-model-summary.mjs",
     "check:model-ir-boundary": "node scripts/check-model-ir-import-boundary.mjs",

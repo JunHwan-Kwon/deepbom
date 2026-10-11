@@ -62,10 +62,10 @@ try {
   assert.deepEqual(await page.evaluate(() => window.navigation), ["weight"]);
   assert.equal(await page.evaluate(() => window.continuation.apply()), false, "Do not reroute subsequent audits");
   await page.evaluate(() => { window.location.hash = "workflow=redesign"; });
-  await page.waitForFunction(() => document.body.textContent.includes("unavailable for the selected format"));
-  assert.deepEqual(await page.evaluate(() => window.navigation), ["weight"]);
+  await page.waitForFunction(() => window.navigation.includes("redesign"));
+  assert.deepEqual(await page.evaluate(() => window.navigation), ["weight", "redesign"]);
   await page.evaluate(() => { window.location.hash = "workflow=placement"; });
   await page.waitForFunction(() => window.navigation.includes("accelerator"));
-  assert.deepEqual(await page.evaluate(() => window.navigation), ["weight", "audit", "accelerator"]);
+  assert.deepEqual(await page.evaluate(() => window.navigation), ["weight", "redesign", "audit", "accelerator"]);
 } finally { await browser.close(); }
 console.log("Workflow guide passed: CLI/schema route closure, fixed public links, no artifact transfer, browser continuation, format/access gates and one-shot navigation.");

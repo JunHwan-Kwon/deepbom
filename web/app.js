@@ -1079,6 +1079,7 @@ const explorerRedesignController = createExplorerRedesignController({
   blocksRoot: blocksExplorerPanel,
   cacheRoot: cacheExplorerPanel,
   redesignRoot: redesignPanel,
+  getModelIr: () => currentArtifactIrContext?.model_ir,
   project: (request) => {
     if (!current || current.format !== "tflite" || !currentModelBytes) {
       throw new Error("A bound TFLite source audit is required for Redesign.");

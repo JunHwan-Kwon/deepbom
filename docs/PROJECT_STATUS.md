@@ -1,6 +1,6 @@
 # DEEPBOM Project Status
 
-Current release and development baseline reviewed: 2026-10-06 KST.
+Current release and development baseline reviewed: 2026-10-11 KST.
 
 The release snapshot and development rules below are current. The detailed implementation inventory records accumulated feature work; it is not a claim that every format, runtime or target device was measured again on this date.
 
@@ -10,27 +10,51 @@ ignored by git.
 
 ## Snapshot
 
-The analyzer release baseline is **DEEPBOM 2.1.0**, shared by the CLI, local MCP and hosted analysis engine. A documentation deployment does not require republishing that npm version. Public source is generated from the reviewed allowlist; the deployment repository also contains private modules and service bindings that are not public export inputs.
+The analyzer release baseline is **DEEPBOM 2.3.0**, published to npm and MCP Registry and deployed to Web and both hosted MCP endpoints. The [GitHub release](https://github.com/JunHwan-Kwon/deepbom/releases/tag/channels-v2.3.0) includes the Linux x86-64 standalone engine, Python wheel, npm archive, MCPB and qualification receipts. Native qualification is Linux x86-64 CPU; this release does not establish Windows/macOS native execution or PyPI, Cargo, apt or Snap publication. A documentation update does not require republishing the engine. Public source is generated from the reviewed allowlist; the deployment repository also contains private modules and service bindings outside that export.
 
 | Surface | Current contract and boundary |
 | --- | --- |
-| Evidence IR | Artifact IR v2; Model, Weight, Activation and Provenance IR v1. The implementation is released; the project-maintained specification remains draft. Family catalog 1.0.0 and compatibility catalog 0.2.1 have independent version histories. |
+| Evidence IR | Existing artifact members retain their contracts. Native Model/Weight/Activation v2 and Training IR v1 are additive. Snapshot IR v1 and typed Provenance v2 use the family v3 entry point. The Web compatibility catalog is 0.20.0; npm 2.3.0 retains its 0.16.0 snapshot. Schema/catalog versions remain independent of the engine version. The project-maintained specification is not an externally approved standard. |
 | ChatGPT MCP | Seven tools, including conversational queries and workflow guidance. Base result transports v1 and v2 are accepted; optional provenance requires v2. Host tool availability and directory review are separate from server deployment. |
 | Browser/Claude MCP | Four tools for browser-local analysis and bounded result/error return. The result envelope is v2; the ChatGPT conversational query tools are not implied here. |
 | Local analysis | CLI and local MCP inspect supported artifacts without executing model code. Explicit numerical analysis is optional; imported activation/runtime captures retain their external evidence boundary. |
+| Model development | Experimental Python optimization accepts supported PyTorch/Keras models and explicitly trusted factories. Bounded folding or structure-change candidates have before/after evidence, state packages and reports. Training observers support qualified Torch loops, eager GradientTape and Keras fit. Model construction/probes execute local code; they are separate from static artifact inspection. |
+| Shared review | Web Worker, CLI, Node/Python SDK and local MCP share Snapshot, provenance, evaluation, OMOP and deployment-declaration workflow owners. Hosted MCP retains its attachment tools and provides Web continuation; it does not execute arbitrary native optimization or evaluation workflows. |
 | Interchange | CycloneDX 1.7 artifact evidence and SPDX 2.3 artifact inventories; the compatibility explorer states each mapping's limits. TEA exchange remains proposed, not implemented. |
 | Jetson/Orin guidance | The [optimization guide](https://deepbom.org/guides/jetson-orin-optimization/) separates QAT, target-device measurement and evidence review. It does not certify Orin execution or performance. |
-| Candidate review | The separate DEEPBOM Review v0.1.0 preview uses analyzer 1.103.0. Its MLflow/Olive imports and narrower model support must not be described as part of the DEEPBOM 2.0.0 IR contract. |
+| Candidate review | The new common evidence workflow compares bound external evaluation records. The older DEEPBOM Review v0.1.0 preview uses analyzer 1.103.0 and remains a separate contract; its MLflow/Olive adapters are not automatically part of this workflow. |
 
-See [release details](evidence-ir/RELEASE_2_0_0.md), [migration](evidence-ir/MIGRATION.md), [transport compatibility](chatgpt-app/PUBLICATION_COMPATIBILITY.md) and the [versioned compatibility catalog](evidence-ir/compatibility/README.md). These are the current contract references; historical review records are preserved rather than rewritten.
+See the [current Snapshot workflow](evidence-ir/SNAPSHOT_WORKFLOW.md), [native development guide](NATIVE_MODEL_TRAINING_GUIDE.md), [migration](evidence-ir/MIGRATION.md), [transport compatibility](chatgpt-app/PUBLICATION_COMPATIBILITY.md) and [versioned compatibility catalog](evidence-ir/compatibility/README.md). The [2.0.0 release record](evidence-ir/RELEASE_2_0_0.md) remains historical evidence of that transition.
 
-Release 2.1.0 adds an explicit Node/TypeScript SDK entry point, Python
-`inspect`, shared review-summary consumption and three runnable
-export/MLflow/candidate-review integrations. It also corrects common semantic
-comparisons, assessment coverage and failure propagation. See the
-[SDK contract](SDK_CONTRACT.md), [examples](../examples/integrations/README.md)
-and [changelog](../CHANGELOG.md). Agent metadata versions remain independent
-of this engine release; server deployment is not directory approval.
+The SDK introduced in 2.1.0 now includes optional numerical evidence (2.2.0)
+and the shared `evidenceWorkflow` / `evidence_workflow` API (2.3.0).
+Use the [SDK contract](SDK_CONTRACT.md), [examples](../examples/integrations/README.md)
+and [Python model-development entry point](MODEL_DEVELOPMENT_WORKFLOW.md).
+DeepBoard currently reads training evidence; it is not an integrated code editor
+or interactive model-rewrite session. Agent metadata versions remain independent
+of engine versions; deployed endpoints do not establish directory approval.
+
+The Web update dated 2026-10-11 includes a **Structure IDE** over the existing
+Model IR: port wiring, native attributes, layer templates, undo/redo, before/after,
+source-bound edit projects and a bounded Mermaid view. This is a Web delivery;
+the published CLI/native engine remains 2.3.0.
+Compatibility catalog 0.20.0 records this project mapping, bidirectional code
+synchronization, code-based layer addition/copy and original-block navigation source pins; the published 2.3.0 catalog snapshot remains unchanged.
+Edited native costs/contracts are invalidated until a supported rule recomputes
+them. It exports structural proposals, not trainable models. Existing TFLite block
+optimization remains a separate mode over the original artifact, accessible from
+a source layer in the inspector without losing draft edits. Code line numbers,
+focus mode, panel sizing, search/scroll preservation and guarded project loading
+are part of the workspace. See the
+[usage and boundaries](MODEL_DEVELOPMENT_WORKFLOW.md#web-structure-ide).
+
+Release qualification recorded 275 check runners and 180 Rust tests. On
+2026-10-11, a subsequent status check confirmed the published versions, 17 live
+asset/page hashes, both MCP tool inventories and service-worker revision v603;
+shared workflow, IR and calculation checks were rerun successfully. This was
+not another complete release qualification. An optional private segmentation
+fixture was unavailable. Actual ChatGPT/Claude conversation file sharing,
+Windows/macOS native execution and GPU/Jetson execution were not requalified.
 
 DEEPBOM is the primary product name for this browser-local engineering workbench for deployment
 artifacts. It covers local model inspection, static on-device audit, graph and
@@ -1369,9 +1393,9 @@ Priority 1: stabilization and maintainability.
 
 - Keep the extracted graph/research workspace, report, target-profile, arena,
   and influence modules behind import, source-budget, and provenance-slice
-  checks. `web/app.js` is below 300 KiB and `src/lib.rs` is below 400 KiB;
-  further extraction must preserve those budgets rather than create new public
-  surface by default.
+  checks. Per-file and category limits are owned by
+  `scripts/check-source-budget.mjs`; further extraction must preserve those
+  measured budgets rather than create new public surface by default.
 - Preserve workflow order: Input, Audit, Graph, Runtime, advanced modules,
   Output.
 - Keep Output as final report/export review, not execution surface.

@@ -21,7 +21,7 @@
     ],
     "boundary": "All application source files in these roots are enumerated. JS functions/tables are parsed; Rust/Python/C++ candidates also require semantic review. Textual equality is a candidate, not proof of equivalent contracts."
   },
-  "source_file_count": 549,
+  "source_file_count": 551,
   "files": [
     {
       "file": "bin/deepbom-agent-contract.mjs",
@@ -761,10 +761,10 @@
     },
     {
       "file": "web/app.js",
-      "sha256": "a0aeeabdd7a09dcce5ecc239f15ae63f65f3aee184879b3f4bcfe455385611cc",
+      "sha256": "eaf699aa8b79cf88790f1c3b4ac09f6f2d73cdf7fa09a82270bcd3b2a276a009",
       "language": "js",
       "role": "runtime",
-      "functions": 596,
+      "functions": 597,
       "calculation_candidates": 13
     },
     {
@@ -1241,7 +1241,7 @@
     },
     {
       "file": "web/lib/build-metadata.js",
-      "sha256": "e9ed65bf4c0eaa2b8f29fec2680b7754d699f496ed91b470514bdb4567a7ce73",
+      "sha256": "667b51ec452a257a9cb9ba0d21aa75aeb78999b63af49c2982a8d224d060d7f4",
       "language": "js",
       "role": "runtime",
       "functions": 0,
@@ -1817,10 +1817,10 @@
     },
     {
       "file": "web/lib/explorer-redesign.js",
-      "sha256": "2954f1844eb06a5f552958d8428d51394615f26d5dbadc303b5af2ffd12fcd41",
+      "sha256": "24829896ea5b8a82bbf762e9b56d85d47fcc437a54b7bf58695878c70a6d8f91",
       "language": "js",
       "role": "runtime",
-      "functions": 213,
+      "functions": 221,
       "calculation_candidates": 3
     },
     {
@@ -1897,7 +1897,7 @@
     },
     {
       "file": "web/lib/format-evidence-scope.js",
-      "sha256": "1dcbce5c27e9d72be31427110c7ceddbc6654f068b11eb8cccc26ec4d74ac272",
+      "sha256": "48f641e80a7fb350e273304a48a3988cf244fc546cdf8d7756aaaa29a418887f",
       "language": "js",
       "role": "runtime",
       "functions": 10,
@@ -1905,7 +1905,7 @@
     },
     {
       "file": "web/lib/format-workflow-ui.js",
-      "sha256": "aa559155eb27842e10adb325278a765794f153d9a9f7aada277a4e8ea5205588",
+      "sha256": "c49acf5716c50bd35272acec42c5db4ccd3fee80d33041848ae65c3052bcd9ed",
       "language": "js",
       "role": "runtime",
       "functions": 11,
@@ -2305,7 +2305,7 @@
     },
     {
       "file": "web/lib/model-ir.js",
-      "sha256": "a48deb072cbf5ebcbede3b8acf58356db500032dc334ccd4f1f6986476a842ec",
+      "sha256": "9f286c86d001f2cd0470c6fbfcdd47d2a936795a9c336b3ee454d4580257893c",
       "language": "js",
       "role": "runtime",
       "functions": 75,
@@ -2358,6 +2358,22 @@
       "role": "runtime",
       "functions": 9,
       "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/model-structure-editor.js",
+      "sha256": "90c0abd462dbadbf70e83af46677a768413c2327bc642f4240098c3b31f9c212",
+      "language": "js",
+      "role": "runtime",
+      "functions": 130,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/model-structure.js",
+      "sha256": "240e49bef6c08d77438c429afc096f61162dbb1784e116d81bc9fe4a78e91a88",
+      "language": "js",
+      "role": "runtime",
+      "functions": 117,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/model-summary.js",
@@ -4281,7 +4297,7 @@
     },
     {
       "file": "web/lib/workflow-catalog.js",
-      "sha256": "8c3029c5b591ef36a74ed399d026519bbce37ff84bd0635558cf5799e225d2db",
+      "sha256": "c46431b1026d2568a2357e559ee799bdaf9f54930ef487e9f0be4f9cd4ed82a4",
       "language": "js",
       "role": "runtime",
       "functions": 10,
@@ -4305,7 +4321,7 @@
     },
     {
       "file": "web/lib/workflow-copy.js",
-      "sha256": "6fd35ad677406d9d31a8b161771270f87a4eda21d25e6c458392c9f4e8c7e36e",
+      "sha256": "9dc215c660b67d43b62b47edf92800dd9e222acadebb70f9d766026221a48843",
       "language": "js",
       "role": "runtime",
       "functions": 7,
@@ -4361,7 +4377,7 @@
     },
     {
       "file": "web/sw.js",
-      "sha256": "dc10621611832110cc36743b1c9a04b9245b87089163f14a29c8c37c0093565a",
+      "sha256": "dab5dc3275f1fb9f09e6b78214820e6e43b910d7fc05149000a255586f2777d6",
       "language": "js",
       "role": "runtime",
       "functions": 18,

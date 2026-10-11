@@ -124,18 +124,23 @@ or platform approval.
 Account-owned ChatGPT, Claude, Codex, and search-indexing steps are kept in the
 [agent distribution operations checklist](docs/AGENT_DISTRIBUTION_OPERATIONS.md).
 
-Verified release channels expose the same analysis implementation:
+For code-first model development, start with the [Python candidate loop](docs/MODEL_DEVELOPMENT_WORKFLOW.md).
+It uses the shipped native APIs and distinguishes trainable-model workflows
+from the browser Structure IDE's source-bound graph proposals.
+
+Verified 2.3.0 release channels expose the same analysis implementation. npm
+and the Linux x86-64 release wheel below are published; other native platforms
+and registry channels require their own release verification.
 
 ```bash
-npx deepbom audit model.onnx --format cyclonedx
-npx deepbom audit model.onnx --format sarif --output deepbom.sarif --gate defects
+npx deepbom@2.3.0 audit model.onnx --format cyclonedx
+npx deepbom@2.3.0 audit model.onnx --format sarif --output deepbom.sarif --gate defects
 deepbom capabilities --compact
 deepbom self-test
 deepbom audit model.onnx --list-sections --compact
 deepbom audit model.onnx --section quantization,memory --compact
 deepbom explain-rule onnx.conv.output-shape
-python -m pip install deepbom
-cargo install deepbom
+python -m pip install 'deepbom @ https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v2.3.0/deepbom-2.3.0-py3-none-linux_x86_64.whl'
 deepbom audit model.gguf --compact
 deepbom verify model.tflite --contract production-interface.json
 deepbom verify model.onnx --bom supplied.cdx.json --render markdown

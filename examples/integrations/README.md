@@ -15,35 +15,31 @@ or the
 channel changes using the common workbench engines, and records the evidence,
 plots and untrained structure scaffolds. It does not train or deploy a model.
 
-For the proposed trainable-model interface, see
-[file, factory and Python-object entry points (Korean)](TRAINABLE_ENTRY_POINTS.ko.md).
-Its `deepbom.optimization` and `deepbom.training` commands and APIs are design examples, **not implemented
-or available in the released SDK**. It specifies both PyTorch and TensorFlow/Keras
-inputs, the call point before optimizer construction, and the common before/after
-comparison output. Candidate comparison, constraint revision, regeneration and
-selection form an independent loop before training; the same proposal includes
-CLI/API examples for that loop. Model optimization produces a selected structure
-and model state for training with a new user-owned optimizer. The separate
-training observation path records evidence; it does not optimize the training
-procedure or require a resumable checkpoint.
+For in-memory PyTorch/TensorFlow model development, start with the
+[runnable Python candidate loop](../../docs/MODEL_DEVELOPMENT_WORKFLOW.md) and
+[native implementation guide](../../docs/NATIVE_MODEL_TRAINING_GUIDE.md).
+`deepbom.optimization` and `deepbom.training` are experimental local APIs shipped
+since 2.2.0. They provide supported candidate transformations, before/after
+reports and qualified Torch-loop, GradientTape and Keras-fit observations.
+DeepBoard reads those records; MLflow, TensorBoard and W&B exports are explicit.
+The selected model uses a new user-owned optimizer. Training replay and an
+integrated framework-source editor are not provided. The separate Web Structure
+IDE edits source-bound graph proposals, not executable Python training code.
 
-The [training lifecycle design](../../docs/evidence-ir/TRAINING_LIFECYCLE.md)
-owns the proposed Training IR terminology, generation/reference diagrams and
-binding rules. It distinguishes run observations from checkpoint-bound numerical
-evidence and defines the shared observation semantics for Keras `fit`, TensorFlow
-`GradientTape` and PyTorch loops. This extension is not implemented yet.
-The same design provides optional presentation/storage adapters for DeepBoard
-(the proposed local evidence viewer), MLflow, TensorBoard and W&B. Existing
-MLflow artifact examples below do not imply that those full adapters or the
-live training collector already exist.
+For the 2.3.0 Snapshot/provenance/evaluation/OMOP workflow, use the
+[shared contract](../../docs/evidence-ir/SNAPSHOT_WORKFLOW.md) and
+[synthetic before/after example](../evidence-workflow/README.md).
+The earlier [entry-point proposal](TRAINABLE_ENTRY_POINTS.ko.md) and
+[training lifecycle design](../../docs/evidence-ir/TRAINING_LIFECYCLE.md) remain
+historical design records; their speculative APIs are not the current reference.
 
 For a separate model-replacement scenario with three comparable MLflow runs,
 see [the MLflow release-review walkthrough (Korean)](MLFLOW_RELEASE_SCENARIO.ko.md).
 `mlflow_release_review.py` consumes a completed bundle from the examples below,
 logs the existing evidence and decisions, and verifies them by reading them back.
 
-**Minimum SDK version: 2.1.0.** Install the Node SDK with
-`npm install deepbom@2.1.0` and use the matching Python platform wheel from the
+**Minimum SDK version for the three artifact examples: 2.1.0.** For the current
+release, install `npm install deepbom@2.3.0` and use the matching Python platform wheel from the
 release assets. The source walkthrough below builds and verifies both packages
 without publishing them. These additions are absent from earlier 2.0.0 packages.
 

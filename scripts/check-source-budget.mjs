@@ -24,7 +24,8 @@ const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_
 // These are documentation/history, not additional runtime implementations.
 // Retain the immutable 0.15.0 compatibility snapshot and channel/rule review.
 // Adds strict workflow/family schemas, migration guide and immutable 0.16 catalog.
-const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 2944);
+// Retain immutable 0.18–0.20 editor/synchronization snapshots (~88 KiB each).
+const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 3232);
 // Includes metadata tampering, cross-channel and browser regression checks.
 // Workflow routing and weight-query regression coverage add a measured 18 KiB;
 // reserve 32 KiB for tests and 16 KiB for the expanded review contract snapshot.

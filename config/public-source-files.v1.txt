@@ -181,6 +181,7 @@ docs/DEPENDENCY_SECURITY.md
 docs/EXTERNAL_REVIEW_TRIAGE.md
 docs/KNOWN_ISSUES.md
 docs/MEASUREMENT_ORACLE_GATE.md
+docs/MODEL_DEVELOPMENT_WORKFLOW.md
 docs/MODEL_FREE_BUG_REPORTING.md
 docs/MODEL_IR_V1.md
 docs/NATIVE_MODEL_TRAINING_GUIDE.md
@@ -251,8 +252,12 @@ docs/evidence-ir/compatibility/0.14.0.json
 docs/evidence-ir/compatibility/0.14.1.json
 docs/evidence-ir/compatibility/0.15.0.json
 docs/evidence-ir/compatibility/0.16.0.json
+docs/evidence-ir/compatibility/0.17.0.json
+docs/evidence-ir/compatibility/0.18.0.json
+docs/evidence-ir/compatibility/0.19.0.json
 docs/evidence-ir/compatibility/0.2.0.json
 docs/evidence-ir/compatibility/0.2.1.json
+docs/evidence-ir/compatibility/0.20.0.json
 docs/evidence-ir/compatibility/0.3.0.json
 docs/evidence-ir/compatibility/0.4.0.json
 docs/evidence-ir/compatibility/0.5.0.json
@@ -564,6 +569,8 @@ scripts/check-model-ir-import-boundary.mjs
 scripts/check-model-ir-source-contracts.mjs
 scripts/check-model-ir-visualization.mjs
 scripts/check-model-ir.mjs
+scripts/check-model-structure-viewer.mjs
+scripts/check-model-structure.mjs
 scripts/check-model-summary.mjs
 scripts/check-native-capture-pipeline.mjs
 scripts/check-native-correctness-regressions.py
@@ -1146,6 +1153,8 @@ web/lib/model-ir/internal/native-facts.js
 web/lib/model-ir/internal/profiles.js
 web/lib/model-ir/internal/program.js
 web/lib/model-ir/internal/shared.js
+web/lib/model-structure-editor.js
+web/lib/model-structure.js
 web/lib/model-summary.js
 web/lib/native-evidence.js
 web/lib/native-optimization-diff.js
@@ -1423,6 +1432,7 @@ web/samples/sample_cnn_float.onnx
 web/samples/tensorrt_supported_probe.onnx
 web/samples/tiny_decoder_llm.onnx
 web/samples/tinymqa1m.Q4_0.gguf
+web/structure-ide.css
 web/styles.css
 web/sw.js
 web/test.html

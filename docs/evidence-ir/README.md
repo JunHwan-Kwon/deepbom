@@ -2,13 +2,14 @@
 
 [Compatibility explorer](https://deepbom.org/guides/evidence-ir/compatibility/) · [Generated mapping table and snapshots](compatibility/README.md) · [Compatibility baseline and maintenance](COMPATIBILITY.md)
 
-**Status: draft DEEPBOM-maintained specification, implemented and released in DEEPBOM 2.0.0.**
+**Status: draft DEEPBOM-maintained specification; artifact family released in
+2.0.0, native extension in 2.2.0, Snapshot workflow in 2.3.0.**
 
-The package release does not make this an externally approved standard. The family catalog is version 1.0.0; compatibility catalog versions are listed in the [version index](compatibility/index.json). These catalog versions are independent of the package version. A newer checkout snapshot does not establish a deployed release. See the [release record](RELEASE_2_0_0.md) and [migration rules](MIGRATION.md).
+The package release does not make this an externally approved standard. The original artifact catalog remains 1.0.0; family v2/v3 entry points extend it without rewriting older members. The Web compatibility catalog is 0.20.0; npm 2.3.0 retains its 0.16.0 snapshot, and prior snapshots remain in the [version index](compatibility/index.json). Catalog, schema and package versions are independent. See the [current workflow](SNAPSHOT_WORKFLOW.md), [historical 2.0.0 release record](RELEASE_2_0_0.md) and [migration rules](MIGRATION.md).
 
 DEEPBOM Evidence IR is a family of interoperable intermediate representations for artifact, structural, numerical, runtime, and provenance evidence. It is maintained by the DEEPBOM project; no external standards-body approval or independent adoption is claimed.
 
-## Members and shared rules
+## Artifact members and shared rules
 
 | Member | Question answered | Serialized identity |
 | --- | --- | --- |
@@ -50,7 +51,7 @@ The machine-readable naming and identity owner is [`web/lib/evidence-ir.js`](../
 The artifact metadata path uses `deepbom.provenance_ir.v1`, the digest field `provenance_ir_sha256`, and the `provenance_ir` CLI/MCP section. `provenance-ir.js` owns the implementation directly. The generic input and bounded summary have their own identities: `deepbom.provenance_input.v1` and `deepbom.provenance_summary.v1`. No retired-name aliases are supported. See [the explicit transition rules](MIGRATION.md) before using older documents.
 
 ```sh
-# Run from a DEEPBOM 2.0.0 source checkout.
+# Run from a DEEPBOM 2.3.0 source checkout; this member contract began in 2.0.0.
 node bin/deepbom.mjs audit model.onnx --metadata metadata.json \
   --section provenance_ir --output-format json
 ```
@@ -59,8 +60,8 @@ Generic associations, BOM references and documentation links are contextual rela
 
 ## Training and immutable model-state evidence
 
-The [training lifecycle design](TRAINING_LIFECYCLE.md) separates a training process
-from the particular model states it produces. It proposes **Training IR** as an
+The [implemented native extension](../NATIVE_MODEL_TRAINING_GUIDE.md) separates a training process
+from the particular model states it produces. It records **Training IR** as an
 immutable snapshot of the observed training lifecycle, temporal coordinates,
 training-specific evidence and time-bound model-state references. It retains the
 same IR type after a run ends; each changed snapshot has its own digest. An optional
@@ -71,8 +72,8 @@ Artifact, Model, Weight and Activation IR retain their existing responsibilities
 
 Model optimization returns a selected model structure and state for use with a
 new user-owned optimizer. Training IR records observations, rather than requiring
-training replay or a resumable checkpoint. The [consumer adapter design](TRAINING_LIFECYCLE.md#85-하나의-근거-선택-가능한-표시저장-대상)
-keeps common evidence independent of the DeepBoard viewer and external
+training replay or a resumable checkpoint. The [implemented record adapters](../NATIVE_MODEL_TRAINING_GUIDE.md#deepboard-and-external-record-systems)
+keep common evidence independent of the DeepBoard viewer and external
 MLflow, TensorBoard or W&B presentations. Missing state binding remains explicit.
 
 The additive experimental native family implements CPU-qualified PyTorch and

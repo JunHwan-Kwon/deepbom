@@ -1515,12 +1515,12 @@ try {
     status: step.dataset.applicabilityStatus,
     reason: step.dataset.applicabilityReason,
   }));
-  if (onnxRedesign.hidden || onnxRedesign.applicable !== "false"
-    || onnxRedesign.status !== "not_applicable" || !onnxRedesign.reason) {
+  if (onnxRedesign.hidden || onnxRedesign.applicable !== "true"
+    || onnxRedesign.status === "not_applicable") {
     throw new Error(`ONNX Redesign applicability is not isolated: ${JSON.stringify(onnxRedesign)}`);
   }
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log(`Explorer + Redesign viewer check passed (${path.relative(ROOT, SERVE_ROOT) || "source"}; TFLite desktop/mobile projection overlay; ONNX fail-closed behavior).`);
+  console.log(`Explorer + Redesign viewer check passed (${path.relative(ROOT, SERVE_ROOT) || "source"}; TFLite desktop/mobile projection overlay; ONNX structure navigation and bounded block semantics).`);
   console.log(`graph=${graphScreenshot}`);
   console.log(`graph_dark=${graphDarkScreenshot}`);
   console.log(`graph_mobile=${graphMobileScreenshot}`);

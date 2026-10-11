@@ -220,7 +220,7 @@ export function formatWorkflowApplicability(format, analysis = null) {
   const tfliteResearch = id === "tflite";
   return {
     graph,
-    redesign: id === "tflite",
+    redesign: graph,
     runtime,
     protectedSourceAnalysis: id === "tflite" || id === "onnx",
     tfliteResearch,

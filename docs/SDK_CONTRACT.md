@@ -1,6 +1,7 @@
 # DEEPBOM SDK contract
 
-Introduced in DEEPBOM **2.1.0**. Install the Node SDK with `npm install deepbom@2.2.0`.
+Introduced in DEEPBOM **2.1.0**; current documented package **2.3.0**.
+Install the Node SDK with `npm install deepbom@2.3.0`.
 The Python SDK uses the corresponding platform wheel; platform availability
 is determined by the published release assets, not by this API description.
 See the [installation and integration walkthrough](../examples/integrations/README.md)
@@ -42,6 +43,7 @@ native engine and WASM manifest. Neither requires an analysis server.
 | `verifyContract(path, contract)` | `verify_contract(path, contract)` | Native external-interface verification |
 | `verifyBom(path, bom, options?)` | `verify_bom(path, bom, **options)` | Bounded BOM reconciliation, not universal standards conformance |
 | `numericalEvidence(path, options)` | `numerical_evidence(path, **options)` | Explicit Weight/Activation IR, numerical detail and reference comparison; added in 2.2.0 |
+| `evidenceWorkflow(request, options?)` | `evidence_workflow(request, **options)` | Shared Snapshot/provenance/evaluation/review result, or validation of a saved result; added in 2.3.0 |
 
 Node supports Node.js >=20, ESM imports and CommonJS dynamic `import()`. The
 package root is the supported entry point; internal file imports are private.
@@ -73,6 +75,21 @@ and requires a 2.2.0 or later package. Advanced target profiles, other runtime
 imports, custom policy files and image/bundle exports remain CLI/MCP/Web
 workflows. An SDK method's existence does not imply all CLI options are exposed.
 There is intentionally no arbitrary `extraArgs` escape hatch.
+
+`evidenceWorkflow` accepts a workflow request or saved result object. In Node,
+`files` is an array of `{sha256, path}`; in Python it is a digest-to-local-path
+dictionary. Both use their normal timeout/output limits and the common engine.
+Workflow documents are limited to 16 MiB, and supplied originals to 64 MiB each
+and 256 MiB combined. Missing required originals leave checks unresolved;
+saved observations do not establish fresh byte verification. Check the returned
+document status as well as process success. See the
+[workflow contract and examples](evidence-ir/SNAPSHOT_WORKFLOW.md).
+
+For an in-memory trainable model, use the separate experimental Python
+`deepbom.optimization` and `deepbom.training` APIs. They run explicitly supplied
+local framework code and reuse the common evidence owners. This static SDK's
+no-model-execution promise does not cover those opt-in native operations.
+Start with [model development from Python](MODEL_DEVELOPMENT_WORKFLOW.md).
 
 ## Options
 

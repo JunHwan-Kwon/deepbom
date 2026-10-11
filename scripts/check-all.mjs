@@ -86,6 +86,8 @@ const CHECKS = [
   "scripts/check-ir-hardening.mjs",
   "scripts/check-ir-support-gate.mjs",
   "scripts/check-model-ir.mjs",
+  "scripts/check-model-structure.mjs",
+  "scripts/check-model-structure-viewer.mjs",
   "scripts/check-model-summary.mjs",
   "scripts/check-numerical-ir.mjs",
   "scripts/check-numerical-details.mjs",

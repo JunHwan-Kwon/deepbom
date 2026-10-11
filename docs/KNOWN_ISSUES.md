@@ -1,5 +1,24 @@
 # Known Issues
 
+## DEEPBOM 2.3.0: tuple-valued native layer configuration
+
+Reproduced on 2026-10-11 in the installed Linux x86-64 wheel while executing
+the Python development example. `AdaptiveAvgPool2d((1, 1))` stores a tuple in
+`output_size`; the native package's JSON reconstruction changes it to a list.
+The state-definition identity preserves that distinction, so export fails with
+`Loaded model definition or state differs from the selected manifest`.
+
+This is an unresolved native reconstruction defect, not evidence of altered
+model outputs or a static artifact calculation error. The identity check must
+remain enabled. The documented toy example uses `AdaptiveAvgPool2d(1)`, whose
+scalar configuration restores correctly; that is not a general solution for
+tuple-valued layer settings. A fix needs explicit type-preserving constructor
+configuration and round-trip checks across supported layer arguments.
+
+The existing native guide's statement about preserving custom attribute types
+does not establish the same property for built-in constructor configurations.
+No runtime fix or new package release is included in this documentation update.
+
 ## DEEPBOM 1.95.0: partial ONNX MAC ledgers
 
 DEEPBOM 1.95.0 could present the assessed MAC subtotal of an incomplete ONNX

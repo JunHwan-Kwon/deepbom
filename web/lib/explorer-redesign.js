@@ -10,6 +10,7 @@ import {
   scenarioFingerprint,
 } from "./redesign-codegen.js";
 import { createZipBlob } from "./zip.js";
+import { createModelStructureEditor } from "./model-structure-editor.js";
 import {
   createNodeViewController,
   getRedesignContractState,
@@ -826,6 +827,20 @@ function channelBudget(row, bytesPerElement) {
 
 function renderRedesign(root, analysis, state, actions) {
   root.replaceChildren();
+  const modes = element("div", "se-modes");
+  for (const [mode, label] of [["structure", "Structure IDE"], ["blocks", "Block optimization"]]) {
+    const tab = button(label);
+    tab.setAttribute("aria-pressed", String(state.editorMode === mode));
+    tab.addEventListener("click", () => { state.editorMode = mode; renderRedesign(root, analysis, state, actions); });
+    if (mode === "blocks") tab.disabled = analysis?.format !== "tflite";
+    modes.append(tab);
+  }
+  modes.append(element("span", "", state.editorMode === "structure" ? "Model IR · local draft" : "Original TFLite source · independent block scenarios"));
+  root.append(modes);
+  if (state.editorMode === "structure") {
+    const host = element("div"); root.append(host); actions.mountStructureEditor(host); return;
+  }
+  actions.suspendStructureEditor?.();
   if (!analysis) {
     root.append(emptyPanel("Redesign unavailable", "Run a TFLite static audit before creating an isolated projection."));
     return;
@@ -1912,6 +1927,7 @@ export function createExplorerRedesignController({
   blocksRoot,
   cacheRoot,
   redesignRoot,
+  getModelIr = () => null,
   project,
   explorePareto = null,
   selectOp,
@@ -1919,6 +1935,7 @@ export function createExplorerRedesignController({
   filenameForExport = (suffix) => suffix,
 }) {
   const state = {
+    editorMode: "structure",
     selectedBlockId: "",
     blockSort: "execution",
     blockWarningsOnly: false,
@@ -1955,15 +1972,38 @@ export function createExplorerRedesignController({
   let projectionTimer = null;
   let redesignNodeController = null;
   let implementationCache = null;
+  const structureEditor = createModelStructureEditor({
+    sourceContext(op) {
+      const model = getModelIr();
+      if (analysis?.format !== "tflite" || model?.artifact?.sha256 !== analysis.model_sha256) return null;
+      const sourceOp = model.program.operations.find(row => row.id === op.id);
+      // Only primary-region, source-bound operators may address the TFLite ledger.
+      if (!sourceOp || !model.program.programs[0]?.entry_region_refs.includes(sourceOp.region_ref)
+        || !Number.isInteger(sourceOp.native_index)) return null;
+      const block = analysis.block_inventory?.blocks?.find(row => row.op_indices?.includes(sourceOp.native_index));
+      if (!block) return null;
+      const originalSha = analysis.model_sha256, originalModel = model.model_ir_sha256;
+      return { label: `${block.block_id} · ${block.display_name}`,
+        detail: `Channel, kernel and memory scenarios · ${analysis.target_profile?.label || "bound target"}`,
+        open() {
+          if (analysis?.model_sha256 !== originalSha || getModelIr()?.model_ir_sha256 !== originalModel) return;
+          actions.openRedesign(block.block_id, sourceOp.native_index);
+        },
+      };
+    },
+  });
 
   const actions = {
+    mountStructureEditor(host) { structureEditor.sync(host, getModelIr()); },
+    suspendStructureEditor() { structureEditor.suspend(); },
     paretoAvailable: typeof explorePareto === "function",
     selectOp,
-    openRedesign(blockId) {
+    openRedesign(blockId, opIndex = null) {
+      state.editorMode = "blocks";
       ensureRedesignState(analysis, state);
       state.selectedRedesignBlockId = blockId;
-      state.selectedRedesignOpIndex = analysis.block_inventory.blocks
-        .find((block) => block.block_id === blockId)?.op_indices?.[0]
+      const block = analysis.block_inventory.blocks.find((block) => block.block_id === blockId);
+      state.selectedRedesignOpIndex = block?.op_indices?.includes(opIndex) ? opIndex : block?.op_indices?.[0]
         ?? state.selectedRedesignOpIndex;
       openWorkspace?.("redesign");
       renderRedesign(redesignRoot, analysis, state, actions);
@@ -2201,6 +2241,8 @@ export function createExplorerRedesignController({
 
   return {
     resetInteractionState() {
+      structureEditor.reset();
+      state.editorMode = "structure";
       const projectionWasRunning = state.running;
       clearTimeout(projectionTimer);
       redesignNodeController?.resetInteractionState();

@@ -19,6 +19,7 @@ const SMOKE = [
   "scripts/generate-deepbom-property-taxonomy.mjs --check",
   "scripts/check-public-product-contracts.mjs",
   "scripts/check-model-summary.mjs",
+  "scripts/check-model-structure.mjs",
   "scripts/check-cyclonedx-consumer-compatibility.mjs",
   "scripts/check-bom-artifact-reconciliation.mjs",
   "scripts/check-release-supply-chain-evidence.mjs",
@@ -98,6 +99,7 @@ const FORMAT_EVIDENCE = [
 
 const RELEASE = [
   ...SMOKE,
+  "scripts/check-model-structure-viewer.mjs",
   ...FORMATS,
   ...FORMAT_EVIDENCE,
   "scripts/write-build-metadata.mjs",

@@ -6,12 +6,11 @@
 > 제안 API 전부가 현재 지원된다는 뜻은 아닙니다.
 
 
-**상태: 2026-10-07 인터페이스 제안. `deepbom.optimization`, `deepbom.training`,
-아래 CLI 명령과 Python API는 아직 구현·배포되지 않았다.
-현재 DEEPBOM 2.1.0에서 실행하는 안내가 아니다.**
-프레임워크 모델 정의 예시는 일반 PyTorch/Keras 코드이며, 전체 예제의 실행 검증은
-향후 양 프레임워크 어댑터 구현 후 수행한다. 현재 실행 가능한 예제는
-[통합 예제 README](README.md)를 참고한다.
+**아래 본문의 기준: 2026-10-07 구현 전 인터페이스 제안.**
+당시의 제안 API를 현재 API로 간주하지 않는다. 지금은 두 namespace가
+실험적 native 기능으로 배포되어 있으며, 현재 실행 가능한 예제는
+[Python 개발 흐름](../../docs/MODEL_DEVELOPMENT_WORKFLOW.md)과
+[통합 예제 README](README.md)를 따른다.
 
 **기본 목적은 모델 최적화다.** 선택한 모델의 구조·가중치·필요한 buffer를
 복원해 사용자의 새 optimizer로 학습하거나 fine-tuning할 수 있도록 한다.
