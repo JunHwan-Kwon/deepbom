@@ -258,6 +258,7 @@ docs/evidence-ir/compatibility/0.19.0.json
 docs/evidence-ir/compatibility/0.2.0.json
 docs/evidence-ir/compatibility/0.2.1.json
 docs/evidence-ir/compatibility/0.20.0.json
+docs/evidence-ir/compatibility/0.21.0.json
 docs/evidence-ir/compatibility/0.3.0.json
 docs/evidence-ir/compatibility/0.4.0.json
 docs/evidence-ir/compatibility/0.5.0.json
@@ -1362,6 +1363,7 @@ web/lib/static-audit-worker-protocol.js
 web/lib/status.js
 web/lib/storage.js
 web/lib/strict-json.js
+web/lib/structure-wire-routing.js
 web/lib/target-profiles.generated.js
 web/lib/telemetry.js
 web/lib/tensor-inventory.js

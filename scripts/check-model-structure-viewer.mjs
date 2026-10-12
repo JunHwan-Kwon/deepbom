@@ -50,7 +50,7 @@ try {
   assert.equal(await host.getAttribute('aria-modal'), 'true');
   await host.getByRole('button', { name: 'Exit focus', exact: true }).press('Escape');
   assert(!(await host.evaluate(node => node.classList.contains('se-expanded'))));
-  await page.waitForFunction(() => document.querySelector(".se-wire")?.getAttribute("d")?.includes("C"));
+  await page.waitForFunction(() => document.querySelector(".se-wire")?.getAttribute("d")?.includes("L"));
   await host.getByRole("button", { name: "+ Add", exact: true }).click();
   assert.equal(await host.locator(".se-node").count(), model.program.operations.length + 1);
   const inputValue = model.program.programs[0].input_value_refs[0];
@@ -270,6 +270,42 @@ try {
   await page.waitForFunction(() => document.querySelector('#redesignPanel .se-source-strip')?.textContent.includes('mobilenet_v2'));
   await page.locator('[data-workflow-step="redesign"]').click();
   const redesign = page.locator('#redesignPanel');
+  await page.waitForFunction(() => document.querySelector('#redesignPanel .se-wire-group'));
+  const readRouting = () => redesign.evaluate(host => {
+    const scene = host.querySelector('.se-scene'), s = scene.getBoundingClientRect();
+    const zoom = scene.getBoundingClientRect().width / parseFloat(scene.style.width);
+    const boxes = [...host.querySelectorAll('.se-node')].map(node => { const b = node.getBoundingClientRect(); return { x: (b.x - s.x) / zoom, y: (b.y - s.y) / zoom, w: b.width / zoom, h: b.height / zoom }; });
+    let crossings = 0;
+    for (const path of host.querySelectorAll('.se-wire')) {
+      const length = path.getTotalLength();
+      for (let t = 0; t <= length; t += 3) { const p = path.getPointAtLength(t); if (boxes.some(b => p.x > b.x + 1 && p.x < b.x + b.w - 1 && p.y > b.y + 1 && p.y < b.y + b.h - 1)) crossings++; }
+    }
+    return { crossings, blocked: host.querySelectorAll('.is-blocked').length, routed: host.querySelectorAll('.se-wire-group.is-routed').length, wires: host.querySelectorAll('.se-wire').length, inputs: host.querySelectorAll('.se-data-inputs [data-input-port]').length };
+  });
+  const routing = await readRouting();
+  assert.equal(routing.crossings, 0, 'MobileNet paths avoid every layer card, including rounded corners');
+  assert.equal(routing.blocked, 0); assert(routing.routed > 0, 'Residual connections have dedicated outside routes');
+  assert.equal(routing.wires, routing.inputs, 'Routing preserves every bound data input connection');
+  await redesign.getByRole('button', { name: 'Trace selected', exact: true }).click();
+  assert.equal(await redesign.getByRole('button', { name: 'Trace selected', exact: true }).getAttribute('aria-pressed'), 'true');
+  await redesign.getByRole('button', { name: 'Trace selected', exact: true }).click();
+  await redesign.locator('.se-node-head').nth(8).press('Enter');
+  await redesign.locator('.se-viewport').evaluate(node => { node.scrollTop = 1050; });
+  await redesign.locator('.se-viewport').screenshot({ path: path.join(output, 'structure-wires-tflite.png') });
+  await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+  await redesign.locator('.se-viewport').screenshot({ path: path.join(output, 'structure-wires-tflite-dark.png') });
+  await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+  const layerHead = await redesign.locator('.se-node-head').nth(8).boundingBox();
+  await page.mouse.move(layerHead.x + 30, layerHead.y + 20); await page.mouse.down();
+  await page.mouse.move(layerHead.x + 115, layerHead.y + 20, { steps: 8 }); await page.mouse.up();
+  for (const action of [null, '+', '−', 'Arrange']) {
+    if (action) await redesign.getByRole('button', { name: action, exact: true }).click();
+    await page.waitForFunction(() => document.querySelector('#redesignPanel .se-wire-group'));
+    const moved = await readRouting();
+    assert.equal(moved.crossings, 0, `No card crossings after ${action || 'node drag'}`);
+    assert.equal(moved.blocked, 0); assert.equal(moved.wires, routing.wires);
+  }
+  await redesign.locator('.se-viewport').evaluate(node => { node.scrollTop = 0; });
   const sourceCount = await redesign.locator('.se-node').count();
   await redesign.getByRole('button', { name: '+ Identity', exact: true }).click();
   assert.equal(await redesign.getByRole('button', { name: 'Open source block scenario', exact: true }).count(), 0, 'A new layer has no original source block');

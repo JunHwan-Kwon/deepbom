@@ -26,7 +26,9 @@ const dist = path.resolve("dist");
 // Structure IDE, its shared editor and immutable 0.17–0.20 compatibility
 // snapshots bring the measured Web artifact to 68.68 MiB. Allocate 384 KiB
 // for this delivery; retain the 16 MiB per-file limit and explicit total gate.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 68.75);
+// Orthogonal routing and immutable 0.21 catalog bring the artifact to 68.78 MiB.
+// Reserve 128 KiB; the per-file cap is unchanged.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 68.875);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

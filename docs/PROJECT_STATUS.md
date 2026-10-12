@@ -14,7 +14,7 @@ The analyzer release baseline is **DEEPBOM 2.3.0**, published to npm and MCP Reg
 
 | Surface | Current contract and boundary |
 | --- | --- |
-| Evidence IR | Existing artifact members retain their contracts. Native Model/Weight/Activation v2 and Training IR v1 are additive. Snapshot IR v1 and typed Provenance v2 use the family v3 entry point. The Web compatibility catalog is 0.20.0; npm 2.3.0 retains its 0.16.0 snapshot. Schema/catalog versions remain independent of the engine version. The project-maintained specification is not an externally approved standard. |
+| Evidence IR | Existing artifact members retain their contracts. Native Model/Weight/Activation v2 and Training IR v1 are additive. Snapshot IR v1 and typed Provenance v2 use the family v3 entry point. The Web compatibility catalog is 0.21.0; npm 2.3.0 retains its 0.16.0 snapshot. Schema/catalog versions remain independent of the engine version. The project-maintained specification is not an externally approved standard. |
 | ChatGPT MCP | Seven tools, including conversational queries and workflow guidance. Base result transports v1 and v2 are accepted; optional provenance requires v2. Host tool availability and directory review are separate from server deployment. |
 | Browser/Claude MCP | Four tools for browser-local analysis and bounded result/error return. The result envelope is v2; the ChatGPT conversational query tools are not implied here. |
 | Local analysis | CLI and local MCP inspect supported artifacts without executing model code. Explicit numerical analysis is optional; imported activation/runtime captures retain their external evidence boundary. |
@@ -38,14 +38,16 @@ The Web update dated 2026-10-11 includes a **Structure IDE** over the existing
 Model IR: port wiring, native attributes, layer templates, undo/redo, before/after,
 source-bound edit projects and a bounded Mermaid view. This is a Web delivery;
 the published CLI/native engine remains 2.3.0.
-Compatibility catalog 0.20.0 records this project mapping, bidirectional code
+Compatibility catalog 0.21.0 records this project mapping, bidirectional code
 synchronization, code-based layer addition/copy and original-block navigation source pins; the published 2.3.0 catalog snapshot remains unchanged.
 Edited native costs/contracts are invalidated until a supported rule recomputes
 them. It exports structural proposals, not trainable models. Existing TFLite block
 optimization remains a separate mode over the original artifact, accessible from
 a source layer in the inspector without losing draft edits. Code line numbers,
 focus mode, panel sizing, search/scroll preservation and guarded project loading
-are part of the workspace. See the
+are part of the workspace. The 2026-10-12 update aligns flow ports vertically,
+routes residual connections outside layer cards, and adds selected-path tracing.
+Routing is display geometry and does not change Model IR or calculations. See the
 [usage and boundaries](MODEL_DEVELOPMENT_WORKFLOW.md#web-structure-ide).
 
 Release qualification recorded 275 check runners and 180 Rust tests. On

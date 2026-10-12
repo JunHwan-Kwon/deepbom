@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v607";
+const CACHE_NAME = "tflite-wasm-static-audit-v608";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -65,6 +65,7 @@ const APP_ASSETS = [
   "./lib/model-ir.js",
   "./lib/model-structure.js",
   "./lib/model-structure-editor.js",
+  "./lib/structure-wire-routing.js",
   "./lib/model-ir/internal/blocks.js",
   "./lib/model-ir/internal/constants.js",
   "./lib/model-ir/internal/native-facts.js",

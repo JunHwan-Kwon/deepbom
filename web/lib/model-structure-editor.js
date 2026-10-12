@@ -1,17 +1,21 @@
 import { createStructureSession, indexStructure, inputsOf, outputsOf, structureMermaid, parseStructureMermaid, structureLayerSnippet, topologicalOrder, STRUCTURE_LAYERS, STRUCTURE_TEMPLATES } from "./model-structure.js";
 import { downloadText } from "./download.js";
+import { routeStructureWires, roundedWirePath } from "./structure-wire-routing.js";
 
 const NS = "http://www.w3.org/2000/svg";
+let editorNumber = 0;
 function el(tag, cls = "", text = "") { const n = document.createElement(tag); n.className = cls; n.textContent = text; return n; }
 function button(text, fn, cls = "") { const n = el("button", cls, text); n.type = "button"; n.addEventListener("click", fn); return n; }
 function svg(tag, attrs = {}) { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); return n; }
 function contract(v) { return v ? `${v.shape == null ? "shape ?" : v.shape.length ? v.shape.join(" × ") : "scalar"} · ${v.dtype || "dtype ?"}` : "Disconnected"; }
 
 export function createModelStructureEditor({ sourceContext = () => null } = {}) {
+  const arrowId = `se-flow-arrow-${++editorNumber}`;
   let host, session, source, selected = null, region, draft, idx, zoom = 1, positions = new Map();
   let viewport, scene, wireLayer, message = "", textOpen = true, fromValue = null, portElements = new Map(), previews = [];
   let gestureCleanup = null, resizeObserver = null, candidateNumber = 0;
   let layerSearch = "", codeShare = 46, expanded = false, artifactInfo = null;
+  let traceMode = false, routes = [], producedValues = new Set();
   const paneOffsets = new Map();
   const rememberPanes = () => { for (const node of host?.querySelectorAll('.se-palette,.se-inspector,.se-text-panel,.se-code-input') || []) paneOffsets.set(node.className, [node.scrollTop, node.scrollLeft]); };
   const textBuffers = new Map();
@@ -95,16 +99,22 @@ export function createModelStructureEditor({ sourceContext = () => null } = {}) 
       levels.set(op.id, level);
       if (!groups.has(level)) groups.set(level, []); groups.get(level).push(op);
     }
-    let y = 110;
+    const pitch = Math.max(320, ...ops.map(op => nodeWidth(op) + 80));
+    const preferredX = op => { const parents = draft.program.relationships.filter(e => e.kind === 'data_dependency' && e.to_ref === op.id).map(e => positions.get(e.from_ref)?.x).filter(x => x != null); return parents.length ? parents.reduce((a, b) => a + b, 0) / parents.length : 72; };
+    let y = 145;
     for (const list of groups.values()) {
-      let height = 100;
-      list.forEach((op, i) => { positions.set(op.id, { x: 70 + i * 305, y }); height = Math.max(height, nodeHeight(op)); });
-      y += height + 65;
+      let height = 100, nextX = 72;
+      list.sort((a, b) => preferredX(a) - preferredX(b));
+      list.forEach(op => { const x = Math.max(nextX, preferredX(op)); positions.set(op.id, { x, y }); nextX = x + pitch; height = Math.max(height, nodeHeight(op)); });
+      y += height + 76;
     }
     // Invalid cycles still remain visible and editable.
     for (const op of draft.program.operations.filter(op => op.region_ref === region)) if (!positions.has(op.id)) { positions.set(op.id, { x: 70, y }); y += nodeHeight(op) + 65; }
   }
-  function nodeHeight(op) { return 74 + 28 * Math.max(op.input_port_refs.length, op.output_port_refs.length, 1); }
+  function isStateInput(port) { return idx.values.get(port.value_ref)?.storage_refs?.length && !producedValues.has(port.value_ref); }
+  function stateInputs(op) { return inputsOf(op, idx).filter(isStateInput); }
+  function nodeHeight(op) { return 88 + Math.ceil(stateInputs(op).length / 3) * 26; }
+  function nodeWidth(op) { return Math.max(240, 40 + 28 * Math.max(op.input_port_refs.length - stateInputs(op).length, op.output_port_refs.length)); }
   function visibleOps() { return draft.program.operations.filter(op => op.region_ref === region); }
   function render() {
     if (!host || !session) return;
@@ -113,6 +123,7 @@ export function createModelStructureEditor({ sourceContext = () => null } = {}) 
     const scroll = { x: viewport?.scrollLeft || 0, y: viewport?.scrollTop || 0 };
     rememberPanes();
     draft = session.draft; idx = indexStructure(draft.program);
+    producedValues = new Set(draft.program.ports.filter(p => p.direction === 'output').map(p => p.value_ref));
     if (!region || !draft.program.regions.some(r => r.id === region)) region = draft.program.programs[0]?.entry_region_refs?.[0] || draft.program.regions[0]?.id;
     codeState();
     if (!positions.size) arrange();
@@ -159,17 +170,22 @@ export function createModelStructureEditor({ sourceContext = () => null } = {}) 
     const grid = el("div", `se-grid${textOpen ? " se-with-code" : ""}`); grid.append(palette());
     viewport = el("div", "se-viewport"); viewport.tabIndex = 0; viewport.setAttribute("aria-label", "Model structure canvas");
     viewport.addEventListener("keydown", event => { if (event.key === "Escape") { fromValue = null; disposeGesture(); render(); } });
-    const canvasLabel = el("div", "se-canvas-label"); canvasLabel.append(el("strong", "", "GRAPH"), el("span", "", `${visibleOps().length} layers · drag ● → ○`)); viewport.append(canvasLabel);
+    const canvasLabel = el("div", "se-canvas-label"); canvasLabel.append(el("strong", "", "DATA FLOW ↓"), el("span", "", `${visibleOps().length} layers`));
+    const trace = button('Trace selected', () => { traceMode = !traceMode; trace.setAttribute('aria-pressed', String(traceMode)); emphasizeConnections(); });
+    trace.setAttribute('aria-pressed', String(traceMode)); trace.title = 'Highlight upstream and downstream paths of the selected layer'; canvasLabel.append(trace); viewport.append(canvasLabel);
     const space = el("div", "se-space"); scene = el("div", "se-scene"); wireLayer = svg("svg", { class: "se-wires", "aria-label": "Tensor connections" });
     scene.append(wireLayer); portElements = new Map();
     const external = externalValues();
     external.forEach((v, i) => {
-      const n = el("div", "se-external"); n.style.left = `${20 + i * 235}px`; n.style.top = "12px";
+      const consumers = draft.program.ports.filter(p => p.direction === 'input' && p.value_ref === v.id).map(p => positions.get(p.operation_ref)).filter(Boolean);
+      const x = external.length === 1 && consumers.length ? Math.min(...consumers.map(p => p.x)) + 120 : 192 + i * 200;
+      const n = el("div", "se-external"); n.style.left = `${x - 85}px`; n.style.top = "62px";
+      n.append(el('span', 'se-external-label', v.name || 'Model input'));
       const p = portButton("output", v.id, v.name || "Model input"); p.title = contract(v); n.append(p); scene.append(n);
     });
     for (const op of visibleOps()) scene.append(node(op));
-    let width = Math.max(760, external.length * 235 + 50), height = 500;
-    for (const op of visibleOps()) { const pos = positions.get(op.id) || { x: 70, y: 110 }; width = Math.max(width, pos.x + 330); height = Math.max(height, pos.y + nodeHeight(op) + 100); }
+    let width = Math.max(420, external.length * 200 + 100), height = 500;
+    for (const op of visibleOps()) { const pos = positions.get(op.id) || { x: 72, y: 145 }; width = Math.max(width, pos.x + nodeWidth(op) + 100); height = Math.max(height, pos.y + nodeHeight(op) + 100); }
     scene.style.width = `${width}px`; scene.style.height = `${height}px`; scene.style.transform = `scale(${zoom})`;
     space.style.width = `${width * zoom}px`; space.style.height = `${height * zoom}px`; space.append(scene); viewport.append(space);
     viewport.addEventListener("dragover", event => event.preventDefault());
@@ -222,9 +238,9 @@ export function createModelStructureEditor({ sourceContext = () => null } = {}) 
   function node(op) {
     const n = el("article", `se-node ${selected === op.id ? "is-selected" : ""} ${draft.affected.includes(op.id) ? "is-changed" : ""}`);
     n.dataset.nodeRef = op.id;
-    const pos = positions.get(op.id) || { x: 70, y: 110 }; positions.set(op.id, pos); n.style.left = `${pos.x}px`; n.style.top = `${pos.y}px`;
+    const pos = positions.get(op.id) || { x: 72, y: 145 }; positions.set(op.id, pos); n.style.left = `${pos.x}px`; n.style.top = `${pos.y}px`; n.style.width = `${nodeWidth(op)}px`; n.style.height = `${nodeHeight(op)}px`;
     if (draft.issues.some(row => row.subject_ref === op.id && row.severity === "error")) n.classList.add("has-error");
-    const head = el("div", "se-node-head"); head.append(el("strong", "", op.name || op.native_op.name), el("span", "", op.draft_template ? "NEW LAYER" : `${op.native_op.name} · ${op.native_index ?? op.source_order ?? op.id}`));
+    const head = el("div", "se-node-head"); head.append(el("span", "se-node-index", op.native_index == null ? 'NEW' : `#${String(op.native_index).padStart(3, '0')}`), el("strong", "", op.name || op.native_op.name), el("span", "", op.draft_template ? "New layer" : op.native_op.name));
     head.tabIndex = 0; head.setAttribute("role", "button"); head.setAttribute("aria-label", `Select ${op.name}`);
     head.addEventListener("keydown", event => { if (event.key === "Enter") { selected = op.id; render(); } });
     head.addEventListener("pointerdown", event => {
@@ -238,15 +254,17 @@ export function createModelStructureEditor({ sourceContext = () => null } = {}) 
       gestureCleanup = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); };
     });
     n.append(head);
-    const io = el("div", "se-node-io"), left = el("div"), right = el("div");
-    for (const p of inputsOf(op, idx)) { const v = idx.values.get(p.value_ref); const b = portButton("input", p.id, `in ${p.position}${v?.storage_refs?.length ? " · state" : ""}`); b.title = `${v?.name || "Unbound"}\n${contract(v)}`; if (!v) b.classList.add("is-unbound"); left.append(b); }
-    for (const p of outputsOf(op, idx)) { const terminal = draft.program.programs.some(g => g.output_value_refs.includes(p.value_ref)); const b = portButton("output", p.value_ref, `out ${p.position}${terminal ? " · model" : ""}`); b.title = contract(idx.values.get(p.value_ref)); right.append(b); }
-    io.append(left, right); n.append(io);
+    const incoming = el('div', 'se-data-inputs'), outgoing = el('div', 'se-data-outputs'), state = el('div', 'se-state-inputs');
+    for (const p of inputsOf(op, idx)) { const v = idx.values.get(p.value_ref), stored = isStateInput(p); const b = portButton("input", p.id, `in ${p.position}${stored ? " · state" : ""}`); b.title = `${v?.name || "Unbound"}\n${contract(v)}`; if (!v) b.classList.add("is-unbound"); (stored ? state : incoming).append(b); }
+    for (const p of outputsOf(op, idx)) { const terminal = draft.program.programs.some(g => g.output_value_refs.includes(p.value_ref)); const b = portButton("output", p.value_ref, `out ${p.position}${terminal ? " · model" : ""}`); b.title = contract(idx.values.get(p.value_ref)); outgoing.append(b); }
+    n.append(incoming, outgoing);
     const first = outputsOf(op, idx)[0]; n.append(el("div", "se-node-contract", contract(idx.values.get(first?.value_ref))));
+    if (state.childElementCount) n.append(state);
+    n.addEventListener('pointerenter', () => emphasizeConnections(op.id)); n.addEventListener('pointerleave', () => emphasizeConnections());
     return n;
   }
   function portButton(direction, ref, label) {
-    const b = el("button", `se-port se-${direction}`, `${direction === "input" ? "○ " : ""}${label}${direction === "output" ? " ●" : ""}`);
+    const b = el("button", `se-port se-${direction}`); b.append(el('span', 'se-port-dot'), el('span', 'se-port-label', label));
     b.type = "button"; b.dataset[direction === "input" ? "inputPort" : "outputValue"] = ref;
     b.setAttribute("aria-label", `${direction} ${label}`); portElements.set(`${direction}:${ref}`, b);
     if (direction === "output") {
@@ -255,9 +273,9 @@ export function createModelStructureEditor({ sourceContext = () => null } = {}) 
         b.classList.add("is-connecting");
         const ghost = svg("path", { class: "se-wire is-changed", "stroke-dasharray": "5 4" }); wireLayer.append(ghost);
         const move = e => { const bounds = scene.getBoundingClientRect(), rect = b.getBoundingClientRect();
-          const x = (rect.right - bounds.left) / zoom, y = (rect.top + rect.height / 2 - bounds.top) / zoom;
+          const x = (rect.left + rect.width / 2 - bounds.left) / zoom, y = (rect.top + rect.height / 2 - bounds.top) / zoom;
           const tx = (e.clientX - bounds.left) / zoom, ty = (e.clientY - bounds.top) / zoom;
-          ghost.setAttribute("d", `M${x},${y} C${x + 50},${y} ${tx - 50},${ty} ${tx},${ty}`);
+          ghost.setAttribute("d", roundedWirePath([{ x, y }, { x, y: (y + ty) / 2 }, { x: tx, y: (y + ty) / 2 }, { x: tx, y: ty }]));
         };
         const up = e => { const target = document.elementFromPoint(e.clientX, e.clientY)?.closest("[data-input-port]"); disposeGesture();
           if (target && host.contains(target)) command({ type: "connect", port_ref: target.dataset.inputPort, value_ref: ref }); };
@@ -272,15 +290,52 @@ export function createModelStructureEditor({ sourceContext = () => null } = {}) 
     return b;
   }
   function wires() {
-    if (!wireLayer || !scene) return; wireLayer.replaceChildren(); const bounds = scene.getBoundingClientRect();
+    if (!wireLayer || !scene || !viewport.clientWidth) return;
+    const bounds = scene.getBoundingClientRect(), snap = n => Math.round(n * 10) / 10;
+    const boxOf = node => { const r = node.getBoundingClientRect(); return { x: snap((r.left - bounds.left) / zoom), y: snap((r.top - bounds.top) / zoom), width: snap(r.width / zoom), height: snap(r.height / zoom) }; };
+    const boxes = [...scene.querySelectorAll('.se-node,.se-external')].map(boxOf);
+    const producers = new Map(draft.program.ports.filter(p => p.direction === 'output').map(p => [p.value_ref, p.operation_ref]));
+    const edges = [];
     for (const op of visibleOps()) for (const p of inputsOf(op, idx)) {
       const a = portElements.get(`output:${p.value_ref}`), b = portElements.get(`input:${p.id}`); if (!a || !b) continue;
-      const ar = a.getBoundingClientRect(), br = b.getBoundingClientRect();
-      const x1 = (ar.right - bounds.left) / zoom, y1 = (ar.top + ar.height / 2 - bounds.top) / zoom;
-      const x2 = (br.left - bounds.left) / zoom, y2 = (br.top + br.height / 2 - bounds.top) / zoom;
-      const d = `M${x1},${y1} C${x1 + 55},${y1} ${x2 - 55},${y2} ${x2},${y2}`;
-      const path = svg("path", { d, class: `se-wire ${draft.affected.includes(op.id) ? "is-changed" : ""}` });
-      const title = svg("title"); title.textContent = `Input ${p.position}: ${idx.values.get(p.value_ref)?.name || p.value_ref}`; path.append(title); wireLayer.append(path);
+      const from = boxOf(a.querySelector('.se-port-dot')), to = boxOf(b.querySelector('.se-port-dot'));
+      edges.push({ id: p.id, value_ref: p.value_ref, from_ref: producers.get(p.value_ref) || null, to_ref: op.id,
+        start: { x: snap(from.x + from.width / 2), y: snap(from.y + from.height / 2 + 9) },
+        end: { x: snap(to.x + to.width / 2), y: snap(to.y + to.height / 2 - 9) },
+        label: `${idx.values.get(p.value_ref)?.name || p.value_ref} → ${op.name}, input ${p.position}` });
+    }
+    routes = routeStructureWires(edges, boxes); wireLayer.replaceChildren();
+    const defs = svg('defs'), marker = svg('marker', { id: arrowId, markerWidth: 6, markerHeight: 6, refX: 5, refY: 3, orient: 'auto', markerUnits: 'userSpaceOnUse' });
+    marker.append(svg('path', { d: 'M0,0 L6,3 L0,6 Z', fill: 'context-stroke' })); defs.append(marker); wireLayer.append(defs);
+    for (const edge of routes) {
+      const group = svg('g', { class: `se-wire-group${edge.side ? ' is-routed' : ''}${edge.blocked ? ' is-blocked' : ''}`, 'data-connection': edge.id });
+      const title = svg('title'); title.textContent = `${edge.label}${edge.blocked ? ' · layout obstructed; move overlapping layers or Arrange' : ''}`;
+      const path = svg('path', { d: edge.path, class: `se-wire${draft.affected.includes(edge.to_ref) ? ' is-changed' : ''}`, 'marker-end': `url(#${arrowId})` });
+      group.append(title, svg('path', { d: edge.path, class: 'se-wire-halo' }), path); wireLayer.append(group);
+    }
+    const all = routes.flatMap(edge => edge.points);
+    const width = Math.max(parseFloat(scene.style.width), ...all.map(p => p.x + 28));
+    const height = Math.max(parseFloat(scene.style.height), ...all.map(p => p.y + 28));
+    scene.style.width = `${width}px`; scene.style.height = `${height}px`;
+    scene.parentElement.style.width = `${width * zoom}px`; scene.parentElement.style.height = `${height * zoom}px`;
+    emphasizeConnections();
+  }
+  function emphasizeConnections(ref = selected) {
+    if (!wireLayer) return;
+    const related = new Set([ref]);
+    if (traceMode) for (const [from, to] of [['from_ref', 'to_ref'], ['to_ref', 'from_ref']]) {
+      const queue = [ref], visited = new Set(queue);
+      for (let i = 0; i < queue.length; i++) for (const edge of routes) if (edge[from] === queue[i] && edge[to] && !visited.has(edge[to])) { visited.add(edge[to]); queue.push(edge[to]); related.add(edge[to]); }
+    }
+    const active = new Set();
+    for (const edge of routes) if (edge.from_ref === ref || edge.to_ref === ref || (traceMode && (!edge.from_ref || related.has(edge.from_ref)) && related.has(edge.to_ref))) { active.add(edge.id); related.add(edge.from_ref); related.add(edge.to_ref); }
+    for (const group of wireLayer.querySelectorAll('.se-wire-group')) {
+      group.classList.toggle('is-focus', active.has(group.dataset.connection));
+      group.classList.toggle('is-muted', traceMode && !active.has(group.dataset.connection));
+    }
+    for (const node of scene.querySelectorAll('.se-node')) {
+      node.classList.toggle('is-neighbor', related.has(node.dataset.nodeRef) && node.dataset.nodeRef !== ref);
+      node.classList.toggle('is-muted', traceMode && !related.has(node.dataset.nodeRef));
     }
   }
   function inspector() {

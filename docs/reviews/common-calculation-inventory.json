@@ -21,7 +21,7 @@
     ],
     "boundary": "All application source files in these roots are enumerated. JS functions/tables are parsed; Rust/Python/C++ candidates also require semantic review. Textual equality is a candidate, not proof of equivalent contracts."
   },
-  "source_file_count": 551,
+  "source_file_count": 552,
   "files": [
     {
       "file": "bin/deepbom-agent-contract.mjs",
@@ -1241,7 +1241,7 @@
     },
     {
       "file": "web/lib/build-metadata.js",
-      "sha256": "667b51ec452a257a9cb9ba0d21aa75aeb78999b63af49c2982a8d224d060d7f4",
+      "sha256": "fa1a528a5a90c37371fc041e980f3cfc1d6399d901f0a69d43605f82d44d8199",
       "language": "js",
       "role": "runtime",
       "functions": 0,
@@ -2361,10 +2361,10 @@
     },
     {
       "file": "web/lib/model-structure-editor.js",
-      "sha256": "90c0abd462dbadbf70e83af46677a768413c2327bc642f4240098c3b31f9c212",
+      "sha256": "63252c3e3b4eb5ad154e7320c04208e65be21a227803837c59f7af5685f72e1f",
       "language": "js",
       "role": "runtime",
-      "functions": 130,
+      "functions": 156,
       "calculation_candidates": 0
     },
     {
@@ -4032,6 +4032,14 @@
       "calculation_candidates": 0
     },
     {
+      "file": "web/lib/structure-wire-routing.js",
+      "sha256": "a4f0630cfc5b8b6c41aac70da60361f81a7d60c04755b4ecec109fb3d9eb47d2",
+      "language": "js",
+      "role": "runtime",
+      "functions": 30,
+      "calculation_candidates": 1
+    },
+    {
       "file": "web/lib/target-profiles.generated.js",
       "sha256": "191ccdf930f49e3a4e09c1a5d150968728a33fe6aa04eb3e4651f421222aac27",
       "language": "js",
@@ -4377,7 +4385,7 @@
     },
     {
       "file": "web/sw.js",
-      "sha256": "dab5dc3275f1fb9f09e6b78214820e6e43b910d7fc05149000a255586f2777d6",
+      "sha256": "e5dce146aab70d332f762dc2f992fc93f923535b22799180ac02f8852e50bd44",
       "language": "js",
       "role": "runtime",
       "functions": 18,

@@ -6,6 +6,29 @@ import path from "node:path";
 import { createStructureSession, structureMermaid, parseStructureMermaid, structureLayerSnippet, STRUCTURE_TEMPLATES } from "../web/lib/model-structure.js";
 import { EXECUTORCH_ADD_PTE_BASE64 } from "./fixtures/executorch-fixtures.mjs";
 import { validateModelIr } from "../web/lib/model-ir.js";
+import { routeStructureWires, segmentHitsBox } from "../web/lib/structure-wire-routing.js";
+
+const boxes = [0, 200, 400].map(y => ({ x: 80, y: y + 30, width: 240, height: 110 }));
+const wireCases = [
+  { id: 'trunk', value_ref: 'a', start: { x: 200, y: 149 }, end: { x: 200, y: 221 } },
+  { id: 'skip', value_ref: 'b', start: { x: 200, y: 149 }, end: { x: 176, y: 421 } },
+  { id: 'skip2', value_ref: 'c', start: { x: 200, y: 149 }, end: { x: 224, y: 421 } },
+  { id: 'feedback', value_ref: 'd', start: { x: 200, y: 549 }, end: { x: 200, y: 21 } },
+];
+const routed = routeStructureWires(wireCases, boxes);
+assert.equal(routed[0].points.length, 2, 'Sequential flow is a straight vertical trunk');
+assert(routed.slice(1).every(row => row.side && !row.blocked), 'Skip and reverse paths use outside corridors');
+for (const row of routed) for (let i = 1; i < row.points.length; i++) {
+  assert(row.points[i].x === row.points[i - 1].x || row.points[i].y === row.points[i - 1].y, 'Routes are orthogonal');
+  assert(boxes.every(box => !segmentHitsBox(row.points[i - 1], row.points[i], box)), 'A route never cuts through a card');
+}
+assert.deepEqual(routeStructureWires(wireCases, boxes), routed, 'Wire layout is deterministic');
+const staggered = [boxes[0], boxes[1], { ...boxes[2], y: 630 }, { x: 260, y: 150, width: 80, height: 60 }, { x: 0, y: 450, width: 180, height: 80 }];
+const [detour] = routeStructureWires([{ id: 'dragged', value_ref: 'x', start: { x: 200, y: 149 }, end: { x: 200, y: 621 } }], staggered);
+assert(!detour.blocked, 'Dragged layers can route around staggered obstacles that block simple outside lanes');
+assert(detour.points.every((p, i) => !i || staggered.every(b => !segmentHitsBox(detour.points[i - 1], p, b))));
+const [overlap] = routeStructureWires([wireCases[0]], [...boxes, { x: 160, y: 140, width: 80, height: 50 }]);
+assert(overlap.blocked, 'Overlapping cards are explicitly marked as obstructed');
 
 const out = mkdtempSync(path.join(tmpdir(), "deepbom-structure-"));
 function graph(file, i) {

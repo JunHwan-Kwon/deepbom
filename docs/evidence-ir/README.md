@@ -5,7 +5,7 @@
 **Status: draft DEEPBOM-maintained specification; artifact family released in
 2.0.0, native extension in 2.2.0, Snapshot workflow in 2.3.0.**
 
-The package release does not make this an externally approved standard. The original artifact catalog remains 1.0.0; family v2/v3 entry points extend it without rewriting older members. The Web compatibility catalog is 0.20.0; npm 2.3.0 retains its 0.16.0 snapshot, and prior snapshots remain in the [version index](compatibility/index.json). Catalog, schema and package versions are independent. See the [current workflow](SNAPSHOT_WORKFLOW.md), [historical 2.0.0 release record](RELEASE_2_0_0.md) and [migration rules](MIGRATION.md).
+The package release does not make this an externally approved standard. The original artifact catalog remains 1.0.0; family v2/v3 entry points extend it without rewriting older members. The Web compatibility catalog is 0.21.0; npm 2.3.0 retains its 0.16.0 snapshot, and prior snapshots remain in the [version index](compatibility/index.json). Catalog, schema and package versions are independent. See the [current workflow](SNAPSHOT_WORKFLOW.md), [historical 2.0.0 release record](RELEASE_2_0_0.md) and [migration rules](MIGRATION.md).
 
 DEEPBOM Evidence IR is a family of interoperable intermediate representations for artifact, structural, numerical, runtime, and provenance evidence. It is maintained by the DEEPBOM project; no external standards-body approval or independent adoption is claimed.
 

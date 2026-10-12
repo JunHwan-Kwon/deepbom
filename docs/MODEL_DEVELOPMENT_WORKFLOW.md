@@ -110,7 +110,13 @@ code or upload model bytes. A serialized operation graph is required. Tensor-onl
 artifacts such as GGUF and SafeTensors do not acquire an invented graph.
 
 1. Select a layer, or find it in the left-hand list. Drag a node to arrange the
-   view; drag its output handle to an input handle to change the graph.
+   view; drag its bottom output handle to a top input handle to change the graph.
+   Sequential connections flow downwards; skip/residual edges use outside lanes.
+   Stored inputs remain labeled inside the card. Hover or select a layer to
+   highlight adjacent connections; **Trace selected** highlights its upstream
+   and downstream paths. **Arrange** restores the automatic layout. Obstructed
+   routes caused by overlapping cards are dashed; move the cards or use Arrange.
+   Layout and routing do not change tensor bindings, Model IR, or calculations.
 2. Use the inspector to select exact input bindings, change exposed native
    scalar/list attributes, duplicate/delete a layer, or bypass a unary layer.
    Model output bindings are editable separately. Duplicated layers initially
