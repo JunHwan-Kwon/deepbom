@@ -29,6 +29,8 @@ const MAX_ONNX_QUANT_PARAMETER_ELEMENTS = 65_536;
 const MAX_ONNX_FUNCTIONS = 10_000;
 const MAX_ONNX_METADATA_PROPERTIES = 10_000;
 const MAX_ONNX_METADATA_TEXT_BYTES = 4_194_304;
+const MAX_ONNX_NODE_METADATA_PROPERTIES = 200_000;
+const MAX_ONNX_NODE_METADATA_TEXT_BYTES = 33_554_432;
 const MAX_ONNX_EXTERNAL_DATA_ENTRIES = 100_000;
 const MAX_ONNX_EXTERNAL_DATA_TEXT_BYTES = 4_194_304;
 const MAX_ONNX_EXTERNAL_FILE_COUNT = 1_024;
@@ -705,7 +707,7 @@ function parseStringStringEntry(bytes) {
 }
 
 function parseNode(bytes) {
-  const node = { name: "", opType: "", domain: "", overload: "", inputs: [], outputs: [], attributes: new Map(), duplicateAttributeNames: [] };
+  const node = { name: "", opType: "", domain: "", overload: "", inputs: [], outputs: [], attributes: new Map(), duplicateAttributeNames: [], metadataProps: [] };
   for (const field of readFields(bytes)) {
     if (field.no === 1 && field.wire === 2) node.inputs.push(decodeString(field.bytes));
     if (field.no === 2 && field.wire === 2) node.outputs.push(decodeString(field.bytes));
@@ -720,6 +722,10 @@ function parseNode(bytes) {
     }
     if (field.no === 7 && field.wire === 2) node.domain = decodeString(field.bytes);
     if (field.no === 8 && field.wire === 2) node.overload = decodeString(field.bytes);
+    if (field.no === 9 && field.wire === 2) {
+      if (node.metadataProps.length >= 4096 || field.bytes.byteLength > 262144) throw new Error("ONNX node metadata exceeds per-node safety limit.");
+      node.metadataProps.push(parseStringStringEntry(field.bytes));
+    }
   }
   return node;
 }
@@ -1001,6 +1007,14 @@ function validateOnnxGraphLimits(graph, functions = [], modelMetadata = []) {
     + textEncoder.encode(String(entry.key || "")).byteLength
     + textEncoder.encode(String(entry.value || "")).byteLength, 0);
   if (metadataBytes > MAX_ONNX_METADATA_TEXT_BYTES) throw new Error(`ONNX model and FunctionProto metadata text bytes ${metadataBytes} exceed safety limit ${MAX_ONNX_METADATA_TEXT_BYTES}.`);
+  let nodeMetadataCount = 0, nodeMetadataBytes = 0;
+  for (const node of [...graphs.flatMap(scope => scope.nodes), ...functions.flatMap(fn => fn.nodes)]) {
+    for (const entry of node.metadataProps || []) {
+      nodeMetadataCount++;
+      nodeMetadataBytes += textEncoder.encode(entry.key).byteLength + textEncoder.encode(entry.value).byteLength;
+      if (nodeMetadataCount > MAX_ONNX_NODE_METADATA_PROPERTIES || nodeMetadataBytes > MAX_ONNX_NODE_METADATA_TEXT_BYTES) throw new Error("ONNX node metadata exceeds aggregate safety limit.");
+    }
+  }
 }
 
 function materializedTensorElementCount(tensor) {
@@ -3528,6 +3542,7 @@ function buildOnnxOp(node, index, tensorMap, tensorIdByName) {
     index,
     name: node.opType || "UNKNOWN",
     graph_node_name: node.name || "",
+    ...(node.metadataProps?.length ? { onnx_metadata_properties: node.metadataProps.map(entry => ({ ...entry })) } : {}),
     domain: normalizeOnnxDomain(node.domain),
     standard_domain: standardDomain,
     input_names: [...node.inputs],

@@ -2255,3 +2255,7 @@ body.privacy-locked .layout {
     min-width: 44px;
   }
 }
+
+/* Summary/export controls belong to every Explorer view. */
+.graph-summary-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
+.graph-summary-actions #graphStats { flex-basis: 100%; overflow-wrap: anywhere; }

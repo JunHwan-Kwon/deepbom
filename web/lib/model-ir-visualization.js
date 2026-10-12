@@ -1,9 +1,11 @@
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { validateModelIr } from "./model-ir.js";
+import { resolveModelHierarchyPresentation } from "./model-hierarchy.js";
 
 export const MODEL_IR_VISUALIZATION_SCHEMA = "deepbom.model_ir_visualization_manifest.v1";
-export const MODEL_IR_VISUALIZATION_METHOD_VERSION = "1.0.0";
+export const MODEL_IR_VISUALIZATION_SCHEMA_V2 = "deepbom.model_ir_visualization_manifest.v2";
+export const MODEL_IR_VISUALIZATION_METHOD_VERSION = "1.1.0";
 export const MODEL_IR_VIEW_IDS = Object.freeze([
   "identity-boundary",
   "architecture-overview",
@@ -24,14 +26,18 @@ const FOOTER_HEIGHT = 82;
 export function buildModelIrVisualizationBundle(input, {
   views = MODEL_IR_VIEW_IDS,
   orientation = "portrait",
+  manifestVersion = 1,
+  hierarchy = null,
 } = {}) {
   const modelIr = validateModelIr(input);
+  const presentation = resolveModelHierarchyPresentation(modelIr, hierarchy);
   const selectedViews = normalizeViews(views);
   if (!PAGE[orientation]) throw new Error("Model IR visualization orientation must be portrait or landscape.");
+  if (![1, 2].includes(manifestVersion)) throw new Error("Visualization manifest version must be 1 or 2.");
   const pages = [];
-  for (const view of selectedViews) pages.push(...renderViewPages(modelIr, view, orientation));
+  for (const view of selectedViews) pages.push(...renderViewPages(modelIr, view, orientation, presentation));
   const body = {
-    schema: MODEL_IR_VISUALIZATION_SCHEMA,
+    schema: manifestVersion === 2 ? MODEL_IR_VISUALIZATION_SCHEMA_V2 : MODEL_IR_VISUALIZATION_SCHEMA,
     method_version: MODEL_IR_VISUALIZATION_METHOD_VERSION,
     model_ir_schema: modelIr.schema,
     model_ir_sha256: modelIr.model_ir_sha256,
@@ -42,6 +48,13 @@ export function buildModelIrVisualizationBundle(input, {
     },
     selected_views: selectedViews,
     orientation,
+    ...(presentation ? { architecture_source: {
+      schema: presentation.view.schema,
+      hierarchy_sha256: presentation.hierarchy.hierarchy_sha256,
+      view_sha256: presentation.view.view_sha256,
+      basis: presentation.hierarchy.status,
+      represented_operation_count: presentation.view.conservation.represented_operations,
+    } } : {}),
     visual_contract: {
       page_size: "ISO_A4",
       canonical_vector_format: "SVG_1_1_subset",
@@ -56,7 +69,7 @@ export function buildModelIrVisualizationBundle(input, {
       source_reference_attribute: "data-subject-ref",
       exhaustive_view_omission_policy: "zero_omissions",
     },
-    conservation: buildConservation(modelIr, pages),
+    conservation: manifestVersion === 2 ? buildRequestedConservation(modelIr, pages, selectedViews) : buildConservation(modelIr, pages),
     pages: pages.map(({ svg, caption, render_model, ...page }) => page),
     word_insertion: {
       body_view: "architecture-overview",
@@ -70,7 +83,7 @@ export function buildModelIrVisualizationBundle(input, {
     interpretation_boundary: "These diagrams are deterministic projections of deepbom.model_ir.v1. Solid program edges exist only when serialized by the artifact source contract. Dashed inferred groupings do not establish execution order. Static projections are not observed runtime. This is engineering evidence, not a regulatory conclusion or standard-conformance claim.",
   };
   const manifest = Object.freeze({ ...body, visualization_manifest_sha256: sha256TextHex(canonicalJson(body)) });
-  return Object.freeze({ manifest, pages: pages.map((page) => Object.freeze(page)) });
+  return Object.freeze({ manifest, pages: pages.map((page) => Object.freeze(page)), hierarchy_view: presentation?.view || null });
 }
 
 export function modelIrVisualizationFiles(input, options = {}) {
@@ -86,6 +99,10 @@ export function modelIrVisualizationFiles(input, options = {}) {
     media_type: "application/json",
     sha256: sha256TextHex(`${JSON.stringify(bundle.manifest, null, 2)}\n`),
   });
+  if (bundle.hierarchy_view) {
+    const data = `${JSON.stringify(bundle.hierarchy_view, null, 2)}\n`;
+    files.push({ name: "model-views/hierarchy-view.json", data, media_type: "application/json", sha256: sha256TextHex(data) });
+  }
   return { bundle, files };
 }
 
@@ -97,9 +114,9 @@ function normalizeViews(views) {
   return selected;
 }
 
-function renderViewPages(modelIr, view, orientation) {
+function renderViewPages(modelIr, view, orientation, presentation) {
   const page = PAGE[orientation];
-  const projection = projectView(modelIr, view);
+  const projection = projectView(modelIr, view, presentation);
   const chunks = chunkProjectionRows(projection.rows, page.bodyRows);
   const count = Math.max(1, chunks.length);
   const subjectToPage = new Map();
@@ -136,19 +153,56 @@ function renderViewPages(modelIr, view, orientation) {
         page: { width: page.width, height: page.height, width_mm: page.widthMm, height_mm: page.heightMm },
         projection: { level: projection.level, title: projection.title, boundary: projection.boundary },
         rows,
+        edges: edges.map(edge => ({ ...edge, source_page: subjectToPage.has(edge.from_ref) ? subjectToPage.get(edge.from_ref) + 1 : null })),
       },
     });
   }
   return pages;
 }
 
-function projectView(modelIr, view) {
+function projectView(modelIr, view, presentation) {
   if (view === "identity-boundary") return identityProjection(modelIr);
-  if (view === "architecture-overview") return architectureProjection(modelIr);
-  if (view === "block-detail") return blockProjection(modelIr);
+  if (view === "architecture-overview") return presentation ? hierarchyOverview(presentation) : architectureProjection(modelIr);
+  if (view === "block-detail") return presentation ? hierarchyDetail(modelIr, presentation) : blockProjection(modelIr);
   if (view === "exhaustive") return exhaustiveProjection(modelIr);
   if (view === "static-runtime") return staticRuntimeProjection(modelIr);
   return observedRuntimeProjection(modelIr);
+}
+
+function hierarchyOverview({ hierarchy, view }) {
+  const byGroup = new Map(hierarchy.groups.map(group => [group.id, group]));
+  const rows = view.rows.map(item => row(item.id, byGroup.get(item.id)?.kind === "source_scope" ? "Source module" : "Structural group",
+    item.label, hierarchyMetricText(item), byGroup.get(item.id)?.kind === "source_scope" ? "DECLARED_UNVERIFIED" : "DERIVED", item.member_refs));
+  const ids = new Set(rows.map(item => item.subject_ref));
+  const edges = view.edges.filter(edge => ids.has(edge.from_ref) && ids.has(edge.to_ref))
+    .map(edge => ({ ...edge, kind: "serialized_port_bundle", evidence_class: "OBSERVED_SERIALIZED_ARTIFACT" }));
+  return projection("V1", "Architecture overview", rows, view.interpretation_boundary, { edges });
+}
+
+function hierarchyMetricText(item) {
+  const metric = value => value?.decimal == null ? "not assessed" : `${value.decimal}${value.status === "partial" ? " (partial)" : ""}`;
+  const a = item.aggregation;
+  return `${item.member_refs.length} ops | ${metric(a.macs)} MACs | ${metric(a.serialized_element_count)} stored elements | ${a.inputs.length} inputs / ${a.outputs.length} outputs`;
+}
+
+function hierarchyDetail(modelIr, { hierarchy, view }) {
+  const operations = new Map(modelIr.program.operations.map(op => [op.id, op]));
+  const groups = new Map(hierarchy.groups.map(group => [group.id, group]));
+  const blocks = new Map(modelIr.program.blocks.map(block => [`hierarchy:structural:${block.id}`, block]));
+  const rows = [], edges = [];
+  for (const group of view.rows) {
+    const block = blocks.get(group.id), source = groups.get(group.id)?.kind === "source_scope";
+    rows.push(row(group.id, source ? "Source module" : "Structural block", group.label,
+      `${hierarchyMetricText(group)}${block ? ` | signature ${block.signature_sha256.slice(0, 12)}` : ""}`,
+      source ? "DECLARED_UNVERIFIED" : "DERIVED", group.member_refs, { conservationCount: 0, pageGroup: group.id }));
+    for (const ref of group.member_refs) {
+      const op = operations.get(ref);
+      rows.push(row(op.id, `Operation ${op.display_order ?? op.source_order ?? "?"}`, `${op.native_op.domain}:${op.native_op.name}`,
+        formatBlockOperation(modelIr, op), op.evidence_class, [], { pageGroup: group.id }));
+      edges.push({ id: `visual:hierarchy:${group.id}:${op.id}`, kind: "group_membership", from_ref: group.id, to_ref: op.id, evidence_class: "DERIVED" });
+    }
+  }
+  return projection("V2", "Model group detail", rows, view.interpretation_boundary, { edges });
 }
 
 function identityProjection(modelIr) {
@@ -304,6 +358,30 @@ function buildConservation(modelIr, pages) {
     duplicate_relationship_count: duplicateCount(exhaustivePages.flatMap((page) => page.relationship_refs)),
     status: expected === rendered && expectedRelationships === renderedRelationships ? "conserved" : "failed",
   };
+}
+
+function buildRequestedConservation(model, pages, selectedViews) {
+  const legacy = buildConservation(model, pages);
+  if (!selectedViews.includes("exhaustive")) return { ...legacy, status: "not_requested",
+    rendered_count: null, omitted_count: null, duplicate_count: null,
+    rendered_relationship_count: null, omitted_relationship_count: null, duplicate_relationship_count: null,
+    assessment_scope: "exhaustive_rendering_only", source_data_omission_claim: false,
+    explanation: "Exhaustive rendering was not requested. This is not a source-data loss verdict. Collapsed views require their own member/edge conservation manifest." };
+  const ids = new Set((model.program.operations.length ? model.program.operations : model.tensors_and_storage.storage_objects).map(row => row.id));
+  const edges = new Set(model.program.relationships.filter(row => ["data_dependency", "control_dependency", "state_dependency", "call"].includes(row.kind)
+    && ids.has(row.from_ref) && ids.has(row.to_ref)).map(row => row.id));
+  const selected = pages.filter(page => page.view === "exhaustive");
+  const subjects = selected.flatMap(page => page.subject_refs).filter(ref => ids.has(ref));
+  const relations = selected.flatMap(page => page.relationship_refs);
+  const subjectSet = new Set(subjects), relationSet = new Set(relations);
+  const omitted = [...ids].filter(ref => !subjectSet.has(ref));
+  const missingEdges = [...edges].filter(ref => !relationSet.has(ref));
+  const duplicateSubjects = duplicateCount(subjects), duplicateEdges = duplicateCount(relations);
+  return { ...legacy, rendered_count: subjects.length, omitted_count: omitted.length,
+    omitted_relationship_count: missingEdges.length, duplicate_count: duplicateSubjects, duplicate_relationship_count: duplicateEdges,
+    status: !omitted.length && !missingEdges.length && !duplicateSubjects && !duplicateEdges && relations.every(ref => edges.has(ref)) ? "conserved" : "failed",
+    assessment_scope: "exhaustive_rendering_only", source_data_omission_claim: false,
+    explanation: "Requested exhaustive pages are checked against source subject and relationship identities, including duplicates." };
 }
 
 function caption(modelIr, projection, pageNumber, pageCount) {

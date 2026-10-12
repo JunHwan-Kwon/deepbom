@@ -209,6 +209,8 @@ import { buildSingleFileArtifactSet } from "./lib/artifact-set.js";
 import { exportGraphVisualization } from "./lib/graph-export.js";
 import { buildBrowserModelIrVisualizationArchive } from "./lib/model-ir-browser-export.js";
 import { buildModelSummary, renderModelSummaryTable } from "./lib/model-summary.js";
+import { resolveModelHierarchyPresentation } from "./lib/model-hierarchy.js";
+import { renderModelHierarchyTable } from "./lib/model-hierarchy-view.js";
 import {
   buildModelIdentity,
   detectModelFormat,
@@ -2339,7 +2341,8 @@ void import("./lib/provenance-panel.js").then(({ installProvenancePanel }) => {
 showModelSummary?.addEventListener("click", () => {
   if (!currentArtifactIrContext?.model_ir || !modelSummaryPanel || !modelSummaryText) return;
   const summary = buildModelSummary(currentArtifactIrContext.model_ir);
-  modelSummaryText.textContent = renderModelSummaryTable(summary);
+  const presentation = resolveModelHierarchyPresentation(currentArtifactIrContext.model_ir, currentArtifactIrContext.model_hierarchy);
+  modelSummaryText.textContent = presentation ? renderModelHierarchyTable(presentation.view, "table") : renderModelSummaryTable(summary);
   modelSummaryPanel.hidden = false;
   modelSummaryPanel.open = true;
   modelSummaryPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -4702,8 +4705,8 @@ function canonicalGraphSvgText() {
   if (!Number.isSafeInteger(size) || size < 0) return graphSvgText(graphMapSvg);
   const graph = currentArtifactIrContext?.graph_ir;
   if (!graph) return graphSvgText(graphMapSvg);
-  const view = currentGraphMode === "deploy" ? "placement" : "structure";
-  return exportGraphVisualization(graph, { view, format: "svg" }).text;
+  const view = currentGraphMode === "deploy" ? "placement" : "architecture";
+  return exportGraphVisualization(graph, { view, format: "svg", modelIr: currentArtifactIrContext.model_ir, hierarchy: currentArtifactIrContext.model_hierarchy }).text;
 }
 
 async function downloadCurrentModelViews() {
@@ -4713,7 +4716,7 @@ async function downloadCurrentModelViews() {
   await withBusyButton(downloadModelViews, "Rendering", async () => {
     try {
       if (!(await ensureRawExportAllowed("Model views ZIP"))) return;
-      const archive = await buildBrowserModelIrVisualizationArchive(modelIr, { orientation: "portrait" });
+      const archive = await buildBrowserModelIrVisualizationArchive(modelIr, { orientation: "portrait", hierarchy: currentArtifactIrContext.model_hierarchy });
       downloadBlob(currentArtifactFilename("model_views.zip"), archive.blob);
       recordPrepared();
       setStatus("Model views downloaded", "ok");

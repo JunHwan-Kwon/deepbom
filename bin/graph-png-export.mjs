@@ -11,8 +11,8 @@ const FONT = Object.freeze({
   A:[14,17,17,31,17,17,17],B:[30,17,17,30,17,17,30],C:[14,17,16,16,16,17,14],D:[30,17,17,17,17,17,30],E:[31,16,16,30,16,16,31],F:[31,16,16,30,16,16,16],G:[14,17,16,23,17,17,15],H:[17,17,17,31,17,17,17],I:[14,4,4,4,4,4,14],J:[7,2,2,2,2,18,12],K:[17,18,20,24,20,18,17],L:[16,16,16,16,16,16,31],M:[17,27,21,21,17,17,17],N:[17,25,21,19,17,17,17],O:[14,17,17,17,17,17,14],P:[30,17,17,30,16,16,16],Q:[14,17,17,17,21,18,13],R:[30,17,17,30,20,18,17],S:[15,16,16,14,1,1,30],T:[31,4,4,4,4,4,4],U:[17,17,17,17,17,17,14],V:[17,17,17,17,17,10,4],W:[17,17,17,21,21,21,10],X:[17,17,10,4,10,17,17],Y:[17,17,10,4,4,4,4],Z:[31,1,2,4,8,16,31],
 });
 
-export function exportGraphPng(graph, { view = "structure" } = {}) {
-  const visual = buildGraphVisualizationScene(graph, view);
+export function exportGraphPng(graph, { view = "structure", modelIr = null, hierarchy = null } = {}) {
+  const visual = buildGraphVisualizationScene(graph, view, { modelIr, hierarchy });
   const projection = visual.projection;
   const sourceScene = visual.scene;
   const sourceScale = Math.min(1, MAX_DIMENSION / sourceScene.width, MAX_DIMENSION / sourceScene.height);
@@ -45,7 +45,12 @@ export function exportGraphPng(graph, { view = "structure" } = {}) {
     drawText(pixels,width,height,x+Math.max(2,scaled(10)),y+Math.max(18,scaled(61)),placement.slice(0,textLimit),fontScale,border);
   }
   drawText(pixels,width,height,scaled(48),scaled(24),`${graph.artifact.filename} ${view}`.slice(0,80),Math.max(1,Math.floor(scale*2)),[25,23,20,255]);
-  const manifestBody={schema:VISUALIZATION_MANIFEST_SCHEMA,graph_ir_sha256:graph.graph_ir_sha256,view,format:"png",full_node_count:graph.nodes.length,rendered_node_count:projection.nodes.length,rendered_edge_count:projection.edges.length,level_of_detail:projection.level,executable_dag_claim:graph.projection.executable_dag_claim,dimensions:{width,height},source_scene_dimensions:{width:sourceScene.width,height:sourceScene.height},raster_layout:rasterLayout.kind,raster_layout_dimensions:{width:scene.width,height:scene.height},raster_scale:Number(scale.toFixed(12)),determinism:"canonical_graph_ir_fixed_layout_builtin_5x7_font_rgba_deflate_v2",interpretation_boundary:graph.interpretation_boundary};
+  const manifestBody={schema:VISUALIZATION_MANIFEST_SCHEMA,graph_ir_sha256:graph.graph_ir_sha256,view,format:"png",full_node_count:graph.nodes.length,rendered_node_count:projection.nodes.length,rendered_edge_count:projection.edges.length,level_of_detail:projection.level,executable_dag_claim:projection.hierarchy_view?false:graph.projection.executable_dag_claim,dimensions:{width,height},source_scene_dimensions:{width:sourceScene.width,height:sourceScene.height},raster_layout:rasterLayout.kind,raster_layout_dimensions:{width:scene.width,height:scene.height},raster_scale:Number(scale.toFixed(12)),determinism:"canonical_graph_ir_fixed_layout_builtin_5x7_font_rgba_deflate_v2",interpretation_boundary:projection.hierarchy_view?.interpretation_boundary||graph.interpretation_boundary};
+  if (projection.hierarchy_view) {
+    manifestBody.hierarchy_view_sha256 = projection.hierarchy_view.view_sha256;
+    manifestBody.hierarchy_sha256 = projection.hierarchy_view.hierarchy_sha256;
+    manifestBody.hierarchy_conservation = projection.hierarchy_view.conservation;
+  }
   const manifest={...manifestBody,visualization_manifest_sha256:sha256TextHex(canonicalJson(manifestBody))};
   return { bytes: encodePng(width,height,pixels), mediaType:"image/png", manifest };
 }

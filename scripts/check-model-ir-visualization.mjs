@@ -46,7 +46,7 @@ assert.deepEqual([...renderedBlockOperations].sort(), graphModel.program.operati
 assert(blockDetailRows.some((row) => row.kind === "Structural block" && /signature [a-f0-9]{12}/.test(row.detail)),
   "block detail must expose its deterministic structural signature");
 for (const block of graphModel.program.blocks.filter((row) => row.member_refs.length + 1 <= 22)) {
-  const pageIndexes = new Set(blockDetail.pages.flatMap((page, pageIndex) => page.render_model.rows.some((row) => row.subject_ref === block.id || block.member_refs.includes(row.subject_ref)) ? [pageIndex] : []));
+    const pageIndexes = new Set(blockDetail.pages.flatMap((page, pageIndex) => page.render_model.rows.some((row) => row.subject_ref === `hierarchy:structural:${block.id}` || block.member_refs.includes(row.subject_ref)) ? [pageIndex] : []));
   assert.equal(pageIndexes.size, 1, `block ${block.id} that fits on one page must not be split`);
 }
 

@@ -24,6 +24,7 @@
     "web/lib/mac-coverage.js",
     "web/lib/metadata-model-adapters.js",
     "web/lib/model-file.js",
+    "web/lib/model-source-metadata.js",
     "web/lib/node-edge-evidence-overlay.js",
     "web/lib/numerical-abi-propagation.js",
     "web/lib/numerical-ir/weight-contracts.js",

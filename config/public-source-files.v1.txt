@@ -237,6 +237,8 @@ docs/evidence-ir/OPTIMIZATION_REPORT_DIFF_REVIEW_2026-10-08.md
 docs/evidence-ir/README.md
 docs/evidence-ir/RELEASE_2_0_0.md
 docs/evidence-ir/SNAPSHOT_WORKFLOW.md
+docs/evidence-ir/SOURCE_HIERARCHY.md
+docs/evidence-ir/SOURCE_HIERARCHY_VISUALIZATION_PLAN_2026-10-12.md
 docs/evidence-ir/SYSTEM_FLOW_REVIEW_2026-10-09.md
 docs/evidence-ir/TEA_REVIEW.md
 docs/evidence-ir/TRAINABLE_COMPATIBILITY_REVIEW_2026-10-07.md
@@ -259,6 +261,7 @@ docs/evidence-ir/compatibility/0.2.0.json
 docs/evidence-ir/compatibility/0.2.1.json
 docs/evidence-ir/compatibility/0.20.0.json
 docs/evidence-ir/compatibility/0.21.0.json
+docs/evidence-ir/compatibility/0.22.0.json
 docs/evidence-ir/compatibility/0.3.0.json
 docs/evidence-ir/compatibility/0.4.0.json
 docs/evidence-ir/compatibility/0.5.0.json
@@ -280,6 +283,7 @@ docs/schemas/deepbom-evidence-ir-v1.schema.json
 docs/schemas/deepbom-evidence-ir-v2.schema.json
 docs/schemas/deepbom-evidence-ir-v3.schema.json
 docs/schemas/deepbom-evidence-workflow-v1.schema.json
+docs/schemas/deepbom-model-hierarchy-v1.schema.json
 docs/schemas/deepbom-model-ir-v1.schema.json
 docs/schemas/deepbom-model-summary-v1.schema.json
 docs/schemas/deepbom-native-evidence-v1.schema.json
@@ -564,8 +568,11 @@ scripts/check-mcp-server.mjs
 scripts/check-mcpb-bundle.mjs
 scripts/check-measurement-oracles.mjs
 scripts/check-metadata-model-adapters.mjs
+scripts/check-metric-field-discovery.mjs
 scripts/check-mlbom-conservation.mjs
 scripts/check-model-file-contract.mjs
+scripts/check-model-hierarchy-browser.mjs
+scripts/check-model-hierarchy.mjs
 scripts/check-model-ir-import-boundary.mjs
 scripts/check-model-ir-source-contracts.mjs
 scripts/check-model-ir-visualization.mjs
@@ -748,6 +755,7 @@ scripts/fixtures/onnx_dynamic_conv.onnx
 scripts/fixtures/onnx_recursive_scope.onnx
 scripts/fixtures/onnx_zero_dim_identity.onnx
 scripts/fixtures/report-boundary-analysis.v1.json.gz
+scripts/fixtures/source-hierarchy.mjs
 scripts/fixtures/weight-svd-oracles.json
 scripts/generate-accelerator-llm-samples.py
 scripts/generate-browser-target-profiles.mjs
@@ -761,6 +769,7 @@ scripts/generate-executorch-operator-signatures.mjs
 scripts/generate-finding-rule-catalog.mjs
 scripts/generate-gguf-backend-contract.mjs
 scripts/generate-gguf-codebooks.mjs
+scripts/generate-model-hierarchy-schema.mjs
 scripts/generate-native-evidence-schema.mjs
 scripts/generate-onnx-dynamic-shape-fixtures.py
 scripts/generate-onnx-recursive-scope-fixture.py
@@ -1144,6 +1153,8 @@ web/lib/metric-coverage.js
 web/lib/modal-accessibility.js
 web/lib/model-file.js
 web/lib/model-glance.js
+web/lib/model-hierarchy-view.js
+web/lib/model-hierarchy.js
 web/lib/model-ir-browser-export.js
 web/lib/model-ir-generic-analysis.js
 web/lib/model-ir-visualization.js
@@ -1154,6 +1165,8 @@ web/lib/model-ir/internal/native-facts.js
 web/lib/model-ir/internal/profiles.js
 web/lib/model-ir/internal/program.js
 web/lib/model-ir/internal/shared.js
+web/lib/model-program-boundary.js
+web/lib/model-source-metadata.js
 web/lib/model-structure-editor.js
 web/lib/model-structure.js
 web/lib/model-summary.js

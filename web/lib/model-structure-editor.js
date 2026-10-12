@@ -1,6 +1,7 @@
 import { createStructureSession, indexStructure, inputsOf, outputsOf, structureMermaid, parseStructureMermaid, structureLayerSnippet, topologicalOrder, STRUCTURE_LAYERS, STRUCTURE_TEMPLATES } from "./model-structure.js";
 import { downloadText } from "./download.js";
 import { routeStructureWires, roundedWirePath } from "./structure-wire-routing.js";
+import { mountModelHierarchy } from "./model-hierarchy-view.js";
 
 const NS = "http://www.w3.org/2000/svg";
 let editorNumber = 0;
@@ -9,7 +10,7 @@ function button(text, fn, cls = "") { const n = el("button", cls, text); n.type 
 function svg(tag, attrs = {}) { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); return n; }
 function contract(v) { return v ? `${v.shape == null ? "shape ?" : v.shape.length ? v.shape.join(" × ") : "scalar"} · ${v.dtype || "dtype ?"}` : "Disconnected"; }
 
-export function createModelStructureEditor({ sourceContext = () => null } = {}) {
+export function createModelStructureEditor({ sourceContext = () => null, hierarchyContext = () => null } = {}) {
   const arrowId = `se-flow-arrow-${++editorNumber}`;
   let host, session, source, selected = null, region, draft, idx, zoom = 1, positions = new Map();
   let viewport, scene, wireLayer, message = "", textOpen = true, fromValue = null, portElements = new Map(), previews = [];
@@ -140,6 +141,16 @@ export function createModelStructureEditor({ sourceContext = () => null } = {}) 
     const identity = el("code", "", `SHA-256 ${artifactInfo.sha256.slice(0, 12)}…`); identity.title = artifactInfo.sha256;
     binding.append(el("strong", "", artifactInfo.filename || "Local model"), el("span", "", artifactInfo.format.toUpperCase()), identity,
       el("span", "se-source-boundary", "Original preserved · local structural draft")); host.append(binding);
+    const evidence = hierarchyContext();
+    if (evidence?.model && evidence?.hierarchy && evidence.model.model_ir_sha256 === source) {
+      const overview = el("details"), summary = el("summary", "", "Original source hierarchy (read-only evidence)");
+      const panel = el("div"); overview.append(summary, panel); host.append(overview);
+      overview.addEventListener("toggle", () => {
+        if (overview.open && !panel.childElementCount) mountModelHierarchy(panel, evidence.model, evidence.hierarchy, {
+          onSelect(op) { if (idx.operations.has(op.id)) { selected = op.id; render(); focusSelection(); } },
+        });
+      });
+    }
     const tools = el("div", "se-toolbar");
     const undo = button("Undo", () => { session.undo(); message = ""; render(); }); undo.disabled = !session.canUndo;
     const redo = button("Redo", () => { session.redo(); message = ""; render(); }); redo.disabled = !session.canRedo;

@@ -293,6 +293,8 @@ const engineeringEvidence = buildEngineeringEvidenceDocument(crossOutputContext.
   mlBomDocument: crossOutputMlBom,
 });
 const rawFiles = buildRawDataArtifactFiles(crossOutputContext.primary_view, { rawEvidenceContext });
+assert.deepEqual(engineeringEvidence.evidence.model_hierarchy, crossOutputContext.model_hierarchy, "Engineering evidence reuses the common hierarchy");
+assert.deepEqual(JSON.parse(rawFiles.find(row => row.name === "static/model_hierarchy.json").data), crossOutputContext.model_hierarchy, "Raw export preserves the same hierarchy and hash");
 const rawArtifactIr = JSON.parse(rawFiles.find((row) => row.name === "static/artifact_ir.json").data);
 const deploymentContracts = buildDeploymentContractDocuments(crossOutputContext.primary_view, {
   hash: crossOutputSha, fileSizeBytes: crossOutputBytes.length, generatedAt: "2026-09-02T00:00:00.000Z", artifactIrContext: crossOutputContext,

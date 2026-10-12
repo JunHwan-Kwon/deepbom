@@ -32,6 +32,7 @@ import { buildSecurityPostureEvidence, collectRuntimeWarnings } from "./report-s
 import { resolveArtifactIrContext } from "./artifact-ir-context.js";
 import { buildModelIrFromArtifactIr } from "./model-ir.js";
 import { buildModelSummary, validateModelSummary } from "./model-summary.js";
+import { validateModelHierarchy } from "./model-hierarchy.js";
 import { modelIrVisualizationFiles } from "./model-ir-visualization.js";
 
 export function buildStaticAnalysisExport(analysis) {
@@ -1072,6 +1073,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
   });
   const modelIr = resolveReportModelIr(analysis, artifactIr, rawEvidenceContext, reportContext);
   const modelSummary = resolveReportModelSummary(analysis, modelIr, rawEvidenceContext, reportContext);
+  const modelHierarchy = resolveReportModelHierarchy(analysis, modelIr, rawEvidenceContext, reportContext);
   const modelStructure = buildModelStructureEvidence(analysis, identity);
   const quantization = buildQuantizationEvidence(analysis, identity);
   const runtimeResults = buildRuntimeEvidence({ analysis, ...runtimeEvidence });
@@ -1094,6 +1096,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
       ...(artifactIr ? { artifact_ir: artifactIr } : {}),
       ...(modelIr ? { model_ir: modelIr } : {}),
       ...(modelSummary ? { model_summary: modelSummary } : {}),
+      ...(modelHierarchy ? { model_hierarchy: modelHierarchy } : {}),
       quantization,
       runtime_results: runtimeResults,
       execution_placement: executionPlacement,
@@ -1123,6 +1126,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
       ...(artifactIr ? { artifact_ir: artifactIr } : {}),
       ...(modelIr ? { model_ir: modelIr } : {}),
       ...(modelSummary ? { model_summary: modelSummary } : {}),
+      ...(modelHierarchy ? { model_hierarchy: modelHierarchy } : {}),
       model_structure: modelStructure,
       quantization,
       runtime_results: runtimeResults,
@@ -1160,6 +1164,7 @@ export function buildEngineeringEvidenceDocument(analysis, {
       ...(artifactIr ? { artifact_ir: artifactIr } : {}),
       ...(modelIr ? { model_ir: modelIr } : {}),
       ...(modelSummary ? { model_summary: modelSummary } : {}),
+      ...(modelHierarchy ? { model_hierarchy: modelHierarchy } : {}),
       model_structure: modelStructure,
       quantization,
       runtime_results: runtimeResults,
@@ -1235,6 +1240,7 @@ export function buildRawDataArtifactFiles(analysis, {
   const artifactIr = resolveReportArtifactIr(analysis, rawEvidenceContext.identity || {}, rawEvidenceContext);
   const modelIr = resolveReportModelIr(analysis, artifactIr, rawEvidenceContext);
   const modelSummary = resolveReportModelSummary(analysis, modelIr, rawEvidenceContext);
+  const modelHierarchy = resolveReportModelHierarchy(analysis, modelIr, rawEvidenceContext);
   const files = [
     zipTextFile("static/raw_static_audit.md", analysis?._markdown || buildStaticAuditMarkdown(analysis, analysis?.model_sha256 || "") || ""),
     zipTextFile("static/roofline.csv", analysis?.roofline_csv || ""),
@@ -1244,6 +1250,7 @@ export function buildRawDataArtifactFiles(analysis, {
     ...(artifactIr ? [zipTextFile("static/artifact_ir.json", jsonForDownload(artifactIr))] : []),
     ...(modelIr ? [zipTextFile("static/model_ir.json", jsonForDownload(modelIr))] : []),
     ...(modelSummary ? [zipTextFile("static/model_summary.json", jsonForDownload(modelSummary))] : []),
+    ...(modelHierarchy ? [zipTextFile("static/model_hierarchy.json", jsonForDownload(modelHierarchy))] : []),
     zipTextFile("static/arena_plan.csv", buildArenaPlanCsv(analysis)),
     zipTextFile("static/mlbom_cdx.json", jsonForDownload(mlBomDocument || {})),
     ...buildRawEvidenceFiles(analysis, rawEvidenceContext),
@@ -1259,7 +1266,7 @@ export function buildRawDataArtifactFiles(analysis, {
   }
   if (graphSvgText) files.push(zipTextFile("static/graph_neighborhood.svg", graphSvgText));
   if (modelIr) {
-    const modelViews = modelIrVisualizationFiles(modelIr);
+    const modelViews = modelIrVisualizationFiles(modelIr, { hierarchy: modelHierarchy });
     files.push(...modelViews.files.map((file) => zipTextFile(file.name, file.data)));
   }
   const inputWitness = analysis?.input_counterexample?.witnesses?.[0];
@@ -1321,4 +1328,12 @@ function resolveReportModelSummary(analysis, modelIr, ...contexts) {
     return validated;
   }
   return buildModelSummary(modelIr);
+}
+
+function resolveReportModelHierarchy(analysis, modelIr, ...contexts) {
+  const supplied = contexts.map(context => context?.artifactIrContext?.model_hierarchy).find(Boolean)
+    || analysis?.model_hierarchy || null;
+  // Absence in an older context is not evidence of absent source annotations.
+  // Reuse the common projection when supplied; never reconstruct annotations here.
+  return supplied ? validateModelHierarchy(supplied, modelIr) : null;
 }

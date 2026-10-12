@@ -484,7 +484,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "bf065ed6c44b5aaf6a705f7600d202dc05f78d830dd9e65d12629a2dbfc99428"
+              "content": "f9831c7b67e59dcd8c465f20bf6b908bd8c5e9343cdd2a917009c6608c3453dc"
             }
           ]
         },
@@ -818,7 +818,7 @@
     },
     {
       "name": "deepbom:modelIrSha256",
-      "value": "d91fae70ff9df4483962c6a91045208b8a4589c9e6dc282aeeeba85b673b3af4"
+      "value": "5934194c9038501ec0353f9d94742370b673e86db61658b5ef26c05c53b726e7"
     },
     {
       "name": "deepbom:modelIrLocation",

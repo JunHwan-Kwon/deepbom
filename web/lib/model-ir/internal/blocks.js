@@ -1,31 +1,37 @@
 import { compareCanonicalText } from "../../report-utils.js";
 import { sha256TextHex } from "../../sha256-sync.js";
+import { partitionConnectedOperations } from "../../model-program-boundary.js";
 
 const MAX_PATTERN_LENGTH = 64;
 
 export function buildStructuralBlocks(operations, regions, { ports = [], values = [], relationships = [] } = {}) {
   const context = buildSignatureContext(ports, values, relationships);
   const blocks = [];
+  const edgesByOperation = new Map();
+  for (const edge of relationships) {
+    if (!edgesByOperation.has(edge.from_ref)) edgesByOperation.set(edge.from_ref, []);
+    edgesByOperation.get(edge.from_ref).push(edge);
+  }
   for (const region of regions) {
     const rows = operations.filter((row) => row.region_ref === region.id).sort(displayOrder);
     if (!rows.length) continue;
-    const signatures = rows.map((row) => operationSignature(row, context, false));
-    const repeated = bestRepeatedRun(signatures);
-    const spans = repeated
-      ? [
-          ...(repeated.start ? [{ start: 0, length: repeated.start, kind: "head", repeatIndex: null }] : []),
-          ...Array.from({ length: repeated.repetitions }, (_, repeatIndex) => ({ start: repeated.start + repeatIndex * repeated.length, length: repeated.length, kind: "repeated_structure", repeatIndex })),
-          ...(repeated.start + repeated.length * repeated.repetitions < rows.length ? [{ start: repeated.start + repeated.length * repeated.repetitions, length: rows.length - (repeated.start + repeated.length * repeated.repetitions), kind: "tail", repeatIndex: null }] : []),
-        ]
-      : partitionNonRepeated(rows.length);
+    const regionEdges = rows.flatMap(row => edgesByOperation.get(row.id) || []);
+    const spans = partitionConnectedOperations(rows, regionEdges).flatMap(members => {
+      const memberIds = new Set(members.map(row => row.id));
+      const edges = members.flatMap(row => edgesByOperation.get(row.id) || []).filter(edge => memberIds.has(edge.to_ref));
+      return partitionRepeated(members, context).flatMap(span => {
+        const parts = partitionConnectedOperations(span.members, edges);
+        return parts.map(part => ({ ...span, members: part, ...(parts.length > 1 ? { kind: "rank_partition", repeatIndex: null } : {}) }));
+      });
+    });
     for (const [spanIndex, span] of spans.entries()) {
-      const members = rows.slice(span.start, span.start + span.length);
+      const members = span.members;
       const signature = members.map((row) => operationSignature(row, context, false));
       const representationSignature = members.map((row) => operationSignature(row, context, true));
       const digest = sha256TextHex(JSON.stringify({ schema: "deepbom.structural_block_signature.v1", signature }));
       const representationDigest = sha256TextHex(JSON.stringify({ schema: "deepbom.structural_block_representation_signature.v1", signature: representationSignature }));
       blocks.push({
-        id: `block:${sha256TextHex(region.id).slice(0, 8)}:${digest.slice(0, 12)}:${String(span.repeatIndex ?? spanIndex).padStart(4, "0")}`,
+        id: `block:${sha256TextHex(region.id).slice(0, 8)}:${digest.slice(0, 12)}:${String(spanIndex).padStart(4, "0")}`,
         region_ref: region.id,
         kind: span.kind,
         signature_sha256: digest,
@@ -34,16 +40,32 @@ export function buildStructuralBlocks(operations, regions, { ports = [], values 
         member_refs: members.map((row) => row.id),
         source_order_range: [Math.min(...members.map((row) => row.source_order)), Math.max(...members.map((row) => row.source_order))],
         display_order_range: [Math.min(...members.map((row) => row.display_order)), Math.max(...members.map((row) => row.display_order))],
-        boundary_evidence: repeated && span.kind === "repeated_structure"
+        boundary_evidence: span.kind === "repeated_structure"
           ? ["maximal_contiguous_repeated_operation_signature"]
-          : [span.kind === "rank_partition" ? "deterministic_display_rank_partition" : "serialized_region_sequence"],
+          : ["connected_data_component", "bounded_display_order_partition_max_50"],
         grouping_rule_id: "deepbom.structural_block_partition.v1",
-        grouping_rule_version: "1.0.0",
+        grouping_rule_version: "1.1.0",
         evidence_class: "DERIVED",
       });
     }
   }
   return blocks;
+}
+
+// Search the remainder as well as the best run. Each search is bounded by the
+// common group limit; no unbounded head/tail catch-all is emitted.
+function partitionRepeated(members, context) {
+  const repeated = bestRepeatedRun(members.map(row => operationSignature(row, context, false)));
+  if (!repeated) return [{ members, kind: "rank_partition", repeatIndex: null }];
+  const end = repeated.start + repeated.length * repeated.repetitions;
+  return [
+    ...(repeated.start ? partitionRepeated(members.slice(0, repeated.start), context) : []),
+    ...Array.from({ length: repeated.repetitions }, (_, repeatIndex) => ({
+      members: members.slice(repeated.start + repeatIndex * repeated.length, repeated.start + (repeatIndex + 1) * repeated.length),
+      kind: "repeated_structure", repeatIndex,
+    })),
+    ...(end < members.length ? partitionRepeated(members.slice(end), context) : []),
+  ];
 }
 
 function bestRepeatedRun(signatures) {
@@ -66,16 +88,6 @@ function bestRepeatedRun(signatures) {
 function equalRange(rows, left, right, length) {
   for (let index = 0; index < length; index += 1) if (rows[left + index] !== rows[right + index]) return false;
   return true;
-}
-
-function partitionNonRepeated(length) {
-  if (length <= 100) return [{ start: 0, length, kind: "non_repeating_region", repeatIndex: null }];
-  const count = Math.ceil(length / 50);
-  return Array.from({ length: count }, (_, index) => {
-    const start = Math.floor(index * length / count);
-    const end = Math.floor((index + 1) * length / count);
-    return { start, length: end - start, kind: "rank_partition", repeatIndex: null };
-  });
 }
 
 function operationSignature(row, context, includeRepresentation) {

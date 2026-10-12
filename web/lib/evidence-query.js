@@ -24,11 +24,20 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
   const nativeByRef = new Map(nativeOps.filter(op => op.artifact_ir_subject_ref).map(op => [op.artifact_ir_subject_ref, op]));
   const nativeByIndex = new Map(nativeOps.map((op, position) => [op.index ?? position, op]));
   const rowsByRef = new Map(all.map(row => [row.subject_ref, row]));
+  const hierarchy = artifactIrContext.model_hierarchy;
+  const sourceByRef = new Map((hierarchy?.assignments || []).map(row => [row.subject_ref, row]));
+  const groupByRef = new Map((hierarchy?.groups || []).map(row => [row.id, row]));
   // Native indices are local to a scope. Never resolve a repeated index by
   // selecting the first row or equate a display-order number with that index.
   const nativeFor = row => nativeByRef.get(row.subject_ref) || null;
   const opRow = row => makeRow(row.subject_ref, row.kind, row.name, {
     ...row,
+    ...(sourceByRef.has(row.subject_ref) ? { source_hierarchy: {
+      ...sourceByRef.get(row.subject_ref),
+      path: groupByRef.get(sourceByRef.get(row.subject_ref).group_ref)?.path || null,
+      hierarchy_sha256: hierarchy.hierarchy_sha256,
+      interpretation_boundary: "Exporter source annotation; not a proven native module or runtime invocation.",
+    } } : {}),
     metric_contracts: opByRef.get(row.subject_ref)?.metric_contracts ?? null,
     quantization_summary: opByRef.get(row.subject_ref)?.quantization_summary ?? null,
     attributes: opByRef.get(row.subject_ref)?.attributes ?? null,
@@ -141,7 +150,7 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
   }
   if (query.search) {
     const term = query.search.toLowerCase();
-    rows = rows.filter(row => `${row.title} ${row.subject_ref} ${row.kind} ${row.details.native_type?.name || ""}`.toLowerCase().includes(term));
+    rows = rows.filter(row => `${row.title} ${row.subject_ref} ${row.kind} ${row.details.native_type?.name || ""} ${row.details.source_hierarchy?.path || ""}`.toLowerCase().includes(term));
   }
   if (query.section === "operator" && rows.length !== 1) throw new Error("Operator detail did not resolve exactly one subject. Use an exact subject_ref from the operators query.");
   if (unavailable) context.unavailable_reason = unavailable;

@@ -8,7 +8,7 @@
   "required": ["schema", "method_version", "source_contract", "hash_contract", "artifact", "artifact_role", "projection", "columns", "rows", "totals", "coverage", "trainability", "loss_ledger", "interpretation_boundary", "model_summary_sha256"],
   "properties": {
     "schema": { "const": "deepbom.model_summary.v1" },
-    "method_version": { "enum": ["1.0.0", "1.1.0"] },
+    "method_version": { "enum": ["1.0.0", "1.1.0", "1.2.0"] },
     "source_contract": {
       "type": "object", "additionalProperties": false,
       "required": ["schema", "model_ir_sha256", "artifact_sha256"],

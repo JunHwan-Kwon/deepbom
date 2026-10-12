@@ -6,6 +6,7 @@ import { buildOverviewDomainMap } from "./overview-domain-map.js";
 import { staticTensorPayloadBytes } from "./tensor-inventory.js";
 import { requireArtifactIrConsumerView } from "./artifact-ir-context.js";
 import { artifactIrOperators, artifactIrValues } from "./artifact-ir-selectors.js";
+import { mountModelHierarchy } from "./model-hierarchy-view.js";
 
 export function createGraphWorkspace(workspace) {
   const {
@@ -375,6 +376,22 @@ function renderInferencePanel(analysis) {
 
 function renderGraphExplorer(analysis) {
   const analysisView = artifactIrAnalysisView(analysis);
+  if (graphExplorer && analysisView.model_hierarchy && analysisView.model_ir) {
+    let hierarchyPanel = graphExplorer.querySelector("[data-model-hierarchy]");
+    if (!hierarchyPanel) {
+      hierarchyPanel = document.createElement("details"); hierarchyPanel.dataset.modelHierarchy = "";
+      const label = document.createElement("summary"); label.textContent = "Model hierarchy · groups, connections and evidence";
+      hierarchyPanel.append(label, document.createElement("div")); graphExplorer.prepend(hierarchyPanel);
+    }
+    hierarchyPanel.open = analysisView.model_ir.program.operations.length > 0;
+    mountModelHierarchy(hierarchyPanel.lastElementChild, analysisView.model_ir, analysisView.model_hierarchy, {
+      onSelect(op) {
+        if (!analysisView.model_ir.program.programs[0]?.entry_region_refs.includes(op.region_ref)) return;
+        workspace.selectedOpIndex = op.native_index;
+        void renderOpDetail(analysisView, op.native_index); deferGraphMap(analysisView, op.native_index);
+      },
+    });
+  }
   const cursor = evidenceCursor?.get?.();
   const cursorMatches = cursor?.artifact_sha256 && cursor.artifact_sha256 === analysisView.model_sha256;
   const ops = graphOps(analysisView);

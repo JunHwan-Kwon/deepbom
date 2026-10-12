@@ -1,0 +1,1234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepbom.org/schemas/deepbom-model-hierarchy-v1.schema.json",
+  "title": "Model IR source hierarchy projections",
+  "description": "Validate shape here, then rederive against Model IR with validateModelHierarchy. A valid digest is not exporter authenticity. No independent IR family or runtime claim.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/hierarchy"
+    },
+    {
+      "$ref": "#/$defs/view"
+    },
+    {
+      "$ref": "#/$defs/query"
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "nonEmpty": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nullableInteger": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "nullableString": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "exactInteger": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "decimal",
+        "number"
+      ],
+      "properties": {
+        "decimal": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "number": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      }
+    },
+    "assessedExactInteger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decimal",
+        "number",
+        "status",
+        "assessed_count",
+        "total_count"
+      ],
+      "properties": {
+        "decimal": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]+$"
+        },
+        "number": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "status": {
+          "enum": [
+            "complete",
+            "partial",
+            "not_assessable"
+          ]
+        },
+        "assessed_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value_ref",
+        "name",
+        "dtype",
+        "shape",
+        "shape_signature",
+        "roles"
+      ],
+      "properties": {
+        "value_ref": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "type_contract": {
+          "type": "object"
+        },
+        "name": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "dtype": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "shape": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "shape_signature": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_ir_schema",
+        "model_ir_sha256",
+        "artifact_ir_sha256",
+        "artifact_sha256"
+      ],
+      "properties": {
+        "model_ir_schema": {
+          "const": "deepbom.model_ir.v1"
+        },
+        "model_ir_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "artifact_ir_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "artifact_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "annotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject_ref",
+        "scope_names",
+        "class_names",
+        "status",
+        "reason",
+        "source_pointer",
+        "metadata_sha256",
+        "call_identity_status"
+      ],
+      "properties": {
+        "subject_ref": {
+          "type": "string"
+        },
+        "scope_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "maxItems": 128
+        },
+        "class_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "maxItems": 128
+        },
+        "status": {
+          "enum": [
+            "observed_exporter_annotation",
+            "invalid_annotation"
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_pointer": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "metadata_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "call_identity_status": {
+          "const": "exporter_annotation_not_runtime_invocation"
+        }
+      }
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_value_refs",
+        "output_value_refs",
+        "internal_edge_refs",
+        "incoming_edge_refs",
+        "outgoing_edge_refs"
+      ],
+      "properties": {
+        "input_value_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "output_value_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "internal_edge_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "incoming_edge_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "outgoing_edge_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "aggregation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_count",
+        "storage_object_count",
+        "serialized_element_count",
+        "serialized_byte_length",
+        "storage_refs",
+        "macs",
+        "mac_assessment",
+        "inputs",
+        "outputs",
+        "boundary",
+        "trainable_parameter_count"
+      ],
+      "properties": {
+        "operation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "storage_object_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "serialized_element_count": {
+          "$ref": "#/$defs/assessedExactInteger"
+        },
+        "serialized_byte_length": {
+          "$ref": "#/$defs/assessedExactInteger"
+        },
+        "storage_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "macs": {
+          "$ref": "#/$defs/assessedExactInteger"
+        },
+        "mac_assessment": {
+          "$ref": "#/$defs/assessment"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/value"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/value"
+          }
+        },
+        "boundary": {
+          "$ref": "#/$defs/boundary"
+        },
+        "trainable_parameter_count": {
+          "type": "null"
+        }
+      }
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "parent_ref",
+        "path",
+        "kind",
+        "region_ref",
+        "class_names",
+        "child_refs",
+        "direct_member_refs",
+        "member_refs",
+        "aggregation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "parent_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "graph_region",
+            "source_scope",
+            "root_functional",
+            "derived_structural_group",
+            "unclassified"
+          ]
+        },
+        "region_ref": {
+          "type": "string"
+        },
+        "class_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "child_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "direct_member_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "member_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "aggregation": {
+          "$ref": "#/$defs/aggregation"
+        }
+      }
+    },
+    "assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject_ref",
+        "group_ref",
+        "status",
+        "call_site_name",
+        "call_identity_status",
+        "source_pointer",
+        "metadata_sha256",
+        "reason"
+      ],
+      "properties": {
+        "subject_ref": {
+          "type": "string"
+        },
+        "group_ref": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "observed_exporter_annotation",
+            "invalid_annotation",
+            "unavailable"
+          ]
+        },
+        "call_site_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "call_identity_status": {
+          "enum": [
+            "exporter_annotation_not_runtime_invocation",
+            "not_exposed"
+          ]
+        },
+        "source_pointer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value_ref",
+        "from_ref",
+        "to_ref",
+        "from_port_ref",
+        "to_port_ref",
+        "from_port_position",
+        "to_port_position",
+        "boundary_program_ref",
+        "boundary_position",
+        "kind",
+        "shape",
+        "dtype",
+        "layout"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "value_ref": {
+          "type": "string"
+        },
+        "from_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "to_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "from_port_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "to_port_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "from_port_position": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "to_port_position": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boundary_program_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boundary_position": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "enum": [
+            "data_dependency",
+            "storage_input",
+            "external_input",
+            "model_output"
+          ]
+        },
+        "shape": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "dtype": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layout": {
+          "const": "not_inferred"
+        }
+      }
+    },
+    "hierarchy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "method_version",
+        "source",
+        "interpretation_boundary",
+        "status",
+        "annotations",
+        "groups",
+        "assignments",
+        "edges",
+        "hierarchy_sha256",
+        "non_data_relationships",
+        "coverage"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.model_hierarchy.v1"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "interpretation_boundary": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "source_annotated",
+            "structural_fallback",
+            "not_applicable_no_program"
+          ]
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/annotation"
+          }
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/group"
+          }
+        },
+        "assignments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/assignment"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/edge"
+          }
+        },
+        "hierarchy_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "non_data_relationships": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "kind"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "control_dependency",
+                  "state_dependency",
+                  "call"
+                ]
+              }
+            }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "operation_count",
+            "annotated_operation_count",
+            "invalid_annotation_count",
+            "unannotated_operation_count",
+            "operator_edge_count",
+            "boundary_edge_count",
+            "non_data_relationship_count",
+            "runtime_call_identity_assessed",
+            "unknown_is_zero"
+          ],
+          "properties": {
+            "operation_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "annotated_operation_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "invalid_annotation_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unannotated_operation_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "operator_edge_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "boundary_edge_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "non_data_relationship_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runtime_call_identity_assessed": {
+              "const": false
+            },
+            "unknown_is_zero": {
+              "const": false
+            }
+          }
+        }
+      }
+    },
+    "view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "method_version",
+        "source",
+        "interpretation_boundary",
+        "hierarchy_sha256",
+        "view_sha256",
+        "selection",
+        "rows",
+        "edges",
+        "highlighted_operation_refs",
+        "non_data_relationship_refs",
+        "conservation"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.model_hierarchy_view.v1"
+        },
+        "method_version": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "interpretation_boundary": {
+          "type": "string"
+        },
+        "hierarchy_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "view_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "selection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "selected",
+            "expanded",
+            "search",
+            "focus"
+          ],
+          "properties": {
+            "selected": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expanded": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "search": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "focus": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "label",
+              "native_type",
+              "member_refs",
+              "aggregation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "group",
+                  "operation"
+                ]
+              },
+              "label": {
+                "type": "string"
+              },
+              "native_type": {
+                "type": "string"
+              },
+              "member_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "aggregation": {
+                "$ref": "#/$defs/aggregation"
+              }
+            }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "from_ref",
+              "to_ref",
+              "edge_refs"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from_ref": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "to_ref": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "edge_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        "highlighted_operation_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "non_data_relationship_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "conservation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "total_operations",
+            "represented_operations",
+            "omitted_operation_refs",
+            "total_edges",
+            "internal_edge_refs",
+            "omitted_edge_refs",
+            "boundary_policy"
+          ],
+          "properties": {
+            "status": {
+              "const": "conserved"
+            },
+            "total_operations": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "represented_operations": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "omitted_operation_refs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "total_edges": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "internal_edge_refs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "omitted_edge_refs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "boundary_policy": {
+              "const": "all_incident_edges_retained_even_when_opposite_endpoint_is_outside_view"
+            }
+          }
+        }
+      }
+    },
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "source",
+        "hierarchy_sha256",
+        "interpretation_boundary",
+        "query",
+        "total",
+        "matched",
+        "returned",
+        "next_offset",
+        "rows"
+      ],
+      "properties": {
+        "schema": {
+          "const": "deepbom.model_hierarchy_query.v1"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "hierarchy_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "interpretation_boundary": {
+          "type": "string"
+        },
+        "query": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "parent_ref",
+            "offset",
+            "limit",
+            "search"
+          ],
+          "properties": {
+            "parent_ref": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "search": {
+              "type": "string",
+              "maxLength": 256
+            }
+          }
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "matched": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "returned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "next_offset": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "parent_ref",
+              "path",
+              "kind",
+              "class_names",
+              "operation_count",
+              "child_count",
+              "macs",
+              "mac_assessment",
+              "serialized_element_count",
+              "serialized_byte_length",
+              "trainable_parameter_count",
+              "input_value_count",
+              "output_value_count",
+              "details_pointer"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "parent_ref": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "path": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "class_names": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "operation_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "child_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "macs": {
+                "$ref": "#/$defs/assessedExactInteger"
+              },
+              "mac_assessment": {
+                "$ref": "#/$defs/assessment"
+              },
+              "serialized_element_count": {
+                "$ref": "#/$defs/assessedExactInteger"
+              },
+              "serialized_byte_length": {
+                "$ref": "#/$defs/assessedExactInteger"
+              },
+              "trainable_parameter_count": {
+                "type": "null"
+              },
+              "input_value_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "output_value_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "details_pointer": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -13,7 +13,8 @@ import {
 // about 58 KiB; reserve a bounded 96 KiB increment without raising per-file caps.
 // Native numerical transport and detailed views add ~65 KiB; allocate 128 KiB.
 // Snapshot/context/evaluation owners and their bounded report adapters add ~80 KiB.
-const handwrittenRuntimeBudgetKiB = Number(process.env.HANDWRITTEN_RUNTIME_SOURCE_BUDGET_KIB || process.env.SOURCE_BUDGET_KIB || 13312);
+// Shared source hierarchy, bounded graph projection and export adapters add ~66 KiB.
+const handwrittenRuntimeBudgetKiB = Number(process.env.HANDWRITTEN_RUNTIME_SOURCE_BUDGET_KIB || process.env.SOURCE_BUDGET_KIB || 13408);
 const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_BUDGET_KIB || 1856);
 // Includes the public connection contract, schema and OMOP usage guide.
 // Includes the hash-addressed common-rule inventory (~138 KiB) and review report.
@@ -26,12 +27,14 @@ const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_
 // Adds strict workflow/family schemas, migration guide and immutable 0.16 catalog.
 // Retain immutable 0.18–0.20 editor/synchronization snapshots (~88 KiB each).
 // Retain the immutable 0.21 geometry-source snapshot (~88 KiB); reserve 96 KiB.
-const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 3328);
+// Preserve the hierarchy schema/guide and immutable 0.22 compatibility snapshot.
+const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 3520);
 // Includes metadata tampering, cross-channel and browser regression checks.
 // Workflow routing and weight-query regression coverage add a measured 18 KiB;
 // reserve 32 KiB for tests and 16 KiB for the expanded review contract snapshot.
 // Adds schema/source closure and browser snapshot-integrity regression checks.
-const verificationSourceBudgetKiB = Number(process.env.VERIFICATION_SOURCE_BUDGET_KIB || 4096);
+// Source hierarchy, exact port conservation and browser/export regression coverage.
+const verificationSourceBudgetKiB = Number(process.env.VERIFICATION_SOURCE_BUDGET_KIB || 4160);
 // Includes the reproducible Provenance IR schema generator.
 // Includes the shared scalar registry/generator and reviewed duplicate exceptions.
 // Retains the four measured 2.0.0 delivery observations alongside prior releases.
@@ -42,7 +45,8 @@ const devToolingSourceBudgetKiB = Number(process.env.DEV_TOOLING_SOURCE_BUDGET_K
 const nativeToolingSourceBudgetKiB = Number(process.env.NATIVE_TOOLING_SOURCE_BUDGET_KIB || 256);
 const corpusEvidenceSourceBudgetKiB = Number(process.env.CORPUS_EVIDENCE_SOURCE_BUDGET_KIB || 544);
 const runtimeFileBudgetKiB = Number(process.env.RUNTIME_SOURCE_FILE_BUDGET_KIB || 512);
-const appJsBudgetKiB = Number(process.env.APP_JS_BUDGET_KIB || 310);
+// Common hierarchy summary/export wiring raises the shell from <310 to 310.1 KiB.
+const appJsBudgetKiB = Number(process.env.APP_JS_BUDGET_KIB || 312);
 const stylesCssBudgetKiB = Number(process.env.STYLES_CSS_BUDGET_KIB || 280);
 const researchLabsCssBudgetKiB = Number(process.env.RESEARCH_LABS_CSS_BUDGET_KIB || 48);
 const appShellCssBudgetKiB = Number(process.env.APP_SHELL_CSS_BUDGET_KIB || 64);

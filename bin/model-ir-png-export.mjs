@@ -36,12 +36,27 @@ function renderPage(page, modelIr, orientation) {
   drawText(pixels, width, height, margin, 180, `ARTIFACT SHA256 ${modelIr.artifact.sha256.slice(0, 16)} PAGE ${page.page_number} OF ${page.page_count}`, 2);
   const rows = page.render_model.rows;
   const rowHeight = Math.floor((height - 390) / Math.max(1, orientation === "landscape" ? 12 : 22));
+  const edges = page.render_model.edges || [], left = edges.length ? margin + 100 : margin;
+  const indices = new Map(rows.map((row, index) => [row.subject_ref, index]));
+  for (const [index, edge] of edges.entries()) {
+    const from = indices.get(edge.from_ref), to = indices.get(edge.to_ref);
+    if (to === undefined) continue;
+    const y2 = 230 + to * rowHeight + Math.floor((rowHeight - 8) / 2), lane = margin + 12 + index % 4 * 18;
+    if (from !== undefined) {
+      const y1 = 230 + from * rowHeight + Math.floor((rowHeight - 8) / 2);
+      line(pixels, width, height, left, y1, lane, y1, dashed(edge.evidence_class));
+      line(pixels, width, height, lane, y1, lane, y2, dashed(edge.evidence_class));
+    } else drawText(pixels, width, height, lane, y2 - 20, `P${edge.source_page ?? "?"}`, 2);
+    line(pixels, width, height, lane, y2, left, y2, dashed(edge.evidence_class));
+    line(pixels, width, height, left - 10, y2 - 7, left, y2);
+    line(pixels, width, height, left - 10, y2 + 7, left, y2);
+  }
   for (const [index, row] of rows.entries()) {
     const y = 230 + index * rowHeight;
-    rectangle(pixels, width, height, margin, y, width - margin * 2, rowHeight - 8, dashed(row.evidence_class));
-    drawText(pixels, width, height, margin + 14, y + 10, `${row.kind} | ${row.title}`.slice(0, orientation === "landscape" ? 112 : 76), 5);
-    drawText(pixels, width, height, margin + 14, y + 52, row.detail.slice(0, orientation === "landscape" ? 112 : 76), 5);
-    drawText(pixels, width, height, margin + 14, y + 94, row.subject_ref.slice(0, orientation === "landscape" ? 112 : 76), 5);
+    rectangle(pixels, width, height, left, y, width - margin - left, rowHeight - 8, dashed(row.evidence_class));
+    drawText(pixels, width, height, left + 14, y + 10, `${row.kind} | ${row.title}`.slice(0, orientation === "landscape" ? 112 : 76), 5);
+    drawText(pixels, width, height, left + 14, y + 52, row.detail.slice(0, orientation === "landscape" ? 112 : 76), 5);
+    drawText(pixels, width, height, left + 14, y + 94, row.subject_ref.slice(0, orientation === "landscape" ? 112 : 76), 5);
   }
   drawText(pixels, width, height, margin, height - 105, `DEEPBOM MODEL IR ${modelIr.method_version} ${modelIr.model_ir_sha256.slice(0, 16)}`, 2);
   return encodePng(width, height, pixels);

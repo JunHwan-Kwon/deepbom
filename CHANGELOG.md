@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.4.0 — 2026-10-12 — source hierarchy and bounded architecture views
+
+- Preserve bounded ONNX exporter module annotations and derive a hash-bound hierarchy from the common Model IR. Keep declared source paths distinct from proven native module identities and calls.
+- Replace oversized structural TAIL groups with connected groups of at most 50 operations and detect later repeated regions. Preserve exact tensor ports, shared storage, unknown metric states and boundary connections when folding groups.
+- Generate default architecture diagrams, human summaries, report views and exports from the same hierarchy projection across Web, CLI and MCP. Add searchable, expandable browser navigation and a local MCP hierarchy query.
+- Keep the default Model Summary JSON ledger and earlier Model IR readers compatible. Offer explicit full-operation graph views and hierarchy JSON; label inferred grouping and incomplete evidence.
+- Validate common projection identities, operation and edge conservation, tamper rejection, graph exports, report bundles, browser interaction and installed-channel parity. Reserve 96 KiB runtime, 192 KiB documentation and 64 KiB verification source capacity for the measured additions, plus 2 KiB for app-shell wiring; analysis limits are unchanged.
+- Reserve 256 KiB of distribution capacity for the measured 69.03 MiB web artifact; initial interaction scripts remain 2,475 gzip bytes and the 16 MiB file ceiling is unchanged.
+
 ## 2.3.0 — 2026-10-11 — scoped snapshots and model-change evidence
 
 - Add typed Snapshot/Provenance, evaluation protocols and records, exact-decimal before/after checks, and bounded deployment-declaration consistency through one Web/CLI/SDK/local MCP workflow.

@@ -1,6 +1,7 @@
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { buildHierarchicalGraphProjection } from "./graph-hierarchy.js";
+import { resolveModelHierarchyPresentation } from "./model-hierarchy.js";
 
 export const VISUALIZATION_MANIFEST_SCHEMA = "deepbom.visualization_manifest.v1";
 const NODE_WIDTH = 248;
@@ -9,8 +10,8 @@ const GAP_X = 54;
 const GAP_Y = 56;
 const MARGIN = 48;
 
-export function exportGraphVisualization(graph, { view = "structure", format = "svg", compact = false, artifactIr = null, modelIr = null } = {}) {
-  const { projection, scene } = buildGraphVisualizationScene(graph, view);
+export function exportGraphVisualization(graph, { view = "structure", format = "svg", compact = false, artifactIr = null, modelIr = null, hierarchy = null } = {}) {
+  const { projection, scene } = buildGraphVisualizationScene(graph, view, { modelIr, hierarchy });
   const manifestBody = {
     schema: VISUALIZATION_MANIFEST_SCHEMA,
     graph_ir_sha256: graph.graph_ir_sha256,
@@ -21,10 +22,13 @@ export function exportGraphVisualization(graph, { view = "structure", format = "
     rendered_edge_count: projection.edges.length,
     level_of_detail: projection.level,
     hierarchy_conservation: projection.hierarchy?.conservation || null,
-    executable_dag_claim: graph.projection.executable_dag_claim,
+    ...(projection.hierarchy_view ? { hierarchy_view_sha256: projection.hierarchy_view.view_sha256,
+      hierarchy_sha256: projection.hierarchy_view.hierarchy_sha256,
+      hierarchy_conservation: projection.hierarchy_view.conservation } : {}),
+    executable_dag_claim: projection.hierarchy_view ? false : graph.projection.executable_dag_claim,
     dimensions: { width: scene.width, height: scene.height },
     determinism: "canonical_graph_ir_stable_order_and_fixed_layout_v1",
-    interpretation_boundary: graph.interpretation_boundary,
+    interpretation_boundary: projection.hierarchy_view?.interpretation_boundary || graph.interpretation_boundary,
   };
   const manifest = { ...manifestBody, visualization_manifest_sha256: sha256TextHex(canonicalJson(manifestBody)) };
   if (artifactIr && artifactIr.artifact_ir_sha256 !== graph.artifact_ir_sha256) {
@@ -34,7 +38,8 @@ export function exportGraphVisualization(graph, { view = "structure", format = "
     throw new Error("Visualization Model IR does not match the Graph IR source contract.");
   }
   if (format === "json") return {
-    text: `${JSON.stringify({ ...(artifactIr ? { artifact_ir: artifactIr } : {}), ...(modelIr ? { model_ir: modelIr } : {}), graph_ir: graph, visualization_manifest: manifest }, null, compact ? 0 : 2)}\n`,
+    text: `${JSON.stringify({ ...(artifactIr ? { artifact_ir: artifactIr } : {}), ...(modelIr ? { model_ir: modelIr } : {}), graph_ir: graph, visualization_manifest: manifest,
+      ...(projection.hierarchy_view ? { hierarchy_view: projection.hierarchy_view } : {}) }, null, compact ? 0 : 2)}\n`,
     mediaType: "application/json",
     manifest,
   };
@@ -46,9 +51,25 @@ export function exportGraphVisualization(graph, { view = "structure", format = "
   throw new Error(`Unsupported graph export format: ${format}.`);
 }
 
-export function buildGraphVisualizationScene(graph, view = "structure") {
-  const projection = project(graph, view);
+export function buildGraphVisualizationScene(graph, view = "structure", { modelIr = null, hierarchy = null } = {}) {
+  if (modelIr && modelIr.source_contract?.sha256 !== graph.artifact_ir_sha256) throw new Error("Graph presentation Model IR source mismatch.");
+  const presentation = view === "architecture" && modelIr ? resolveModelHierarchyPresentation(modelIr, hierarchy) : null;
+  const projection = presentation ? hierarchyProjection(presentation.view) : project(graph, view);
   return { projection, scene: layout(projection.nodes, projection.edges) };
+}
+
+function hierarchyProjection(view) {
+  const ids = new Set(view.rows.map(row => row.id));
+  return {
+    level: "model_hierarchy_exact_contraction", hierarchy_view: view,
+    nodes: view.rows.map((row, index) => ({ id: row.id, index, kind: row.kind, label: row.label,
+      domain: "Model IR", secondary_label: `${row.member_refs.length} operations`,
+      source_subject_refs: row.member_refs, output_shapes: row.aggregation.outputs.map(value => value.shape),
+      macs: row.aggregation.macs, estimated_bytes: row.aggregation.serialized_byte_length })),
+    edges: view.edges.filter(edge => ids.has(edge.from_ref) && ids.has(edge.to_ref))
+      .map(edge => ({ id: edge.id, from: edge.from_ref, to: edge.to_ref,
+        tensor_name: `${edge.edge_refs.length} serialized port edges`, source_edge_refs: edge.edge_refs })),
+  };
 }
 
 function project(graph, view) {
@@ -100,7 +121,9 @@ function renderSvg(graph, scene, manifest) {
     const tone = nodeTone(node, manifest.view);
     const detail = node.output_shapes?.[0]?.length ? node.output_shapes[0].join("×")
       : node.estimated_bytes?.decimal ? `${formatBytes(node.estimated_bytes.decimal)} serialized/logical` : node.secondary_label || "";
-    const mac = node.macs?.decimal && node.macs.decimal !== "0" ? `${formatInteger(node.macs.decimal)} MACs` : node.placement?.status || node.kind;
+    const mac = node.macs?.status
+      ? node.macs.decimal == null ? "MACs not assessed" : `${formatInteger(node.macs.decimal)} MACs${node.macs.status === "partial" ? " (partial)" : ""}`
+      : node.macs?.decimal && node.macs.decimal !== "0" ? `${formatInteger(node.macs.decimal)} MACs` : node.placement?.status || node.kind;
     return `<g class="node ${tone}" data-node-id="${xml(node.id)}" data-search="${xml(`${node.index} ${node.label} ${node.secondary_label || ""} ${node.domain} ${node.placement?.backend || ""} ${node.placement?.status || ""}`.toLowerCase())}" transform="translate(${node.x} ${node.y})"><rect width="${NODE_WIDTH}" height="${NODE_HEIGHT}" rx="6"/><text class="index" x="14" y="20">#${String(node.index).padStart(3, "0")} · ${xml(node.domain)}</text><text class="label" x="14" y="45">${xml(clip(node.label, 30))}</text><text class="detail" x="14" y="67">${xml(clip(detail, 36))}</text><text class="metric" x="14" y="84">${xml(clip(mac, 38))}</text><title>${xml(node.label)} · ${xml(node.placement?.status || "")}</title></g>`;
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${scene.width}" height="${scene.height}" viewBox="0 0 ${scene.width} ${scene.height}" role="img" aria-labelledby="title desc"><title id="title">${xml(graph.artifact.filename)} · ${xml(manifest.view)} graph</title><desc id="desc">${xml(graph.interpretation_boundary)}</desc><style>:root{color-scheme:light dark}.background{fill:#f5f2ea}.edge{fill:none;stroke:#8d887d;stroke-width:1.5;opacity:.72}.node rect{fill:#fffdfa;stroke:#777064;stroke-width:1.4}.node .index{font:11px ui-monospace,SFMono-Regular,Consolas,monospace;fill:#6a6258}.node .label{font:700 15px Inter,Arial,sans-serif;fill:#191714}.node .detail,.node .metric{font:11px Inter,Arial,sans-serif;fill:#514b43}.node.delegated rect{stroke:#177d6b;stroke-width:2}.node.fallback rect{stroke:#b44c3e;stroke-width:2}.node.quantized rect{fill:#edf7f3;stroke:#177d6b}.node.risk rect{fill:#fff1ed;stroke:#b44c3e}.heading{font:700 20px Inter,Arial,sans-serif;fill:#191714}.subheading{font:12px Inter,Arial,sans-serif;fill:#625b51}@media(prefers-color-scheme:dark){.background{fill:#171b1a}.edge{stroke:#aaa}.node rect{fill:#242b29;stroke:#abb5b0}.node .index,.node .detail,.node .metric,.subheading{fill:#c2ccc7}.node .label,.heading{fill:#f0f4f1}.node.delegated rect,.node.quantized rect{stroke:#77d8bb}.node.fallback rect,.node.risk rect{stroke:#ffa58d}.node.quantized rect{fill:#203c33}.node.risk rect{fill:#442c27}}</style><rect class="background" width="100%" height="100%"/><text class="heading" x="${MARGIN}" y="34">${xml(graph.artifact.filename)}</text><text class="subheading" x="${MARGIN}" y="55">${xml(`${manifest.view} · ${manifest.rendered_node_count}/${manifest.full_node_count} nodes · ${manifest.level_of_detail}`)}</text><g class="edges">${edges}</g><g class="nodes">${nodes}</g></svg>\n`;

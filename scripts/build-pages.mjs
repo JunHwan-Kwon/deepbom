@@ -44,6 +44,7 @@ for (const relativePath of [
 const buildMetadata = writeBuildMetadata();
 await runNode("scripts/generate-cli-docs.mjs", ["--check"]);
 await runNode("scripts/generate-provenance-schema.mjs", ["--check"]);
+await runNode("scripts/generate-model-hierarchy-schema.mjs", ["--check"]);
 await runNode("scripts/generate-evidence-ir-catalog.mjs", ["--check"]);
 await runNode("scripts/check-evidence-compatibility.mjs");
 
@@ -126,6 +127,7 @@ await copyFile(
   path.join(dist, ".well-known", "deepbom-signing-keys.json"),
 );
 await mkdir(path.join(dist, "schemas"), { recursive: true });
+await copyFile(path.join(root, "docs", "schemas", "deepbom-model-hierarchy-v1.schema.json"), path.join(dist, "schemas", "deepbom-model-hierarchy-v1.schema.json"));
 for (const name of ["deepbom-evidence-workflow-v1.schema.json", "deepbom-evidence-ir-v3.schema.json", "deepbom-model-ir-v1.schema.json", "deepbom-numerical-ir-v1.schema.json", "deepbom-weight-analysis-v1.schema.json", "deepbom-provenance-ir-v1.schema.json", "deepbom-evidence-ir-v1.schema.json", "deepbom-numerical-details-v1.schema.json", "deepbom-native-evidence-v1.schema.json", "deepbom-evidence-ir-v2.schema.json", "deepbom-optimization-report-v1.schema.json", "deepbom-optimization-diff-v1.schema.json", "deepbom-optimization-report-access-v1.schema.json"]) await copyFile(path.join(root, "docs", "schemas", name), path.join(dist, "schemas", name));
 await copyFile(path.join(root, "docs", "evidence-ir", "catalog.json"), path.join(dist, "schemas", "evidence-ir-catalog.json"));
 await copyFile(path.join(root, "docs", "evidence-ir", "native-catalog.json"), path.join(dist, "schemas", "native-evidence-catalog.json"));

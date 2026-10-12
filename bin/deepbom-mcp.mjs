@@ -34,6 +34,13 @@ const CACHE_WRITING_ANNOTATIONS = Object.freeze({
 
 const TOOLS = Object.freeze([
   {
+    name: "deepbom_model_hierarchy", title: "Explore source groups and tensor connections",
+    description: "Read one local artifact and page its Model IR source hierarchy. ONNX exporter metadata is an observed declaration, not proof of native calls or trainable parameter sharing. Other formats use explicitly labelled structural groups. Returns source hashes, exact static metrics, coverage and JSON Pointers for deepbom_audit detail queries. Use expected_sha256 on follow-ups. No model execution or remote fetch.",
+    inputSchema: { type: "object", properties: { path: { type: "string" }, expected_sha256: { type: "string", pattern: "^[a-fA-F0-9]{64}$" }, parent_ref: { type: "string" }, search: { type: "string", maxLength: 256 }, offset: { type: "integer", minimum: 0 }, limit: { type: "integer", minimum: 1, maximum: 100 } }, required: ["path"], additionalProperties: false },
+    outputSchema: { type: "object", properties: { schema: { const: "deepbom.model_hierarchy_query.v1" } }, required: ["schema"], additionalProperties: true },
+    annotations: READ_ONLY_ANNOTATIONS,
+  },
+  {
     name:"deepbom_evidence_workflow", title:"Review model change evidence",
     description:"Run a local evidence request or read a saved workflow result using the same core as Web and SDK. Supports Snapshot, provenance, external evaluation and before/after review. Does not execute model code, fetch URLs or infer clinical approval. Files are optional explicit SHA-256/local-path pairs; missing originals stay unresolved. Return a page of checks with exact total and result digest. Open the request or result at https://deepbom.org/reports/evidence/ for JSON, HTML and print/PDF.",
     inputSchema:{type:"object",properties:{path:{type:"string"},files:{type:"array",maxItems:256,items:{type:"object",properties:{sha256:{type:"string",pattern:"^[a-f0-9]{64}$"},path:{type:"string"}},required:["sha256","path"],additionalProperties:false}},expected_sha256:{type:"string",pattern:"^[a-f0-9]{64}$"},offset:{type:"integer",minimum:0},limit:{type:"integer",minimum:1,maximum:100}},required:["path"],additionalProperties:false},
@@ -329,6 +336,11 @@ async function callTool(params, state, signal) {
 }
 
 function commandArguments(name, args, roots) {
+  if (name === "deepbom_model_hierarchy") {
+    const argv = ["model-summary", requiredLocalPath(args.path, "path", roots), "--level", "source", "--source-query", "--format", "json"];
+    for (const [key, flag] of [["parent_ref", "--source-group"], ["search", "--source-search"], ["offset", "--source-offset"], ["limit", "--source-limit"], ["expected_sha256", "--expected-sha256"]]) if (Object.hasOwn(args, key)) argv.push(flag, String(args[key]));
+    return argv;
+  }
   if(name==="deepbom_evidence_workflow"){
     const argv=["evidence-workflow",requiredLocalPath(args.path,"path",roots),"--offset",String(args.offset??0),"--limit",String(args.limit??25)];
     for(const f of args.files||[])argv.push("--file",f.sha256+":"+requiredLocalPath(f.path,"file",roots));
@@ -401,6 +413,7 @@ function appendRemoteControls(argv, args, roots) {
 function validateToolArguments(name, args) {
   if (!args || typeof args !== "object" || Array.isArray(args)) throw new Error("Tool arguments must be a JSON object.");
   const allowed = {
+    deepbom_model_hierarchy: ["path", "expected_sha256", "parent_ref", "search", "offset", "limit"],
     deepbom_evidence_workflow:["path","files","expected_sha256","offset","limit"],
     deepbom_optimization_report: ["path","expected_sha256","section","subject","search","offset","limit"],
     deepbom_export_optimization_report: ["path","expected_sha256","format"],
@@ -439,7 +452,8 @@ function validateToolArguments(name, args) {
   if (Object.hasOwn(args, "expected_sha256") && !/^[a-f0-9]{64}$/i.test(args.expected_sha256)) {
     throw new Error("The expected_sha256 argument must contain exactly 64 hexadecimal characters.");
   }
-  if(["deepbom_evidence_workflow","deepbom_optimization_report","deepbom_export_optimization_report"].includes(name)) {
+  if(["deepbom_model_hierarchy","deepbom_evidence_workflow","deepbom_optimization_report","deepbom_export_optimization_report"].includes(name)) {
+    if (name === "deepbom_model_hierarchy" && (args.search?.length > 256 || args.parent_ref?.length > 512)) throw Error("Hierarchy search or parent reference is too long");
     if(Object.hasOwn(args,"offset")&&(!Number.isSafeInteger(args.offset)||args.offset<0))throw Error("offset must be a non-negative integer");
     if(Object.hasOwn(args,"limit")&&(!Number.isSafeInteger(args.limit)||args.limit<1||args.limit>100))throw Error("limit must be 1–100");
     if(name==="deepbom_export_optimization_report"&&(!args.expected_sha256||!args.format))throw Error("Export requires format and expected_sha256");

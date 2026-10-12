@@ -1,6 +1,6 @@
 {
   "schema": "deepbom.model_ir.v1",
-  "method_version": "1.1.2",
+  "method_version": "1.1.3",
   "source_contract": {
     "schema": "deepbom.artifact_ir.v2",
     "sha256": "82fc953c6057397075caf874f41887cf26fc149d0f1d8d0f905d272c09c1532b",
@@ -10120,7 +10120,7 @@
       {
         "id": "block:dc569e3d:47555fe75818:0000",
         "region_ref": "region:scope:tflite:subgraph:0",
-        "kind": "head",
+        "kind": "rank_partition",
         "signature_sha256": "47555fe758182989e29f1e11b86ee43f2ad857925461e32f83c8b774f6b69c59",
         "representation_signature_sha256": "384dcde9790d7f8ef5c4749af4353e3823564a06cb5570b98e9c90ab1e99f9d6",
         "repeat_index": null,
@@ -10159,14 +10159,15 @@
           23
         ],
         "boundary_evidence": [
-          "serialized_region_sequence"
+          "connected_data_component",
+          "bounded_display_order_partition_max_50"
         ],
         "grouping_rule_id": "deepbom.structural_block_partition.v1",
-        "grouping_rule_version": "1.0.0",
+        "grouping_rule_version": "1.1.0",
         "evidence_class": "DERIVED"
       },
       {
-        "id": "block:dc569e3d:595478702ccf:0000",
+        "id": "block:dc569e3d:595478702ccf:0001",
         "region_ref": "region:scope:tflite:subgraph:0",
         "kind": "repeated_structure",
         "signature_sha256": "595478702ccf0537f1ba3c5257d89fce5cc2a8310ff876bcb1eadc9176a47c0f",
@@ -10190,11 +10191,11 @@
           "maximal_contiguous_repeated_operation_signature"
         ],
         "grouping_rule_id": "deepbom.structural_block_partition.v1",
-        "grouping_rule_version": "1.0.0",
+        "grouping_rule_version": "1.1.0",
         "evidence_class": "DERIVED"
       },
       {
-        "id": "block:dc569e3d:595478702ccf:0001",
+        "id": "block:dc569e3d:595478702ccf:0002",
         "region_ref": "region:scope:tflite:subgraph:0",
         "kind": "repeated_structure",
         "signature_sha256": "595478702ccf0537f1ba3c5257d89fce5cc2a8310ff876bcb1eadc9176a47c0f",
@@ -10218,15 +10219,15 @@
           "maximal_contiguous_repeated_operation_signature"
         ],
         "grouping_rule_id": "deepbom.structural_block_partition.v1",
-        "grouping_rule_version": "1.0.0",
+        "grouping_rule_version": "1.1.0",
         "evidence_class": "DERIVED"
       },
       {
-        "id": "block:dc569e3d:6599d81d275d:0003",
+        "id": "block:dc569e3d:818ed0334085:0003",
         "region_ref": "region:scope:tflite:subgraph:0",
-        "kind": "tail",
-        "signature_sha256": "6599d81d275d132e4de5f5e63c6e862976508a36a150534128a766142c482e85",
-        "representation_signature_sha256": "50fe07de016a2fd1d80a322f390da48880a25c144d66aadcca6ee6319aa6a77f",
+        "kind": "rank_partition",
+        "signature_sha256": "818ed033408536f8586f250b65cc7f9166cfdc94c03b6ac2368c0863149794be",
+        "representation_signature_sha256": "0e2747ec85317164c3c2569f12037f2e3c83ab68b850f84a20e798b3f002c424",
         "repeat_index": null,
         "member_refs": [
           "operator:scope:tflite:subgraph:0:32",
@@ -10246,7 +10247,32 @@
           "operator:scope:tflite:subgraph:0:46",
           "operator:scope:tflite:subgraph:0:47",
           "operator:scope:tflite:subgraph:0:48",
-          "operator:scope:tflite:subgraph:0:49",
+          "operator:scope:tflite:subgraph:0:49"
+        ],
+        "source_order_range": [
+          32,
+          49
+        ],
+        "display_order_range": [
+          32,
+          49
+        ],
+        "boundary_evidence": [
+          "connected_data_component",
+          "bounded_display_order_partition_max_50"
+        ],
+        "grouping_rule_id": "deepbom.structural_block_partition.v1",
+        "grouping_rule_version": "1.1.0",
+        "evidence_class": "DERIVED"
+      },
+      {
+        "id": "block:dc569e3d:972fcb3bd650:0004",
+        "region_ref": "region:scope:tflite:subgraph:0",
+        "kind": "rank_partition",
+        "signature_sha256": "972fcb3bd6508b5364b1179ca5d1b44f1411ae4c3c317e454f8cc9ab71fbb45d",
+        "representation_signature_sha256": "b295c6483cc35b556562e46b7b66021db443516b39c711aa13aa2bf4854a7bb0",
+        "repeat_index": null,
+        "member_refs": [
           "operator:scope:tflite:subgraph:0:50",
           "operator:scope:tflite:subgraph:0:51",
           "operator:scope:tflite:subgraph:0:52",
@@ -10264,18 +10290,19 @@
           "operator:scope:tflite:subgraph:0:64"
         ],
         "source_order_range": [
-          32,
+          50,
           64
         ],
         "display_order_range": [
-          32,
+          50,
           64
         ],
         "boundary_evidence": [
-          "serialized_region_sequence"
+          "connected_data_component",
+          "bounded_display_order_partition_max_50"
         ],
         "grouping_rule_id": "deepbom.structural_block_partition.v1",
-        "grouping_rule_version": "1.0.0",
+        "grouping_rule_version": "1.1.0",
         "evidence_class": "DERIVED"
       }
     ],
@@ -53955,9 +53982,10 @@
         "parent_ref": null,
         "member_refs": [
           "block:dc569e3d:47555fe75818:0000",
-          "block:dc569e3d:595478702ccf:0000",
           "block:dc569e3d:595478702ccf:0001",
-          "block:dc569e3d:6599d81d275d:0003"
+          "block:dc569e3d:595478702ccf:0002",
+          "block:dc569e3d:818ed0334085:0003",
+          "block:dc569e3d:972fcb3bd650:0004"
         ],
         "boundary_refs": [],
         "grouping_rule_id": "deepbom.model_root.v1",
@@ -53967,8 +53995,8 @@
       },
       {
         "id": "block:dc569e3d:47555fe75818:0000",
-        "kind": "head",
-        "label": "head",
+        "kind": "rank_partition",
+        "label": "rank_partition",
         "parent_ref": "architecture:model:0",
         "member_refs": [
           "operator:scope:tflite:subgraph:0:0",
@@ -53998,14 +54026,15 @@
         ],
         "boundary_refs": [],
         "grouping_rule_id": "deepbom.structural_block_partition.v1",
-        "grouping_rule_version": "1.0.0",
+        "grouping_rule_version": "1.1.0",
         "grouping_basis": [
-          "serialized_region_sequence"
+          "connected_data_component",
+          "bounded_display_order_partition_max_50"
         ],
         "evidence_class": "DERIVED"
       },
       {
-        "id": "block:dc569e3d:595478702ccf:0000",
+        "id": "block:dc569e3d:595478702ccf:0001",
         "kind": "repeated_structure",
         "label": "repeated_structure 0",
         "parent_ref": "architecture:model:0",
@@ -54017,14 +54046,14 @@
         ],
         "boundary_refs": [],
         "grouping_rule_id": "deepbom.structural_block_partition.v1",
-        "grouping_rule_version": "1.0.0",
+        "grouping_rule_version": "1.1.0",
         "grouping_basis": [
           "maximal_contiguous_repeated_operation_signature"
         ],
         "evidence_class": "DERIVED"
       },
       {
-        "id": "block:dc569e3d:595478702ccf:0001",
+        "id": "block:dc569e3d:595478702ccf:0002",
         "kind": "repeated_structure",
         "label": "repeated_structure 1",
         "parent_ref": "architecture:model:0",
@@ -54036,16 +54065,16 @@
         ],
         "boundary_refs": [],
         "grouping_rule_id": "deepbom.structural_block_partition.v1",
-        "grouping_rule_version": "1.0.0",
+        "grouping_rule_version": "1.1.0",
         "grouping_basis": [
           "maximal_contiguous_repeated_operation_signature"
         ],
         "evidence_class": "DERIVED"
       },
       {
-        "id": "block:dc569e3d:6599d81d275d:0003",
-        "kind": "tail",
-        "label": "tail",
+        "id": "block:dc569e3d:818ed0334085:0003",
+        "kind": "rank_partition",
+        "label": "rank_partition",
         "parent_ref": "architecture:model:0",
         "member_refs": [
           "operator:scope:tflite:subgraph:0:32",
@@ -54065,7 +54094,23 @@
           "operator:scope:tflite:subgraph:0:46",
           "operator:scope:tflite:subgraph:0:47",
           "operator:scope:tflite:subgraph:0:48",
-          "operator:scope:tflite:subgraph:0:49",
+          "operator:scope:tflite:subgraph:0:49"
+        ],
+        "boundary_refs": [],
+        "grouping_rule_id": "deepbom.structural_block_partition.v1",
+        "grouping_rule_version": "1.1.0",
+        "grouping_basis": [
+          "connected_data_component",
+          "bounded_display_order_partition_max_50"
+        ],
+        "evidence_class": "DERIVED"
+      },
+      {
+        "id": "block:dc569e3d:972fcb3bd650:0004",
+        "kind": "rank_partition",
+        "label": "rank_partition",
+        "parent_ref": "architecture:model:0",
+        "member_refs": [
           "operator:scope:tflite:subgraph:0:50",
           "operator:scope:tflite:subgraph:0:51",
           "operator:scope:tflite:subgraph:0:52",
@@ -54084,9 +54129,10 @@
         ],
         "boundary_refs": [],
         "grouping_rule_id": "deepbom.structural_block_partition.v1",
-        "grouping_rule_version": "1.0.0",
+        "grouping_rule_version": "1.1.0",
         "grouping_basis": [
-          "serialized_region_sequence"
+          "connected_data_component",
+          "bounded_display_order_partition_max_50"
         ],
         "evidence_class": "DERIVED"
       }
@@ -54485,8 +54531,8 @@
       ]
     },
     "totals": {
-      "hierarchy_node_count": 5,
-      "referenced_member_count": 69
+      "hierarchy_node_count": 6,
+      "referenced_member_count": 70
     },
     "unresolved_member_refs": [],
     "interpretation_boundary": "Architecture hierarchy groups existing IR subjects without changing or omitting their source identity. Storage namespace groups are review coordinates, not serialized execution blocks. Model-profile roles remain absent until a capability-gated profile pass supplies traceable evidence."
@@ -56503,5 +56549,5 @@
     "embedded": false
   },
   "interpretation_boundary": "DEEPBOM Model IR preserves serialized program, logical tensor, physical storage, quantization, architecture grouping, static projection, and observed runtime as separate evidence layers. Missing structures are represented by applicability and loss records. Display order is deterministic but is not runtime order. This engineering evidence does not assert model quality, safety, regulatory conformity, or standard conformance.",
-  "model_ir_sha256": "d91fae70ff9df4483962c6a91045208b8a4589c9e6dc282aeeeba85b673b3af4"
+  "model_ir_sha256": "5934194c9038501ec0353f9d94742370b673e86db61658b5ef26c05c53b726e7"
 }

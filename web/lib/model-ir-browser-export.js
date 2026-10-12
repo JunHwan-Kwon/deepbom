@@ -4,8 +4,8 @@ import { modelIrVisualizationFiles } from "./model-ir-visualization.js";
 import { jsonForDownload, zipBinaryFile, zipTextFile } from "./report-utils.js";
 import { createZipBlob } from "./zip.js";
 
-export async function buildBrowserModelIrVisualizationArchive(modelIr, { orientation = "portrait" } = {}) {
-  const generated = modelIrVisualizationFiles(modelIr, { orientation });
+export async function buildBrowserModelIrVisualizationArchive(modelIr, { orientation = "portrait", hierarchy = null } = {}) {
+  const generated = modelIrVisualizationFiles(modelIr, { orientation, hierarchy });
   const files = generated.files.map((file) => zipTextFile(file.name, file.data));
   const pngRecords = [];
   for (const page of generated.bundle.pages) {
@@ -94,17 +94,36 @@ function drawRenderModel(context, renderModel, width, height) {
   const headerHeight = 130;
   const footerHeight = 82;
   const rowHeight = Math.max(42, Math.floor((source.height - headerHeight - footerHeight) / Math.max(1, rows.length)));
+  const rowById = new Map(rows.map((row, index) => [row.subject_ref, index]));
+  const edges = renderModel.edges || [], recordLeft = edges.length ? 108 : 60;
+  for (const [index, edge] of edges.entries()) {
+    const from = rowById.get(edge.from_ref), to = rowById.get(edge.to_ref);
+    if (to === undefined) continue;
+    const y2 = headerHeight + to * rowHeight + (rowHeight - 6) / 2;
+    const lane = 65 + index % 4 * 8;
+    context.setLineDash(dashPattern(edge.evidence_class)); context.beginPath();
+    if (from !== undefined) {
+      const y1 = headerHeight + from * rowHeight + (rowHeight - 6) / 2;
+      context.moveTo(recordLeft, y1); context.lineTo(lane, y1); context.lineTo(lane, y2);
+    } else {
+      context.moveTo(lane, y2); context.font = "10px Arial,sans-serif";
+      context.fillText(`p${edge.source_page ?? "?"}`, lane, y2 - 5);
+    }
+    context.lineTo(recordLeft, y2); context.stroke();
+    context.setLineDash([]); context.beginPath(); context.moveTo(recordLeft - 6, y2 - 4);
+    context.lineTo(recordLeft, y2); context.lineTo(recordLeft - 6, y2 + 4); context.stroke();
+  }
   for (const [index, row] of rows.entries()) {
     const y = headerHeight + index * rowHeight;
     context.setLineDash(dashPattern(row.evidence_class));
-    context.strokeRect(60, y, source.width - 120, rowHeight - 6);
+    context.strokeRect(recordLeft, y, source.width - recordLeft - 60, rowHeight - 6);
     context.setLineDash([]);
     context.font = "700 15px Arial, sans-serif";
-    context.fillText(clipText(`${row.kind} | ${row.title}`, 112), 72, y + 20);
+    context.fillText(clipText(`${row.kind} | ${row.title}`, 112), recordLeft + 12, y + 20);
     context.font = "15px Arial, sans-serif";
-    context.fillText(clipText(row.detail, 128), 72, y + 40);
+    context.fillText(clipText(row.detail, 128), recordLeft + 12, y + 40);
     context.font = "12px ui-monospace, monospace";
-    context.fillText(clipText(row.subject_ref, 150), 72, y + rowHeight - 14);
+    context.fillText(clipText(row.subject_ref, 150), recordLeft + 12, y + rowHeight - 14);
   }
   context.font = "12px Arial, sans-serif";
   context.fillText("DEEPBOM Model IR | deterministic monochrome derivative; canonical SVG authoritative", 60, source.height - 52);

@@ -28,7 +28,9 @@ const dist = path.resolve("dist");
 // for this delivery; retain the 16 MiB per-file limit and explicit total gate.
 // Orthogonal routing and immutable 0.21 catalog bring the artifact to 68.78 MiB.
 // Reserve 128 KiB; the per-file cap is unchanged.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 68.875);
+// Source hierarchy modules/schema and the immutable 0.22 catalog bring the
+// measured release to 69.03 MiB. Reserve 256 KiB; initial scripts remain 2,475 gzip bytes.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 69.125);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

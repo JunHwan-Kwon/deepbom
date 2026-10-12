@@ -42,7 +42,7 @@ For export pipelines, experiment tracking and release checks, see the new
 [Node/TypeScript and Python SDK contract](docs/SDK_CONTRACT.md) and
 [three executable integration examples](examples/integrations/README.md).
 The supported SDK begins with DEEPBOM 2.1.0; earlier npm 2.0.0 packages do not
-include this entry point. Install it with `npm install deepbom@2.3.0`.
+include this entry point. Install it with `npm install deepbom@2.4.0`.
 
 Run the published CLI without cloning the repository (Node.js 20 or newer):
 
@@ -60,10 +60,10 @@ is documented separately below.
 Install the repository-local Agent Skill after previewing the managed files:
 
 ```bash
-npx -y deepbom@2.3.0 integrate codex
-npx -y deepbom@2.3.0 integrate codex --apply
-npx -y deepbom@2.3.0 integrate claude-code
-npx -y deepbom@2.3.0 integrate claude-code --apply
+npx -y deepbom@2.4.0 integrate codex
+npx -y deepbom@2.4.0 integrate codex --apply
+npx -y deepbom@2.4.0 integrate claude-code
+npx -y deepbom@2.4.0 integrate claude-code --apply
 ```
 
 The Skill lets a local agent select a contract-compatible analyzer for a
@@ -83,7 +83,7 @@ For persistent tool-call access, run the same local analyzer as an MCP server
 over stdio:
 
 ```bash
-npx -y deepbom@2.3.0 mcp
+npx -y deepbom@2.4.0 mcp
 ```
 
 It exposes `deepbom_capabilities`, `deepbom_audit`, `deepbom_diff`, and
@@ -93,7 +93,7 @@ formats and large-model scan depth are explicit. Local paths are restricted to
 the launch directory unless `DEEPBOM_MCP_ALLOWED_ROOTS` is configured.
 Agent-facing usage guidance is in [the DEEPBOM skill](skills/deepbom/SKILL.md).
 Claude Desktop users can instead install the version-matched
-`deepbom-2.3.0.mcpb` asset from the corresponding GitHub Release. The bundle
+`deepbom-2.4.0.mcpb` asset from the corresponding GitHub Release. The bundle
 contains the same CLI and WASM bytes as the npm channel and asks the user to
 select the only local directory it may read.
 
@@ -128,19 +128,19 @@ For code-first model development, start with the [Python candidate loop](docs/MO
 It uses the shipped native APIs and distinguishes trainable-model workflows
 from the browser Structure IDE's source-bound graph proposals.
 
-Verified 2.3.0 release channels expose the same analysis implementation. npm
+Verified 2.4.0 release channels expose the same analysis implementation. npm
 and the Linux x86-64 release wheel below are published; other native platforms
 and registry channels require their own release verification.
 
 ```bash
-npx deepbom@2.3.0 audit model.onnx --format cyclonedx
-npx deepbom@2.3.0 audit model.onnx --format sarif --output deepbom.sarif --gate defects
+npx deepbom@2.4.0 audit model.onnx --format cyclonedx
+npx deepbom@2.4.0 audit model.onnx --format sarif --output deepbom.sarif --gate defects
 deepbom capabilities --compact
 deepbom self-test
 deepbom audit model.onnx --list-sections --compact
 deepbom audit model.onnx --section quantization,memory --compact
 deepbom explain-rule onnx.conv.output-shape
-python -m pip install 'deepbom @ https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v2.3.0/deepbom-2.3.0-py3-none-linux_x86_64.whl'
+python -m pip install 'deepbom @ https://github.com/JunHwan-Kwon/deepbom/releases/download/channels-v2.4.0/deepbom-2.4.0-py3-none-linux_x86_64.whl'
 deepbom audit model.gguf --compact
 deepbom verify model.tflite --contract production-interface.json
 deepbom verify model.onnx --bom supplied.cdx.json --render markdown

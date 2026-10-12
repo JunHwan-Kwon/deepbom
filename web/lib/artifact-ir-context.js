@@ -3,6 +3,8 @@ import { normalizeArtifactIrRuntimeOverlay } from "./artifact-ir-runtime.js";
 import { projectArtifactIrToCanonicalGraph } from "./graph-ir.js";
 import { buildModelIrFromArtifactIr, buildModelIrNativeFactLedger, validateModelIr } from "./model-ir.js";
 import { buildModelSummary, validateModelSummary } from "./model-summary.js";
+import { buildModelHierarchy, validateModelHierarchy } from "./model-hierarchy.js";
+import { collectModelSourceAnnotations } from "./model-source-metadata.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 
@@ -52,11 +54,12 @@ export function resolveArtifactIrContext(analysis, artifact = {}, {
       || modelSummary.source_contract.artifact_sha256 !== validated.artifact.sha256)) {
       throw new Error("Model Summary context source binding is inconsistent.");
     }
+    if (artifactIrContext.model_hierarchy) validateModelHierarchy(artifactIrContext.model_hierarchy, modelIr);
     if (validated.artifact_ir_sha256 !== artifactIrContext.graph_ir?.artifact_ir_sha256) {
       throw new Error("Artifact IR context graph binding is inconsistent.");
     }
     requireRuntimeIdentity(validated, runtimeEvidence, artifactIrContext.runtime_signature);
-    return artifactIrContext.model_ir && artifactIrContext.model_summary ? artifactIrContext : contextFromArtifactIr(analysis, validated, {
+    return artifactIrContext.model_ir && artifactIrContext.model_summary && artifactIrContext.model_hierarchy ? artifactIrContext : contextFromArtifactIr(analysis, validated, {
       runtimeSignature: artifactIrContext.runtime_signature ?? (runtimeEvidence == null ? null : sha256TextHex(canonicalJson(runtimeEvidence))),
     });
   }
@@ -78,11 +81,16 @@ function contextFromArtifactIr(analysis, artifactIr, { runtimeSignature = null }
   });
   const graphIr = projectArtifactIrToCanonicalGraph(artifactIr);
   const modelSummary = buildModelSummary(modelIr);
+  const modelHierarchy = buildModelHierarchy(modelIr, {
+    annotations: collectModelSourceAnnotations(analysis, modelIr),
+  });
   const primaryView = buildPrimaryScopeAnalysisView(analysis, artifactIr, modelIr, modelSummary);
+  primaryView.model_hierarchy = modelHierarchy;
   return Object.freeze({
     artifact_ir: artifactIr,
     model_ir: modelIr,
     model_summary: modelSummary,
+    model_hierarchy: modelHierarchy,
     runtime_signature: runtimeSignature,
     graph_ir: graphIr,
     primary_view: primaryView,
@@ -148,7 +156,7 @@ export function buildPrimaryScopeAnalysisView(analysis, artifactIr, modelIr = bu
     }))
     : nativeTensors;
   const view = {};
-  const canonicalKeys = new Set(["ops", "tensors", "artifact_ir", "model_ir", "model_summary", "artifact_ir_consumer_view", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"]);
+  const canonicalKeys = new Set(["ops", "tensors", "artifact_ir", "model_ir", "model_summary", "model_hierarchy", "artifact_ir_consumer_view", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"]);
   const passthroughKeys = new Set([
     ...Object.keys(analysis),
     "_markdown",

@@ -22,6 +22,10 @@
     "web/lib/model-ir/internal/native-facts.js": ["web/lib/model-ir.js"]
   },
   "protected_symbols": {
+    "collectModelSourceAnnotations": [
+      "web/lib/model-source-metadata.js",
+      "web/lib/artifact-ir-context.js"
+    ],
     "buildModelIrFromArtifactIr": [
       "web/lib/model-ir.js",
       "web/lib/artifact-ir-context.js",

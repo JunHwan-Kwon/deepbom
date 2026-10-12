@@ -77,8 +77,9 @@ const cliJson = run(["model-summary", cases[0].file, "--format", "json-compact"]
 const cliDocument = JSON.parse(cliJson.stdout);
 assert.equal(cliDocument.schema, "deepbom.model_summary.v1");
 assert.equal(cliDocument.artifact.sha256, cases.length ? buildModelSummary(onnx).artifact.sha256 : null);
-assert.match(run(["model-summary", cases[0].file, "--format", "table"]).stdout, /ORDER\tNAME\tNATIVE TYPE/);
-assert.match(run(["model-summary", cases[0].file, "--format", "markdown"]).stdout, /\| Order \| Name \| Native type \|/);
+assert.match(run(["model-summary", cases[0].file, "--format", "table"]).stdout, /Subject\tSource \/ operation/);
+assert.match(run(["model-summary", cases[0].file, "--format", "markdown"]).stdout, /\| Subject \| Source \/ operation \|/);
+assert.match(run(["model-summary", cases[0].file, "--level", "operation", "--format", "table"]).stdout, /ORDER\tNAME\tNATIVE TYPE/);
 assert.equal(run(["audit", cases[0].file, "--section", "model_summary", "--compact"]).status, 0);
 
 const tampered = structuredClone(buildModelSummary(onnx));

@@ -38,6 +38,7 @@ async function checkRealServerContract() {
     session.request(2, "tools/list");
     const tools = (await session.response(2)).result.tools;
     assert.deepEqual(tools.map((tool) => tool.name), [
+      "deepbom_model_hierarchy",
       "deepbom_evidence_workflow",
       "deepbom_optimization_report",
       "deepbom_export_optimization_report",
@@ -86,6 +87,22 @@ async function checkRealServerContract() {
     assert.equal(declared.default_audit_output, "summary");
     assert.deepEqual(declared.protocol_versions, ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"]);
     assert.deepEqual(declared.tools, tools.map((tool) => tool.name));
+
+    session.request(1001, "tools/call", { name: "deepbom_model_hierarchy", arguments: { path: onnxPath, limit: 1 } });
+    const hierarchyResult = (await session.response(1001)).result;
+    assert.equal(hierarchyResult.isError, undefined);
+    const cliHierarchy = spawnSync(process.execPath, ["bin/deepbom.mjs", "model-summary", onnxPath, "--level", "source", "--source-query", "--source-limit", "1", "--format", "json"], { encoding: "utf8" });
+    assert.equal(cliHierarchy.status, 0, cliHierarchy.stderr);
+    assert.deepEqual(hierarchyResult.structuredContent, JSON.parse(cliHierarchy.stdout));
+    const group = hierarchyResult.structuredContent.rows[0];
+    session.request(1002, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath, pointer: group.details_pointer, expected_sha256: hierarchyResult.structuredContent.source.artifact_sha256 } });
+    const detail = (await session.response(1002)).result;
+    assert.equal(detail.isError, undefined, JSON.stringify(detail));
+    assert.equal(detail.structuredContent.value.id, group.id);
+    session.request(1003, "tools/call", { name: "deepbom_model_hierarchy", arguments: { path: onnxPath, limit: 101 } });
+    assert.equal((await session.response(1003)).result.isError, true);
+    session.request(1004, "tools/call", { name: "deepbom_model_hierarchy", arguments: { path: onnxPath, expected_sha256: "0".repeat(64) } });
+    assert.equal((await session.response(1004)).result.isError, true);
 
     session.request(4, "tools/call", { name: "deepbom_audit", arguments: { path: onnxPath } });
     const summary = (await session.response(4)).result;

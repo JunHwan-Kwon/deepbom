@@ -12,6 +12,7 @@ import { onnxTfIdfMlBomConserves, registerOnnxTfIdfConformanceChecks } from "./r
 import { formatIntegerForConformance, markdownCellForConformance, validateStaticCanonicalTextLedger, validateStaticSignedZeroLedger } from "./report-conformance-common.js";
 import { externalLocationStatus, normalizeExternalLocation, nullableClose, onnxTensorPayloadBytes, parseExternalDataDecimal, sameArray, sourceLedgerProblems, tensorElementCount } from "./report-conformance-runtime-helpers.js";
 import { exactNonnegativeRatio } from "./exact-rational.js";
+import { code } from "./report-utils.js";
 
 const PINNED_ONNX_TENSOR_TYPES = Object.freeze([
   [0, "UNDEFINED", 0], [1, "FLOAT32", 32], [2, "UINT8", 8], [3, "INT8", 8], [4, "UINT16", 16], [5, "INT16", 16],
@@ -100,7 +101,8 @@ export function registerOnnxConformance({
     "ONNX metadata ledger must conserve decoded ModelProto/GraphProto text without promoting untyped properties to preprocessing or output-label contracts.", ["/evidence/static_analysis/metadata_presence"]);
     check("CF-METADATA-002", engineeringReportText.includes(metadata.schema)
       && engineeringReportText.includes(metadata.preprocessing_contract_status)
-      && metadataProperties.slice(0, 24).every((entry) => engineeringReportText.includes(entry.key) && engineeringReportText.includes(entry.value)),
+      && metadataProperties.slice(0, 24).every((entry) => engineeringReportText.includes(markdownCellForConformance(code(entry.key || "(empty key)")))
+        && engineeringReportText.includes(markdownCellForConformance(entry.value || "(empty value)"))),
     "Engineering report must preserve the ONNX metadata schema, preprocessing evidence boundary, and rendered property rows.", ["/evidence/static_analysis/metadata_presence", "/engineering_report.md"]);
     const dataTypeContract = staticAnalysis?.onnx_tensor_data_type_contract || {};
     const dataTypeRows = dataTypeContract.types || [];

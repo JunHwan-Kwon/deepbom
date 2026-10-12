@@ -5,7 +5,7 @@
 **Status: draft DEEPBOM-maintained specification; artifact family released in
 2.0.0, native extension in 2.2.0, Snapshot workflow in 2.3.0.**
 
-The package release does not make this an externally approved standard. The original artifact catalog remains 1.0.0; family v2/v3 entry points extend it without rewriting older members. The Web compatibility catalog is 0.21.0; npm 2.3.0 retains its 0.16.0 snapshot, and prior snapshots remain in the [version index](compatibility/index.json). Catalog, schema and package versions are independent. See the [current workflow](SNAPSHOT_WORKFLOW.md), [historical 2.0.0 release record](RELEASE_2_0_0.md) and [migration rules](MIGRATION.md).
+The package release does not make this an externally approved standard. The original artifact catalog remains 1.0.0; family v2/v3 entry points extend it without rewriting older members. This checkout's compatibility catalog is 0.22.0; the last recorded Web catalog is 0.21.0 and npm 2.3.0 retains its 0.16.0 snapshot. Prior snapshots remain in the [version index](compatibility/index.json). Catalog, schema and package versions are independent. See the [source hierarchy projection](SOURCE_HIERARCHY.md), [current workflow](SNAPSHOT_WORKFLOW.md), [historical 2.0.0 release record](RELEASE_2_0_0.md) and [migration rules](MIGRATION.md).
 
 DEEPBOM Evidence IR is a family of interoperable intermediate representations for artifact, structural, numerical, runtime, and provenance evidence. It is maintained by the DEEPBOM project; no external standards-body approval or independent adoption is claimed.
 
@@ -45,6 +45,10 @@ The machine-readable naming and identity owner is [`web/lib/evidence-ir.js`](../
 - [Provenance IR, OMOP import and external BOM references](../PROVENANCE_IR.md).
 - [Common calculation ownership and verification](../COMMON_CALCULATION_RULES_REVIEW_2026-09-29.md).
 - [Conformance and compatibility](CONFORMANCE.md), [maintenance and publication](GOVERNANCE.md), [change log](CHANGELOG.md).
+
+## Development plans
+
+- [Source hierarchy, tensor topology and shared visualization plan (2026-10-12)](SOURCE_HIERARCHY_VISUALIZATION_PLAN_2026-10-12.md) — reviewed gaps, common IR ownership, backward compatibility, phased implementation and acceptance tests. This is a plan, not a released capability declaration.
 
 ## Provenance contract
 

@@ -19,6 +19,8 @@ import { artifactFilename } from "../lib/download.js";
 import { buildBrowserModelIrVisualizationArchive, rasterizeMonochromeModelView } from "../lib/model-ir-browser-export.js";
 import { MODEL_IR_VIEW_IDS, buildModelIrVisualizationBundle } from "../lib/model-ir-visualization.js";
 import { compactModelSummaryForConversation, renderModelSummaryTable } from "../lib/model-summary.js";
+import { resolveModelHierarchyPresentation } from "../lib/model-hierarchy.js";
+import { renderModelHierarchyTable } from "../lib/model-hierarchy-view.js";
 import { createStaticAuditWorkerClient } from "../lib/static-audit-worker-client.js";
 import { STATIC_AUDIT_OPERATION } from "../lib/static-audit-worker-protocol.js";
 import { sha256FileHex } from "../lib/hash.js";
@@ -180,7 +182,7 @@ async function start() {
       return weightEvidence;
     },
   };
-  renderResult(returned, openai, artifactIrContext.model_ir, artifactIrContext.model_summary, reportDelivery, exportActions);
+  renderResult(returned, openai, artifactIrContext.model_ir, artifactIrContext.model_summary, reportDelivery, exportActions, artifactIrContext.model_hierarchy);
   const inspect = async requestedQuery => {
     const context = { analysis: analysisView, artifactIrContext, summary, envelope };
     let queryContainer = root.querySelector(".evidence-query");
@@ -492,7 +494,7 @@ function setStatus(status, detail) {
   root.querySelector("#detail").textContent = detail || "";
 }
 
-function renderResult(result, openai, modelIr = null, modelSummary = null, reportDelivery = null, exports = {}) {
+function renderResult(result, openai, modelIr = null, modelSummary = null, reportDelivery = null, exports = {}, hierarchy = null) {
   setStatus("Static evidence ready", `${result.artifact.filename} · ${result.artifact.format.toUpperCase()} · ${formatBytes(result.artifact.byte_length)}`);
   const container = root.querySelector("#result");
   container.replaceChildren();
@@ -558,22 +560,23 @@ function renderResult(result, openai, modelIr = null, modelSummary = null, repor
   if (reportControl) container.prepend(reportControl.button.parentElement);
   if (modelIr) {
     const visual = document.createElement("div");
-    appendModelIrVisualization(visual, result, openai, modelIr, exports);
+    appendModelIrVisualization(visual, result, openai, modelIr, exports, hierarchy);
     if (reportControl) reportControl.button.parentElement.after(visual);
     else container.prepend(visual);
   }
   if (modelIr) appendMetadataPanel(container, result, openai, modelIr, exports);
-  if (modelSummary) appendModelSummary(container, modelSummary);
+  if (modelSummary) appendModelSummary(container, modelSummary, modelIr, hierarchy);
   return reportControl;
 }
 
-function appendModelSummary(container, modelSummary) {
+function appendModelSummary(container, modelSummary, modelIr, hierarchy) {
   const section = element("section", "model-summary");
   section.append(
     element("h3", "", "Format-neutral model summary"),
     element("p", "detail", "Projected from the same hash-bound Common Model IR. Serialized storage is not relabeled as trainable parameters; display order is not runtime order."),
   );
-  const pre = element("pre", "model-summary-table", renderModelSummaryTable(modelSummary));
+  const presentation = modelIr ? resolveModelHierarchyPresentation(modelIr, hierarchy) : null;
+  const pre = element("pre", "model-summary-table", presentation ? renderModelHierarchyTable(presentation.view, "table") : renderModelSummaryTable(modelSummary));
   pre.setAttribute("tabindex", "0");
   section.append(pre);
   container.append(section);
@@ -605,7 +608,7 @@ function markReportRequested(control) {
   control.note.textContent = "ChatGPT accepted the request. If no new reply appears, this button remains available so the completed result is never stranded.";
 }
 
-function appendModelIrVisualization(container, result, openai, modelIr, exports) {
+function appendModelIrVisualization(container, result, openai, modelIr, exports, hierarchy) {
   const section = element("section", "visualization");
   section.dataset.modelIrSha256 = String(modelIr.model_ir_sha256 || "");
 
@@ -802,7 +805,7 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
     uploadedImageIds = [];
     uploadedDownload = null;
     pageIndex = 0;
-    bundle = buildModelIrVisualizationBundle(modelIr, { views: [viewSelect.value], orientation: "portrait" });
+    bundle = buildModelIrVisualizationBundle(modelIr, { views: [viewSelect.value], orientation: "portrait", manifestVersion: 2, hierarchy });
     renderPage();
   };
 
@@ -841,7 +844,7 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports)
     status.textContent = "300-DPI PNG prepared. If no local file appears, select Save via ChatGPT above.";
   }));
   downloadBundle.addEventListener("click", () => runVisualAction(downloadBundle, "Building bundle…", status, async () => {
-    const archive = await buildBrowserModelIrVisualizationArchive(modelIr, { orientation: "portrait" });
+    const archive = await buildBrowserModelIrVisualizationArchive(modelIr, { orientation: "portrait", hierarchy });
     if (archive.bundle.manifest.conservation.status !== "conserved") {
       throw new Error("The exhaustive visualization failed its Model IR conservation check.");
     }

@@ -20,11 +20,15 @@ export function buildHierarchicalGraphProjection(graph, { maximumGroups = 256, c
   });
 
   const edgeGroups = new Map();
+  const edgeLedger = [];
   let internalEdgeCount = 0;
   let externalEdgeCount = 0;
   for (const edge of graph.edges) {
     const from = edge.from ? groupByNode.get(edge.from) : null;
     const to = edge.to ? groupByNode.get(edge.to) : null;
+    edgeLedger.push({ edge_ref: edge.id, from_group_ref: from || null, to_group_ref: to || null,
+      classification: !from || !to ? "external" : from === to ? "internal" : "inter_group",
+      source_edge: { ...edge } });
     if (!from || !to) {
       externalEdgeCount += 1;
       continue;
@@ -40,6 +44,7 @@ export function buildHierarchicalGraphProjection(graph, { maximumGroups = 256, c
       to,
       relation: "exact_inter_group_contraction",
       edge_count: 0,
+      edge_refs: [],
       tensor_indices: [],
       tensor_names: [],
       assessed_payload_bytes: 0n,
@@ -48,6 +53,7 @@ export function buildHierarchicalGraphProjection(graph, { maximumGroups = 256, c
     });
     const aggregate = edgeGroups.get(key);
     aggregate.edge_count += 1;
+    aggregate.edge_refs.push(edge.id);
     if (Number.isSafeInteger(Number(edge.tensor_index))) aggregate.tensor_indices.push(Number(edge.tensor_index));
     if (edge.tensor_name) aggregate.tensor_names.push(String(edge.tensor_name));
     const bytes = exactValue(edge.byte_length);
@@ -86,6 +92,7 @@ export function buildHierarchicalGraphProjection(graph, { maximumGroups = 256, c
     nodes,
     edges,
     conservation,
+    edge_ledger: edgeLedger,
     interpretation_boundary: "Groups are presentation-level contractions of canonical graph nodes. Every rendered inter-group relationship comes from one or more serialized tensor edges; no sequential or runtime relationship is invented.",
   });
 }

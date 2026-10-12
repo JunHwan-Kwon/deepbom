@@ -2,14 +2,17 @@ import { compareCanonicalText } from "./report-utils.js";
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
 import { validateModelIr } from "./model-ir.js";
+import { indexModelProgram, modelGroupBoundary } from "./model-program-boundary.js";
 
 export const MODEL_SUMMARY_SCHEMA = "deepbom.model_summary.v1";
-export const MODEL_SUMMARY_METHOD_VERSION = "1.1.0";
+export const MODEL_SUMMARY_METHOD_VERSION = "1.2.0";
 export const MODEL_SUMMARY_LEVELS = Object.freeze(["auto", "operation", "block", "storage"]);
+const summaries = new WeakMap(), memberRows = new WeakMap();
 
 export function buildModelSummary(input, { level = "auto" } = {}) {
   const modelIr = validateModelIr(input);
   if (!MODEL_SUMMARY_LEVELS.includes(level)) throw new Error(`Model summary level must be one of: ${MODEL_SUMMARY_LEVELS.join(", ")}.`);
+  if (summaries.get(modelIr)?.has(level)) return summaries.get(modelIr).get(level);
   const selectedLevel = selectLevel(modelIr, level);
   const rows = selectedLevel === "operation"
     ? operationRows(modelIr)
@@ -68,7 +71,10 @@ export function buildModelSummary(input, { level = "auto" } = {}) {
     interpretation_boundary: "This is a deterministic tabular projection of deepbom.model_ir.v1. Operation rows are serialized program subjects; block rows are reversible structural groups, not framework layers or runtime fusion; storage rows are serialized objects, not trainable parameters or runtime allocations. Display order is not runtime order. Unknown and not-assessable values are never converted to zero. This engineering evidence does not establish model quality, safety, regulatory compliance, standard conformance, or actual runtime behavior.",
   };
   validateModelSummaryBody(body);
-  return deepFreeze({ ...body, model_summary_sha256: sha256TextHex(canonicalJson(body)) });
+  const result = deepFreeze({ ...body, model_summary_sha256: sha256TextHex(canonicalJson(body)) });
+  if (!summaries.has(modelIr)) summaries.set(modelIr, new Map());
+  summaries.get(modelIr).set(level, result);
+  return result;
 }
 
 export function validateModelSummary(document) {
@@ -87,6 +93,33 @@ export function validateModelSummaryAgainstSource(document, modelIr) {
   const expected = buildModelSummary(modelIr, { level: summary.projection.requested_level });
   if (canonicalJson(summary) !== canonicalJson(expected)) throw new Error("Model summary differs from its independently supplied Model IR source.");
   return summary;
+}
+
+// Shared union aggregation for source groups and selected subgraphs. Storage
+// identity, not equal tensor contents, controls deduplication.
+export function summarizeModelMembers(modelIr, memberRefs, { rows = null, index = null } = {}) {
+  const sourceRows = rows || operationRows(modelIr);
+  const byRef = memberRows.get(sourceRows) || new Map(sourceRows.map(row => [row.subject_ref, row]));
+  if (Object.isFrozen(sourceRows)) memberRows.set(sourceRows, byRef);
+  if (new Set(memberRefs).size !== memberRefs.length || memberRefs.some(ref => !byRef.has(ref))) throw new Error("Summary membership is duplicated or unresolved.");
+  const members = memberRefs.map(ref => byRef.get(ref));
+  const topology = index || indexModelProgram(modelIr);
+  const boundary = modelGroupBoundary(topology, memberRefs);
+  const storage = uniqueBy(members.flatMap(row => row.bound_storage), "storage_ref");
+  return {
+    operation_count: members.length,
+    ...aggregateStorage(storage),
+    storage_refs: storage.map(row => row.storage_ref),
+    macs: sumMetric(members, "macs"),
+    mac_assessment: memberRefs.reduce((counts, ref) => {
+      const status = topology.operations.get(ref).metrics?.mac_assessment_status || "legacy_unclassified";
+      counts[status] = (counts[status] || 0) + 1; return counts;
+    }, {}),
+    inputs: boundary.input_value_refs.map(ref => valueContract(topology.values.get(ref))),
+    outputs: boundary.output_value_refs.map(ref => valueContract(topology.values.get(ref))),
+    boundary,
+    trainable_parameter_count: null,
+  };
 }
 
 export function renderModelSummaryTable(input) {
@@ -222,9 +255,12 @@ function operationRows(modelIr) {
 function blockRows(modelIr) {
   if (modelIr.program.status !== "serialized") return [];
   const operations = new Map(operationRows(modelIr).map((row) => [row.subject_ref, row]));
+  const index = indexModelProgram(modelIr);
   return modelIr.program.blocks.map((block) => {
     const members = (block.member_refs || []).map((ref) => operations.get(ref)).filter(Boolean);
     const bound = uniqueBy(members.flatMap((row) => row.bound_storage), "storage_ref");
+    const boundary = modelGroupBoundary(index, block.member_refs);
+    const membership = new Set(block.member_refs);
     return {
       id: `summary-row:${block.id}`,
       subject_ref: block.id,
@@ -234,8 +270,9 @@ function blockRows(modelIr) {
       native_type: { domain: "deepbom", name: "reversible_structural_group", version: block.grouping_rule_version },
       semantic_family: null,
       member_refs: [...block.member_refs],
-      outputs: members.at(-1)?.outputs || [],
-      predecessor_relationships: [],
+      outputs: boundary.output_value_refs.map(ref => valueContract(index.values.get(ref))),
+      predecessor_relationships: uniqueBy(members.flatMap(row => row.predecessor_relationships)
+        .filter(row => !membership.has(row.from_ref)), "relationship_ref"),
       bound_storage: bound,
       aggregates: { ...aggregateStorage(bound), operation_count: members.length, macs: sumMetric(members, "macs") },
       metrics: { macs: sumMetric(members, "macs") },
@@ -364,14 +401,14 @@ function operationCompleteness(outputs, storage) {
 }
 
 function validateModelSummaryBody(value) {
-  if (value?.schema !== MODEL_SUMMARY_SCHEMA || !["1.0.0", MODEL_SUMMARY_METHOD_VERSION].includes(value?.method_version)) throw new Error("Model summary schema identity is invalid.");
+  if (value?.schema !== MODEL_SUMMARY_SCHEMA || !["1.0.0", "1.1.0", MODEL_SUMMARY_METHOD_VERSION].includes(value?.method_version)) throw new Error("Model summary schema identity is invalid.");
   if (value?.source_contract?.schema !== "deepbom.model_ir.v1" || !/^[a-f0-9]{64}$/.test(String(value.source_contract.model_ir_sha256 || "")) || !/^[a-f0-9]{64}$/.test(String(value.source_contract.artifact_sha256 || ""))) throw new Error("Model summary source binding is invalid.");
   if (value?.hash_contract?.canonicalization !== "RFC8785-JCS" || JSON.stringify(value.hash_contract.excluded_pointers) !== JSON.stringify(["/model_summary_sha256"])) throw new Error("Model summary hash contract is invalid.");
   if (!Array.isArray(value.rows) || !value.projection || !value.totals || !value.coverage || !value.trainability) throw new Error("Model summary required sections are missing.");
   if (!["operation", "block", "storage", "identity"].includes(value.projection.selected_level)) throw new Error("Model summary projection level is invalid.");
   if (value.projection.ordering.runtime_order_claim !== false || value.coverage.unknown_is_zero !== false) throw new Error("Model summary evidence boundary was promoted beyond its source.");
   if (value.trainability.trainable_parameter_count !== null || value.trainability.non_trainable_parameter_count !== null) throw new Error("Model summary must not infer trainability from deployment storage.");
-  if (value.method_version === MODEL_SUMMARY_METHOD_VERSION) {
+  if (["1.1.0", MODEL_SUMMARY_METHOD_VERSION].includes(value.method_version)) {
     for (const [key, count] of Object.entries(value.totals).filter(([key]) => key.endsWith("_count") && !key.includes("element") && key !== "trainable_parameter_count")) {
       if (!Number.isSafeInteger(count) || count < 0) throw new Error(`Model summary count is invalid: ${key}.`);
     }

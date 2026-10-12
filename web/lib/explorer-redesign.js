@@ -1973,6 +1973,7 @@ export function createExplorerRedesignController({
   let redesignNodeController = null;
   let implementationCache = null;
   const structureEditor = createModelStructureEditor({
+    hierarchyContext() { return analysis?.model_hierarchy ? { model: getModelIr(), hierarchy: analysis.model_hierarchy } : null; },
     sourceContext(op) {
       const model = getModelIr();
       if (analysis?.format !== "tflite" || model?.artifact?.sha256 !== analysis.model_sha256) return null;

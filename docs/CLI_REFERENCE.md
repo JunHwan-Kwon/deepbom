@@ -31,9 +31,9 @@ asset verification, and equivalence checks are documented in
 | `contract capture` | 1 | `summary`<br>`deepbom.artifact_derived_interface_baseline.v1` |
 | `diff` | 2 | `summary`<br>`markdown`<br>`deepbom.semantic_artifact_diff.v1`<br>`deepbom.tensor_encoding_diff.v1` |
 | `explore` | 1 | `summary`<br>`deepbom.redesign_pareto.v1` |
-| `graph` | 1 | `svg`<br>`png`<br>`html`<br>`mermaid`<br>`dot`<br>`deepbom.artifact_ir.v2`<br>`deepbom.model_ir.v1`<br>`deepbom.graph_ir.v1`<br>`deepbom.visualization_manifest.v1` |
-| `model-summary` | 1 | `table`<br>`markdown`<br>`deepbom.model_summary.v1` |
-| `visualize` | 1 | `monochrome_a4_svg`<br>`black_white_300dpi_png`<br>`caption_sidecars`<br>`deepbom.model_ir_visualization_manifest.v1` |
+| `graph` | 1 | `svg`<br>`png`<br>`html`<br>`mermaid`<br>`dot`<br>`deepbom.artifact_ir.v2`<br>`deepbom.model_ir.v1`<br>`deepbom.graph_ir.v1`<br>`deepbom.visualization_manifest.v1`<br>`deepbom.model_hierarchy.v1`<br>`deepbom.model_hierarchy_view.v1` |
+| `model-summary` | 1 | `table`<br>`markdown`<br>`deepbom.model_summary.v1`<br>`deepbom.model_hierarchy_view.v1`<br>`deepbom.model_hierarchy_query.v1` |
+| `visualize` | 1 | `monochrome_a4_svg`<br>`black_white_300dpi_png`<br>`caption_sidecars`<br>`deepbom.model_ir_visualization_manifest.v1`<br>`deepbom.model_ir_visualization_manifest.v2` |
 | `placement` | 1 | `deepbom.placement_comparison.v1` |
 | `accelerator collect nvidia` | none | `deepbom.accelerator_profile.v1` |
 | `explain-rule` | none | `deepbom.rule_explanation.v1`<br>`deepbom.rule_explanation_index.v1` |
@@ -60,10 +60,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`2.3.0`:
+`2.4.0`:
 
 ```console
-DEEPBOM 2.3.0
+DEEPBOM 2.4.0
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -148,7 +148,7 @@ Exit codes:
   0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding; 4 expected SHA-256 mismatch
 
 Additional command:
-  deepbom model-summary <artifact> [--level auto|operation|block|storage] [--format table|markdown|json|json-compact]
+  deepbom model-summary <artifact> [--level auto|operation|block|storage|source] [--format table|markdown|json|json-compact]
 
 SavedModel package preview:
   TensorFlow SavedModel directories are accepted with bounded member hashing and first-MetaGraph projection.
@@ -249,20 +249,29 @@ Output format selection:
   --format <kind>         Backward-compatible alias; retained for existing automation
 
 Deterministic graph export:
-  deepbom graph <artifact> --view structure --output-format svg -o graph.svg
-  --view <kind>           structure, placement, quantization, or architecture
+  deepbom graph <artifact> --output-format svg -o graph.svg
+  --view <kind>           architecture (default), structure, placement, quantization, or source
+  Architecture uses source hierarchy or bounded connected groups; structure retains all operation nodes
+  --source-group <ref>    Select a hierarchy group (source view only)
+  Source view formats: svg, html, json; group boundaries retain external connections
   --output-format <kind>  svg, png, html, mermaid, dot, or json for graph
 
 Regulatory-document model views:
   deepbom visualize <artifact> --view all --orientation portrait -o model-views.zip
   --view <ids>            all or comma-separated identity-boundary, architecture-overview, block-detail, exhaustive, static-runtime, observed-runtime
   --orientation <kind>    portrait or landscape ISO A4
+  --manifest-version <n>  1 (legacy default) or 2 (requested-view conservation)
   --output-format <kind>  bundle (SVG, captions, manifest) or json manifest
   These monochrome, hash-bound engineering views do not assert regulatory approval or standard conformance.
 
 Format-neutral Keras-style model summary:
   deepbom model-summary <artifact> --level auto --format table
-  --level <kind>          auto, operation, block, or storage
+  --level <kind>          auto (hierarchy table/Markdown; stable operation/storage JSON), operation, block, storage, or source
+  --source-group <ref>    Focus and expand a source group
+  --source-query         JSON page of groups; --source-group becomes parent filter
+  --source-offset <n>    Group query offset (default 0)
+  --source-limit <n>     Group query size 1–100 (default 40)
+  --source-search <text> Filter group paths/classes (maximum 256 characters)
   --format <kind>         table, markdown, json, or json-compact
   Rows are projections of deepbom.model_ir.v1; storage is not relabeled as trainable parameters and display order is not runtime order.
 

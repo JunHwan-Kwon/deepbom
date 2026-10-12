@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { finishArtifactEvidenceWorkflow } from "../web/lib/artifact-evidence-workflow.js";
 import { shapeElementCount } from "../web/lib/tensor-size.js";
+import { projectModelHierarchy, queryModelHierarchy } from "../web/lib/model-hierarchy.js";
+import { renderModelHierarchySvg, renderModelHierarchyTable, renderModelHierarchyHtml } from "../web/lib/model-hierarchy-view.js";
 
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -116,7 +118,7 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "2.3.0";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "2.4.0";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 const EXPECTED_SELF_TEST_SHA256 = typeof __DEEPBOM_SELF_TEST_SHA256__ === "string" ? __DEEPBOM_SELF_TEST_SHA256__ : "";
 
@@ -1248,13 +1250,24 @@ async function runGraphCommand(parsed, artifactIrContext) {
   const artifactIr = artifactIrContext.artifact_ir;
   const modelIr = artifactIrContext.model_ir;
   const graph = artifactIrContext.graph_ir;
+  if (parsed.view === "source") {
+    const hierarchy = artifactIrContext.model_hierarchy;
+    const view = projectModelHierarchy(modelIr, hierarchy, { selected: parsed.sourceGroup || null, expanded: parsed.sourceGroup ? [parsed.sourceGroup] : [] });
+    const text = parsed.outputFormat === "json" ? `${JSON.stringify({ model_ir: modelIr, model_hierarchy: hierarchy, view }, null, parsed.compact ? 0 : 2)}\n`
+      : parsed.outputFormat === "svg" ? renderModelHierarchySvg(view, { theme: "monochrome" })
+        : parsed.outputFormat === "html" ? renderModelHierarchyHtml(view) : null;
+    if (text === null) throw new Error("Source hierarchy graph supports svg, html and json. Use model-summary --level source for tables.");
+    if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, text, { noClobber: parsed.noClobber });
+    else process.stdout.write(text);
+    return;
+  }
   if (parsed.outputFormat === "png") {
-    const exported = exportGraphPng(graph, { view: parsed.view });
+    const exported = exportGraphPng(graph, { view: parsed.view, modelIr, hierarchy: artifactIrContext.model_hierarchy });
     if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, exported.bytes, { noClobber: parsed.noClobber });
     else process.stdout.write(exported.bytes);
     return;
   }
-  const exported = exportGraphVisualization(graph, { view: parsed.view, format: parsed.outputFormat, compact: parsed.compact, artifactIr, modelIr });
+  const exported = exportGraphVisualization(graph, { view: parsed.view, format: parsed.outputFormat, compact: parsed.compact, artifactIr, modelIr, hierarchy: artifactIrContext.model_hierarchy });
   if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, exported.text, { noClobber: parsed.noClobber });
   else process.stdout.write(exported.text);
 }
@@ -1287,14 +1300,14 @@ function assertCommandOutputFormat(parsed, command) {
 async function runVisualizationCommand(parsed, artifactIrContext) {
   const views = parsed.view === "all" ? MODEL_IR_VIEW_IDS : parsed.view.split(",");
   if (parsed.outputFormat === "json") {
-    const bundle = buildModelIrVisualizationBundle(artifactIrContext.model_ir, { views, orientation: parsed.orientation });
+    const bundle = buildModelIrVisualizationBundle(artifactIrContext.model_ir, { views, orientation: parsed.orientation, manifestVersion: parsed.manifestVersion, hierarchy: artifactIrContext.model_hierarchy });
     const text = `${JSON.stringify(bundle.manifest, null, parsed.compact ? 0 : 2)}\n`;
     if (parsed.output && parsed.output !== "-") await writeOutputAtomically(parsed.output, text, { noClobber: parsed.noClobber });
     else process.stdout.write(text);
     return;
   }
-  const { files } = modelIrVisualizationFiles(artifactIrContext.model_ir, { views, orientation: parsed.orientation });
-  const pngFiles = exportModelIrVisualizationPngFiles(artifactIrContext.model_ir, { views, orientation: parsed.orientation });
+  const { files } = modelIrVisualizationFiles(artifactIrContext.model_ir, { views, orientation: parsed.orientation, manifestVersion: parsed.manifestVersion, hierarchy: artifactIrContext.model_hierarchy });
+  const pngFiles = exportModelIrVisualizationPngFiles(artifactIrContext.model_ir, { views, orientation: parsed.orientation, manifestVersion: parsed.manifestVersion, hierarchy: artifactIrContext.model_hierarchy });
   const pngManifest = {
     schema: "deepbom.model_ir_png_derivation_manifest.v1",
     model_ir_sha256: artifactIrContext.model_ir.model_ir_sha256,
@@ -1311,9 +1324,15 @@ async function runVisualizationCommand(parsed, artifactIrContext) {
 }
 
 async function runModelSummaryCommand(parsed, artifactIrContext) {
-  const document = buildModelSummary(artifactIrContext.model_ir, { level: parsed.level });
+  const source = parsed.level === "source" || (parsed.level === "auto" && parsed.outputFormat !== "json" && artifactIrContext.model_ir.program.operations.length > 0);
+  const document = parsed.sourceQuery ? queryModelHierarchy(artifactIrContext.model_ir, artifactIrContext.model_hierarchy,
+    { parent_ref: parsed.sourceGroup || null, offset: parsed.sourceOffset, limit: parsed.sourceLimit, search: parsed.sourceSearch })
+    : source ? projectModelHierarchy(artifactIrContext.model_ir, artifactIrContext.model_hierarchy,
+    { selected: parsed.sourceGroup || null, expanded: parsed.sourceGroup ? [parsed.sourceGroup] : [] })
+    : buildModelSummary(artifactIrContext.model_ir, { level: parsed.level });
   const text = parsed.outputFormat === "json"
     ? `${JSON.stringify(document, bigintReplacer, parsed.compact ? 0 : 2)}\n`
+    : source ? renderModelHierarchyTable(document, parsed.outputFormat)
     : parsed.outputFormat === "markdown"
       ? renderModelSummaryMarkdown(document)
       : renderModelSummaryTable(document);
@@ -1801,7 +1820,10 @@ function selectAnalysisOutput(analysis, parsed, reviewSummary, artifactIrContext
     sections: availableAnalysisSections(analysis),
   };
   if (parsed.pointer) {
-    const resolved = resolveJsonPointer(analysis, parsed.pointer);
+    const contextKey = parsed.pointer.split("/")[1];
+    const root = ["artifact_ir", "model_ir", "model_summary", "model_hierarchy"].includes(contextKey)
+      ? { [contextKey]: artifactIrContext[contextKey] } : analysis;
+    const resolved = resolveJsonPointer(root, parsed.pointer);
     if (!resolved.found) throw new Error(`JSON Pointer does not resolve: ${parsed.pointer} (${resolved.reason}).`);
     return {
       schema: "deepbom.analysis_pointer_result.v1",
@@ -1818,6 +1840,7 @@ function selectAnalysisOutput(analysis, parsed, reviewSummary, artifactIrContext
       else if (section === "artifact_ir") sections.artifact_ir = artifactIrContext.artifact_ir;
       else if (section === "model_ir") sections.model_ir = artifactIrContext.model_ir;
       else if (section === "model_summary") sections.model_summary = artifactIrContext.model_summary;
+      else if (section === "model_hierarchy") sections.model_hierarchy = artifactIrContext.model_hierarchy;
       else if (Object.prototype.hasOwnProperty.call(analysis, section)) sections[section] = analysis[section];
       else {
         const aliases = analysisSectionAliases(analysis)[section];
@@ -1837,7 +1860,7 @@ function selectAnalysisOutput(analysis, parsed, reviewSummary, artifactIrContext
 
 function availableAnalysisSections(analysis) {
   return [...new Set([
-    "summary", "findings", "artifact_ir", "model_ir", "model_summary", "shapes", "quantization", "memory", "placement",
+    "summary", "findings", "artifact_ir", "model_ir", "model_summary", "model_hierarchy", "shapes", "quantization", "memory", "placement",
     ...Object.keys(analysis || {}).filter((key) => analysis[key] && typeof analysis[key] === "object"),
   ])].sort();
 }
@@ -2565,10 +2588,13 @@ function parseArguments(argv) {
     bom: "",
     componentRef: "",
     request: "",
-    view: command === "graph" ? "structure" : command === "visualize" ? "all" : "",
+    view: command === "graph" ? "architecture" : command === "visualize" ? "all" : "",
     orientation: "portrait",
+    manifestVersion: 1, manifestVersionExplicit: false,
     outputFormat: command === "graph" ? "svg" : command === "visualize" ? "bundle" : command === "model-summary" ? "table" : "analysis",
     level: "auto",
+    sourceGroup: "",
+    sourceQuery: false, sourceOffset: 0, sourceLimit: 40, sourceSearch: "", sourceQueryOptions: false,
     output: "",
     batchOutputDir: "",
     policyOutput: "",
@@ -2661,7 +2687,13 @@ function parseArguments(argv) {
     else if (token === "--request") parsed.request = requiredValue(values, token);
     else if (token === "--view") parsed.view = requiredValue(values, token).toLowerCase();
     else if (token === "--orientation") parsed.orientation = requiredValue(values, token).toLowerCase();
+    else if (token === "--manifest-version") { parsed.manifestVersion = positiveInteger(requiredValue(values, token), token); parsed.manifestVersionExplicit = true; }
     else if (token === "--level") parsed.level = requiredValue(values, token).toLowerCase();
+    else if (token === "--source-group") parsed.sourceGroup = requiredValue(values, token);
+    else if (token === "--source-query") parsed.sourceQuery = true;
+    else if (token === "--source-offset") { parsed.sourceOffset = parseNonNegativeInteger(requiredValue(values, token), token); parsed.sourceQueryOptions = true; }
+    else if (token === "--source-limit") { parsed.sourceLimit = positiveInteger(requiredValue(values, token), token); parsed.sourceQueryOptions = true; }
+    else if (token === "--source-search") { parsed.sourceSearch = requiredValue(values, token); parsed.sourceQueryOptions = true; }
     else if (token === "--context") parsed.context = positiveInteger(requiredValue(values, token), token);
     else if (token === "--images") parsed.images = positiveInteger(requiredValue(values, token), token);
     else if (token === "--tokens-per-image") parsed.tokensPerImage = positiveInteger(requiredValue(values, token), token);
@@ -2797,8 +2829,8 @@ function parseArguments(argv) {
         ? "--format must be table, markdown, json, or json-compact for model-summary."
       : `--format must be ${AUDIT_OUTPUT_FORMATS.join(", ")}.`);
   }
-  if (parsed.command === "graph" && !new Set(["structure", "placement", "quantization", "architecture"]).has(parsed.view)) {
-    throw new Error("--view must be structure, placement, quantization, or architecture.");
+  if (parsed.command === "graph" && !new Set(["structure", "placement", "quantization", "architecture", "source"]).has(parsed.view)) {
+    throw new Error("--view must be structure, placement, quantization, architecture, or source.");
   }
   if (!new Set(["text", "json"]).has(parsed.errorFormat)) throw new Error("--error-format must be text or json.");
   if (parsed.apply && parsed.command !== "integrate") throw new Error("--apply is valid only with deepbom integrate.");
@@ -2813,7 +2845,12 @@ function parseArguments(argv) {
     }
     if (!new Set(["portrait", "landscape"]).has(parsed.orientation)) throw new Error("--orientation must be portrait or landscape.");
   } else if (parsed.orientation !== "portrait") throw new Error("--orientation is valid only with the visualize command.");
-  if (!MODEL_SUMMARY_LEVELS.includes(parsed.level)) throw new Error(`--level must be ${MODEL_SUMMARY_LEVELS.join(", ")}.`);
+  if (![...MODEL_SUMMARY_LEVELS, "source"].includes(parsed.level)) throw new Error(`--level must be ${[...MODEL_SUMMARY_LEVELS, "source"].join(", ")}.`);
+  if (parsed.sourceGroup && !((parsed.command === "graph" && parsed.view === "source") || (parsed.command === "model-summary" && parsed.level === "source"))) throw new Error("--source-group requires graph --view source or model-summary --level source.");
+  if (parsed.sourceQuery && (parsed.command !== "model-summary" || parsed.level !== "source" || parsed.outputFormat !== "json")) throw new Error("--source-query requires model-summary --level source --format json.");
+  if (parsed.sourceQueryOptions && !parsed.sourceQuery) throw new Error("Source pagination/search options require --source-query.");
+  if (parsed.sourceLimit > 100 || parsed.sourceSearch.length > 256) throw new Error("Source query requires limit 1–100 and search at most 256 characters.");
+  if (![1, 2].includes(parsed.manifestVersion) || (parsed.command !== "visualize" && parsed.manifestVersionExplicit)) throw new Error("--manifest-version 1|2 is supported by visualize.");
   if (parsed.command !== "model-summary" && parsed.level !== "auto") throw new Error("--level is valid only with the model-summary command.");
   if (parsed.render && (parsed.json || parsed.compact || parsed.outputFormat !== "analysis")) {
     throw new Error("--render markdown cannot be combined with JSON, summary, CycloneDX, SARIF, envelope, or graph output formats.");
@@ -2908,7 +2945,7 @@ async function readJsonSidecar(filePath, role, maximumBytes = MAX_JSON_SIDECAR_B
 function printHelp(command) {
   if (command === "gguf") { printGgufHelp(); printMetadataHelp(); return; }
   process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom verify <artifact> --bom <cyclonedx-1.7.json> [--component-ref <bom-ref>]\n  deepbom contract capture <artifact> [-o baseline.interface-contract.json]\n  deepbom batch <manifest.json> --batch-output-dir <directory> [options]\n  deepbom diff <baseline-artifact-or-package> <candidate-artifact-or-package> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom visualize <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  Stable or existing: .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  Preview static graph: GraphDef or saved_model.pb\n  Preview safe envelope: .h5, .hdf5, .keras, .pt2, .pt, .pth, .ckpt\n  Packages: .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --bom <json>           Reconcile CycloneDX 1.7 claims with the selected artifact\n  --component-ref <ref>  Explicitly select a BOM component; hash disagreements still block\n  --expected-sha256 <hex> Require the exact artifact digest before analysis\n  --summary             Compatibility alias for --output-format summary\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif\n  --weight-analysis     Weight IR plus channels, similarity, SVD, sparsity and quantization; JSON output\n  --weight-baseline <artifact>\n                          Compare aligned weight values against this original artifact\n  --weight-options <json>\n                          Explicit axes, tensor selection and bounded analysis budgets\n  --weight-mapping <json>\n                          Explicit tensor pairs and candidate axis permutations\n  --activation-evidence <json>\n                          Import hash-bound runtime captures as Activation IR; no execution\n  --activation-baseline <json>\n                          Compare a reference capture for the same artifact; requires --activation-evidence\n  --section <names>      Emit selected analysis sections; use --list-sections to discover names\n  --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity\n  --list-sections        List selectable analysis sections for this artifact\n  --gate defects         Exit 2 only when an artifact_defect finding is present\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Compatibility severity gate: informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Compatibility alias for --output-format json\n  --compact              Compatibility alias for --output-format json-compact\n  --version              Print version\n  --help                 Show this help\n\nSafe-envelope boundary:\n  Keras, HDF5, PT2, and PyTorch checkpoint previews do not construct framework objects or claim an executable graph.\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding; 4 expected SHA-256 mismatch\n`);
-  process.stdout.write("\nAdditional command:\n  deepbom model-summary <artifact> [--level auto|operation|block|storage] [--format table|markdown|json|json-compact]\n");
+  process.stdout.write("\nAdditional command:\n  deepbom model-summary <artifact> [--level auto|operation|block|storage|source] [--format table|markdown|json|json-compact]\n");
   process.stdout.write("\nSavedModel package preview:\n  TensorFlow SavedModel directories are accepted with bounded member hashing and first-MetaGraph projection.\n  GraphDef, Keras config, and PT2 JSON expose serialized declarative relationships only; HDF5 and PyTorch checkpoints remain safe-envelope-only.\n");
   process.stdout.write("\nGGUF quick inspection:\n  --tensors              Emit a concise tensor table; add --json or --compact for deepbom.tensor_table.v1\n");
   process.stdout.write("\nFormat-neutral tensor evidence:\n  --encoding-inventory   Emit serialized encoding counts, assignments, and reproducible hashes for GGUF, SafeTensors, ONNX, or TFLite\n");
@@ -2929,9 +2966,9 @@ function printHelp(command) {
   process.stdout.write("\nBounded scan policy:\n  --scan <mode>           auto, structure, integrity, or full\n  GGUF/SafeTensors use range reads; auto selects structure above 10 GiB and streamed integrity above 2 GiB.\n  Monolithic TFLite/ONNX/ExecuTorch files above 1 GiB fail before full-file allocation.\n");
   process.stdout.write("\nRepeat-review policy:\n  --review-policy <json> Bind required analysis coverage, finding threshold, and identity-scoped expiring exceptions\n  --policy-output <path> Write the deterministic policy decision JSON\n  --policy, --gate, --review-policy, and --fail-on are mutually exclusive policy sources.\n");
   process.stdout.write("\nOutput format selection:\n  --output-format <kind>  Preferred unambiguous spelling for --format\n  --format <kind>         Backward-compatible alias; retained for existing automation\n");
-  process.stdout.write("\nDeterministic graph export:\n  deepbom graph <artifact> --view structure --output-format svg -o graph.svg\n  --view <kind>           structure, placement, quantization, or architecture\n  --output-format <kind>  svg, png, html, mermaid, dot, or json for graph\n");
-  process.stdout.write("\nRegulatory-document model views:\n  deepbom visualize <artifact> --view all --orientation portrait -o model-views.zip\n  --view <ids>            all or comma-separated identity-boundary, architecture-overview, block-detail, exhaustive, static-runtime, observed-runtime\n  --orientation <kind>    portrait or landscape ISO A4\n  --output-format <kind>  bundle (SVG, captions, manifest) or json manifest\n  These monochrome, hash-bound engineering views do not assert regulatory approval or standard conformance.\n");
-  process.stdout.write("\nFormat-neutral Keras-style model summary:\n  deepbom model-summary <artifact> --level auto --format table\n  --level <kind>          auto, operation, block, or storage\n  --format <kind>         table, markdown, json, or json-compact\n  Rows are projections of deepbom.model_ir.v1; storage is not relabeled as trainable parameters and display order is not runtime order.\n");
+  process.stdout.write("\nDeterministic graph export:\n  deepbom graph <artifact> --output-format svg -o graph.svg\n  --view <kind>           architecture (default), structure, placement, quantization, or source\n  Architecture uses source hierarchy or bounded connected groups; structure retains all operation nodes\n  --source-group <ref>    Select a hierarchy group (source view only)\n  Source view formats: svg, html, json; group boundaries retain external connections\n  --output-format <kind>  svg, png, html, mermaid, dot, or json for graph\n");
+  process.stdout.write("\nRegulatory-document model views:\n  deepbom visualize <artifact> --view all --orientation portrait -o model-views.zip\n  --view <ids>            all or comma-separated identity-boundary, architecture-overview, block-detail, exhaustive, static-runtime, observed-runtime\n  --orientation <kind>    portrait or landscape ISO A4\n  --manifest-version <n>  1 (legacy default) or 2 (requested-view conservation)\n  --output-format <kind>  bundle (SVG, captions, manifest) or json manifest\n  These monochrome, hash-bound engineering views do not assert regulatory approval or standard conformance.\n");
+  process.stdout.write("\nFormat-neutral Keras-style model summary:\n  deepbom model-summary <artifact> --level auto --format table\n  --level <kind>          auto (hierarchy table/Markdown; stable operation/storage JSON), operation, block, storage, or source\n  --source-group <ref>    Focus and expand a source group\n  --source-query         JSON page of groups; --source-group becomes parent filter\n  --source-offset <n>    Group query offset (default 0)\n  --source-limit <n>     Group query size 1–100 (default 40)\n  --source-search <text> Filter group paths/classes (maximum 256 characters)\n  --format <kind>         table, markdown, json, or json-compact\n  Rows are projections of deepbom.model_ir.v1; storage is not relabeled as trainable parameters and display order is not runtime order.\n");
   process.stdout.write("\nTensorRT optimized-engine option:\n  --tensorrt-engine-inspector <json>\n                          Import identity-bound TensorRT optimized-engine inspector evidence\n");
   process.stdout.write("\nExecuTorch selected-build option:\n  --executorch-build <json>\n                          Bind backend/operator inventories and runtime binary digests to a PTE audit\n");
   process.stdout.write("\nArtifact reconciliation and baseline capture:\n  deepbom verify <artifact> --bom <cyclonedx-1.7.json> [--component-ref <bom-ref>]\n  deepbom contract capture <artifact> [-o baseline.interface-contract.json]\n  deepbom diff <baseline> <candidate> --tensors\n  --render markdown      Render audit, diff, or verify results as Markdown\n");
@@ -2950,10 +2987,10 @@ const CLI_OPTION_SPELLINGS = Object.freeze([
   "--conversion-receipt", "--coreml-compute-plan", "--device", "--edgetpu-compiler-evidence",
   "--encoding-inventory", "--error-format", "--executorch-build", "--expected-sha256", "--fail-on",
   "--format", "--gate", "--help", "--images", "--include-device-identifiers", "--json", "--level",
-  "--list", "--list-sections", "--litert-qualcomm-evidence", "--llm-memory-profile", "--max-download-gib",
+  "--list", "--list-sections", "--litert-qualcomm-evidence", "--llm-memory-profile", "--max-download-gib", "--manifest-version",
   "--metadata", "--metadata-template", "--evidence-files", "--memory-mib", "--no-clobber", "--offline", "--orientation", "--output", "--output-format", "--pointer", "--policy",
   "--policy-output", "--profiles", "--render", "--request", "--review-policy", "--scan", "--section",
-  "--state-bits", "--summary", "--target", "--target-profile", "--tensor-limit", "--tensor-offset",
+  "--state-bits", "--summary", "--target", "--target-profile", "--tensor-limit", "--tensor-offset", "--source-group", "--source-query", "--source-offset", "--source-limit", "--source-search",
   "--tensors", "--tensorrt-engine-inspector", "--tensorrt-llm-binding", "--tensorrt-llm-config",
   "--tensorrt-parser-evidence", "--tensorrt-profile", "--timestamp", "--tokens-per-image", "--version", "--view",
 ]);

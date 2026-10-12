@@ -1,6 +1,6 @@
 """Public Python SDK and launcher for the verified DEEPBOM engine."""
 
-__version__ = "2.3.0"
+__version__ = "2.4.0"
 
 from .api import (  # noqa: E402
     DeepBomError,

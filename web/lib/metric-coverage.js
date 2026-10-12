@@ -7,6 +7,10 @@ export { buildDecisionCoverageLedger, decisionCoverageMarkdown } from "./decisio
 
 const SCHEMA = "deepbom.metric_coverage_manifest.v1.55";
 const MAX_FIELD_DISCOVERY_VISITS = 2_000_000;
+const FIELD_DOCUMENT_SCHEMAS = Object.freeze({
+  artifact_ir: "deepbom.artifact_ir.v2", model_ir: "deepbom.model_ir.v1",
+  model_summary: "deepbom.model_summary.v1", model_hierarchy: "deepbom.model_hierarchy.v1",
+});
 const SPECIAL_FIELD_EXPORT_ROUTES = new Map([
   ["roofline_csv", "supplemental_sources.roofline_csv"],
   ["core_isolation_csv", "supplemental_sources.core_isolation_roofline_csv"],
@@ -1535,17 +1539,17 @@ function spec(id, label, {
 const SPECS = [
   spec("artifact.canonical_ir", "Canonical Artifact Evidence IR", {
     formats: ["tflite", "onnx", "coreml", "mlmodel", "gguf", "safetensors", "executorch", "pte", "ptd"],
-    keys: ["artifact_ir", "model_ir", "model_summary", "artifact_ir_consumer_view", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"],
+    keys: ["artifact_ir", "model_ir", "model_summary", "model_hierarchy", "artifact_ir_consumer_view", "artifact_ir_primary_scope_ref", "artifact_ir_nested_scope_count"],
     status: (analysis) => analysis?.artifact_ir?.schema === "deepbom.artifact_ir.v2"
       && /^[a-f0-9]{64}$/.test(String(analysis.artifact_ir?.artifact_ir_sha256 || ""))
       ? "assessed" : "not_assessed",
     evidenceClass: "OBSERVED/DERIVED",
-    pointers: ["/evidence/artifact_ir", "/evidence/model_ir", "/evidence/model_summary"],
+    pointers: ["/evidence/artifact_ir", "/evidence/model_ir", "/evidence/model_summary", "/evidence/model_hierarchy"],
     report: (format) => ["gguf", "safetensors", "coreml", "executorch"].includes(format)
       ? "## Artifact Identity" : "## Artifact And Target",
     viewer: ["Overview", "Explorer", "Reports"],
-    exports: ["engineering_evidence.json", "static/artifact_ir.json", "static/model_ir.json", "static/model_summary.json", "static/static_analysis.json"],
-    method: "Validate one hash-bound deepbom.artifact_ir.v2 document, derive one source-bound deepbom.model_ir.v1 projection with an explicit loss ledger, derive the deterministic deepbom.model_summary.v1 presentation projection, and reuse those identities across viewer and export surfaces without reconstructing them from a compatibility view.",
+    exports: ["engineering_evidence.json", "static/artifact_ir.json", "static/model_ir.json", "static/model_summary.json", "static/model_hierarchy.json", "static/static_analysis.json"],
+    method: "Validate one hash-bound deepbom.artifact_ir.v2 document, derive one source-bound deepbom.model_ir.v1 projection with an explicit loss ledger and deterministic summary, validate an optional source hierarchy against that same Model IR, and reuse these identities across viewer and export surfaces without reconstructing them from a compatibility view.",
   }),
   spec("executorch.serialized_contract", "ExecuTorch ET12/FT01 serialized contract", {
     formats: ["executorch"],
@@ -2045,6 +2049,13 @@ function traversableFieldValue(value) {
 export function collectAnalysisFieldPatterns(root) {
   const kindsByPath = new Map();
   const ancestors = new Set();
+  // A compatibility analysis may contain several complete, versioned documents.
+  // Preserve the same bounded inspection for EACH document instead of spending
+  // the raw-analysis budget again on every embedded projection. Unknown objects
+  // do not create new budgets; the total remains bounded by these four contracts.
+  const documentRoots = new Set(Object.entries(FIELD_DOCUMENT_SCHEMAS)
+    .filter(([key, schema]) => root?.[key]?.schema === schema).map(([key]) => `/${key}`));
+  const documentVisits = new Map([["", 0], ...[...documentRoots].map(key => [key, 0])]);
   let visits = 0;
   let limitExceeded = false;
 
@@ -2054,10 +2065,12 @@ export function collectAnalysisFieldPatterns(root) {
     kinds.add(fieldValueKind(value));
     kindsByPath.set(path, kinds);
   };
-  const walk = (value, path) => {
+  const walk = (value, path, documentRoot = "") => {
     if (["undefined", "function", "symbol"].includes(typeof value)) return;
+    if (documentRoots.has(path)) documentRoot = path;
     visits += 1;
-    if (visits > MAX_FIELD_DISCOVERY_VISITS) {
+    documentVisits.set(documentRoot, documentVisits.get(documentRoot) + 1);
+    if (documentVisits.get(documentRoot) > MAX_FIELD_DISCOVERY_VISITS) {
       limitExceeded = true;
       return;
     }
@@ -2077,7 +2090,7 @@ export function collectAnalysisFieldPatterns(root) {
     ancestors.add(value);
     for (const key of keys) {
       if (!path && key.startsWith("_")) continue;
-      walk(value[key], fieldPath(path, key, Array.isArray(value)));
+      walk(value[key], fieldPath(path, key, Array.isArray(value)), documentRoot);
       if (limitExceeded) break;
     }
     ancestors.delete(value);
@@ -2086,7 +2099,9 @@ export function collectAnalysisFieldPatterns(root) {
   return {
     status: limitExceeded ? "incomplete_visit_limit" : "complete",
     visit_count: visits,
-    visit_limit: MAX_FIELD_DISCOVERY_VISITS,
+    visit_limit: MAX_FIELD_DISCOVERY_VISITS * documentVisits.size,
+    visit_limit_per_document: MAX_FIELD_DISCOVERY_VISITS,
+    document_visits: Object.fromEntries(documentVisits),
     fields: [...kindsByPath.entries()]
       .map(([path, kinds]) => ({ field_path: path, value_kinds: [...kinds].sort() }))
       .sort((a, b) => a.field_path.localeCompare(b.field_path)),
@@ -2260,6 +2275,8 @@ function buildFieldCoverage(analysis, applicableSpecs, reportAccessedFieldPaths,
     discovery_status: discovered.status,
     discovery_visit_count: discovered.visit_count,
     discovery_visit_limit: discovered.visit_limit,
+    discovery_visit_limit_per_document: discovered.visit_limit_per_document,
+    discovery_document_visits: discovered.document_visits,
     static_export_discovery_status: staticPatterns?.status || "not_checked",
     leaf_field_pattern_count: ledger.length,
     report_consumed_field_pattern_count: reportConsumed.length,

@@ -26,7 +26,7 @@ for (const entry of cases) {
   const modelIr = output.model_ir;
   outputs.set(entry.format, modelIr);
   assert.equal(modelIr.schema, "deepbom.model_ir.v1", `${entry.format} schema`);
-  assert.equal(modelIr.method_version, "1.1.2", `${entry.format} method version`);
+  assert.equal(modelIr.method_version, "1.1.3", `${entry.format} method version`);
   assert.equal(modelIr.source_contract.schema, "deepbom.artifact_ir.v2", `${entry.format} source schema`);
   assert.equal(modelIr.source_contract.sha256, output.artifact_ir.artifact_ir_sha256, `${entry.format} source digest binding`);
   assert.equal(validateSchema(modelIr), true, `${entry.format} JSON Schema: ${errors(validateSchema.errors)}`);
@@ -98,6 +98,28 @@ assert.notEqual(structureQ4.representation_signature_sha256, structureQ5.represe
   "representation-only changes must remain visible in a separate digest");
 assert.notEqual(structureQ4.signature_sha256, differentShape.signature_sha256,
   "a changed parameter shape pattern must change the structural signature");
+
+// Previously the repeated prefix caused the entire remaining graph to become
+// one unbounded TAIL, including later repeated runs.
+const largeOps = Array.from({ length: 1831 }, (_, i) => ({ ...baseOperation,
+  id: `large:${i}`, source_order: i, display_order: i,
+  native_op: { domain: "", name: i < 190 ? ["Conv", "Relu"][i % 2] : i > 1700 ? ["Add", "Mul"][i % 2] : `Op${i}`, version: 1 },
+}));
+const links = largeOps.slice(1).map((op, i) => ({ from_ref: largeOps[i].id, to_ref: op.id, kind: "data_dependency" }));
+const bounded = buildStructuralBlocks(largeOps, region, { relationships: links });
+assert.equal(bounded.flatMap(row => row.member_refs).length, 1831);
+assert.equal(new Set(bounded.flatMap(row => row.member_refs)).size, 1831);
+assert.equal(new Set(bounded.map(row => row.id)).size, bounded.length, "Repeated signatures across chunks cannot collide");
+assert(bounded.every(row => row.member_refs.length <= 50 && !["head", "tail"].includes(row.kind)));
+assert(bounded.some(row => row.kind === "repeated_structure" && row.source_order_range[0] > 1700), "Later repeats are examined as well as the first run");
+const disconnected = buildStructuralBlocks(largeOps.slice(0, 100), region);
+assert(disconnected.every(row => row.member_refs.length === 1), "Display adjacency never invents a data connection");
+const branchedLinks = links.filter((_, i) => i % 7 !== 0);
+const separated = buildStructuralBlocks(largeOps, region, { relationships: branchedLinks });
+const incoming = new Map(branchedLinks.map(edge => [edge.to_ref, edge.from_ref]));
+for (const block of separated) for (const ref of block.member_refs.slice(1)) {
+  assert(block.member_refs.includes(incoming.get(ref)), "Groups cannot span disconnected components");
+}
 
 const tamperedDigest = structuredClone(outputs.get("onnx"));
 tamperedDigest.model_ir_sha256 = "0".repeat(64);

@@ -1,8 +1,53 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-10-10T16:22:10.734446+00:00",
+  "recorded_at": "2026-10-12T08:44:00.182062+00:00",
   "scope": "Public installation channels and private web delivery",
   "observations": [
+    {
+      "kind": "private_web_preflight_basis",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 241.371,
+      "observed_at": "2026-10-12T08:35:46.011660+00:00",
+      "version": "2.4.0",
+      "source_commit": "cb9da4f3d06fc540d50c677078970c5ea67be840",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.4.0 source hierarchy, connected structural groups and shared architecture projections release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately.",
+      "check_count": 102
+    },
+    {
+      "kind": "local_channel_build",
+      "command": "node scripts/build-channel-artifacts.mjs --with-dist",
+      "elapsed_seconds": 12.784,
+      "observed_at": "2026-10-12T08:39:54.360718+00:00",
+      "version": "2.4.0",
+      "source_commit": "550efd1c24ee3ad4df369ff2c6d084096c32a068",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.4.0 source hierarchy, connected structural groups and shared architecture projections release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately."
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --platform-smoke",
+      "elapsed_seconds": 45.902,
+      "observed_at": "2026-10-12T08:40:40.350698+00:00",
+      "version": "2.4.0",
+      "source_commit": "550efd1c24ee3ad4df369ff2c6d084096c32a068",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.4.0 source hierarchy, connected structural groups and shared architecture projections release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately."
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --release-contract",
+      "elapsed_seconds": 157.444,
+      "observed_at": "2026-10-12T08:43:17.795873+00:00",
+      "version": "2.4.0",
+      "source_commit": "550efd1c24ee3ad4df369ff2c6d084096c32a068",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.4.0 source hierarchy, connected structural groups and shared architecture projections release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately."
+    },
     {
       "kind": "private_web_preflight_basis",
       "command": "node scripts/check-deploy.mjs --establish-observation",

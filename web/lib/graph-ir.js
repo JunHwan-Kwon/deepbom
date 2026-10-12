@@ -54,8 +54,8 @@ function projectSerializedGraph(artifactIr) {
   const edges = [];
   for (const value of primaryValues) {
     const from = value.producer ? legacyNodeId.get(value.producer.operator_ref) || null : null;
+    if (from && graphOutputIds.has(value.id)) edges.push(legacyEdge(value, from, null, "model_output", value.producer?.port, null));
     if (!value.consumers.length) {
-      if (from && graphOutputIds.has(value.id)) edges.push(legacyEdge(value, from, null, "model_output", value.producer?.port, null));
       continue;
     }
     for (const consumer of value.consumers) {
