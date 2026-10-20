@@ -325,6 +325,7 @@ docs/evidence-ir/compatibility/0.54.0.json
 docs/evidence-ir/compatibility/0.55.0.json
 docs/evidence-ir/compatibility/0.56.0.json
 docs/evidence-ir/compatibility/0.57.0.json
+docs/evidence-ir/compatibility/0.57.1.json
 docs/evidence-ir/compatibility/0.6.0.json
 docs/evidence-ir/compatibility/0.7.0.json
 docs/evidence-ir/compatibility/0.8.0.json
@@ -423,6 +424,15 @@ reference/cyclonedx/1.7/cryptography-defs.schema.json
 reference/cyclonedx/1.7/examples/README.md
 reference/cyclonedx/1.7/examples/current-reference.json
 reference/cyclonedx/1.7/examples/historical-reference.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_artifact_evidence_envelope.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_artifact_ir.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_cyclonedx_evidence.cdx.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_interface_contracts.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_missing_provenance_fields.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_model_ir.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_observed_formulation.cdx.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_runtime_requirements.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/producer.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant-30ddafa6602abcc1128b346ec6e7a15045eb3a59d4d53e989ccae78c4952e1b1/deepbom_artifact_evidence_envelope.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant-30ddafa6602abcc1128b346ec6e7a15045eb3a59d4d53e989ccae78c4952e1b1/deepbom_artifact_ir.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant-30ddafa6602abcc1128b346ec6e7a15045eb3a59d4d53e989ccae78c4952e1b1/deepbom_cyclonedx_evidence.cdx.json

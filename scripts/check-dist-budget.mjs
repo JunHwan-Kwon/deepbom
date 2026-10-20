@@ -42,7 +42,9 @@ const dist = path.resolve("dist");
 // Add 64 KiB to the total only; keep the 16 MiB per-file and startup limits.
 // Release 2.5.0 retains the 0.56.0 and 0.57.0 catalogs and rebuilt companion WASM.
 // Measured assembly is 82.29 MiB; add 128 KiB total while retaining all per-file/startup limits.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 82.4375);
+// Bilingual query guidance, widget navigation and immutable 0.57.1 total 82.57 MiB.
+// Allocate 256 KiB; preserve the existing per-file and startup limits.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 82.6875);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

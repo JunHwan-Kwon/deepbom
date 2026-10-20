@@ -43,7 +43,8 @@ const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_
 // Preserve the immutable 0.54/0.55 portable crosswalks (~114 KiB each); no per-file cap increase.
 // Release 2.5.0 retains immutable 0.56.0 and 0.57.0 catalogs; measured docs 7.67 MiB.
 // Reserve 128 KiB for this archive; runtime, per-file and calculation limits stay unchanged.
-const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 7936);
+// Compatible query navigation retains one ~121 KiB immutable 0.57.1 source-binding snapshot.
+const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 8064);
 // Includes metadata tampering, cross-channel and browser regression checks.
 // Workflow routing and weight-query regression coverage add a measured 18 KiB;
 // reserve 32 KiB for tests and 16 KiB for the expanded review contract snapshot.
