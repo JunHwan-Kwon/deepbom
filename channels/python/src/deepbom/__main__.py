@@ -11,11 +11,18 @@ from ._engine import _verified_engine
 
 def main() -> int:
     try:
+        if len(sys.argv) > 1 and sys.argv[1] == "instrument":
+            from .instrument import main as instrument_main
+            return instrument_main(sys.argv[2:])
         if len(sys.argv) > 1 and sys.argv[1] in (
             "optimize",
             "training",
             "optimization-report",
+            "inspect-native",
         ):
+            if sys.argv[1] == "inspect-native":
+                from .optimization.__main__ import main as native_main
+                return native_main(["inspect", *sys.argv[2:]])
             if sys.argv[1] == "optimization-report":
                 from .optimization.__main__ import main as native_main
 

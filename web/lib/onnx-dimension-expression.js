@@ -1,3 +1,4 @@
+import { portableContract } from "./portable-contracts.js";
 const OPERATORS = new Set(["add", "sub", "mul", "div", "floor_div", "ceil_div", "max", "min", "broadcast_dim", "reshape_quotient", "range_len", "slice_len"]);
 
 export function parseOnnxDimensionExpression(value) {
@@ -44,62 +45,9 @@ export function onnxDimensionExpressionDependencies(expression) {
 }
 
 export function evaluateOnnxDimensionExpression(expression, assignments) {
-  const value = evaluate(expression, assignments instanceof Map ? assignments : new Map(Object.entries(assignments || {})));
-  return typeof value === "bigint" && value >= 0n ? value : null;
-}
-
-function evaluate(node, assignments) {
-  if (node?.kind === "constant") return BigInt(node.value_decimal);
-  if (node?.kind === "infinity") return node.sign < 0 ? "-inf" : "+inf";
-  if (node?.kind === "symbol") {
-    const value = assignments.get(node.name);
-    return typeof value === "bigint" ? value : Number.isSafeInteger(Number(value)) ? BigInt(Number(value)) : null;
-  }
-  if (node?.kind !== "call") return null;
-  const values = node.arguments.map((argument) => evaluate(argument, assignments));
-  if (values.some((value) => value == null)) return null;
-  const finite = values.every((value) => typeof value === "bigint");
-  if (node.operator === "slice_len") return sliceLength(values);
-  if (!finite) return null;
-  const [left, right] = values;
-  if (node.operator === "add") return values.reduce((sum, value) => sum + value, 0n);
-  if (node.operator === "sub") return left - right;
-  if (node.operator === "mul") return values.reduce((product, value) => product * value, 1n);
-  if (["div", "reshape_quotient"].includes(node.operator)) return right === 0n || node.operator === "reshape_quotient" && left % right !== 0n ? null : left / right;
-  if (node.operator === "floor_div") return right > 0n ? floorDiv(left, right) : null;
-  if (node.operator === "ceil_div") return right > 0n ? -floorDiv(-left, right) : null;
-  if (node.operator === "max") return values.reduce((value, item) => value > item ? value : item);
-  if (node.operator === "min") return values.reduce((value, item) => value < item ? value : item);
-  if (node.operator === "broadcast_dim") {
-    if (values.some((value) => value < 0n)) return null;
-    const nonOne = [...new Set(values.filter((value) => value !== 1n).map(String))].map(BigInt);
-    return nonOne.length <= 1 ? nonOne[0] ?? 1n : null;
-  }
-  if (node.operator === "range_len") {
-    const [start, limit, delta] = values;
-    if (delta === 0n) return null;
-    const count = delta > 0n ? -floorDiv(start - limit, delta) : -floorDiv(limit - start, -delta);
-    return count > 0n ? count : 0n;
-  }
-  return null;
-}
-
-function floorDiv(value, divisor) { let q = value / divisor; if (value % divisor < 0n) q -= 1n; return q; }
-
-function sliceLength(values) {
-  if (values.length !== 4 || typeof values[0] !== "bigint" || typeof values[3] !== "bigint" || values[0] < 0n || values[3] === 0n) return null;
-  const [size, rawStart, rawEnd, step] = values;
-  let start = rawStart; let end = rawEnd;
-  if (step > 0n) {
-    start = start === "-inf" ? 0n : start === "+inf" ? size : start < 0n ? start + size : start;
-    end = end === "+inf" ? size : end === "-inf" ? 0n : end < 0n ? end + size : end;
-    start = start < 0n ? 0n : start > size ? size : start;
-    end = end < 0n ? 0n : end > size ? size : end;
-    return end <= start ? 0n : -floorDiv(start - end, step);
-  }
-  start = start === "+inf" ? size - 1n : start === "-inf" ? -1n : start < 0n ? start + size : start;
-  end = end === "-inf" ? -1n : end === "+inf" ? size - 1n : end < 0n ? end + size : end;
-  start = start < -1n ? -1n : start >= size ? size - 1n : start;
-  end = end < -1n ? -1n : end >= size ? size - 1n : end;
-  return start <= end ? 0n : -floorDiv(end - start, -step);
+  const rows = assignments instanceof Map ? [...assignments] : Object.entries(assignments || {});
+  const normalized = Object.fromEntries(rows.map(([key, value]) => [key,
+    typeof value === "bigint" ? String(value) : value != null && typeof value !== "boolean" && Number.isSafeInteger(Number(value)) ? String(Number(value)) : null]));
+  const result = portableContract("dimension_expression", { expression, assignments: normalized });
+  return result == null ? null : BigInt(result);
 }

@@ -111,6 +111,24 @@ assert.equal(checkpoint.safe_source_artifact.unsafe_deserialization_performed, f
 const legacy = await analyzeLegacyPyTorchEnvelope(pickle, "legacy.pth");
 assert.equal(legacy.safe_source_artifact.pickle.literal_global_count, 1);
 
+// A normal PyTorch archive has ZIP64 end records even when all sizes fit ZIP32.
+// Exercise both that form and sentinel counts without allocating large payloads.
+for (const sentinels of [false, true]) {
+  const archive = withZip64End(checkpointZip, sentinels);
+  const full = await analyzeZipModelEnvelope(archive, "model.pt", "pytorch_checkpoint");
+  const ranged = await readZipModelEnvelopeFile(blobFile(archive, "model.pt"), "model.pt", "pytorch_checkpoint");
+  assert.deepEqual(full.safe_source_artifact.pickle_members, ranged.analysis.safe_source_artifact.pickle_members);
+  assert.equal(full.safe_source_artifact.unsafe_deserialization_performed, false);
+  const invalid = archive.slice();
+  new DataView(invalid.buffer).setBigUint64(invalid.length - 22 - 12, BigInt(archive.length), true);
+  await assert.rejects(() => analyzeZipModelEnvelope(invalid, "model.pt", "pytorch_checkpoint"), /ZIP64|range/i);
+}
+// LONG_BINPUT / LONG_BINGET with a memo index greater than 255 is ordinary pickle.
+const memo = Uint8Array.of(0x80, 0x02, 0x4e, 0x72, 0x00, 0x01, 0, 0, 0x6a, 0x00, 0x01, 0, 0, 0x2e);
+const memoResult = await analyzeLegacyPyTorchEnvelope(memo, "memo.pth");
+assert.equal(memoResult.safe_source_artifact.pickle.stop_opcode_observed, true);
+await assert.rejects(() => analyzeLegacyPyTorchEnvelope(Uint8Array.of(0x80, 2, 0x6a, 0, 1, 0, 0, 0x2e), "bad.pth"), /memo/i);
+
 const digest = sha256BytesHex(graphDef);
 graphAnalysis.model_sha256 = digest;
 graphAnalysis.file_size = graphDef.length;
@@ -171,19 +189,16 @@ try {
   await writeFile(path.join(variablesDirectory, "variables.index"), Uint8Array.of(1, 2, 3));
   await writeFile(path.join(variablesDirectory, "variables.data-00000-of-00001"), Uint8Array.of(4, 5, 6));
   const savedResult = spawnSync(process.execPath, ["bin/deepbom.mjs", savedDirectory, "--section", "artifact_ir,model_ir", "--compact"], { encoding: "utf8", cwd: path.resolve(".") });
-  assert.equal(savedResult.status, 0, savedResult.stderr);
-  const savedDocument = JSON.parse(savedResult.stdout);
-  assert.equal(savedDocument.artifact.format, "savedmodel");
-  assert.equal(savedDocument.sections.model_ir.artifact_role, "model_package");
+  assert.notEqual(savedResult.status, 0, "A fabricated checkpoint index must be rejected");
+  assert.match(savedResult.stderr, /checkpoint|TensorBundle|footer|index/i);
 
   const savedBundleFiles = [
     blobFile(savedModel, "saved_model/saved_model.pb"),
     blobFile(Uint8Array.of(1, 2, 3), "saved_model/variables/variables.index"),
     blobFile(Uint8Array.of(4, 5, 6), "saved_model/variables/variables.data-00000-of-00001"),
   ];
-  const boundSavedModel = await readArtifactBundle(savedBundleFiles, { scanMode: "structure" });
-  assert.equal(boundSavedModel.analysis.savedmodel.package_closure_status, "selected_directory_complete_hash_bound");
-  assert.equal(boundSavedModel.analysis.artifact_bundle.files.length, 3);
+  await assert.rejects(()=>readArtifactBundle(savedBundleFiles, { scanMode: "structure" }), /checkpoint|TensorBundle|footer|index/i);
+  // Actual TensorFlow-produced checkpoint success is covered by check-tensorflow-checkpoint.py.
   const hdfFile = new Blob([hdf5]); Object.defineProperty(hdfFile, "name", { value: "weights.h5" });
   const hdfRead = await readHdf5EnvelopeFile(hdfFile);
   assert.equal(hdfRead.analysis.file_size_bytes, 512);
@@ -201,6 +216,25 @@ assert.throws(() => analyzeTensorFlowProtobuf(Uint8Array.of(0x0a, 0x7f), "bad.pb
 console.log("Safe source artifact checks passed (GraphDef/SavedModel preview; HDF5/Keras/PT2/PyTorch safe envelopes; CLI parity; traversal and truncation fail closed).");
 
 function node(name, op, inputs = [], attributes = []) { return message([field(1, bytes(name)), field(2, bytes(op)), ...inputs.map((input) => field(3, bytes(input))), ...attributes.map((value) => field(5, value))]); }
+function withZip64End(zip, sentinels) {
+  const end = zip.length - 22, old = new DataView(zip.buffer, zip.byteOffset + end, 22);
+  const result = new Uint8Array(zip.length + 76);
+  result.set(zip.subarray(0, end)); result.set(zip.subarray(end), end + 76);
+  const view = new DataView(result.buffer);
+  view.setUint32(end, 0x06064b50, true); view.setBigUint64(end + 4, 44n, true);
+  view.setUint16(end + 12, 45, true); view.setUint16(end + 14, 45, true);
+  view.setBigUint64(end + 24, BigInt(old.getUint16(8, true)), true);
+  view.setBigUint64(end + 32, BigInt(old.getUint16(10, true)), true);
+  view.setBigUint64(end + 40, BigInt(old.getUint32(12, true)), true);
+  view.setBigUint64(end + 48, BigInt(old.getUint32(16, true)), true);
+  view.setUint32(end + 56, 0x07064b50, true); view.setBigUint64(end + 64, BigInt(end), true);
+  view.setUint32(end + 72, 1, true);
+  if (sentinels) {
+    view.setUint16(end + 76 + 8, 0xffff, true); view.setUint16(end + 76 + 10, 0xffff, true);
+    view.setUint32(end + 76 + 12, 0xffffffff, true); view.setUint32(end + 76 + 16, 0xffffffff, true);
+  }
+  return result;
+}
 function attribute(name, value) { return message([field(1, bytes(name)), field(2, value)]); }
 function tensorShape(dimensions) { return message(dimensions.map((size) => field(2, message([varintField(1, size)])))); }
 function tensorProto(dtype, shape, content) { return message([varintField(1, dtype), field(2, tensorShape(shape)), field(4, content)]); }

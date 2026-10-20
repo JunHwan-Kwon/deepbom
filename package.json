@@ -1,6 +1,6 @@
 {
   "name": "deepbom",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "mcpName": "io.github.JunHwan-Kwon/deepbom",
   "description": "Browser-native static audit tool for TFLite, ONNX, GGUF, SafeTensors, Core ML, and ExecuTorch deployment artifacts.",
   "homepage": "https://deepbom.org",
@@ -346,7 +346,12 @@
     "check:evidence-workflow": "node scripts/check-evidence-workflow.mjs && node scripts/check-evidence-workflow-channels.mjs",
     "check:native-correctness": "python scripts/check-native-correctness-regressions.py",
     "check:model-hierarchy": "node scripts/generate-model-hierarchy-schema.mjs --check && node scripts/check-model-hierarchy.mjs",
-    "check:model-hierarchy-browser": "node scripts/check-model-hierarchy-browser.mjs"
+    "check:model-hierarchy-browser": "node scripts/check-model-hierarchy-browser.mjs",
+    "check:development-analysis": "node scripts/generate-development-analysis-schema.mjs --check && node scripts/check-development-analysis.mjs",
+    "check:automatic-integrations": "python scripts/check-native-monitor-inspection.py && python scripts/check-automatic-integrations.py && python scripts/check-analysis-jobs.py",
+    "check:static-source-values": "python scripts/check-tensorflow-source-numerics.py && python scripts/check-tensorflow-checkpoint.py && python scripts/check-hdf5-source.py",
+    "check:generated-models": "python scripts/check-redesign-codegen.py",
+    "check:development-integrations": "python scripts/check-development-integrations.py"
   },
   "keywords": [],
   "author": "",
@@ -354,6 +359,7 @@
   "type": "module",
   "dependencies": {
     "@litertjs/core": "^2.5.2",
+    "h5wasm": "0.10.3",
     "onnxruntime-web": "^1.26.0"
   },
   "devDependencies": {

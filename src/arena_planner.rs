@@ -102,6 +102,11 @@ fn pinned_in_place_registration(op_name: &str) -> Option<InPlaceRegistration> {
 }
 
 pub(super) fn declared_tensor_payload_bytes(tensor: &TensorInfo) -> Result<usize, String> {
+    usize::try_from(declared_tensor_payload_bytes_exact(tensor)?)
+        .map_err(|_| "Tensor payload exceeds the arena address range.".to_string())
+}
+
+pub(super) fn declared_tensor_payload_bytes_exact(tensor: &TensorInfo) -> Result<u128, String> {
     if tensor.shape.is_empty() && !tensor.has_rank {
         return Err("Tensor rank is unknown; an empty shape is not a declared scalar.".to_string());
     }
@@ -111,7 +116,8 @@ pub(super) fn declared_tensor_payload_bytes(tensor: &TensorInfo) -> Result<usize
     if tensor_math::scalar_dtype_bits(&tensor.dtype).is_none() {
         return Err(format!("{} does not have a fixed inline scalar width for arena projection.", tensor.dtype));
     }
-    tensor_math::shape_payload_bytes(&tensor.dtype, &tensor.shape)
+    tensor_math::shape_elements(&tensor.shape)
+        .and_then(|elements| tensor_math::logical_bytes(&tensor.dtype, elements))
         .ok_or_else(|| "Tensor payload exceeds the analyzer integer range.".to_string())
 }
 

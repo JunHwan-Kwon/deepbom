@@ -21,6 +21,10 @@ export function createModelStructureEditor({ sourceContext = () => null, hierarc
   const rememberPanes = () => { for (const node of host?.querySelectorAll('.se-palette,.se-inspector,.se-text-panel,.se-code-input') || []) paneOffsets.set(node.className, [node.scrollTop, node.scrollLeft]); };
   const textBuffers = new Map();
   const disposeGesture = () => { gestureCleanup?.(); gestureCleanup = null; };
+  const releaseDom = () => {
+    disposeGesture(); resizeObserver?.disconnect(); resizeObserver = null;
+    viewport = scene = wireLayer = null; portElements.clear(); routes = [];
+  };
   const command = edit => {
     disposeGesture();
     let applied = false;
@@ -34,7 +38,7 @@ export function createModelStructureEditor({ sourceContext = () => null, hierarc
   const hasPendingCode = () => [...textBuffers.values()].some(buffer => buffer.text !== buffer.baseText);
   const canSave = () => {
     if (!hasPendingCode()) return true;
-    fail(new Error("Code edits are pending. Use Sync to code to apply them, or Sync to graph to replace them, before saving the project or candidate.")); return false;
+    fail(new Error("Code edits are pending. Use Apply code to graph, or Replace code from graph, before saving the project or candidate.")); return false;
   };
   const replaceProject = project => {
     if (!canSave()) return;
@@ -87,7 +91,7 @@ export function createModelStructureEditor({ sourceContext = () => null, hierarc
         box.value = snippet; box.readOnly = true; box.setAttribute("aria-label", "Layer code to copy");
         const hint = el("p", "se-hint", "Copy this snippet into Structure code. Use a new ID for each copy; then connect its output.");
         panel.append(hint, box); box.focus(); box.select();
-        navigator.clipboard?.writeText(snippet).then(() => { hint.textContent = "Copied. Paste into Structure code, connect the output, then Sync to code."; }).catch(() => { hint.textContent = "Clipboard unavailable. The snippet is selected; use Ctrl+C / Cmd+C to copy."; });
+        navigator.clipboard?.writeText(snippet).then(() => { hint.textContent = "Copied. Paste into Structure code, connect the output, then Apply code to graph."; }).catch(() => { hint.textContent = "Clipboard unavailable. The snippet is selected; use Ctrl+C / Cmd+C to copy."; });
       }
     } catch (error) { fail(error); }
   }
@@ -420,10 +424,20 @@ export function createModelStructureEditor({ sourceContext = () => null, hierarc
     const stats = el("span");
     const lineNumbers = () => { const count = text.value.split('\n').length; gutter.textContent = Array.from({ length: count }, (_, i) => i + 1).join('\n'); stats.textContent = `${count} lines · Mermaid`; gutter.scrollTop = text.scrollTop; };
     text.addEventListener('scroll', () => { gutter.scrollTop = text.scrollTop; }); lineNumbers();
-    const toGraph = button("Sync to graph", () => { textBuffers.delete(region); message = ""; render(); resetCodeView(); });
+    const replacementPending = () => buffer.replacementConfirmation === buffer.text && buffer.replacementRevision === session.revision;
+    const toGraph = button(replacementPending() ? "Confirm replacing code draft" : "Replace code from graph", () => {
+      if (buffer.text !== buffer.baseText && !replacementPending()) {
+        buffer.replacementConfirmation = buffer.text;
+        buffer.replacementRevision = session.revision;
+        toGraph.textContent = "Confirm replacing code draft";
+        status.textContent = "This replaces your pending code edits. Download the code to keep a copy, or click again to confirm.";
+        return;
+      }
+      textBuffers.delete(region); message = ""; render(); resetCodeView();
+    });
     toGraph.title = "Graph → Code: replace this code draft with the current graph";
-    const toCode = button("Sync to code", () => { try {
-      if (buffer.revision !== session.revision) throw new Error("Graph changed while code was being edited. Download your code to keep it, then use Sync to graph and reapply your edits to the current graph.");
+    const toCode = button("Apply code to graph", () => { try {
+      if (buffer.revision !== session.revision) throw new Error("Graph changed while code was being edited. Download your code to keep it, then use Replace code from graph and reapply your edits to the current graph.");
       const before = draft.program.operations.length;
       session.apply(parseStructureMermaid(buffer.text, draft.program, region), { rejectErrors: true });
       if (session.draft.program.operations.length > before) { positions.clear(); selected = session.draft.program.operations.at(-1).id; }
@@ -495,14 +509,14 @@ export function createModelStructureEditor({ sourceContext = () => null, hierarc
   return {
     sync(root, model) {
       rememberPanes(); host?.removeEventListener('keydown', keyboard); host = root; host.addEventListener('keydown', keyboard);
-      if (!model) { disposeGesture(); resizeObserver?.disconnect(); source = null; session = null; expanded = false; focusSemantics(); textBuffers.clear(); paneOffsets.clear(); host.replaceChildren(el("p", "se-hint", "Run an artifact analysis to open its structure.")); return; }
+      if (!model) { releaseDom(); source = null; session = null; draft = idx = artifactInfo = null; expanded = false; focusSemantics(); positions.clear(); previews = []; textBuffers.clear(); paneOffsets.clear(); host.replaceChildren(el("p", "se-hint", "Run an artifact analysis to open its structure.")); return; }
       if (source !== model.model_ir_sha256) {
         disposeGesture(); positions.clear(); selected = null; region = null; previews = []; candidateNumber = 0; zoom = 1; fromValue = null; textBuffers.clear(); paneOffsets.clear(); layerSearch = "";
-        try { session = createStructureSession(model); source = model.model_ir_sha256; artifactInfo = model.artifact; message = ""; } catch (error) { source = null; session = null; host.replaceChildren(el("p", "se-hint", error.message)); return; }
+        try { session = createStructureSession(model); source = model.model_ir_sha256; artifactInfo = model.artifact; message = ""; } catch (error) { releaseDom(); source = null; session = null; draft = idx = artifactInfo = null; host.replaceChildren(el("p", "se-hint", error.message)); return; }
       }
       if (session) render();
     },
     suspend() { disposeGesture(); resizeObserver?.disconnect(); },
-    reset() { disposeGesture(); resizeObserver?.disconnect(); host?.removeEventListener('keydown', keyboard); source = null; session = null; expanded = false; if (host) focusSemantics(); positions.clear(); textBuffers.clear(); paneOffsets.clear(); host?.replaceChildren(); },
+    reset() { releaseDom(); host?.removeEventListener('keydown', keyboard); source = null; session = null; draft = idx = artifactInfo = null; previews = []; producedValues.clear(); expanded = false; if (host) focusSemantics(); positions.clear(); textBuffers.clear(); paneOffsets.clear(); host?.replaceChildren(); host = null; },
   };
 }

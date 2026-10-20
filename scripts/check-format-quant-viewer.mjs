@@ -313,8 +313,8 @@ function validate(format, state) {
       || !state.holes.includes("WeightParams rather than explicit graph Q/DQ") || !state.notApplicableTabs.includes("quant-labs") || state.notApplicableTabs.includes("stage")
       || !state.claimBoundary.includes("Model/package contract and serialized-program audit") || !state.evidenceRuntimeDisabled
       || !state.placement.includes("Core ML Execution Placement") || !state.placement.includes("RUNTIME PLAN REQUIRED")
-      || !["redesign", "runtime", "deepbom", "runtime_basin", "deployment_sensitivity"].every((step) => state.notApplicableWorkflow.includes(step))
-      || state.notApplicableWorkflow.includes("graph")) {
+      || !["runtime", "deepbom", "runtime_basin", "deployment_sensitivity"].every((step) => state.notApplicableWorkflow.includes(step))
+      || state.notApplicableWorkflow.includes("graph") || state.notApplicableWorkflow.includes("redesign")) {
       throw new Error(`Core ML numerical evidence is incomplete: ${JSON.stringify(state)}`);
     }
   }

@@ -287,6 +287,20 @@ def _sections(data, view=None):
         ],
         [0.43, 0.19, 0.19, 0.19],
     )
+    facts = engine("optimization_facts", data)
+    table(
+        ["Validation / conditions", "Recorded evidence"],
+        [["Validation", "; ".join(
+            f"{key}: {facts['validation'].get(key, 'not recorded')}"
+            for key in ("load", "forward", "backward", "quality")
+         )],
+         ["Before probe inputs", _brief(a["inputs"], 800)],
+         ["After probe inputs", _brief(b["inputs"], 800)],
+         ["MAC assessment", f"Before: {a['cost']['status']}; after: {b['cost']['status']}"],
+         ["Measured latency", "Not established by this report"]],
+        [0.3, 0.7],
+    )
+    p("Report generation does not mean numerical validation or task-quality acceptance. See the recorded validation result and probe conditions above.")
     p(
         "State includes registered parameters and buffers; payload bytes exclude headers, compression, optimizer state and runtime allocation. MACs are derived from observed shapes on a supplied probe path, not measured performance or a complete functional-operation graph."
     )

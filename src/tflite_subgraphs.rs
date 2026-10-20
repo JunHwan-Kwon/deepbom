@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use serde::Serialize;
 
 use crate::verified_flatbuffer::Fb;
-use crate::{deterministic_tensor_payload_assessment, estimate_op, TensorInfo};
+use crate::{deterministic_tensor_payload_assessment_exact, estimate_op, TensorInfo};
 
 const SOURCE_COMMIT: &str = "87bbf65b8d23d3f06912b1b2183587e1884bc45c";
 const SCHEMA_SOURCE: &str = "tensorflow/compiler/mlir/lite/schema/schema.fbs";
@@ -51,7 +51,10 @@ struct SubgraphTensorIntrinsic {
     scale_sample: Vec<f32>,
     zero_point_sample: Vec<i64>,
     dtype: String,
-    logical_payload_bytes: Option<usize>,
+    logical_payload_bytes: Option<f64>,
+    logical_payload_bytes_decimal: Option<String>,
+    #[serde(skip)]
+    logical_payload_bytes_exact: Option<u128>,
     payload_status: &'static str,
     payload_binding: &'static str,
     payload_reason: String,
@@ -73,8 +76,12 @@ pub(super) struct SubgraphOperatorIntrinsic {
     pub(super) mac_assessment_status: &'static str,
     mac_formula_class: &'static str,
     pub(super) mac_assessment_reason: String,
-    logical_io_payload_bytes: Option<usize>,
-    assessed_logical_io_payload_bytes: usize,
+    logical_io_payload_bytes: Option<f64>,
+    logical_io_payload_bytes_decimal: Option<String>,
+    assessed_logical_io_payload_bytes: Option<f64>,
+    assessed_logical_io_payload_bytes_decimal: String,
+    #[serde(skip)]
+    assessed_logical_io_payload_bytes_exact: u128,
     pub(super) logical_io_payload_status: &'static str,
     present_io_tensor_slot_count: usize,
     assessed_io_tensor_slot_count: usize,
@@ -103,16 +110,22 @@ struct SubgraphIntrinsicCost {
     assessed_nominal_macs_decimal: String,
     modeled_scenario_macs: Option<f64>,
     modeled_scenario_macs_decimal: String,
-    logical_tensor_payload_bytes: Option<usize>,
-    assessed_logical_tensor_payload_bytes: usize,
+    logical_tensor_payload_bytes: Option<f64>,
+    logical_tensor_payload_bytes_decimal: Option<String>,
+    assessed_logical_tensor_payload_bytes: Option<f64>,
+    assessed_logical_tensor_payload_bytes_decimal: String,
     assessed_tensor_payload_count: usize,
     unassessed_tensor_payload_count: usize,
-    logical_operator_io_payload_bytes: Option<usize>,
-    assessed_logical_operator_io_payload_bytes: usize,
+    logical_operator_io_payload_bytes: Option<f64>,
+    logical_operator_io_payload_bytes_decimal: Option<String>,
+    assessed_logical_operator_io_payload_bytes: Option<f64>,
+    assessed_logical_operator_io_payload_bytes_decimal: String,
     assessed_operator_io_tensor_slot_count: usize,
     unassessed_operator_io_tensor_slot_count: usize,
-    graph_input_payload_bytes: Option<usize>,
-    graph_output_payload_bytes: Option<usize>,
+    graph_input_payload_bytes: Option<f64>,
+    graph_input_payload_bytes_decimal: Option<String>,
+    graph_output_payload_bytes: Option<f64>,
+    graph_output_payload_bytes_decimal: Option<String>,
     logical_constant_reference_bytes: usize,
     physical_unique_constant_bytes: usize,
     physical_unique_constant_buffer_count: usize,
@@ -472,15 +485,15 @@ pub(super) fn build_tflite_subgraph_inventory(
 
 
 struct PayloadLedger {
-    total_bytes: Option<usize>,
-    assessed_bytes: usize,
+    total_bytes: Option<u128>,
+    assessed_bytes: u128,
     present_slot_count: usize,
     assessed_slot_count: usize,
     unassessed_slot_count: usize,
 }
 
 fn build_tensor_intrinsic(tensor: &TensorInfo) -> SubgraphTensorIntrinsic {
-    let payload = deterministic_tensor_payload_assessment(tensor);
+    let payload = deterministic_tensor_payload_assessment_exact(tensor);
     SubgraphTensorIntrinsic {
         tensor_index: tensor.index,
         name: tensor.name.clone(),
@@ -493,7 +506,9 @@ fn build_tensor_intrinsic(tensor: &TensorInfo) -> SubgraphTensorIntrinsic {
         scale_sample: tensor.scale_sample.clone(),
         zero_point_sample: tensor.zero_point_sample.clone(),
         dtype: tensor.dtype.clone(),
-        logical_payload_bytes: payload.bytes,
+        logical_payload_bytes: payload.bytes.and_then(crate::tensor_math::safe_count_number),
+        logical_payload_bytes_decimal: payload.bytes.map(|v| v.to_string()),
+        logical_payload_bytes_exact: payload.bytes,
         payload_status: payload.status,
         payload_binding: payload.binding,
         payload_reason: payload.reason,
@@ -534,8 +549,11 @@ fn build_operator_intrinsic(
         mac_assessment_status,
         mac_formula_class,
         mac_assessment_reason: mac_reason,
-        logical_io_payload_bytes: io_payload.total_bytes,
-        assessed_logical_io_payload_bytes: io_payload.assessed_bytes,
+        logical_io_payload_bytes: io_payload.total_bytes.and_then(crate::tensor_math::safe_count_number),
+        logical_io_payload_bytes_decimal: io_payload.total_bytes.map(|v| v.to_string()),
+        assessed_logical_io_payload_bytes: crate::tensor_math::safe_count_number(io_payload.assessed_bytes),
+        assessed_logical_io_payload_bytes_decimal: io_payload.assessed_bytes.to_string(),
+        assessed_logical_io_payload_bytes_exact: io_payload.assessed_bytes,
         logical_io_payload_status: if io_payload.unassessed_slot_count == 0 {
             "assessed"
         } else if io_payload.assessed_slot_count > 0 {
@@ -788,7 +806,7 @@ fn payload_ledger(
     indices: impl Iterator<Item = i32>,
     tensors: &[SubgraphTensorIntrinsic],
 ) -> Result<PayloadLedger, String> {
-    let mut assessed_bytes = 0usize;
+    let mut assessed_bytes = 0u128;
     let mut present_slot_count = 0usize;
     let mut assessed_slot_count = 0usize;
     let mut unassessed_slot_count = 0usize;
@@ -800,7 +818,7 @@ fn payload_ledger(
         let tensor = tensors
             .get(index as usize)
             .ok_or_else(|| format!("Intrinsic payload ledger references missing tensor {index}"))?;
-        if let Some(bytes) = tensor.logical_payload_bytes {
+        if let Some(bytes) = tensor.logical_payload_bytes_exact {
             assessed_bytes = assessed_bytes
                 .checked_add(bytes)
                 .ok_or_else(|| "Intrinsic logical payload subtotal overflows".to_string())?;
@@ -871,12 +889,12 @@ fn build_subgraph_intrinsic_cost(
         && unassessed_mac_operator_count == 0)
         .then_some(assessed_nominal_macs);
     let to_safe_number = crate::tensor_math::safe_count_number;
-    let mut assessed_operator_io_payload_bytes = 0usize;
+    let mut assessed_operator_io_payload_bytes = 0u128;
     let mut assessed_operator_io_tensor_slot_count = 0usize;
     let mut unassessed_operator_io_tensor_slot_count = 0usize;
     for operator in operators {
         assessed_operator_io_payload_bytes = assessed_operator_io_payload_bytes
-            .checked_add(operator.assessed_logical_io_payload_bytes)
+            .checked_add(operator.assessed_logical_io_payload_bytes_exact)
             .ok_or_else(|| "Intrinsic operator I/O payload subtotal overflows".to_string())?;
         assessed_operator_io_tensor_slot_count += operator.assessed_io_tensor_slot_count;
         unassessed_operator_io_tensor_slot_count += operator.unassessed_io_tensor_slot_count;
@@ -934,16 +952,22 @@ fn build_subgraph_intrinsic_cost(
         assessed_nominal_macs_decimal: assessed_nominal_macs.to_string(),
         modeled_scenario_macs: to_safe_number(modeled_scenario_macs),
         modeled_scenario_macs_decimal: modeled_scenario_macs.to_string(),
-        logical_tensor_payload_bytes: tensor_payload.total_bytes,
-        assessed_logical_tensor_payload_bytes: tensor_payload.assessed_bytes,
+        logical_tensor_payload_bytes: tensor_payload.total_bytes.and_then(to_safe_number),
+        logical_tensor_payload_bytes_decimal: tensor_payload.total_bytes.map(|v| v.to_string()),
+        assessed_logical_tensor_payload_bytes: to_safe_number(tensor_payload.assessed_bytes),
+        assessed_logical_tensor_payload_bytes_decimal: tensor_payload.assessed_bytes.to_string(),
         assessed_tensor_payload_count: tensor_payload.assessed_slot_count,
         unassessed_tensor_payload_count: tensor_payload.unassessed_slot_count,
-        logical_operator_io_payload_bytes,
-        assessed_logical_operator_io_payload_bytes: assessed_operator_io_payload_bytes,
+        logical_operator_io_payload_bytes: logical_operator_io_payload_bytes.and_then(to_safe_number),
+        logical_operator_io_payload_bytes_decimal: logical_operator_io_payload_bytes.map(|v| v.to_string()),
+        assessed_logical_operator_io_payload_bytes: to_safe_number(assessed_operator_io_payload_bytes),
+        assessed_logical_operator_io_payload_bytes_decimal: assessed_operator_io_payload_bytes.to_string(),
         assessed_operator_io_tensor_slot_count,
         unassessed_operator_io_tensor_slot_count,
-        graph_input_payload_bytes: input_payload.total_bytes,
-        graph_output_payload_bytes: output_payload.total_bytes,
+        graph_input_payload_bytes: input_payload.total_bytes.and_then(to_safe_number),
+        graph_input_payload_bytes_decimal: input_payload.total_bytes.map(|v| v.to_string()),
+        graph_output_payload_bytes: output_payload.total_bytes.and_then(to_safe_number),
+        graph_output_payload_bytes_decimal: output_payload.total_bytes.map(|v| v.to_string()),
         logical_constant_reference_bytes,
         physical_unique_constant_bytes,
         physical_unique_constant_buffer_count: physical_constant_buffers.len(),
@@ -1365,6 +1389,42 @@ pub(super) fn exact_nominal_macs(name: &str, inputs: &[i32], outputs: &[i32], te
     };
     if factors.contains(&0) { return Some(0); }
     factors.iter().try_fold(1u128, |product, value| product.checked_mul(u128::try_from(*value).ok()?))
+}
+
+#[derive(Clone, serde::Serialize)]
+pub(super) struct SpatialOptions {
+    pub(super) padding: String,
+    pub(super) strides: [usize; 2],
+    pub(super) dilations: [usize; 2],
+}
+
+pub(super) fn spatial_options(fb: &Fb<'_>, operator: usize, name: &str) -> Result<Option<SpatialOptions>, String> {
+    if !matches!(name, "CONV_2D" | "DEPTHWISE_CONV_2D" | "AVERAGE_POOL_2D" | "MAX_POOL_2D") { return Ok(None); }
+    let Some(options) = fb.checked_table_field(operator, 4, "Operator.builtin_options")? else { return Ok(None); };
+    let padding = match fb.checked_i8_field(options, 0, 0, "SpatialOptions.padding")? {
+        0 => "same", 1 => "valid", _ => return Err("Unknown spatial padding enum".into()),
+    };
+    let positive = |field, default, label| -> Result<usize, String> {
+        let value = fb.checked_i32_field(options, field, default, label)?;
+        if value <= 0 { return Err(format!("{label} must be positive")); }
+        Ok(value as usize)
+    };
+    let strides = [positive(2, 0, "SpatialOptions.stride_h")?, positive(1, 0, "SpatialOptions.stride_w")?];
+    let dilations = match name {
+        "CONV_2D" => [positive(5, 1, "Conv2DOptions.dilation_h")?, positive(4, 1, "Conv2DOptions.dilation_w")?],
+        "DEPTHWISE_CONV_2D" => [positive(6, 1, "DepthwiseConv2DOptions.dilation_h")?, positive(5, 1, "DepthwiseConv2DOptions.dilation_w")?],
+        _ => [1, 1],
+    };
+    Ok(Some(SpatialOptions {padding: padding.into(), strides, dilations}))
+}
+
+pub(super) fn spatial_output(size: i32, kernel: i32, stride: usize, dilation: usize, padding: &str) -> Option<i32> {
+    if size <= 0 || kernel <= 0 || stride == 0 || dilation == 0 { return None; }
+    let effective = (kernel as u128 - 1).checked_mul(dilation as u128)?.checked_add(1)?;
+    let extent = if padding == "same" { (size as u128).div_ceil(stride as u128) }
+        else if padding == "valid" { if (size as u128) < effective { return None; } (size as u128 - effective) / stride as u128 + 1 }
+        else { return None; };
+    i32::try_from(extent).ok()
 }
 
 pub(super) fn pool_filter(fb: &Fb<'_>, operator: usize, name: &str) -> Result<Option<(i32, i32)>, String> {

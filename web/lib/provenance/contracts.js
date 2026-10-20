@@ -1,3 +1,4 @@
+import { portableContract } from "../portable-contracts.js";
 import { canonicalJson } from "../report-utils.js";
 
 export const OMOP_INPUT_SCHEMA = "deepbom.omop_metadata_input.v1";
@@ -37,46 +38,6 @@ export function primitive(value, label) {
   if (typeof value === "string") text(value, label, { empty: true });
 }
 export function validateProvenanceInput(input) {
-  const json = canonicalJson(input);
-  requireProvenance(new TextEncoder().encode(json).length <= PROVENANCE_LIMITS.input_bytes, "metadata input exceeds 2 MiB.");
-  objectKeys(input, ["schema", "subject", "nodes", "relationships"], input.schema === OMOP_INPUT_SCHEMA ? ["omop"] : [], "input");
-  requireProvenance([PROVENANCE_INPUT_SCHEMA, OMOP_INPUT_SCHEMA].includes(input.schema), "unsupported metadata input schema.");
-  if (input.schema === OMOP_INPUT_SCHEMA) requireProvenance(Object.hasOwn(input, "omop"), "OMOP input requires omop metadata.");
-  objectKeys(input.subject, ["artifact_sha256", "artifact_set_sha256"], ["model_ir_sha256"], "subject");
-  digest(input.subject.artifact_sha256, "subject.artifact_sha256");
-  if (input.subject.artifact_set_sha256 !== null) digest(input.subject.artifact_set_sha256, "subject.artifact_set_sha256");
-  if (input.subject.model_ir_sha256 !== undefined) digest(input.subject.model_ir_sha256, "subject.model_ir_sha256");
-  const seen = new Set([PRIMARY_MODEL_REF, "omop:release", "omop:context"]);
-  list(input.nodes, PROVENANCE_LIMITS.nodes, "nodes").forEach((node, index) => {
-    const label = `nodes[${index}]`;
-    objectKeys(node, ["id", "kind", "name"], ["version", "uri", "sha256", "file", "attributes", "bom"], label);
-    identifier(node.id, `${label}.id`); requireProvenance(!seen.has(node.id), `${label}.id is duplicated or reserved.`); seen.add(node.id);
-    requireProvenance(NODE_KINDS.includes(node.kind), `${label}.kind is unsupported.`); text(node.name, `${label}.name`);
-    for (const key of ["version", "uri"]) if (node[key] !== undefined) text(node[key], `${label}.${key}`);
-    if (node.sha256 !== undefined) digest(node.sha256, `${label}.sha256`);
-    if (node.file !== undefined) localEvidencePath(node.file);
-    const attributes = new Set();
-    list(node.attributes || [], PROVENANCE_LIMITS.attributes, `${label}.attributes`).forEach((attribute, at) => {
-      objectKeys(attribute, ["name", "value"], [], `${label}.attributes[${at}]`);
-      text(attribute.name, "attribute name", { limit: 256 }); primitive(attribute.value, "attribute value");
-      requireProvenance(!attributes.has(attribute.name), `${label} repeats an attribute name.`); attributes.add(attribute.name);
-    });
-    if (node.bom !== undefined) {
-      requireProvenance(node.kind === "bom", `${label}.bom requires kind=bom.`);
-      objectKeys(node.bom, ["format", "spec_version", "document_id", "document_version", "element_ref"], [], `${label}.bom`);
-      for (const key of ["format", "spec_version", "document_id", "element_ref"]) text(node.bom[key], `${label}.bom.${key}`);
-      requireProvenance(node.bom.document_version === null || (Number.isSafeInteger(node.bom.document_version) && node.bom.document_version >= 1), "BOM document_version must be a positive safe integer or null.");
-    }
-  });
-  const relationshipIds = new Set(); let referenceCount = 0;
-  list(input.relationships, PROVENANCE_LIMITS.relationships, "relationships").forEach((edge, index) => {
-    objectKeys(edge, ["id", "from", "to", "role"], ["evidence_refs"], `relationships[${index}]`);
-    for (const key of ["id", "from", "to"]) identifier(edge[key], `relationship.${key}`);
-    requireProvenance(!seen.has(edge.id) && !relationshipIds.has(edge.id), "relationship id is duplicated, reserved or collides with a node."); relationshipIds.add(edge.id);
-    requireProvenance(RELATION_ROLES.includes(edge.role), "relationship role is unsupported.");
-    const refs = list(edge.evidence_refs || [], PROVENANCE_LIMITS.nodes, "evidence_refs");
-    referenceCount += refs.length; requireProvenance(referenceCount <= PROVENANCE_LIMITS.evidence_refs, "relationship evidence references exceed the total bound.");
-    refs.forEach(ref => identifier(ref, "evidence_ref")); requireProvenance(new Set(refs).size === refs.length, "evidence_refs contains duplicates.");
-  });
-  return JSON.parse(json);
+  canonicalJson(input);
+  return portableContract("provenance",{operation:"input",value:input});
 }

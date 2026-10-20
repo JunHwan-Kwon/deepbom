@@ -35,7 +35,26 @@ assert.equal(sparsityAnalysis([0,0,0],[1,3],'last_axis_fastest',1).structured_2_
 const affine={scales:[0.5,2],zero_points:[1,2],axis:0,parameterization:'per_axis',block_size:null,scale_shape:[2]};
 const dq=dequantize([1,3,2,4],{dtype:'INT8',shape:[2,2],representation:'stored_scalar'},affine,'last_axis_fastest');
 assert.deepEqual([...dq.values],[0,1,0,4]);assert.equal(dq.report.status,'assessed');
+for (const [shape,order] of [[[4,4],'last_axis_fastest'],[[2,2],'invented_order']]) {
+  const bad=dequantize([1,3,2,4],{dtype:'INT8',shape,representation:'stored_scalar'},{...affine,parameterization:'per_tensor',scales:[.5],zero_points:[1]},order);
+  assert.equal(bad.report.reason,'invalid_tensor_shape_or_storage_order');
+  assert.deepEqual(bad.values,[1,3,2,4],'invalid shape must not produce partial dequantization');
+}
 const cmp=compareValues([0,1,0,2],[0,1,0,4]);near(cmp.metrics.rmse,1);near(cmp.metrics.relative_l2,2/Math.sqrt(5));assert.equal(cmp.metrics.changed_count,'1');
+// ABI safety and the public tensor limit must agree. Empty channel matrices
+// still consume quadratic output space even when arithmetic work is zero.
+for (const axis of [-1,0.5,2,Infinity]) assert.throws(()=>matrixView([1,2],[1,2],axis,'last_axis_fastest'));
+assert.throws(()=>matrixView([1,2],[3],0,'last_axis_fastest'));
+assert.throws(()=>matrixView([1],[1],0,'unknown_order'));
+assert.throws(()=>sparsityAnalysis([0],[1],'last_axis_fastest',0,0));
+assert.equal(similarityAnalysis({data:[],rows:4000,columns:0},5000,.9).reason,'complete_pairwise_matrix_exceeds_budget');
+assert.equal(compareValues([0],[Number.MIN_VALUE]).metrics.rmse,Number.MIN_VALUE);
+const overflowComparison=compareValues([1e308],[-1e308]);
+assert.equal(overflowComparison.metrics.maximum_absolute_error,null);
+assert.equal(overflowComparison.metrics.cosine,-1);
+assert.equal(overflowComparison.differences[0],-Infinity);
+const aboveOldWasmLimit=new Float64Array(8_388_609);
+assert.equal(spectrumAnalysis({data:aboveOldWasmLimit,rows:1,columns:aboveOldWasmLimit.length},0).reason,'full_svd_exceeds_budget');
 
 function context(bytes,analysis,name){analysis.model_sha256=sha256BytesHex(bytes);return getArtifactIrContext(analysis,{filename:name,format:analysis.format,sha256:analysis.model_sha256,size:bytes.length}).model_ir;}
 async function collect(bytes,analysis,name,options={}){const ir=context(bytes,analysis,name);return {ir,...await collectWeightAnalysis(ir,analysis,bytes,{options})};}

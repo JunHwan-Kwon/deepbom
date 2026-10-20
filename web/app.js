@@ -1,3 +1,5 @@
+import { initializeNumericalWasm } from "./lib/numerical-wasm.js";
+await initializeNumericalWasm();
 import { installWorkflowContinuation } from "./lib/workflow-continuation.js";
 import { prepareExternalDataFiles } from "./lib/onnx-external-data.js";
 import { BROWSER_TARGET_PROFILES } from "./lib/target-profiles.generated.js";
@@ -846,6 +848,8 @@ let pendingRuntimeProfile = null;
 let pendingModelFile = null;
 let pendingModelInspection = null;
 let pendingArtifactBundleFiles = [];
+let analyzedArtifactBundleFiles = [];
+let analyzedModelFile = null;
 let pendingArtifactBundleName = "";
 let sampleLibraryController = null;
 let currentExternalDataFiles = [];
@@ -2331,7 +2335,7 @@ downloadModelViews?.addEventListener("click", () => {
   void downloadCurrentModelViews();
 });
 void import("./lib/numerical-ir-panel.js").then(({ installNumericalPanel }) => {
-  weightWorkspaceController = installNumericalPanel(weightWorkspace, () => ({ model: currentArtifactIrContext?.model_ir, analysis: current, source: pendingModelFile || (currentModelBytes?.length ? new Blob([currentModelBytes]) : null) }));
+  weightWorkspaceController = installNumericalPanel(weightWorkspace, () => ({ model: currentArtifactIrContext?.model_ir, analysis: current, files: current?.artifact_bundle ? analyzedArtifactBundleFiles : [], source: analyzedModelFile || (currentModelBytes?.length ? new Blob([currentModelBytes]) : null) }));
 });
 
 void import("./lib/provenance-panel.js").then(({ installProvenancePanel }) => {
@@ -3871,6 +3875,8 @@ async function analyzeFile(file) {
     analysisEstimate.textContent = formatMeasuredAudit(durationMs);
     analysisEstimateNote.textContent = "Measured from Run Static Audit to rendered completion on this browser; retained locally to calibrate future estimates.";
     pendingModelFile = file;
+    analyzedModelFile = file;
+    analyzedArtifactBundleFiles = [...pendingArtifactBundleFiles];
     const scope = formatEvidenceScope(current?.format || format, { analysis: currentAnalysisView(), runtimeEvidence: runtimeAssignmentEvidence });
     analysisPlanStatus.textContent = scope.completion;
     renderAuditClaimBoundary(current?.format || format, currentAnalysisView());
@@ -3901,7 +3907,7 @@ async function analyzeFile(file) {
     runAudit.textContent = formatAuditButtonLabel(pendingModelInspection?.formatId);
     analysisPlanStatus.textContent = `Audit failed: ${errorMsg}`;
     auditProgressController.set(null, "Audit failed", "error");
-    if (runtimeGuardCode !== RUNTIME_OK) {
+    if (runtimeGuardCode !== null && runtimeGuardCode !== RUNTIME_OK) {
       return;
     }
     updateWorkflowState("error");

@@ -1,5 +1,6 @@
 import { canonicalJson } from "./report-utils.js";
 import { sha256TextHex } from "./sha256-sync.js";
+import { portableContract } from "./portable-contracts.js";
 
 const PACKAGE_SCHEMA = "deepbom.redesign_structure_package.v1";
 export const REDESIGN_SCENARIO_SET_SCHEMA = "deepbom.redesign_scenario_set.v1.1";
@@ -55,6 +56,7 @@ export function buildRedesignScenarioSet({ analysis, savedScenarios, pareto = nu
       throw new Error("Saved redesign scenario is missing its WASM implementation plan.");
     }
     const implementationPlanSha256 = sha256TextHex(canonicalJson(plan));
+    validateRedesignImplementationPlan(plan);
     const projectionSha256 = sha256TextHex(canonicalJson(projection));
     return {
       scenario_id: scenarioId,
@@ -119,6 +121,7 @@ export function verifyRedesignScenarioSet(value) {
     }
     verifyProjectionSource(row.projection, sourceSha256);
     const plan = row.projection?.implementation_plan;
+    validateRedesignImplementationPlan(plan);
     if (requiredSha(row.projection_sha256, "Scenario projection SHA-256") !== sha256TextHex(canonicalJson(row.projection))
       || requiredSha(row.implementation_plan_sha256, "Implementation-plan SHA-256") !== sha256TextHex(canonicalJson(plan))
       || canonicalJson(row.source_mapping) !== canonicalJson(sourceMappingSummary(plan))
@@ -178,7 +181,8 @@ function verifyProjectionSource(projection, sourceSha256) {
 
 function verifyParetoSource(search, sourceSha256) {
   if (!search || search.schema !== "deepbom.redesign_pareto.v1"
-    || search.accepted_candidate_count !== search.candidates?.length
+    || search.accepted_candidate_count !== search.candidates?.filter(row=>row.status!=="blocked"&&row.error_constraint_count===0).length
+    || search.evaluated_candidate_count !== search.accepted_candidate_count + search.rejected_candidate_count
     || search.frontier_candidate_count !== search.candidates.filter((row) => row.pareto_optimal).length
     || search.candidates.some((row) => canonicalScenario(row.request).source_sha256 !== sourceSha256)) {
     throw new Error("Redesign Pareto search is not conserved or source-bound.");
@@ -200,13 +204,18 @@ function jsonClone(value, label) {
 }
 
 export function buildRedesignImplementationFiles({ analysis, projection, request }) {
+  const source = requiredSha(analysis?.model_sha256 || request?.source_sha256, "Redesign source SHA-256");
+  verifyProjectionSource(projection, source);
+  if (canonicalScenario(request).source_sha256.toLowerCase() !== source) throw new Error("Implementation request is bound to another source.");
   const plan = projection?.implementation_plan;
   if (!plan || plan.schema !== "deepbom.redesign_implementation_plan.v1") {
     throw new Error("The WASM projection does not contain a reviewed implementation plan.");
   }
   if (!plan.exportable) {
-    throw new Error("Structure code export is blocked because the projected repeat topology was not materialized in the WASM tensor graph.");
+    throw new Error("Structure code export is blocked: projected repeat topology is not materialized or tensor contracts are invalid.");
   }
+  validateRedesignImplementationPlan(plan, { executable: true });
+  if (projection.constraints?.some(row => row.severity === "error")) throw new Error("Structure code export is blocked by projected constraints.");
   const scenario = canonicalScenario(request);
   const codeFiles = [
     textFile("pytorch/model.py", renderPytorch(plan)),
@@ -258,6 +267,12 @@ function structureCodeMarkdown(readme, codeFiles) {
   }).join("\n")}`;
 }
 
+export function validateRedesignImplementationPlan(plan, { executable = false } = {}) {
+  const error = portableContract("redesign_validate", { plan, executable });
+  if (error) throw new Error(error);
+  return true;
+}
+
 function renderPytorch(plan) {
   const lines = [
     '"""Weight-free architecture scaffold derived from a DEEPBOM WASM projection.',
@@ -273,20 +288,32 @@ function renderPytorch(plan) {
     "",
     "",
     "class SamePadConv2d(nn.Module):",
-    "    def __init__(self, in_channels, out_channels, kernel_size, stride=1, groups=1):",
+    "    def __init__(self, in_channels, out_channels, kernel_size, stride=1, groups=1, dilation=(1, 1), padding='same'):",
     "        super().__init__()",
     "        self.kernel_size = (kernel_size, kernel_size) if isinstance(kernel_size, int) else tuple(kernel_size)",
     "        self.stride = (stride, stride) if isinstance(stride, int) else tuple(stride)",
-    "        self.conv = nn.Conv2d(in_channels, out_channels, self.kernel_size, self.stride, padding=0, groups=groups, bias=True)",
+    "        self.dilation, self.padding = tuple(dilation), padding",
+    "        self.conv = nn.Conv2d(in_channels, out_channels, self.kernel_size, self.stride, padding=0, groups=groups, dilation=self.dilation, bias=True)",
     "",
     "    def forward(self, x):",
+    "        if self.padding == 'valid': return self.conv(x)",
     "        in_h, in_w = x.shape[-2:]",
     "        out_h = (in_h + self.stride[0] - 1) // self.stride[0]",
     "        out_w = (in_w + self.stride[1] - 1) // self.stride[1]",
-    "        pad_h = max((out_h - 1) * self.stride[0] + self.kernel_size[0] - in_h, 0)",
-    "        pad_w = max((out_w - 1) * self.stride[1] + self.kernel_size[1] - in_w, 0)",
+    "        pad_h = max((out_h - 1) * self.stride[0] + (self.kernel_size[0] - 1) * self.dilation[0] + 1 - in_h, 0)",
+    "        pad_w = max((out_w - 1) * self.stride[1] + (self.kernel_size[1] - 1) * self.dilation[1] + 1 - in_w, 0)",
     "        x = F.pad(x, (pad_w // 2, pad_w - pad_w // 2, pad_h // 2, pad_h - pad_h // 2))",
     "        return self.conv(x)",
+    "",
+    "def spatial_pool(x, kernel, stride, padding, average):",
+    "    h, w = x.shape[-2:]",
+    "    ph = max(((h + stride[0] - 1) // stride[0] - 1) * stride[0] + kernel[0] - h, 0) if padding == 'same' else 0",
+    "    pw = max(((w + stride[1] - 1) // stride[1] - 1) * stride[1] + kernel[1] - w, 0) if padding == 'same' else 0",
+    "    pads = (pw // 2, pw - pw // 2, ph // 2, ph - ph // 2)",
+    "    if not average: return F.max_pool2d(F.pad(x, pads, value=float('-inf')), kernel, stride)",
+    "    numerator = F.avg_pool2d(F.pad(x, pads), kernel, stride, divisor_override=1)",
+    "    denominator = F.avg_pool2d(F.pad(torch.ones_like(x[:, :1]), pads), kernel, stride, divisor_override=1)",
+    "    return numerator / denominator",
     "",
     "",
     "class ReconstructedModel(nn.Module):",
@@ -306,10 +333,10 @@ function pytorchDeclaration(node) {
   const symbol = `self.${node.generated_symbol}`;
   if (node.module_kind === "conv2d" || node.module_kind === "depthwise_conv2d") {
     if (![node.input_channels, node.output_channels, node.kernel_height, node.stride_height].every(Number.isFinite)) return [];
-    const groups = node.module_kind === "depthwise_conv2d" ? node.input_channels : 1;
+    const groups = node.groups ?? (node.module_kind === "depthwise_conv2d" ? node.input_channels : 1);
     return [
       prefix,
-      `        ${symbol} = SamePadConv2d(${node.input_channels}, ${node.output_channels}, (${node.kernel_height}, ${node.kernel_width || node.kernel_height}), stride=(${node.stride_height}, ${node.stride_width || node.stride_height}), groups=${groups})`,
+      `        ${symbol} = SamePadConv2d(${node.input_channels}, ${node.output_channels}, (${node.kernel_height}, ${node.kernel_width || node.kernel_height}), stride=(${node.stride_height}, ${node.stride_width || node.stride_height}), groups=${groups}, dilation=${pythonTuple(node.spatial_options?.dilations || [1,1])}, padding=${pythonString(node.spatial_options?.padding || "same")})`,
     ];
   }
   if (node.module_kind === "linear") {
@@ -332,17 +359,17 @@ function pytorchForwardNode(node) {
   switch (node.module_kind) {
     case "conv2d":
     case "depthwise_conv2d": expression = `self.${node.generated_symbol}(${args[0]})`; break;
-    case "linear": expression = `self.${node.generated_symbol}(torch.flatten(${args[0]}, 1))`; break;
+    case "linear": expression = `self.${node.generated_symbol}(torch.flatten(${node.input_shapes?.[0]?.length === 4 ? `${args[0]}.permute(0, 2, 3, 1).contiguous()` : args[0]}, 1))`; break;
     case "add": expression = `${args[0]} + ${args[1]}`; break;
     case "subtract": expression = `${args[0]} - ${args[1]}`; break;
     case "multiply": expression = `${args[0]} * ${args[1]}`; break;
     case "maximum": expression = `torch.maximum(${args[0]}, ${args[1]})`; break;
     case "minimum": expression = `torch.minimum(${args[0]}, ${args[1]})`; break;
     case "concatenate": expression = `torch.cat([${args.join(", ")}], dim=${pytorchAxis(node.concatenation_axis_nhwc, node.output_shapes?.[0]?.length)})`; break;
-    case "average_pool2d": expression = `F.adaptive_avg_pool2d(${args[0]}, ${pytorchSpatial(node.output_shapes?.[0])})`; break;
-    case "max_pool2d": expression = `F.adaptive_max_pool2d(${args[0]}, ${pytorchSpatial(node.output_shapes?.[0])})`; break;
-    case "reshape": expression = pytorchReshape(args[0], node.output_shapes?.[0]); break;
-    case "squeeze": expression = pytorchReshape(args[0], node.output_shapes?.[0]); break;
+    case "average_pool2d":
+    case "max_pool2d": expression = node.spatial_options ? `spatial_pool(${args[0]}, (${node.kernel_height}, ${node.kernel_width}), ${pythonTuple(node.spatial_options.strides)}, ${pythonString(node.spatial_options.padding)}, ${node.module_kind === "average_pool2d" ? "True" : "False"})` : `F.adaptive_${node.module_kind === "average_pool2d" ? "avg" : "max"}_pool2d(${args[0]}, ${pytorchSpatial(node.output_shapes?.[0])})`; break;
+    case "reshape": expression = pytorchReshape(args[0], node.input_shapes?.[0], node.output_shapes?.[0]); break;
+    case "squeeze": expression = pytorchReshape(args[0], node.input_shapes?.[0], node.output_shapes?.[0]); break;
     case "relu": expression = `F.relu(${args[0]})`; break;
     case "relu6": expression = `F.relu6(${args[0]})`; break;
     case "sigmoid": expression = `torch.sigmoid(${args[0]})`; break;
@@ -428,10 +455,10 @@ function kerasForwardNode(node) {
   let expression = "";
   switch (node.module_kind) {
     case "conv2d":
-      expression = `layers.Conv2D(${node.output_channels}, (${node.kernel_height}, ${node.kernel_width || node.kernel_height}), strides=(${node.stride_height}, ${node.stride_width || node.stride_height}), padding="same", name=${name})(${inputs[0]})`;
+      expression = `layers.Conv2D(${node.output_channels}, (${node.kernel_height}, ${node.kernel_width || node.kernel_height}), strides=(${node.stride_height}, ${node.stride_width || node.stride_height}), dilation_rate=${pythonTuple(node.spatial_options?.dilations || [1,1])}, groups=${node.groups ?? 1}, padding=${pythonString(node.spatial_options?.padding || "same")}, name=${name})(${inputs[0]})`;
       break;
     case "depthwise_conv2d":
-      expression = `layers.DepthwiseConv2D((${node.kernel_height}, ${node.kernel_width || node.kernel_height}), strides=(${node.stride_height}, ${node.stride_width || node.stride_height}), padding="same", depth_multiplier=${Math.max(1, Math.round((node.output_channels || 1) / (node.input_channels || 1)))}, name=${name})(${inputs[0]})`;
+      expression = `layers.DepthwiseConv2D((${node.kernel_height}, ${node.kernel_width || node.kernel_height}), strides=(${node.stride_height}, ${node.stride_width || node.stride_height}), dilation_rate=${pythonTuple(node.spatial_options?.dilations || [1,1])}, padding=${pythonString(node.spatial_options?.padding || "same")}, depth_multiplier=${Math.max(1, Math.round((node.output_channels || 1) / (node.input_channels || 1)))}, name=${name})(${inputs[0]})`;
       break;
     case "linear": expression = `layers.Dense(${featureCount(node.output_shapes?.[0])}, name=${name})(layers.Flatten()(${inputs[0]}))`; break;
     case "add": expression = `layers.Add(name=${name})([${inputs.join(", ")}])`; break;
@@ -440,8 +467,8 @@ function kerasForwardNode(node) {
     case "maximum": expression = `layers.Maximum(name=${name})([${inputs.join(", ")}])`; break;
     case "minimum": expression = `layers.Minimum(name=${name})([${inputs.join(", ")}])`; break;
     case "concatenate": expression = `layers.Concatenate(axis=${node.concatenation_axis_nhwc}, name=${name})([${inputs.join(", ")}])`; break;
-    case "average_pool2d": expression = `layers.GlobalAveragePooling2D(keepdims=${node.output_shapes?.[0]?.length === 4 ? "True" : "False"}, name=${name})(${inputs[0]})`; break;
-    case "max_pool2d": expression = `layers.GlobalMaxPooling2D(keepdims=${node.output_shapes?.[0]?.length === 4 ? "True" : "False"}, name=${name})(${inputs[0]})`; break;
+    case "average_pool2d":
+    case "max_pool2d": expression = node.spatial_options ? `layers.${node.module_kind === "average_pool2d" ? "Average" : "Max"}Pooling2D(pool_size=(${node.kernel_height}, ${node.kernel_width}), strides=${pythonTuple(node.spatial_options.strides)}, padding=${pythonString(node.spatial_options.padding)}, name=${name})(${inputs[0]})` : `layers.Global${node.module_kind === "average_pool2d" ? "Average" : "Max"}Pooling2D(keepdims=True, name=${name})(${inputs[0]})`; break;
     case "reshape":
     case "squeeze": expression = `layers.Reshape(${pythonTuple((node.output_shapes?.[0] || []).slice(1))}, name=${name})(${inputs[0]})`; break;
     case "relu": expression = `layers.ReLU(name=${name})(${inputs[0]})`; break;
@@ -499,11 +526,11 @@ function sourceComment(node) {
   return `#${String(node.op_index).padStart(3, "0")} ${node.op_name} | ${node.block_id || "unbound"} | ${String(node.source_layer_ref || "artifact path unavailable").replace(/[\r\n]+/g, " ")}`;
 }
 
-function pytorchReshape(value, shape) {
-  if (!Array.isArray(shape) || shape.length < 2) return value;
-  if (shape.length === 2) return `torch.flatten(${value}, 1)`;
-  const nchw = shape.length === 4 ? [shape[3], shape[1], shape[2]] : shape.slice(1);
-  return `${value}.reshape(${value}.shape[0], ${nchw.map((item) => Number(item) > 0 ? Number(item) : -1).join(", ")})`;
+function pytorchReshape(value, inputShape, shape) {
+  if (!Array.isArray(shape) || shape.length < 1) return value;
+  const source = inputShape?.length === 4 ? `${value}.permute(0, 2, 3, 1).contiguous()` : value;
+  const reshaped = `${source}.reshape(${value}.shape[0], ${shape.slice(1).join(", ")})`;
+  return shape.length === 4 ? `${reshaped}.permute(0, 3, 1, 2).contiguous()` : reshaped;
 }
 
 function pytorchSpatial(shape) {
@@ -512,13 +539,16 @@ function pytorchSpatial(shape) {
 
 function pytorchAxis(nhwcAxis, rank) {
   if (!Number.isInteger(nhwcAxis) || !Number.isInteger(rank)) return -1;
+  if (nhwcAxis < 0) nhwcAxis += rank;
   if (rank !== 4) return nhwcAxis;
   return [0, 2, 3, 1][nhwcAxis] ?? -1;
 }
 
 function featureCount(shape) {
   if (!Array.isArray(shape) || shape.length < 2) return 0;
-  return shape.slice(1).reduce((product, value) => product * Math.max(1, Number(value) || 1), 1);
+  const result = portableContract("product", { values: shape.slice(1) });
+  if (!result) throw new Error("Linear feature dimensions are not exact.");
+  return result.decimal;
 }
 
 function pythonShape(shape) {

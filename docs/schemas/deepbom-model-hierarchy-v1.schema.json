@@ -702,7 +702,10 @@
           "const": "deepbom.model_hierarchy.v1"
         },
         "method_version": {
-          "const": "1.0.0"
+          "enum": [
+            "1.0.0",
+            "1.1.0"
+          ]
         },
         "source": {
           "$ref": "#/$defs/source"
@@ -841,7 +844,10 @@
           "const": "deepbom.model_hierarchy_view.v1"
         },
         "method_version": {
-          "const": "1.0.0"
+          "enum": [
+            "1.0.0",
+            "1.1.0"
+          ]
         },
         "source": {
           "$ref": "#/$defs/source"

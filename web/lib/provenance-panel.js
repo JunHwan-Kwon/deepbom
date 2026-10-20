@@ -29,7 +29,7 @@ export function installProvenancePanel(host, getContext, { onResult = () => {}, 
   const say = (message, error = false) => { status.textContent = message; status.dataset.error = String(error); };
   function invalidate() { generation++; result = null; action("apply").disabled = !model; action("save-ir").disabled = action("save-bom").disabled = true; $('[data-link-results]').hidden = $('[data-link-checks]').hidden = true; $('[data-link-metrics]').replaceChildren(); onResult(null); }
   function setInput(value) { editor.value = JSON.stringify(value, null, 2); syncFields(value); invalidate(); }
-  function syncFields(value) { const options = [{ id: PRIMARY_MODEL_REF, name: "Current model" }, ...(value?.omop ? [{ id: "omop:release", name: "OMOP release" }] : []), ...(value?.nodes || [])]; $('[data-link-new="from"]').innerHTML = options.map(node => `<option value="${esc(node.id)}">${esc(node.name)}</option>`).join(""); $('[data-link-omop]').hidden = !value?.omop; for (const field of host.querySelectorAll('[data-link-field]')) field.value = value?.omop?.[field.dataset.linkField] || ""; }
+  function syncFields(value, { updateVisibility = true } = {}) { const options = [{ id: PRIMARY_MODEL_REF, name: "Current model" }, ...(value?.omop ? [{ id: "omop:release", name: "OMOP release" }] : []), ...(value?.nodes || [])]; $('[data-link-new="from"]').innerHTML = options.map(node => `<option value="${esc(node.id)}">${esc(node.name)}</option>`).join(""); if (updateVisibility) $('[data-link-omop]').hidden = !value?.omop; for (const field of host.querySelectorAll('[data-link-field]')) field.value = value?.omop?.[field.dataset.linkField] || ""; }
   function sync() {
     const next = getContext()?.model || null;
     if (next?.model_ir_sha256 === model?.model_ir_sha256) return false;
@@ -76,7 +76,9 @@ export function installProvenancePanel(host, getContext, { onResult = () => {}, 
   inputFile("cdm").addEventListener("change", async () => { invalidate(); const token = generation; try { const source = parseStrictJson(await fileText(inputFile("cdm").files[0]), "CDM_SOURCE"); if (token !== generation) return; const template = parseStrictJson(editor.value, "metadata"); setInput(fillOmopTemplate(template, source)); say("CDM_SOURCE imported. Supply the institution-scoped instance and release identifiers, then check connections."); } catch (error) { if (token === generation) say(error.message, true); } finally { inputFile("cdm").value = ""; } });
   inputFile("evidence").addEventListener("change", () => { files = [...inputFile("evidence").files]; invalidate(); $('[data-link-file-count]').textContent = `${files.length} evidence files selected`; });
   editor.addEventListener("input", () => { invalidate(); say("Metadata changed. Check connections again to update the evidence."); });
-  editor.addEventListener("change", () => { try { syncFields(parseStrictJson(editor.value)); } catch { /* The Apply action reports input errors. */ } });
+  // Keep the Apply button in place between pointer-down and pointer-up.
+  // Applying/importing commits panel visibility; blur only synchronizes values.
+  editor.addEventListener("change", () => { try { syncFields(parseStrictJson(editor.value), { updateVisibility: false }); } catch { /* The Apply action reports input errors. */ } });
   for (const field of host.querySelectorAll('[data-link-field]')) field.addEventListener("change", () => { try { const value = parseStrictJson(editor.value); value.omop[field.dataset.linkField] = field.value; setInput(value); } catch (error) { say(error.message, true); } });
   action("add-record").addEventListener("click", () => {
     try {

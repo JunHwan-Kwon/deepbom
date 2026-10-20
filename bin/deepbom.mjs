@@ -46,7 +46,7 @@ import { explainRule, listRuleExplanations } from "../web/lib/rule-explanations.
 import { buildTensorRtStaticPreflight } from "../web/lib/tensorrt-static-preflight.js";
 import { buildOnDeviceLlmContract } from "../web/lib/on-device-llm-contract.js";
 import { buildLlmStaticMemoryPlacement } from "../web/lib/llm-static-memory-placement.js";
-import { readArtifactBundle } from "../web/lib/artifact-bundle.js";
+import { readArtifactBundle, createArtifactPayloadSource } from "../web/lib/artifact-bundle.js";
 import { identifyCliFile, loadCliBundleMembers, loadCliInput, loadExecuTorchExternalData, loadOnnxExternalData, loadOnnxExternalDataMembers, readCliFileBytes, verifyBundleSnapshot } from "./deepbom-input.mjs";
 import { collectNvidiaAcceleratorProfile } from "./nvidia-accelerator-collector.mjs";
 import { resolveArtifactSource } from "./remote-artifact-resolver.mjs";
@@ -118,17 +118,22 @@ const MAX_JSON_SIDECAR_BYTES = 16 * 1024 * 1024;
 const MAX_IN_MEMORY_EXECUTABLE_ARTIFACT_BYTES = 1024 * 1024 * 1024;
 const METADATA_STRUCTURE_DEFAULT_BYTES = 10 * 1024 * 1024 * 1024;
 const METADATA_INTEGRITY_DEFAULT_BYTES = 2 * 1024 * 1024 * 1024;
-const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "2.4.0";
+const VERSION = typeof __DEEPBOM_RELEASE_VERSION__ === "string" ? __DEEPBOM_RELEASE_VERSION__ : "2.5.0";
 const EXPECTED_TFLITE_WASM_SHA256 = typeof __DEEPBOM_TFLITE_WASM_SHA256__ === "string" ? __DEEPBOM_TFLITE_WASM_SHA256__ : "";
 const EXPECTED_SELF_TEST_SHA256 = typeof __DEEPBOM_SELF_TEST_SHA256__ === "string" ? __DEEPBOM_SELF_TEST_SHA256__ : "";
 
+import { initializeNumericalWasm } from "../web/lib/numerical-wasm.js";
+
 async function main(argv) {
+  if (["evidence-workflow","optimization-report","evidence-native"].includes(argv[0])) await initializeNumericalWasm();
   if(argv[0]==="evidence-workflow") { const {runEvidenceCommand}=await import("./evidence-workflow.mjs");return runEvidenceCommand(argv.slice(1)); }
   if(argv[0]==="optimization-report") { const {runOptimizationReport}=await import("./optimization-report.mjs");return runOptimizationReport(argv.slice(1)); }
   if(argv[0]==="evidence-native") { const { runNativeEvidence }=await import("./deepbom-native-evidence.mjs");return runNativeEvidence(argv.slice(1)); }
   const parsed = parseArguments(argv);
+  if(parsed.tfMetagraph!==undefined&&parsed.command!=="audit")throw Error('--tf-metagraph applies only to audit');
   if (parsed.help) return printHelp(parsed.command);
   if (parsed.version) return process.stdout.write(`${VERSION}\n`);
+  await initializeNumericalWasm();
   if ((parsed.metadata || parsed.metadataTemplate || parsed.evidenceFiles) && !["audit", "gguf"].includes(parsed.command)) throw new Error("Metadata options apply only to audit or gguf.");
   if (parsed.evidenceFiles && !parsed.metadata) throw new Error("--evidence-files requires --metadata.");
   if (parsed.metadata && parsed.metadataTemplate) throw new Error("--metadata and --metadata-template are mutually exclusive.");
@@ -217,7 +222,8 @@ async function main(argv) {
   if (parsed.tensorTable && detectedFormat !== "gguf") {
     throw new Error("--tensors is valid only with the gguf command or a GGUF artifact shorthand.");
   }
-  let scanPolicy = resolveScanPolicy((parsed.tensorTable || parsed.encodingInventory) && !parsed.scanExplicit ? "structure" : parsed.scan, detectedFormat, input);
+  let scanPolicy = resolveScanPolicy((parsed.tensorTable || parsed.encodingInventory) && !parsed.scanExplicit
+    && ["gguf", "safetensors"].includes(detectedFormat) ? "structure" : parsed.scan, detectedFormat, input);
   if ((parsed.targetProfile || parsed.targetExplicit) && input.kind === "file" && detectedFormat !== "tflite") {
     throw new Error(`${parsed.targetProfile ? "--target-profile" : "--target"} applies only to TFLite artifacts, received ${detectedFormat}.`);
   }
@@ -264,6 +270,7 @@ async function main(argv) {
     execuTorchBuild,
     scanPolicy,
     preanalyzedOnnx,
+    tfMetagraph: parsed.tfMetagraph,
     externalDataMembers: resolvedSource.external_data_members,
   });
   analysis = normalizeAnalysisSummaryContract(analysis);
@@ -450,23 +457,23 @@ async function main(argv) {
     if (!["audit", "gguf"].includes(parsed.command) || parsed.outputFormat !== "analysis" || parsed.summary || parsed.tensorTable) throw new Error("Optional numerical IR requires audit/gguf with --output-format json (or json-compact).");
     const { buildActivationIr, buildNumericalEvidenceBundle } = await import("../web/lib/activation-ir.js");
     if (parsed.weightAnalysis) {
-      if (input.kind !== "file") throw new Error("Weight IR currently requires one serialized artifact file; select the model or tensor member from the package.");
+      const weightSource = input.kind === "file" ? input.file : createArtifactPayloadSource(analysis, input.files);
       const { collectWeightAnalysis, compareWeightAnalyses } = await import("../web/lib/weight-analysis.js");
       const options = parsed.weightOptions ? (await readJsonSidecar(parsed.weightOptions, "weight options")).document : {};
-      await input.file.assertUnchanged();
-      const numerical = await collectWeightAnalysis(artifactIrContext.model_ir, analysis, input.file, { options });
+      await weightSource.assertUnchanged?.();
+      const numerical = await collectWeightAnalysis(artifactIrContext.model_ir, analysis, weightSource, { options });
       analysis.weight_ir = numerical.weight_ir;
       analysis.weight_analysis = numerical.weight_analysis;
       if (parsed.weightBaseline) {
         const baseline = await analyzeDiffArtifact(parsed.weightBaseline, { ...parsed, targetExplicit: false, targetProfile: "" }, targetBinding);
-        if (baseline.input.kind !== "file") throw new Error("Weight comparison requires a single baseline artifact file.");
-        await baseline.input.file.assertUnchanged();
-        const prior = await collectWeightAnalysis(baseline.artifactIrContext.model_ir, baseline.analysis, baseline.input.file, { options: { ...options, tensor_ids: [], axes: {} } });
-        await baseline.input.file.assertUnchanged();
+        const baselineSource = baseline.input.kind === "file" ? baseline.input.file : createArtifactPayloadSource(baseline.analysis, baseline.input.files);
+        await baselineSource.assertUnchanged?.();
+        const prior = await collectWeightAnalysis(baseline.artifactIrContext.model_ir, baseline.analysis, baselineSource, { options: { ...options, tensor_ids: [], axes: {} } });
+        await baselineSource.assertUnchanged?.();
         const mapping = parsed.weightMapping ? (await readJsonSidecar(parsed.weightMapping, "weight comparison mapping")).document : [];
         analysis.weight_comparison = compareWeightAnalyses(prior, numerical, { mapping });
       }
-      await input.file.assertUnchanged();
+      await weightSource.assertUnchanged?.();
     }
     if (parsed.activationEvidence) analysis.activation_ir = buildActivationIr(artifactIrContext.model_ir, (await readJsonSidecar(parsed.activationEvidence, "activation capture")).document);
     if (parsed.activationBaseline) analysis.activation_baseline_ir = buildActivationIr(artifactIrContext.model_ir, (await readJsonSidecar(parsed.activationBaseline, "reference activation capture")).document);
@@ -1353,10 +1360,12 @@ function optionName(name) {
   return `--${name.replace(/[A-Z]/g, (character) => `-${character.toLowerCase()}`)}`;
 }
 
-async function analyzeArtifact({ input, filename, format, target, externalDataRoot, execuTorchBuild, scanPolicy, preanalyzedOnnx = null, externalDataMembers = null }) {
+async function analyzeArtifact({ input, filename, format, target, externalDataRoot, execuTorchBuild, scanPolicy, preanalyzedOnnx = null, externalDataMembers = null, tfMetagraph }) {
+  if(tfMetagraph!==undefined&&format!=="tensorflow_protobuf"&&input.bundleKind!=="tensorflow_savedmodel"&&input.kind!=="bundle")throw Error('--tf-metagraph requires SavedModel or GraphDef');
   if (input.kind === "bundle") {
     const parsed = await readArtifactBundle(input.files, {
       scanMode: scanPolicy.effective_mode,
+      metaGraphIndex: tfMetagraph,
       onProgress: buildBundleScanProgressReporter(input.files),
     });
     await verifyBundleSnapshot(input.files, parsed.analysis.artifact_bundle?.files);
@@ -1414,7 +1423,7 @@ async function analyzeArtifact({ input, filename, format, target, externalDataRo
   if (format === "coreml") return (await readCoreMlModelFile(input.file)).analysis;
   if (format === "tensorflow_protobuf") {
     const bytes = await readCliFileBytes(input);
-    return analyzeTensorFlowProtobuf(bytes, filename);
+    return analyzeTensorFlowProtobuf(bytes, filename, {metaGraphIndex:tfMetagraph??0});
   }
   if (format === "hdf5") return (await readHdf5EnvelopeFile(input.file, filename)).analysis;
   if (["keras", "pt2"].includes(format)) return (await readZipModelEnvelopeFile(input.file, filename, format)).analysis;
@@ -2779,6 +2788,7 @@ function parseArguments(argv) {
     else if (token === "--no-clobber") parsed.noClobber = true;
     else if (token === "--apply") parsed.apply = true;
     else if (token === "--error-format") parsed.errorFormat = requiredValue(values, token).toLowerCase();
+    else if (token === "--tf-metagraph") { const value=requiredValue(values,token);if(!/^\d+$/.test(value)||!Number.isSafeInteger(Number(value)))throw Error('--tf-metagraph requires a nonnegative integer');parsed.tfMetagraph=Number(value); }
     else if (token === "--timestamp") parsed.timestamp = normalizeTimestamp(requiredValue(values, token));
     else if (token === "--json") {
       if (parsed.summary) throw new Error("--json conflicts with --summary.");
@@ -2946,7 +2956,7 @@ function printHelp(command) {
   if (command === "gguf") { printGgufHelp(); printMetadataHelp(); return; }
   process.stdout.write(`DEEPBOM ${VERSION}\n\nUsage:\n  deepbom audit <artifact-or-package> [options]\n  deepbom gguf <artifact.gguf> [options]\n  deepbom verify <artifact> --contract <json> [options]\n  deepbom verify <artifact> --bom <cyclonedx-1.7.json> [--component-ref <bom-ref>]\n  deepbom contract capture <artifact> [-o baseline.interface-contract.json]\n  deepbom batch <manifest.json> --batch-output-dir <directory> [options]\n  deepbom diff <baseline-artifact-or-package> <candidate-artifact-or-package> [options]\n  deepbom explore <artifact.tflite> [options]\n  deepbom graph <artifact> [options]\n  deepbom visualize <artifact> [options]\n  deepbom accelerator collect nvidia [options]\n  deepbom capabilities [--json|--compact]\n\nSupported inputs:\n  Stable or existing: .tflite, .onnx, .gguf, .safetensors, .mlmodel, .pte, .ptd\n  Preview static graph: GraphDef or saved_model.pb\n  Preview safe envelope: .h5, .hdf5, .keras, .pt2, .pt, .pth, .ckpt\n  Packages: .mlpackage directories and sharded SafeTensors repository directories\n\nOptions:\n  --target <id>          TFLite target profile (default: ${DEFAULT_TARGET})\n  --target-profile <json>\n                          Bind a strict custom TFLite target profile (mutually exclusive with --target)\n  --contract <json>      Production external-interface contract for verify\n  --bom <json>           Reconcile CycloneDX 1.7 claims with the selected artifact\n  --component-ref <ref>  Explicitly select a BOM component; hash disagreements still block\n  --expected-sha256 <hex> Require the exact artifact digest before analysis\n  --summary             Compatibility alias for --output-format summary\n  --request <json>       Bound redesign request for explore\n  --external-data-dir <directory>\n                          Resolve ONNX external_data or ExecuTorch PTD sidecars from this directory\n  --context <tokens>     Declared text-token scenario for a statically derived LLM KV contract\n  --images <count>       Declared image count; requires --tokens-per-image\n  --tokens-per-image <count>\n                          Declared projector output tokens per image; never inferred\n  --batch <count>        LLM scenario batch size (default: 1)\n  --state-bits <bits>    LLM state width: 8, 16, or 32 (default: 16)\n  --memory-mib <MiB>     Compare the conditional lower bound with a declared capacity\n  --tensorrt-profile <json>\n                          Bind an ONNX TensorRT native/ORT EP build profile\n  --tensorrt-parser-evidence <json>\n                          Import identity-bound TensorRT parser/build evidence\n  --tensorrt-llm-config <json>\n                          Assess a TensorRT-LLM engine config with SafeTensors\n  --tensorrt-llm-binding <json>\n                          Bind that config to model-source/component digests\n  --llm-memory-profile <json>\n                          Evaluate serialized layer/state lower bounds against declared CPU and accelerator pools\n  --output-format <kind> summary, json, json-compact, envelope, cyclonedx, or sarif\n  --weight-analysis     Weight IR plus channels, similarity, SVD, sparsity and quantization; JSON output\n  --weight-baseline <artifact>\n                          Compare aligned weight values against this original artifact\n  --weight-options <json>\n                          Explicit axes, tensor selection and bounded analysis budgets\n  --weight-mapping <json>\n                          Explicit tensor pairs and candidate axis permutations\n  --activation-evidence <json>\n                          Import hash-bound runtime captures as Activation IR; no execution\n  --activation-baseline <json>\n                          Compare a reference capture for the same artifact; requires --activation-evidence\n  --section <names>      Emit selected analysis sections; use --list-sections to discover names\n  --pointer <pointer>    Emit one RFC 6901 JSON Pointer result with artifact identity\n  --list-sections        List selectable analysis sections for this artifact\n  --gate defects         Exit 2 only when an artifact_defect finding is present\n  --timestamp <iso>      Fixed generation timestamp; SOURCE_DATE_EPOCH is also honored\n  --fail-on <severity>   Compatibility severity gate: informational, low, medium, or high\n  --policy-output <path> Write the deterministic finding-gate decision JSON\n  --output, -o <path>    Atomically write the complete document; use - for stdout\n  --no-clobber           Refuse to replace an existing output or policy file\n  --error-format <kind>  text or json structured stderr (default: text)\n  --json                 Compatibility alias for --output-format json\n  --compact              Compatibility alias for --output-format json-compact\n  --version              Print version\n  --help                 Show this help\n\nSafe-envelope boundary:\n  Keras, HDF5, PT2, and PyTorch checkpoint previews do not construct framework objects or claim an executable graph.\n\nExit codes:\n  0 pass; 1 invocation/input/analysis/output failure; 2 policy or verification block; 3 incomplete verification binding; 4 expected SHA-256 mismatch\n`);
   process.stdout.write("\nAdditional command:\n  deepbom model-summary <artifact> [--level auto|operation|block|storage|source] [--format table|markdown|json|json-compact]\n");
-  process.stdout.write("\nSavedModel package preview:\n  TensorFlow SavedModel directories are accepted with bounded member hashing and first-MetaGraph projection.\n  GraphDef, Keras config, and PT2 JSON expose serialized declarative relationships only; HDF5 and PyTorch checkpoints remain safe-envelope-only.\n");
+  process.stdout.write("\nSavedModel package preview:\n  TensorFlow SavedModel directories are accepted with bounded member hashing and selected MetaGraph projection (--tf-metagraph, default 0).\n  GraphDef, Keras config, and PT2 JSON expose serialized declarative relationships only; HDF5 fixed numeric datasets and SavedModel variables have bounded numeric inspection; PyTorch checkpoints remain safe-envelope-only.\n");
   process.stdout.write("\nGGUF quick inspection:\n  --tensors              Emit a concise tensor table; add --json or --compact for deepbom.tensor_table.v1\n");
   process.stdout.write("\nFormat-neutral tensor evidence:\n  --encoding-inventory   Emit serialized encoding counts, assignments, and reproducible hashes for GGUF, SafeTensors, ONNX, or TFLite\n");
   process.stdout.write("\nWindows-safe batch audit:\n  deepbom batch <manifest.json> --batch-output-dir <directory> [--json|--compact]\n  Manifest: deepbom.batch_manifest.v1 with safe relative paths and required SHA-256 identities\n");

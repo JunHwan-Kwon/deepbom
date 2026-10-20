@@ -15,6 +15,10 @@ def main(argv=None):
     x.add_argument("--port", type=int, default=0)
     x = sub.add_parser("inspect")
     x.add_argument("directory")
+    x = sub.add_parser("recover", help="Recover persisted observations; does not resume training")
+    x.add_argument("directory")
+    x.add_argument("--timeout", type=float, default=30)
+    x.add_argument("--skip-analysis", action="store_true")
     x = sub.add_parser("import")
     x.add_argument("source", choices=["csv", "tensorboard", "mlflow", "wandb"])
     x.add_argument("--output", required=True)
@@ -43,6 +47,9 @@ def main(argv=None):
             server.server_close()
     elif a.command == "inspect":
         print(json.dumps(read_run(a.directory)["training"], indent=2))
+    elif a.command == "recover":
+        from .recovery import recover
+        print(json.dumps(recover(a.directory, timeout=a.timeout, analyze_pending=not a.skip_analysis), indent=2))
     elif a.command == "import":
         print(
             import_logs(

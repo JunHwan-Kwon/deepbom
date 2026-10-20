@@ -1,8 +1,53 @@
 {
   "schema": "deepbom.delivery_operations.v1",
-  "recorded_at": "2026-10-12T08:44:00.182062+00:00",
+  "recorded_at": "2026-10-20T05:32:30.866977+00:00",
   "scope": "Public installation channels and private web delivery",
   "observations": [
+    {
+      "kind": "private_web_preflight_basis",
+      "command": "node scripts/check-deploy.mjs --establish-observation",
+      "elapsed_seconds": 314.688,
+      "observed_at": "2026-10-20T05:13:14.253192+00:00",
+      "version": "2.5.0",
+      "source_commit": "dfb1adb81d2b7aefc2eeb32ce577e958b67bb108",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.5.0 shared WASM calculation, IR admission and managed development evidence release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately.",
+      "check_count": 102
+    },
+    {
+      "kind": "local_channel_build",
+      "command": "node scripts/build-channel-artifacts.mjs --with-dist",
+      "elapsed_seconds": 13.342,
+      "observed_at": "2026-10-20T05:25:12.819072+00:00",
+      "version": "2.5.0",
+      "source_commit": "89d70dbf4a683b66f084bd369dcf849f6068d4eb",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.5.0 shared WASM calculation, IR admission and managed development evidence release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately."
+    },
+    {
+      "kind": "platform_channel_smoke",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --platform-smoke",
+      "elapsed_seconds": 61.46,
+      "observed_at": "2026-10-20T05:26:51.281612+00:00",
+      "version": "2.5.0",
+      "source_commit": "93d24e3357f7ec629b5ff8177ba1f6b4edd7edbe",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.5.0 shared WASM calculation, IR admission and managed development evidence release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately."
+    },
+    {
+      "kind": "release_contract_channel_equivalence",
+      "command": "node scripts/check-channel-equivalence.mjs --no-build --release-contract",
+      "elapsed_seconds": 235.682,
+      "observed_at": "2026-10-20T05:30:46.964482+00:00",
+      "version": "2.5.0",
+      "source_commit": "93d24e3357f7ec629b5ff8177ba1f6b4edd7edbe",
+      "conclusion": "success",
+      "platform": "linux-x64",
+      "qualification": "Measured locally on the clean 2.5.0 shared WASM calculation, IR admission and managed development evidence release candidate. Linux x86-64 only; installed npm, Python and local MCP evidence does not assert other native platforms or host directory approval. No GitHub Actions. Publication is verified separately."
+    },
     {
       "kind": "private_web_preflight_basis",
       "command": "node scripts/check-deploy.mjs --establish-observation",
@@ -3256,7 +3301,7 @@
   "budgets": {
     "installation_release_critical_path_seconds": 720,
     "failed_registry_job_retry_seconds": 120,
-    "private_web_preflight_seconds": 300,
+    "private_web_preflight_seconds": 360,
     "local_channel_build_seconds": 300,
     "platform_channel_smoke_seconds": 300,
     "public_pr_channel_equivalence_seconds": 90,

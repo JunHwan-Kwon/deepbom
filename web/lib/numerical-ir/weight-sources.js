@@ -1,6 +1,7 @@
 import { Sha256Accumulator, sha256BytesHex } from "../sha256-sync.js";
 import { TensorStatistics } from "./statistics.js";
 import { requireCondition, shapeCount } from "./common.js";
+import { isArtifactPayloadSource } from "../artifact-bundle.js";
 
 export const MAX_IN_MEMORY_SOURCE = 512 * 1024 * 1024;
 export const sourceSize = source => source instanceof Uint8Array ? source.byteLength : source?.size;
@@ -10,6 +11,7 @@ export async function readBytes(source, start = 0, end = sourceSize(source)) {
   requireCondition(bytes.length === end - start, "payload read was truncated"); return bytes;
 }
 export async function hashSource(source, { signal, onProgress } = {}) {
+  if (isArtifactPayloadSource(source)) return source.verify({signal, onProgress});
   const digest = new Sha256Accumulator(), size = sourceSize(source);
   requireCondition(Number.isSafeInteger(size) && size >= 0, "missing artifact source");
   for (let offset = 0; offset < size; offset += 4 * 1024 * 1024) {
@@ -17,6 +19,10 @@ export async function hashSource(source, { signal, onProgress } = {}) {
     digest.update(await readBytes(source, offset, end)); onProgress?.({ phase: "identity", bytes: end, total: size });
   }
   return digest.digestHex();
+}
+export async function verifySourceAfterRead(source, expected, options = {}) {
+  if (isArtifactPayloadSource(source)) requireCondition(await source.verify(options) === expected, "artifact payload identity changed");
+  else await source?.assertUnchanged?.();
 }
 const unavailable = reason => ({ status: "not_assessed", reason });
 const dtypeAlias = dtype => ({ F32: "FLOAT32", F16: "FLOAT16", F64: "FLOAT64", BF16: "BFLOAT16", FLOAT: "FLOAT32", DOUBLE: "FLOAT64", HALF: "FLOAT16", BYTE: "UINT8", CHAR: "INT8", SHORT: "INT16", INT: "INT32", LONG: "INT64" }[dtype] || dtype);
@@ -28,7 +34,43 @@ export async function numericSources(source, analysis, model, { captureValues = 
     for (const tensor of analysis.tensors || []) {
       const store = stores.find(s => s.native_subject_ref === `storage:tensor:${tensor.index}`);
       add(store, { locator: `${format}:tensor:${tensor.index}`, name: tensor.name, dtype: tensor.dtype, shape: tensor.shape,
-        visit: (visitor, options) => visitSerializedTensorValues(source, analysis, tensor, visitor, options) });
+        visit: (visitor, options) => visitSerializedTensorValues(isArtifactPayloadSource(source) ? source.member(tensor.shard_path) : source,
+          isArtifactPayloadSource(source) ? {...analysis, safetensors:{...analysis.safetensors, header_byte_length:tensor.shard_header_byte_length}} : analysis, tensor, visitor, options) });
+    }
+  } else if (["hdf5", "keras"].includes(format)) {
+    const {visitHdf5Dataset} = await import("../hdf5-source.js");
+    let hdf = source;
+    if (format === "keras") {
+      const {readKerasWeightMember} = await import("../safe-source-artifacts.js");
+      const file = source instanceof Uint8Array ? new Blob([source]) : source;
+      hdf = (await readKerasWeightMember(file))?.bytes;
+    }
+    if (hdf) for (const row of analysis.format_extensions?.hdf5_objects?.objects || []) {
+      if (row.kind !== "dataset") continue;
+      const {kind, ...contract} = row;
+      // v1 storage objects require a physical payload size. Do not invent one
+      // from the decompressed size; keep the exact dataset locator unlinked.
+      add(null, {locator:`hdf5:dataset:${row.path}`, name:row.path, dtype:row.dtype, shape:row.shape,
+        visit:(visitor,options) => visitHdf5Dataset(hdf,contract,visitor,options)});
+    }
+  } else if (["graphdef", "savedmodel"].includes(format)) {
+    const root = isArtifactPayloadSource(source) ? source.rootFile : source;
+    if (root && sourceSize(root) <= MAX_IN_MEMORY_SOURCE) {
+      const {tensorFlowNumericSources} = await import("../safe-source-artifacts.js");
+      for (const entry of tensorFlowNumericSources(await readBytes(root), {savedModel:format === "savedmodel",metaGraphIndex:analysis.savedmodel?.selected_meta_graph_index ?? 0})) {
+        const tensor = (analysis.tensors || []).find(t => t.name === entry.name);
+        const store = stores.find(s => tensor && s.native_subject_ref === `storage:tensor:${tensor.index}`);
+        add(store, {locator:`tensorflow:const:${entry.name}`, ...entry});
+      }
+    }
+    if (isArtifactPayloadSource(source) && analysis.format_extensions?.tensorflow_checkpoint) {
+      const {visitTensorBundleEntry} = await import("../tensorflow-checkpoint.js");
+      for (const row of analysis.format_extensions.tensorflow_checkpoint.tensors) {
+        const tensor = (analysis.tensors || []).find(t => t.checkpoint_entry_index === row.index);
+        const store = stores.find(s => tensor && s.native_subject_ref === `storage:tensor:${tensor.index}`);
+        add(store, {locator:`tensorflow:checkpoint:${row.index}`,name:row.name,dtype:row.dtype,shape:row.shape,
+          visit:(visitor,options) => visitTensorBundleEntry(source.member(row.file_path),row,visitor,options)});
+      }
     }
   } else if (format === "onnx" && sourceSize(source) <= MAX_IN_MEMORY_SOURCE) {
     const { onnxNumericTensorSources } = await import("../../onnx.js");
@@ -37,12 +79,13 @@ export async function numericSources(source, analysis, model, { captureValues = 
       add(matches.length === 1 ? matches[0] : null, { locator: `onnx:${entry.scope}:${entry.role}:${candidates.length}`, name: entry.name, dtype: entry.dtype, shape: entry.shape,
         visit: visitor => { const result = entry.visit(visitor); return result.ok ? { status: "assessed", representation: /^COMPLEX/.test(entry.dtype) ? "complex_magnitude" : "stored_scalar", payload_sha256: null, invalid_encoding_count: 0 } : unavailable(result.reason); } });
     }
-  } else if (["coreml", "mlmodel"].includes(format) && sourceSize(source) <= MAX_IN_MEMORY_SOURCE) {
+  } else if (["coreml", "mlmodel"].includes(format) && sourceSize(isArtifactPayloadSource(source) ? source.rootFile : source) <= MAX_IN_MEMORY_SOURCE) {
     const { parseCoreMlModel } = await import("../coreml-metadata-adapter.js");
-    const bytes = await readBytes(source), captures = new WeakMap(); let sequence = 0;
+    const root = isArtifactPayloadSource(source) ? source.rootFile : source;
+    const bytes = await readBytes(root), captures = new WeakMap(); let sequence = 0;
     const parsed = parseCoreMlModel(bytes, model.artifact.filename, sourceSize(source), { numericalFactory: () => {
       const stats = new TensorStatistics(), slot = { index: sequence++, values: null };
-      return { add(value) { stats.add(value); }, finish() { const result = stats.finish(); captures.set(result, slot); return result; } };
+      return { add(value) { stats.add(value); }, finish() { try {const result = stats.finish(); captures.set(result, slot); return result;} finally {stats.free();} } };
     } });
     if (captureValues) {
       // Parameter decoding order can differ from inventory order (packed
@@ -64,6 +107,7 @@ export async function numericSources(source, analysis, model, { captureValues = 
       }
     }
     for (const [index, parameter] of (parsed.weight_integrity?.parameters || []).entries()) {
+      if (parameter.storage?.startsWith("mil_")) continue;
       const store = stores.find(s => s.native_source?.path === `weight_integrity.parameters[${index}]`);
       add(store, { locator: `coreml:parameter:${index}`, name: store?.name || parameter.role, dtype: store?.dtype || parameter.storage,
         shape: store?.shape?.length ? store.shape : Number.isSafeInteger(parameter.value_count) ? [parameter.value_count] : null,
@@ -78,10 +122,21 @@ export async function numericSources(source, analysis, model, { captureValues = 
       const immediate = tensor.immediate_value;
       if (!tensor.constant_buffer || !immediate) continue;
       const values = immediate.values;
-      const store = stores.find(s => s.native_subject_ref === `storage:tensor:${tensor.index}`);
+      const parameterIndex = (analysis.weight_integrity?.parameters || []).findIndex(p => p.tensor_index === tensor.index);
+      const store = stores.find(s => parameterIndex >= 0 ? s.native_source?.path === `weight_integrity.parameters[${parameterIndex}]` : s.native_subject_ref === `storage:tensor:${tensor.index}`);
       if (store && candidates.some(c => c.storage_ref === store.id)) continue;
       add(store, { locator: `coreml:immediate:${tensor.index}`, name: tensor.name, dtype: tensor.dtype, shape: tensor.shape,
         visit: visitor => visitMilImmediateValues(tensor, visitor) });
+    }
+    if (isArtifactPayloadSource(source)) {
+      const {visitCoreMlBlobValues} = await import("../coreml-blob.js");
+      for (const [index, parameter] of (analysis.weight_integrity?.parameters || []).entries()) {
+        if (parameter.storage !== "mil_blob_v2") continue;
+        const store = stores.find(s => s.native_source?.path === `weight_integrity.parameters[${index}]`);
+        if (!store) continue; // Another view of the same serialized blob.
+        add(store, {locator:`coreml:blob:${index}`, name:parameter.tensor_name, dtype:parameter.dtype, shape:parameter.shape,
+          visit:(visitor, options) => visitCoreMlBlobValues(source.member(parameter.file_path), parameter, visitor, options)});
+      }
     }
   }
   if (format === "tflite" || format === "executorch") {

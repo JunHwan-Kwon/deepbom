@@ -1,28 +1,46 @@
-"""Transport and content-addressed storage. Numerical definitions live in JS."""
+"""Transport and content-addressed storage; analysis uses the common engine."""
 
 from __future__ import annotations
 import base64
-import hashlib
+from contextvars import ContextVar
 import json
 import math
 import os
 from pathlib import Path
 import tempfile
+import threading
 from typing import Any
 
+_active_engine = ContextVar("deepbom_native_engine", default=None)
 
-def engine(operation: str, payload: dict) -> dict:
+
+def bind_engine(request):
+    """Bind an owner-controlled session to this context; never share globally."""
+    return _active_engine.set((os.getpid(), threading.get_ident(), request))
+
+
+def reset_engine(token):
+    _active_engine.reset(token)
+
+
+
+def engine(operation: str, payload: dict, *, timeout_seconds=300) -> dict:
     from ..api import _invoke_json
+    from .._process import remaining_seconds
 
+    bound = _active_engine.get()
+    if bound is not None:
+        pid, thread, request = bound
+        if pid == os.getpid() and thread == threading.get_ident():
+            return _json_binary64(request(operation, payload, remaining_seconds(timeout_seconds)))
+    # A copied context or forked data loader must not use its parent's session.
     with tempfile.TemporaryDirectory(prefix="deepbom-native-") as tmp:
         request = Path(tmp) / "request.json"
-        request.write_text(
-            json.dumps({"operation": operation, "payload": payload}, allow_nan=False),
-            encoding="utf-8",
-        )
+        atomic_json(request, {"operation": operation, "payload": payload},
+                    compact=True, max_bytes=128 * 1024 * 1024)
         return _json_binary64(
             _invoke_json(
-                ["evidence-native", "--request", str(request)], 300, 128 * 1024 * 1024
+                ["evidence-native", "--request", str(request)], remaining_seconds(timeout_seconds), 128 * 1024 * 1024
             )
         )
 
@@ -37,7 +55,7 @@ def _json_binary64(value):
         and abs(value) > 2**53 - 1
     ):
         return float(value)
-    if isinstance(value, list):
+    if isinstance(value, (list, tuple)):
         return [_json_binary64(x) for x in value]
     if isinstance(value, dict):
         return {k: _json_binary64(x) for k, x in value.items()}
@@ -45,9 +63,24 @@ def _json_binary64(value):
 
 
 def content_hash(value: Any) -> str:
-    import rfc8785
-
-    return hashlib.sha256(rfc8785.dumps(_json_binary64(value))).hexdigest()
+    # Host admission only; canonical bytes and SHA-256 belong to Rust/WASM.
+    def admit(item):
+        if isinstance(item, dict):
+            if any(not isinstance(key, str) for key in item):
+                raise TypeError("Canonical evidence keys must be strings")
+            return {key: admit(child) for key, child in item.items()}
+        if isinstance(item, (list, tuple)):
+            return [admit(child) for child in item]
+        if item is None or isinstance(item, (str, bool, int, float)):
+            if isinstance(item, float) and not math.isfinite(item):
+                raise ValueError("Canonical evidence numbers must be finite")
+            return item
+        raise TypeError(f"Unsupported canonical evidence value: {type(item).__name__}")
+    result = engine("content_hash", admit(_json_binary64(value)))
+    digest = result.get("sha256")
+    if not isinstance(digest, str) or len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+        raise ValueError("Native engine returned an invalid content digest")
+    return digest
 
 
 def json_value(value):
@@ -137,12 +170,15 @@ def tensor_row(value, name, *, role="variable", trainable=False, aliases=()):
     }
 
 
-def atomic_json(path, value, *, replace=False):
+def atomic_json(path, value, *, replace=False, compact=False, max_bytes=None):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     data = (
-        json.dumps(value, ensure_ascii=False, allow_nan=False, indent=2) + "\n"
+        json.dumps(value, ensure_ascii=False, allow_nan=False,
+                   indent=None if compact else 2) + ("" if compact else "\n")
     ).encode()
+    if max_bytes is not None and len(data) > max_bytes:
+        raise ValueError("JSON transport exceeds its byte budget")
     if path.exists() and not replace:
         if path.read_bytes() != data:
             raise ValueError(f"Immutable evidence conflict: {path}")
@@ -162,6 +198,14 @@ def atomic_json(path, value, *, replace=False):
                 if path.read_bytes() != data:
                     raise ValueError(f"Immutable evidence conflict: {path}")
             os.unlink(temp)
+        # Persist the directory entry as well as file bytes. An atomic rename
+        # alone does not make the new head durable across host power loss.
+        if os.name == "posix":
+            directory_fd = os.open(path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+            try:
+                os.fsync(directory_fd)
+            finally:
+                os.close(directory_fd)
     finally:
         if os.path.exists(temp):
             os.unlink(temp)

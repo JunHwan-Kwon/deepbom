@@ -93,6 +93,13 @@ function reconstruct(source, dtype, shape, mode) {
       integerRoundingCount, overflowCount, nonfiniteCount: null, signedZeroCount: null,
     };
   }
+  // A zero-width row has no elements; count its divisor without iterating batches.
+  if (rowWidth === 0) return {
+    status: "assessed_pinned_ort_float32", values: [], inputCount: 0,
+    divisorPreview: Array(Math.min(8, batchCount)).fill(mode === "MAX" ? String(FLOAT32_LOWEST) : "0"),
+    outputPreview: [], zeroRows: mode === "MAX" ? 0 : batchCount, negativeMaxRows: 0,
+    integerRoundingCount: 0, overflowCount: 0, nonfiniteCount: 0, signedZeroCount: 0,
+  };
   const values = source.length <= MATERIALIZATION_LIMIT ? new Array(source.length) : null;
   const divisorPreview = [];
   const outputPreview = [];

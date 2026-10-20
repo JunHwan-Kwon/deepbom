@@ -45,6 +45,7 @@ const buildMetadata = writeBuildMetadata();
 await runNode("scripts/generate-cli-docs.mjs", ["--check"]);
 await runNode("scripts/generate-provenance-schema.mjs", ["--check"]);
 await runNode("scripts/generate-model-hierarchy-schema.mjs", ["--check"]);
+await runNode("scripts/generate-development-analysis-schema.mjs", ["--check"]);
 await runNode("scripts/generate-evidence-ir-catalog.mjs", ["--check"]);
 await runNode("scripts/check-evidence-compatibility.mjs");
 
@@ -82,6 +83,7 @@ for (const suffix of readSwRuntimeCacheableSuffixes(path.join(root, "web", "sw.j
   const runtimeFile = runtimeFileFromNodeModulesSuffix(suffix);
   await copyRuntimeFile(runtimeFile.packageName, runtimeFile.packageRelative);
 }
+await copyRuntimeFile("h5wasm", "LICENSE.txt");
 
 for (const file of [
   "web/index.html",
@@ -90,6 +92,7 @@ for (const file of [
   "web/onnx.js",
   "web/sw.js",
   "web/lib/runtime-module-loader.js",
+  "web/lib/hdf5-source.js",
 ]) {
   await rewriteNodeModulesPath(path.join(dist, file));
 }
@@ -128,6 +131,7 @@ await copyFile(
 );
 await mkdir(path.join(dist, "schemas"), { recursive: true });
 await copyFile(path.join(root, "docs", "schemas", "deepbom-model-hierarchy-v1.schema.json"), path.join(dist, "schemas", "deepbom-model-hierarchy-v1.schema.json"));
+await copyFile(path.join(root, "docs", "schemas", "deepbom-development-analysis-v1.schema.json"), path.join(dist, "schemas", "deepbom-development-analysis-v1.schema.json"));
 for (const name of ["deepbom-evidence-workflow-v1.schema.json", "deepbom-evidence-ir-v3.schema.json", "deepbom-model-ir-v1.schema.json", "deepbom-numerical-ir-v1.schema.json", "deepbom-weight-analysis-v1.schema.json", "deepbom-provenance-ir-v1.schema.json", "deepbom-evidence-ir-v1.schema.json", "deepbom-numerical-details-v1.schema.json", "deepbom-native-evidence-v1.schema.json", "deepbom-evidence-ir-v2.schema.json", "deepbom-optimization-report-v1.schema.json", "deepbom-optimization-diff-v1.schema.json", "deepbom-optimization-report-access-v1.schema.json"]) await copyFile(path.join(root, "docs", "schemas", name), path.join(dist, "schemas", name));
 await copyFile(path.join(root, "docs", "evidence-ir", "catalog.json"), path.join(dist, "schemas", "evidence-ir-catalog.json"));
 await copyFile(path.join(root, "docs", "evidence-ir", "native-catalog.json"), path.join(dist, "schemas", "native-evidence-catalog.json"));
@@ -140,6 +144,17 @@ await copyFile(
   path.join(root, "docs", "schemas", "deepbom-artifact-ir-v2.schema.json"),
   path.join(dist, "schemas", "deepbom-artifact-ir-v2.schema.json"),
 );
+// Every local schema advertised by the current compatibility catalog must be
+// present in the actual deploy artifact, not only in the source checkout.
+const compatibilityIndex = JSON.parse(await readFile(path.join(root, "docs", "evidence-ir", "compatibility", "index.json"), "utf8"));
+const compatibilitySnapshot = JSON.parse(await readFile(path.join(root, "docs", "evidence-ir", "compatibility", `${compatibilityIndex.current}.json`), "utf8"));
+for (const endpoint of compatibilitySnapshot.nodes) {
+  if (!endpoint.json_schema) continue;
+  const url = new URL(endpoint.json_schema);
+  if (url.origin !== "https://deepbom.org" || !url.pathname.startsWith("/schemas/")) continue;
+  const deployedSchema = path.join(dist, url.pathname.slice(1));
+  if (!(await stat(deployedSchema)).isFile()) throw new Error(`Missing deployed schema for ${endpoint.id}: ${url.pathname}`);
+}
 await mkdir(path.join(dist, "skills", "deepbom"), { recursive: true });
 await copyFile(
   path.join(root, "skills", "deepbom", "SKILL.md"),
@@ -358,6 +373,10 @@ console.log(
 );
 
 async function bundleApplicationEntry() {
+  // The HDF5 browser module already includes its WASM bytes and is copied into
+  // vendor/. Do not embed a second multi-megabyte copy in application chunks.
+  // Resolve relative to each emitted chunk, preserving subdirectory hosting.
+  const hdf5Marker = "__deepbom_hdf5_browser_module__";
   const result = await build({
     absWorkingDir: root,
     entryPoints: ["web/app.js"],
@@ -367,6 +386,9 @@ async function bundleApplicationEntry() {
     chunkNames: "chunks/[name]-[hash]",
     assetNames: "chunks/[name]-[hash]",
     bundle: true,
+    plugins: [{name:"shared-hdf5-browser-asset", setup(build) {
+      build.onResolve({filter:/h5wasm\/dist\/esm\/hdf5_hl\.js$/}, () => ({path:hdf5Marker,external:true}));
+    }}],
     charset: "ascii",
     external: [
       "../pkg/*",
@@ -389,6 +411,13 @@ async function bundleApplicationEntry() {
     .sort();
   const entry = path.join(dist, "web", "app.bundle.js");
   if (!outputFiles.includes(entry)) throw new Error("esbuild did not emit dist/web/app.bundle.js.");
+  for (const file of outputFiles) {
+    const code = await readFile(file, "utf8");
+    if (!code.includes(hdf5Marker)) continue;
+    let relative = path.relative(path.dirname(file), path.join(dist,"vendor/h5wasm/dist/esm/hdf5_hl.js")).replaceAll(path.sep,"/");
+    if (!relative.startsWith(".")) relative = "./" + relative;
+    await writeFile(file, code.replaceAll(JSON.stringify(hdf5Marker), JSON.stringify(relative)));
+  }
   await writeFile(path.join(dist, "web", "app.js"), 'import "./app.bundle.js";\n');
   return { outputFiles };
 }
@@ -535,6 +564,8 @@ async function copyProjectFile(relativePath) {
 async function rewriteNodeModulesPath(file) {
   const source = await readFile(file, "utf8");
   const rewritten = source
+    .replaceAll("../node_modules/h5wasm/", "../vendor/h5wasm/")
+    .replaceAll("/node_modules/h5wasm/", "/vendor/h5wasm/")
     .replaceAll("../node_modules/@litertjs/", "../vendor/@litertjs/")
     .replaceAll("/node_modules/@litertjs/", "/vendor/@litertjs/")
     .replaceAll("../node_modules/onnxruntime-web/", "../vendor/onnxruntime-web/")

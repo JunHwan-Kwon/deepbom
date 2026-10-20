@@ -17,6 +17,7 @@
     "web/lib/dynamic-shape-cost.js",
     "web/lib/edgetpu-compiler-evidence.js",
     "web/lib/execution-placement-evidence.js",
+    "web/lib/hdf5-source.js",
     "web/lib/input-counterexample.js",
     "web/lib/kernel-witness.js",
     "web/lib/litert-qualcomm-evidence.js",

@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v608";
+const CACHE_NAME = "tflite-wasm-static-audit-v613";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",
@@ -33,6 +33,11 @@ const APP_ASSETS = [
   "./lib/scalar-numeric.js",
   "./lib/scalar-types.generated.js",
   "./lib/tensor-size.js",
+  "./lib/numerical-wasm.js",
+  "./lib/portable-contracts.js",
+  "./lib/portable-protobuf.js",
+  "./lib/builtin-metrics.js",
+  "./lib/training-analysis-bindings.js",
   "./lib/gguf-storage-types.js",
   "./lib/exact-rational.js",
   "./lib/executorch-operator-signatures.generated.js",
@@ -81,6 +86,8 @@ const APP_ASSETS = [
   "./lib/model-ir-visualization.js",
   "./lib/model-ir-browser-export.js",
   "./lib/safe-source-artifacts.js",
+  "./lib/hdf5-source.js",
+  "./lib/tensorflow-checkpoint.js",
   "./lib/artifact-dossier-view.js",
   "./lib/artifact-ir-selectors.js",
   "./lib/artifact-ir-runtime.js",
@@ -309,6 +316,7 @@ const APP_ASSETS = [
   "./lib/onnx-extended-shape-inference.js",
   "./lib/onnx-schema-legality.js",
   "./lib/onnx-einsum-contract.js",
+  "./lib/onnx-portable.js",
   "./lib/onnx-shape-inference.js",
   "./lib/onnx-contract-conflict.js",
   "./lib/onnx-runtime-shape-binding.js",
@@ -445,6 +453,8 @@ const APP_SHELL_ASSETS = [
 ];
 
 const RUNTIME_CACHEABLE_SUFFIXES = [
+  "/node_modules/h5wasm/dist/esm/hdf5_hl.js",
+  "/node_modules/h5wasm/dist/esm/hdf5_util.js",
   "/node_modules/@litertjs/core/dist/index.js",
   "/node_modules/@litertjs/wasm-utils/dist/index.js",
   "/node_modules/@litertjs/core/wasm/litert_wasm_compat_internal.js",

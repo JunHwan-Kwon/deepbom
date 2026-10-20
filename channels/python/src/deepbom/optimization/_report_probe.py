@@ -8,9 +8,15 @@ from __future__ import annotations
 from collections import Counter
 import copy
 from .._native.adapters import framework_of, independent_copy
+from .._native.probe import preserve_probe_random_state
 
 
 def capture_shapes(model, args, kwargs):
+    with preserve_probe_random_state(model, (args, kwargs)):
+        return _capture_shapes(model, args, kwargs)
+
+
+def _capture_shapes(model, args, kwargs):
     if not args and not kwargs:
         return {
             "status": "not_requested",
@@ -78,8 +84,7 @@ def capture_shapes(model, args, kwargs):
                             hook(name or "$model"), with_kwargs=True
                         )
                     )
-            devices = sorted({p.device.index for p in test.parameters() if p.is_cuda})
-            with torch.random.fork_rng(devices=devices), torch.no_grad():
+            with torch.no_grad():
                 output = test(*args, **kwargs)
         finally:
             for handle in handles:

@@ -7,10 +7,13 @@ import { validateWeightIr } from "./weight-ir.js";
 import { validateActivationIr } from "./activation-ir.js";
 import { validateNativeDocument, validateTrainingIr, validateTrainingChunk, validateTrainingBundle } from "./native-evidence.js";
 import { validateSnapshotIr } from "./snapshot-ir.js";
+import { validateMetricConfiguration } from "./metric-evidence.js";
 import { sha256BytesHex } from "./sha256-sync.js";
 import { canonicalEvidenceDigest, requireEvidence as need, referenceKey, subjectReference, validateSubjectReference } from "./evidence-identity.js";
 
 const CONTRACTS = {
+  "deepbom.metric_configuration.v1": [validateMetricConfiguration,"configuration_sha256","evidence_document"],
+  "deepbom.metric_configuration.v2": [validateMetricConfiguration,"configuration_sha256","evidence_document"],
   "deepbom.training_chunk.v1": [validateTrainingChunk,"chunk_sha256","evidence_document"],
   "deepbom.optimization_report.v1": [d=>openOptimizationReport(JSON.stringify(d)),"report_sha256","evidence_document"],
   "deepbom.semantic_artifact_diff.v1": [validateSemanticArtifactDiff,"semantic_diff_sha256","evidence_document"],

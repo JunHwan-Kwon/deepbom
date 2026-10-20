@@ -157,6 +157,12 @@ class Candidate:
 
 
 def _validate(model, example_args, example_kwargs, loss_fn=None):
+    from .._native.probe import preserve_probe_random_state
+    with preserve_probe_random_state(model, (example_args, example_kwargs)):
+        return _validate_copy(model, example_args, example_kwargs, loss_fn)
+
+
+def _validate_copy(model, example_args, example_kwargs, loss_fn=None):
     report = {
         "load": "not_run",
         "forward": "not_run",

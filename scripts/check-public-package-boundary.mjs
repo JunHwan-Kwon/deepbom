@@ -10,6 +10,7 @@ const packageRoot = path.join(releaseRoot, "npm", "package");
 const expectedMembers = [
   "LICENSE",
   "README.md",
+  "THIRD_PARTY_NOTICES.md",
   "bin/capture-activation-evidence.py",
   "bin/deepbom-self-test.onnx",
   "bin/deepbom.mjs",
@@ -52,6 +53,9 @@ for (const keyword of ["static-analysis", "agent-skills", "model-context-protoco
 const publicLicense = await readFile(path.join(root, "channels", "LICENSE"));
 const packagedLicense = await readFile(path.join(packageRoot, "LICENSE"));
 assert(sha256(publicLicense) === sha256(packagedLicense), "Packaged license differs from the public channel license.");
+const sourceNotices = await readFile(path.join(root, "THIRD_PARTY_NOTICES.md"));
+const packagedNotices = await readFile(path.join(packageRoot, "THIRD_PARTY_NOTICES.md"));
+assert(sha256(sourceNotices) === sha256(packagedNotices), "Packaged third-party notices differ from the reviewed source notices.");
 
 const releaseManifest = JSON.parse(await readFile(path.join(packageRoot, "pkg", "release-manifest.json"), "utf8"));
 assert(releaseManifest.schema === "deepbom.npm_release.v1", "Unexpected npm release-manifest schema.");

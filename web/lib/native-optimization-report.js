@@ -3,6 +3,8 @@ import { compareNativeEvidence, sealNative, nativeStateTotals } from "./native-e
 import { canonicalJson } from "./report-utils.js";
 import { estimateOnnxMacs } from "../onnx.js";
 import { scalarDtypeBytes, shapeElementCount } from "./tensor-size.js";
+import {exactFields} from './evidence-identity.js';
+import { portableContract, aggregateExactCounts } from './portable-contracts.js';
 
 const need = (ok, reason) => { if (!ok) throw new Error(`Optimization report: ${reason}`); };
 const missing = (reason) => ({ status: "not_assessed", value_decimal: null, reason });
@@ -26,20 +28,25 @@ function logicalBytes(t) {
   const count = shapeElementCount(t.shape);
   return width && count ? String(BigInt(count.decimal) * BigInt(width)) : null;
 }
-function cost(node, call, storage, framework) {
+function cost(node, call, storage, framework, method) {
   if(call.inputs.length !== 1 || call.outputs.length !== 1) return missing("Requires one tensor input and one tensor output.");
   const type = node.kind.split(".").at(-1), cfg = node.config;
   const trusted = framework === "pytorch" ? node.kind.startsWith("torch.nn.") : node.kind.startsWith("keras.");
   if (!trusted) return missing("Custom module arithmetic is not inferred from its class name.");
   let x = call.inputs[0].shape, y = call.outputs[0].shape, w, opType, attributes = {};
   const weights = node.state_refs.map(id => storage.get(id)).filter(Boolean);
-  if (framework === "pytorch" && ["Conv1d", "Conv2d", "Conv3d", "Linear"].includes(type)) {
+  if (framework === "pytorch" && ["Conv1d", "Conv2d", "Conv3d", "Linear", ...(method === "1.1.0" ? ["ConvTranspose2d"] : [])].includes(type)) {
     const kernels = weights.filter(t => /(?:^|\.)weight$/.test(t.id));
     if (kernels.length !== 1) return missing("No unambiguous kernel binding.");
     w = kernels[0].shape;
     if (type === "Linear") {
       if (x.length === 2 && y.length === 2) { opType = "Gemm"; attributes = { transB: 1 }; }
       else { opType = "MatMul"; w = w?.length === 2 ? [w[1],w[0]] : null; }
+    } else if (type === "ConvTranspose2d") {
+      if (x.length !== 4 || y.length !== 4 || ![cfg.padding, cfg.stride, cfg.dilation, cfg.output_padding].every(v=>Array.isArray(v)&&v.length===2))
+        return missing("Requires explicit rank-4 ConvTranspose2d spatial settings.");
+      opType = "ConvTranspose";
+      attributes = {group:cfg.groups,pads:[...cfg.padding,...cfg.padding],strides:cfg.stride,dilations:cfg.dilation,output_padding:cfg.output_padding};
     } else { opType = "Conv"; attributes = { group: cfg.groups }; }
   } else if (framework === "tensorflow" && ["Conv2D", "DepthwiseConv2D", "Dense"].includes(type)) {
     const kernels = weights.filter(t => /(?:^|\/)kernel$/.test(t.id));
@@ -61,11 +68,12 @@ function cost(node, call, storage, framework) {
   }
   if (!w) return missing("No unambiguous kernel binding.");
   const tensor = (name,shape) => ({name,shape,dtype:"FLOAT32",shapeDeclared:true,valueKind:"tensor"});
-  const result = estimateOnnxMacs({opType,domain:"",inputs:["x","w"],outputs:["y"],attributes:new Map(Object.entries(attributes).map(([k,v])=>[k,{i:v,ints:[],s:""}]))},
+  const result = estimateOnnxMacs({opType,domain:"",inputs:["x","w"],outputs:["y"],attributes:new Map(Object.entries(attributes).map(([k,v])=>[k,{i:Array.isArray(v)?null:v,ints:Array.isArray(v)?v:[],s:""}]))},
     new Map([tensor("x",x),tensor("w",w),tensor("y",y)].map(t=>[t.name,t])));
   return {status:result.status,value_decimal:result.value_decimal,reason:result.reason,mapping:opType};
 }
-function structure(bundle, probe) {
+export function buildNativeStructureProjection(bundle, probe, method = "1.0.0") {
+  need(["1.0.0", "1.1.0"].includes(method), "unsupported native cost method");
   const program = bundle.model_ir.program, storage = new Map(bundle.snapshot.tensors.map(t=>[t.id,t]));
   const nodes = new Map(program.nodes.map(n=>[n.id,n]));
   need(probe && ["observed","not_requested"].includes(probe.status) && Array.isArray(probe.invocations), "invalid shape observation");
@@ -80,10 +88,10 @@ function structure(bundle, probe) {
     need(nodes.has(c.subject) && Number.isSafeInteger(c.invocation) && c.invocation>0 && !seen.has(`${c.subject}\0${c.invocation}`), "unbound or duplicate invocation");
     seen.add(`${c.subject}\0${c.invocation}`);
     validateTensors(c.inputs); validateTensors(c.outputs);
-    return {...c, outputs:c.outputs.map(t=>({...t,logical_bytes:logicalBytes(t)})),macs:cost(nodes.get(c.subject),c,storage,program.framework.name)};
+    return {...c, outputs:c.outputs.map(t=>({...t,logical_bytes:logicalBytes(t)})),macs:cost(nodes.get(c.subject),c,storage,program.framework.name,method)};
   });
   const assessed=calls.filter(c=>c.macs.status==="assessed"), unknown=calls.filter(c=>c.macs.status==="not_assessed");
-  const sum=assessed.reduce((s,c)=>s+BigInt(c.macs.value_decimal),0n);
+  const sum=aggregateExactCounts(assessed.map(c=>c.macs.value_decimal)).decimal;
   const allNonContraction = calls.length > 0 && assessed.length === 0 && unknown.length === 0;
   return {snapshot_sha256:bundle.snapshot.snapshot_sha256,model_ir_sha256:bundle.model_ir.model_ir_sha256,
     framework:program.framework,scope:program.scope,limitations:program.limitations,inputs:probe.inputs,outputs:probe.outputs,
@@ -95,10 +103,11 @@ function structure(bundle, probe) {
 }
 export function buildNativeOptimizationReport(input) {
   const {baseline,candidate,transformations,context,validation}=input;
+  exactFields(context,['version','objective','target','selection','user_rationale','probes'],[],'optimization report v1 context');
   const comparison=compareNativeEvidence(baseline,candidate);
   need(context?.version===1 && ["automatic_rules","explicit_rules","not_recorded"].includes(context.selection), "unsupported report context");
   need(Array.isArray(transformations), "invalid transformation ledger");
-  const before=structure(baseline,context.probes.baseline),after=structure(candidate,context.probes.candidate);
+  const before=buildNativeStructureProjection(baseline,context.probes.baseline),after=buildNativeStructureProjection(candidate,context.probes.candidate);
   const idsA=new Set(before.nodes.map(n=>n.id)),idsB=new Set(after.nodes.map(n=>n.id));
   const changes=transformations.map((t,index)=>{
     need(t && typeof t.subject==="string" && (idsA.has(t.subject)||idsB.has(t.subject)) && t.request?.kind===t.rule, "unbound transformation");
@@ -122,7 +131,8 @@ export function buildNativeOptimizationReport(input) {
 }
 
 export function nativeReportDeltas(totals) {
-  return Object.fromEntries(Object.keys(totals.baseline).map(k=>[k,String(BigInt(totals.candidate[k])-BigInt(totals.baseline[k]))]));
+  const values = portableContract("deltas", { before: totals.baseline, after: totals.candidate });
+  return Object.fromEntries(Object.keys(totals.baseline).map(key => [key, values[key]]));
 }
 
 // Imported reports carry observations, not executable models. Check every
@@ -132,7 +142,7 @@ export function validateOptimizationReportProjection(report) {
   for(const side of ['baseline','candidate']) {
     const s=report[side];
     need(same(nativeStateTotals(s.storage),report.comparison.totals[side]),'stored state totals disagree');
-    const projected=structure({snapshot:{snapshot_sha256:s.snapshot_sha256,tensors:s.storage},model_ir:{model_ir_sha256:s.model_ir_sha256,program:s}},report.context.probes[side]);
+    const projected=buildNativeStructureProjection({snapshot:{snapshot_sha256:s.snapshot_sha256,tensors:s.storage},model_ir:{model_ir_sha256:s.model_ir_sha256,program:s}},report.context.probes[side],report.context.cost_method);
     need(same(projected,s),'shape, cost or coverage projection disagrees with recorded probe');
   }
   need(same(nativeReportDeltas(report.comparison.totals),report.static_deltas),'static deltas disagree');

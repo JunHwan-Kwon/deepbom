@@ -360,8 +360,8 @@ function clearGraphScenarioPreview() {
 function renderInferencePanel(analysis) {
   benchmarkWrap.hidden = true;
   benchmarkBody.replaceChildren();
-  runtimeStatus.textContent = "Ready";
   const executable = modelSupportsCapability(analysis?.format, "runtime_execution") && Boolean(workspace.currentModelPayloadLoaded);
+  runtimeStatus.textContent = executable ? "Ready" : "Not available";
   runInference.disabled = !executable;
   runInference.title = executable ? "Run a local browser runtime benchmark." : `${modelFormatAdapter(analysis?.format).label} static artifact analysis is available, but no local browser runtime benchmark is implemented.`;
   const warmup = clampInt(warmupInput.value, 0, 100, 1);

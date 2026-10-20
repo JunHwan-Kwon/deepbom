@@ -1,0 +1,15 @@
+{
+  "schema": "deepbom.archived_export_reference.v1",
+  "directory": "mobilenet-v2-quant",
+  "note": "Preserved historical bytes; their recorded producer is not substituted into current computations.",
+  "files": {
+    "deepbom_artifact_evidence_envelope.json": "ac0cce09054a510b7ca2d60363eb2f7b4d150c52d7a54d21bfe815ee34fed841",
+    "deepbom_artifact_ir.json": "9fe6eef64c4386fece79f808cf750b6f2b4cf02477394712fc8da1d4789baa2a",
+    "deepbom_cyclonedx_evidence.cdx.json": "f974a426134d2e06ef2c2304b237fe4b89777a57cf650188aac7932a32ee94ed",
+    "deepbom_interface_contracts.json": "3df2f0f4119dbb7d9b93d1b0a68eddc62c28392debd3a2bd233eff5a441c5b9b",
+    "deepbom_missing_provenance_fields.json": "d051919196e5dcd16551201cc2024a357c0a1341570c01197ece2407719cd503",
+    "deepbom_model_ir.json": "a91239b3c404896a4d7d24c4057dda3cff416c2f567a87fba5ef473a0256f7cd",
+    "deepbom_observed_formulation.cdx.json": "abb9fe85bdd0d3b20d41951969c416ed4de6e7f8f3f7857c6feb950fa6ae80e3",
+    "deepbom_runtime_requirements.json": "d753341eb39aae6cce5fae3bfc75f05c94fca8242f71de012287278b615c2b88"
+  }
+}

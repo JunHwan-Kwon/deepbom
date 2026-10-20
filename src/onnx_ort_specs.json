@@ -1,0 +1,110 @@
+{
+  "FastGelu": {
+    "inputMinimum": 1,
+    "inputMaximum": 2,
+    "outputMinimum": 1,
+    "outputMaximum": 1,
+    "attributes": {},
+    "requiredAttributes": [],
+    "requiredInputs": [
+      0
+    ]
+  },
+  "RotaryEmbedding": {
+    "inputMinimum": 4,
+    "inputMaximum": 4,
+    "outputMinimum": 1,
+    "outputMaximum": 1,
+    "attributes": {
+      "scale": 1,
+      "interleaved": 2,
+      "rotary_embedding_dim": 2,
+      "num_heads": 2,
+      "is_packed_batching": 2
+    },
+    "requiredAttributes": [],
+    "requiredInputs": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "SkipLayerNormalization": {
+    "inputMinimum": 3,
+    "inputMaximum": 5,
+    "outputMinimum": 1,
+    "outputMaximum": 4,
+    "attributes": {
+      "epsilon": 1
+    },
+    "requiredAttributes": [],
+    "requiredInputs": [
+      0,
+      1,
+      2
+    ]
+  },
+  "SkipSimplifiedLayerNormalization": {
+    "inputMinimum": 3,
+    "inputMaximum": 4,
+    "outputMinimum": 1,
+    "outputMaximum": 4,
+    "attributes": {
+      "epsilon": 1
+    },
+    "requiredAttributes": [],
+    "requiredInputs": [
+      0,
+      1,
+      2
+    ]
+  },
+  "MultiHeadAttention": {
+    "inputMinimum": 1,
+    "inputMaximum": 10,
+    "outputMinimum": 1,
+    "outputMaximum": 4,
+    "attributes": {
+      "num_heads": 2,
+      "mask_filter_value": 1,
+      "scale": 1,
+      "unidirectional": 2
+    },
+    "requiredAttributes": [
+      "num_heads"
+    ],
+    "requiredInputs": [
+      0
+    ]
+  },
+  "GroupQueryAttention": {
+    "inputMinimum": 7,
+    "inputMaximum": 14,
+    "outputMinimum": 3,
+    "outputMaximum": 4,
+    "attributes": {
+      "num_heads": 2,
+      "kv_num_heads": 2,
+      "scale": 1,
+      "softcap": 1,
+      "local_window_size": 2,
+      "do_rotary": 2,
+      "rotary_interleaved": 2,
+      "smooth_softmax": 2,
+      "qk_output": 2,
+      "k_quant_type": 3,
+      "v_quant_type": 3,
+      "kv_cache_bit_width": 2
+    },
+    "requiredAttributes": [
+      "num_heads",
+      "kv_num_heads"
+    ],
+    "requiredInputs": [
+      0,
+      5,
+      6
+    ]
+  }
+}

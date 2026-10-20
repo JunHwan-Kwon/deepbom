@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 const cli = fileURLToPath(new URL("../bin/deepbom.mjs", import.meta.url));
 const defaults = { timeoutMs: 300_000, maxOutputBytes: 64 * 1024 * 1024 };
 const limitKeys = Object.keys(defaults);
-const auditKeys = [...limitKeys, "scan", "output", "sections", "gate", "policy", "expectedSha256"];
+const auditKeys = [...limitKeys, "scan", "output", "sections", "gate", "policy", "expectedSha256", "tfMetagraph"];
 
 export class DeepBomError extends Error {
   constructor(message, { exitCode = null, document = null, cause } = {}) {
@@ -39,6 +39,7 @@ export async function audit(artifact, options = {}) {
   if (sections.length && output !== "analysis") throw new TypeError("sections require output='analysis'");
   if (options.gate != null && options.policy != null) throw new TypeError("gate and policy are mutually exclusive");
   const argv = ["audit", localPath(artifact), "--scan", choice(options.scan ?? "auto", "scan", ["auto", "structure", "integrity", "full"])];
+  if(options.tfMetagraph!==undefined){if(!Number.isSafeInteger(options.tfMetagraph)||options.tfMetagraph<0)throw new TypeError('tfMetagraph must be a nonnegative integer');argv.push('--tf-metagraph',String(options.tfMetagraph));}
   if (sections.length) argv.push("--section", sections.join(","));
   if (output !== "analysis") argv.push("--output-format", output);
   argv.push("--compact");
@@ -66,6 +67,18 @@ export async function diff(baseline, candidate, options = {}) {
   checkOptions(options, [...limitKeys, "tensorsOnly"]);
   if (options.tensorsOnly != null && typeof options.tensorsOnly !== "boolean") throw new TypeError("tensorsOnly must be boolean");
   return invoke(["diff", localPath(baseline), localPath(candidate), "--compact", ...(options.tensorsOnly ? ["--tensors"] : [])], options);
+}
+
+/** Read-only saved optimization evidence; version 2 adds bounded facts and validation. */
+export async function optimizationQuery(report, options = {}) {
+  checkOptions(options,[...limitKeys,'version','section','subject','search','offset','limit','maxBytes','sort','expectedSha256']);
+  const argv=['optimization-report',localPath(report)];
+  for(const [key,flag] of Object.entries({version:'query-version',section:'section',subject:'subject',search:'search',offset:'offset',limit:'limit',maxBytes:'max-bytes',sort:'sort',expectedSha256:'expected-sha256'})) {
+    if(options[key]===undefined)continue;
+    if(['version','offset','limit','maxBytes'].includes(key) ? !Number.isSafeInteger(options[key]) : typeof options[key]!=='string')throw new TypeError(`Invalid ${key}`);
+    argv.push(`--${flag}`,String(options[key]));
+  }
+  return invoke(argv,options);
 }
 
 /** Explicit numerical inspection of stored weights and/or imported captures. */

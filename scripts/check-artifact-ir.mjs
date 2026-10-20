@@ -38,7 +38,9 @@ const cases = [
   { format: "tflite", file: "web/samples/mobilenet_v2_1.0_224_quant.tflite", graph: true, operators: 65, values: 173, macs: "300775552" },
   { format: "gguf", file: "web/samples/tinymqa1m.Q4_0.gguf", graph: false },
   { format: "safetensors", file: "web/samples/nanofable-1m-fp16.safetensors", graph: false },
-  { format: "coreml", file: "web/samples/MNISTClassifier.mlmodel", graph: true, operators: 14, values: 16 },
+  // 16 named graph values plus 10 embedded weight/bias operand values. These
+  // reference the existing serialized storage objects and add no storage bytes.
+  { format: "coreml", file: "web/samples/MNISTClassifier.mlmodel", graph: true, operators: 14, values: 26 },
 ];
 
 const outputs = new Map();
@@ -62,7 +64,7 @@ for (const entry of cases) {
   outputs.set(entry.format, output);
 
   assert.equal(artifactIr.schema, "deepbom.artifact_ir.v2", `${entry.format} Artifact IR schema`);
-  assert.equal(artifactIr.method_version, "2.3.2", `${entry.format} Artifact IR method version`);
+  assert.equal(artifactIr.method_version, "2.3.4", `${entry.format} Artifact IR method version`);
   assert.equal(artifactIr.lineage_evidence.status, "not_provided", `${entry.format} absent conversion receipt status`);
   assert.equal(artifactIr.lineage_evidence.evidence_class, "NOT_ASSESSABLE", `${entry.format} absent conversion receipt evidence class`);
   assert.deepEqual(artifactIr.hash_contract.excluded_pointers, ["/artifact_ir_sha256"], `${entry.format} self-hash exclusion contract`);
@@ -434,6 +436,14 @@ assert.throws(() => validateArtifactEvidenceIr(tamperedScopeCount), /scope opera
 const tamperedDigest = structuredClone(onnxFirst.artifact_ir);
 tamperedDigest.artifact_ir_sha256 = "0".repeat(64);
 assert.throws(() => validateArtifactEvidenceIr(tamperedDigest), /SHA-256 is invalid/, "tampered Artifact IR digest must fail closed");
+
+// Preserve cardinalities and rehash: a swapped ledger binding must still fail.
+const runtimeLedgerMismatch = structuredClone(crossOutputContext.artifact_ir);
+runtimeLedgerMismatch.overlays.runtime[0].rows[0].backend = "unrelated_backend";
+delete runtimeLedgerMismatch.artifact_ir_sha256;
+runtimeLedgerMismatch.artifact_ir_sha256 = createHash("sha256").update(canonicalJsonForTest(runtimeLedgerMismatch)).digest("hex");
+assert.throws(() => validateArtifactEvidenceIr(runtimeLedgerMismatch), /ledger disagrees/,
+  "runtime rows must agree with their explicit node binding, even with a valid hash");
 
 const runtimeRemovedWithStaleDigest = structuredClone(crossOutputContext.artifact_ir);
 runtimeRemovedWithStaleDigest.overlays.runtime = [];

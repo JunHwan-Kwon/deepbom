@@ -1,4 +1,4 @@
-import { inspectArtifactBundle, readArtifactBundle } from "../web/lib/artifact-bundle.js";
+import { inspectArtifactBundle, readArtifactBundle, createArtifactPayloadSource } from "../web/lib/artifact-bundle.js";
 import { parseCoreMlModel } from "../web/lib/coreml-metadata-adapter.js";
 import { buildDeploymentContractDocuments } from "../web/lib/report-export-contracts.js";
 import { buildMlBomDocument } from "../web/lib/report-mlbom.js";
@@ -97,6 +97,7 @@ const coreFiles = [
 const corePlan = await inspectArtifactBundle(coreFiles);
 expect(corePlan.rootFile.name === "model.mlmodel", "Core ML root manifest binding");
 const coreBundle = await readArtifactBundle(coreFiles);
+await expectReject(readArtifactBundle(coreFiles, { metaGraphIndex: 0 }), "MetaGraph selection requires SavedModel", "A non-TensorFlow bundle cannot silently ignore an explicit MetaGraph selector");
 expect(coreBundle.analysis.artifact_bundle.files.length === 5, "Core ML package inventory includes every selected unmanifested file, including entries outside the package root");
 const workerDescriptorBundle = await readArtifactBundle(coreFiles.map((entry) => ({
   file: entry,
@@ -177,6 +178,13 @@ const shardFiles = [
   file("repo/config.json", JSON.stringify({ model_type: "fixture" }), "application/json"),
 ];
 const shardBundle = await readArtifactBundle(shardFiles);
+const verifiedPayload=createArtifactPayloadSource(shardBundle.analysis,shardFiles);
+expect(await verifiedPayload.verify()===shardBundle.analysis.model_sha256,'Payload resolver must preserve the exact bundle identity');
+await expectReject(Promise.resolve().then(()=>verifiedPayload.member('../outside')),'path','Payload cannot escape its selected member closure');
+const corruptFiles=[...shardFiles];
+const originalBytes=new Uint8Array(await shardFiles[1].arrayBuffer());originalBytes[originalBytes.length-1]^=1;
+corruptFiles[1]=file(shardFiles[1].webkitRelativePath || shardFiles[1].name,originalBytes);
+await expectReject(createArtifactPayloadSource(shardBundle.analysis,corruptFiles).verify(),'changed','A same-size replaced member must fail its hash before decoding');
 expect(shardBundle.analysis.tensor_count === 2, "SafeTensors shard tensor conservation");
 expect(shardBundle.analysis.tensors.map((item) => item.index).join(",") === "0,1", "SafeTensors shard aggregate tensor indices");
 expect(shardBundle.analysis.safetensors.tensor_count === 2, "SafeTensors shard aggregate metadata tensor count");

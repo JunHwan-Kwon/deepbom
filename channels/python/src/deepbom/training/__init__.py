@@ -3,62 +3,25 @@
 from .collector import watch, Recorder
 
 
+def recover(directory, **options):
+    from .recovery import recover as run
+    return run(directory, **options)
+
+
+def lightning_callback(model, **options):
+    from .lightning import lightning_callback as create
+    return create(model, **options)
+
+
 def callback(*, logdir, **options):
-    import keras
-
+    from .keras_callback import make_callback
     if set(options.get("capture", ("metrics",))) - {"metrics", "weights"}:
-        raise ValueError(
-            "fit callbacks capture metrics and selected end-of-batch weights; use explicit GradientTape observations for gradients/activations"
-        )
-
-    class EvidenceCallback(keras.callbacks.Callback):
-        def on_train_begin(self, logs=None):
-            self.evidence = Recorder(
-                self.model,
-                optimizer=self.model.optimizer,
-                logdir=logdir,
-                observation="manual",
-                **options
-            )
-            self.evidence.__enter__()
-            self.evidence.event("training_begin", {}, {"origin": "keras_callback"})
-
-        def on_epoch_begin(self, epoch, logs=None):
-            self.epoch = epoch
-
-        def on_train_batch_end(self, batch, logs=None):
-            self.evidence.record_metrics(
-                logs or {},
-                at={"phase": "train", "epoch": self.epoch, "batch": batch},
-                definition="keras_callback_logs; framework reductions retained",
-            )
-            if "weights" in self.evidence.capture and batch % self.evidence.every == 0:
-                self.evidence.record_snapshot(
-                    at={
-                        "phase": "train",
-                        "epoch": self.epoch,
-                        "batch": batch,
-                        "boundary": "batch_end",
-                    }
-                )
-
-        def on_test_batch_end(self, batch, logs=None):
-            self.evidence.record_metrics(
-                logs or {},
-                at={"phase": "validation", "batch": batch},
-                definition="keras_callback_logs",
-            )
-
-        def on_train_end(self, logs=None):
-            self.evidence.finish("ended", origin="keras_on_train_end")
-            self.evidence.__exit__(None, None, None)
-
-        def close(self):
-            """Call from finally if fit aborts before on_train_end."""
-            if hasattr(self, "evidence") and not self.evidence._closed:
-                self.evidence.__exit__(None, None, None)
-
-    return EvidenceCallback()
+        raise ValueError("fit callbacks capture metrics and selected weights; use explicit GradientTape observations for gradients/activations")
+    def open_recorder(model):
+        evidence = Recorder(model, optimizer=model.optimizer, logdir=logdir, observation="manual", **options)
+        evidence.__enter__()
+        return evidence
+    return make_callback(open_recorder, close=lambda evidence: evidence.__exit__(None, None, None))
 
 
 def import_logs(*args, **kwargs):

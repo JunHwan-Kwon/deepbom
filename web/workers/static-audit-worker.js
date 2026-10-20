@@ -1,3 +1,4 @@
+import { initializeNumericalWasm } from "../lib/numerical-wasm.js";
 import {
   FILE_SCOPED_STATIC_AUDIT_OPERATIONS,
   STATIC_AUDIT_OPERATION,
@@ -39,6 +40,7 @@ function metadataProgress(id, progress = {}) {
 }
 
 async function runFileScopedOperation(id, operation, payload) {
+  await initializeNumericalWasm();
   if (operation === STATIC_AUDIT_OPERATION.WEIGHT_IR) {
     if (!payload.advanced) {
       const { buildWeightIr } = await import("../lib/weight-ir.js");
@@ -97,6 +99,9 @@ self.addEventListener("message", async ({ data }) => {
     if (!(modelBytes instanceof Uint8Array)) throw new Error("Static audit worker has no loaded model.");
     const requestModelBytes = modelBytes;
     const requestFilename = filename;
+    // Byte-scoped ONNX/ExecuTorch routes use shared shape/statistics helpers too.
+    // Install the listener first, then await readiness for every analysis route.
+    await initializeNumericalWasm();
     const tflite = String(operation).startsWith("tflite_") ? await ensureWasm(id) : null;
     let result;
     if (operation === STATIC_AUDIT_OPERATION.TFLITE_ANALYZE) {

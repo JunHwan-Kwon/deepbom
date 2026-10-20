@@ -1,32 +1,30 @@
 import { shapeElementCount } from "../tensor-size.js";
-import { canonicalJson } from "../report-utils.js";
-import { sha256TextHex } from "../sha256-sync.js";
+import { canonicalJsonInput } from "../report-utils.js";
+import { canonicalEvidenceDigest } from "../evidence-identity.js";
+import { portableContract } from "../portable-contracts.js";
 import { modelEvidenceSource } from "../ir-evidence-contract.js";
 
 export const METHOD_VERSION = "1.0.0";
 export const SHA256 = /^[a-f0-9]{64}$/;
 export function requireCondition(ok, message) { if (!ok) throw new Error(`Numerical IR: ${message}`); }
 export function exactKeys(value, keys, label) {
-  requireCondition(value && typeof value === "object" && !Array.isArray(value), `${label} must be an object`);
-  const allowed = new Set(keys);
-  requireCondition(Object.keys(value).every(key => allowed.has(key)), `${label} contains an unknown field`);
-  requireCondition(keys.every(key => Object.hasOwn(value, key)), `${label} is missing a field`);
+  const error = portableContract("evidence_contract", {operation:"exact_keys",value:canonicalJsonInput(value ?? null),keys,label});
+  requireCondition(!error,error);
 }
 export function sourceContract(input) {
   return modelEvidenceSource(input);
 }
 export function bindSource(source, model) {
-  exactKeys(source, ["model_ir_sha256", "artifact_sha256", "artifact_set_sha256"], "source");
-  const expected = sourceContract(model).source;
-  requireCondition(canonicalJson(source) === canonicalJson(expected), "source does not match Model IR and artifact identity");
+  sourceContract(model);
+  portableContract("semantic_validation",{operation:"numerical_source",value:source,model});
 }
-export function seal(body, field) { return { ...body, [field]: sha256TextHex(canonicalJson(body)) }; }
+export function seal(body, field) { return { ...body, [field]: canonicalEvidenceDigest(body) }; }
 export function checkDigest(document, field) {
   const { [field]: digest, ...body } = document;
-  requireCondition(SHA256.test(digest || "") && digest === sha256TextHex(canonicalJson(body)), `${field} mismatch`);
+  requireCondition(SHA256.test(digest || "") && digest === canonicalEvidenceDigest(body), `${field} mismatch`);
 }
 export function decimalCount(value, label = "count") {
-  requireCondition(typeof value === "string" && /^(0|[1-9][0-9]*)$/.test(value), `${label} must be a canonical nonnegative decimal string`);
+  requireCondition(portableContract("evidence_contract", {operation:"decimal_count",value:value ?? null}), `${label} must be a canonical nonnegative decimal string`);
   return BigInt(value);
 }
 export function shapeCount(shape) {

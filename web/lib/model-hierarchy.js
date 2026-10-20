@@ -119,7 +119,7 @@ export function buildModelHierarchy(input, { annotations = [] } = {}) {
   }));
   const otherRelationships = model.program.relationships.filter(row => ["control_dependency", "state_dependency", "call"].includes(row.kind));
   const body = {
-    schema: MODEL_HIERARCHY_SCHEMA, method_version: "1.0.0",
+    schema: MODEL_HIERARCHY_SCHEMA, method_version: annotations.some(row=>row.source_pointer.endsWith('/source_annotation')) ? "1.1.0" : "1.0.0",
     source: { model_ir_schema: model.schema, model_ir_sha256: model.model_ir_sha256,
       artifact_ir_sha256: model.source_contract.sha256, artifact_sha256: model.artifact.sha256 },
     status: model.program.operations.length ? annotated ? "source_annotated" : "structural_fallback" : "not_applicable_no_program",
@@ -286,7 +286,7 @@ function validateAnnotations(rows, model) {
     if (Object.keys(row).length !== keys.length || keys.some(key => !Object.hasOwn(row, key)) || !ids.has(row.subject_ref) || seen.has(row.subject_ref)) throw new Error("Invalid source annotation identity or fields.");
     seen.add(row.subject_ref);
     if (!["observed_exporter_annotation", "invalid_annotation"].includes(row.status)
-      || !HASH.test(row.metadata_sha256 || "") || typeof row.source_pointer !== "string" || !/^\/ops\/\d+\/onnx_metadata_properties$/.test(row.source_pointer) || row.source_pointer.length > 128
+      || !HASH.test(row.metadata_sha256 || "") || typeof row.source_pointer !== "string" || !/^\/ops\/\d+\/(onnx_metadata_properties|source_annotation)$/.test(row.source_pointer) || row.source_pointer.length > 128
       || row.call_identity_status !== "exporter_annotation_not_runtime_invocation"
       || !Array.isArray(row.scope_names) || !Array.isArray(row.class_names)
       || row.scope_names.length > 128 || row.class_names.length > 128

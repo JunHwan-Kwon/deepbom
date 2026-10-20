@@ -32,7 +32,7 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
     analysis_engine: "shared_browser_cli_javascript_and_tflite_wasm",
     commands: [
       { name: "evidence-workflow", input_count: 1, input: "deepbom.evidence_workflow_request.v1 or saved result", operations: ["snapshot","omop","protocol","evaluation","provenance","review","deployment","verify"], outputs: ["deepbom.evidence_workflow_result.v1","deepbom.evidence_workflow_query.v1","html","pdf","deepbom.evidence_standard_projection.v1"], model_execution: false, web_viewer: "https://deepbom.org/reports/evidence/", boundary: "External measurements remain reported evidence. Saved file observations are not newly verified bytes; no clinical or deployment approval." },
-      { name: "optimization-report", input_count: 1, input: "deepbom.optimization_report.v1 JSON", outputs: ["deepbom.optimization_report_query.v1", "deepbom.optimization_report.v1", "deepbom.optimization_diff.v1", "html", "pdf"], sections: ["summary", "changes", "structure", "subject"], model_execution: false, pdf_requirement: "Matching Python deepbom[report]; optional DEEPBOM_REPORT_PYTHON interpreter", web_viewer: "https://deepbom.org/reports/optimization/" },
+      { name: "optimization-report", input_count: 1, input: "deepbom.optimization_report.v1 JSON", outputs: ["deepbom.optimization_report_query.v1", "deepbom.optimization_report_query.v2", "deepbom.optimization_report.v1", "deepbom.optimization_diff.v1", "html", "pdf"], sections: ["summary", "changes", "structure", "subject"], optional_query_v2:{flag:"--query-version 2",additional_sections:["facts","validation","invocations"],byte_budget:{flag:"--max-bytes",minimum:2048,maximum:1048576},sort:"--sort macs_desc (invocations only)"}, model_execution: false, pdf_requirement: "Matching Python deepbom[report]; optional DEEPBOM_REPORT_PYTHON interpreter", web_viewer: "https://deepbom.org/reports/optimization/" },
       { name: "audit", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },
       { name: "gguf", input_count: 1, outputs: [...AUDIT_OUTPUT_FORMATS] },
       { name: "batch", input_count: 1, outputs: ["summary", "deepbom.batch_result.v1"], manifest_schema: "deepbom.batch_manifest.v1" },
@@ -54,8 +54,10 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       standalone_extensions: [".tflite", ".onnx", ".gguf", ".safetensors", ".mlmodel", ".pte", ".ptd", ".pb", ".h5", ".hdf5", ".keras", ".pt2", ".pt", ".pth", ".ckpt"],
       package_kinds: ["coreml_mlpackage", "onnx_external_data", "safetensors_sharded_repository", "executorch_ptd", "tensorflow_savedmodel"],
       preview_boundaries: {
-        static_graph: ["tensorflow_graphdef", "tensorflow_savedmodel_first_metagraph", "keras_declarative_config", "pt2_declarative_graph"],
-        safe_envelope_only: ["generic_hdf5", "pytorch_pt_pth_ckpt"],
+        static_graph: ["tensorflow_graphdef", "tensorflow_savedmodel_selected_metagraph", "keras_declarative_config", "pt2_declarative_graph"],
+        safe_envelope_only: ["pytorch_pt_pth_ckpt"],
+        bounded_numeric_inventory: ["hdf5_fixed_numeric_datasets", "keras_hdf5_weights", "savedmodel_tensorbundle_v2"],
+        tensorflow_metagraph: {default_index:0, selector:"--tf-metagraph", function_bodies:"inventory_not_inlined"},
         arbitrary_framework_object_construction: false,
       },
       remote_sources: {
@@ -70,6 +72,16 @@ export function buildCliCapabilities(version, { defaultTarget, deltaTargets } = 
       symbolic_stdin_reason: "Artifact identity, sidecar resolution, and bounded range reads require a stable regular file or package directory.",
     },
     default_audit_output: AUDIT_DEFAULT_OUTPUT_FORMAT,
+    local_python_development: {
+      package: "deepbom", channel: "trusted_local_python_only", hosted_execution: false,
+      inspection: {api:"deepbom.inspect_native",cli:"python -m deepbom inspect-native",schema:"deepbom.native_inspection.v1",probe_execution:"independent_copy_only_when_inputs_supplied"},
+      observation: {api:"deepbom.monitor",presets:["basic","weights","activations","gradients"],manual_loops:["torch","tensorflow_gradient_tape"],keras:"session.keras_callback()",lightning:"deepbom.training.lightning_callback",optimizer_owned_by:"caller",metrics_inferred:false},
+      automatic_attachment: {api:"deepbom.autolog",framework:"keras",qualified_versions:{keras:"3.11.x",tensorflow:"2.20.x",wrapt:"2.5.0"},presets:["basic","weights"]},
+      optional_metrics: {api:"deepbom.metrics.evaluate",producer:"torchmetrics==1.9.0",metrics:["ssim","generalized_dice"],requires:["prediction","target","sample_ids","options"]},
+      background: {api:"deepbom.jobs.AnalysisQueue",inputs:"immutable JSON or verified completed files",file_watcher:"deepbom.completed_files.CompletedFileWatcher"},
+      correspondence: {api:"deepbom.correspondence.correspondence",scope:"explicit many-to-many Model IR subject bindings",equivalence_inferred:false},
+      torchlens: "experimental separately qualified probe; not a production adapter",
+    },
     output_contracts: {
       ...cloneAuditOutputContracts(),
       analysis: {

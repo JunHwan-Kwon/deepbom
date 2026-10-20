@@ -32,6 +32,10 @@ try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   await page.goto(`http://127.0.0.1:${server.address().port}/web/`, { waitUntil: "domcontentloaded" });
   await page.evaluate(async (model) => {
+    // This component harness runs before the application's async initialization.
+    // Use the same readiness boundary as app.js before invoking sync consumers.
+    const { initializeNumericalWasm } = await import("/web/lib/numerical-wasm.js");
+    await initializeNumericalWasm();
     const { insightDashboardCards, insightDashboardRecommendationItems } = await import("/web/lib/audit-ui.js");
     const { artifactOverviewPanels } = await import("/web/lib/artifact-overview.js");
     const { renderOpDetailPanel } = await import("/web/lib/graph-ui.js");

@@ -1,3 +1,4 @@
+import { protobufVarint } from "./portable-protobuf.js";
 const TFLITE_RUNTIME_INFO_ADAPTER_SCHEMA = "deepbom.tflite_runtime_info_adapter.v1";
 const RUNTIME_ASSIGNMENT_SCHEMA = "deepbom.runtime_assignment.v1.10";
 const MAX_PROTO_BYTES = 32 * 1024 * 1024;
@@ -333,17 +334,9 @@ export class ProtoReader {
   }
 
   rawVarint() {
-    let value = 0n;
-    for (let shift = 0n; shift < 70n; shift += 7n) {
-      if (this.position >= this.bytes.length) throw new Error(`${this.label} contains a truncated protobuf varint.`);
-      const byte = this.bytes[this.position++];
-      value |= BigInt(byte & 0x7f) << shift;
-      if ((byte & 0x80) === 0) {
-        if (value > 0xffffffffffffffffn) throw new Error(`${this.label} protobuf integer exceeds the uint64 range.`);
-        return value;
-      }
-    }
-    throw new Error(`${this.label} contains an overlong protobuf varint.`);
+    const result = protobufVarint(this.bytes, this.position, this.label);
+    this.position = result.next;
+    return result.value;
   }
 
   varint() {

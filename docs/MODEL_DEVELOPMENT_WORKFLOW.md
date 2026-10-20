@@ -133,9 +133,9 @@ artifacts such as GGUF and SafeTensors do not acquire an invented graph.
 4. Inspect before/after changes, disconnected ports, cycles and applicable
    template shape/dtype checks. Undo/Redo and candidate snapshots use one history.
 5. **Structure code · Mermaid** opens beside the graph on desktop (stacked on
-   narrow screens). Graph edits update clean code immediately. **Sync to graph**
+   narrow screens). Graph edits update clean code immediately. **Replace code from graph**
    means **Graph → Code**, explicitly replacing this region's code draft.
-   Edit the code, then **Sync to code** means **Code → Graph**: validate and apply
+   Edit the code, then **Apply code to graph** means **Code → Graph**: validate and apply
    new layers and connections as one undoable edit. Typing alone does not change
    the graph. Keep existing declarations unchanged; new nodes require unique IDs
    and a `:::template_Name` or `:::copy_nN` annotation. These are ordinary Mermaid
@@ -196,7 +196,7 @@ for manual Ctrl+C / Cmd+C.
 Unapplied code survives graph edits, layout changes, panel hiding and region
 switches. If the graph revision also changes, code application is blocked until
 the text is reconciled with the current graph; stale aliases are never silently
-reinterpreted. Download pending text before replacing it with **Sync to graph**.
+reinterpreted. Download pending text before replacing it with **Replace code from graph**.
 Syntax, unknown/duplicate port, missing output, cycle and supported shape errors
 leave the graph/history unchanged. Pending code must be applied or explicitly
 replaced before saving a project/candidate; project files contain committed edits.
@@ -378,3 +378,5 @@ text/visual edit parity, rejected invalid references/port assignments, stale
 metric invalidation, undo, baseline preservation and structural diff before
 calling this feature implemented. Supported candidate export additionally
 requires adapter-specific restoration and fresh-evidence checks.
+
+See [automatic development integration](AUTOMATIC_DEVELOPMENT_INTEGRATION.md) for opt-in monitor, Keras/Lightning adapters, immutable analysis jobs, metric plugins and bounded report queries.

@@ -1,12 +1,13 @@
 import { sha256BytesHex } from "./sha256-sync.js";
+import { protobufWireFields, protobufVarint as readVarint } from "./portable-protobuf.js";
 
 const MAX_PROTOBUF_BYTES = 1024 * 1024 * 1024;
-const MAX_PROTOBUF_FIELDS = 2_000_000;
 const MAX_ZIP_ENTRIES = 100_000;
 const MAX_ZIP_TEXT_BYTES = 16 * 1024 * 1024;
 const MAX_ZIP_CENTRAL_DIRECTORY_BYTES = 64 * 1024 * 1024;
 const MAX_ZIP_TEXT_COMPRESSION_RATIO = 200;
 const UTF8 = new TextDecoder("utf-8", { fatal: true });
+const tensorProtoPayloads = new WeakMap();
 
 export function analyzeTensorFlowGraphDef(bytes, filename = "graph.pb") {
   requireBytes(bytes, MAX_PROTOBUF_BYTES, "TensorFlow GraphDef");
@@ -14,28 +15,35 @@ export function analyzeTensorFlowGraphDef(bytes, filename = "graph.pb") {
   return graphDefAnalysis(graph, filename, "graphdef");
 }
 
-export function analyzeTensorFlowProtobuf(bytes, filename = "graph.pb") {
+export function analyzeTensorFlowProtobuf(bytes, filename = "graph.pb", {metaGraphIndex = 0} = {}) {
   requireBytes(bytes, MAX_PROTOBUF_BYTES, "TensorFlow protobuf");
   if (/^saved_model\.pb$/i.test(String(filename).split(/[\\/]/).pop() || "")) {
     const graphs = parseSavedModelGraphDefs(bytes);
-    const primary = graphDefAnalysis(graphs[0], filename, "savedmodel", {
-      source: "SavedModel.meta_graphs[0].graph_def",
+    if (!Number.isSafeInteger(metaGraphIndex) || metaGraphIndex < 0 || !graphs[metaGraphIndex]) throw new Error("Selected SavedModel MetaGraph does not exist");
+    const selected = graphs[metaGraphIndex];
+    const primary = graphDefAnalysis(selected, filename, "savedmodel", {
+      source: `SavedModel.meta_graphs[${metaGraphIndex}].graph_def`,
       artifact_role: "model_package",
     });
     primary.savedmodel = {
       schema: "deepbom.tensorflow_savedmodel_safe_static_contract.v1",
       meta_graph_count: graphs.length,
-      materialized_meta_graph_indices: [0],
-      signature_defs: graphs[0].signatures,
-      additional_meta_graphs: graphs.slice(1).map((graph, index) => ({ index: index + 1, node_count: graph.nodes.length, function_count: graph.functions.length, signature_count: graph.signatures.length })),
+      selected_meta_graph_index: metaGraphIndex,
+      materialized_meta_graph_indices: [metaGraphIndex],
+      signature_defs: selected.signatures,
+      meta_graphs: graphs.map((graph,index) => ({index,tags:graph.tags,signatures:graph.signatures,functions:graph.functions,
+        resource_variables:graph.nodes.filter(n=>n.op === "VarHandleOp").map(n=>({name:n.name,attributes:n.attributes})),
+        object_graph:graph.object_graph, node_count:graph.nodes.length})),
+      additional_meta_graphs: graphs.map((graph,index) => ({index,node_count:graph.nodes.length,function_count:graph.functions.length,signature_count:graph.signatures.length})).filter(row=>row.index!==metaGraphIndex),
       package_closure_status: "protobuf_only_variables_assets_and_fingerprints_not_bound",
       evidence_class: "OBSERVED_SERIALIZED_ARTIFACT",
       unsafe_execution_performed: false,
-      interpretation_boundary: "The first serialized MetaGraph GraphDef and SignatureDef tensor contracts are materialized. Additional MetaGraphs are inventoried but not merged into one execution graph, and this standalone protobuf does not bind the SavedModel directory, variables, assets, fingerprints, kernels, or runtime behavior.",
+      interpretation_boundary: "The explicitly selected MetaGraph GraphDef and SignatureDef tensor contracts are materialized. Additional MetaGraphs are inventoried but not merged into one execution graph, and this standalone protobuf does not bind the SavedModel directory, variables, assets, fingerprints, kernels, or runtime behavior.",
     };
     primary.format_extensions.savedmodel = primary.savedmodel;
     return primary;
   }
+  if (metaGraphIndex !== 0) throw new Error("MetaGraph selection applies only to SavedModel");
   return analyzeTensorFlowGraphDef(bytes, filename);
 }
 
@@ -75,6 +83,7 @@ export async function readHdf5EnvelopeFile(file, filename = file?.name || "model
     analysis.safe_source_artifact.signature_offset = offset;
     analysis.safe_source_artifact.file_size_bytes = file.size;
     analysis.safe_source_artifact.header_range = { start: offset, end_exclusive: offset + bytes.length };
+    await attachHdf5Objects(analysis, file);
     return { analysis, retainedBytes: bytes };
   }
   throw new Error("HDF5 signature was not found at an allowed user-block boundary within the bounded 1 GiB search range.");
@@ -82,7 +91,7 @@ export async function readHdf5EnvelopeFile(file, filename = file?.name || "model
 
 export async function analyzeZipModelEnvelope(bytes, filename = "model.pt2", forcedFormat = "") {
   requireBytes(bytes, Number.MAX_SAFE_INTEGER, "ZIP model container");
-  const archive = parseZipDirectory(bytes);
+  const archive = await parseZipDirectory(bytes);
   const lower = String(filename).toLowerCase();
   const format = forcedFormat || (lower.endsWith(".pt2") ? "pt2" : lower.endsWith(".keras") ? "keras" : "pytorch_checkpoint");
   const selected = await inspectKnownZipMembers(archive, format, (entry) => extractZipEntry(bytes, entry));
@@ -106,17 +115,9 @@ export async function analyzeZipModelEnvelope(bytes, filename = "model.pt2", for
 
 export async function readZipModelEnvelopeFile(file, filename = file?.name || "model.pt2", forcedFormat = "") {
   requireFile(file, "ZIP model container");
-  const tailLength = Math.min(file.size, 65_557);
-  const tailStart = file.size - tailLength;
-  const tail = new Uint8Array(await file.slice(tailStart, file.size).arrayBuffer());
-  const eocd = findEocd(tail);
-  const eocdView = new DataView(tail.buffer, tail.byteOffset, tail.byteLength);
-  const entryCount = eocdView.getUint16(eocd + 10, true);
-  const centralDirectorySize = eocdView.getUint32(eocd + 12, true);
-  const centralDirectoryOffset = eocdView.getUint32(eocd + 16, true);
-  validateZipDirectoryBounds(entryCount, centralDirectorySize, centralDirectoryOffset, file.size, tailStart + eocd);
-  const central = new Uint8Array(await file.slice(centralDirectoryOffset, centralDirectoryOffset + centralDirectorySize).arrayBuffer());
-  const archive = parseZipDirectoryRecords(central, entryCount, centralDirectoryOffset, centralDirectorySize);
+  const { archive, tail } = await readZipDirectory(file.size, async (start, end) =>
+    new Uint8Array(await file.slice(start, end).arrayBuffer()));
+  const centralDirectorySize = archive.centralDirectorySize;
   const lower = String(filename).toLowerCase();
   const format = forcedFormat || (lower.endsWith(".pt2") ? "pt2" : lower.endsWith(".keras") ? "keras" : "pytorch_checkpoint");
   const selected = await inspectKnownZipMembers(archive, format, (entry) => extractZipFileEntry(file, entry));
@@ -136,6 +137,10 @@ export async function readZipModelEnvelopeFile(file, filename = file?.name || "m
   }, role);
   if (format === "pt2") materializePt2DeclarativeGraph(analysis, selected);
   if (format === "keras") materializeKerasDeclarativeGraph(analysis, selected);
+  if (format === "keras") {
+    const weights = await readKerasWeightMember(file);
+    if (weights) await attachHdf5Objects(analysis, weights.bytes, weights.path);
+  }
   analysis.file_size = file.size;
   analysis.file_size_bytes = file.size;
   return { analysis, retainedBytes: tail };
@@ -191,15 +196,20 @@ export function parseSavedModelGraphDefs(bytes) {
   return metaGraphs.map((field, index) => {
     const meta = protobufFields(field.bytes, `SavedModel.meta_graphs[${index}]`, 1);
     const graph = meta.find((item) => item.number === 2 && item.wire === 2);
-    if (!graph) return null;
+    if (!graph) throw new Error(`SavedModel MetaGraph ${index} has no graph_def`);
     const parsed = parseGraphDef(graph.bytes, `SavedModel.meta_graphs[${index}].graph_def`);
     parsed.signatures = parseSignatureDefs(meta, `SavedModel.meta_graphs[${index}]`);
+    const info = meta.find(f=>f.number===1&&f.wire===2);
+    parsed.tags = info ? protobufFields(info.bytes,"MetaInfoDef",2).filter(f=>f.number===4&&f.wire===2).map(f=>decode(f.bytes,"MetaGraph tag")) : [];
+    const object = meta.find(f=>f.number===7&&f.wire===2);
+    parsed.object_graph = object ? parseSavedObjectGraph(object.bytes) : null;
     return parsed;
-  }).filter(Boolean);
+  });
 }
 
 export function graphDefAnalysis(graph, filename, format = "graphdef", supplemental = {}) {
   const nodeIndex = new Map(graph.nodes.map((node, index) => [node.name, index]));
+  if (nodeIndex.size !== graph.nodes.length) throw new Error("GraphDef contains duplicate node names");
   const nodeByName = new Map(graph.nodes.map((node) => [node.name, node]));
   const endpoints = new Map();
   const endpoint = (name, port = 0) => {
@@ -208,6 +218,7 @@ export function graphDefAnalysis(graph, filename, format = "graphdef", supplemen
     return endpoints.get(key);
   };
   for (const node of graph.nodes) for (const input of node.inputs) if (!input.control) endpoint(input.node, input.port);
+  for (const node of graph.nodes) if (node.op === "Const" && node.attributes?.value?.tensor) endpoint(node.name, 0);
   for (const signature of graph.signatures || []) for (const item of [...signature.inputs, ...signature.outputs]) {
     const parsed = parseTensorFlowInput(item.tensor_name);
     if (!parsed.control) endpoint(parsed.node, parsed.port);
@@ -221,13 +232,18 @@ export function graphDefAnalysis(graph, filename, format = "graphdef", supplemen
     domain: "tensorflow.graphdef",
     version: null,
     inputs: node.inputs.filter((input) => !input.control).map((input) => endpoint(input.node, input.port)),
-    outputs: [...endpoints.keys()].filter((key) => key.startsWith(`${node.name}:`)).map((key) => endpoints.get(key)).sort((a, b) => a - b),
+    outputs: (() => {
+      const rows = [...endpoints.keys()].filter(key=>key.startsWith(`${node.name}:`)).map(key=>({index:endpoints.get(key),port:Number(key.slice(node.name.length+1))}));
+      const ports = rows.length ? Array(rows.reduce((max,row)=>Math.max(max,row.port),0)+1).fill(-1) : [];
+      for (const row of rows) ports[row.port]=row.index;
+      return ports;
+    })(),
     macs: null,
     macs_status: "not_assessed_operator_semantics_and_shapes_not_materialized",
   }));
   const tensors = [...endpoints.entries()].sort(([, left], [, right]) => left - right).map(([name, index]) => {
     const sourceName = name.replace(/:\d+$/, "");
-    const contract = graphDefOutputContract(nodeByName.get(sourceName), signatureTensorInfo.get(name));
+    const contract = graphDefOutputContract(nodeByName.get(sourceName), signatureTensorInfo.get(name), Number(name.slice(name.lastIndexOf(":") + 1)));
     return {
       index, name, dtype: contract.dtype, shape: contract.shape, value_kind: "graph_value", constant_buffer: contract.constant,
       serialized_payload_bytes: contract.serialized_payload_bytes,
@@ -385,7 +401,13 @@ function parseAttrValue(bytes, label) {
     type: type ? tensorFlowDtype(safeNumber(type.value, `${label}.type`)) : null,
     shape: shape ? parseTensorShape(shape.bytes, `${label}.shape`) : null,
     tensor: tensor ? parseTensorProto(tensor.bytes, `${label}.tensor`) : null,
+    list_types: list ? protobufFields(list.bytes, `${label}.list`, 4).filter(f=>f.number===6).flatMap(f=>{
+      if(f.wire===0)return [tensorFlowDtype(safeNumber(f.value,"DataType"))];
+      if(f.wire!==2)throw new Error("Invalid AttrValue list type wire");
+      const values=[];let offset=0;while(offset<f.bytes.length){const n=readVarint(f.bytes,offset,"DataType list");offset=n.next;values.push(tensorFlowDtype(safeNumber(n.value,"DataType")));}return values;
+    }) : [],
     list_shapes: list ? protobufFields(list.bytes, `${label}.list`, 4).filter((field) => field.number === 7 && field.wire === 2).map((field, index) => parseTensorShape(field.bytes, `${label}.list.shape[${index}]`)) : [],
+    function_ref: (() => { const fn=fields.find(f=>f.number===10&&f.wire===2); return fn ? optionalString(protobufFields(fn.bytes,`${label}.func`,4),1) : null; })(),
     scalar_kinds_present: fields.filter((field) => [2,3,4,5,9,10,11,12,13,14].includes(field.number)).map((field) => field.number),
   };
 }
@@ -395,16 +417,18 @@ function parseTensorProto(bytes, label) {
   const dtypeField = fields.find((field) => field.number === 1 && field.wire === 0);
   const shapeField = fields.find((field) => field.number === 2 && field.wire === 2);
   const content = fields.find((field) => field.number === 4 && field.wire === 2)?.bytes || null;
-  return {
+  const result = {
     dtype: dtypeField ? tensorFlowDtype(safeNumber(dtypeField.value, `${label}.dtype`)) : "UNKNOWN",
     shape: shapeField ? parseTensorShape(shapeField.bytes, `${label}.tensor_shape`) : [],
     tensor_content_byte_length: content?.length || 0,
     tensor_content_sha256: content ? sha256BytesHex(content) : null,
     typed_value_field_count: fields.filter((field) => field.number >= 5 && field.number <= 19).length,
   };
+  tensorProtoPayloads.set(result, {fields, content});
+  return result;
 }
 
-function parseTensorShape(bytes, label) {
+export function parseTensorShape(bytes, label) {
   const fields = protobufFields(bytes, label, 4);
   const unknownRank = fields.find((field) => field.number === 3 && field.wire === 0);
   if (unknownRank?.value === 1n) return null;
@@ -416,11 +440,17 @@ function parseTensorShape(bytes, label) {
   });
 }
 
-function graphDefOutputContract(node, signatureInfo = null) {
+function graphDefOutputContract(node, signatureInfo = null, port = 0) {
   if (!node) return { dtype: "UNKNOWN", shape: [], constant: false, serialized_payload_bytes: 0, payload_sha256: null, status: "referenced_source_node_unresolved" };
-  const tensor = node.attributes?.value?.tensor || null;
-  const declaredShape = node.attributes?.shape?.shape ?? node.attributes?._output_shapes?.list_shapes?.[0] ?? tensor?.shape ?? null;
-  const dtype = tensor?.dtype || node.attributes?.dtype?.type || node.attributes?.T?.type || signatureInfo?.dtype || "UNKNOWN";
+  const tensor = port === 0 ? node.attributes?.value?.tensor || null : null;
+  const declaredShape = node.attributes?._output_shapes?.list_shapes?.[port] ?? (port === 0 ? node.attributes?.shape?.shape ?? tensor?.shape : null) ?? null;
+  const homogeneous = new Set(["Identity","IdentityN","Add","AddV2","Sub","Mul","RealDiv","Relu","Relu6","Sigmoid","Tanh","Conv2D","DepthwiseConv2dNative","MatMul","BatchMatMul","BatchMatMulV2","BiasAdd","Reshape","Transpose","ConcatV2","Split","SplitV"]);
+  const typedOutput = ["Placeholder","PlaceholderWithDefault","ReadVariableOp"].includes(node.op) ? node.attributes?.dtype?.type
+    : node.op === "VarHandleOp" ? "RESOURCE"
+    : ["PartitionedCall","StatefulPartitionedCall"].includes(node.op) ? node.attributes?.Tout?.list_types?.[port]
+    : node.op === "IdentityN" ? node.attributes?.T?.list_types?.[port]
+    : homogeneous.has(node.op) ? node.attributes?.T?.type : null;
+  const dtype = tensor?.dtype || signatureInfo?.dtype || typedOutput || "UNKNOWN";
   const resolvedShape = Array.isArray(declaredShape) ? declaredShape : Array.isArray(signatureInfo?.shape) ? signatureInfo.shape : [];
   return {
     dtype,
@@ -433,8 +463,66 @@ function graphDefOutputContract(node, signatureInfo = null) {
   };
 }
 
-function tensorFlowDtype(value) {
+export function tensorFlowDtype(value) {
   return ({ 1:"FLOAT32",2:"FLOAT64",3:"INT32",4:"UINT8",5:"INT16",6:"INT8",7:"STRING",8:"COMPLEX64",9:"INT64",10:"BOOL",14:"BFLOAT16",17:"UINT16",19:"FLOAT16",22:"UINT32",23:"UINT64" })[value] || `TF_DATATYPE_${value}`;
+}
+
+// TensorProto decoding reuses the shared scalar decoder for tensor_content.
+// Typed repeated fields follow TensorFlow MakeNdarray's last-value padding,
+// without constructing a Graph, Session, checkpoint object, or custom op.
+export function tensorFlowNumericSources(bytes, {savedModel = false, metaGraphIndex = 0} = {}) {
+  const graph = savedModel ? parseSavedModelGraphDefs(bytes)[metaGraphIndex] : parseGraphDef(bytes, "GraphDef");
+  if (!graph) throw new Error("Selected SavedModel MetaGraph does not exist");
+  return graph.nodes.filter(node => node.op === "Const" && node.attributes?.value?.tensor).map(node => {
+    const tensor = node.attributes.value.tensor;
+    return {name:`${node.name}:0`, dtype:tensor.dtype, shape:tensor.shape,
+      visit:async (visitor, {maxValues = 100_000_000, signal} = {}) => {
+        const {fields, content} = tensorProtoPayloads.get(tensor);
+        const unavailable = reason => ({status:"not_assessed", reason});
+        if (!Array.isArray(tensor.shape) || tensor.shape.some(d => !Number.isSafeInteger(d) || d < 0)) return unavailable("shape_not_exact");
+        const count = tensor.shape.reduce((n, d) => n * BigInt(d), 1n);
+        if (count > BigInt(maxValues)) return unavailable("value_budget_exceeded");
+        if (fields.find(f => f.number === 3)?.value > 0n) return unavailable("tensor_proto_version_not_qualified");
+        for (const number of [1,2,3,4]) if (fields.filter(f => f.number === number).length > 1) throw new Error("TensorProto repeats a singular field");
+        const typedFields = fields.filter(f => f.number >= 5 && f.number <= 18);
+        if (content?.length) {
+          if (typedFields.length) throw new Error("TensorProto contains conflicting numeric representations");
+          const {visitDeclaredNumericBytes} = await import("../onnx.js");
+          signal?.throwIfAborted();
+          const result = visitDeclaredNumericBytes(content, tensor.dtype, tensor.shape, visitor);
+          return result.ok ? {status:"assessed", representation: /^COMPLEX/.test(tensor.dtype) ? "complex_magnitude" : "stored_scalar", payload_sha256:sha256BytesHex(content), invalid_encoding_count:0} : unavailable(result.reason);
+        }
+        const field = {FLOAT32:5,FLOAT64:6,INT32:7,INT16:7,UINT16:7,INT8:7,UINT8:7,INT64:10,BOOL:11,FLOAT16:13,BFLOAT16:13,UINT32:16,UINT64:17}[tensor.dtype];
+        if (!field) return unavailable("tensor_proto_typed_encoding_not_qualified");
+        if (typedFields.some(f => f.number !== field)) throw new Error("TensorProto typed payload contradicts dtype");
+        const values = [];
+        const append = value => { if (values.length >= maxValues || BigInt(values.length) >= count) throw new Error("TensorProto typed value count exceeds its declared shape or budget"); values.push(value); };
+        for (const item of typedFields) {
+          if (field === 5 || field === 6) {
+            const width = field === 5 ? 4 : 8;
+            if (![2, field === 5 ? 5 : 1].includes(item.wire) || item.bytes.length % width) throw new Error("TensorProto float field is truncated or has invalid wire type");
+            const view = new DataView(item.bytes.buffer, item.bytes.byteOffset, item.bytes.byteLength);
+            for (let offset = 0; offset < item.bytes.length; offset += width) append(width === 4 ? view.getFloat32(offset, true) : view.getFloat64(offset, true));
+          } else if (item.wire === 0) append(item.value);
+          else if (item.wire === 2) {
+            for (let offset = 0; offset < item.bytes.length;) {const v = readVarint(item.bytes, offset, "TensorProto packed integer"); append(v.value); offset = v.next;}
+          } else throw new Error("TensorProto integer field has invalid wire type");
+          if (values.length > maxValues || BigInt(values.length) > count) throw new Error("TensorProto typed value count exceeds its declared shape or budget");
+        }
+        const {float16ToNumber, bfloat16ToNumber} = await import("./scalar-numeric.js");
+        const convert = value => {
+          if (field === 5 || field === 6) return value;
+          if (field === 13) return tensor.dtype === "FLOAT16" ? float16ToNumber(Number(BigInt.asUintN(16, value))) : bfloat16ToNumber(Number(BigInt.asUintN(16, value)));
+          if (tensor.dtype === "BOOL") return value === 0n ? 0 : 1;
+          const width = Number(tensor.dtype.match(/\d+$/)[0]);
+          const v = tensor.dtype.startsWith("UINT") ? BigInt.asUintN(width, value) : BigInt.asIntN(width, value);
+          return width === 64 ? v : Number(v);
+        };
+        const fallback = values.length ? values.at(-1) : field === 5 || field === 6 ? 0 : 0n;
+        for (let i = 0; i < Number(count); i++) { if (i % 65536 === 0) signal?.throwIfAborted(); visitor(convert(i < values.length ? values[i] : fallback)); }
+        return {status:"assessed", representation:"stored_scalar", payload_sha256:null, invalid_encoding_count:0};
+      }};
+  });
 }
 
 function parseTensorFlowInput(value) {
@@ -443,23 +531,40 @@ function parseTensorFlowInput(value) {
   const match = /^(.*?)(?::(\d+))?$/.exec(body);
   if (!match || !match[1]) throw new Error(`Invalid TensorFlow NodeDef input reference ${JSON.stringify(value)}.`);
   const port = match[2] == null ? 0 : Number(match[2]);
-  if (!Number.isSafeInteger(port) || port < 0) throw new Error(`Invalid TensorFlow output port in ${JSON.stringify(value)}.`);
+  if (!Number.isSafeInteger(port) || port < 0 || port > 100_000) throw new Error(`Invalid TensorFlow output port in ${JSON.stringify(value)}.`);
   return { serialized: value, node: match[1], port, control };
 }
 
 function parseFunctionLibrary(bytes, label) {
-  return protobufFields(bytes, label, 1).filter((field) => field.number === 1 && field.wire === 2).map((field, index) => {
-    const fields = protobufFields(field.bytes, `${label}.function[${index}]`, 2);
-    const signature = fields.find((item) => item.number === 1 && item.wire === 2);
-    const functionName = signature ? optionalString(protobufFields(signature.bytes, `${label}.function[${index}].signature`, 3), 1) : null;
-    return {
-      index,
-      name: functionName || `function_${index}`,
-      node_count: fields.filter((item) => item.number === 3 && item.wire === 2).length,
-      return_entry_count: fields.filter((item) => item.number === 4 && item.wire === 2).length,
-      control_return_entry_count: fields.filter((item) => item.number === 6 && item.wire === 2).length,
-    };
+  const seen = new Set();
+  return protobufFields(bytes, label, 1).filter(field=>field.number===1&&field.wire===2).map((field,index) => {
+    const fields = protobufFields(field.bytes, `${label}.function[${index}]`,2);
+    const signature = fields.find(f=>f.number===1&&f.wire===2);
+    const sig = signature ? protobufFields(signature.bytes,`${label}.signature`,3) : [];
+    const name = optionalString(sig,1);
+    if (!name || seen.has(name)) throw new Error("Missing or repeated FunctionDef name"); seen.add(name);
+    const args = number => sig.filter(f=>f.number===number&&f.wire===2).map(f=>{const a=protobufFields(f.bytes,"ArgDef",4);return {name:optionalString(a,1),dtype:tensorFlowDtype(varintNumber(a.find(f=>f.number===3))||0),type_attr:optionalString(a,4),number_attr:optionalString(a,5),type_list_attr:optionalString(a,6)};});
+    const map = number => fields.filter(f=>f.number===number&&f.wire===2).map(f=>{const a=protobufFields(f.bytes,"FunctionDef.map",3);return {key:requiredString(a,1,"map key"),value:requiredString(a,2,"map value")};});
+    const nodes = fields.filter(f=>f.number===3&&f.wire===2).map((f,i)=>parseNodeDef(f.bytes,`${label}.node[${i}]`));
+    return {index,name,node_count:nodes.length,return_entry_count:map(4).length,control_return_entry_count:map(6).length,
+      inputs:args(2),outputs:args(3),nodes,returns:map(4),control_returns:map(6),
+      status:"serialized_function_definition_not_inlined_or_counted_as_execution"};
   });
+}
+
+function parseSavedObjectGraph(bytes) {
+  const fields=protobufFields(bytes,"SavedObjectGraph",1);
+  const nodes=fields.filter(f=>f.number===1&&f.wire===2).map((field,index)=>{
+    const row=protobufFields(field.bytes,"SavedObject",2), variable=row.find(f=>f.number===7&&f.wire===2);
+    const refs=number=>row.filter(f=>f.number===number&&f.wire===2).map(f=>{const ref=protobufFields(f.bytes,"ObjectReference",3);return {node_id:varintNumber(ref.find(f=>f.number===1))??0,local_name:optionalString(ref,2)};});
+    const vf=variable?protobufFields(variable.bytes,"SavedVariable",3):[];
+    const shape=vf.find(f=>f.number===2&&f.wire===2);
+    return {index,children:refs(1),dependencies:refs(15),variable:variable?{
+      name:optionalString(vf,6),dtype:tensorFlowDtype(varintNumber(vf.find(f=>f.number===1))||0),shape:shape?parseTensorShape(shape.bytes,"SavedVariable.shape"):null,
+      trainable:varintNumber(vf.find(f=>f.number===3))===1}:null};
+  });
+  for(const row of nodes) for(const ref of [...row.children,...row.dependencies]) if(ref.node_id<0||ref.node_id>=nodes.length) throw new Error("SavedObjectGraph reference outside its node inventory");
+  return {nodes,status:"serialized_object_relationships_not_checkpoint_key_mapping"};
 }
 
 function parseVersionDef(bytes) {
@@ -471,34 +576,82 @@ function parseVersionDef(bytes) {
   };
 }
 
-function protobufFields(bytes, label, depth) {
+export function protobufFields(bytes, label, depth) {
   if (depth > 8) throw new Error(`${label} exceeds the bounded protobuf nesting depth.`);
-  const fields = [];
-  let offset = 0;
-  while (offset < bytes.length) {
-    if (fields.length >= MAX_PROTOBUF_FIELDS) throw new Error(`${label} exceeds ${MAX_PROTOBUF_FIELDS} protobuf fields.`);
-    const tag = readVarint(bytes, offset, label); offset = tag.next;
-    const number = Number(tag.value >> 3n);
-    const wire = Number(tag.value & 7n);
-    if (!Number.isSafeInteger(number) || number <= 0) throw new Error(`${label} contains an invalid protobuf field number.`);
-    if (wire === 0) { const value = readVarint(bytes, offset, label); offset = value.next; fields.push({ number, wire, value: value.value }); }
-    else if (wire === 1) { requireRange(bytes, offset, 8, label); fields.push({ number, wire, bytes: bytes.subarray(offset, offset + 8) }); offset += 8; }
-    else if (wire === 2) { const length = readVarint(bytes, offset, label); offset = length.next; const size = safeNumber(length.value, `${label} length`); requireRange(bytes, offset, size, label); fields.push({ number, wire, bytes: bytes.subarray(offset, offset + size) }); offset += size; }
-    else if (wire === 5) { requireRange(bytes, offset, 4, label); fields.push({ number, wire, bytes: bytes.subarray(offset, offset + 4) }); offset += 4; }
-    else throw new Error(`${label} contains unsupported protobuf wire type ${wire}.`);
-  }
-  return fields;
+  return protobufWireFields(bytes, label).map(({ no: number, wire, value, offset, length }) => wire === 0
+    ? { number, wire, value: BigInt(value) }
+    : { number, wire, bytes: bytes.subarray(offset, offset + length) });
 }
 
-function parseZipDirectory(bytes) {
-  const eocd = findEocd(bytes);
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const entryCount = view.getUint16(eocd + 10, true);
-  const centralDirectorySize = view.getUint32(eocd + 12, true);
-  const centralDirectoryOffset = view.getUint32(eocd + 16, true);
-  validateZipDirectoryBounds(entryCount, centralDirectorySize, centralDirectoryOffset, bytes.length, eocd);
-  const central = bytes.subarray(centralDirectoryOffset, centralDirectoryOffset + centralDirectorySize);
-  return parseZipDirectoryRecords(central, entryCount, centralDirectoryOffset, centralDirectorySize);
+async function parseZipDirectory(bytes) {
+  return (await readZipDirectory(bytes.length, async (start, end) => bytes.subarray(start, end))).archive;
+}
+
+// PKWARE APPNOTE 6.3.10, sections 4.3.14–16 and 4.5.3. Full and range readers
+// share the same bounds and exact 64-bit decoding; addresses must fit JS indexing.
+async function readZipDirectory(fileSize, read) {
+  const range = async (start, end) => {
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end < start || end > fileSize) throw new Error("ZIP record exceeds the source byte range.");
+    const bytes = await read(start, end);
+    if (bytes.length !== end - start) throw new Error("ZIP record read was truncated.");
+    return bytes;
+  };
+  const tailStart = Math.max(0, fileSize - 65_577);
+  const tail = await range(tailStart, fileSize);
+  const localEocd = findEocd(tail), eocd = tailStart + localEocd;
+  const v = new DataView(tail.buffer, tail.byteOffset, tail.byteLength);
+  let entryCount = v.getUint16(localEocd + 10, true);
+  let centralDirectorySize = v.getUint32(localEocd + 12, true);
+  let centralDirectoryOffset = v.getUint32(localEocd + 16, true);
+  const legacy = [entryCount, centralDirectorySize, centralDirectoryOffset];
+  let directoryEnd = eocd;
+  const locator = eocd >= 20 ? await range(eocd - 20, eocd) : new Uint8Array();
+  const lv = new DataView(locator.buffer, locator.byteOffset, locator.byteLength);
+  const zip64 = locator.length === 20 && lv.getUint32(0, true) === 0x07064b50;
+  if (zip64) {
+    if (lv.getUint32(4, true) !== 0 || lv.getUint32(16, true) !== 1) throw new Error("Multi-disk ZIP64 archives are not supported.");
+    directoryEnd = safeNumber(lv.getBigUint64(8, true), "ZIP64 directory record offset");
+    const record = await range(directoryEnd, directoryEnd + 56);
+    const rv = new DataView(record.buffer, record.byteOffset, record.byteLength);
+    const recordSize = safeNumber(rv.getBigUint64(4, true), "ZIP64 record size");
+    if (rv.getUint32(0, true) !== 0x06064b50 || recordSize < 44 || recordSize > 1024 * 1024 || directoryEnd + 12 + recordSize !== eocd - 20) throw new Error("ZIP64 directory record bounds are invalid.");
+    if (rv.getUint32(16, true) !== 0 || rv.getUint32(20, true) !== 0 || rv.getBigUint64(24, true) !== rv.getBigUint64(32, true)) throw new Error("Multi-disk ZIP64 archives are not supported.");
+    entryCount = safeNumber(rv.getBigUint64(32, true), "ZIP64 entry count");
+    centralDirectorySize = safeNumber(rv.getBigUint64(40, true), "ZIP64 directory size");
+    centralDirectoryOffset = safeNumber(rv.getBigUint64(48, true), "ZIP64 directory offset");
+    [entryCount, centralDirectorySize, centralDirectoryOffset].forEach((value, i) => {
+      if (legacy[i] !== [0xffff, 0xffffffff, 0xffffffff][i] && legacy[i] !== value) throw new Error("ZIP64 and legacy directory fields disagree.");
+    });
+  } else if (entryCount === 0xffff || centralDirectorySize === 0xffffffff || centralDirectoryOffset === 0xffffffff) throw new Error("ZIP64 directory locator is missing.");
+  validateZipDirectoryBounds(entryCount, centralDirectorySize, centralDirectoryOffset, fileSize, directoryEnd);
+  const central = await range(centralDirectoryOffset, centralDirectoryOffset + centralDirectorySize);
+  const archive = parseZipDirectoryRecords(central, entryCount, centralDirectoryOffset, centralDirectorySize);
+  return { archive, tail };
+}
+
+function zip64Extra(extra, fields) {
+  let pos = 0, data = null;
+  const view = new DataView(extra.buffer, extra.byteOffset, extra.byteLength);
+  while (pos < extra.length) {
+    requireRange(extra, pos, 4, "ZIP extra header");
+    const kind = view.getUint16(pos, true), size = view.getUint16(pos + 2, true);
+    requireRange(extra, pos + 4, size, "ZIP extra field");
+    if (kind === 1) {
+      if (data) throw new Error("ZIP entry repeats ZIP64 extra field.");
+      data = extra.subarray(pos + 4, pos + 4 + size);
+    }
+    pos += 4 + size;
+  }
+  let cursor = 0;
+  return fields.map(([value, sentinel, width, label]) => {
+    if (value !== sentinel) return value;
+    if (!data) throw new Error("ZIP entry requires a ZIP64 extra field.");
+    requireRange(data, cursor, width, label);
+    const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+    const result = width === 8 ? safeNumber(dv.getBigUint64(cursor, true), label) : dv.getUint32(cursor, true);
+    cursor += width;
+    return result;
+  });
 }
 
 function parseZipDirectoryRecords(bytes, entryCount, centralDirectoryOffset, centralDirectorySize) {
@@ -512,19 +665,28 @@ function parseZipDirectoryRecords(bytes, entryCount, centralDirectoryOffset, cen
     const flags = view.getUint16(offset + 8, true);
     const compressionMethod = view.getUint16(offset + 10, true);
     const crc32 = view.getUint32(offset + 16, true);
-    const compressedSize = view.getUint32(offset + 20, true);
-    const uncompressedSize = view.getUint32(offset + 24, true);
+    let compressedSize = view.getUint32(offset + 20, true);
+    let uncompressedSize = view.getUint32(offset + 24, true);
     const nameLength = view.getUint16(offset + 28, true);
     const extraLength = view.getUint16(offset + 30, true);
     const commentLength = view.getUint16(offset + 32, true);
-    const localHeaderOffset = view.getUint32(offset + 42, true);
+    let localHeaderOffset = view.getUint32(offset + 42, true);
+    let disk = view.getUint16(offset + 34, true);
     requireRange(bytes, offset + 46, nameLength + extraLength + commentLength, "ZIP central record payload");
+    [uncompressedSize, compressedSize, localHeaderOffset, disk] = zip64Extra(bytes.subarray(offset + 46 + nameLength, offset + 46 + nameLength + extraLength), [
+      [uncompressedSize, 0xffffffff, 8, "ZIP64 uncompressed size"],
+      [compressedSize, 0xffffffff, 8, "ZIP64 compressed size"],
+      [localHeaderOffset, 0xffffffff, 8, "ZIP64 local offset"],
+      [disk, 0xffff, 4, "ZIP64 disk"],
+    ]);
+    if (disk !== 0) throw new Error("Multi-disk ZIP entries are not supported.");
+    if (!Number.isSafeInteger(localHeaderOffset + 30 + compressedSize) || localHeaderOffset + 30 + compressedSize > centralDirectoryOffset) throw new Error("ZIP member overlaps or exceeds the central directory.");
     const memberPath = safeArchivePath(decode(bytes.subarray(offset + 46, offset + 46 + nameLength), `ZIP entry ${index}`));
     const folded = memberPath.toLowerCase();
     if (names.has(folded)) throw new Error(`ZIP archive repeats or case-collides path ${memberPath}.`);
     names.add(folded);
     if (flags & 1) throw new Error(`Encrypted ZIP entry is not accepted: ${memberPath}.`);
-    entries.push({ path: memberPath, flags, compressionMethod, crc32, compressedSize, uncompressedSize, localHeaderOffset, encrypted: false });
+    entries.push({ path: memberPath, flags, compressionMethod, crc32, compressedSize, uncompressedSize, localHeaderOffset, dataEnd: centralDirectoryOffset, encrypted: false });
     offset += 46 + nameLength + extraLength + commentLength;
   }
   if (offset !== centralDirectorySize) throw new Error("ZIP central-directory size does not conserve parsed records.");
@@ -532,7 +694,6 @@ function parseZipDirectoryRecords(bytes, entryCount, centralDirectoryOffset, cen
 }
 
 function validateZipDirectoryBounds(entryCount, centralDirectorySize, centralDirectoryOffset, fileSize, eocdOffset) {
-  if (entryCount === 0xffff || centralDirectorySize === 0xffffffff || centralDirectoryOffset === 0xffffffff) throw new Error("ZIP64 model archives are not supported by the bounded envelope parser.");
   if (entryCount > MAX_ZIP_ENTRIES) throw new Error(`ZIP archive exceeds ${MAX_ZIP_ENTRIES} entries.`);
   if (centralDirectorySize > MAX_ZIP_CENTRAL_DIRECTORY_BYTES) throw new Error(`ZIP central directory exceeds ${MAX_ZIP_CENTRAL_DIRECTORY_BYTES} bytes.`);
   if (centralDirectoryOffset + centralDirectorySize !== eocdOffset || centralDirectoryOffset + centralDirectorySize > fileSize) throw new Error("ZIP central-directory bounds do not terminate at the EOCD record.");
@@ -586,51 +747,60 @@ async function inspectKnownZipMembers(archive, format, extract) {
 }
 
 async function extractZipEntry(bytes, entry) {
-  validateExtractedZipEntry(entry);
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const offset = entry.localHeaderOffset;
-  requireRange(bytes, offset, 30, `ZIP local header ${entry.path}`);
-  if (view.getUint32(offset, true) !== 0x04034b50) throw new Error(`ZIP local header signature is invalid for ${entry.path}.`);
-  const nameLength = view.getUint16(offset + 26, true);
-  const extraLength = view.getUint16(offset + 28, true);
-  const start = offset + 30 + nameLength + extraLength;
-  requireRange(bytes, start, entry.compressedSize, `ZIP member ${entry.path}`);
-  const compressed = bytes.subarray(start, start + entry.compressedSize);
-  return decompressAndVerifyZipEntry(compressed, entry);
+  return extractZipFileEntry({ size: bytes.length, slice: (start, end) => ({ arrayBuffer: async () => bytes.slice(start, end).buffer }) }, entry);
 }
 
-async function extractZipFileEntry(file, entry) {
-  validateExtractedZipEntry(entry);
+async function extractZipFileEntry(file, entry, maximum = MAX_ZIP_TEXT_BYTES) {
+  validateExtractedZipEntry(entry, maximum);
   const local = new Uint8Array(await file.slice(entry.localHeaderOffset, entry.localHeaderOffset + 30).arrayBuffer());
   requireRange(local, 0, 30, `ZIP local header ${entry.path}`);
   const view = new DataView(local.buffer, local.byteOffset, local.byteLength);
   if (view.getUint32(0, true) !== 0x04034b50) throw new Error(`ZIP local header signature is invalid for ${entry.path}.`);
-  const flags = view.getUint16(6, true);
-  const method = view.getUint16(8, true);
-  const nameLength = view.getUint16(26, true);
-  const extraLength = view.getUint16(28, true);
-  if ((flags & 1) || method !== entry.compressionMethod) throw new Error(`ZIP local header conflicts with the central directory for ${entry.path}.`);
-  const headerPayload = new Uint8Array(await file.slice(entry.localHeaderOffset + 30, entry.localHeaderOffset + 30 + nameLength + extraLength).arrayBuffer());
+  const flags = view.getUint16(6, true), method = view.getUint16(8, true);
+  const nameLength = view.getUint16(26, true), extraLength = view.getUint16(28, true);
+  if (flags !== entry.flags || (flags & 1) || method !== entry.compressionMethod) throw new Error(`ZIP local header conflicts with the central directory for ${entry.path}.`);
+  const start = entry.localHeaderOffset + 30 + nameLength + extraLength;
+  if (!Number.isSafeInteger(start + entry.compressedSize) || start + entry.compressedSize > Math.min(file.size, entry.dataEnd)) throw new Error(`ZIP member ${entry.path} exceeds the source byte range.`);
+  const headerPayload = new Uint8Array(await file.slice(entry.localHeaderOffset + 30, start).arrayBuffer());
+  requireRange(headerPayload, 0, nameLength + extraLength, "ZIP local extra fields");
   const localName = safeArchivePath(decode(headerPayload.subarray(0, nameLength), `ZIP local entry ${entry.path}`));
   if (localName !== entry.path) throw new Error(`ZIP local and central paths disagree for ${entry.path}.`);
-  const start = entry.localHeaderOffset + 30 + nameLength + extraLength;
-  if (start + entry.compressedSize > file.size) throw new Error(`ZIP member ${entry.path} exceeds the source byte range.`);
+  if (!(flags & 8)) {
+    const [size, compressed] = zip64Extra(headerPayload.subarray(nameLength), [
+      [view.getUint32(22, true), 0xffffffff, 8, "ZIP64 local uncompressed size"],
+      [view.getUint32(18, true), 0xffffffff, 8, "ZIP64 local compressed size"],
+    ]);
+    if (size !== entry.uncompressedSize || compressed !== entry.compressedSize || view.getUint32(14, true) !== entry.crc32) throw new Error(`ZIP local sizes/CRC disagree for ${entry.path}.`);
+  }
   const compressed = new Uint8Array(await file.slice(start, start + entry.compressedSize).arrayBuffer());
-  return decompressAndVerifyZipEntry(compressed, entry);
+  if (compressed.length !== entry.compressedSize) throw new Error(`ZIP member ${entry.path} is truncated.`);
+  return decompressAndVerifyZipEntry(compressed, entry, maximum);
 }
 
-function validateExtractedZipEntry(entry) {
-  if (entry.uncompressedSize > MAX_ZIP_TEXT_BYTES || entry.compressedSize > MAX_ZIP_TEXT_BYTES) throw new Error(`ZIP declarative member ${entry.path} exceeds the ${MAX_ZIP_TEXT_BYTES}-byte extraction limit.`);
+function validateExtractedZipEntry(entry, maximum = MAX_ZIP_TEXT_BYTES) {
+  if (entry.uncompressedSize > maximum || entry.compressedSize > maximum) throw new Error(`ZIP declarative member ${entry.path} exceeds the ${maximum}-byte extraction limit.`);
   if (entry.compressedSize > 0 && entry.uncompressedSize / entry.compressedSize > MAX_ZIP_TEXT_COMPRESSION_RATIO) throw new Error(`ZIP declarative member ${entry.path} exceeds the ${MAX_ZIP_TEXT_COMPRESSION_RATIO}:1 compression-ratio limit.`);
 }
 
-async function decompressAndVerifyZipEntry(compressed, entry) {
-  validateExtractedZipEntry(entry);
+async function decompressAndVerifyZipEntry(compressed, entry, maximum = MAX_ZIP_TEXT_BYTES) {
+  validateExtractedZipEntry(entry, maximum);
   let output;
   if (entry.compressionMethod === 0) output = new Uint8Array(compressed);
   else if (entry.compressionMethod === 8) {
     if (typeof DecompressionStream !== "function") throw new Error(`Deflate decompression is unavailable for ${entry.path}.`);
-    output = new Uint8Array(await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+    const reader = new Blob([compressed]).stream().pipeThrough(new DecompressionStream("deflate-raw")).getReader();
+    const chunks = []; let length = 0;
+    try {
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        length += value.length;
+        if (length > entry.uncompressedSize || length > maximum) throw new Error(`ZIP member ${entry.path} exceeds its decompression budget.`);
+        chunks.push(value);
+      }
+    } finally { await reader.cancel(); reader.releaseLock(); }
+    output = new Uint8Array(length); let offset = 0;
+    for (const chunk of chunks) { output.set(chunk, offset); offset += chunk.length; }
   } else throw new Error(`ZIP member ${entry.path} uses unsupported compression method ${entry.compressionMethod}.`);
   if (output.length !== entry.uncompressedSize) throw new Error(`ZIP member ${entry.path} uncompressed size mismatch.`);
   if (crc32(output) !== entry.crc32) throw new Error(`ZIP member ${entry.path} CRC-32 mismatch.`);
@@ -656,10 +826,31 @@ function inspectPickle(bytes) {
   let stackGlobalCount = 0;
   let offset = 0;
   let stopped = false;
+  const memo = new Set();
   while (offset < bytes.length && !stopped) {
     const opcode = bytes[offset];
     opcodeCounts.set(`0x${opcode.toString(16).padStart(2, "0")}`, (opcodeCounts.get(`0x${opcode.toString(16).padStart(2, "0")}`) || 0) + 1);
     offset += 1;
+    if ([0x67, 0x68, 0x6a, 0x70, 0x71, 0x72, 0x94].includes(opcode)) {
+      let index;
+      if (opcode === 0x94) index = memo.size;
+      else if (opcode === 0x67 || opcode === 0x70) {
+        const end = skipPickleLine(bytes, offset, "pickle memo index");
+        const text = decode(bytes.subarray(offset, end - 1), "pickle memo index");
+        if (!/^[0-9]+$/.test(text)) throw new Error("Invalid pickle memo index.");
+        index = Number(text); offset = end;
+      } else {
+        const width = [0x6a, 0x72].includes(opcode) ? 4 : 1;
+        requireRange(bytes, offset, width, "pickle memo index");
+        index = width === 4 ? new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(offset, true) : bytes[offset];
+        offset += width;
+      }
+      if (!Number.isSafeInteger(index) || index > 1_000_000) throw new Error("Pickle memo index exceeds the bounded inventory budget.");
+      if ([0x67, 0x68, 0x6a].includes(opcode)) {
+        if (!memo.has(index)) throw new Error("Pickle references an undefined memo index.");
+      } else memo.add(index);
+      continue;
+    }
     if (opcode === 0x63) {
       const moduleEnd = bytes.indexOf(0x0a, offset);
       const nameEnd = moduleEnd < 0 ? -1 : bytes.indexOf(0x0a, moduleEnd + 1);
@@ -787,74 +978,108 @@ function materializeKerasDeclarativeGraph(analysis, selected) {
     analysis.format_extensions.keras = analysis.keras;
     return;
   }
-  const nameToIndex = new Map();
-  const records = layers.map((layer, index) => {
-    const name = String(layer?.config?.name || layer?.name || `layer_${index}`);
-    if (!name || nameToIndex.has(name)) throw new Error(`Keras config contains a missing or duplicate layer name ${JSON.stringify(name)}.`);
-    nameToIndex.set(name, index);
-    return { layer, index, name, className: String(layer?.class_name || "unknown") };
-  });
-  const explicitInputs = records.map((row) => uniqueNames(kerasHistoryNames(row.layer?.inbound_nodes))).map((names) => names.filter((name) => nameToIndex.has(name)));
-  const sequential = rootClass === "Sequential";
-  const valueNames = records.map((row) => `${row.name}:output:0`);
-  analysis.tensors = records.map((row, index) => {
-    const shape = kerasStaticShape(row.layer?.build_config?.input_shape ?? row.layer?.config?.batch_shape ?? row.layer?.config?.batch_input_shape);
-    return {
-      index,
-      name: valueNames[index],
-      dtype: String(row.layer?.config?.dtype || "UNKNOWN").toUpperCase(),
-      shape: shape || [],
-      shape_signature: shape || [],
-      value_kind: "keras_declared_layer_output",
-      constant_buffer: false,
-      contract_status: shape ? "declared_config_shape" : "serialized_layer_output_name_shape_not_assessable",
-    };
-  });
-  analysis.ops = records.map((row, index) => {
-    const predecessors = explicitInputs[index].length ? explicitInputs[index]
-      : sequential && index > 0 ? [records[index - 1].name] : [];
-    return {
-      index,
-      name: row.className,
-      graph_node_name: row.name,
-      domain: "keras.config",
-      version: null,
-      inputs: predecessors.map((name) => nameToIndex.get(name)),
-      outputs: [index],
-      macs: null,
-      macs_status: "not_assessed_layer_class_does_not_establish_lowered_operator_semantics",
-    };
-  });
-  const declaredInputs = uniqueNames(kerasEndpointNames(document?.config?.input_layers));
-  const declaredOutputs = uniqueNames(kerasEndpointNames(document?.config?.output_layers));
-  const inputIndices = declaredInputs.map((name) => nameToIndex.get(name)).filter(Number.isSafeInteger);
-  const outputIndices = declaredOutputs.map((name) => nameToIndex.get(name)).filter(Number.isSafeInteger);
-  analysis.operator_count = analysis.ops.length;
-  analysis.tensor_count = analysis.tensors.length;
-  analysis.input_tensor_indices = inputIndices.length ? inputIndices : records.filter((row, index) => row.className === "InputLayer" || (!explicitInputs[index].length && (!sequential || index === 0))).map((row) => row.index);
-  analysis.output_tensor_indices = outputIndices.length ? outputIndices : (records.length ? [records.at(-1).index] : []);
   analysis.mac_assessment = {
-    status: "not_assessed",
-    metric_scope: "serialized Keras config layer graph; no layer construction, lowering, kernel selection, or execution",
-    compute_ops: analysis.ops.length,
-    assessed_compute_ops: 0,
-    not_assessed_compute_ops: analysis.ops.length,
-    total_assessed_macs: 0,
-    total_assessed_macs_decimal: "0",
+    status: "not_assessed", metric_scope: "serialized Keras config calls; no execution or lowering",
+    compute_ops: 0, assessed_compute_ops: 0, not_assessed_compute_ops: 0,
+    total_assessed_macs: 0, total_assessed_macs_decimal: "0",
   };
   analysis.keras = {
-    schema: "deepbom.keras_declarative_layer_graph.v1",
-    graph_materialized: true,
-    root_class_name: rootClass,
-    primary_config_path: configRow.path,
-    layer_count: records.length,
-    explicit_inbound_reference_count: explicitInputs.reduce((sum, rows) => sum + rows.length, 0),
-    sequential_order_used: sequential,
-    unsafe_deserialization_performed: false,
-    custom_layer_execution_claim: false,
-    interpretation_boundary: "Layer identities and connections are projected only from serialized Keras config order or explicit keras_history references. Layer classes are not constructed, imported, lowered, or treated as equivalent to backend operators. Weights, concrete function traces, kernels, runtime order, performance, and model quality remain separate evidence.",
+    schema: "deepbom.keras_declarative_layer_graph.v1", graph_materialized: true,
+    root_class_name: rootClass, primary_config_path: configRow.path,
+    layer_count: layers.length, sequential_order_used: rootClass === "Sequential",
+    unsafe_deserialization_performed: false, custom_layer_execution_claim: false,
   };
+  materializeKerasCalls(analysis, document, configRow.path);
   analysis.format_extensions.keras = analysis.keras;
+}
+
+function kerasReferences(value) {
+  if (!value || typeof value !== "object") return [];
+  if (Array.isArray(value)) {
+    if (typeof value[0] === "string" && Number.isSafeInteger(value[1]) && Number.isSafeInteger(value[2])) return [{layer:value[0], call:value[1], port:value[2]}];
+    return value.flatMap(kerasReferences);
+  }
+  if (Array.isArray(value.keras_history)) {
+    const refs = kerasReferences(value.keras_history);
+    return refs.map(ref => ({...ref, shape:kerasStaticShape(value.shape), dtype:typeof value.dtype === "string" ? value.dtype.toUpperCase() : null}));
+  }
+  return Object.values(value).flatMap(kerasReferences);
+}
+
+function materializeKerasCalls(analysis, document, configPath) {
+  const modules = [], bodies = [];
+  const walk = (model, prefix = "", depth = 0) => {
+    if (depth > 64 || modules.length > 100_000) throw new Error("Keras module inventory exceeds its bounded depth or count");
+    const names = new Set();
+    for (const layer of model.config?.layers || []) {
+      const name = layer.config?.name || layer.name;
+      if (typeof name !== "string" || !name || names.has(name)) throw new Error("Keras module name is missing or duplicated within its parent");
+      names.add(name);
+      const path = prefix ? `${prefix}/${name}` : name;
+      modules.push({path, parent:prefix || null, class_name:layer.class_name, config:layer.config || {}, evidence_basis:"serialized_config_containment"});
+      if (Array.isArray(layer.config?.layers)) {
+        bodies.push({module_path:path, input_refs:kerasReferences(layer.config.input_layers), output_refs:kerasReferences(layer.config.output_layers),
+          calls:layer.config.layers.flatMap(child => (child.inbound_nodes || []).map((call, index) => ({module:child.config?.name || child.name, invocation:index, input_refs:kerasReferences(call)}))),
+          status:"declarative_body_not_inlined_into_parent_calls"});
+        walk(layer, path, depth + 1);
+      }
+    }
+  };
+  walk(document);
+  const layers = document.config.layers, sequential = document.class_name === "Sequential", calls = [], byCall = new Map(), values = new Map();
+  const key = ref => JSON.stringify([ref.layer, ref.call]);
+  const valueKey = ref => JSON.stringify([ref.layer, ref.call, ref.port]);
+  for (const [index, layer] of layers.entries()) {
+    const name = layer.config?.name || layer.name;
+    const inbound = layer.inbound_nodes?.length ? layer.inbound_nodes : [null];
+    for (const [invocation, input] of inbound.entries()) {
+      const refs = input ? kerasReferences(input) : sequential && index > 0 ? [{layer:layers[index - 1].config?.name || layers[index - 1].name, call:0, port:0}] : [];
+      const call = {layer:name, invocation, definition:layer, refs, index:calls.length};
+      calls.push(call); byCall.set(key({layer:name,call:invocation}), call);
+      if (calls.length > 100_000) throw new Error("Keras invocation count exceeds 100,000");
+    }
+  }
+  const ensure = ref => {
+    if (!byCall.has(key(ref)) || ref.call < 0 || ref.port < 0 || ref.port > 1024) throw new Error("Keras history references an unresolved invocation or unbounded port");
+    const id = valueKey(ref);
+    const existing = values.get(id);
+    if (existing) {
+      if (ref.shape && existing.shape && JSON.stringify(existing.shape) !== JSON.stringify(ref.shape)) throw new Error("Keras tensor histories disagree on shape");
+      if (ref.dtype && existing.dtype && existing.dtype !== ref.dtype) throw new Error("Keras tensor histories disagree on dtype");
+      existing.shape ||= ref.shape; existing.dtype ||= ref.dtype;
+    } else values.set(id, {...ref, index:values.size});
+    return values.get(id).index;
+  };
+  for (const call of calls) {
+    for (const ref of call.refs) ensure(ref);
+    if (sequential || call.definition.class_name === "InputLayer") ensure({layer:call.layer,call:call.invocation,port:0,
+      ...(call.definition.class_name === "InputLayer" ? {shape:kerasStaticShape(call.definition.config?.batch_shape ?? call.definition.config?.batch_input_shape), dtype:typeof call.definition.config?.dtype === "string" ? call.definition.config.dtype.toUpperCase() : null} : {})});
+  }
+  const inputs = kerasReferences(document.config.input_layers), outputs = kerasReferences(document.config.output_layers);
+  inputs.forEach(ensure); outputs.forEach(ensure);
+  analysis.tensors = [...values.values()].map(value => ({index:value.index, name:`${value.layer}@${value.call}:output:${value.port}`,
+    shape:value.shape || [], shape_signature:value.shape || [], shape_declared:Array.isArray(value.shape), dtype:value.dtype || "UNKNOWN",
+    value_kind:"keras_declared_layer_output", constant_buffer:false,
+    contract_status:value.shape ? "serialized_keras_tensor_contract" : "serialized_layer_output_name_shape_not_assessable"}));
+  const valuesByCall = new Map();
+  for (const value of values.values()) { const id=key(value); if(!valuesByCall.has(id))valuesByCall.set(id,[]); valuesByCall.get(id).push(value); }
+  analysis.ops = calls.map(call => {
+    const ports = valuesByCall.get(key({layer:call.layer,call:call.invocation})) || [];
+    const maxPort = ports.reduce((n, value) => Math.max(n, value.port), -1);
+    const outputRefs = Array.from({length:maxPort + 1}, (_, port) => values.get(valueKey({layer:call.layer,call:call.invocation,port}))?.index ?? -1);
+    return {index:call.index, name:call.definition.class_name, graph_node_name:`${call.layer}@${call.invocation}`, domain:"keras.config", version:null,
+      inputs:call.refs.map(ref => values.get(valueKey(ref)).index), outputs:outputRefs, macs:null,
+      source_module_path:call.layer, source_call_index:call.invocation,
+      source_annotation:{scope_names:[call.layer],class_names:[call.definition.class_name],declared_call_index:call.invocation,basis:"serialized_keras_config"},
+      macs_status:"not_assessed_layer_class_does_not_establish_lowered_operator_semantics"};
+  });
+  analysis.input_tensor_indices = inputs.length ? inputs.map(ref => values.get(valueKey(ref)).index) : calls.filter(c => c.definition.class_name === "InputLayer" || sequential && c.index === 0).map(c => values.get(valueKey({layer:c.layer,call:c.invocation,port:0}))?.index).filter(Number.isSafeInteger);
+  analysis.output_tensor_indices = outputs.length ? outputs.map(ref => values.get(valueKey(ref)).index) : sequential && calls.length ? [values.get(valueKey({layer:calls.at(-1).layer,call:0,port:0})).index] : [];
+  analysis.operator_count = calls.length; analysis.tensor_count = values.size;
+  analysis.mac_assessment.compute_ops = analysis.mac_assessment.not_assessed_compute_ops = calls.length;
+  Object.assign(analysis.keras, {invocation_count:calls.length, module_inventory:modules, nested_declarative_bodies:bodies,
+    explicit_inbound_reference_count:calls.reduce((n, call) => n + call.refs.length, 0), primary_config_path:configPath,
+    interpretation_boundary:"Module containment, call indices, tensor ports and declared tensor contracts are preserved separately. Nested model bodies are inventoried, not inlined or executed. A build input shape is not an output shape. Functional operations absent from config, lowering, kernel behavior and numerical quality remain unobserved."});
 }
 
 function pt2ArgumentNames(value) {
@@ -884,17 +1109,6 @@ function countKey(value, key) {
   if (!value || typeof value !== "object") return 0;
   if (Array.isArray(value)) return value.reduce((sum, row) => sum + countKey(row, key), 0);
   return Object.entries(value).reduce((sum, [name, row]) => sum + (name === key ? 1 : 0) + countKey(row, key), 0);
-}
-function kerasHistoryNames(value) {
-  if (!value || typeof value !== "object") return [];
-  if (Array.isArray(value)) return value.flatMap(kerasHistoryNames);
-  const history = value.keras_history;
-  const current = Array.isArray(history) && typeof history[0] === "string" ? [history[0]] : [];
-  return [...current, ...Object.values(value).flatMap(kerasHistoryNames)];
-}
-function kerasEndpointNames(value) {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((row) => Array.isArray(row) && typeof row[0] === "string" ? [row[0]] : kerasEndpointNames(row));
 }
 function kerasStaticShape(value) {
   if (!Array.isArray(value)) return null;
@@ -1031,7 +1245,7 @@ function safeArchivePath(value) {
 }
 function requiredString(fields, number, label) { const field = fields.find((item) => item.number === number && item.wire === 2); if (!field) throw new Error(`${label} is missing.`); const value = decode(field.bytes, label); if (!value || value.length > 100_000) throw new Error(`${label} is invalid.`); return value; }
 function optionalString(fields, number) { const field = fields.find((item) => item.number === number && item.wire === 2); return field ? decode(field.bytes, `field ${number}`) : null; }
-function readVarint(bytes, offset, label) { let value = 0n; for (let shift = 0n; shift <= 63n; shift += 7n) { if (offset >= bytes.length) throw new Error(`${label} contains a truncated varint.`); const byte = bytes[offset++]; value |= BigInt(byte & 0x7f) << shift; if (!(byte & 0x80)) return { value, next: offset }; } throw new Error(`${label} contains an overlong varint.`); }
+
 function varintNumber(field) { return field?.wire === 0 ? safeNumber(field.value, "protobuf integer") : null; }
 function safeNumber(value, label) { if (value > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error(`${label} exceeds the safe integer range.`); return Number(value); }
 function decode(bytes, label) { try { return UTF8.decode(bytes); } catch { throw new Error(`${label} is not valid UTF-8.`); } }
@@ -1041,3 +1255,23 @@ function requireRange(bytes, offset, length, label) { if (!Number.isSafeInteger(
 function requireAddressSizes(offsetSize, lengthSize) { if (![2,4,8,16,32].includes(offsetSize) || ![2,4,8,16,32].includes(lengthSize)) throw new Error(`Unsupported HDF5 address sizes offset=${offsetSize}, length=${lengthSize}.`); }
 function readLeInteger(bytes, offset, size) { requireRange(bytes, offset, size, "HDF5 integer"); let value = 0n; for (let index = 0; index < size; index += 1) value |= BigInt(bytes[offset + index]) << BigInt(index * 8); const undefinedValue = (1n << BigInt(size * 8)) - 1n; return value === undefinedValue ? null : value.toString(); }
 function crc32(bytes) { let value = 0xffffffff; for (const byte of bytes) { value ^= byte; for (let bit = 0; bit < 8; bit += 1) value = (value >>> 1) ^ ((value & 1) ? 0xedb88320 : 0); } return (value ^ 0xffffffff) >>> 0; }
+
+
+export async function readKerasWeightMember(file) {
+  requireFile(file, "Keras weight container");
+  const {archive} = await readZipDirectory(file.size, async (start,end) => new Uint8Array(await file.slice(start,end).arrayBuffer()));
+  const entries = archive.entries.filter(entry => entry.path === "model.weights.h5");
+  if (!entries.length) return null;
+  if (entries.length !== 1) throw new Error("Keras archive repeats model.weights.h5");
+  return {path:entries[0].path, bytes:await extractZipFileEntry(file,entries[0],128*1024*1024)};
+}
+
+async function attachHdf5Objects(analysis, source, memberPath = null) {
+  try {
+    const {inspectHdf5Objects, applyHdf5Inventory} = await import("./hdf5-source.js");
+    applyHdf5Inventory(analysis,await inspectHdf5Objects(source),{memberPath});
+  } catch (error) {
+    analysis.format_extensions ||= {};
+    analysis.format_extensions.hdf5_objects = {status:"not_assessed", reason:String(error.message), member_path:memberPath};
+  }
+}

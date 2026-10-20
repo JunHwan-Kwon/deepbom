@@ -11,7 +11,9 @@ import { buildInterfaceQuantizationContractLedger } from "../web/lib/quantizatio
 import { AGENT_CONTRACT, EVIDENCE_CONTRACT } from "../bin/deepbom-public-contract-versions.mjs";
 
 const root = process.cwd();
-const releaseRoot = path.join(root, ".local-validation", "channel-release");
+const artifactFlag = process.argv.indexOf("--artifacts");
+if (artifactFlag >= 0 && (!process.argv[artifactFlag+1] || !process.argv.includes("--no-build"))) throw new Error("--artifacts requires an existing path and --no-build");
+const releaseRoot = artifactFlag >= 0 ? path.resolve(process.argv[artifactFlag+1]) : path.join(root, ".local-validation", "channel-release");
 const manifestPath = path.join(releaseRoot, "channel-release-manifest.json");
 const platformSmoke = process.argv.includes("--platform-smoke");
 const releaseContract = process.argv.includes("--release-contract");

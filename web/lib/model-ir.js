@@ -1,16 +1,17 @@
+import { canonicalEvidenceDigest } from "./evidence-identity.js";
+import { portableContract } from "./portable-contracts.js";
 import { buildValueType, valueElementCount } from "./ir-value-type.js";
-import { validateLogicalInventory } from "./ir-logical-inventory.js";
-import { validateArtifactMembers } from "./ir-artifact-members.js";
+import "./ir-logical-inventory.js";
+import "./ir-artifact-members.js";
 import { canonicalJson } from "./report-utils.js";
-import { sha256TextHex } from "./sha256-sync.js";
 import { validateArtifactEvidenceIr } from "./artifact-ir.js";
-import { MODEL_IR_METHOD_VERSION, MODEL_IR_SCHEMA, MODEL_IR_SOURCE_SCHEMA, RELATIONSHIP_KINDS, SHA256 } from "./model-ir/internal/constants.js";
+import { MODEL_IR_METHOD_VERSION, MODEL_IR_SCHEMA, MODEL_IR_SOURCE_SCHEMA, SHA256 } from "./model-ir/internal/constants.js";
 import { buildProgramModel, validateProgramLinks } from "./model-ir/internal/program.js";
 import { buildModelProfiles } from "./model-ir/internal/profiles.js";
 import { buildModelIrNativeFactLedger, validateModelIrNativeFactLedger } from "./model-ir/internal/native-facts.js";
 import { buildGenericModelIrAnalysis } from "./model-ir-generic-analysis.js";
-import { clone, deepFreeze, evidenceClass, exact, list, unique } from "./model-ir/internal/shared.js";
-import { validateExactInteger } from "./exact-integer.js";
+import { clone, deepFreeze, evidenceClass, unique } from "./model-ir/internal/shared.js";
+import "./exact-integer.js";
 
 export { MODEL_IR_METHOD_VERSION, MODEL_IR_SCHEMA };
 // Shared structural checks also serve source-bound editing proposals. This
@@ -88,7 +89,7 @@ export function buildModelIrFromArtifactIr(input, { nativeFactLedger = null } = 
     interpretation_boundary: "DEEPBOM Model IR preserves serialized program, logical tensor, physical storage, quantization, architecture grouping, static projection, and observed runtime as separate evidence layers. Missing structures are represented by applicability and loss records. Display order is deterministic but is not runtime order. This engineering evidence does not assert model quality, safety, regulatory conformity, or standard conformance.",
   };
   validateModelIrBody(body);
-  return rememberModel({ ...body, model_ir_sha256: sha256TextHex(canonicalJson(body)) });
+  return rememberModel({ ...body, model_ir_sha256: canonicalEvidenceDigest(body) });
 }
 
 export function validateModelIr(document) {
@@ -98,7 +99,7 @@ export function validateModelIr(document) {
   const digest = String(body.model_ir_sha256 || "").toLowerCase();
   delete body.model_ir_sha256;
   validateModelIrBody(body);
-  if (!SHA256.test(digest) || digest !== sha256TextHex(canonicalJson(body))) throw new Error("Model IR SHA-256 is invalid.");
+  if (!SHA256.test(digest) || digest !== canonicalEvidenceDigest(body)) throw new Error("Model IR SHA-256 is invalid.");
   return rememberModel({ ...body, model_ir_sha256: digest });
 }
 
@@ -151,33 +152,7 @@ function buildStorageModel(artifactIr) {
 }
 
 function buildBindings(program, storage) {
-  const storageIds = new Set(storage.storage_objects.map((row) => row.id));
-  const bindings = [];
-  const values = new Map(program.values.map(row => [row.id, row]));
-  for (const port of program.ports.filter((row) => row.direction === "input")) {
-    const value = values.get(port.value_ref);
-    for (const storageRef of list(value?.storage_refs)) {
-      if (!storageIds.has(storageRef)) continue;
-      bindings.push({
-        id: `binding:${port.id}:${storageRef}`,
-        operation_ref: port.operation_ref,
-        port_ref: port.id,
-        value_ref: port.value_ref,
-        storage_ref: storageRef,
-        parameter_role: `input_port_${port.position}`,
-        semantic_role: null,
-        binding_status: "observed_from_graph",
-        binding_basis: "serialized_operation_port_to_value_and_value_to_storage",
-        evidence_class: "OBSERVED_SERIALIZED_ARTIFACT",
-      });
-    }
-  }
-  return {
-    status: bindings.length ? "materialized" : program.status === "not_serialized" ? "not_assessable_graph_not_serialized" : "no_bound_serialized_parameters",
-    bindings,
-    totals: { binding_count: bindings.length, unresolved_count: 0 },
-    interpretation_boundary: "A weight binding is emitted only when a serialized operation port resolves through a logical value to a serialized storage object. Input-port position is structural; semantic roles are not inferred from names.",
-  };
+  return portableContract("semantic_validation", {operation:"model_bindings",program,storage});
 }
 
 function buildQuantizationModel(artifactIr) {
@@ -364,102 +339,8 @@ function elementCount(shape, rankStatus) {
 function externalStorageStatus(row) { return row.native_source?.external_data ? { status: row.native_source.external_data.verified === true ? "external_bound" : "external_declared_unverified", source: clone(row.native_source.external_data) } : { status: "inline_or_not_exposed", source: null }; }
 
 function validateModelIrBody(value) {
-  if (value?.schema !== MODEL_IR_SCHEMA || !["1.0.0", "1.0.1", "1.1.0", "1.1.1", "1.1.2", MODEL_IR_METHOD_VERSION].includes(value?.method_version)) throw new Error("Model IR schema identity is invalid.");
-  if (value?.source_contract?.schema !== MODEL_IR_SOURCE_SCHEMA || !SHA256.test(String(value?.source_contract?.sha256 || ""))) throw new Error("Model IR source contract binding is invalid.");
-  validateModelIrNativeFactLedger(value.source_contract.native_fact_ledger, value.source_contract.sha256);
-  if (value?.hash_contract?.algorithm !== "SHA-256" || value?.hash_contract?.canonicalization !== "RFC8785-JCS" || JSON.stringify(value?.hash_contract?.excluded_pointers) !== JSON.stringify(["/model_ir_sha256"])) throw new Error("Model IR hash contract is invalid.");
-  if (!SHA256.test(String(value?.artifact?.sha256 || ""))) throw new Error("Model IR artifact identity is invalid.");
-  const program = value.program;
-  const expectedCapabilities = {
-    serialized_program_graph: program?.status === "serialized",
-    tensor_shapes: Boolean(program?.values?.length || value?.tensors_and_storage?.logical_values?.length || value?.tensors_and_storage?.storage_objects?.length),
-    serialized_storage: Boolean(value?.tensors_and_storage?.storage_objects?.length),
-    weight_bindings: Boolean(value?.weight_bindings?.bindings?.length),
-    quantization_contracts: Boolean(value?.quantization?.records?.length),
-    static_runtime_projection: Boolean(value?.static_runtime?.projections?.length),
-    observed_runtime_overlay: Boolean(value?.observed_runtime?.overlays?.length),
-  };
-  if (canonicalJson(value.capabilities) !== canonicalJson(expectedCapabilities)) throw new Error("Model IR capability applicability is inconsistent with its ledgers.");
-  validateExactInteger(value.artifact.byte_length);
-  for (const row of value.tensors_and_storage.storage_objects) {
-    for (const key of ["element_count", "serialized_byte_length", "logical_byte_length"]) validateExactInteger(row[key]);
-    validateExactInteger(row.external_storage?.source?.file_byte_length);
-    if (["1.1.0", "1.1.1", "1.1.2", MODEL_IR_METHOD_VERSION].includes(value.method_version) && canonicalJson(row.element_count) !== canonicalJson(elementCount(row.shape, row.shape_rank_status))) throw new Error("Model IR storage element count contradicts its declared shape.");
-  }
-  for (const row of program.operations) for (const key of ["macs", "logical_io_bytes"]) validateExactInteger(row.metrics?.[key]);
-  const profileById = new Map(value.profiles.map((profile) => [profile.id, profile]));
-  if (profileById.size !== value.profiles.length || profileById.get("identity")?.requirement !== "core_mandatory" || profileById.get("identity")?.applicability !== "applicable") throw new Error("Model IR mandatory profile contract is invalid.");
-  for (const [id, capability] of [["program_graph", "serialized_program_graph"], ["tensor_storage", "serialized_storage"], ["quantization", "quantization_contracts"], ["static_runtime_projection", "static_runtime_projection"], ["observed_runtime", "observed_runtime_overlay"]]) {
-    const profile = profileById.get(id);
-    if (!profile || (profile.applicability === "applicable") !== expectedCapabilities[capability]) throw new Error(`Model IR ${id} profile applicability is inconsistent.`);
-  }
-  for (const key of ["programs", "functions", "regions", "blocks", "operations", "values", "ports", "relationships"]) if (!Array.isArray(program?.[key])) throw new Error(`Model IR program ${key} ledger is invalid.`);
-  const ids = new Set();
-  const collect = (rows, label) => rows.forEach((row) => { if (!row?.id || ids.has(row.id)) throw new Error(`Model IR ${label} identity is invalid or duplicated.`); ids.add(row.id); });
-  collect(program.programs, "program"); collect(program.functions, "function"); collect(program.regions, "region"); collect(program.blocks, "block"); collect(program.operations, "operation"); collect(program.values, "value"); collect(program.ports, "port");
-  const storageIds = new Set(value.tensors_and_storage.storage_objects.map((row) => row.id));
-  const storage = value.tensors_and_storage;
-  if (storageIds.size !== storage.storage_objects.length || storageIds.has(null) || storageIds.has(undefined) || storageIds.has("")) throw new Error("Model IR storage identity is invalid or duplicated.");
-  const expectedStorageBytes = storage.storage_objects.reduce((sum, row) => sum + BigInt(row.serialized_byte_length.decimal), 0n);
-  validateExactInteger(storage.totals.serialized_object_bytes_sum);
-  if (storage.totals.storage_object_count !== storage.storage_objects.length || storage.totals.logical_value_count !== storage.logical_values.length
-    || storage.totals.serialized_object_bytes_sum?.decimal !== expectedStorageBytes.toString()
-    || storage.totals.exact_range_count !== storage.storage_objects.filter(row => row.byte_range?.status === "exact").length
-    || storage.totals.payload_digest_count !== storage.storage_objects.filter(row => SHA256.test(String(row.payload_sha256 || ""))).length) throw new Error("Model IR storage count or byte conservation failed.");
-  storageIds.forEach((id) => { if (ids.has(id)) throw new Error("Model IR storage identity collides with a program subject."); ids.add(id); });
-  if (["1.1.0", "1.1.1", "1.1.2", MODEL_IR_METHOD_VERSION].includes(value.method_version) && value.logical_inventory !== null) {
-    validateLogicalInventory(value.logical_inventory, program.values, storage.storage_objects);
-    const inventory = new Map(value.logical_inventory.values.map(row => [row.id, row]));
-    if (inventory.size !== storage.logical_values.length) throw new Error("Model IR logical inventory count is inconsistent.");
-    const logicalIds = new Set();
-    for (const row of storage.logical_values) {
-      const original = inventory.get(row.id);
-      if (!original || logicalIds.has(row.id) || row.dtype !== original.dtype || canonicalJson(row.shape) !== canonicalJson(original.shape)
-        || canonicalJson(row.type_contract) !== canonicalJson(original.type_contract) || canonicalJson(row.storage_refs) !== canonicalJson(original.storage_refs)) throw new Error("Model IR logical value contradicts inventory.");
-      logicalIds.add(row.id);
-    }
-    validateArtifactMembers(value.artifact_members, value.artifact, { objects: storage.storage_objects });
-    if (canonicalJson(value.artifact_set.member_refs) !== canonicalJson(value.artifact_members.members.map(row => row.id))) throw new Error("Model IR artifact member count is inconsistent.");
-  }
-  const relationshipIds = new Set();
-  for (const row of program.relationships) {
-    if (!row.id || relationshipIds.has(row.id) || !RELATIONSHIP_KINDS.includes(row.kind)) throw new Error("Model IR relationship identity or kind is invalid.");
-    relationshipIds.add(row.id);
-    if (!ids.has(row.from_ref) || !ids.has(row.to_ref) || (row.value_ref && !ids.has(row.value_ref))) throw new Error("Model IR relationship reference is invalid.");
-  }
-  const regionIds = new Set(program.regions.map((row) => row.id));
-  const operationIds = new Set(program.operations.map((row) => row.id));
-  const valueIds = new Set(program.values.map((row) => row.id));
-  for (const row of program.operations) if (!regionIds.has(row.region_ref)) throw new Error("Model IR operation region reference is invalid.");
-  const blockMembers = program.blocks.flatMap((row) => row.member_refs || []);
-  if (new Set(blockMembers).size !== blockMembers.length || blockMembers.length !== program.operations.length || !blockMembers.every((ref) => operationIds.has(ref))) throw new Error("Model IR structural block operation conservation is invalid.");
-  for (const row of program.blocks) if (!regionIds.has(row.region_ref) || !row.member_refs.length) throw new Error("Model IR structural block reference is invalid.");
-  for (const row of program.ports) if (!operationIds.has(row.operation_ref) || !valueIds.has(row.value_ref)) throw new Error("Model IR port reference is invalid.");
-  if (program.status === "not_serialized" && (program.operations.length || program.relationships.length || program.regions.length)) throw new Error("Model IR fabricated a program for a graphless artifact.");
-  for (const binding of value.weight_bindings.bindings) if (!operationIds.has(binding.operation_ref) || !valueIds.has(binding.value_ref) || !storageIds.has(binding.storage_ref)) throw new Error("Model IR weight binding reference is invalid.");
-  if (["1.1.0", "1.1.1", "1.1.2", MODEL_IR_METHOD_VERSION].includes(value.method_version)) {
-    validateProgramLinks(program);
-    if (canonicalJson(value.weight_bindings) !== canonicalJson(buildBindings(program, storage))) throw new Error("Model IR weight binding contradicts operation ports and storage.");
-  }
-  for (const row of value.quantization.records) if (!valueIds.has(row.subject_ref) && !storageIds.has(row.subject_ref)) throw new Error("Model IR quantization subject reference is invalid.");
-  const profileIds = new Set();
-  for (const profile of value.architecture.model_profiles) {
-    if (!profile?.id || profileIds.has(profile.id)) throw new Error("Model IR model-profile identity is invalid or duplicated.");
-    profileIds.add(profile.id);
-    for (const assignment of list(profile.assignments)) if (!ids.has(assignment.subject_ref)) throw new Error("Model IR model-profile assignment reference is invalid.");
-    for (const group of list(profile.groups)) {
-      if (!list(group.member_refs).every((ref) => ids.has(ref))) throw new Error("Model IR model-profile group member reference is invalid.");
-    }
-  }
-  for (const projection of value.static_runtime.projections) for (const segment of projection.segments) {
-    if (!segment.source_subject_refs.every((ref) => operationIds.has(ref) || new Set(value.architecture.hierarchy.map((row) => row.id)).has(ref))) throw new Error("Model IR static runtime subject reference is invalid.");
-    if (segment.actual_runtime_assignment_claim !== false) throw new Error("Model IR static projection was promoted to an actual runtime assignment.");
-  }
-  if (value.generic_analysis?.pass_contract?.format_specific_branch_count !== 0 || value.generic_analysis?.pass_contract?.native_ledger_access !== false) throw new Error("Model IR generic analysis crossed the format-neutral import boundary.");
-  if (value.generic_analysis?.pass_count !== value.generic_analysis?.passes?.length) throw new Error("Model IR generic analysis pass conservation is invalid.");
-  for (const pass of value.generic_analysis.passes) if (!Array.isArray(pass.subject_refs) || !pass.status || !pass.completeness) throw new Error("Model IR generic analysis pass contract is invalid.");
-  if (value.completeness?.unknown_is_zero !== false || !Array.isArray(value.loss_ledger?.entries) || value.loss_ledger.count !== value.loss_ledger.entries.length) throw new Error("Model IR completeness or loss ledger is inconsistent.");
-  if (!String(value.interpretation_boundary || "").trim()) throw new Error("Model IR interpretation boundary is missing.");
+  canonicalJson(value);
+  portableContract("semantic_validation", {operation:"model",value});
 }
 
 // The source and supplementary ledger must be supplied independently by the caller.

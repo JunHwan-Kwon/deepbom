@@ -52,21 +52,6 @@
       "reason": "Independent operator-conformance readers retain separate native attribute validation."
     },
     {
-      "body_sha256": "607f38da5ddff22b1491e33723a851de950237852563644797d08852b7f85139",
-      "occurrences": [
-        {
-          "file": "web/lib/onnx-ml-normalizer-conformance.js",
-          "name": "squareToFloat32"
-        },
-        {
-          "file": "web/lib/onnx-ml-normalizer.js",
-          "name": "squareToFloat32"
-        }
-      ],
-      "category": "independent_oracle",
-      "reason": "Normalizer conformance independently reconstructs pinned float32 intermediate rounding; sharing production arithmetic would weaken the oracle."
-    },
-    {
       "body_sha256": "69b2be6191d2da144b01932c135c65f00c52dedc20c4f89e5c52b36c4b4032c0",
       "occurrences": [
         {
@@ -131,21 +116,6 @@
       "reason": "Independent vocabulary conformance checks preserve typed key equality; production vocabulary counts have one owner in onnx-static-value-evidence.js."
     },
     {
-      "body_sha256": "8ed8d37419c2f2a966a5de1e653956ebd130b1a337a915c589ef2d52538c19e2",
-      "occurrences": [
-        {
-          "file": "web/lib/onnx-ml-value-inference.js",
-          "name": "sumExactNonnegative"
-        },
-        {
-          "file": "web/lib/report-conformance-onnx.js",
-          "name": "exactArraySum"
-        }
-      ],
-      "category": "independent_oracle",
-      "reason": "Production integer-list inference and report conformance independently validate exact nonnegative sums."
-    },
-    {
       "body_sha256": "a8052629185105985bb06e352b4e64203a40643fbbee8175642c1516e0d43f60",
       "occurrences": [
         {
@@ -182,21 +152,6 @@
       ],
       "category": "independent_observation_check",
       "reason": "Inspector and report independently compare named observed count dictionaries; neither computes the underlying counts."
-    },
-    {
-      "body_sha256": "e4a09c51681eaafe2b1a8cd139bfafe519a348e9c13f0126149e7f81670c113d",
-      "occurrences": [
-        {
-          "file": "web/lib/onnx-ml-normalizer-conformance.js",
-          "name": "countOverflow"
-        },
-        {
-          "file": "web/lib/onnx-ml-normalizer.js",
-          "name": "countSignedOverflow"
-        }
-      ],
-      "category": "independent_oracle",
-      "reason": "Normalizer conformance independently detects signed-overflow boundaries for pinned operator semantics."
     }
   ],
   "scalar_width_oracles": [
@@ -204,6 +159,11 @@
       "file": "web/lib/dynamic-shape-cost-conformance.js",
       "body_sha256": "7fb0af0ae481c7aba5ced06c45ed3c78af7c3c2c850fd10ccb5075f45ce05ceb",
       "reason": "Independent symbolic-cost reconstruction oracle; deliberately does not import production width rules."
+    },
+    {
+      "file": "web/lib/safe-source-artifacts.js",
+      "body_sha256": "c200506ff212314f0d2bb8e7e482c6a55f82cb53015dfb41f1f3f1402acd9153",
+      "reason": "TensorFlow TensorProto protobuf field numbers (float_val=5, double_val=6, int_val=7, int64_val=10, bool_val=11, half_val=13, uint32_val=16, uint64_val=17), not scalar bit widths or storage arithmetic. Numeric decoding uses existing scalar-numeric and ONNX byte visitors; compared to tf.make_ndarray in check-tensorflow-source-numerics.py."
     }
   ],
   "non_width_tables": [

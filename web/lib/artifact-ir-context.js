@@ -1,3 +1,4 @@
+import { canonicalEvidenceDigest } from "./evidence-identity.js";
 import { buildArtifactEvidenceIrUnchecked, validateArtifactEvidenceIr } from "./artifact-ir.js";
 import { normalizeArtifactIrRuntimeOverlay } from "./artifact-ir-runtime.js";
 import { projectArtifactIrToCanonicalGraph } from "./graph-ir.js";
@@ -6,7 +7,6 @@ import { buildModelSummary, validateModelSummary } from "./model-summary.js";
 import { buildModelHierarchy, validateModelHierarchy } from "./model-hierarchy.js";
 import { collectModelSourceAnnotations } from "./model-source-metadata.js";
 import { canonicalJson } from "./report-utils.js";
-import { sha256TextHex } from "./sha256-sync.js";
 
 const CACHE = new WeakMap();
 
@@ -25,7 +25,7 @@ export function getArtifactIrContext(analysis, artifact = {}, { runtimeEvidence 
     size: artifact.size ?? artifact.byte_length ?? analysis.file_size_bytes ?? analysis.file_size ?? null,
     artifact_set_sha256: artifact.artifact_set_sha256 || analysis?.artifact_set?.artifact_set_sha256 || null,
   };
-  const runtimeSignature = sha256TextHex(canonicalJson(runtimeEvidence || null));
+  const runtimeSignature = canonicalEvidenceDigest(runtimeEvidence || null);
   const cacheKey = canonicalJson({ artifact: normalizedArtifact, runtime_signature: runtimeSignature });
   const cached = CACHE.get(analysis);
   if (cached?.cache_key === cacheKey) return cached.context;
@@ -60,7 +60,7 @@ export function resolveArtifactIrContext(analysis, artifact = {}, {
     }
     requireRuntimeIdentity(validated, runtimeEvidence, artifactIrContext.runtime_signature);
     return artifactIrContext.model_ir && artifactIrContext.model_summary && artifactIrContext.model_hierarchy ? artifactIrContext : contextFromArtifactIr(analysis, validated, {
-      runtimeSignature: artifactIrContext.runtime_signature ?? (runtimeEvidence == null ? null : sha256TextHex(canonicalJson(runtimeEvidence))),
+      runtimeSignature: artifactIrContext.runtime_signature ?? (runtimeEvidence == null ? null : canonicalEvidenceDigest(runtimeEvidence)),
     });
   }
   const supplied = artifactIr || analysis.artifact_ir || null;
@@ -69,7 +69,7 @@ export function resolveArtifactIrContext(analysis, artifact = {}, {
     requireArtifactIdentity(validated, analysis, artifact);
     requireRuntimeIdentity(validated, runtimeEvidence);
     return contextFromArtifactIr(analysis, validated, {
-      runtimeSignature: runtimeEvidence == null ? null : sha256TextHex(canonicalJson(runtimeEvidence)),
+      runtimeSignature: runtimeEvidence == null ? null : canonicalEvidenceDigest(runtimeEvidence),
     });
   }
   return getArtifactIrContext(analysis, artifact, { runtimeEvidence });
@@ -102,7 +102,7 @@ function contextFromArtifactIr(analysis, artifactIr, { runtimeSignature = null }
 
 function requireRuntimeIdentity(artifactIr, runtimeEvidence, contextRuntimeSignature = null) {
   if (!hasMaterialRuntimeEvidence(runtimeEvidence)) return;
-  const expectedSignature = sha256TextHex(canonicalJson(runtimeEvidence));
+  const expectedSignature = canonicalEvidenceDigest(runtimeEvidence);
   if (contextRuntimeSignature != null && contextRuntimeSignature !== expectedSignature) {
     throw new Error("Artifact IR context is stale for the supplied runtime evidence.");
   }

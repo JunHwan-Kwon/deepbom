@@ -3,6 +3,7 @@ import { prepareMagnitudePruning, simulateMagnitudePruning } from '../web/lib/we
 import { matrixView } from '../web/lib/numerical-ir/weight-math.js';
 import { checkDigest } from '../web/lib/numerical-ir/common.js';
 import { sha256BytesHex } from '../web/lib/sha256-sync.js';
+import { numericalWasm } from '../web/lib/numerical-wasm.js';
 
 const source = { artifact_sha256: 'a'.repeat(64), model_ir_sha256: 'b'.repeat(64), artifact_set_sha256: null };
 const make = (values, shape = [2, values.length / 2], axis = 0, order = 'last_axis_fastest', representation = 'stored_scalar', dtype = 'FLOAT64') => prepareMagnitudePruning({
@@ -32,6 +33,8 @@ assert.throws(() => make([NaN, 0]), /finite/);
 assert.throws(() => make([1, 2], [1, 2], 0, 'last_axis_fastest', 'stored_scalar', 'INT8'), /integer codes/);
 assert(simulateMagnitudePruning(make([1, 2], [1, 2], 0, 'last_axis_fastest', 'dequantized_real', 'INT8')));
 assert.throws(() => make(Array(4097).fill(1), [4097, 1]), /4,096 channels/);
+assert.throws(() => numericalWasm().numerical_pruning_simulate(prepared.data,2,4,Uint32Array.from([3,2,4,5,6,7]),50), /invalid pruning ranking/);
+assert.throws(() => numericalWasm().numerical_pruning_simulate(prepared.data,2,4,Uint32Array.from([2,2,4,5,6,7]),50), /invalid pruning ranking/);
 
 // Independent exhaustive mask and energy oracle for every slider position.
 let seed = 1234567;

@@ -1,5 +1,5 @@
+import { canonicalEvidenceDigest } from "../evidence-identity.js";
 import { canonicalJson } from "../report-utils.js";
-import { sha256TextHex } from "../sha256-sync.js";
 import { validateProvenanceIr } from "../provenance-ir.js";
 import { PRIMARY_MODEL_REF, requireProvenance } from "./contracts.js";
 
@@ -51,7 +51,7 @@ export function projectProvenanceToCycloneDx(baseDocument, document, model) {
   bom.properties = [...(bom.properties || []), property("schema", ir.schema), property("irSha256", ir.provenance_ir_sha256), property("source", ir.source), property("inputSha256", ir.input_sha256), property("status", ir.verdict.status), property("coverage", ir.coverage), property("relationships", ir.relationships), property("checks", ir.checks), property("observedFiles", ir.observations.map(({ node_ref, sha256, byte_length }) => ({ node_ref, sha256, byte_length }))), property("fieldLedger", ir.field_ledger), property("interpretationBoundary", ir.interpretation_boundary)];
   // Revisions of the evidence document must not reuse the original document's
   // identity with changed content. The model component identity remains stable.
-  const hash = sha256TextHex(canonicalJson(bom));
+  const hash = canonicalEvidenceDigest(bom);
   // UUIDv8 carries a custom deterministic digest; UUIDv5 would imply SHA-1
   // namespace/name derivation, which this document hashing scheme does not use.
   bom.serialNumber = `urn:uuid:${hash.slice(0, 8)}-${hash.slice(8, 12)}-8${hash.slice(13, 16)}-a${hash.slice(17, 20)}-${hash.slice(20, 32)}`;

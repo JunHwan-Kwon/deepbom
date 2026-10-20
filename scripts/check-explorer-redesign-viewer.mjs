@@ -29,12 +29,15 @@ const tensorsScreenshot = path.join(output, "tensors-light.png");
 const blocksDarkScreenshot = path.join(output, "blocks-dark.png");
 const redesignScenarioScreenshot = path.join(output, "redesign-scenarios.png");
 const redesignGraphScreenshot = path.join(output, "redesign-full-graph.png");
+const TRANSIENT_READ_CODES = new Set(["EMFILE", "ENFILE", "EBUSY", "EAGAIN", "EPERM", "EACCES"]);
 const server = createStaticServer(SERVE_ROOT);
 const errors = [];
 let browser;
 
 try {
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const absent = await fetch(`http://127.0.0.1:${server.address().port}/__missing_viewer_fixture__.json`);
+  if (absent.status !== 404) throw new Error(`Missing viewer asset must return 404, got ${absent.status}`);
   browser = await launchChromium(chromium);
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   page.on("pageerror", (error) => errors.push(`page: ${error.message}`));
@@ -1143,6 +1146,9 @@ try {
     || baselineIssueDetail.includes("No flagged projected or retained condition")) {
     throw new Error(`Redesign baseline issue fill is not linked to its evidence: ${baselineIssueDetail}`);
   }
+  // The flagged depthwise block feeds a residual merge; changing only that
+  // branch correctly blocks export. Use a valid stem edit for the code-sync check.
+  await page.locator('#redesignPanel [data-redesign-field="selected_block"]').selectOption("block_000");
   const outputChannels = page.locator("#redesignPanel label", { hasText: "Output channels" }).locator("input");
   const sourceChannels = Number(await outputChannels.inputValue());
   await page.locator("#redesignPanel .xr-scenario-lab").getByRole("button", { name: "View code", exact: true }).click();
@@ -1177,7 +1183,7 @@ try {
   const updatedCode = await page.locator(".xr-code-source code").textContent();
   if (updatedCode === priorCode || !updatedCode?.includes("import torch")
     || await page.locator(".xr-code-preview").getByRole("button", { name: "Copy code", exact: true }).isDisabled()) {
-    throw new Error("The current code did not become available after scenario recalculation.");
+    throw new Error(`The current code did not become available after scenario recalculation: ${String(updatedCode).slice(0,2000)}`);
   }
   const redesignNodeEdited = await page.locator("#redesignPanel").evaluate((panel) => ({
     direct: panel.querySelectorAll(".nv-node-redesign-direct").length,
@@ -1231,10 +1237,14 @@ try {
     sourceUnchanged: panel.textContent?.includes("Loaded source bytes unchanged: verified in session"),
   }));
   if (projection.boundary !== "PROJECTED_UNTRAINED"
-    || !projection.status.includes("assessed_with_serialized_shape_scaling")
+    || projection.status !== "blocked / partial"
     || projection.constraints < 1
     || !projection.sourceUnchanged) {
     throw new Error(`Edited projection did not preserve its evidence boundary: ${JSON.stringify(projection)}`);
+  }
+  if (!(await page.locator('.xr-code-source code').textContent())?.includes('RD-SHAPE-SPATIAL-001')
+    || !(await page.locator('.xr-code-preview').getByRole('button', { name: 'Copy code', exact: true }).isDisabled())) {
+    throw new Error('Invalid pooling geometry must disable code export and explain the violated spatial contract.');
   }
 
   await page.locator("#redesignPanel .nv-view-controls button", { hasText: "Selection" }).click();
@@ -1915,7 +1925,6 @@ function createStaticServer(root) {
   });
 }
 
-const TRANSIENT_READ_CODES = new Set(["EMFILE", "ENFILE", "EBUSY", "EAGAIN", "EPERM", "EACCES"]);
 
 async function readServedFile(file) {
   for (let attempt = 0; ; attempt += 1) {

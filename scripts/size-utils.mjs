@@ -29,6 +29,7 @@ async function walkFileSizes(dir, options) {
   const files = [];
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
+    if (options.ignoredPaths.has(fullPath)) continue;
     if (entry.isDirectory()) {
       if (options.ignoredDirs.has(entry.name) || options.ignoredPaths.has(fullPath)) continue;
       files.push(...await walkFileSizes(fullPath, options));

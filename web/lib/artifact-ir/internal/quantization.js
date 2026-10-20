@@ -1,7 +1,7 @@
+import { canonicalEvidenceDigest } from "../../evidence-identity.js";
 import { safeIntegerCodeRange } from "../../tensor-size.js";
 import { INLINE_PARAMETER_LIMIT } from "./constants.js";
-import { canonicalJson } from "../../report-utils.js";
-import { sha256TextHex } from "../../sha256-sync.js";
+import "../../report-utils.js";
 import {
   finiteNumberArray, integerArray, list, nonNegativeInteger, normalizeSha256, optionalInteger, positiveInteger, tensorIndex,
 } from "./shared.js";
@@ -159,7 +159,7 @@ function parameterVector(values, declaredCount, complete) {
   const normalized = list(values);
   return {
     count: declaredCount,
-    sha256: complete ? sha256TextHex(canonicalJson(normalized)) : null,
+    sha256: complete ? canonicalEvidenceDigest(normalized) : null,
     inline_values: normalized.length <= INLINE_PARAMETER_LIMIT ? normalized : null,
     inline_status: complete ? normalized.length <= INLINE_PARAMETER_LIMIT ? "complete" : "digest_only_large_vector" : "partial_sample_not_complete_vector",
   };

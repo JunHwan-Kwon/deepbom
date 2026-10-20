@@ -1,7 +1,7 @@
+import { canonicalEvidenceDigest } from "./evidence-identity.js";
 import { buildLogicalInventory } from "./ir-logical-inventory.js";
 import { buildArtifactMembers } from "./ir-artifact-members.js";
 import { canonicalJson } from "./report-utils.js";
-import { sha256TextHex } from "./sha256-sync.js";
 // Internal construction boundary. Consumers must resolve a shared context through
 // artifact-ir-context.js so runtime overlays and scoped identities cannot diverge.
 import { ARTIFACT_IR_METHOD_VERSION, ARTIFACT_IR_SCHEMA, GRAPH_FORMATS, SHA256 } from "./artifact-ir/internal/constants.js";
@@ -65,7 +65,7 @@ export function buildArtifactEvidenceIrUnchecked(analysis, artifact = {}, { runt
     interpretation_boundary: "The canonical graph, storage, architecture, and quantization ledgers preserve distinct evidence scopes. Static backend eligibility and imported runtime observations are overlays and never rewrite serialized artifact facts. A missing executable graph is represented as not_serialized; no execution edge is synthesized from tensor names or architecture order.",
   };
   validateArtifactIrBody(body);
-  return deepFreeze({ ...body, artifact_ir_sha256: sha256TextHex(canonicalJson(body)) });
+  return deepFreeze({ ...body, artifact_ir_sha256: canonicalEvidenceDigest(body) });
 }
 
 export function validateArtifactEvidenceIr(document) {
@@ -74,7 +74,7 @@ export function validateArtifactEvidenceIr(document) {
   const digest = String(body.artifact_ir_sha256 || "").toLowerCase();
   delete body.artifact_ir_sha256;
   validateArtifactIrBody(body);
-  if (!SHA256.test(digest) || digest !== sha256TextHex(canonicalJson(body))) {
+  if (!SHA256.test(digest) || digest !== canonicalEvidenceDigest(body)) {
     throw new Error("Artifact IR SHA-256 is invalid.");
   }
   return deepFreeze({ ...body, artifact_ir_sha256: digest });

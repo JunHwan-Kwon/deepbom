@@ -40,7 +40,7 @@ fn haar_decompose_patch(patch: &[f64], kh: usize, kw: usize) -> KernelHaarEnergy
         .iter()
         .enumerate()
         .map(|(i, &v)| {
-            if (i / kw + i % kw).is_multiple_of(2) {
+            if (i / kw + i % kw) % 2 == 0 {
                 v
             } else {
                 -v

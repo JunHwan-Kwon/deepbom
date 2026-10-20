@@ -50,8 +50,8 @@ const TOOLS = Object.freeze([
     name: "deepbom_optimization_report",
     title: "Inspect a saved optimization report",
     description: "Read one local deepbom.optimization_report.v1 JSON. Query before/after structure, changed fields, rule reasons and static metrics without loading or executing the model. Results are paginated; use the returned report_sha256 as expected_sha256 for follow-ups. A self-consistent report is not producer attestation or proof of quality/speed. Open the same JSON at https://deepbom.org/reports/optimization/ for interactive exploration.",
-    inputSchema: {type:"object",properties:{path:{type:"string"},expected_sha256:{type:"string",pattern:"^[a-fA-F0-9]{64}$"},section:{type:"string",enum:["summary","changes","structure","subject"]},subject:{type:"string"},search:{type:"string",maxLength:512},offset:{type:"integer",minimum:0},limit:{type:"integer",minimum:1,maximum:100}},required:["path"],additionalProperties:false},
-    outputSchema:{type:"object",properties:{schema:{const:"deepbom.optimization_report_query.v1"}},required:["schema"],additionalProperties:true},
+    inputSchema: {type:"object",properties:{query_version:{type:"integer",enum:[1,2]},max_bytes:{type:"integer",minimum:2048,maximum:1048576},sort:{type:"string",enum:["source","macs_desc"]},path:{type:"string"},expected_sha256:{type:"string",pattern:"^[a-fA-F0-9]{64}$"},section:{type:"string",enum:["summary","changes","structure","subject","facts","validation","invocations"]},subject:{type:"string"},search:{type:"string",maxLength:512},offset:{type:"integer",minimum:0},limit:{type:"integer",minimum:1,maximum:100}},required:["path"],additionalProperties:false},
+    outputSchema:{type:"object",properties:{schema:{enum:["deepbom.optimization_report_query.v1","deepbom.optimization_report_query.v2"]}},required:["schema"],additionalProperties:true},
     annotations:READ_ONLY_ANNOTATIONS,
   },
   {
@@ -100,6 +100,7 @@ const TOOLS = Object.freeze([
         list_sections: { type: "boolean", description: "List selectable analysis sections instead of auditing." },
         pointer: { type: "string", description: "Emit one RFC 6901 JSON Pointer result, such as /operator_count." },
         target: { type: "string", description: "TFLite target profile id for cost-model binding; it is not host detection." },
+        tf_metagraph: {type:"integer",minimum:0,description:"Select the serialized SavedModel MetaGraph index; default 0. No TensorFlow code is executed."},
         external_data_dir: { type: "string", description: "Local ONNX external_data or ExecuTorch .ptd sidecar directory under the allowed roots." },
         expected_sha256: { type: "string", pattern: "^[A-Fa-f0-9]{64}$", description: "Independent expected digest for a local or remote artifact." },
         cache_dir: { type: "string", description: "Content-addressed cache directory under the allowed roots." },
@@ -351,6 +352,7 @@ function commandArguments(name, args, roots) {
     const argv=["optimization-report",requiredLocalPath(args.path,"path",roots)];
     for(const k of ["section","subject","search","offset","limit","format"])if(Object.hasOwn(args,k))argv.push(`--${k}`,String(args[k]));
     if(args.expected_sha256)argv.push("--expected-sha256",args.expected_sha256);
+    for(const key of ["query_version","max_bytes","sort"])if(Object.hasOwn(args,key))argv.push(`--${key.replaceAll('_','-')}`,String(args[key]));
     if(name === "deepbom_export_optimization_report")argv.push("--mcp-export");
     return argv;
   }
@@ -373,6 +375,7 @@ function commandArguments(name, args, roots) {
     }
     if (args.scan) argv.push("--scan", args.scan);
     if (args.target) argv.push("--target", String(args.target));
+    if (Object.hasOwn(args,"tf_metagraph")) argv.push("--tf-metagraph",String(args.tf_metagraph));
     if (args.external_data_dir) argv.push("--external-data-dir", requiredLocalPath(args.external_data_dir, "external_data_dir", roots));
     appendRemoteControls(argv, args, roots);
     if (args.weight_analysis) argv.push("--weight-analysis");
@@ -415,10 +418,10 @@ function validateToolArguments(name, args) {
   const allowed = {
     deepbom_model_hierarchy: ["path", "expected_sha256", "parent_ref", "search", "offset", "limit"],
     deepbom_evidence_workflow:["path","files","expected_sha256","offset","limit"],
-    deepbom_optimization_report: ["path","expected_sha256","section","subject","search","offset","limit"],
+    deepbom_optimization_report: ["path","expected_sha256","section","subject","search","offset","limit","query_version","max_bytes","sort"],
     deepbom_export_optimization_report: ["path","expected_sha256","format"],
     deepbom_capabilities: [],
-    deepbom_audit: ["metadata", "evidence_files", "metadata_template", "weight_baseline", "weight_options", "weight_mapping", "weight_analysis", "activation_evidence", "activation_baseline", "path", "output_format", "scan", "section", "tensors", "tensor_offset", "tensor_limit", "list_sections", "pointer", "target", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
+    deepbom_audit: ["metadata", "evidence_files", "metadata_template", "weight_baseline", "weight_options", "weight_mapping", "weight_analysis", "activation_evidence", "activation_baseline", "path", "output_format", "scan", "section", "tensors", "tensor_offset", "tensor_limit", "list_sections", "pointer", "target", "tf_metagraph", "external_data_dir", "expected_sha256", "cache_dir", "offline", "max_download_gib", "gate", "policy"],
     deepbom_diff: ["baseline", "candidate", "target", "expected_sha256", "cache_dir", "offline", "max_download_gib", "tensors", "tensor_offset", "tensor_limit"],
     deepbom_explain_rule: ["rule"],
   }[name];
@@ -430,7 +433,10 @@ function validateToolArguments(name, args) {
     if(!Array.isArray(args.files)||args.files.length>256||args.files.some(f=>!f||Object.keys(f).some(k=>!["sha256","path"].includes(k))||typeof f.sha256!=="string"||!/^[a-f0-9]{64}$/.test(f.sha256)||typeof f.path!=="string"))throw Error("files requires bounded SHA-256/local-path pairs");
   }
   const booleanFields = ["weight_analysis", "tensors", "list_sections", "offline"];
-  const integerFields = ["max_download_gib", "tensor_offset", "tensor_limit", "offset", "limit"];
+  const integerFields = ["max_download_gib", "tensor_offset", "tensor_limit", "offset", "limit","query_version","max_bytes","tf_metagraph"];
+  if(Object.hasOwn(args,"query_version")&&![1,2].includes(args.query_version))throw Error("query_version must be 1 or 2");
+  if(Object.hasOwn(args,"max_bytes")&&(!Number.isSafeInteger(args.max_bytes)||args.max_bytes<2048||args.max_bytes>1048576))throw Error("max_bytes must be 2048–1048576");
+  if(Object.hasOwn(args,"tf_metagraph")&&(!Number.isSafeInteger(args.tf_metagraph)||args.tf_metagraph<0||args.tensors))throw Error("tf_metagraph requires a non-negative index and audit mode");
   for (const key of allowed.filter((key) => !booleanFields.includes(key) && !integerFields.includes(key) && key!=="files")) {
     if (Object.hasOwn(args, key) && typeof args[key] !== "string") throw new Error(`The ${key} argument must be a string.`);
   }

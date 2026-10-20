@@ -16,6 +16,7 @@ import { collectWeightAnalysis } from "../web/lib/weight-analysis.js";
 import { linkedOperations, histogramSvg, histogramWindow, zeroLabel } from "../web/lib/weight-visuals.js";
 import { statisticsOf } from "../web/lib/numerical-ir/statistics.js";
 const root=process.cwd(),bytes=new Uint8Array(await readFile("web/samples/sample_cnn_float.onnx"));
+const serveRoot=process.argv.includes("--dist")?path.join(root,"dist"):root;
 const analysis=analyzeOnnxModel(bytes,"sample.onnx"),sha=sha256BytesHex(bytes);analysis.model_sha256=sha;
 const model=getArtifactIrContext(analysis,{filename:"sample.onnx",format:"onnx",sha256:sha,size:bytes.length}).model_ir;
 const expected=await buildWeightIr(model,analysis,bytes);
@@ -33,10 +34,10 @@ assert.equal(zeroLabel(statisticsOf([9007199254740993n])),"0.00%");
 assert.equal(histogramSvg({statistics:statisticsOf([9007199254740993n])},{}),null);
 const server=createServer(async(req,res)=>{try{
   const url=new URL(req.url,"http://localhost");
-  if(url.pathname==="/"){res.writeHead(200,{"content-type":"text/html"});res.end('<html><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/web/research-theme.css"><link rel="stylesheet" href="/web/weight-workspace.css"><style>body{margin:20px auto;max-width:1240px;padding:0 12px}</style><main id="host"></main><script type="module">import {installNumericalPanel} from "/web/lib/numerical-ir-panel.js";window.context=await(await fetch("/context")).json();context.source=await(await fetch("/model")).blob();window.panel=installNumericalPanel(document.querySelector("main"),()=>window.context);</script></html>');return;}
+  if(url.pathname==="/"){res.writeHead(200,{"content-type":"text/html"});res.end('<html><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/web/research-theme.css"><link rel="stylesheet" href="/web/weight-workspace.css"><style>body{margin:20px auto;max-width:1240px;padding:0 12px}</style><main id="host"></main><script type="module">import {initializeNumericalWasm} from "/web/lib/numerical-wasm.js";await initializeNumericalWasm();import {installNumericalPanel} from "/web/lib/numerical-ir-panel.js";window.context=await(await fetch("/context")).json();context.source=await(await fetch("/model")).blob();window.panel=installNumericalPanel(document.querySelector("main"),()=>window.context);</script></html>');return;}
   if(url.pathname==="/context"){res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({analysis,model}));return;}
   if(url.pathname==="/model"){res.writeHead(200);res.end(bytes);return;}
-  const file=path.resolve(root,"."+url.pathname);if(!file.startsWith(root+path.sep))throw Error("outside root");
+  const file=path.resolve(serveRoot,"."+url.pathname);if(!file.startsWith(serveRoot+path.sep))throw Error("outside root");
   const content=await readFile(file),mime={".css":"text/css",".json":"application/json",".wasm":"application/wasm",".html":"text/html"}[path.extname(file)]||"text/javascript";
   res.writeHead(200,{"content-type":mime});res.end(content);
 }catch{res.writeHead(404);res.end();}});

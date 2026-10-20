@@ -7,6 +7,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { statisticsOf, HISTOGRAM_EDGES } from "../web/lib/numerical-ir/statistics.js";
 import { describeDistribution, compareDistributions } from "../web/lib/numerical-ir/distribution.js";
+import { numericalWasm } from "../web/lib/numerical-wasm.js";
 import { buildNumericalDetails, validateNumericalDetails, activationInventory } from "../web/lib/numerical-details.js";
 import { buildActivationIr } from "../web/lib/activation-ir.js";
 import { buildWeightIr } from "../web/lib/weight-ir.js";
@@ -49,6 +50,19 @@ assert.equal(compare([1.25], [1.5]).histogram_total_variation.value, 0, "same bi
 assert.equal(compare([NaN], [1]).reason, "no_finite_values");
 assert.equal(compare([9007199254740993n], [1]).reason, "histogram_unavailable");
 assert.equal(compare([-Number.MAX_VALUE], [Number.MAX_VALUE]).mean_delta, null, "delta overflow stays unknown");
+assert.deepEqual(Array.from(numericalWasm().numerical_histogram_edges()),HISTOGRAM_EDGES,'reader histogram contract matches the common numerical engine');
+const aggregate = values => {
+  const s=statisticsOf(values), factor=1n<<156n;
+  for (const key of ['value_count','finite_count','zero_count','negative_zero_count','unsafe_integer_count']) s[key]=String(BigInt(s[key])*factor);
+  for (const key of Object.keys(s.nonfinite)) s.nonfinite[key]=String(BigInt(s.nonfinite[key])*factor);
+  s.histogram.counts=s.histogram.counts.map(value=>String(BigInt(value)*factor));
+  s.l2_norm*=2**78;
+  return s;
+};
+const largeDistribution=describeDistribution(aggregate([0,1,1]));
+assert.equal(largeDistribution.sign_counts.positive,String(2n<<156n));
+assert.equal(largeDistribution.zero_fraction_of_finite.value,1/3);
+assert.equal(compareDistributions(aggregate([0,1,1]),aggregate([0,0,1])).histogram_total_variation.value,1/3,'distribution counts retain precision beyond u128');
 
 const bytes = new Uint8Array(model([node("Add", "first", ["x", "w"], ["middle"]), node("Add", "second", ["middle", "w"], ["y"])], [tensor("w", 1, [4], float32([-2, 0, 1, 3]))], [valueInfo("x", 1, [4])], [valueInfo("y", 1, [4])], 13));
 const analysis = analyzeOnnxModel(bytes, "details.onnx"); analysis.model_sha256 = sha256BytesHex(bytes);
@@ -143,10 +157,14 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path('channels/python/src').resolve()))
 import deepbom
 import deepbom.api as api
+import deepbom._process as managed
 real_run = subprocess.run
+real_managed_run = managed.run_process
 def run_engine(argv, **kwargs):
     return real_run([sys.argv[1], 'bin/deepbom.mjs', *argv[1:]], **kwargs)
-with patch.object(api, '_verified_engine', return_value=(Path(sys.argv[1]), None)), patch.object(api.subprocess, 'run', side_effect=run_engine):
+def run_managed_engine(argv, **kwargs):
+    return real_managed_run([sys.argv[1], 'bin/deepbom.mjs', *argv[1:]], **kwargs)
+with patch.object(api, '_verified_engine', return_value=(Path(sys.argv[1]), None)), patch.object(api.subprocess, 'run', side_effect=run_engine), patch.object(managed, 'run_process', side_effect=run_managed_engine):
     print(json.dumps(deepbom.numerical_evidence(sys.argv[2], weights=True, activation_capture=sys.argv[3], activation_baseline=sys.argv[4])))
 `, process.execPath, artifact, path.join(directory, "current.json"), path.join(directory, "prior.json")], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
   assert.equal(py.status, 0, py.stderr);

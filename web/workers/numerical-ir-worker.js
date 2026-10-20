@@ -1,10 +1,13 @@
+import { initializeNumericalWasm } from "../lib/numerical-wasm.js";
 import { collectWeightAnalysis, compareWeightAnalyses } from "../lib/weight-analysis.js";
 import { readWeightModelFile } from "../lib/numerical-ir/weight-browser-input.js";
+import { createArtifactPayloadSource } from "../lib/artifact-bundle.js";
 self.onmessage = async event => {
   try {
-    const { model, analysis, source, options={}, baseline=null, mapping=[] } = event.data;
+    await initializeNumericalWasm();
+    const { model, analysis, source, files, options={}, baseline=null, mapping=[] } = event.data;
     const onProgress=progress=>self.postMessage({progress});
-    const current=await collectWeightAnalysis(model,analysis,source,{options,onProgress});
+    const current=await collectWeightAnalysis(model,analysis,files?.length ? createArtifactPayloadSource(analysis, files) : source,{options,onProgress});
     let comparison=null;
     if(baseline) {
       const context=await readWeightModelFile(baseline);

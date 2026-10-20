@@ -121,7 +121,7 @@ export const ANALYZER_METADATA = Object.freeze({
     onnxExternalData: "deepbom.onnx_external_data.v1.3",
     onnxExternalArtifactSet: "deepbom.onnx_external_artifact_set.v1.2",
     onnxExternalRuntimeBinding: "deepbom.onnx_external_runtime_binding.v1",
-    onnxShapeInference: "deepbom.onnx_shape_inference.v1.30",
+    onnxShapeInference: "deepbom.onnx_shape_inference.v1.31",
     onnxExtendedShapeInference: "deepbom.onnx_extended_shape_inference.v1.6",
     onnxContainerValueInference: "deepbom.onnx_container_value_inference.v1",
     onnxTfIdfVectorizerInference: "deepbom.onnx_tfidf_vectorizer_inference.v1",

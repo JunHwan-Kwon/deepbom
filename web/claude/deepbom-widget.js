@@ -1,3 +1,5 @@
+import { initializeNumericalWasm } from "../lib/numerical-wasm.js";
+await initializeNumericalWasm();
 import { finishArtifactEvidenceWorkflow } from "../lib/artifact-evidence-workflow.js";
 import { PROVENANCE_IR } from "../lib/evidence-ir.js";
 import { installProvenancePanel } from "../lib/provenance-panel.js";

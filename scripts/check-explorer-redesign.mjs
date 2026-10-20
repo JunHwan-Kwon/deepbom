@@ -165,7 +165,8 @@ const pareto = explore_tflite_redesign_pareto(bytes, filename, targetId, noOpReq
 const paretoRepeat = explore_tflite_redesign_pareto(bytes, filename, targetId, noOpRequest);
 expectEqual(pareto.schema, "deepbom.redesign_pareto.v1", "Pareto schema should be pinned.");
 expectEqual(pareto.evaluated_candidate_count, 25, "Default Pareto grid should evaluate five resolutions by five width multipliers.");
-expectEqual(pareto.accepted_candidate_count, pareto.candidates.length, "Accepted Pareto count should conserve emitted candidate rows.");
+expectEqual(pareto.accepted_candidate_count, pareto.candidates.filter(row=>row.status!=="blocked"&&row.error_constraint_count===0).length, "Accepted Pareto count excludes diagnostic rejected rows.");
+expectEqual(pareto.accepted_candidate_count+pareto.rejected_candidate_count,pareto.evaluated_candidate_count,"Pareto candidates conserve accepted and rejected counts.");
 expect(pareto.frontier_candidate_count > 0, "Pareto search should identify at least one non-dominated candidate.");
 expect(
   pareto.candidates.every((candidate) => candidate.request.source_sha256 === sha256),
@@ -415,6 +416,13 @@ expectThrows(
   "does not match",
   "Projection should reject a source hash mismatch.",
 );
+expectThrows(
+  () => explore_tflite_redesign_pareto(bytes, filename, targetId, { ...noOpRequest, source_sha256: "0".repeat(64) }),
+  "does not match", "Pareto must reject a source mismatch before constructing candidates.",
+);
+const invalidSpatial=project_tflite_redesign(bytes,filename,targetId,{...noOpRequest,input_height:64,input_width:64});
+expect(invalidSpatial.constraints.some(row=>row.code==='RD-SHAPE-SPATIAL-001'&&row.severity==='error'),'A 7x7 pool on a 2x2 projection must block materialization.');
+expectThrows(()=>buildRedesignImplementationFiles({analysis,projection:invalidSpatial,request:{...noOpRequest,input_height:64,input_width:64}}),'blocked','Code generation must not emit invalid spatial geometry.');
 
 done(
   `Explorer + Redesign contract passed: ${analysis.block_inventory.block_count} blocks, `

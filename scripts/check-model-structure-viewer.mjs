@@ -23,6 +23,10 @@ try {
   await page.route(`${origin}/editor`, route => route.fulfill({ contentType: "text/html", body: `<!doctype html><html data-theme="light"><head><link rel="stylesheet" href="/web/styles.css"><link rel="stylesheet" href="/web/research-theme.css"><link rel="stylesheet" href="/web/structure-ide.css"></head><body style="padding:24px;margin:0"><div id="host"></div></body></html>` }));
   await page.goto(`${origin}/editor`);
   await page.evaluate(async model => {
+    // This isolated host must perform the same readiness handshake as main.js
+    // before synchronous structure edits invoke shared shape calculations.
+    const { initializeNumericalWasm } = await import("/web/lib/numerical-wasm.js");
+    await initializeNumericalWasm();
     const { createModelStructureEditor } = await import("/web/lib/model-structure-editor.js");
     window.editor = createModelStructureEditor(); window.model = model;
     window.editor.sync(document.getElementById("host"), model);
@@ -61,8 +65,16 @@ try {
   assert(sourceBox && targetBox);
   await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2); await page.mouse.down();
   await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2, { steps: 12 }); await page.mouse.up();
+  if (await host.getByLabel("Input 0 connection", { exact: true }).inputValue() !== inputValue) {
+    await page.screenshot({ path: path.join(output, "drag-failure.png"), fullPage: true });
+    console.error("Drag hit targets", await page.evaluate(({ sourceBox, targetBox }) => [sourceBox, targetBox].map(box => ({ box, target: document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.outerHTML.slice(0, 600) })), { sourceBox, targetBox }));
+  }
   assert.equal(await host.getByLabel("Input 0 connection", { exact: true }).inputValue(), inputValue);
   await source.click(); await host.locator(".se-node.is-selected [data-input-port]").nth(1).click();
+  if (await host.getByLabel("Input 1 connection", { exact: true }).inputValue() !== inputValue) {
+    await page.screenshot({ path: path.join(output, "click-failure.png"), fullPage: true });
+    console.error("Click connection failure", await host.locator(".se-inspector").innerText(), await host.locator('[role="alert"]').allTextContents());
+  }
   assert.equal(await host.getByLabel("Input 1 connection", { exact: true }).inputValue(), inputValue);
   assert.match(await host.locator(".se-node.is-selected .se-node-contract").innerText(), /FLOAT32/);
   const dimensions = await host.locator(".se-summary").innerText(); assert.match(dimensions, /9 → 10/);
@@ -92,15 +104,15 @@ try {
   await host.getByRole("button", { name: "Undo", exact: true }).click();
   const beforeDiff = await host.locator(".se-diff").innerText();
   await textarea.fill(originalText.replace(/v\d+ -->\|out 0 : in 0\| n0/, "n0 -->|out 0 : in 0| n0"));
-  await host.getByRole("button", { name: "Sync to code", exact: true }).click();
+  await host.getByRole("button", { name: "Apply code to graph", exact: true }).click();
   assert.match(await host.getByRole("alert").innerText(), /cycle/);
   assert.equal(await host.locator(".se-diff").innerText(), beforeDiff, "Invalid code leaves graph and history unchanged");
-  await host.getByRole("button", { name: "Sync to graph", exact: true }).click();
+  await replaceCodeFromGraph(host);
   await textarea.fill(originalText + '\nclick n0 "javascript:alert(1)"');
-  await host.getByRole("button", { name: "Sync to code", exact: true }).click();
+  await host.getByRole("button", { name: "Apply code to graph", exact: true }).click();
   assert.match(await host.getByRole("alert").innerText(), /syntax/);
   assert.match(await host.getByLabel("Mermaid structure code").inputValue(), /javascript/, "Rejected text must stay editable");
-  await host.getByRole("button", { name: "Sync to graph", exact: true }).click();
+  await replaceCodeFromGraph(host);
   assert.equal(await textarea.inputValue(), originalText);
   assert.equal(await host.getByRole("alert").count(), 0);
   await textarea.fill(rewired);
@@ -115,10 +127,10 @@ try {
   await host.getByLabel("Layer name", { exact: true }).press("Tab");
   assert.equal(await textarea.inputValue(), rewired, "Graph edit preserves unapplied code");
   assert.match(await host.locator(".se-sync-status").innerText(), /Conflict/);
-  await host.getByRole("button", { name: "Sync to code", exact: true }).click();
+  await host.getByRole("button", { name: "Apply code to graph", exact: true }).click();
   assert.match(await host.getByRole("alert").innerText(), /Graph changed/);
   assert.equal(await host.getByLabel("Layer name", { exact: true }).inputValue(), "Graph edit during code draft");
-  await host.getByRole("button", { name: "Sync to graph", exact: true }).click();
+  await replaceCodeFromGraph(host);
   assert.match(await textarea.inputValue(), /Graph edit during code draft/);
   await host.getByRole("button", { name: "Undo", exact: true }).click();
   assert.equal(await textarea.inputValue(), originalText);
@@ -141,7 +153,7 @@ try {
   assert.match(await host.getByRole('alert').innerText(), /pending/);
   await host.getByRole('button', { name: 'Reset', exact: true }).click();
   assert.equal(await textarea.inputValue(), pendingCandidate, 'Candidate/reset cannot discard unapplied code');
-  await host.getByRole('button', { name: 'Sync to graph', exact: true }).click();
+  await replaceCodeFromGraph(host);
   // A slow file read must not replace edits made after Open project started.
   await page.evaluate(() => {
     const original = File.prototype.text;
@@ -165,7 +177,7 @@ try {
   assert.match(await textarea.inputValue(), /relu_1\["ReLU"\]:::template_ReLU/);
   assert.match(await textarea.inputValue(), /relu_2\["ReLU"\]:::template_ReLU/);
   assert.equal(await host.locator(".se-node").count(), model.program.operations.length + 1);
-  await host.getByRole("button", { name: "Sync to code", exact: true }).click();
+  await host.getByRole("button", { name: "Apply code to graph", exact: true }).click();
   assert.equal(await host.locator(".se-node").count(), model.program.operations.length + 3);
   assert.match(await host.locator(".se-node.is-selected .se-node-contract").innerText(), /FLOAT32/);
   await host.getByRole("button", { name: "Undo", exact: true }).click();
@@ -184,7 +196,7 @@ try {
   assert.match(copiedCode, /:::copy_n0/);
   assert.match(await host.locator(".se-text-panel").innerText(), /Clipboard unavailable/);
   await textarea.fill(`${await textarea.inputValue()}\n${copiedCode}`);
-  await host.getByRole("button", { name: "Sync to code", exact: true }).click();
+  await host.getByRole("button", { name: "Apply code to graph", exact: true }).click();
   assert.equal(await host.locator(".se-node").count(), model.program.operations.length + 2);
   assert.equal(await host.getByLabel("Input 1 connection", { exact: true }).inputValue(), stateBeforeCopy);
   const codeDownload = page.waitForEvent("download");
@@ -215,6 +227,8 @@ try {
   });
   assert(darkColors, "Code editor follows the settled dark theme tokens");
   await page.screenshot({ path: path.join(output, "structure-dark.png"), fullPage: true });
+  await page.setViewportSize({ width: 320, height: 740 });
+  assert((await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 1, "320px editor document overflow");
   await page.setViewportSize({ width: 390, height: 844 });
   assert((await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 1, "Mobile document overflow");
   await host.getByRole('button', { name: 'Focus mode', exact: true }).click();
@@ -258,7 +272,13 @@ try {
   await page.locator("#fileInput").setInputFiles(path.join(root, "web/samples/sample_cnn_float.onnx"));
   await page.waitForFunction(() => !document.querySelector("#runAudit")?.disabled);
   await page.locator("#runAudit").click();
-  await page.waitForFunction(() => document.querySelector("#redesignPanel .se-node"), null, { timeout: 120000 });
+  try {
+    await page.waitForFunction(() => document.querySelector("#redesignPanel .se-node"), null, { timeout: 120000 });
+  } catch (error) {
+    console.error("App analysis state", await page.locator('#status').innerText(), await page.locator('#redesignPanel').innerText(), await page.locator('[role="alert"]').allTextContents());
+    await page.screenshot({ path: path.join(output, "app-analysis-failure.png"), fullPage: true });
+    throw error;
+  }
   await page.locator('[data-workflow-step="redesign"]').click();
   await page.locator("#redesignPanel .se-viewport").waitFor({ state: "visible" });
   await page.waitForFunction(() => [...document.querySelectorAll("#redesignPanel .se-wire")].some(p => !p.getAttribute("d").startsWith("M0,0")));
@@ -320,8 +340,19 @@ try {
   assert.equal(await redesign.locator('.se-node').count(), sourceCount + 1, 'Switching to source scenarios preserves the graph draft');
   assert.equal(await sourceCode.inputValue(), retainedText, 'Switching to source scenarios preserves pending code');
   assert.match(await redesign.locator('.se-source-context').innerText(), /do not include Structure IDE edits/);
-  await redesign.getByRole('button', { name: 'Sync to graph', exact: true }).click();
+  await replaceCodeFromGraph(redesign);
   await redesign.screenshot({ path: path.join(output, 'redesign-tflite-source-workflow.png') });
   assert.deepEqual(errors, []);
   console.log(`Structure IDE browser passed: side-by-side live code, both sync directions, template insertion, native copy/paste, clipboard fallback, atomic rejection, conflict/draft preservation, drag wiring, undo/redo, project reload, light/dark/mobile and ONNX Web navigation. Artifacts: ${output}`);
 } finally { await browser.close(); await new Promise(resolve => server.close(resolve)); }
+
+async function replaceCodeFromGraph(container) {
+  const text = container.locator('.se-code-input');
+  const before = await text.inputValue();
+  await container.getByRole('button', {name:'Replace code from graph',exact:true}).click();
+  const confirm = container.getByRole('button', {name:'Confirm replacing code draft',exact:true});
+  if (await confirm.count()) {
+    assert.equal(await text.inputValue(), before, 'Pending edits remain until replacement is confirmed');
+    await confirm.click();
+  }
+}

@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { File } from "node:buffer";
-import { readArtifactBundle } from "../web/lib/artifact-bundle.js";
+import { readArtifactBundle, createArtifactPayloadSource } from "../web/lib/artifact-bundle.js";
+import { getArtifactIrContext } from "../web/lib/artifact-ir-context.js";
+import { collectWeightAnalysis } from "../web/lib/weight-analysis.js";
 import { scanCoreMlBlobFile } from "../web/lib/coreml-blob.js";
 import { readCoreMlModelFile } from "../web/lib/coreml-metadata-adapter.js";
 import { buildEngineeringReport } from "../web/lib/report-engineering.js";
@@ -51,9 +53,10 @@ function uint32Payload(values) {
   return result;
 }
 
-function mlProgramModel({ forwardReference = false } = {}) {
+function mlProgramModel({ forwardReference = false, attributeConstant = false } = {}) {
   const weightShape = [2, 1, 3, 3];
-  const constOp = operation("const", [["val", valueBinding(blobValue(11, weightShape, "@model_path/weights/weight.bin", 64))]], [["weight", 11, weightShape]]);
+  const value = blobValue(11, weightShape, "@model_path/weights/weight.bin", 64);
+  const constOp = operation("const", attributeConstant ? [] : [["val", valueBinding(value)]], [["weight", 11, weightShape]], [], attributeConstant ? [["val", value]] : []);
   const convOp = operation("conv", [["x", nameBinding("image")], ["weight", nameBinding("weight")]], [["output", 11, [1, 2, 2, 2]]]);
   const block = concat(string(2, "output"), [forwardReference ? convOp : constOp, forwardReference ? constOp : convOp].map((op) => message(3, op)));
   const fn = concat(message(1, named("image", 11, [1, 1, 4, 4])), string(2, "CoreML7"), message(3, concat(string(1, "CoreML7"), message(2, block))));
@@ -312,6 +315,9 @@ function packageFile(payload, name, relativePath) { const file = new File([paylo
 const weights = floatPayload(Array.from({ length: 18 }, (_, index) => (index + 1) / 16));
 const model = mlProgramModel();
 const parsed = (await readCoreMlModelFile(new File([model], "model.mlmodel"))).analysis;
+const attributeParsed = (await readCoreMlModelFile(new File([mlProgramModel({attributeConstant:true})], "attribute.mlmodel"))).analysis;
+assert(attributeParsed.total_macs === parsed.total_macs, "MIL attributes.val must preserve const-to-SSA weight binding");
+assert(attributeParsed.coreml_blob_references.length === parsed.coreml_blob_references.length, "MIL attributes.val must preserve external blob resolution");
 assert(parsed.coreml?.model_type === "mlProgram", "Core ML ML Program model type was not retained");
 assert(parsed.operator_count === 2 && parsed.tensor_count === 3, "Core ML MIL SSA graph inventory is incorrect");
 assert(parsed.total_macs === 72 && parsed.mac_assessment?.status === "assessed_all_decoded_compute_ops", "Core ML MIL conv MAC derivation is incorrect");
@@ -591,6 +597,13 @@ const files = [
   packageFile(blobFile(2, weights), "weight.bin", "Fixture.mlpackage/Data/com.example/weights/weight.bin"),
 ];
 const bundled = (await readArtifactBundle(files)).analysis;
+const bundleModel = getArtifactIrContext(bundled, {filename:"Fixture.mlpackage", format:"coreml", sha256:bundled.model_sha256, size:bundled.file_size}).model_ir;
+const numerical = await collectWeightAnalysis(bundleModel, bundled, createArtifactPayloadSource(bundled, files));
+assert(numerical.weight_ir.coverage.inventory_count === 1 && numerical.weight_ir.coverage.assessed_count === 1, "package Weight IR must preserve unique blob identity");
+assert(numerical.weight_ir.tensors[0].statistics.value_count === "18" && numerical.weight_ir.tensors[0].dtype === "FLOAT32", "package Weight IR must decode bound values with their tensor dtype");
+assert(numerical.weight_ir.tensors[0].binding_refs.length > 0, "package weight must bind to its actual consumer");
+assert(numerical.weight_analysis.coverage.assessed_count === 1, "package advanced analysis must share the same decoder");
+assert(numerical.weight_ir.source.artifact_sha256 === bundled.model_sha256, "package numerical identity must retain the bundle digest");
 assert(bundled.artifact_bundle?.kind === "coreml_mlpackage", "Core ML package identity was not retained");
 assert(bundled.weight_integrity?.status === "assessed" && bundled.weight_integrity.assessed_parameter_count === 1, "Core ML package blob did not bind to the MIL tensor");
 assert(bundled.weight_integrity.payload_bytes === weights.length && bundled.weight_integrity.nonfinite_value_count === 0, "Core ML package blob aggregate is incorrect");

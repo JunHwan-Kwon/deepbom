@@ -1,11 +1,11 @@
+import { initializeNumericalWasm, numericalWasm } from "./numerical-wasm.js";
+import { portableContract, aggregateExactCounts } from "./portable-contracts.js";
 // Common owner for native snapshot evidence. Existing artifact-based v1 IRs
 // remain immutable contracts. Framework adapters supply facts, never statistics.
-import { canonicalJson } from "./report-utils.js";
-import { sha256BytesHex } from "./sha256-sync.js";
+import { canonicalJson, canonicalJsonInput } from "./report-utils.js";
 import {
   exactKeys,
   requireCondition as need,
-  shapeCount,
   SHA256,
 } from "./numerical-ir/common.js";
 import {
@@ -27,7 +27,6 @@ import {
 } from "./numerical-ir/weight-math.js";
 import { validateWeightMathFeatures } from "./weight-analysis.js";
 import { visitDenseTensorValues } from "./tensor-numerical-integrity.js";
-import { scalarDtypeBytes } from "./tensor-size.js";
 import { canonicalEvidenceDigest, sealDocument } from "./evidence-identity.js";
 
 export const NATIVE_SCHEMAS = Object.freeze({
@@ -66,39 +65,7 @@ function checkSeal(doc, field) {
   digest(hash);
   need(nativeDigest(body) === hash, `${field} mismatch`);
 }
-const roles = new Set([
-  "parameter",
-  "buffer",
-  "variable",
-  "activation",
-  "gradient",
-]);
-const nativeDtypes = new Set([
-  "F16",
-  "BF16",
-  "F32",
-  "F64",
-  "I8",
-  "U8",
-  "I16",
-  "U16",
-  "I32",
-  "U32",
-  "I64",
-  "U64",
-  "BOOL",
-]);
-export async function analyzeNativeTensor(
-  row,
-  { maxValues = 1_000_000, advanced = false } = {},
-) {
-  need(
-    Number.isSafeInteger(maxValues) &&
-      maxValues >= 0 &&
-      maxValues <= 100_000_000,
-    "invalid value budget",
-  );
-  need(typeof advanced === "boolean", "invalid advanced option");
+export function decodeNativeTensor(row) {
   exactKeys(
     row,
     [
@@ -114,25 +81,9 @@ export async function analyzeNativeTensor(
     ],
     "native tensor",
   );
-  text(row.id, "tensor id");
-  text(row.name, "tensor name");
-  need(roles.has(row.role), "invalid native tensor role");
-  need(typeof row.trainable === "boolean", "invalid trainability");
-  need(
-    Array.isArray(row.aliases) &&
-      new Set(row.aliases).size === row.aliases.length &&
-      row.aliases.every((x) => typeof x === "string"),
-    "invalid aliases",
-  );
-  need(nativeDtypes.has(row.dtype), "unsupported native dtype");
-  need(
-    Array.isArray(row.shape) &&
-      row.shape.every((d) => Number.isSafeInteger(d) && d >= 0),
-    "native dimensions must be exact nonnegative integers",
-  );
-  const count = shapeCount(row.shape);
-  need(count <= 100_000_000n, "native tensor exceeds transport budget");
-  need(row.byte_order === "little", "native byte order must be little");
+  const { data_base64, ...descriptor } = row;
+  const counts = portableContract("native_tensor", {operation:"descriptor",value:descriptor});
+  const count = BigInt(counts.element_count);
   need(
     typeof row.data_base64 === "string" &&
       row.data_base64.length <= 128 * 1024 * 1024 &&
@@ -147,19 +98,35 @@ export async function analyzeNativeTensor(
   );
   const raw = Uint8Array.from(atob(row.data_base64), (c) => c.charCodeAt(0));
   need(
-    BigInt(raw.length) === count * BigInt(scalarDtypeBytes(row.dtype)),
+    String(raw.length) === counts.byte_length,
     "native shape/byte count mismatch",
   );
-  const { data_base64, ...descriptor } = row;
   const identity = {
     ...descriptor,
     element_count: String(count),
     byte_length: String(raw.length),
-    payload_sha256: sha256BytesHex(raw),
+    payload_sha256: numericalWasm().evidence_sha256(raw),
   };
+  return {raw,count,identity};
+}
+export async function analyzeNativeTensor(
+  row,
+  { maxValues = 1_000_000, advanced = false } = {},
+) {
+  await initializeNumericalWasm();
+  need(
+    Number.isSafeInteger(maxValues) &&
+      maxValues >= 0 &&
+      maxValues <= 100_000_000,
+    "invalid value budget",
+  );
+  need(typeof advanced === "boolean", "invalid advanced option");
+  const {raw,count,identity}=decodeNativeTensor(row);
   const stats = new TensorStatistics(),
     values = [];
-  const result = await visitDenseTensorValues(
+  let result, statistics;
+  try {
+  result = await visitDenseTensorValues(
     raw,
     row,
     (value) => {
@@ -168,7 +135,8 @@ export async function analyzeNativeTensor(
     },
     { maxValues },
   );
-  const statistics = result.status === "assessed" ? stats.finish() : null;
+  statistics = result.status === "assessed" ? stats.finish() : null;
+  } finally {stats.free();}
   let features = null;
   if (
     advanced &&
@@ -251,6 +219,7 @@ function validateDefinition(definition, stateIds) {
   );
 }
 export async function buildNativeEvidence(input) {
+  await initializeNumericalWasm();
   exactKeys(
     input,
     ["schema", "definition", "tensors", "capture", "options"],
@@ -384,51 +353,7 @@ export async function buildNativeEvidence(input) {
   });
 }
 function validateNativeIdentity(row) {
-  exactKeys(
-    row,
-    [
-      "id",
-      "name",
-      "role",
-      "trainable",
-      "aliases",
-      "dtype",
-      "shape",
-      "byte_order",
-      "element_count",
-      "byte_length",
-      "payload_sha256",
-    ],
-    "tensor identity",
-  );
-  text(row.id, "tensor id");
-  text(row.name, "tensor name");
-  need(
-    roles.has(row.role) && typeof row.trainable === "boolean",
-    "invalid native role",
-  );
-  need(
-    Array.isArray(row.aliases) &&
-      row.aliases.every((a) => typeof a === "string" && a !== row.id) &&
-      new Set(row.aliases).size === row.aliases.length,
-    "invalid aliases",
-  );
-  need(
-    nativeDtypes.has(row.dtype) && row.byte_order === "little",
-    "invalid tensor layout",
-  );
-  need(
-    Array.isArray(row.shape) &&
-      row.shape.every((d) => Number.isSafeInteger(d) && d >= 0),
-    "invalid native shape",
-  );
-  need(
-    row.element_count === String(shapeCount(row.shape)) &&
-      row.byte_length ===
-        String(shapeCount(row.shape) * BigInt(scalarDtypeBytes(row.dtype))),
-    "identity counts do not conserve",
-  );
-  digest(row.payload_sha256);
+  portableContract("native_tensor", {operation:"identity",value:canonicalJsonInput(row)});
 }
 function validateNativeTensorMetrics(row) {
   validateNativeIdentity(row.identity);
@@ -667,17 +592,7 @@ export function validateNativeBundle(bundle) {
   return bundle;
 }
 export function compareNativeNodes(before, after) {
-  const index = rows => {
-    need(Array.isArray(rows), "invalid native nodes");
-    const map = new Map(rows.map(n => [n.id, n]));
-    need(map.size === rows.length, "duplicate native node");
-    return map;
-  };
-  const a = index(before), b = index(after);
-  return [...new Set([...a.keys(), ...b.keys()])].sort().map(id => ({
-    id, status: !a.has(id) ? "added" : !b.has(id) ? "removed"
-      : canonicalJson(a.get(id)) === canonicalJson(b.get(id)) ? "unchanged" : "changed",
-  }));
+  return portableContract("nodes", { before, after });
 }
 
 // Shared by bundle generation and saved-report ingestion. Correspondence can
@@ -756,17 +671,9 @@ export function compareNativeEvidence(baseline, candidate) {
 export function nativeStateTotals(tensors) {
   tensors.forEach(validateNativeIdentity);
   return {
-    state_elements: String(
-      tensors.reduce((n, t) => n + BigInt(t.element_count), 0n),
-    ),
-    state_bytes: String(
-      tensors.reduce((n, t) => n + BigInt(t.byte_length), 0n),
-    ),
-    trainable_elements: String(
-      tensors
-        .filter((t) => t.trainable)
-        .reduce((n, t) => n + BigInt(t.element_count), 0n),
-    ),
+    state_elements: aggregateExactCounts(tensors.map(t => t.element_count)).decimal,
+    state_bytes: aggregateExactCounts(tensors.map(t => t.byte_length)).decimal,
+    trainable_elements: aggregateExactCounts(tensors.filter(t => t.trainable).map(t => t.element_count)).decimal,
   };
 }
 export function buildTrainingIr(input) {

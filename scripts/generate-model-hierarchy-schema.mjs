@@ -23,7 +23,7 @@ defs.assignment = obj({ subject_ref: str, group_ref: str, status: { enum: ["obse
 defs.edge = obj({ id: str, value_ref: str, from_ref: nullable(str), to_ref: nullable(str), from_port_ref: nullable(str), to_port_ref: nullable(str),
   from_port_position: nullable(count), to_port_position: nullable(count), boundary_program_ref: nullable(str), boundary_position: nullable(count),
   kind: { enum: ["data_dependency", "storage_input", "external_input", "model_output"] }, shape: summary.$defs.value.properties.shape, dtype: nullable(str), layout: { const: "not_inferred" } });
-const base = { method_version: { const: "1.0.0" }, source: ref("source"), interpretation_boundary: str };
+const base = { method_version: { enum: ["1.0.0", "1.1.0"] }, source: ref("source"), interpretation_boundary: str };
 defs.hierarchy = obj({ schema: { const: "deepbom.model_hierarchy.v1" }, ...base, status: { enum: ["source_annotated", "structural_fallback", "not_applicable_no_program"] },
   annotations: list(ref("annotation")), groups: list(ref("group")), assignments: list(ref("assignment")), edges: list(ref("edge")), hierarchy_sha256: ref("sha256"),
   non_data_relationships: list({ type: "object", required: ["id", "kind"], properties: { id: str, kind: { enum: ["control_dependency", "state_dependency", "call"] } } }),

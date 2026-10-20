@@ -4,8 +4,12 @@ from pathlib import Path
 import threading
 import uuid
 import weakref
+import warnings
 from .._native.core import engine, atomic_json, EvidenceStore, json_value, tensor_row
 from .._native.adapters import framework_of, snapshot_input
+from .._native.keras_identity import state_names
+from .._ownership import WriterOwnership
+from ._persistence import training_input, write_intent, publish
 
 _ACTIVE = weakref.WeakKeyDictionary()
 
@@ -23,7 +27,14 @@ class Recorder:
         max_values=100_000,
         run_id=None,
         chunk_size=32,
+        max_state_bytes=None,
+        _observer=None,
     ):
+        if _observer is not None and not callable(_observer):
+            raise TypeError("Observer dispatch must be callable")
+        self._observer = _observer
+        self._engine = engine
+        self._snapshot_sink = None
         if observation not in ("auto", "manual"):
             raise ValueError("observation must be auto or manual")
         if not isinstance(every, int) or isinstance(every, bool) or every < 1:
@@ -48,6 +59,9 @@ class Recorder:
         self.capture = set(capture)
         self.every = every
         self.max_values = max_values
+        if max_state_bytes is not None and (type(max_state_bytes) is not int or max_state_bytes < 0):
+            raise ValueError("max_state_bytes must be a nonnegative integer or None")
+        self.max_state_bytes = max_state_bytes
         self.logdir = Path(logdir)
         self.store = EvidenceStore(self.logdir)
         if (self.logdir / "latest.json").exists():
@@ -82,19 +96,27 @@ class Recorder:
         if self.model is not None and self.model in _ACTIVE:
             raise ValueError("Model already has an active DEEPBOM collector")
         self._lock_path = self.logdir / ".writer.lock"
-        with self._lock_path.open("x", encoding="utf-8") as lock:
-            lock.write(self.run_id + "\n" + self.segment_id + "\n")
+        self._ownership = WriterOwnership(self._lock_path, purpose="training_writer")
         try:
             if (self.logdir / "latest.json").exists():
                 raise FileExistsError("Evidence directory already has a run")
+            if (self.logdir / "pending-training.json").exists() or (self.logdir / "unsealed-events.json").exists():
+                raise FileExistsError("Unsealed observations exist; recover the evidence before starting a new run")
             return self._begin()
-        except BaseException:
+        except BaseException as primary_error:
             for handle in self.handles:
-                handle.remove()
+                try:
+                    handle.remove()
+                except Exception as cleanup_error:
+                    _cleanup_warning(f"DEEPBOM hook cleanup failed: {type(cleanup_error).__name__}")
             if self.model is not None:
                 _ACTIVE.pop(self.model, None)
             self._closed = True
-            self._lock_path.unlink(missing_ok=True)
+            try:
+                self._ownership.close()
+            except BaseException as cleanup_error:
+                if hasattr(primary_error,"add_note"):
+                    primary_error.add_note(f"Writer cleanup also failed: {type(cleanup_error).__name__}")
             raise
 
     def _begin(self):
@@ -103,21 +125,20 @@ class Recorder:
         self._entered = True
         self._thread = threading.get_ident()
         if self.observation == "auto":
-
+            def observe(function, *args, **kwargs):
+                return self._observer(function, *args, **kwargs) if self._observer else function(*args, **kwargs)
             def pre(optimizer, args, kwargs):
-                if kwargs.get("closure") is not None or len(args) > 1:
-                    raise ValueError("Optimizer closure observation is not qualified")
-                self._auto_token = self._before_update(
-                    optimizer=optimizer, at={}, gradient_stage="optimizer_pre_hook"
-                )
+                def capture():
+                    if kwargs.get("closure") is not None or len(args) > 1:
+                        raise ValueError("Optimizer closure observation is not qualified")
+                    return self._before_update(optimizer=optimizer, at={}, gradient_stage="optimizer_pre_hook")
+                self._auto_token = observe(capture)
 
             def post(optimizer, args, kwargs):
-                self._after_update(self._auto_token, optimizer=optimizer)
+                observe(self._after_update, self._auto_token, optimizer=optimizer)
 
-            self.handles = [
-                self.optimizer.register_step_pre_hook(pre),
-                self.optimizer.register_step_post_hook(post),
-            ]
+            self.handles.append(self.optimizer.register_step_pre_hook(pre))
+            self.handles.append(self.optimizer.register_step_post_hook(post))
         self.event(
             "collector_started",
             {},
@@ -132,6 +153,9 @@ class Recorder:
                 ],
             },
         )
+        # Persist initial identity before training can start. Buffered later
+        # events are not claimed recoverable until a flush records its intent.
+        self.flush()
         return self
 
     def _check(self, *, running=False):
@@ -181,27 +205,10 @@ class Recorder:
             and self.previous["lifecycle"] == self.lifecycle
         ):
             return self.previous
-        result = engine(
-            "training",
-            {
-                "schema": "deepbom.training_input.v1",
-                "run_id": self.run_id,
-                "segment_id": self.segment_id,
-                "lifecycle": self.lifecycle,
-                "events": self.events,
-                "previous": self.previous,
-            },
-        )
-        self.store.put(result["chunk"])
-        self.store.put(result["document"])
-        atomic_json(
-            self.logdir / "latest.json",
-            {
-                "schema": "deepbom.training_head.v1",
-                "training_ir_sha256": result["document"]["training_ir_sha256"],
-            },
-            replace=True,
-        )
+        payload = training_input(self)
+        write_intent(self.logdir, payload)
+        result = self._engine("training", payload)
+        publish(self.logdir, self.store, result)
         self.previous = result["document"]
         self.events = []
         return self.previous
@@ -221,11 +228,23 @@ class Recorder:
         self._check(running=True)
         if self.model is None:
             raise ValueError("Snapshot requires a model")
-        raw = snapshot_input(self.model, max_values=self.max_values, advanced=advanced)
-        bundle = engine("snapshot", raw)
+        raw = snapshot_input(self.model, max_values=self.max_values, advanced=advanced,
+                             max_state_bytes=self.max_state_bytes)
+        bundle = self._engine("snapshot", raw)
+        return self._commit_snapshot(bundle, at=at, raw=raw)
+
+    def observe_snapshot(self, *, at=None, advanced=False):
+        """Internal automatic boundary; explicit record_snapshot stays synchronous."""
+        if self._snapshot_sink is not None:
+            return self._snapshot_sink(at=at, advanced=advanced)
+        return self.record_snapshot(at=at, advanced=advanced)
+
+    def _commit_snapshot(self, bundle, *, at=None, raw=None):
+        self._check(running=True)
         refs = {k: self.store.put(v) for k, v in bundle.items() if v is not None}
         digest = bundle["snapshot"]["snapshot_sha256"]
-        self._snapshots = {digest: raw}
+        if raw is not None:
+            self._snapshots = {digest: raw}
         self.event(
             "model_snapshot",
             at or {},
@@ -264,7 +283,7 @@ class Recorder:
             "context": {**json_value(context), "at": json_value(at)},
             "values": rows,
         }
-        result = engine("snapshot", raw)
+        result = self._engine("snapshot", raw)
         ref = self.store.put(result["activation_ir"])
         self.event(
             "activation_capture",
@@ -309,7 +328,7 @@ class Recorder:
                 raise ValueError("Optimizer repeats a model parameter")
             observation_context["optimizer_binding"] = {"status":"model_parameter_subset", "native_state_refs":[members[id(v)] for v in selected], "model_parameter_count":len(members)}
         else:
-            members = {id(v): getattr(v, "path", v.name) for v in self.model.weights}
+            members = state_names(self.model)
             selected = getattr(optimizer, "_trainable_variables", ())
             if selected and any(id(v) not in members for v in selected):
                 raise ValueError("Optimizer variables do not belong to the selected model")
@@ -327,7 +346,7 @@ class Recorder:
             if framework_of(self.model) == "pytorch":
                 names = {id(v): n for n, v in self.model.named_parameters()}
             else:
-                names = {id(v): getattr(v, "path", v.name) for v in self.model.weights}
+                names = state_names(self.model)
             if variables is None:
                 if framework_of(self.model) != "pytorch":
                     raise ValueError(
@@ -382,7 +401,7 @@ class Recorder:
                     }
                 )
             if transport_rows:
-                batch = engine(
+                batch = self._engine(
                     "tensor_batch",
                     {
                         "tensors": transport_rows,
@@ -398,6 +417,7 @@ class Recorder:
         self.pending[token] = {
             "optimizer": optimizer,
             "sampled": attempt_index % self.every == 0,
+            "attempt": str(attempt_index + 1),
         }
         self.attempts += 1
         return token
@@ -427,9 +447,10 @@ class Recorder:
                 "Unsupported update outcome; return alone does not prove changed weights"
             )
         self.event("update_returned", at or {}, {"token": token, "outcome": outcome})
-        sampled = self.pending.pop(token)["sampled"]
-        if "weights" in self.capture and sampled:
-            self.record_snapshot(at=at)
+        pending = self.pending.pop(token)
+        if "weights" in self.capture and pending["sampled"]:
+            self.observe_snapshot(at={**(at or {}), "optimizer_attempt":pending["attempt"],
+                "optimizer_token":token, "boundary":"after_optimizer_return", "outcome":outcome})
 
     def finish(self, state="ended", *, origin="user_declared"):
         self._check()
@@ -442,11 +463,19 @@ class Recorder:
         self.flush()
 
     def __exit__(self, typ, value, tb):
+        errors = []
+        self.cleanup_errors = errors
         try:
             for handle in self.handles:
-                handle.remove()
+                try:
+                    handle.remove()
+                except Exception as error:
+                    errors.append(error)
             if self.lifecycle == "running":
-                self.lifecycle = "failed" if typ else "collector_closed"
+                if typ and issubclass(typ, KeyboardInterrupt):
+                    self.lifecycle = "interrupted"
+                else:
+                    self.lifecycle = "failed" if typ else "collector_closed"
             self.event(
                 "collector_closed",
                 {},
@@ -456,15 +485,45 @@ class Recorder:
                 },
             )
             self.flush()
+        except Exception as error:
+            errors.append(error)
         finally:
             if self.model is not None:
                 _ACTIVE.pop(self.model, None)
             self._closed = True
             self._snapshots.clear()
-            self._lock_path.unlink(missing_ok=True)
+            if self.events:
+                try:
+                    # Keep the writer through journal publication. Otherwise a
+                    # recovery process could seal the old head before this last
+                    # surviving buffer became visible.
+                    atomic_json(self.logdir / "unsealed-events.json", {
+                        "schema":"deepbom.unsealed_training_journal.v1",
+                        "run_id":self.run_id,"segment_id":self.segment_id,
+                        "previous":self.previous,"events":self.events,
+                        "status":"incomplete_requires_validation_before_recovery"},
+                        replace=True,compact=True,max_bytes=128*1024*1024)
+                except Exception as error:
+                    errors.append(error)
+            try:
+                self._ownership.close()
+            except OSError as error:
+                errors.append(error)
+        if errors:
+            if typ is None:
+                raise errors[0]
+            # Cleanup must never replace an exception from the user's training.
+            _cleanup_warning(f"DEEPBOM cleanup also failed ({type(errors[0]).__name__}); original training exception preserved")
         return False
 
 
 def watch(model, **options):
     options.setdefault("observation", "auto")
     return Recorder(model, **options)
+
+
+def _cleanup_warning(message):
+    try:
+        warnings.warn(message, RuntimeWarning)
+    except Warning:
+        pass  # Preserve the original failure even with warnings-as-errors.

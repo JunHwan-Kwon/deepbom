@@ -14,7 +14,12 @@ import {
 // Native numerical transport and detailed views add ~65 KiB; allocate 128 KiB.
 // Snapshot/context/evaluation owners and their bounded report adapters add ~80 KiB.
 // Shared source hierarchy, bounded graph projection and export adapters add ~66 KiB.
-const handwrittenRuntimeBudgetKiB = Number(process.env.HANDWRITTEN_RUNTIME_SOURCE_BUDGET_KIB || process.env.SOURCE_BUDGET_KIB || 13408);
+// Portable kernels and the native Python SDK are now counted together. Python
+// sources were previously omitted by the extension filter. Measured 2026-10-14:
+// 14,150,649 runtime bytes, including 354,095 Python SDK bytes. Keep per-file caps.
+// Portable ONNX/family validators replace host owners; measured 14,285,398 bytes.
+// Reserve 66 KiB with unchanged per-file caps.
+const handwrittenRuntimeBudgetKiB = Number(process.env.HANDWRITTEN_RUNTIME_SOURCE_BUDGET_KIB || process.env.SOURCE_BUDGET_KIB || 14016);
 const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_BUDGET_KIB || 1856);
 // Includes the public connection contract, schema and OMOP usage guide.
 // Includes the hash-addressed common-rule inventory (~138 KiB) and review report.
@@ -28,22 +33,35 @@ const generatedRuntimeDataBudgetKiB = Number(process.env.GENERATED_RUNTIME_DATA_
 // Retain immutable 0.18–0.20 editor/synchronization snapshots (~88 KiB each).
 // Retain the immutable 0.21 geometry-source snapshot (~88 KiB); reserve 96 KiB.
 // Preserve the hierarchy schema/guide and immutable 0.22 compatibility snapshot.
-const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 3520);
+// Immutable compatibility 0.23–0.44 archives and the new 120-trial CPU record
+// raise measured documentation to 6,403,735 bytes. Preserve prior records;
+// personal ignored reports are excluded and per-file caps remain unchanged.
+// Add immutable 0.45.0 (~118 KiB) and execution-boundary documentation; per-file caps unchanged.
+// Immutable 0.46–0.49 catalogs and portable IR ABI notes bring measured docs to
+// 7,026,761 bytes (2026-10-20). Reserve 18 KiB; runtime and per-file caps stay unchanged.
+// Preserve immutable 0.50–0.53 snapshots and ABI documentation: 7.20 MiB.
+// Preserve the immutable 0.54/0.55 portable crosswalks (~114 KiB each); no per-file cap increase.
+// Release 2.5.0 retains immutable 0.56.0 and 0.57.0 catalogs; measured docs 7.67 MiB.
+// Reserve 128 KiB for this archive; runtime, per-file and calculation limits stay unchanged.
+const docsSourceBudgetKiB = Number(process.env.DOCS_SOURCE_BUDGET_KIB || 7936);
 // Includes metadata tampering, cross-channel and browser regression checks.
 // Workflow routing and weight-query regression coverage add a measured 18 KiB;
 // reserve 32 KiB for tests and 16 KiB for the expanded review contract snapshot.
 // Adds schema/source closure and browser snapshot-integrity regression checks.
 // Source hierarchy, exact port conservation and browser/export regression coverage.
-const verificationSourceBudgetKiB = Number(process.env.VERIFICATION_SOURCE_BUDGET_KIB || 4160);
+// Include Python regression checks: measured 4,446,256 verification bytes.
+const verificationSourceBudgetKiB = Number(process.env.VERIFICATION_SOURCE_BUDGET_KIB || 4416);
 // Includes the reproducible Provenance IR schema generator.
 // Includes the shared scalar registry/generator and reviewed duplicate exceptions.
 // Retains the four measured 2.0.0 delivery observations alongside prior releases.
 // Includes the 9.4 KiB pinned historical ChatGPT contract fixture.
 // Native schema generation and channel/integration guides; local ignored studies
 // are excluded by source-size-utils rather than inflating the product allowance.
-const devToolingSourceBudgetKiB = Number(process.env.DEV_TOOLING_SOURCE_BUDGET_KIB || 2016);
+// Python fixture/benchmark tooling is now included: measured 2,263,671 bytes.
+const devToolingSourceBudgetKiB = Number(process.env.DEV_TOOLING_SOURCE_BUDGET_KIB || 2256);
 const nativeToolingSourceBudgetKiB = Number(process.env.NATIVE_TOOLING_SOURCE_BUDGET_KIB || 256);
-const corpusEvidenceSourceBudgetKiB = Number(process.env.CORPUS_EVIDENCE_SOURCE_BUDGET_KIB || 544);
+// Retained public evidence and regression fixtures: measured 597,068 bytes.
+const corpusEvidenceSourceBudgetKiB = Number(process.env.CORPUS_EVIDENCE_SOURCE_BUDGET_KIB || 608);
 const runtimeFileBudgetKiB = Number(process.env.RUNTIME_SOURCE_FILE_BUDGET_KIB || 512);
 // Common hierarchy summary/export wiring raises the shell from <310 to 310.1 KiB.
 const appJsBudgetKiB = Number(process.env.APP_JS_BUDGET_KIB || 312);

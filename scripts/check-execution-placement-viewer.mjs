@@ -149,6 +149,7 @@ try {
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/placement-test`, { waitUntil: "domcontentloaded" });
   await page.evaluate(async () => {
+    await (await import("/web/lib/numerical-wasm.js")).initializeNumericalWasm();
     const module = await import("/web/lib/execution-placement-view.js");
     globalThis.renderPlacementCase = (analysis, runtimeEvidence = null) => module.renderExecutionPlacementView(
       document.querySelector("#root"), analysis, runtimeEvidence, { doc: document },

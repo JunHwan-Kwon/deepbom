@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { parse } from "acorn";
 import { normalizePath } from "./path-utils.mjs";
 import { collectFileSizes } from "./size-utils.mjs";
 
@@ -54,41 +55,18 @@ if (errors.length) {
 
 console.log(`Browser import contract check passed (${checkedImports} named/default exports and ${checkedUsage} local import usages checked across ${files.length} files).`);
 
-function parseStaticImports(source) {
-  const imports = [];
-  for (const match of source.matchAll(/import\s+([\s\S]*?)\s+from\s+["']([^"']+)["']/g)) {
-    const bindings = importBindings(match[1]);
-    imports.push({
-      specifier: match[2],
-      names: bindings.map((item) => item.imported).filter(Boolean),
-      localNames: bindings.map((item) => item.local).filter(Boolean),
-    });
-  }
-  return imports;
+function staticImports(source) {
+  return parse(source, { ecmaVersion: "latest", sourceType: "module" }).body
+    .filter((node) => node.type === "ImportDeclaration");
 }
 
-function importBindings(clause) {
-  const bindings = [];
-  const trimmed = clause.trim();
-  const namedBlock = trimmed.match(/\{([\s\S]*?)\}/);
-  if (namedBlock) {
-    for (const item of namedBlock[1].split(",")) {
-      const part = item.trim();
-      if (!part) continue;
-      const [imported, local = imported] = part.split(/\s+as\s+/).map((value) => value.trim());
-      bindings.push({ imported, local });
-    }
-  }
-
-  const beforeNamed = namedBlock ? trimmed.slice(0, namedBlock.index).trim().replace(/,$/, "").trim() : trimmed;
-  if (beforeNamed && !beforeNamed.startsWith("*")) {
-    bindings.push({ imported: "default", local: beforeNamed });
-  } else if (beforeNamed.startsWith("*")) {
-    const namespace = beforeNamed.match(/\*\s+as\s+([a-zA-Z_$][\w$]*)/);
-    if (namespace) bindings.push({ imported: "", local: namespace[1] });
-  }
-
-  return bindings;
+function parseStaticImports(source) {
+  return staticImports(source).map((node) => ({
+    specifier: node.source.value,
+    names: node.specifiers.flatMap((item) => item.type === "ImportNamespaceSpecifier" ? []
+      : [item.type === "ImportDefaultSpecifier" ? "default" : (item.imported.name ?? item.imported.value)]),
+    localNames: node.specifiers.map((item) => item.local.name),
+  }));
 }
 
 function isLocalManagedImport(specifier, resolved) {
@@ -128,7 +106,10 @@ function exportedNames(file) {
 }
 
 function sourceWithoutStaticImports(source) {
-  return source.replace(/import\s+[\s\S]*?\s+from\s+["'][^"']+["'];?/g, "");
+  for (const node of staticImports(source).reverse()) {
+    source = source.slice(0, node.start) + source.slice(node.end);
+  }
+  return source;
 }
 
 function identifierUsed(source, name) {

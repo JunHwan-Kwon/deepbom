@@ -1,5 +1,6 @@
+import { numericalWasm, initializeNumericalWasm } from "./numerical-wasm.js";
 import { buildWeightIr, validateWeightIr } from "./weight-ir.js";
-import { numericSources, hashSource } from "./numerical-ir/weight-sources.js";
+import { numericSources, hashSource, verifySourceAfterRead } from "./numerical-ir/weight-sources.js";
 import { requireCondition, sourceContract, seal, checkDigest, exactKeys, parseNumeric } from "./numerical-ir/common.js";
 import { axisContract, quantizationContracts, tensorQuantization, dequantize } from "./numerical-ir/weight-contracts.js";
 import { assessed, notAssessed, matrixView, channelStatistics, similarityAnalysis, spectrumAnalysis, spectrumSummary, sparsityAnalysis, tileProjection, kernelProjection, compareValues } from "./numerical-ir/weight-math.js";
@@ -27,6 +28,7 @@ function unavailable(row,reason) {return {weight_ref:row.id,storage_ref:row.stor
 
 // decoded is process-local working data and is never included in exported IR.
 export async function collectWeightAnalysis(modelInput,analysis,source,{weightIr=null,options={},signal,onProgress}={}) {
+  await initializeNumericalWasm();
   const {model,source:identity}=sourceContract(modelInput),settings=weightAnalysisOptions(options);
   const weight=weightIr?validateWeightIr(weightIr,model):await buildWeightIr(model,analysis,source,{signal,onProgress});
   requireCondition(await hashSource(source,{signal})===identity.artifact_sha256,"advanced weight source digest mismatch");
@@ -61,6 +63,7 @@ export async function collectWeightAnalysis(modelInput,analysis,source,{weightIr
   }
   const document=seal({schema:WEIGHT_ANALYSIS_SCHEMA,method_version:"1.0.0",source:identity,weight_ir_sha256:weight.weight_ir_sha256,options:settings,coverage:coverage(rows),tensors:rows,interpretation_boundary:BOUNDARY},"weight_analysis_sha256");
   validateWeightAnalysis(document,weight,model);
+  await verifySourceAfterRead(source, identity.artifact_sha256, {signal});
   return {weight_ir:weight,weight_analysis:document,decoded};
 }
 export async function buildWeightEvidence(model,analysis,source,options={}) {
@@ -124,11 +127,8 @@ export function validateWeightMathFeatures(row) {
 }
 
 function canonicalValues(record, permutation=null) {
-  const shape=record.row.shape, rank=shape.length, dims=permutation?permutation.map(i=>shape[i]):shape;
-  const axes=permutation || shape.map((_,i)=>i),n=record.values.length,values=new Float64Array(n);
-  const native=shape.map((_,i)=>(record.row.axes.storage_order==="first_axis_fastest"?shape.slice(0,i):shape.slice(i+1)).reduce((a,b)=>a*b,1));
-  for(let i=0;i<n;i++){let rest=i,offset=0;for(let d=rank-1;d>=0;d--){const c=rest%dims[d];rest=Math.floor(rest/dims[d]);offset+=c*native[axes[d]];}values[i]=record.values[offset];}
-  return {values,shape:dims};
+  const shape=record.row.shape, axes=permutation||shape.map((_,i)=>i);
+  return {values:numericalWasm().numerical_weight_permute(record.values,shape,record.row.axes.storage_order,axes),shape:axes.map(i=>shape[i])};
 }
 export function compareWeightAnalyses(baseline,candidate,{mapping=[]}={}) {
   requireCondition(Array.isArray(mapping),"weight mapping must be an array");

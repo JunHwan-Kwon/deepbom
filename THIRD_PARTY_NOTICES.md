@@ -69,3 +69,18 @@ pinned with its upstream revision and digest in the accompanying schema lock.
 - Project: https://github.com/spdx/spdx-spec
 - Copyright: Linux Foundation and SPDX contributors
 - License: CC-BY-3.0, https://spdx.github.io/spdx-spec/v2.3/license/
+
+## Exact-arithmetic dependencies
+
+The common numerical WASM engine uses `num-bigint` 0.4.6, `num-integer`
+0.1.46 and `num-traits` 0.2.19 from the Rust num project. These dependencies
+are available under MIT OR Apache-2.0; this distribution selects Apache-2.0.
+Upstream: https://github.com/rust-num. Exact versions and checksums are pinned
+in `Cargo.lock`. The distributed Apache-2.0 license applies to this selection.
+
+## ECMAScript number serialization
+
+The common evidence identity engine uses `ryu-js` 1.0.3 for ECMAScript binary64
+number spelling in RFC 8785 canonical JSON. Upstream: https://github.com/boa-dev/ryu-js.
+It is dual licensed under Apache-2.0 OR BSL-1.0; this distribution selects
+Apache-2.0. The exact version and checksum are pinned in `Cargo.lock`.

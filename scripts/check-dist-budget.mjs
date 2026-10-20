@@ -1,3 +1,4 @@
+// Preserve compatibility 0.45.0 (~118 KiB) plus the expanded common WASM; total allowance +128 KiB.
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { collectFileSizes, formatBytes, mibToBytes } from "./size-utils.mjs";
@@ -30,7 +31,18 @@ const dist = path.resolve("dist");
 // Reserve 128 KiB; the per-file cap is unchanged.
 // Source hierarchy modules/schema and the immutable 0.22 catalog bring the
 // measured release to 69.03 MiB. Reserve 256 KiB; initial scripts remain 2,475 gzip bytes.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 69.125);
+// Portable numerical/evidence owners, HDF5 decoding and archived compatibility
+// catalogs bring this development artifact to 85,192,073 bytes (81.25 MiB).
+// The app reuses the copied HDF5 vendor module, eliminating a 5,594,575-byte
+// duplicate. The ChatGPT audit worker remains self-contained by contract.
+// Keep a bounded 81.5 MiB total and the unchanged 16 MiB per-file gate.
+// Portable IR owners plus immutable 0.46–0.49 catalogs require a bounded 512 KiB increment.
+// Preserve all runtime and per-file ceilings.
+// Final immutable 0.54/0.55 catalogs and portable rules measure 86,135,852 bytes.
+// Add 64 KiB to the total only; keep the 16 MiB per-file and startup limits.
+// Release 2.5.0 retains the 0.56.0 and 0.57.0 catalogs and rebuilt companion WASM.
+// Measured assembly is 82.29 MiB; add 128 KiB total while retaining all per-file/startup limits.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 82.4375);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

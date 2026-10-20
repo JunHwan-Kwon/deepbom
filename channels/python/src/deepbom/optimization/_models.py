@@ -12,6 +12,7 @@ from .._native.adapters import (
     require_supported_execution,
 )
 from .._native.core import json_value
+from .._native.keras_identity import identity_policy, set_identity_policy, LEGACY_POLICY
 
 TORCH_ARGUMENTS = {
     "Linear": ("in_features", "out_features"),
@@ -110,7 +111,7 @@ def model_spec(model, factory=None):
     if fw == "tensorflow":
         import json
 
-        return {"framework": fw, "kind": "keras", "config": json.loads(model.to_json())}
+        return {"framework": fw, "kind": "keras", "config": json.loads(model.to_json()), "state_identity": identity_policy(model)}
     import torch
 
     shared = {}
@@ -148,7 +149,9 @@ def construct(spec):
     if spec["kind"] == "keras":
         import keras, json
 
-        return keras.models.model_from_json(json.dumps(spec["config"]))
+        model = keras.models.model_from_json(json.dumps(spec["config"]))
+        set_identity_policy(model, spec.get("state_identity", LEGACY_POLICY))
+        return model
     if spec["kind"] != "torch_builtin":
         raise ValueError("Unknown model constructor")
     import torch

@@ -75,16 +75,19 @@ export function compareCanonicalText(left, right) {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-export function canonicalJson(value) {
+// Host value admission is shared by host-only publication utilities and the
+// portable evidence identity owner. Clone without invoking toJSON or losing
+// undefined, sparse entries, cycles, lone surrogates or own __proto__ keys.
+function walkCanonicalValue(value, render, preserveOrder = false) {
   const ancestors = new Set();
-  const serialize = (item, path) => {
+  const visit = (item, path) => {
     if (item === null || typeof item === "boolean" || typeof item === "string") {
       assertIJsonString(item, path);
-      return JSON.stringify(item);
+      return render ? JSON.stringify(item) : item;
     }
     if (typeof item === "number") {
       if (!Number.isFinite(item)) throw new TypeError(`RFC 8785 JCS rejects non-finite number at ${path}`);
-      return JSON.stringify(item);
+      return render ? JSON.stringify(item) : item;
     }
     if (typeof item !== "object") throw new TypeError(`RFC 8785 JCS rejects ${typeof item} at ${path}`);
     if (ancestors.has(item)) throw new TypeError(`RFC 8785 JCS rejects a cyclic value at ${path}`);
@@ -95,17 +98,23 @@ export function canonicalJson(value) {
     ancestors.add(item);
     let result;
     if (Array.isArray(item)) {
-      result = `[${Array.from(item, (entry, index) => serialize(entry, `${path}/${index}`)).join(",")}]`;
+      const rows = Array.from(item, (entry, index) => visit(entry, `${path}/${index}`));
+      result = render ? `[${rows.join(",")}]` : rows;
     } else {
-      const keys = Object.keys(item).sort();
+      const keys = Object.keys(item);
+      if (render || !preserveOrder) keys.sort();
       for (const key of keys) assertIJsonString(key, `${path}/<key>`);
-      result = `{${keys.map((key) => `${JSON.stringify(key)}:${serialize(item[key], `${path}/${escapeJsonPointer(key)}`)}`).join(",")}}`;
+      const entries = keys.map(key => [key, visit(item[key], `${path}/${escapeJsonPointer(key)}`)]);
+      if (render) result = `{${entries.map(([key, val]) => `${JSON.stringify(key)}:${val}`).join(",")}}`;
+      else { result = Object.create(null); for (const [key, val] of entries) result[key] = val; }
     }
     ancestors.delete(item);
     return result;
   };
-  return serialize(value, "$");
+  return visit(value, "$");
 }
+export function canonicalJson(value) { return walkCanonicalValue(value, true); }
+export function canonicalJsonInput(value, {preserveOrder = false} = {}) { return walkCanonicalValue(value, false, preserveOrder); }
 
 function assertIJsonString(value, path) {
   if (typeof value !== "string") return;

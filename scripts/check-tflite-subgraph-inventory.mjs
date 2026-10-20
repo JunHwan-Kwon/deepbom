@@ -506,6 +506,16 @@ expectEqual(huge.fallback_macs_decimal, (2097153n ** 3n).toString(), "Partition 
 expectEqual(huge.fallback_macs, undefined, "Partition must not emit a rounded unsafe numeric MAC mirror");
 expectEqual(huge.ops[0].macs_decimal, huge.total_macs_decimal, "Exact per-op and model counts agree");
 expectEqual(huge.mac_assessment.complete, true, "Exact decimal ledger is complete even without a numeric mirror");
+for (const [batch,m,k] of [[1,536870911,2],[1,536870912,2],[1,536870913,2],[1024,2097153,2097153]]) {
+  const bytes = makeMatrixFixture({batch, m, k, n:1});
+  const result = analyze_tflite_for_target(bytes, "large-logical-payload.tflite", "android_mid_a55");
+  const row = result.tflite_subgraph_inventory.rows[0];
+  const expected = BigInt(batch) * BigInt(m) * BigInt(k) * 4n;
+  expectEqual(row.tensor_intrinsics[0].logical_payload_bytes_decimal, String(expected), "Logical payload across WASM32 boundary");
+  const identity = {filename:"large-logical-payload.tflite", format:"tflite", sha256:sha256BytesHex(bytes), size:bytes.length};
+  const context = getArtifactIrContext(result, identity);
+  expectEqual(context.artifact_ir.graph.values[0].logical_byte_length.decimal, String(expected), "IR retains exact payload from the common ledger");
+}
 const pooling = analyze_tflite_for_target(makePoolFixture(), "pooling.tflite", "android_mid_a55");
 expectEqual(pooling.ops[0].ops, 288, "Scalar pooling work uses the serialized 3x3 window, not the 8/4 downsampling ratio");
 expectEqual(pooling.total_macs, 0, "Pooling scalar work is not a MAC count");

@@ -4,6 +4,7 @@ import { sha256TextHex } from "./sha256-sync.js";
 import { validateModelIr } from "./model-ir.js";
 import { indexModelProgram, modelGroupBoundary } from "./model-program-boundary.js";
 
+import { aggregateExactCounts } from "./portable-contracts.js";
 export const MODEL_SUMMARY_SCHEMA = "deepbom.model_summary.v1";
 export const MODEL_SUMMARY_METHOD_VERSION = "1.2.0";
 export const MODEL_SUMMARY_LEVELS = Object.freeze(["auto", "operation", "block", "storage"]);
@@ -359,11 +360,7 @@ function aggregateStorage(rows) {
 }
 
 function exactSum(values) {
-  const known = values.map(exactDecimal);
-  const assessed = known.filter((value) => value !== null);
-  if (values.length && !assessed.length) return { decimal: null, number: null, status: "not_assessable", assessed_count: 0, total_count: values.length };
-  const sum = assessed.reduce((total, value) => total + BigInt(value), 0n);
-  return { decimal: sum.toString(), number: sum <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(sum) : null, status: assessed.length === values.length ? "complete" : assessed.length ? "partial" : "not_assessable", assessed_count: assessed.length, total_count: values.length };
+  return aggregateExactCounts(values.map(exactDecimal));
 }
 
 function sumMetric(rows, key, assessedEmpty = true) {

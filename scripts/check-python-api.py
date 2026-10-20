@@ -113,7 +113,11 @@ with tempfile.TemporaryDirectory(prefix="deepbom-policy-test-") as directory:
         Path(command[output_index]).write_text(json.dumps(completed_document), encoding="utf-8")
         return CompletedProcess(command, 2, stdout="", stderr="deepbom: review policy blocked")
 
-    with patch.object(api, "_verified_engine", return_value=(Path(sys.executable), None)), patch.object(api.subprocess, "run", side_effect=blocked_run):
+    def blocked_managed_run(command, **kwargs):
+        result = blocked_run(command, **kwargs)
+        return {"returncode":result.returncode,"diagnostic":result.stderr}
+
+    with patch.object(api, "_verified_engine", return_value=(Path(sys.executable), None)), patch.object(api.subprocess, "run", side_effect=blocked_run), patch("deepbom._process.run_process", side_effect=blocked_managed_run):
         try:
             deepbom.audit("nan-weight.safetensors", gate="defects")
         except deepbom.DeepBomPolicyBlocked as error:
@@ -165,7 +169,7 @@ def noisy_run(command, **kwargs):
     kwargs["stderr"].write(b"x" * 100000 + b" diagnostic-tail")
     return CompletedProcess(command, 1)
 
-with patch.object(api, "_verified_engine", return_value=(Path(sys.executable), None)), patch.object(api.subprocess, "run", side_effect=noisy_run):
+with patch.object(api, "_verified_engine", return_value=(Path(sys.executable), None)), patch.object(api.subprocess, "run", side_effect=noisy_run), patch("deepbom._process.run_process", return_value={"returncode":1,"diagnostic":("x"*100000+" diagnostic-tail")[-16384:]}):
     try:
         deepbom.capabilities()
     except deepbom.DeepBomInvocationError as error:

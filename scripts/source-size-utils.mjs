@@ -35,6 +35,7 @@ export const BUDGET_SOURCE_EXTENSIONS = new Set([
   ".ts",
   ".tsx",
   ".rs",
+  ".py",
   ".html",
   ".css",
   ".json",
@@ -47,6 +48,7 @@ export const BUDGET_SOURCE_EXTENSIONS = new Set([
 const RUNTIME_SOURCE_PREFIXES = [
   "bin/",
   "sdk/",
+  "channels/python/src/deepbom/",
   "web/",
   "worker/",
   "src/",
@@ -96,7 +98,9 @@ export async function collectSourceFiles({
   const tracked = spawnSync("git", ["-C", rootDir, "ls-files", "-z"], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
   if (tracked.status === 0) {
     const trackedRoots = new Set(tracked.stdout.split("\0").filter(Boolean).map(name => name.split("/")[0]));
-    const candidates = readdirSync(rootDir, { withFileTypes: true }).filter(entry => entry.isDirectory() && !trackedRoots.has(entry.name)).map(entry => entry.name + "/");
+    const candidates = readdirSync(rootDir, { withFileTypes: true })
+      .filter(entry => (entry.isDirectory() || entry.isFile()) && !trackedRoots.has(entry.name))
+      .map(entry => entry.name + (entry.isDirectory() ? "/" : ""));
     if (candidates.length) {
       const ignored = spawnSync("git", ["-C", rootDir, "check-ignore", "--stdin", "-z"], { input: candidates.join("\0") + "\0", encoding: "utf8" });
       if (ignored.status === 0 || ignored.status === 1) {
@@ -115,7 +119,18 @@ export async function collectSourceFiles({
       ignoredPaths,
     })).filter((file) => !isIgnoredSourceFile(file.path)));
   }
-  return files.sort((a, b) => a.path.localeCompare(b.path));
+  // Files may be ignored inside a tracked directory too (for example private
+  // review documents in docs/). check-ignore deliberately keeps tracked files.
+  const ignoredFiles = new Set();
+  if (tracked.status === 0 && files.length) {
+    const ignored = spawnSync("git", ["-C", rootDir, "check-ignore", "--stdin", "-z"], {
+      input: files.map(file => file.path).join("\0") + "\0", encoding: "utf8", maxBuffer: 16 * 1024 * 1024,
+    });
+    if (ignored.status === 0 || ignored.status === 1) {
+      for (const name of ignored.stdout.split("\0").filter(Boolean)) ignoredFiles.add(normalizePath(name));
+    }
+  }
+  return files.filter(file => !ignoredFiles.has(file.path)).sort((a, b) => a.path.localeCompare(b.path));
 }
 
 export async function addRuntimeSourceBytes(files) {

@@ -29,6 +29,44 @@ mod rounding_equivalence;
 mod runtime_version;
 mod scalar_types_generated;
 mod tensor_math;
+mod portable_numerics;
+mod portable_contracts;
+mod portable_integer;
+mod portable_shape;
+mod portable_redesign;
+mod portable_evidence;
+mod portable_identity;
+pub use portable_identity::evidence_sha256;
+mod portable_native;
+mod portable_onnx_type;
+mod portable_ir;
+mod portable_validation;
+mod portable_provenance;
+mod portable_conversion;
+mod portable_activation_validation;
+mod portable_numerical_validation;
+mod portable_model_validation;
+mod portable_artifact_validation;
+mod portable_coreml;
+mod portable_workflow;
+mod portable_decimal;
+mod portable_cost;
+mod portable_einsum;
+mod portable_protobuf;
+mod portable_graph;
+pub use portable_numerics::*;
+mod portable_metrics;
+pub use portable_metrics::*;
+mod portable_spectrum;
+pub use portable_spectrum::*;
+mod portable_weight;
+pub use portable_weight::*;
+mod portable_distribution;
+pub use portable_distribution::*;
+mod portable_affine;
+pub use portable_affine::*;
+mod portable_pruning;
+pub use portable_pruning::*;
 mod target_profiles;
 mod tflite_deep_scopes;
 mod tflite_metadata;
@@ -523,6 +561,8 @@ struct OpInfo {
     batch_matmul_adjoints: (bool, bool),
     #[serde(skip)]
     pool_filter: Option<(i32, i32)>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    spatial_options: Option<tflite_subgraphs::SpatialOptions>,
     estimated_bytes_status: String,
     intensity_status: String,
     bottleneck_assessment_status: String,
@@ -865,8 +905,8 @@ struct PredictedPartitionBoundaryInventory {
     interpretation_boundary: String,
 }
 
-struct TensorPayloadAssessment {
-    bytes: Option<usize>,
+struct TensorPayloadAssessment<T = usize> {
+    bytes: Option<T>,
     status: &'static str,
     binding: &'static str,
     reason: String,
@@ -2457,7 +2497,7 @@ fn compute_quick_low_norm_stat_for_tensor(
     };
     let float_values: Option<Vec<f64>> = match tensor.dtype.as_str() {
         "FLOAT32" => {
-            if !raw.len().is_multiple_of(4) {
+            if raw.len() % 4 != 0 {
                 return None;
             }
             let n = raw.len() / 4;
@@ -3283,6 +3323,7 @@ fn analyze_with_target_scope(
                     bottleneck_assessment_status: "not_assessed".to_string(),
                     batch_matmul_adjoints,
                     pool_filter: tflite_subgraphs::pool_filter(&fb, *table, &name)?,
+                    spatial_options: tflite_subgraphs::spatial_options(&fb, *table, &name)?,
                     macs_status: intrinsic.mac_assessment_status.to_string(),
                     macs_reason: intrinsic.mac_assessment_reason.clone(),
                     mac_percent: 0.0,
@@ -4520,7 +4561,7 @@ fn int32_raw_values(bytes: &[u8], tensor: &TensorInfo) -> Option<Vec<i32>> {
         return None;
     }
     let slice = extract_tensor_buffer(bytes, tensor)?;
-    if !slice.len().is_multiple_of(4) {
+    if slice.len() % 4 != 0 {
         return None;
     }
     Some(
@@ -7342,7 +7383,7 @@ fn channel_alignment_for_op(
     }
 }
 
-fn suppress_graph_output_channel_alignment(ops: &mut [OpInfo], output_tensor_indices: &[i32]) {
+fn graph_output_semantic_tensors(ops: &[OpInfo], output_tensor_indices: &[i32]) -> HashSet<i32> {
     let mut semantic_output_tensors = output_tensor_indices
         .iter()
         .copied()
@@ -7363,6 +7404,11 @@ fn suppress_graph_output_channel_alignment(ops: &mut [OpInfo], output_tensor_ind
                     | "QUANTIZE"
                     | "DEQUANTIZE"
                     | "CAST"
+                    | "RELU"
+                    | "RELU6"
+                    | "TANH"
+                    | "HARD_SWISH"
+                    | "LEAKY_RELU"
             )
         {
             if let Some(input) = op.inputs.first().copied().filter(|index| *index >= 0) {
@@ -7370,6 +7416,11 @@ fn suppress_graph_output_channel_alignment(ops: &mut [OpInfo], output_tensor_ind
             }
         }
     }
+    semantic_output_tensors
+}
+
+fn suppress_graph_output_channel_alignment(ops: &mut [OpInfo], output_tensor_indices: &[i32]) {
+    let semantic_output_tensors = graph_output_semantic_tensors(ops, output_tensor_indices);
     for op in ops.iter_mut().filter(|op| {
         op.channel_alignment_status == "misaligned"
             && op
@@ -8007,6 +8058,16 @@ fn deterministic_tensor_payload_bytes(tensor: &TensorInfo) -> Result<usize, Stri
 }
 
 fn deterministic_tensor_payload_assessment(tensor: &TensorInfo) -> TensorPayloadAssessment {
+    let exact = deterministic_tensor_payload_assessment_exact(tensor);
+    let bytes = exact.bytes.and_then(|n| usize::try_from(n).ok());
+    if exact.bytes.is_some() && bytes.is_none() {
+        return TensorPayloadAssessment { bytes: None, status: "not_assessed", binding: "unbound",
+            reason: "Logical payload is known but exceeds the arena address range.".to_string() };
+    }
+    TensorPayloadAssessment { bytes, status: exact.status, binding: exact.binding, reason: exact.reason }
+}
+
+fn deterministic_tensor_payload_assessment_exact(tensor: &TensorInfo) -> TensorPayloadAssessment<u128> {
     if tensor.shape.iter().any(|dim| *dim < 0) {
         return TensorPayloadAssessment {
             bytes: None,
@@ -8044,7 +8105,7 @@ fn deterministic_tensor_payload_assessment(tensor: &TensorInfo) -> TensorPayload
         }
         "serialized_batch1_projection"
     };
-    match declared_tensor_payload_bytes(tensor) {
+    match arena_planner::declared_tensor_payload_bytes_exact(tensor) {
         Ok(bytes) => TensorPayloadAssessment {
             bytes: Some(bytes),
             status: if binding == "static" {
@@ -9010,6 +9071,7 @@ mod tests {
             bottleneck_assessment_status: "assessed".to_string(),
             batch_matmul_adjoints: (false, false),
             pool_filter: None,
+            spatial_options: None,
             macs_status: "assessed_nominal".to_string(),
             macs_reason: "Test fixture supplies a closed nominal MAC value.".to_string(),
             mac_percent: 0.0,
@@ -10457,3 +10519,40 @@ mod tests {
         assert_eq!(liveness.unassessed_tensor_count, 1);
     }
 }
+
+mod portable_onnx_semantics;
+mod portable_onnx_ort;
+
+mod portable_onnx_container;
+
+mod portable_runtime_overlay;
+
+mod portable_onnx_merge;
+
+mod portable_onnx_node;
+
+mod portable_onnx_tensor;
+mod portable_onnx_tfidf;
+
+mod portable_onnx_dynamic;
+
+mod portable_onnx_elementwise;
+mod portable_onnx_special;
+mod portable_onnx_slice;
+
+mod portable_onnx_conditional;
+
+mod portable_onnx_ml;
+mod portable_onnx_ml_svm;
+mod portable_onnx_ml_svm_eval;
+mod portable_onnx_ml_label;
+mod portable_onnx_ml_linear;
+mod portable_onnx_ml_schema;
+mod portable_onnx_ml_mapping;
+
+mod portable_onnx_regions;
+
+mod portable_onnx_ml_tree;
+mod portable_onnx_ml_tree_data;
+mod portable_onnx_ml_tree_graph;
+mod portable_onnx_ml_tree_eval;

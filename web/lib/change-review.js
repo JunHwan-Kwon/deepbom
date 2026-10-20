@@ -1,7 +1,7 @@
 import {reportedDecimal,addExactDecimals,subtractExactDecimals,negateExactDecimal,halveExactDecimal,compareExactDecimals,exactDecimalText,exactDecimalNumber} from "./exact-rational.js";
 import {openOptimizationReport,queryOptimizationReport} from "./optimization-report-access.js";
 import { EVALUATION_RECORD_SCHEMA, validateEvaluationProtocol, validateMeasurementAgainstProtocol } from "./evaluation-evidence.js";
-import { exactFields, requireEvidence as need, validateSubjectReference, sameReference, referenceKey, sealDocument, assertDocumentDigest, canonicalEvidenceDigest } from "./evidence-identity.js";
+import { exactFields, requireEvidence as need, sameReference, sealDocument, assertDocumentDigest, canonicalEvidenceDigest, evidenceContract } from "./evidence-identity.js";
 
 export const CHANGE_REVIEW_SCHEMA = "deepbom.change_review.v1";
 export const CHANGE_REVIEW_INPUT_SCHEMA = "deepbom.change_review_input.v1";
@@ -10,14 +10,7 @@ export const CHANGE_REVIEW_RULES = Object.freeze([
   { id:"DB-CHANGE-COMPARABILITY", version:"1.0.0", owner:"change-review.js", purpose:"Same protocol, release, cohort, code, environment, unit and paired set when required" },
   { id:"DB-CHANGE-REGRESSION", version:"1.0.0", owner:"change-review.js", purpose:"After-minus-before with declared direction and rounding interval; no derived CI" },
 ]);
-function validateInput(input){
-  exactFields(input,["schema","before","after","change_kind","protocol","evaluations","evidence"],[],"change review input");
-  need(input.schema===CHANGE_REVIEW_INPUT_SCHEMA,"unsupported review input");
-  for(const k of ["before","after","protocol"])validateSubjectReference(input[k]);
-  need(!sameReference(input.before,input.after),"before and after must be distinct subjects");
-  need(["preserving_transformation","approximate_transformation","model_change","configuration_change"].includes(input.change_kind),"unknown change kind");
-  for(const k of ["evaluations","evidence"]){need(Array.isArray(input[k])&&input[k].length<=512,"review reference limit exceeded"); input[k].forEach(validateSubjectReference);need(new Set(input[k].map(referenceKey)).size===input[k].length,"duplicate review evidence reference");}
-}
+function validateInput(input){ evidenceContract("review_input", input); }
 export function buildChangeReview(input, context){
   validateInput(input);
   const protocol=context.document(input.protocol);need(protocol,"review requires supplied protocol");validateEvaluationProtocol(protocol);

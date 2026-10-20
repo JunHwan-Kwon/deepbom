@@ -9,6 +9,12 @@ export function collectModelSourceAnnotations(analysis, model) {
   const records = [];
   for (const [position, native] of (analysis?.ops || []).entries()) {
     const op = primary.get(native.index ?? position);
+    if (op && native.source_annotation?.basis === 'serialized_keras_config') {
+      const entry=native.source_annotation;
+      const valid=[entry.scope_names,entry.class_names].every(a=>Array.isArray(a)&&a.length>0&&a.length<=128&&a.every(s=>typeof s==='string'&&s.length<=4096&&s.isWellFormed()&&!/[\u0000-\u001f\u007f]/.test(s)))&&entry.scope_names.length===entry.class_names.length;
+      records.push({subject_ref:op.id,scope_names:valid?entry.scope_names:[],class_names:valid?entry.class_names:[],status:valid?'observed_exporter_annotation':'invalid_annotation',reason:valid?null:'invalid_serialized_source_annotation',source_pointer:`/ops/${position}/source_annotation`,metadata_sha256:sha256TextHex(canonicalJson(entry)),call_identity_status:'exporter_annotation_not_runtime_invocation'});
+      continue;
+    }
     const entries = native.onnx_metadata_properties;
     if (!op || !Array.isArray(entries) || !entries.length) continue;
     const keys = new Map(), duplicates = new Set();

@@ -1,6 +1,8 @@
 import { runNode } from "./run-utils.mjs";
 
 const CHECKS = [
+  "scripts/generate-development-analysis-schema.mjs --check",
+  "scripts/check-development-analysis.mjs",
   "scripts/generate-evidence-workflow-schema.mjs --check",
   "scripts/check-evidence-workflow.mjs",
   "scripts/check-evidence-workflow-channels.mjs",
@@ -19,6 +21,12 @@ const CHECKS = [
   "scripts/check-zenodo-release.mjs",
   "scripts/check-js.mjs",
   "scripts/check-wasm-hardening.mjs",
+  "scripts/check-portable-contracts.mjs",
+  "scripts/check-portable-evidence.mjs",
+  "scripts/check-wasm-owner-migration.mjs",
+  "scripts/check-wasm-ir-semantics.mjs",
+  "scripts/check-wasm-onnx-semantics.mjs",
+  "scripts/check-portable-shapes.mjs",
   "scripts/check-web-imports.mjs",
   "scripts/check-browser-import-contract.mjs",
   "scripts/check-bootstrap-retry.mjs",

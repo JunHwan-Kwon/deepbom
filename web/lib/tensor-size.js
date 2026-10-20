@@ -1,5 +1,7 @@
+import { numericalWasm } from "./numerical-wasm.js";
 import { exactInteger } from "./exact-integer.js";
 import { SCALAR_TYPES } from "./scalar-types.generated.js";
+import { portableContract, aggregateExactCounts } from "./portable-contracts.js";
 
 // Fixed-width logical scalar encodings. A known width does not imply decoder,
 // operator or backend support. Block encodings and variable-length values have
@@ -33,7 +35,7 @@ export function shapeElementCount(shape) {
   // Array.every/reduce skip holes; a missing extent is unknown, not one.
   for (const dimension of shape) if (!Number.isSafeInteger(dimension) || dimension < 0) return null;
   if (shape.includes(0)) return exactInteger(0);
-  return exactInteger(shape.reduce((product, d) => product * BigInt(d), 1n));
+  return exactInteger(numericalWasm().numerical_shape_count(Float64Array.from(shape)));
 }
 
 export function safeShapeElementCount(shape) {
@@ -52,19 +54,13 @@ export function safeCountProduct(...values) {
 
 export function safeCountSum(...values) {
   if (!values.every(v => Number.isSafeInteger(v) && v >= 0)) return null;
-  return exactInteger(values.reduce((sum, value) => sum + BigInt(value), 0n)).number;
+  return aggregateExactCounts(values).number;
 }
 
 export function broadcastStaticShapes(left, right) {
-  if (!shapeElementCount(left) || !shapeElementCount(right)) return null;
-  const output = [];
-  for (let offset = Math.max(left.length, right.length); offset > 0; offset -= 1) {
-    const a = left[left.length - offset] ?? 1, b = right[right.length - offset] ?? 1;
-    if (a !== b && a !== 1 && b !== 1) return null;
-    // max(0, 1) is 1, but broadcasting an empty dimension with 1 stays empty.
-    output.push(a === 1 ? b : a);
-  }
-  return output;
+  if (!Array.isArray(left) || !Array.isArray(right)) return null;
+  for (const value of [...left, ...right]) if (!Number.isSafeInteger(value) || value < 0) return null;
+  return portableContract("broadcast", { left, right });
 }
 
 export function logicalBytesForElements(dtype, elements) {
@@ -74,7 +70,7 @@ export function logicalBytesForElements(dtype, elements) {
 export function packedBytesForElements(elements, bits) {
   const count = exactInteger(elements);
   return count && Number.isSafeInteger(bits) && bits > 0
-    ? exactInteger((BigInt(count.decimal) * BigInt(bits) + 7n) / 8n) : null;
+    ? portableContract("pack", { elements: count.decimal, bits }) : null;
 }
 
 export function logicalBytesForShape(dtype, shape) {

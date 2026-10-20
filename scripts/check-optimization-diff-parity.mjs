@@ -18,8 +18,8 @@ assert.deepEqual(python,buildNativeOptimizationDiff(report),"Python bridge/commo
 const server=createServer(async(req,res)=>{
   if(req.url==="/"){res.setHeader("Content-Type","text/html");res.end("<!doctype html><title>Diff parity</title>");return;}
   const p=path.resolve(root,"."+new URL(req.url,"http://local").pathname);
-  if(!p.startsWith(path.join(root,"web")+path.sep)){res.statusCode=404;res.end();return;}
-  try{res.setHeader("Content-Type","text/javascript");res.end(await readFile(p));}catch{res.statusCode=404;res.end();}
+  if(!["web","pkg"].some(dir=>p.startsWith(path.join(root,dir)+path.sep))){res.statusCode=404;res.end();return;}
+  try{res.setHeader("Content-Type",p.endsWith('.wasm')?"application/wasm":"text/javascript");res.end(await readFile(p));}catch{res.statusCode=404;res.end();}
 });
 await new Promise(r=>server.listen(0,"127.0.0.1",r));
 let browser;
@@ -28,6 +28,7 @@ try{
   const page=await browser.newPage(),errors=[];page.on("pageerror",e=>errors.push(e.message));
   await page.goto(`http://127.0.0.1:${server.address().port}`);
   const inBrowser=await page.evaluate(async report=>{
+    const {initializeNumericalWasm}=await import("/web/lib/numerical-wasm.js");await initializeNumericalWasm();
     const {buildNativeOptimizationDiff}=await import("/web/lib/native-optimization-diff.js");return buildNativeOptimizationDiff(report);
   },report);
   assert.deepEqual(inBrowser,python,"Browser/Node/Python field-level projection parity");

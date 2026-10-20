@@ -94,7 +94,10 @@ expectEqual(stripped, `fn live() -> &'static str { "}" }`, "stripRustTests shoul
 const work = await mkdtemp(path.join(tmpdir(), "deepbom-source-budget-"));
 try {
   execFileSync("git", ["init", "-q", work]);
-  await writeFile(path.join(work, ".gitignore"), "/local-study/\n/retained/\n");
+  await writeFile(path.join(work, ".gitignore"), "/local-study/\n/retained/\n/private-review.md\n/retained.md\n/source/private.md\n");
+  await writeFile(path.join(work, "private-review.md"), "Private report\n");
+  await writeFile(path.join(work, "retained.md"), "Tracked report\n");
+  execFileSync("git", ["-C", work, "add", "-f", "retained.md"]);
   for (const dir of ["local-study", "retained", "source"]) {
     await mkdir(path.join(work, dir));
     await writeFile(path.join(work, dir, "model.js"), "export const model = 1;\n");
@@ -103,7 +106,14 @@ try {
   await mkdir(path.join(work, "source", "local-study"));
   await writeFile(path.join(work, "source", "local-study", "tracked.js"), "export const value = 1;\n");
   execFileSync("git", ["-C", work, "add", "source/local-study/tracked.js"]);
+  await writeFile(path.join(work, "source", "private.md"), "Private nested report\n");
+  await mkdir(path.join(work, "channels/python/src/deepbom"), {recursive:true});
+  await writeFile(path.join(work, "channels/python/src/deepbom/api.py"), "def inspect(): pass\n");
   const files = await collectSourceFiles({ cwd: work });
+  expectEqual(files.some(file => file.path === "channels/python/src/deepbom/api.py"), true, "Python SDK source must be included in product budgets.");
+  expectEqual(files.some(file => file.path === "private-review.md"), false, "Ignored root reports must not enter source budgets.");
+  expectEqual(files.some(file => file.path === "source/private.md"), false, "Ignored files inside a tracked root must not enter source budgets.");
+  expectEqual(files.some(file => file.path === "retained.md"), true, "Tracked root files must remain counted even when an ignore pattern matches.");
   expectEqual(files.some(file => file.path === "local-study/model.js"), false, "Ignored local studies must not enter product source budgets.");
   expectEqual(files.some(file => file.path === "retained/model.js"), true, "Tracked content in an ignored root must remain counted.");
   expectEqual(files.some(file => file.path === "source/model.js"), true, "New non-ignored product source must remain counted.");

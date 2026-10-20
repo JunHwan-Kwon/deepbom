@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deepbom"
-version = "2.4.0"
+version = "2.5.0"
 description = "Local deployment-artifact analysis for on-device AI models"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "Apache-2.0"
-license-files = ["LICENSE"]
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 authors = [{ name = "Jun-Hwan Kwon" }]
 dependencies = []
 keywords = ["tflite", "onnx", "gguf", "safetensors", "coreml", "executorch", "tensorrt", "quantization", "on-device", "ml-bom", "cyclonedx", "sarif", "mcp", "model-context-protocol", "chatgpt"]
@@ -25,11 +25,15 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-report = ["reportlab>=4.4,<5", "rfc8785==0.1.4"]
-native = ["numpy>=1.26,<3", "rfc8785==0.1.4"]
-torch = ["numpy>=1.26,<3", "rfc8785==0.1.4", "torch>=2.8,<2.9"]
-tensorflow = ["numpy>=1.26,<3", "rfc8785==0.1.4", "tensorflow>=2.20,<2.21", "keras>=3.11,<3.12"]
-tracking = ["numpy>=1.26,<3", "rfc8785==0.1.4", "mlflow-skinny>=3.17,<4", "tensorboard>=2.20,<3", "wandb>=0.30,<0.31"]
+plugins = ["packaging>=24,<27"]
+report = ["reportlab>=4.4,<5"]
+native = ["numpy>=1.26,<3"]
+torch = ["numpy>=1.26,<3", "torch>=2.8,<2.9"]
+tensorflow = ["numpy>=1.26,<3", "tensorflow>=2.20,<2.21", "keras>=3.11,<3.12"]
+autolog = ["numpy>=1.26,<3", "tensorflow>=2.20,<2.21", "keras>=3.11,<3.12", "wrapt==2.5.0"]
+lightning = ["numpy>=1.26,<3", "torch>=2.8,<2.9", "lightning==2.6.6"]
+metrics = ["numpy>=1.26,<3", "torch>=2.8,<2.9", "torchmetrics==1.9.0"]
+tracking = ["numpy>=1.26,<3", "mlflow-skinny>=3.17,<4", "tensorboard>=2.20,<3", "wandb>=0.30,<0.31"]
 
 [project.urls]
 Homepage = "https://deepbom.org"

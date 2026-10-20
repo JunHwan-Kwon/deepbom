@@ -152,10 +152,15 @@ function singleLayerFixture({ inputShape, outputShape, typeField, params, specif
   return concat(uint(1, specificationVersion), message(2, description), message(500, network));
 }
 
-function operationFixture({ inputShapes, outputShapes, typeField, params = Buffer.alloc(0), specificationVersion = 5 }) {
+function operationFixture({ inputShapes, outputShapes, typeField, params = Buffer.alloc(0), specificationVersion = 5, inputDescriptors = [], outputDescriptors = [] }) {
   const inputNames = inputShapes.map((_, index) => `input_${index}`);
   const outputNames = outputShapes.map((_, index) => `output_${index}`);
-  const network = concat(message(1, layer("subject", inputNames, outputNames, typeField, params)), uint(5, 1));
+  const tensorDescriptor = (shape) => concat(uint(1, shape.length), packedInt(2, shape));
+  const network = concat(message(1, concat(
+    layer("subject", inputNames, outputNames, typeField, params),
+    inputDescriptors.map((shape) => message(4, tensorDescriptor(shape))),
+    outputDescriptors.map((shape) => message(5, tensorDescriptor(shape))),
+  )), uint(5, 1));
   const description = concat(
     inputShapes.map((shape, index) => message(1, feature(inputNames[index], arrayType(shape)))),
     outputShapes.map((shape, index) => message(10, feature(outputNames[index], arrayType(shape)))),
@@ -439,6 +444,40 @@ const conv3d = await analyze(singleLayerFixture({
 assert(conv3d.total_macs === 13_824 && conv3d.ops[0].macs_status === "derived_exact_coreml_convolution_3d", "Core ML Conv3D exact MAC derivation is incorrect");
 assert(conv3d.ops[0].output_shapes[0].join("x") === "1x4x4x4x4" && conv3d.weight_integrity.payload_bytes === 880,
   "Core ML Conv3D shape or WeightParams byte conservation is incorrect");
+
+// coremltools 9.0 add_rank_preserving_reshape serializes targetShape in
+// both Tensor descriptors. Verify the exact producer form without accepting
+// unrelated descriptor conflicts or invalid reshape cardinalities.
+for (const [input, target, expected] of [
+  [[20, 10, 5], [0, 2, -1], [20, 2, 25]],
+  [[1, 384, 768, 1, 1], [0, 0, 12, 64, 0], [1, 384, 12, 64, 1]],
+]) {
+  const result = await analyze(operationFixture({
+    inputShapes: [input], outputShapes: [expected], typeField: 1150,
+    params: packedInt(1, target), inputDescriptors: [target], outputDescriptors: [target],
+  }));
+  const op = result.ops[0];
+  assert(op.input_shapes[0].join("x") === input.join("x") && op.output_shapes[0].join("x") === expected.join("x"),
+    "Reshape template descriptors replaced actual producer/derived tensor shapes");
+  assert(op.coreml_shape_annotation?.status === "serialized_reshape_templates_not_tensor_shapes"
+    && op.coreml_shape_annotation.input_descriptors[0].join("x") === target.join("x")
+    && result.coreml.neural_network.layers[0].output_shapes[0].join("x") === target.join("x"),
+    "Raw reshape descriptors or their interpretation evidence were lost");
+  assert(op.macs === 0 && op.estimated_bytes === input.reduce((a, b) => a * b, 1) * 4,
+    "Reshape template interpretation changed cardinality or non-MAC classification");
+}
+await expectRejected(operationFixture({
+  inputShapes: [[20, 10, 5]], outputShapes: [[20, 2, 25]], typeField: 1150,
+  params: packedInt(1, [0, 2, -1]), inputDescriptors: [[20, 11, 5]], outputDescriptors: [[20, 2, 25]],
+}), /conflicting serialized shapes/, "Concrete input shape conflicts must still fail closed");
+await expectRejected(operationFixture({
+  inputShapes: [[20, 10, 5]], outputShapes: [[20, 2, 25]], typeField: 1150,
+  params: packedInt(1, [0, 2, -1]), inputDescriptors: [[20, 10, 5]], outputDescriptors: [[20, 2, 24]],
+}), /serialized output shape.*conflicts/, "Concrete output shape conflicts must still fail closed");
+await expectRejected(operationFixture({
+  inputShapes: [[20, 10, 5]], outputShapes: [[20, 2, 25]], typeField: 1150,
+  params: packedInt(1, [0, 3, 7]), inputDescriptors: [[0, 3, 7]], outputDescriptors: [[0, 3, 7]],
+}), /does not conserve rank and cardinality/, "Builder-shaped descriptors must not bypass reshape validation");
 
 for (const [name, inputShape, outputShape, typeField, params, status] of [
   ["Permute", [2, 3, 4, 5, 6], [2, 3, 6, 4, 5], 310, packedUint(1, [0, 3, 1, 2]), "derived_coreml_permute_contract"],

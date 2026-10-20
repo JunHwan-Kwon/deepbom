@@ -14,6 +14,8 @@ export const COREML_NEURAL_NETWORK_SOURCE = Object.freeze({
   neural_network_validator_sha256: "c4e0d565368627b8bdd9dd46b7d132449d8277295c4ea7a978709493e4e9fc7e",
   neural_network_validator_utils: "mlmodel/src/Validation/NeuralNetwork/NeuralNetworkValidatorUtils.hpp",
   neural_network_validator_utils_sha256: "ad315304ff4d44623e9aa3ca3d3853995980114b47fc3a7a34ae7ff62148bcf8",
+  neural_network_builder: "coremltools/models/neural_network/builder.py",
+  neural_network_builder_sha256: "32e4c6c62ae401935c8720bde69f4ea6672a363b76511308fb06959f671361ca",
   quantization_implementation: "coremltools/models/neural_network/quantization_utils.py",
   quantization_implementation_sha256: "51af467b3b8bd483cd7e39eb13fb2f8814b0221cac556b6f6a68f1a38a544d2d",
 });
@@ -460,6 +462,9 @@ function bindWeightCardinality(weight, shape, axis, label, expectedQuantizationC
   } else if (weight.value_count !== cardinality) {
     throw new Error(`${label} contains ${weight.value_count} values; expected ${cardinality}`);
   }
+  weight.shape = [...shape];
+  weight.channel_axis = axis;
+  weight.shape_basis = "serialized_parent_parameter_contract";
   delete weight._raw_payloads;
 }
 

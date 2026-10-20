@@ -13,22 +13,28 @@ import {
 const entryPoints = readHtmlModuleEntrypoints();
 const swAppAssets = readSwAppAssets().sort();
 const swSource = readSwSource();
+const runtimeAssets = parseStringArrayConst(swSource, "RUNTIME_CACHEABLE_SUFFIXES");
+const cacheableAssets = [...swAppAssets, ...runtimeAssets];
 const swShellAssets = parseStringArrayConst(swSource, "APP_SHELL_ASSETS");
 const authenticatedPrefixes = parseStringArrayConst(swSource, "AUTHENTICATED_ASSET_PREFIXES");
 const authenticatedAssetPaths = new Set(parseStringArrayConst(swSource, "AUTHENTICATED_ASSET_PATHS"));
 const swRepoPathToAsset = new Map(swAppAssets.map((asset) => [normalizePath(appAssetToRepoPath(asset)), asset]));
+for (const asset of runtimeAssets) {
+  if (!asset.startsWith('/node_modules/')) throw new Error(`Unexpected runtime asset root: ${asset}`);
+  swRepoPathToAsset.set(normalizePath(asset.slice(1)), asset);
+}
 const protectedUncachedAssets = new Set([
   "./lib/report-raw-entry.js",
 ]);
 
 const appLocalImports = collectLocalImports(entryPoints);
 
-const missing = appLocalImports.filter((asset) => !swAppAssets.includes(asset) && !protectedUncachedAssets.has(asset));
+const missing = appLocalImports.filter((asset) => !cacheableAssets.includes(asset) && !protectedUncachedAssets.has(asset));
 if (missing.length) {
   throw new Error(`web/sw.js APP_ASSETS is missing app imports: ${missing.join(", ")}`);
 }
 
-const protectedCached = swAppAssets.filter((asset) => authenticatedAssetPaths.has(assetToPathSuffix(asset))
+const protectedCached = cacheableAssets.filter((asset) => authenticatedAssetPaths.has(assetToPathSuffix(asset))
   || asset.startsWith("./protected/"));
 if (protectedCached.length) {
   throw new Error(`web/sw.js APP_ASSETS must not cache gated report formatter assets: ${protectedCached.join(", ")}`);
@@ -47,8 +53,8 @@ if (swShellAssets.length >= swAppAssets.length / 2) {
   throw new Error(`web/sw.js app shell is not bounded (${swShellAssets.length}/${swAppAssets.length} assets).`);
 }
 
-const missingFiles = swAppAssets
-  .map((asset) => [asset, appAssetToRepoPath(asset)])
+const missingFiles = cacheableAssets
+  .map((asset) => [asset, asset.startsWith('/node_modules/') ? asset.slice(1) : appAssetToRepoPath(asset)])
   .filter(([, path]) => path && !existsSync(path));
 if (missingFiles.length) {
   throw new Error(`web/sw.js APP_ASSETS references missing files: ${missingFiles.map(([asset]) => asset).join(", ")}`);

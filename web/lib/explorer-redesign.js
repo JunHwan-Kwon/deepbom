@@ -1591,7 +1591,7 @@ function renderImplementationPreview(projection, state, actions) {
     const files = actions.getImplementationFiles(projection);
     for (const control of content.querySelectorAll("[data-redesign-implementation]")) control.disabled = !files;
     if (!files) {
-      code.textContent = "Recalculate an exportable scenario to view its generated code.";
+      code.textContent = unavailableCodeReason(projection);
       return;
     }
     if (populated) return;
@@ -1917,10 +1917,21 @@ function updateProjectionActivity(root, state, analysis) {
   for (const control of root?.querySelectorAll("[data-redesign-implementation]") || []) control.disabled = unavailable;
   if (unavailable) {
     const code = root?.querySelector(".xr-code-source code");
-    if (code) code.textContent = "Recalculate an exportable scenario to view its generated code.";
+    if (code) code.textContent = state.dirty || state.running
+      ? "Recalculate an exportable scenario to view its generated code."
+      : unavailableCodeReason(state.projection);
     const status = root?.querySelector(".xr-code-status");
-    if (status) status.textContent = "Code is unavailable while this scenario is changing.";
+    if (status) status.textContent = state.dirty || state.running
+      ? "Code is unavailable while this scenario is changing."
+      : "The current scenario does not satisfy the code export contract.";
   }
+}
+
+function unavailableCodeReason(projection) {
+  const errors = (projection?.constraints || []).filter((row) => row.severity === "error");
+  return errors.length
+    ? `Code export blocked by the scenario contract:\n${errors.map((row) => `${row.code} ${row.scope}: ${row.detail}`).join("\n")}`
+    : "Recalculate an exportable scenario to view its generated code.";
 }
 
 export function createExplorerRedesignController({

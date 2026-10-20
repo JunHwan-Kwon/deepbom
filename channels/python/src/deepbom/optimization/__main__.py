@@ -12,7 +12,7 @@ from .._native.core import read_json
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ("optimize", "suggest"):
+    for name in ("optimize", "suggest", "inspect"):
         p = sub.add_parser(name)
         source = p.add_mutually_exclusive_group(required=True)
         source.add_argument(
@@ -29,6 +29,11 @@ def main(argv=None):
             "--state-file",
             help="PyTorch weights-only state dictionary; requires --factory",
         )
+        if name == "inspect":
+            p.add_argument("--inputs", help="Explicit synthetic shape probe JSON; omit for state-only inspection")
+            p.add_argument("--output", help="New JSON file for common native inspection")
+            p.add_argument("--max-state-bytes", type=int, default=64*1024*1024)
+            p.add_argument("--advanced", action="store_true")
         if name == "optimize":
             p.add_argument(
                 "--rules",
@@ -146,6 +151,12 @@ def main(argv=None):
                     tf.zeros(tensor["shape"], dtype=allowed[tensor["dtype"]])
                 )
         kwargs = spec.get("kwargs", {})
+    if args.command == "inspect":
+        from ..inspection import inspect_native
+        document = inspect_native(model,example_args=tuple(examples),example_kwargs=kwargs,
+            advanced=args.advanced,max_state_bytes=args.max_state_bytes,output=args.output)
+        print(json.dumps(document,allow_nan=False))
+        return 0
     result = optimize(
         model,
         objective=args.objective,

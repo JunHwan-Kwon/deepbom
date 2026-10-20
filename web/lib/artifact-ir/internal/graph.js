@@ -2,11 +2,12 @@ import { buildValueType } from "../../ir-value-type.js";
 import { integerMetric } from "../../ir-metric.js";
 import { compareCanonicalText } from "../../report-utils.js";
 import {
-  compactStrings, dimensions, exact, exactInteger, integerArray, list, logicalTensorBytes,
-  nonNegativeInteger, optionalInteger, optionalText, positiveStorageBytes, scopedStorageId, storageId, tensorIndex,
+  compactStrings, dimensions, exact, exactInteger, integerArray, list, logicalTensorBytes, coreMlParameterBindings,
+  nonNegativeInteger, optionalInteger, optionalText, positiveInteger, positiveStorageBytes, scopedStorageId, storageId, tensorIndex,
 } from "./shared.js";
 
 export function buildSerializedGraph(analysis, format, tensors) {
+  const parameterBindings = coreMlParameterBindings(analysis, format);
   const ops = canonicalOps(analysis.ops);
   const scope = primaryScope(analysis, format);
   const valueByIndex = new Map(tensors.map((tensor, position) => [tensorIndex(tensor, position), tensor]));
@@ -74,10 +75,37 @@ export function buildSerializedGraph(analysis, format, tensors) {
       ...(graphOutputs.has(index) || tensor.role === "output" ? ["graph_output"] : []),
       ...(tensor.constant_buffer || positiveStorageBytes(tensor, format) > 0 ? ["serialized_constant_or_storage"] : []),
     ],
-    storage_refs: positiveStorageBytes(tensor, format) > 0 ? [storageId(index)] : [],
+    storage_refs: parameterBindings.byTensor.has(index) ? [parameterBindings.byTensor.get(index)] : positiveStorageBytes(tensor, format) > 0 ? [storageId(index)] : [],
     logical_byte_length: logicalTensorBytes(tensor, format),
     native_source: nativeValueLocator(format, scope, tensor, index),
   }));
+  // Legacy Core ML embeds weight operands in layer messages, not named graph
+  // tensors. Project explicit parameter ports without duplicating their storage.
+  if (["coreml", "mlmodel"].includes(format) && analysis.weight_integrity?.schema === "deepbom.coreml.legacy_weight_integrity.v1") {
+    const operatorByIndex = new Map(operators.map(row => [row.native_index,row]));
+    let nextIndex = values.reduce((maximum, row) => Math.max(maximum, row.native_index), -1) + 1;
+    for (const [index, parameter] of list(analysis.weight_integrity.parameters).entries()) {
+      const operation = operatorByIndex.get(parameter.layer_index);
+      if (!operation || !positiveInteger(parameter.byte_length)) continue;
+      const id = `value:${scope.id}:parameter:${index}`;
+      const port = operation.inputs.length;
+      operation.inputs.push({ port, value_ref: id });
+      let contracts = operation.attributes.entries.find(row => row.name === "deepbom.parameter_contracts");
+      if (!contracts) operation.attributes.entries.push(contracts = {name:"deepbom.parameter_contracts", value:[]});
+      contracts.value.push({port, role:parameter.role, shape:parameter.shape || null,
+        channel_axis:parameter.channel_axis ?? null, basis:parameter.shape_basis || "not_assessed"});
+      const tensor = {shape:parameter.shape || [], dtype:String(parameter.storage || "UNKNOWN").toUpperCase(), shape_declared:Array.isArray(parameter.shape)};
+      values.push({
+        id, scope_ref:scope.id, native_index:nextIndex++, name:`${parameter.layer_name}/${parameter.role}`,
+        value_kind:"tensor", dtype:tensor.dtype, shape:dimensions(tensor.shape),
+        type_contract:buildValueType(tensor, format, scope.id), shape_signature:null,
+        shape_contract_status:parameter.shape_basis || "not_declared", producer:null,
+        consumers:[{operator_ref:operation.id, port}], roles:["serialized_constant_or_storage"],
+        storage_refs:[`storage:parameter:${index}`], logical_byte_length:logicalTensorBytes(tensor, format),
+        native_source:{format,path:`weight_integrity.parameters[${index}]`},
+      });
+    }
+  }
   const additional = materializeAdditionalScopes(analysis, format, scope.id);
   const scopes = [scope, ...additional.scopes];
   const allOperators = [...operators, ...additional.operators];
@@ -137,6 +165,7 @@ function primaryScope(analysis, format) {
   const base = { native_index: 0, materialization_status: "materialized", parent_scope_ref: null, invocation_semantics: "model_entrypoint" };
   if (format === "tflite") return { ...base, id: "scope:tflite:subgraph:0", kind: "tflite_subgraph", name: String(analysis?.tflite_subgraph_inventory?.rows?.[0]?.name || "subgraph_0") };
   if (format === "onnx") return { ...base, id: "scope:onnx:main_graph", kind: "onnx_graph", name: String(analysis.graph_name || "main_graph") };
+  if (format === "savedmodel") return {...base,native_index:analysis.savedmodel?.selected_meta_graph_index ?? 0,id:`scope:savedmodel:primary`,kind:"savedmodel_serialized_program",name:"selected_metagraph"};
   if (format === "coreml" || format === "mlmodel") return { ...base, id: "scope:coreml:primary", kind: "coreml_serialized_program", name: String(analysis.coreml?.selected_function || "primary") };
   return { ...base, id: `scope:${format}:primary`, kind: `${format}_serialized_program`, name: "primary" };
 }
@@ -200,7 +229,7 @@ function materializeTfliteScopes(analysis, primaryId) {
         metrics: {
           macs: exactInteger(operator.nominal_macs_decimal ?? operator.nominal_macs),
           mac_assessment_status: String(operator.mac_assessment_status || "not_assessed"),
-          logical_io_bytes: exactInteger(operator.logical_io_payload_bytes),
+          logical_io_bytes: exactInteger(operator.logical_io_payload_bytes_decimal ?? operator.logical_io_payload_bytes),
         },
         quantization_summary: { state: "not_projected_from_scope_intrinsics", risk: "not_assessed" },
         topology: { depth: null, role: null, stage: null },
@@ -232,7 +261,7 @@ function materializeTfliteScopes(analysis, primaryId) {
           ...(tensor.constant_buffer || storageBytes > 0 ? ["serialized_constant_or_storage"] : []),
         ],
         storage_refs: storageBytes > 0 ? [scopedStorageId(scopeId, index)] : [],
-        logical_byte_length: exactInteger(tensor.logical_payload_bytes),
+        logical_byte_length: logicalTensorBytes(tensor, "tflite"),
         native_source: { format: "tflite", path: `SubGraph[${nativeIndex}].tensors[${index}]` },
       });
     }
@@ -365,7 +394,7 @@ function nativeOperatorLocator(format, scope, op) {
   if (format === "coreml" || format === "mlmodel") return { format: "coreml", path: `Model.primary.operations[${op.index}]`, byte_range: null };
   if (["executorch", "pte", "ptd"].includes(format)) return { format: "executorch", path: `Program.execution_plan[0].chains.instructions[${op.index}]`, byte_range: null };
   if (format === "graphdef") return { format, path: `GraphDef.node[${op.index}]`, byte_range: null };
-  if (format === "savedmodel") return { format, path: `SavedModel.meta_graphs[0].graph_def.node[${op.index}]`, byte_range: null };
+  if (format === "savedmodel") return { format, path: `SavedModel.meta_graphs[${scope.native_index}].graph_def.node[${op.index}]`, byte_range: null };
   return { format, path: `operators[${op.index}]`, byte_range: null };
 }
 
@@ -373,7 +402,7 @@ function nativeValueLocator(format, scope, tensor, index) {
   if (format === "tflite") return { format, path: `SubGraph[${scope.native_index}].tensors[${index}]` };
   if (format === "onnx") return { format, path: `ModelProto.graph.value[name=${JSON.stringify(String(tensor.name || ""))}]` };
   if (format === "graphdef") return { format, path: `GraphDef.endpoint[${JSON.stringify(String(tensor.name || ""))}]` };
-  if (format === "savedmodel") return { format, path: `SavedModel.meta_graphs[0].graph_def.endpoint[${JSON.stringify(String(tensor.name || ""))}]` };
+  if (format === "savedmodel") return { format, path: `SavedModel.meta_graphs[${scope.native_index}].graph_def.endpoint[${JSON.stringify(String(tensor.name || ""))}]` };
   return { format, path: `values[${index}]` };
 }
 

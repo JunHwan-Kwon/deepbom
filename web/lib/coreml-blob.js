@@ -77,6 +77,7 @@ function statsState(type, retainValues = false) {
 }
 
 function observe(state, value, rawCode = null) {
+  state.visitor?.(value);
   state.decoded_value_count += 1;
   if (state.retained_values) state.retained_values.push(Number.isNaN(value) ? "NaN"
     : value === Number.POSITIVE_INFINITY ? "+Infinity"
@@ -109,10 +110,11 @@ function decodeByteAligned(state, bytes) {
   }
 }
 
-async function scanPayload(file, metadata, type, onProgress) {
+async function scanPayload(file, metadata, type, onProgress, visitor = null) {
   const digest = new Sha256Accumulator();
   const expectedCount = (metadata.size_in_bytes * 8 - (type.bits < 8 ? metadata.padding_bits : 0)) / type.bits;
   const state = statsState(type, expectedCount <= 256);
+  state.visitor = visitor;
   let processed = 0;
   if (type.bits >= 8) {
     const width = type.bits / 8;
@@ -120,6 +122,7 @@ async function scanPayload(file, metadata, type, onProgress) {
     for (let offset = 0; offset < metadata.size_in_bytes; offset += step) {
       const length = Math.min(step, metadata.size_in_bytes - offset);
       const bytes = new Uint8Array(await file.slice(metadata.data_offset + offset, metadata.data_offset + offset + length).arrayBuffer());
+      if (bytes.length !== length) throw new Error("Core ML blob payload read was truncated");
       digest.update(bytes);
       decodeByteAligned(state, bytes);
       processed += bytes.length;
@@ -133,6 +136,7 @@ async function scanPayload(file, metadata, type, onProgress) {
     for (let offset = 0; offset < metadata.size_in_bytes; offset += CHUNK_BYTES) {
       const length = Math.min(CHUNK_BYTES, metadata.size_in_bytes - offset);
       const bytes = new Uint8Array(await file.slice(metadata.data_offset + offset, metadata.data_offset + offset + length).arrayBuffer());
+      if (bytes.length !== length) throw new Error("Core ML blob payload read was truncated");
       digest.update(bytes);
       for (const byte of bytes) {
         finalByte = byte;
@@ -163,6 +167,7 @@ async function scanPayload(file, metadata, type, onProgress) {
   delete state.type;
   delete state.code_histogram;
   delete state.retained_values;
+  delete state.visitor;
   return {
     status: "assessed_full_payload", byte_length: metadata.size_in_bytes, payload_sha256: digest.digestHex(), ...state,
     nonfinite_count: nonfinite, all_zero: state.decoded_value_count > 0 && state.zero_count === state.decoded_value_count,
@@ -173,6 +178,19 @@ async function scanPayload(file, metadata, type, onProgress) {
     decoded_values_status: retainedValues ? "complete_bounded_payload" : "not_retained_above_256_values",
     decoded_values: retainedValues || [],
   };
+}
+
+export async function visitCoreMlBlobValues(file, binding, visitor, {maxValues, signal} = {}) {
+  signal?.throwIfAborted();
+  const inventory = await parseInventory(file);
+  const entry = inventory.entries.find(row => row.metadata_offset === binding.metadata_offset);
+  if (!entry || entry.dtype !== binding.dtype || product(binding.shape) !== entry.value_count) {
+    throw new Error("Core ML numerical payload does not match its serialized tensor contract");
+  }
+  if (entry.value_count > maxValues) return {status:"not_assessed", reason:"value_budget_exceeded"};
+  const result = await scanPayload(file, entry, entry.type, () => signal?.throwIfAborted(), visitor);
+  if (binding.numerical_integrity?.payload_sha256 && result.payload_sha256 !== binding.numerical_integrity.payload_sha256) throw new Error("Core ML blob payload digest changed");
+  return {status:"assessed", representation:"stored_scalar", payload_sha256:result.payload_sha256, invalid_encoding_count:0};
 }
 
 async function parseInventory(file) {

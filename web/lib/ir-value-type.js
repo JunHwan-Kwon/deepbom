@@ -1,6 +1,7 @@
+import { portableContract } from "./portable-contracts.js";
 import { logicalBytesForElements, tensorRankKnown } from "./tensor-size.js";
 export { scalarDtypeBits } from "./tensor-size.js";
-import { canonicalJson } from "./report-utils.js";
+import { canonicalJson, canonicalJsonInput } from "./report-utils.js";
 import { exactInteger } from "./exact-integer.js";
 
 // Types describe logical values, independently of whether bytes or a graph exist.
@@ -44,13 +45,7 @@ function dimensionType(value, native, scope) {
 }
 
 export function valueElementCount(contract) {
-  const type = contract?.root;
-  if (!["tensor", "sparse_tensor"].includes(type?.kind) || type.rank_status !== "ranked") return null;
-  const dims = type.dimensions;
-  // A known zero makes the product zero even when another dimension is symbolic.
-  if (dims.some(d => d.kind === "constant" && d.value.decimal === "0")) return exactInteger(0);
-  if (dims.some(d => d.kind !== "constant")) return null;
-  return exactInteger(dims.reduce((product, d) => product * BigInt(d.value.decimal), 1n));
+  return portableContract("ir_semantics", {operation:"elements",value:canonicalJsonInput(contract)});
 }
 
 // Fixed-width scalar encodings only. GGUF block encodings need their native block
@@ -62,24 +57,6 @@ export function valueLogicalBytes(contract) {
 }
 
 export function validateValueType(contract) {
-  if (contract?.schema !== "deepbom.value_type.v1") throw new Error("IR value type schema is invalid.");
-  const visit = (type, depth = 0) => {
-    if (depth > 64 || !type || typeof type !== "object") throw new Error("IR value type tree is invalid.");
-    if (["tensor", "sparse_tensor"].includes(type.kind)) {
-      if (typeof type.dtype !== "string" || !type.dtype || !["ranked", "unknown_rank"].includes(type.rank_status)
-        || (type.rank_status === "unknown_rank" ? type.dimensions !== null : !Array.isArray(type.dimensions))) throw new Error("IR tensor rank contract is invalid.");
-      for (const dim of type.dimensions || []) {
-        if (!dim || typeof dim !== "object") throw new Error("IR dimension contract is invalid.");
-        if (dim.kind === "constant") {
-          const count = exactInteger(dim.value?.decimal);
-          if (!count || canonicalJson(count) !== canonicalJson(dim.value)) throw new Error("IR dimension exact count is inconsistent.");
-        } else if (dim.kind === "symbol") {
-          if (typeof dim.name !== "string" || !dim.name || typeof dim.scope_ref !== "string" || !dim.scope_ref) throw new Error("IR dimension symbol scope is invalid.");
-        } else if (dim.kind !== "unknown") throw new Error("IR dimension kind is invalid.");
-      }
-    } else if (["sequence", "optional"].includes(type.kind)) visit(type.element_type, depth + 1);
-    else if (type.kind === "map") { if (!type.key_dtype) throw new Error("IR map key type is missing."); visit(type.value_type, depth + 1); }
-    else if (!["unknown", "opaque"].includes(type.kind)) throw new Error("IR value kind is invalid.");
-  };
-  canonicalJson(contract); visit(contract.root); return contract;
+  portableContract("ir_semantics", {operation:"value_type",value:canonicalJsonInput(contract)});
+  return contract;
 }

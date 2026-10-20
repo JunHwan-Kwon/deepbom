@@ -9,6 +9,7 @@ import {syntheticScenario} from '../examples/evidence-workflow/synthetic.mjs';
 import {runEvidenceWorkflow,queryWorkflowResult} from '../web/lib/evidence-workflow.js';
 import {evidenceWorkflow} from '../sdk/index.mjs';
 const root=process.cwd(),dir=await mkdtemp(path.join(tmpdir(),'deepbom-workflow-'));
+const receiptDir=process.env.DEEPBOM_WORKFLOW_CHECK_OUTPUT||'.local-validation/snapshot-release-2.3.0';
 const fixture=syntheticScenario(),expected=runEvidenceWorkflow(fixture.request,{files:fixture.files}),fileOptions=[];
 await writeFile(path.join(dir,'request.json'),JSON.stringify(fixture.request));
 await writeFile(path.join(dir,'result.json'),JSON.stringify(expected));
@@ -35,9 +36,9 @@ try{
  await page.locator('#rows button').first().click();assert.match(await page.locator('#detail').textContent(),/evaluation_sha256/);
  const download=page.waitForEvent('download');await page.locator('#save-json').click();const handle=await download;const bytes=await readFile(await handle.path(),'utf8');assert.deepEqual(JSON.parse(bytes),expected);
  await page.locator('#search').fill('original');assert.equal(await page.locator('#rows button').count(),1);
- await mkdir('.local-validation/snapshot-release-2.3.0',{recursive:true});await page.screenshot({path:'.local-validation/snapshot-release-2.3.0/evidence-browser.png',fullPage:true});
+ await mkdir(receiptDir,{recursive:true});await page.screenshot({path:path.join(receiptDir,'evidence-browser.png'),fullPage:true});
  await page.locator('#evidence-files').setInputFiles([]);await page.locator('#request-file').setInputFiles(path.join(dir,'result.json'));await page.locator('#run').click();await page.waitForFunction(()=>document.querySelector('#verdict').textContent==='criteria_not_met');
  assert.deepEqual(errors,[]);
 }finally{await browser.close();await new Promise(r=>server.close(r));}
-await writeFile('.local-validation/snapshot-release-2.3.0/channel-scenario.json',JSON.stringify({directory:dir,result_sha256:expected.result_sha256,counts:expected.document.counts,checks:['common core','Node SDK/subprocess CLI','live local MCP','browser Worker','missing files','saved result','JSON download','source detail','search']},null,2));
+await writeFile(path.join(receiptDir,'channel-scenario.json'),JSON.stringify({directory:dir,result_sha256:expected.result_sha256,counts:expected.document.counts,checks:['common core','Node SDK/subprocess CLI','live local MCP','browser Worker','missing files','saved result','JSON download','source detail','search']},null,2));
 console.log('Evidence workflow Web/CLI/Node SDK/live MCP parity passed. Scenario: '+dir);

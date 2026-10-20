@@ -5,6 +5,7 @@ import copy
 import hashlib
 import inspect
 from .core import engine, json_value, tensor_row
+from .keras_identity import state_bindings, identity_policy, set_identity_policy, OWNER_POLICY
 
 
 def _attribute_identity(value):
@@ -115,8 +116,11 @@ def independent_copy(model):
         raise ValueError(
             "Build the Keras model with explicit inputs before optimization"
         )
-    result = keras.models.clone_model(model)
-    result.set_weights([x.copy() for x in model.get_weights()])
+    # clone_model can rename Functional input layers to symbolic tensor names.
+    # Use the same declarative constructor as package restoration instead.
+    result = keras.models.model_from_json(model.to_json())
+    set_identity_policy(result, identity_policy(model))
+    restore_rows(result, snapshot_input(model, max_values=0)["tensors"])
     # Validate trainability and state cardinality after clone, not only shapes.
     if len(result.weights) != len(model.weights):
         raise ValueError("Keras clone changed state cardinality")
@@ -125,8 +129,33 @@ def independent_copy(model):
     return result
 
 
-def snapshot_input(model, *, input_spec=None, max_values=1_000_000, advanced=False):
+def state_byte_count(model):
+    """Count unique state objects before any host copy; not peak memory."""
+    if framework_of(model) == "pytorch":
+        values = [*model.parameters(), *model.buffers()]
+        seen, total = set(), 0
+        for value in values:
+            if id(value) not in seen:
+                total += value.numel() * value.element_size()
+                seen.add(id(value))
+        return total
+    import numpy as np
+    return sum(int(np.prod(v.shape, dtype=object)) * np.dtype(v.dtype).itemsize
+               for v, _, _ in state_bindings(model)[2])
+
+
+def check_state_budget(model, maximum):
+    if maximum is not None:
+        if type(maximum) is not int or maximum < 0:
+            raise ValueError("max_state_bytes must be a nonnegative integer")
+        size = state_byte_count(model)
+        if size > maximum:
+            raise ValueError(f"Native state requires {size} bytes; max_state_bytes is {maximum}. No state was copied.")
+
+
+def snapshot_input(model, *, input_spec=None, max_values=1_000_000, advanced=False, max_state_bytes=None):
     require_supported_execution(model)
+    check_state_budget(model, max_state_bytes)
     framework = framework_of(model)
     nodes = []
     edges = []
@@ -164,6 +193,7 @@ def snapshot_input(model, *, input_spec=None, max_values=1_000_000, advanced=Fal
                 "stride",
                 "padding",
                 "dilation",
+                "output_padding",
                 "groups",
                 "in_features",
                 "out_features",
@@ -218,7 +248,7 @@ def snapshot_input(model, *, input_spec=None, max_values=1_000_000, advanced=Fal
             raise RuntimeError(
                 "Model state changed during capture; use a quiescent update boundary"
             )
-        fw = {"name": framework, "version": torch.__version__, "backend": "torch"}
+        fw = {"name": framework, "version": str(torch.__version__), "backend": "torch"}
         scope = "module_tree"
         limitations = [
             "Module containment is not an executed call graph.",
@@ -233,36 +263,14 @@ def snapshot_input(model, *, input_spec=None, max_values=1_000_000, advanced=Fal
             )
         if not model.built:
             raise ValueError("Unbuilt Keras model has no complete state")
-        seen = {}
-        bindings = {}
-        for i, v in enumerate(model.weights):
-            name = getattr(v, "path", v.name)
-            if name in bindings:
-                raise ValueError("Ambiguous Keras variable path")
-            bindings[name] = name
-            seen[id(v)] = name
-            rows.append(tensor_row(v, name, role="variable", trainable=v.trainable))
-        layers = []
-        visited = set()
-
-        def walk(layer, path, parent=None):
-            if id(layer) in visited:
-                return
-            visited.add(id(layer))
-            layers.append((layer, path))
-            if parent is not None:
-                edges.append({"from": parent, "to": path, "kind": "contains"})
-            children = layer._flatten_layers(include_self=False, recursive=False)
-            for child in children:
-                walk(
-                    child,
-                    child.name if layer is model else path + "/" + child.name,
-                    path,
-                )
-
-        walk(model, "$model")
+        layers, edges, records = state_bindings(model)
+        seen = {id(v): name for v, name, _ in records}
+        for value, name, aliases in records:
+            rows.append(tensor_row(value, name, role="variable", trainable=value.trainable, aliases=aliases))
         for layer, node_id in layers:
             config = json_value(layer.get_config())
+            if node_id == "$model" and identity_policy(model) == OWNER_POLICY:
+                config = {**config, "deepbom_state_identity": OWNER_POLICY}
             nodes.append(
                 {
                     "id": node_id,
@@ -358,8 +366,9 @@ def restore_rows(model, rows):
                             "Restored model lost tied parameter/buffer identity"
                         )
     else:
-        targets = {getattr(v, "path", v.name): v for v in model.weights}
-        if set(targets) != {r["id"] for r in rows}:
+        records = state_bindings(model)[2]
+        targets = {name: v for v, key, aliases in records for name in [key, *aliases]}
+        if set(targets) != {name for r in rows for name in [r["id"], *r["aliases"]]}:
             raise ValueError("Keras variable correspondence changed")
         dtypes = {
             "F16": "<f2",
@@ -378,6 +387,7 @@ def restore_rows(model, rows):
         import ml_dtypes
 
         dtypes["BF16"] = ml_dtypes.bfloat16
+        assignments = []
         for row in rows:
             if row["dtype"] not in dtypes:
                 raise ValueError("Unsupported Keras restoration dtype")
@@ -390,4 +400,10 @@ def restore_rows(model, rows):
                 raise ValueError("Keras state shape mismatch")
             if str(target.dtype) != str(value.dtype):
                 raise ValueError("Keras state dtype mismatch")
+            if row["role"] != "variable" or bool(target.trainable) != bool(row["trainable"]):
+                raise ValueError("Keras state role/trainability mismatch")
+            if any(targets[alias] is not target for alias in row["aliases"]):
+                raise ValueError("Restored model lost shared variable identity")
+            assignments.append((target, value))
+        for target, value in assignments:
             target.assign(value)

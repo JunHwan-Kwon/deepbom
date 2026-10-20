@@ -144,6 +144,8 @@ pdf = candidate.export_report(out / "selected.pdf")
 assert pdf.read_bytes().startswith(b"%PDF-")
 assert _pdf(d) == pdf.read_bytes(), "PDF must be repeatable"
 pdf_text = subprocess.check_output(["pdftotext", str(pdf), "-"], text=True)
+first_page=subprocess.check_output(["pdftotext","-f","1","-l","1",str(pdf),"-"],text=True)
+assert all(label in first_page for label in ["Validation", "Before probe inputs", "MAC assessment"]),first_page
 assert "Field-level Before / After diff" in pdf_text
 compact_text = "".join(pdf_text.split())
 for entry in view["entries"]:
@@ -367,6 +369,16 @@ for i in (5, 700, 1499):
     large["candidate"]["nodes"][i]["config"]["scale"] = 2
     large["comparison"]["nodes"][i]["status"] = "changed"
 large["comparison"]["tensors"] = []
+for side in ("baseline", "candidate"):
+    large["comparison"]["totals"][side] = {key: "0" for key in large["comparison"]["totals"][side]}
+    large[side]["cost"] = {"status":"not_assessed", "macs":None,
+        "assessed_invocations":0,"unmapped_invocations":0,"observed_invocations":0,
+        "scope":large[side]["cost"]["scope"]}
+    large[side]["shape_observation_status"] = "not_requested"
+    large[side]["inputs"] = []; large[side]["outputs"] = []
+    large["context"]["probes"][side] = {"status":"not_requested","inputs":[],"outputs":[],"invocations":[]}
+large["cost_delta"] = None
+large["static_deltas"] = {key:"0" for key in large["static_deltas"]}
 assert diff_view(seal_fixture(large))["changed_entries"] == 3
 (out / "large-diff.html").write_text(_html(large))
 (out / "state-only-diff.html").write_text(_html(state_only))

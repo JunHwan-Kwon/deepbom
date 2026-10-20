@@ -49,6 +49,25 @@ def read_run(directory):
     )
 
 
+def read_analysis_view(directory):
+    """Validate late analysis separately; preserve the immutable training history."""
+    root=Path(directory);path=root/"analysis-bindings.json"
+    if not path.exists(): return {"bundle":read_run(root),"index":None,"objects":{}}
+    # Read index before its acknowledged head, and retry if the writer advances
+    # during the read. Two atomic files are not a cross-file transaction.
+    for _ in range(3):
+        if path.stat().st_size>16*1024*1024: raise ValueError("Analysis bindings exceed reader budget")
+        index=read_json(path)
+        bundle=read_run(root)
+        if read_json(path)==index: break
+    else: raise RuntimeError("Training analysis advanced during read; retry the view")
+    store=EvidenceStore(root);objects={}
+    for row in index.get("bindings",[]):
+        for reference in row.get("evidence",{}).values():
+            objects[reference["sha256"]]=store.get(reference["sha256"])
+    return engine("validate_training_analysis",{"bundle":bundle,"index":index,"objects":objects})
+
+
 def import_logs(
     source, *, output, logdir=None, tracking_uri=None, run_id=None, project=None
 ):
@@ -197,9 +216,12 @@ def export(
     logdir=None,
     wandb_run=None,
 ):
-    bundle = read_run(directory)
+    analysis = read_analysis_view(directory)
+    bundle = analysis["bundle"]
+    analysis_digest = content_hash(analysis["index"]) if analysis["index"] is not None else None
     root = Path(directory)
     digest = bundle["training"]["training_ir_sha256"]
+    view_key = digest + ("/analysis-"+analysis_digest if analysis_digest else "")
     if logdir is not None:
         logdir = str(Path(logdir).expanduser().resolve())
     if destination == "wandb":
@@ -217,7 +239,8 @@ def export(
             "run_id": run_id,
             "logdir": str(logdir) if logdir else None,
             "digest": digest,
-            "projection": "2.1.0",
+            "projection": "2.2.0" if analysis_digest else "2.1.0",
+            **({"analysis_bindings_sha256":analysis_digest} if analysis_digest else {}),
         }
     )
     receipt = root / "exports" / (key + ".json")
@@ -228,9 +251,12 @@ def export(
 
     with tempfile.TemporaryDirectory(prefix="deepbom-export-") as tmp:
         stage = Path(tmp)
-        for sha, doc in bundle["objects"].items():
+        for sha, doc in {**bundle["objects"],**analysis["objects"]}.items():
             atomic_json(stage / (sha + ".json"), doc)
-        atomic_json(stage / "index.json", {"training_ir_sha256": digest})
+        if analysis_digest:
+            atomic_json(stage / (analysis_digest + ".json"), analysis["index"])
+        atomic_json(stage / "index.json", {"training_ir_sha256": digest,
+                    **({"analysis_bindings_sha256":analysis_digest} if analysis_digest else {})})
         if destination == "mlflow":
             from mlflow.tracking import MlflowClient
 
@@ -239,7 +265,7 @@ def export(
                     "MLflow export requires explicit tracking_uri and run_id"
                 )
             client = MlflowClient(tracking_uri=tracking_uri)
-            client.log_artifacts(run_id, str(stage), artifact_path="deepbom/" + digest)
+            client.log_artifacts(run_id, str(stage), artifact_path="deepbom/" + view_key)
         elif destination == "tensorboard":
             if not logdir:
                 raise ValueError("TensorBoard export requires logdir")
@@ -252,13 +278,13 @@ def export(
             import time
             import shutil
 
-            target = Path(logdir) / "deepbom-evidence" / digest
+            target = Path(logdir) / "deepbom-evidence" / view_key
             target.mkdir(parents=True, exist_ok=True)
             for f in stage.iterdir():
                 shutil.copy2(f, target / f.name)
             # Each immutable head is one TensorBoard run. Appending whole heads
             # to one directory duplicates older observations and mixes runs.
-            writer = EventFileWriter(str(Path(logdir) / "deepbom" / digest))
+            writer = EventFileWriter(str(Path(logdir) / "deepbom" / view_key))
             try:
                 for event in bundle["events"]:
                     for name, value in event["payload"].get("values", {}).items():
@@ -299,7 +325,7 @@ def export(
             artifact = wandb.Artifact(
                 "deepbom-" + digest[:16],
                 type="model-evidence",
-                metadata={"training_ir_sha256": digest},
+                metadata={"training_ir_sha256": digest, **({"analysis_bindings_sha256":analysis_digest} if analysis_digest else {})},
             )
             artifact.add_dir(str(stage))
             wandb_run.log_artifact(artifact)
@@ -312,11 +338,12 @@ def export(
         "destination": destination,
         "status": "submitted",
         "remote_exactly_once": False,
-        "projection": "2.1.0",
+        "projection": "2.2.0" if analysis_digest else "2.1.0",
+        **({"analysis_bindings_sha256":analysis_digest} if analysis_digest else {}),
         "metric_axis": "training_event_sequence",
         "metric_series": "phase/name; original coordinates retained in evidence JSON",
         "event_logdir": (
-            str(Path(logdir) / "deepbom" / digest)
+            str(Path(logdir) / "deepbom" / view_key)
             if destination == "tensorboard"
             else None
         ),

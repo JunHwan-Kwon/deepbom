@@ -1,11 +1,13 @@
 import { SHA256 } from "./constants.js";
 import {
   dimensions, exact, exactInteger, list, nonNegativeInteger, normalizeSha256, positiveInteger, positiveStorageBytes,
-  safeExactSum, scopedStorageId, storageId, tensorIndex, shapeRankStatus,
+  safeExactSum, scopedStorageId, storageId, tensorIndex, shapeRankStatus, coreMlParameterBindings,
 } from "./shared.js";
 
 export function buildStorageTopology(analysis, format, tensors) {
+  const parameterBindings = coreMlParameterBindings(analysis, format);
   const tensorObjects = tensors.map((tensor, position) => storageObject(format, tensor, tensorIndex(tensor, position)))
+    .filter(row => !parameterBindings.byTensor.has(row.native_index))
     .filter((row) => BigInt(row.serialized_byte_length?.decimal || "0") > 0n);
   const nestedTfliteObjects = format === "tflite" ? list(analysis?.tflite_subgraph_inventory?.rows)
     .filter((row) => Number(row.subgraph_index) !== 0)
@@ -34,7 +36,7 @@ export function buildStorageTopology(analysis, format, tensors) {
     source_parameter_index: index,
     native_index: index,
     name: String(parameter.layer_name ? `${parameter.layer_name}/${parameter.role || index}` : parameter.name || `parameter_${index}`),
-    dtype: String(parameter.storage || parameter.dtype || "UNKNOWN").toUpperCase(),
+    dtype: String(parameter.dtype || parameter.storage || "UNKNOWN").toUpperCase(),
     shape: dimensions(parameter.shape),
     shape_rank_status: shapeRankStatus(parameter, format),
     serialized_byte_length: exactInteger(parameter.byte_length),
@@ -42,7 +44,7 @@ export function buildStorageTopology(analysis, format, tensors) {
     payload_sha256: normalizeSha256(parameter?.numerical_integrity?.payload_sha256 || parameter.payload_sha256),
     encoding: { family: parameter.quantization ? "coreml_declared_quantized_weight" : "scalar_or_declared_parameter_encoding", name: String(parameter.storage || parameter.dtype || "UNKNOWN"), block_elements: null, block_bytes: null },
     native_source: { format, path: `weight_integrity.parameters[${index}]` },
-  })).filter((row) => BigInt(row.serialized_byte_length?.decimal || "0") > 0n);
+  })).filter((row) => parameterBindings.canonicalIndices.has(row.source_parameter_index));
   const objects = [...tensorObjects, ...nestedTfliteObjects, ...parameterObjects];
   const bytes = objects.reduce((sum, row) => sum + BigInt(row.serialized_byte_length?.decimal || "0"), 0n);
   return {
@@ -61,7 +63,7 @@ export function buildStorageTopology(analysis, format, tensors) {
 function storageObject(format, tensor, index) {
   const byteLength = exactInteger(positiveStorageBytes(tensor, format));
   const absoluteOffset = nonNegativeInteger(tensor?.numerical_integrity?.byte_offset_absolute ?? tensor.buffer_data_offset);
-  const relativeStart = nonNegativeInteger(tensor.data_offset);
+  const relativeStart = nonNegativeInteger(tensor.checkpoint_byte_offset ?? tensor.data_offset);
   const start = absoluteOffset ?? relativeStart;
   const end = start != null && byteLength ? safeExactSum(start, byteLength.decimal) : null;
   return {
@@ -82,6 +84,8 @@ function storageObject(format, tensor, index) {
 }
 
 function nativeStorageLocator(format, tensor, index) {
+  if (format === "savedmodel" && Number.isSafeInteger(tensor.checkpoint_entry_index)) return {format,
+    path:`TensorBundle.entries[${tensor.checkpoint_entry_index}]`, payload_offset_basis:"selected_checkpoint_data_member"};
   if (format === "gguf") return { format, path: `tensor_infos[${index}]`, payload_offset_basis: "tensor_data_section" };
   if (format === "safetensors") return { format, path: `header[${JSON.stringify(String(tensor.name || ""))}]`, payload_offset_basis: "data_section" };
   if (format === "tflite") return { format, path: `SubGraph[0].tensors[${index}].buffer` };

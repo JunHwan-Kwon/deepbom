@@ -1,5 +1,6 @@
-import { exactSequenceLength, exactSequenceInventory, exactOptionalPresence, canonicalOnnxTypeProto, cloneOnnxTypeProto, makeOnnxOptionalType, makeOnnxSequenceType, makeOnnxTensorType, onnxTypeProtoFromValue, onnxTypeProtoKnown, onnxValueDescriptorFromType, unionOnnxTypeProtos } from "./onnx-type-proto.js";
-import { normalizeAxis } from "./scalar-numeric.js";
+import { onnxSemantic, onnxTensorRecord, onnxNodeSemantic } from './onnx-portable.js';
+import { exactSequenceLength, exactSequenceInventory, canonicalOnnxTypeProto, cloneOnnxTypeProto, makeOnnxSequenceType, makeOnnxTensorType, onnxTypeProtoFromValue, onnxTypeProtoKnown, onnxValueDescriptorFromType } from "./onnx-type-proto.js";
+import "./scalar-numeric.js";
 import {
   inferOnnxShapes,
   mergeOnnxInferredTensor,
@@ -128,7 +129,7 @@ function executeGraph(graph, tensorMap, opsets, scope, context, callStack, recor
     scopeExecution: context.scopeExecution,
     canResolveNode: (node) => canResolveExtendedNode(node, context),
     resolveNodeResult: ({ node, nodeIndex, tensorMap: liveTensors, importedOpset }) => resolveExtendedNode({
-      node, nodeIndex, tensorMap: liveTensors, importedOpset, opsets, scope, context, callStack,
+      node, nodeIndex, tensorMap: liveTensors, importedOpset, opsets, scope, context, callStack, graph,
     }),
   };
   const evidence = inferOnnxShapes(
@@ -482,12 +483,15 @@ function inferIf(args) {
   if (thenGraph.outputs.length !== elseGraph.outputs.length || thenGraph.outputs.length !== node.outputs.length) {
     return finishControlFailure(context, row, "if_branch_output_cardinality_mismatch");
   }
+  const conditionProducer = args.graph?.nodes?.find(candidate => candidate.outputs?.includes(node.inputs?.[0]));
+  const shapeCondition = conditionProducer
+    ? onnxNodeSemantic('region_condition', conditionProducer, tensorMap) : null;
   const outputs = [];
   for (let index = 0; index < node.outputs.length; index += 1) {
     const merged = unionBranchValues(
       thenPrepared.tensorMap.get(thenGraph.outputs[index]?.name),
       elsePrepared.tensorMap.get(elseGraph.outputs[index]?.name),
-      {
+      shapeCondition || {
         key: `if:${scope}:node:${nodeIndex}:condition:${encodeURIComponent(String(node.inputs?.[0] || "anonymous"))}`,
         thenValue: "then_branch",
         elseValue: "else_branch",
@@ -586,83 +590,11 @@ function inferLoop(args) {
     : { status: row.status, reason: row.status === "pass" ? "" : "loop_state_or_iteration_dimension_not_statically_fixed", result: { outputs } };
 }
 
-function assessLoopStateType(value, importedOpset) {
-  const type = onnxTypeProtoFromValue(value);
-  if (!type) return { status: "partial", reason: "loop_state_type_unresolved" };
-  if (type.kind === "tensor") {
-    return onnxTypeProtoKnown(type)
-      ? { status: "pass", reason: "" }
-      : { status: "partial", reason: "loop_state_tensor_element_type_unresolved" };
-  }
-  if (type.kind === "sequence") {
-    if (Number(importedOpset || 0) < 13) return { status: "fail", reason: "loop_sequence_state_requires_opset_13" };
-    if (type.elementType?.kind !== "tensor") return { status: "fail", reason: "loop_sequence_state_element_not_tensor" };
-    return onnxTypeProtoKnown(type)
-      ? { status: "pass", reason: "" }
-      : { status: "partial", reason: "loop_sequence_state_element_type_unresolved" };
-  }
-  if (type.kind === "optional") {
-    if (Number(importedOpset || 0) < 16) return { status: "fail", reason: "loop_optional_state_requires_opset_16" };
-    const child = type.elementType;
-    if (child?.kind !== "tensor" && !(child?.kind === "sequence" && child.elementType?.kind === "tensor")) {
-      return { status: "fail", reason: "loop_optional_state_element_not_tensor_or_tensor_sequence" };
-    }
-    return onnxTypeProtoKnown(type)
-      ? { status: "pass", reason: "" }
-      : { status: "partial", reason: "loop_optional_state_element_type_unresolved" };
-  }
-  return { status: "fail", reason: `loop_state_value_kind_not_supported:${type.kind || "undefined"}` };
-}
+function assessLoopStateType(value, importedOpset) { return onnxSemantic('loop_support',{value:onnxTensorRecord(value),imported_opset:importedOpset}); }
 
-function clearLoopStateDescriptor(value) {
-  const type = clearTypeProtoShapes(onnxTypeProtoFromValue(value));
-  if (!type) return null;
-  const state = {};
-  if (type.kind === "sequence") {
-    state.sequenceLengthStatus = "not_assessed_loop_variant";
-    state.sequenceLength = null;
-    state.sequenceElementInventoryStatus = "not_assessed_loop_variant";
-    state.sequenceElementTypes = [];
-  } else if (type.kind === "optional") {
-    state.optionalPresenceStatus = "not_assessed_loop_variant";
-    state.optionalPresence = null;
-  }
-  return onnxValueDescriptorFromType(type, state);
-}
+function clearLoopStateDescriptor(value) { return onnxSemantic('loop_clear',{value:onnxTensorRecord(value)}); }
 
-function clearTypeProtoShapes(type) {
-  if (!type) return null;
-  if (type.kind === "tensor") return makeOnnxTensorType(type.dtype || type.elementTypeName || "UNKNOWN", [], false);
-  if (type.kind === "sequence") return makeOnnxSequenceType(clearTypeProtoShapes(type.elementType));
-  if (type.kind === "optional") return makeOnnxOptionalType(clearTypeProtoShapes(type.elementType));
-  return cloneOnnxTypeProto(type);
-}
-
-function mergeLoopStateContracts(initialValue, bodyValue, importedOpset) {
-  const initialSupport = assessLoopStateType(initialValue, importedOpset);
-  const bodySupport = assessLoopStateType(bodyValue, importedOpset);
-  if (initialSupport.status === "fail" || bodySupport.status === "fail") return { status: "fail", patch: null };
-  const merged = mergeLoopTypesWithoutShape(onnxTypeProtoFromValue(initialValue), onnxTypeProtoFromValue(bodyValue));
-  if (merged.status !== "pass") return { status: "fail", patch: null };
-  return { status: initialSupport.status === "partial" || bodySupport.status === "partial" ? "partial" : "pass", patch: clearLoopStateDescriptor(onnxValueDescriptorFromType(merged.type)) };
-}
-
-function mergeLoopTypesWithoutShape(left, right) {
-  if (!left || !right) return { status: "unresolved", type: null };
-  if (left.kind !== right.kind) return { status: "fail", type: null };
-  if (left.kind === "tensor") {
-    const leftDtype = left.dtype || left.elementTypeName || "UNKNOWN";
-    const rightDtype = right.dtype || right.elementTypeName || "UNKNOWN";
-    if (leftDtype !== "UNKNOWN" && rightDtype !== "UNKNOWN" && leftDtype !== rightDtype) return { status: "fail", type: null };
-    return { status: "pass", type: makeOnnxTensorType(leftDtype !== "UNKNOWN" ? leftDtype : rightDtype, [], false) };
-  }
-  if (left.kind === "sequence" || left.kind === "optional") {
-    const child = mergeLoopTypesWithoutShape(left.elementType, right.elementType);
-    if (child.status !== "pass") return child;
-    return { status: "pass", type: left.kind === "sequence" ? makeOnnxSequenceType(child.type) : makeOnnxOptionalType(child.type) };
-  }
-  return { status: "fail", type: null };
-}
+function mergeLoopStateContracts(initialValue,bodyValue,importedOpset) { return onnxSemantic('loop_merge',{left:onnxTensorRecord(initialValue),right:onnxTensorRecord(bodyValue),imported_opset:importedOpset}); }
 
 function evaluateExactLoop({ node, body, stateCount, stateInputs, tensorMap, opsets, bodyScope, context, callStack, importedOpset, genericBodyMap }) {
   const reasons = [];
@@ -882,39 +814,9 @@ function exactLoopOutputs(node, body, stateCount, states, genericBodyMap, iterat
   return { status: "assessed", outputs, iteration_count: iterations, body_node_evaluation_count: work, reason_codes: [...new Set(reasons)], iteration_state_contracts: iterationStateContracts };
 }
 
-function exactScalarInteger(value) {
-  if (knownDtype(value) !== "INT64") return null;
-  const values = exactScalarValues(value);
-  return values && Number.isSafeInteger(Number(values[0])) ? Number(values[0]) : null;
-}
-
-function exactScalarBoolean(value) {
-  if (knownDtype(value) !== "BOOL") return null;
-  const values = exactScalarValues(value);
-  if (!values) return null;
-  const item = values[0];
-  if (typeof item === "boolean") return item;
-  if (Number(item) === 0) return false;
-  if (Number(item) === 1) return true;
-  return null;
-}
-
-function exactSingletonBoolean(value) {
-  if (knownDtype(value) !== "BOOL" || value?.shapeDeclared !== true || value.staticValuesComplete !== true
-    || !Array.isArray(value.staticValues) || value.staticValues.length !== 1
-    || value.shape.some((dimension) => !Number.isSafeInteger(dimension) || dimension < 0)
-    || value.shape.reduce((product, dimension) => product * dimension, 1) !== 1) return null;
-  const item = value.staticValues[0];
-  if (typeof item === "boolean") return item;
-  if (Number(item) === 0) return false;
-  if (Number(item) === 1) return true;
-  return null;
-}
-
-function exactScalarValues(value) {
-  return value?.shapeDeclared === true && value.shape.length === 0 && value.staticValuesComplete === true
-    && Array.isArray(value.staticValues) && value.staticValues.length === 1 ? value.staticValues : null;
-}
+function exactScalarInteger(value) { return onnxSemantic('region_scalar', {value:onnxTensorRecord(value),kind:'int64'}); }
+function exactScalarBoolean(value) { return onnxSemantic('region_scalar', {value:onnxTensorRecord(value),kind:'bool'}); }
+function exactSingletonBoolean(value) { return onnxSemantic('region_scalar', {value:onnxTensorRecord(value),kind:'bool',singleton:true}); }
 
 function staticScalarDescriptor(dtype, value, source) {
   return {
@@ -1342,134 +1244,17 @@ function failedGraphEvidence(graph, reason) {
   };
 }
 
-function unionBranchValues(left, right, condition = null) {
-  const leftType = onnxTypeProtoFromValue(left);
-  const rightType = onnxTypeProtoFromValue(right);
-  const leftKind = leftType?.kind || "unresolved";
-  const rightKind = rightType?.kind || "unresolved";
-  if (leftKind !== "tensor" || rightKind !== "tensor") {
-    if (!leftType || !rightType || leftKind !== rightKind) return { status: "fail", patch: null };
-    const merged = unionOnnxTypeProtos([leftType, rightType]);
-    if (merged.status !== "pass") return { status: "fail", patch: null };
-    const state = {};
-    if (leftKind === "sequence") {
-      const leftLength = exactSequenceLength(left);
-      const rightLength = exactSequenceLength(right);
-      if (leftLength != null && leftLength === rightLength) {
-        state.sequenceLengthStatus = "assessed_exact";
-        state.sequenceLength = leftLength;
-      } else {
-        state.sequenceLengthStatus = "not_assessed_branch_dependent";
-        state.sequenceLength = null;
-      }
-      const leftInventory = exactSequenceInventory(left);
-      const rightInventory = exactSequenceInventory(right);
-      const inventory = unionSequenceInventories(leftInventory, rightInventory);
-      state.sequenceElementInventoryStatus = inventory ? "assessed_exact" : "not_assessed_branch_dependent";
-      state.sequenceElementTypes = inventory || [];
-    } else if (leftKind === "optional") {
-      const leftPresence = exactOptionalPresence(left);
-      const rightPresence = exactOptionalPresence(right);
-      if (leftPresence != null && leftPresence === rightPresence) {
-        state.optionalPresenceStatus = "assessed_exact";
-        state.optionalPresence = leftPresence;
-      } else {
-        state.optionalPresenceStatus = "not_assessed_branch_dependent";
-        state.optionalPresence = null;
-      }
-    }
-    return { status: "pass", patch: onnxValueDescriptorFromType(merged.type, state) };
-  }
-  return unionBranchTensors(left, right, condition);
-}
-
-function unionBranchTensors(left, right, condition = null) {
-  if (!denseTensorDescriptor(left) || !denseTensorDescriptor(right)) return { status: "fail", patch: null };
-  const leftDtype = knownDtype(left);
-  const rightDtype = knownDtype(right);
-  if (leftDtype && rightDtype && leftDtype !== rightDtype) return { status: "fail", patch: null };
-  const mergedType = unionOnnxTypeProtos([onnxTypeProtoFromValue(left), onnxTypeProtoFromValue(right)]);
-  if (mergedType.status !== "pass") return { status: "fail", patch: null };
-  const patch = onnxValueDescriptorFromType(mergedType.type);
-  if (sameStaticValues(left, right)) Object.assign(patch, staticPatch(left));
-  if (sameStaticDimensionValues(left, right)) Object.assign(patch, staticDimensionPatch(left));
-  if (condition && completeTensorShapeContract(left) && completeTensorShapeContract(right)) {
-    const variants = [
-      ...branchShapeVariants(left, { key: condition.key, value: condition.thenValue }),
-      ...branchShapeVariants(right, { key: condition.key, value: condition.elseValue }),
-    ];
-    patch.conditionalShapeVariants = deduplicateBranchVariants(variants);
-    patch.conditionalShapeContract = {
-      schema: "deepbom.onnx_conditional_shape_contract.v1",
-      status: "assessed_complete",
-      variant_count: patch.conditionalShapeVariants.length,
-      condition_keys: [...new Set(patch.conditionalShapeVariants.flatMap((variant) => (
-        (variant.conditions || []).map((item) => item.key)
-      )))].sort(),
-    };
-  }
-  return { status: "pass", patch };
-}
-
-function unionSequenceInventories(left, right) {
-  if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return null;
-  const output = [];
-  for (let index = 0; index < left.length; index += 1) {
-    const merged = unionOnnxTypeProtos([left[index], right[index]]);
-    if (merged.status !== "pass") return null;
-    output.push(merged.type);
-  }
-  return output;
-}
+function unionBranchValues(left,right,condition=null) { return onnxSemantic('union_branch',{left:onnxTensorRecord(left),right:onnxTensorRecord(right),condition}); }
 
 function validSequenceMapSequenceType(type) {
   return type?.kind === "sequence" && type.elementType?.kind === "tensor" && onnxTypeProtoKnown(type.elementType);
 }
 
-function mergeTensorContracts(left, right) {
-  if (!left) return { status: right ? "pass" : "unresolved", patch: right || null };
-  if (!right) return { status: "pass", patch: left };
-  if (!denseTensorDescriptor(left) || !denseTensorDescriptor(right)) return { status: "fail", patch: null };
-  const dtypeLeft = knownDtype(left);
-  const dtypeRight = knownDtype(right);
-  if (dtypeLeft && dtypeRight && dtypeLeft !== dtypeRight) return { status: "fail", patch: null };
-  if (left.shapeDeclared && right.shapeDeclared && left.shape.length !== right.shape.length) return { status: "fail", patch: null };
-  const patch = { dtype: dtypeLeft || dtypeRight || "UNKNOWN", shape: [], shapeDeclared: false };
-  if (left.shapeDeclared || right.shapeDeclared) {
-    const a = left.shapeDeclared ? left.shape : right.shape;
-    const b = right.shapeDeclared ? right.shape : left.shape;
-    patch.shapeDeclared = true;
-    patch.shape = a.map((dim, index) => {
-      const other = b[index];
-      if (knownDimension(dim) && knownDimension(other) && dim !== other) return null;
-      return knownDimension(dim) ? dim : other;
-    });
-    if (patch.shape.some((dim) => dim === null)) return { status: "fail", patch: null };
-  }
-  return { status: "pass", patch };
-}
+function mergeTensorContracts(left,right) { return onnxSemantic('region_merge_tensor',{left:onnxTensorRecord(left),right:onnxTensorRecord(right)}); }
 
-function removeAxis(tensor, axis) {
-  if (!denseTensorDescriptor(tensor)) return { status: "fail", patch: null, dimension: null };
-  if (!tensor?.shapeDeclared) return { status: "partial", patch: clearShape(tensor), dimension: -1 };
-  const rank = tensor.shape.length;
-  const normalized = normalizeAxis(axis, rank);
-  if (normalized == null) return { status: "fail", patch: null, dimension: null };
-  const shape = tensor.shape.slice();
-  const [dimension] = shape.splice(normalized, 1);
-  return { status: "pass", patch: denseShapePatch(tensor, shape), dimension };
-}
+function removeAxis(tensor,axis) { const r=onnxSemantic('region_axis',{value:onnxTensorRecord(tensor),axis,insert:false});return {status:r.status,patch:r.status==='fail'?null:denseShapePatch(tensor,r.shape,r.status==='pass'),dimension:r.dimension}; }
 
-function insertAxis(tensor, axis, dimension) {
-  if (!denseTensorDescriptor(tensor)) return null;
-  if (!tensor?.shapeDeclared) return clearShape(tensor);
-  const rank = tensor.shape.length + 1;
-  const normalized = normalizeAxis(axis, rank);
-  if (normalized == null) return null;
-  const shape = tensor.shape.slice();
-  shape.splice(normalized, 0, dimension);
-  return denseShapePatch(tensor, shape);
-}
+function insertAxis(tensor,axis,dimension) { const r=onnxSemantic('region_axis',{value:onnxTensorRecord(tensor),axis,dimension,insert:true});return r.status==='fail'?null:denseShapePatch(tensor,r.shape,r.status==='pass'); }
 
 function removeLeadingDimensions(tensor, count) {
   if (!denseTensorDescriptor(tensor)) return null;
@@ -1559,10 +1344,6 @@ function unknownTensor(name = "") {
   return { name, dtype: "UNKNOWN", shape: [], shapeDeclared: false };
 }
 
-function clearShape(tensor) {
-  return denseTensorDescriptor(tensor) ? denseShapePatch(tensor, [], false) : null;
-}
-
 function denseShapePatch(tensor, shape, shapeDeclared = true) {
   if (!denseTensorDescriptor(tensor)) return null;
   const copy = clearStatic(tensor);
@@ -1588,35 +1369,11 @@ function clearStatic(tensor) {
   delete copy.staticDimensionValuesComplete;
   delete copy.staticDimensionValues;
   delete copy.staticDimensionValuesSource;
+  delete copy.staticValuesCanonicalTextComplete;
+  delete copy.staticValuesCanonicalTexts;
+  delete copy.initializerIntegerValuesExactComplete;
+  delete copy.initializerIntegerValuesExactDecimals;
   return copy;
-}
-
-function staticPatch(tensor) {
-  return {
-    staticValuesStatus: "complete",
-    staticValuesComplete: true,
-    staticValues: [...tensor.staticValues],
-    staticValuesSource: tensor.staticValuesSource || "branch_union",
-  };
-}
-
-function staticDimensionPatch(tensor) {
-  return {
-    staticDimensionValuesStatus: "assessed_exact_symbolic_shape_data",
-    staticDimensionValuesComplete: true,
-    staticDimensionValues: structuredClone(tensor.staticDimensionValues),
-    staticDimensionValuesSource: tensor.staticDimensionValuesSource || "branch_union",
-  };
-}
-
-function sameStaticValues(left, right) {
-  return left?.staticValuesComplete === true && right?.staticValuesComplete === true
-    && JSON.stringify(left.staticValues) === JSON.stringify(right.staticValues);
-}
-
-function sameStaticDimensionValues(left, right) {
-  return left?.staticDimensionValuesComplete === true && right?.staticDimensionValuesComplete === true
-    && JSON.stringify(left.staticDimensionValues) === JSON.stringify(right.staticDimensionValues);
 }
 
 function concreteTensor(tensor) {
@@ -1637,47 +1394,6 @@ function completeTensorShapeContract(value) {
     && value.conditionalShapeVariants.every(concreteTensor);
 }
 
-function branchShapeVariants(value, condition) {
-  const source = value?.conditionalShapeContract?.status === "assessed_complete"
-    && Array.isArray(value.conditionalShapeVariants) && value.conditionalShapeVariants.length
-    ? value.conditionalShapeVariants : [value];
-  const variants = [];
-  for (const item of source) {
-    if (!concreteTensor(item)) continue;
-    const conditions = mergeBranchConditions(item.conditions || [], [condition]);
-    if (!conditions) continue;
-    const patch = descriptor(item);
-    delete patch.conditionalShapeContract;
-    delete patch.conditionalShapeVariants;
-    variants.push({ ...patch, conditions });
-  }
-  return variants;
-}
-
-function mergeBranchConditions(left, right) {
-  const values = new Map();
-  for (const condition of [...left, ...right]) {
-    const key = String(condition?.key || "");
-    const value = String(condition?.value || "");
-    if (!key || !value || values.has(key) && values.get(key) !== value) return null;
-    values.set(key, value);
-  }
-  return [...values].sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => ({ key, value }));
-}
-
-function deduplicateBranchVariants(variants) {
-  const unique = new Map();
-  for (const variant of variants) {
-    const key = JSON.stringify({
-      conditions: variant.conditions || [],
-      dtype: variant.dtype,
-      type: onnxTypeProtoFromValue(variant),
-    });
-    if (!unique.has(key)) unique.set(key, variant);
-  }
-  return [...unique.values()];
-}
-
 function knownDtype(tensor) {
   return denseTensorDescriptor(tensor) && tensor?.dtype && tensor.dtype !== "UNKNOWN" ? tensor.dtype : "";
 }
@@ -1688,7 +1404,7 @@ function denseTensorDescriptor(tensor) {
 }
 
 function knownDimension(value) {
-  return Number.isSafeInteger(Number(value)) && Number(value) >= 0;
+  return Number.isSafeInteger(value) && value >= 0;
 }
 
 function attributeInteger(node, name) {

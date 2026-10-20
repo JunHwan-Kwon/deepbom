@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.5.0 — 2026-10-20 — shared portable engine and development evidence
+
+- Move deterministic numerical calculations, format semantics, evidence content identity and IR admission into the shared Rust/WASM engine. Web, CLI, SDK and MCP retain common evidence flows; host adapters own file decoding, framework hooks, process lifecycle and presentation.
+- Extend ONNX conditional shape, source-pinned extension and ML operator handling. Correct value propagation, dynamic axes, exact integer transport, bounded work, DeformConv and runtime binding checks; preserve unknown and partial assessments.
+- Add managed training observation, bounded background analysis, opt-in analyzer integration and explicit collection/termination status. Preserve immutable snapshot identities and separate observed training evidence from model execution and clinical claims.
+- Extend native optimization review, source hierarchy navigation, reports and machine-readable evidence. Keep diagram and summary projections source-bound and preserve original tensor connections, storage identities and omitted-data boundaries.
+- Recognize the pinned Core ML builder’s rank-preserving reshape descriptor templates, retain their raw annotations, and derive concrete shapes from the producer and operation contract. Unrelated shape conflicts and invalid cardinality still fail validation.
+- Preserve earlier wire contracts and immutable compatibility catalogs. Current catalog: 0.57.0; Artifact IR method: 2.3.4; Model IR method: 1.1.4.
+- Qualification includes 289 check runners with corrected failures rechecked, 181 Rust tests, 1,360 numerical comparisons and 48 public ONNX artifacts analyzed twice. Installed-channel and browser checks cover Linux x86-64; native Windows/macOS, GPU execution and ChatGPT/Claude host review remain separate.
+
 ## 2.4.0 — 2026-10-12 — source hierarchy and bounded architecture views
 
 - Preserve bounded ONNX exporter module annotations and derive a hash-bound hierarchy from the common Model IR. Keep declared source paths distinct from proven native module identities and calls.

@@ -1,3 +1,4 @@
+import { portableContract } from "./portable-contracts.js";
 import { ONNX_TENSOR_TYPE_IDS as TENSOR_TYPE_IDS } from "./onnx-tensor-types.js";
 const SOURCE_COMMIT = "be2b5fde82d9c8874f3d19328bdfe3b6962dc67b";
 
@@ -18,9 +19,7 @@ export function knownDtype(tensor) {
 }
 const MAX_TYPE_PROTO_NODES = 1_000_000;
 const MAX_TYPE_PROTO_TEXT_BYTES = 4_194_304;
-const MAP_KEY_TYPES = new Set(["UINT8", "INT8", "UINT16", "INT16", "INT32", "INT64", "STRING", "UINT32", "UINT64"]);
 const VALUE_ROLES = new Set(["graph_input", "graph_output", "graph_value_info", "function_value_info"]);
-const TEXT_ENCODER = new TextEncoder();
 
 export const ONNX_TYPE_PROTO_SOURCE = Object.freeze({
   release: "v1.21.0",
@@ -89,9 +88,18 @@ export function cloneOnnxTypeProto(type) {
   return clone;
 }
 
+// Host representation decoding only. Unknown/malformed values must not become
+// concrete zero through Number(null), Number(false), or Number("").
+export function onnxDimensionInteger(value) {
+  if (!["number", "string", "bigint"].includes(typeof value)
+    || typeof value === "string" && !value.trim()) return null;
+  const number = Number(value);
+  return Number.isSafeInteger(number) ? number : null;
+}
+
 export function makeOnnxTensorType(dtype, shape = [], shapeDeclared = false, kind = "tensor") {
   const normalizedDtype = String(dtype || "UNKNOWN");
-  const dimensions = shapeDeclared ? (shape || []).map((dimension) => Number.isSafeInteger(Number(dimension)) && Number(dimension) >= 0
+  const dimensions = shapeDeclared ? (shape || []).map((dimension) => onnxDimensionInteger(dimension) != null && onnxDimensionInteger(dimension) >= 0
     ? { kind: "value", value: Number(dimension), parameter: "", denotation: "", valueFieldCount: 1 }
     : { kind: "unknown", value: null, parameter: "", denotation: "", valueFieldCount: 0 }) : [];
   return {
@@ -193,14 +201,7 @@ export function onnxValueDescriptorFromType(type, state = {}) {
 }
 
 export function onnxTypeProtoKnown(type) {
-  if (!type || typeof type !== "object") return false;
-  if (type.kind === "tensor" || type.kind === "sparse_tensor") {
-    return Boolean(type.dtype && type.dtype !== "UNKNOWN" && !String(type.dtype).startsWith("TYPE_"));
-  }
-  if (type.kind === "sequence" || type.kind === "optional") return onnxTypeProtoKnown(type.elementType);
-  if (type.kind === "map") return MAP_KEY_TYPES.has(type.keyTypeName) && onnxTypeProtoKnown(type.valueType);
-  if (type.kind === "opaque") return Boolean(type.domain || type.name);
-  return false;
+  return portableContract("onnx_type", {operation:"known", value:type ?? null});
 }
 
 export function unionOnnxTypeProtos(types) {
@@ -312,52 +313,7 @@ function assessDeclaration(declaration) {
 }
 
 function assessType(type, depth) {
-  const reasons = [];
-  const valueFields = type.valueFieldsPresent || [];
-  if (valueFields.length !== 1) reasons.push(valueFields.length ? "type_proto_oneof_has_multiple_values" : "type_proto_value_missing");
-  let nodeCount = 1;
-  let maximumDepth = depth;
-  let textBytes = utf8Bytes(type.denotation) + utf8Bytes(type.domain) + utf8Bytes(type.name);
-  let symbolicDimensions = 0;
-  let unknownDimensions = 0;
-  if (["tensor", "sparse_tensor"].includes(type.kind)) {
-    if (Number(type.elementTypeFieldCount || 0) !== 1 || !validElementType(type.elementTypeId, type.elementTypeName)) reasons.push(`${type.kind}_element_type_missing_invalid_or_duplicate`);
-    if (Number(type.shapeFieldCount || 0) > 1) reasons.push(`${type.kind}_shape_field_duplicate`);
-    for (const dimension of type.shapeDimensions || []) {
-      textBytes += utf8Bytes(dimension.parameter) + utf8Bytes(dimension.denotation);
-      if (Number(dimension.valueFieldCount || 0) > 1) reasons.push("tensor_dimension_oneof_has_multiple_values");
-      if (dimension.kind === "value" && (!Number.isSafeInteger(dimension.value) || dimension.value < 0)) reasons.push("tensor_dimension_value_invalid");
-      if (dimension.kind === "symbolic") {
-        symbolicDimensions += 1;
-        if (!dimension.parameter) reasons.push("tensor_dimension_symbolic_name_empty");
-      }
-      if (dimension.kind === "unknown") unknownDimensions += 1;
-    }
-  } else if (type.kind === "sequence" || type.kind === "optional") {
-    if (Number(type.childFieldCount || 0) !== 1 || !type.elementType) reasons.push(`${type.kind}_element_type_missing_or_duplicate`);
-  } else if (type.kind === "map") {
-    if (Number(type.keyFieldCount || 0) !== 1 || !MAP_KEY_TYPES.has(type.keyTypeName)) reasons.push("map_key_type_invalid_or_duplicate");
-    if (Number(type.childFieldCount || 0) !== 1 || !type.valueType) reasons.push("map_value_type_missing_or_duplicate");
-  } else if (type.kind !== "opaque") {
-    reasons.push("type_proto_kind_unsupported_or_missing");
-  }
-  for (const child of childTypes(type)) {
-    const nested = assessType(child, depth + 1);
-    reasons.push(...nested.reasons);
-    nodeCount += nested.nodeCount;
-    maximumDepth = Math.max(maximumDepth, nested.maximumDepth);
-    textBytes += nested.textBytes;
-    symbolicDimensions += nested.symbolicDimensions;
-    unknownDimensions += nested.unknownDimensions;
-  }
-  return {
-    reasons: [...new Set(reasons)].sort(),
-    nodeCount,
-    maximumDepth,
-    textBytes,
-    symbolicDimensions,
-    unknownDimensions,
-  };
+  return portableContract("onnx_type", {operation:"assess", value:type, depth});
 }
 
 function childTypes(type) {
@@ -384,128 +340,40 @@ function canonicalType(type) {
   return canonicalOnnxTypeProto(type);
 }
 
-function unionTypePair(left, right) {
-  if (left.kind !== right.kind) return { status: "fail", type: null, reason: `type_kind_mismatch:${left.kind}:${right.kind}` };
-  if (left.kind === "tensor" || left.kind === "sparse_tensor") {
-    const leftDtype = left.dtype || left.elementTypeName || "UNKNOWN";
-    const rightDtype = right.dtype || right.elementTypeName || "UNKNOWN";
-    if (leftDtype !== rightDtype) return { status: "fail", type: null, reason: `tensor_element_type_mismatch:${leftDtype}:${rightDtype}` };
-    const output = makeOnnxTensorType(leftDtype, [], false, left.kind);
-    const leftDimensions = normalizedShapeDimensions(left);
-    const rightDimensions = normalizedShapeDimensions(right);
-    if (left.shapeDeclared === true && right.shapeDeclared === true && leftDimensions.length === rightDimensions.length) {
-      output.shapeDeclared = true;
-      output.shapeFieldCount = 1;
-      output.shapeDimensions = leftDimensions.map((dimension, index) => unionDimension(dimension, rightDimensions[index]));
-      output.shape = output.shapeDimensions.map((dimension) => dimension.kind === "value" ? dimension.value : -1);
-    }
-    return { status: "pass", type: output, reason: "" };
-  }
-  if (left.kind === "sequence" || left.kind === "optional") {
-    const child = unionTypePair(left.elementType || {}, right.elementType || {});
-    if (child.status !== "pass") return child;
-    return { status: "pass", type: left.kind === "sequence" ? makeOnnxSequenceType(child.type) : makeOnnxOptionalType(child.type), reason: "" };
-  }
-  if (left.kind === "map") {
-    if (left.keyTypeName !== right.keyTypeName) return { status: "fail", type: null, reason: "map_key_type_mismatch" };
-    const child = unionTypePair(left.valueType || {}, right.valueType || {});
-    if (child.status !== "pass") return child;
-    return { status: "pass", type: { ...left, valueType: child.type }, reason: "" };
-  }
-  if (left.kind === "opaque") {
-    return left.domain === right.domain && left.name === right.name
-      ? { status: "pass", type: left, reason: "" }
-      : { status: "fail", type: null, reason: "opaque_identity_mismatch" };
-  }
-  return { status: "fail", type: null, reason: `unsupported_type_kind:${left.kind || "undefined"}` };
+// Transport representation normalization; the join/unification decision lives in WASM.
+function portableType(type) {
+  const result = cloneOnnxTypeProto(type) || {};
+  if (result.kind === "tensor" || result.kind === "sparse_tensor") result.shapeDimensions = normalizedShapeDimensions(result);
+  if (result.elementType) result.elementType = portableType(result.elementType);
+  if (result.valueType) result.valueType = portableType(result.valueType);
+  return result;
 }
-
-function unifyTypePair(declared, inferred) {
-  if (declared.kind !== inferred.kind) return { status: "fail", type: null, reason: `type_kind_mismatch:${declared.kind}:${inferred.kind}` };
-  if (declared.kind === "tensor" || declared.kind === "sparse_tensor") {
-    const declaredDtype = declared.dtype || declared.elementTypeName || "UNKNOWN";
-    const inferredDtype = inferred.dtype || inferred.elementTypeName || "UNKNOWN";
-    if (declaredDtype !== "UNKNOWN" && inferredDtype !== "UNKNOWN" && declaredDtype !== inferredDtype) {
-      return { status: "fail", type: null, reason: `tensor_element_type_mismatch:${declaredDtype}:${inferredDtype}` };
-    }
-    const dtype = declaredDtype !== "UNKNOWN" ? declaredDtype : inferredDtype;
-    const output = makeOnnxTensorType(dtype, [], false, declared.kind);
-    const declaredDimensions = normalizedShapeDimensions(declared);
-    const inferredDimensions = normalizedShapeDimensions(inferred);
-    if (declared.shapeDeclared === true && inferred.shapeDeclared === true) {
-      if (declaredDimensions.length !== inferredDimensions.length) return { status: "fail", type: null, reason: "tensor_rank_mismatch" };
-      const dimensions = [];
-      for (let index = 0; index < declaredDimensions.length; index += 1) {
-        const merged = unifyDimension(declaredDimensions[index], inferredDimensions[index]);
-        if (!merged) return { status: "fail", type: null, reason: `tensor_dimension_mismatch:${index}` };
-        dimensions.push(merged);
-      }
-      output.shapeDeclared = true;
-      output.shapeFieldCount = 1;
-      output.shapeDimensions = dimensions;
-      output.shape = dimensions.map((dimension) => dimension.kind === "value" ? dimension.value : -1);
-    } else if (declared.shapeDeclared === true || inferred.shapeDeclared === true) {
-      const source = declared.shapeDeclared === true ? declared : inferred;
-      output.shapeDeclared = true;
-      output.shapeFieldCount = 1;
-      output.shapeDimensions = normalizedShapeDimensions(source);
-      output.shape = output.shapeDimensions.map((dimension) => dimension.kind === "value" ? dimension.value : -1);
-    }
-    return { status: "pass", type: output, reason: "" };
-  }
-  if (declared.kind === "sequence" || declared.kind === "optional") {
-    const child = unifyTypePair(declared.elementType || {}, inferred.elementType || {});
-    if (child.status !== "pass") return child;
-    return { status: "pass", type: declared.kind === "sequence" ? makeOnnxSequenceType(child.type) : makeOnnxOptionalType(child.type), reason: "" };
-  }
-  if (declared.kind === "map") {
-    if (declared.keyTypeName !== inferred.keyTypeName) return { status: "fail", type: null, reason: "map_key_type_mismatch" };
-    const child = unifyTypePair(declared.valueType || {}, inferred.valueType || {});
-    return child.status === "pass" ? { status: "pass", type: { ...declared, valueType: child.type }, reason: "" } : child;
-  }
-  if (declared.kind === "opaque") {
-    return declared.domain === inferred.domain && declared.name === inferred.name
-      ? { status: "pass", type: declared, reason: "" }
-      : { status: "fail", type: null, reason: "opaque_identity_mismatch" };
-  }
-  return { status: "fail", type: null, reason: `unsupported_type_kind:${declared.kind || "undefined"}` };
+function mergeTypes(operation, left, right) {
+  return portableContract("onnx_type", {operation, left:portableType(left), right:portableType(right), tensor_type_ids:Object.fromEntries(TENSOR_TYPE_IDS)});
 }
+function unionTypePair(left, right) { return mergeTypes("union", left, right); }
+function unifyTypePair(left, right) { return mergeTypes("unify", left, right); }
 
 function normalizedShapeDimensions(type) {
   if (Array.isArray(type?.shapeDimensions) && type.shapeDimensions.length === (type.shape || []).length) {
     return type.shapeDimensions.map((dimension) => ({ ...dimension }));
   }
-  return (type?.shape || []).map((dimension) => Number.isSafeInteger(Number(dimension)) && Number(dimension) >= 0
+  return (type?.shape || []).map((dimension) => onnxDimensionInteger(dimension) != null && onnxDimensionInteger(dimension) >= 0
     ? { kind: "value", value: Number(dimension), parameter: "", denotation: "", valueFieldCount: 1 }
     : { kind: "unknown", value: null, parameter: "", denotation: "", valueFieldCount: 0 });
 }
 
 function normalizeDimension(dimension) {
-  if (dimension?.kind === "value" && Number.isSafeInteger(Number(dimension.value)) && Number(dimension.value) >= 0) {
+  if (dimension?.kind === "value" && onnxDimensionInteger(dimension.value) != null && onnxDimensionInteger(dimension.value) >= 0) {
     return { kind: "value", value: Number(dimension.value), parameter: "", denotation: String(dimension.denotation || ""), valueFieldCount: 1 };
   }
   if (dimension?.kind === "symbolic" && String(dimension.parameter || "")) {
     return { kind: "symbolic", value: null, parameter: String(dimension.parameter), denotation: String(dimension.denotation || ""), valueFieldCount: 1 };
   }
-  if (Number.isSafeInteger(Number(dimension)) && Number(dimension) >= 0) {
+  if (onnxDimensionInteger(dimension) != null && onnxDimensionInteger(dimension) >= 0) {
     return { kind: "value", value: Number(dimension), parameter: "", denotation: "", valueFieldCount: 1 };
   }
   return { kind: "unknown", value: null, parameter: "", denotation: String(dimension?.denotation || ""), valueFieldCount: 0 };
-}
-
-function unionDimension(left, right) {
-  if (left.kind === "value" && right.kind === "value" && left.value === right.value) return { ...left };
-  if (left.kind === "symbolic" && right.kind === "symbolic" && left.parameter === right.parameter) return { ...left };
-  return { kind: "unknown", value: null, parameter: "", denotation: "", valueFieldCount: 0 };
-}
-
-function unifyDimension(declared, inferred) {
-  if (declared.kind === "value" && inferred.kind === "value") return declared.value === inferred.value ? { ...declared } : null;
-  if (inferred.kind === "value") return { ...inferred };
-  if (declared.kind === "value") return { ...declared };
-  if (declared.kind === "symbolic") return { ...declared };
-  if (inferred.kind === "symbolic") return { ...inferred };
-  return { kind: "unknown", value: null, parameter: "", denotation: "", valueFieldCount: 0 };
 }
 
 function canonicalDimension(dimension) {
@@ -514,16 +382,8 @@ function canonicalDimension(dimension) {
   return "?";
 }
 
-function validElementType(id, name) {
-  return Number.isSafeInteger(id) && id > 0 && name && name !== "UNDEFINED" && !String(name).startsWith("TYPE_");
-}
-
 function countBy(values) {
   const counts = new Map();
   for (const value of values) counts.set(value || "undefined", (counts.get(value || "undefined") || 0) + 1);
   return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((left, right) => right.count - left.count || left.name.localeCompare(right.name));
-}
-
-function utf8Bytes(value) {
-  return TEXT_ENCODER.encode(String(value || "")).byteLength;
 }

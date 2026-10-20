@@ -245,6 +245,9 @@ struct RedesignImplementationNode {
     module_kind: String,
     codegen_status: String,
     codegen_reason: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    spatial_options: Option<crate::tflite_subgraphs::SpatialOptions>,
+    groups: Option<usize>,
     activation_inputs: Vec<usize>,
     outputs: Vec<usize>,
     input_shapes: Vec<Vec<i32>>,
@@ -338,20 +341,23 @@ struct ShapeProjection {
     alignment: usize,
 }
 
+fn validate_source_binding(bytes: &[u8], request: &RedesignRequest) -> Result<String, String> {
+    let source_hash = sha256(bytes);
+    if !request.source_sha256.is_empty()
+        && !request.source_sha256.eq_ignore_ascii_case(&source_hash)
+    {
+        return Err("Redesign source SHA-256 does not match the loaded artifact bytes.".to_string());
+    }
+    Ok(source_hash)
+}
+
 pub(crate) fn build_redesign_projection(
     bytes: &[u8],
     analysis: &Analysis,
     request: RedesignRequest,
 ) -> Result<RedesignProjection, String> {
     validate_request(analysis, &request)?;
-    let source_hash = sha256(bytes);
-    if !request.source_sha256.is_empty()
-        && !request.source_sha256.eq_ignore_ascii_case(&source_hash)
-    {
-        return Err(
-            "Redesign source SHA-256 does not match the loaded artifact bytes.".to_string(),
-        );
-    }
+    let source_hash = validate_source_binding(bytes, &request)?;
 
     let source_input = analysis
         .inputs
@@ -384,6 +390,8 @@ pub(crate) fn build_redesign_projection(
         .iter()
         .filter_map(|index| usize::try_from(*index).ok())
         .collect::<HashSet<_>>();
+    let protected_output_indices = crate::graph_output_semantic_tensors(&analysis.ops, &analysis.output_tensor_indices)
+        .into_iter().filter_map(|index| usize::try_from(index).ok()).collect::<HashSet<_>>();
     let mut tensors = analysis.tensors.clone();
     let mut ops = analysis.ops.clone();
     let activation_dtype = request.activation_dtype.to_ascii_lowercase();
@@ -427,7 +435,7 @@ pub(crate) fn build_redesign_projection(
                 request.width_multiplier,
                 target.channel_alignment_multiple.max(1),
                 &input_indices,
-                &output_indices,
+                &protected_output_indices,
                 owner,
                 edit,
             )
@@ -440,8 +448,16 @@ pub(crate) fn build_redesign_projection(
             ShapeRuleStatus::Unassessed => unassessed_op_count += 1,
         }
         shape_rule_status_by_op.insert(op.index, status);
+        if structural_edit && !matches!(status, ShapeRuleStatus::Exact)
+            && matches!(op.name.as_str(), "CONV_2D" | "DEPTHWISE_CONV_2D" | "AVERAGE_POOL_2D" | "MAX_POOL_2D") {
+            constraints.push(RedesignConstraint { severity:"error".into(), code:"RD-SHAPE-SPATIAL-001".into(), scope:format!("#{}",op.index), detail:"Projected spatial shape is not established by serialized kernel, stride, dilation and padding; this candidate cannot be exported.".into(), evidence_class:"DERIVED_PROJECTED_TENSOR_CONTRACT".into() });
+        }
         if structural_edit {
-            project_constant_storage(op, &mut tensors, &activation_dtype);
+            let source_groups = convolution_groups(op, &analysis.tensors);
+            if op.name == "CONV_2D" && source_groups.is_some_and(|groups| [op.inputs.first(), op.outputs.first()].into_iter().flatten().any(|i| usize::try_from(*i).ok().and_then(|i| tensors.get(i)).and_then(|t| t.shape.last()).is_some_and(|c| *c > 0 && *c as usize % groups != 0))) {
+                constraints.push(RedesignConstraint { severity:"error".into(), code:"RD-SHAPE-GROUPS-001".into(), scope:format!("#{}", op.index), detail:"Projected input and output channels must be divisible by the source convolution groups.".into(), evidence_class:"DERIVED_PROJECTED_TENSOR_CONTRACT".into() });
+            }
+            project_constant_storage(op, &mut tensors, &activation_dtype, source_groups);
             let output_shapes = op
                 .outputs
                 .iter()
@@ -597,6 +613,24 @@ pub(crate) fn build_redesign_projection(
         &mut constraints,
     );
     append_merge_contract_constraints(&tensors, &ops, &mut constraints);
+    append_reshape_contract_constraints(&tensors, &ops, &mut constraints);
+    for index in &output_indices {
+        if let (Some(before), Some(after)) = (analysis.tensors.get(*index), tensors.get(*index)) {
+            // Resolution edits may change spatial axes; a generic width edit may
+            // not change the batch, rank or output feature/channel contract.
+            if before.shape.len() != after.shape.len()
+                || before.shape.first() != after.shape.first()
+                || before.shape.last() != after.shape.last()
+            {
+                constraints.push(RedesignConstraint {
+                    severity: "error".into(), code: "RD-SHAPE-OUTPUT-001".into(),
+                    scope: format!("T{index}"),
+                    detail: format!("The projected output {:?} changes the source interface {:?}. An explicit interface redesign is required.", after.shape, before.shape),
+                    evidence_class: "DERIVED_PROJECTED_TENSOR_CONTRACT".into(),
+                });
+            }
+        }
+    }
     let block_diffs = build_block_diffs(
         &analysis.block_inventory.blocks,
         &edits,
@@ -632,7 +666,7 @@ pub(crate) fn build_redesign_projection(
         &constraints,
         target,
     );
-    let implementation_plan = build_implementation_plan(
+    let mut implementation_plan = build_implementation_plan(
         &ops,
         &tensors,
         &block_by_op,
@@ -640,6 +674,10 @@ pub(crate) fn build_redesign_projection(
         &output_indices,
         repeat_edits.len(),
     );
+    if constraints.iter().any(|item| item.severity == "error") {
+        implementation_plan.exportable = false;
+        implementation_plan.status = "blocked_invalid_projected_contract".into();
+    }
     let coverage_status = if unassessed_op_count > 0 {
         "partial"
     } else if scaled_shape_fallback_op_count > 0 {
@@ -801,10 +839,11 @@ fn build_implementation_plan(
             .first()
             .and_then(|shape| shape.get(2))
             .and_then(|value| positive(*value));
-        let stride_height = infer_projected_stride(input_h, output_h);
-        let stride_width = infer_projected_stride(input_w, output_w);
-        let kernel_height = op.cache_payload.kernel_height;
-        let kernel_width = op.cache_payload.kernel_width;
+        let stride_height = op.spatial_options.as_ref().map(|s| s.strides[0]).or_else(|| infer_projected_stride(input_h, output_h));
+        let stride_width = op.spatial_options.as_ref().map(|s| s.strides[1]).or_else(|| infer_projected_stride(input_w, output_w));
+        let kernel_height = op.pool_filter.and_then(|s| positive(s.0)).or(op.cache_payload.kernel_height);
+        let kernel_width = op.pool_filter.and_then(|s| positive(s.1)).or(op.cache_payload.kernel_width);
+        let groups = if op.name == "DEPTHWISE_CONV_2D" { input_channels } else { convolution_groups(op, projected_tensors) };
         let (module_kind, codegen_status, codegen_reason, concatenation_axis_nhwc) =
             reviewed_implementation_codegen_contract(&ReviewedCodegenInput {
                 op_name: &op.name,
@@ -843,6 +882,8 @@ fn build_implementation_plan(
             module_kind,
             codegen_status,
             codegen_reason,
+            spatial_options: op.spatial_options.clone(),
+            groups,
             activation_inputs,
             outputs,
             input_shapes,
@@ -1175,6 +1216,7 @@ pub(crate) fn build_redesign_pareto(
     base_request: RedesignRequest,
 ) -> Result<RedesignParetoSearch, String> {
     validate_request(analysis, &base_request)?;
+    let source_hash = validate_source_binding(bytes, &base_request)?;
     let source_input = analysis
         .inputs
         .iter()
@@ -1186,7 +1228,6 @@ pub(crate) fn build_redesign_pareto(
         .ok_or_else(|| "Source input height is dynamic or invalid.".to_string())?;
     let source_w = positive(source_input.shape[2])
         .ok_or_else(|| "Source input width is dynamic or invalid.".to_string())?;
-    let source_hash = sha256(bytes);
     let mut dimensions = BTreeSet::<(usize, usize)>::new();
     for scale in [1.0_f64, 0.875, 0.75, 0.625, 0.5] {
         dimensions.insert((
@@ -1292,6 +1333,9 @@ pub(crate) fn build_redesign_pareto(
         .filter(|candidate| candidate.pareto_optimal)
         .count();
     let accepted_candidate_count = accepted_indices.len();
+    // Successfully evaluated but invalid projections are rejected too. Keep
+    // their rows for diagnostics without losing them from the denominator.
+    rejected_candidate_count += candidates.len() - accepted_candidate_count;
     Ok(RedesignParetoSearch {
         schema: "deepbom.redesign_pareto.v1".to_string(),
         status: if accepted_candidate_count > 0 { "assessed" } else { "blocked" }.to_string(),
@@ -1575,6 +1619,13 @@ fn project_op_shape(
                         }
                         projected[3] = output_channels.max(1) as i32;
                         status = ShapeRuleStatus::Exact;
+                        if let (Some(options), Some(kernel)) = (&op.spatial_options, &kernel) {
+                            for axis in 0..2 {
+                                if let Some(size) = crate::tflite_subgraphs::spatial_output(input[axis + 1], kernel[axis + 1], options.strides[axis], options.dilations[axis], &options.padding) {
+                                    projected[axis + 1] = size;
+                                } else { status = ShapeRuleStatus::Unassessed; }
+                            }
+                        } else { status = ShapeRuleStatus::ScaledFallback; }
                     }
                 }
             }
@@ -1585,11 +1636,18 @@ fn project_op_shape(
                     projected[1] = scale_dimension(projected[1], projected_h, source_h) as i32;
                     projected[2] = scale_dimension(projected[2], projected_w, source_w) as i32;
                     status = ShapeRuleStatus::ScaledFallback;
+                    if let (Some(options), Some((kh, kw))) = (&op.spatial_options, op.pool_filter) {
+                        if let (Some(h), Some(w)) = (
+                            crate::tflite_subgraphs::spatial_output(input[1], kh, options.strides[0], 1, &options.padding),
+                            crate::tflite_subgraphs::spatial_output(input[2], kw, options.strides[1], 1, &options.padding),
+                        ) { projected[1] = h; projected[2] = w; status = ShapeRuleStatus::Exact; }
+                        else { status = ShapeRuleStatus::Unassessed; }
+                    }
                 }
             }
             "ADD" | "MUL" | "SUB" | "DIV" | "MAXIMUM" | "MINIMUM" | "RELU" | "RELU6"
             | "LOGISTIC" | "TANH" | "QUANTIZE" | "DEQUANTIZE" | "HARD_SWISH" | "LEAKY_RELU"
-            | "PRELU" => {
+            | "PRELU" | "SOFTMAX" => {
                 projected = input.clone();
                 status = ShapeRuleStatus::Exact;
             }
@@ -1605,7 +1663,9 @@ fn project_op_shape(
             }
             "RESHAPE" | "SQUEEZE" | "EXPAND_DIMS" => {
                 if !projected.is_empty() {
-                    projected = scaled_serialized_shape(&projected, &shape_projection, false);
+                    if !output_indices_usize.iter().any(|index| output_indices.contains(index)) {
+                        projected = scaled_serialized_shape(&projected, &shape_projection, false);
+                    }
                     status = ShapeRuleStatus::ScaledFallback;
                 }
             }
@@ -1650,7 +1710,14 @@ fn project_op_shape(
     status
 }
 
-fn project_constant_storage(op: &OpInfo, tensors: &mut [TensorInfo], activation_dtype: &str) {
+fn convolution_groups(op: &OpInfo, tensors: &[TensorInfo]) -> Option<usize> {
+    if op.name != "CONV_2D" { return None; }
+    let channels = |slot: usize, axis: usize| op.inputs.get(slot).and_then(|i| usize::try_from(*i).ok()).and_then(|i| tensors.get(i)).and_then(|t| t.shape.get(axis)).and_then(|c| positive(*c));
+    let (input, kernel) = channels(0, 3).zip(channels(1, 3))?;
+    (input % kernel == 0).then_some(input / kernel)
+}
+
+fn project_constant_storage(op: &OpInfo, tensors: &mut [TensorInfo], activation_dtype: &str, source_groups: Option<usize>) {
     let input_shape = op
         .inputs
         .first()
@@ -1675,7 +1742,9 @@ fn project_constant_storage(op: &OpInfo, tensors: &mut [TensorInfo], activation_
                 if let Some(weight) = tensors.get_mut(weight_index) {
                     if weight.shape.len() == 4 && input.len() == 4 && output.len() == 4 {
                         weight.shape[0] = output[3];
-                        weight.shape[3] = input[3];
+                        if let Some(groups) = source_groups.filter(|g| input[3] > 0 && input[3] as usize % g == 0) {
+                            weight.shape[3] = (input[3] as usize / groups) as i32;
+                        }
                         apply_weight_storage(weight, activation_dtype, false);
                     }
                 }
@@ -2127,6 +2196,24 @@ fn append_global_constraints(
                 evidence_class: "HEURISTIC".to_string(),
             });
         }
+    }
+}
+
+fn append_reshape_contract_constraints(tensors: &[TensorInfo], ops: &[OpInfo], constraints: &mut Vec<RedesignConstraint>) {
+    for op in ops.iter().filter(|op| matches!(op.name.as_str(), "RESHAPE" | "SQUEEZE" | "EXPAND_DIMS")) {
+        let input = op.inputs.first().and_then(|index| usize::try_from(*index).ok()).and_then(|index| tensors.get(index));
+        let output = op.outputs.first().and_then(|index| usize::try_from(*index).ok()).and_then(|index| tensors.get(index));
+        let counts = input.zip(output).and_then(|(a, b)| crate::tensor_math::shape_elements(&a.shape).zip(crate::tensor_math::shape_elements(&b.shape)));
+        let (severity, detail) = match counts {
+            Some((a, b)) if a != b => ("error", format!("Projected reshape cannot preserve elements: input {a}, output {b}.")),
+            None => ("warning", "Projected reshape cardinality is not assessed because an input or output shape is incomplete.".into()),
+            _ => continue,
+        };
+        constraints.push(RedesignConstraint {
+            severity: severity.into(), code: "RD-SHAPE-RESHAPE-001".into(),
+            scope: format!("#{:03} {}", op.index, op.name), detail,
+            evidence_class: if severity == "error" { "DERIVED_PROJECTED_TENSOR_CONTRACT" } else { "NOT_ASSESSABLE" }.into(),
+        });
     }
 }
 

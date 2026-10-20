@@ -20,7 +20,7 @@ import {
   initSync,
 } from "../pkg/tflite_wasm_audit.js";
 import { assertCycloneDx17, cycloneDx17Validation } from "./cyclonedx-17-schema.mjs";
-import { REFERENCE_CONTRACT_ANALYZER_METADATA } from "./reference-contract-provenance.mjs";
+import { REFERENCE_CONTRACT_ANALYZER_METADATA, REFERENCE_GENERATED_AT, readReferenceSet, writeReferenceSet } from "./reference-contract-provenance.mjs";
 
 const SHA = "a".repeat(64);
 const PROFILE_SHA = "b".repeat(64);
@@ -718,7 +718,7 @@ const sampleRepair = compute_delegation_repair(sampleBytes, sampleFilename, "and
 sampleAnalysis.model_sha256 = sampleRepair.artifact_sha256;
 sampleAnalysis.delegation_repair = sampleRepair;
 const sampleSet = buildDeploymentContractDocuments(sampleAnalysis, {
-  generatedAt: GENERATED_AT,
+  generatedAt: REFERENCE_GENERATED_AT,
   hash: sampleRepair.artifact_sha256,
   fileSizeBytes: sampleBytes.byteLength,
   analyzerMetadata: REFERENCE_CONTRACT_ANALYZER_METADATA,
@@ -785,9 +785,18 @@ for (const document of [
   expectEqual(document.provenance.rulepack_sha256, REFERENCE_CONTRACT_ANALYZER_METADATA.rulepackSha256, "reference sample canonical rulepack hash");
   expectEqual(document.provenance.analyzer_semantic_version, REFERENCE_CONTRACT_ANALYZER_METADATA.semanticVersion, "reference sample canonical analyzer version");
 }
-const exampleDir = "reference/cyclonedx/1.7/examples/mobilenet-v2-quant";
+const referenceSet = process.argv.includes("--update-reference") ? writeReferenceSet(sampleSet) : readReferenceSet();
+// The actual run above uses the actual current producer. For the golden-only
+// comparison, Git commit/dirty context is a controlled fixture input. The loader
+// first requires identical engine/source-content/rulepack/version identities.
+// This does not regenerate, relabel or publish historical documents.
+const referenceExpected = buildDeploymentContractDocuments(sampleAnalysis, {
+  generatedAt: REFERENCE_GENERATED_AT,
+  hash: sampleRepair.artifact_sha256,
+  fileSizeBytes: sampleBytes.byteLength,
+  analyzerMetadata: referenceSet.record.producer.analyzer,
+});
 const storedExamples = {};
-const updateReferences = process.argv.includes("--update-reference");
 for (const [key, filename] of Object.entries(sampleSet.files)) {
   const documentKey = {
     cyclonedx: "cyclonedx_evidence",
@@ -799,16 +808,16 @@ for (const [key, filename] of Object.entries(sampleSet.files)) {
     runtime: "runtime_requirement_manifest",
     missingFields: "missing_provenance_field_specification",
   }[key];
-  if (updateReferences) writeFileSync(`${exampleDir}/${filename}`, `${JSON.stringify(sampleSet.documents[documentKey], null, 2)}\n`);
-  const stored = JSON.parse(readFileSync(`${exampleDir}/${filename}`, "utf8"));
+  const stored = referenceSet.documents[filename];
+  expect(Boolean(stored), `${filename} missing from producer-bound reference set`);
   storedExamples[filename] = stored;
   const storedSubjectHash = stored.metadata?.component?.hashes?.[0]?.content || stored.subject?.sha256 || stored.identity?.sha256 || stored.artifact?.sha256;
   expectEqual(storedSubjectHash, sampleRepair.artifact_sha256, `${filename} public artifact binding`);
   if (filename.endsWith(".cdx.json")) assertCycloneDx17(stored, `${filename} stored public example`);
   if (key === "cyclonedx") {
-    expectEqual(JSON.stringify(stored.metadata.component.modelCard), JSON.stringify(sampleSet.documents[documentKey].metadata.component.modelCard), `${filename} model-card contracts`);
+    expectEqual(JSON.stringify(stored.metadata.component.modelCard), JSON.stringify(referenceExpected.documents[documentKey].metadata.component.modelCard), `${filename} model-card contracts`);
   }
-  expectEqual(canonicalJson(stored), canonicalJson(sampleSet.documents[documentKey]), `${filename} complete canonical reference document`);
+  expectEqual(canonicalJson(stored), canonicalJson(referenceExpected.documents[documentKey]), `${filename} complete canonical reference document`);
 }
 for (const source of [DEPLOYMENT_CONTRACT_FILES.cyclonedx, DEPLOYMENT_CONTRACT_FILES.formulation]) {
   for (const reference of storedExamples[source].metadata.component.externalReferences) {

@@ -21,6 +21,8 @@ try {
   await page.route(`${origin}/hierarchy`, route => route.fulfill({ contentType: "text/html", body: '<!doctype html><html><body style="margin:12px"><svg id="other"><text fill="red">Unaffected</text></svg><div id="host"></div><div id="editor"></div></body></html>' }));
   await page.goto(`${origin}/hierarchy`);
   await page.evaluate(async data => {
+    const { initializeNumericalWasm } = await import("/web/lib/numerical-wasm.js");
+    await initializeNumericalWasm();
     const { mountModelHierarchy } = await import("/web/lib/model-hierarchy-view.js");
     window.hierarchyMount = mountModelHierarchy; window.sourceData = data;
     window.current = mountModelHierarchy(document.getElementById("host"), data.model, data.hierarchy, { onSelect: op => { window.selectedOp = op.id; } });

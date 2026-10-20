@@ -22,10 +22,10 @@ input.relationships = [{ id: "cohort-def", from: "omop:release", to: "cohort", r
 const expected = buildProvenanceIr(model, input);
 const server = createServer(async (req, res) => { try {
   const url = new URL(req.url, "http://localhost");
-  if (url.pathname === "/") { res.setHeader("content-type", "text/html"); res.end('<html><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/web/research-theme.css"><style>body{margin:20px auto;max-width:1200px;padding:0 12px;background:var(--surface,#fff);color:var(--ink,#111)}</style><main id="host"></main><script type="module">import {installProvenancePanel} from "/web/lib/provenance-panel.js";window.context=await(await fetch("/context")).json();window.panel=installProvenancePanel(document.querySelector("main"),()=>window.context);</script></html>'); return; }
+  if (url.pathname === "/") { res.setHeader("content-type", "text/html"); res.end('<html><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/web/research-theme.css"><style>body{margin:20px auto;max-width:1200px;padding:0 12px;background:var(--surface,#fff);color:var(--ink,#111)}</style><main id="host"></main><script type="module">import {initializeNumericalWasm} from "/web/lib/numerical-wasm.js";await initializeNumericalWasm();import {installProvenancePanel} from "/web/lib/provenance-panel.js";window.context=await(await fetch("/context")).json();window.panel=installProvenancePanel(document.querySelector("main"),()=>window.context);</script></html>'); return; }
   if (url.pathname === "/context") { res.setHeader("content-type", "application/json"); res.end(JSON.stringify({ model, analysis })); return; }
   const file = path.resolve(root, "." + url.pathname); if (!file.startsWith(root + path.sep)) throw Error("outside root");
-  res.setHeader("content-type", path.extname(file) === ".css" ? "text/css" : "text/javascript"); res.end(await readFile(file));
+  res.setHeader("content-type", path.extname(file) === ".css" ? "text/css" : path.extname(file) === ".wasm" ? "application/wasm" : "text/javascript"); res.end(await readFile(file));
 } catch { res.writeHead(404); res.end(); } });
 await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
 await mkdir(".local-validation/provenance", { recursive: true });
@@ -87,7 +87,8 @@ try {
   assert.equal(await page.evaluate(() => window.panel.getResult().nodes.some(node => node.id === "record:2")), true);
   await page.locator('[data-link-editor]').fill(JSON.stringify({ ...input, relationships: [...input.relationships, { id: "missing", from: "artifact:primary", to: "absent", role: "documented_by" }] }));
   assert(await page.locator('[data-link-action="save-ir"]').isDisabled()); await page.locator('[data-link-action="apply"]').click();
-  await page.getByRole("status").filter({ hasText: "incomplete" }).waitFor();
+  await page.waitForFunction(() => document.querySelector('[role="status"]')?.dataset.error === "true" || window.panel.getResult() !== null, null, {timeout:10000}).catch(async error => { console.error({errors, status:await page.getByRole("status").textContent(), disabled:await page.locator('[data-link-action="apply"]').isDisabled(), result:await page.evaluate(() => window.panel.getResult())}); throw error; });
+  assert.match(await page.getByRole("status").textContent(), /incomplete/);
   assert.equal(await page.evaluate(() => window.panel.getResult().coverage.check_counts.unresolved), 1);
   assert.equal(await page.locator('[data-link-inventory] [data-link-node="artifact:primary"]').getAttribute("aria-pressed"), "true", "removed selections fall back to the current model in both list and graph");
   await page.evaluate(() => { window.context = null; window.panel.sync(); });

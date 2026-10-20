@@ -192,7 +192,7 @@ export function installNumericalPanel(host, getContext) {
     try {
       const context = requireContext(); if (worker) return;
       pruningView?.destroy(); pruningView = null; pruningPreview = null; if (inspection === "pruning") { lastSvg = null; button("svg").disabled = button("png").disabled = true; $("[data-histogram]").innerHTML = empty("Updating weight evidence", "The interactive preview will reopen after analysis completes."); }
-      if (!context.source) throw new Error("Select one serialized artifact file for numeric inspection. Package sidecars need local CLI analysis.");
+      if (!context.source && !context.files?.length) throw new Error("Select the artifact file or its complete package for numeric inspection.");
       const digest = model.model_ir_sha256, ticket = ++generation;
       button("weights").disabled = true; button("cancel").hidden = false; $("progress").hidden = false; $("progress").removeAttribute("value");
       setStatus("Checking artifact identity before reading stored values…");
@@ -209,7 +209,7 @@ export function installNumericalPanel(host, getContext) {
         setStatus(`${weight.coverage.assessed_count}/${weight.coverage.inventory_count} payloads assessed · ${countLabel(weight.coverage.decoded_value_count)} values · ${weight.coverage.not_assessed_count} not assessed.`);
         rebuild();
       };
-      activeWorker.postMessage({model,analysis:context.analysis,source:context.source, options, baseline, mapping});
+      activeWorker.postMessage({model,analysis:context.analysis,source:context.source, files:context.files, options, baseline, mapping});
     } catch (error) {stopWorker(); setStatus(error.message,true);}
   }
   function download(name, blob) {

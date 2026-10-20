@@ -23,7 +23,7 @@ asset verification, and equivalence checks are documented in
 | Command | Artifact inputs | Declared outputs |
 | --- | ---: | --- |
 | `evidence-workflow` | 1 | `deepbom.evidence_workflow_result.v1`<br>`deepbom.evidence_workflow_query.v1`<br>`html`<br>`pdf`<br>`deepbom.evidence_standard_projection.v1` |
-| `optimization-report` | 1 | `deepbom.optimization_report_query.v1`<br>`deepbom.optimization_report.v1`<br>`deepbom.optimization_diff.v1`<br>`html`<br>`pdf` |
+| `optimization-report` | 1 | `deepbom.optimization_report_query.v1`<br>`deepbom.optimization_report_query.v2`<br>`deepbom.optimization_report.v1`<br>`deepbom.optimization_diff.v1`<br>`html`<br>`pdf` |
 | `audit` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
 | `gguf` | 1 | `summary`<br>`envelope`<br>`json`<br>`json-compact`<br>`cyclonedx`<br>`sarif` |
 | `batch` | 1 | `summary`<br>`deepbom.batch_result.v1` |
@@ -60,10 +60,10 @@ commit, a Google Cloud Storage object generation, or an HTTPS SHA-256.
 ## Executable help
 
 The following block is the normalized stdout of `deepbom --help` for version
-`2.4.0`:
+`2.5.0`:
 
 ```console
-DEEPBOM 2.4.0
+DEEPBOM 2.5.0
 
 Usage:
   deepbom audit <artifact-or-package> [options]
@@ -151,8 +151,8 @@ Additional command:
   deepbom model-summary <artifact> [--level auto|operation|block|storage|source] [--format table|markdown|json|json-compact]
 
 SavedModel package preview:
-  TensorFlow SavedModel directories are accepted with bounded member hashing and first-MetaGraph projection.
-  GraphDef, Keras config, and PT2 JSON expose serialized declarative relationships only; HDF5 and PyTorch checkpoints remain safe-envelope-only.
+  TensorFlow SavedModel directories are accepted with bounded member hashing and selected MetaGraph projection (--tf-metagraph, default 0).
+  GraphDef, Keras config, and PT2 JSON expose serialized declarative relationships only; HDF5 fixed numeric datasets and SavedModel variables have bounded numeric inspection; PyTorch checkpoints remain safe-envelope-only.
 
 GGUF quick inspection:
   --tensors              Emit a concise tensor table; add --json or --compact for deepbom.tensor_table.v1

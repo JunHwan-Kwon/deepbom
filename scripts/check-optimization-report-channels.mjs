@@ -30,6 +30,9 @@ assert.throws(()=>queryOptimizationReport(data,{section:'summary',subject:'layer
 for(const modify of [r=>r.static_deltas.state_bytes='1',r=>r.baseline.cost.macs='4',r=>r.baseline.nodes[0].extra=true]){const r=structuredClone(report);modify(r);const {report_sha256,...body}=r;r.report_sha256=nativeDigest(body);assert.throws(()=>openOptimizationReport(JSON.stringify(r)));}
 assert(!optimizationReportHtml(data).includes('<img'));
 const cli=spawnSync(process.execPath,['bin/deepbom.mjs','optimization-report',filename,'--section','changes'],{encoding:'utf8'});assert.equal(cli.status,0,cli.stderr);assert.deepEqual(JSON.parse(cli.stdout),queryOptimizationReport(data,{section:'changes'}));
+const v2Options={version:2,section:'structure',offset:5,limit:20,maxBytes:4096};
+const v2=spawnSync(process.execPath,['bin/deepbom.mjs','optimization-report',filename,'--query-version','2','--section','structure','--offset','5','--limit','20','--max-bytes','4096','--json','--compact','--offline'],{encoding:'utf8'});
+assert.equal(v2.status,0,v2.stderr);assert.deepEqual(JSON.parse(v2.stdout),queryOptimizationReport(data,v2Options));
 for(const file of process.argv.slice(2))openOptimizationReport(await readFile(file,'utf8'));
 
 const invalidTensorReports=[];
@@ -51,21 +54,23 @@ const server=createServer(async(req,res)=>{
   let uri=new URL(req.url,'http://local').pathname;
   if(uri==='/reports/optimization/')uri='/web/reports/optimization/index.html';
   const file=path.resolve(root,'.'+uri);
-  if(!file.startsWith(root+path.sep)||!uri.startsWith('/web/')){res.statusCode=404;res.end();return;}
-  try{res.setHeader('Content-Type',uri.endsWith('.js')?'text/javascript':uri.endsWith('.css')?'text/css':'text/html');res.end(await readFile(file));}catch{res.statusCode=404;res.end();}
+  if(!file.startsWith(root+path.sep)||!['/web/','/pkg/'].some(prefix=>uri.startsWith(prefix))){res.statusCode=404;res.end();return;}
+  try{res.setHeader('Content-Type',uri.endsWith('.wasm')?'application/wasm':uri.endsWith('.js')?'text/javascript':uri.endsWith('.css')?'text/css':'text/html');res.end(await readFile(file));}catch{res.statusCode=404;res.end();}
 });await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;
 try{
   browser=await launchChromium(chromium);const page=await browser.newPage({acceptDownloads:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));let uploads=0;page.on('request',r=>{if(r.method()==='POST')uploads++;});
   await page.goto(`http://127.0.0.1:${server.address().port}/reports/optimization/`);await page.locator('#report-file').setInputFiles(filename);await page.locator('#report-content').waitFor({state:'visible',timeout:60000});
   assert.match(await page.locator('#report-detail').textContent(),/layer-1/);assert.equal(await page.locator('#report-detail img').count(),0);
   await page.locator('#report-filter').selectOption('structure');await page.locator('#report-next').click();assert.match(await page.locator('#report-page').textContent(),/51–100/);
+  const pageDownload=page.waitForEvent('download');await page.locator('#export-page').click();assert.deepEqual(JSON.parse(await readFile(await (await pageDownload).path(),'utf8')),queryOptimizationReport(data,{version:2,section:'structure',offset:50,limit:50,maxBytes:1048576}));
   await page.locator('#tree-next').click();assert.match(await page.locator('#tree-page').textContent(),/2 \/ 4/);assert.equal(await page.locator('#after-tree button').count(),35);
   await page.locator('#report-search').fill('layer-119');assert.equal(await page.locator('#report-entries button').count(),1);
+  const matchesDownload=page.waitForEvent('download');await page.locator('#export-search').click();const matches=(await readFile(await (await matchesDownload).path(),'utf8')).trim().split('\n').map(JSON.parse);assert.equal(matches.length,1);assert.equal(matches[0].rows[0].id,'layer-119');assert.equal(matches[0].selection.search,'layer-119');assert.equal(matches[0].next_offset,null);
   const dl=page.waitForEvent('download');await page.locator('#export-diff').click();assert.deepEqual(JSON.parse(await readFile(await (await dl).path(),'utf8')),data.diff);
   const htmlDownload=page.waitForEvent('download');await page.locator('#export-html').click();assert.equal(await readFile(await (await htmlDownload).path(),'utf8'),optimizationReportHtml(data));
   const popup=page.waitForEvent('popup');await page.locator('#export-pdf').click();const printPage=await popup;assert.equal(await printPage.title(),'DEEPBOM Model Optimization Report');assert.match(await printPage.locator('body').textContent(),new RegExp(report.report_sha256));await printPage.close();
   await page.emulateMedia({colorScheme:'dark'});await page.screenshot({path:path.join(scratch,'web-dark.png'),fullPage:true});
-  await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  for(const width of [390,320]){await page.setViewportSize({width,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),JSON.stringify(await page.evaluate(()=>[...document.querySelectorAll("body *")].filter(e=>e.getBoundingClientRect().right>innerWidth+1).slice(0,12).map(e=>[e.tagName,e.id,e.getBoundingClientRect().right]))));}
   const malformed=path.join(scratch,'invalid.json');await writeFile(malformed,'{}');await page.locator('#report-file').setInputFiles(malformed);await page.locator('#report-status[data-error=true]').waitFor();assert(await page.locator('#report-content').isHidden());
   for(const [i,file] of process.argv.slice(2).entries()){await page.locator('#report-file').setInputFiles(file);await page.locator('#report-content').waitFor({state:'visible'});assert.match(await page.locator('#report-detail').textContent(),/spatial/);await page.setViewportSize({width:1440,height:1050});await page.screenshot({path:path.join(scratch,`actual-report-${i}.png`),fullPage:true});}
   for(const file of invalidTensorReports){await page.locator('#report-file').setInputFiles(file);await page.locator('#report-status[data-error=true]').waitFor();assert.match(await page.locator('#report-status').textContent(),/tensor comparison/);assert(await page.locator('#report-content').isHidden());}
@@ -78,6 +83,7 @@ const call=(name,args)=>request('tools/call',{name,arguments:args});
 try{
   await request('initialize',{protocolVersion:'2025-11-25',clientInfo:{name:'report-check',version:'1'},capabilities:{}});
   const result=(await call('deepbom_optimization_report',{path:filename,section:'changes'})).result;assert.deepEqual(result.structuredContent,queryOptimizationReport(data,{section:'changes'}));
+  const resultV2=(await call('deepbom_optimization_report',{path:filename,query_version:2,section:'structure',offset:5,limit:20,max_bytes:4096})).result;assert.deepEqual(resultV2.structuredContent,queryOptimizationReport(data,v2Options));
   for(const format of ['json','diff','html',...(process.env.DEEPBOM_REPORT_PYTHON?['pdf']:[])]){
     const out=(await call('deepbom_export_optimization_report',{path:filename,expected_sha256:report.report_sha256,format})).result;
     assert(!out.isError,JSON.stringify(out));assert(validate(out.structuredContent),JSON.stringify(validate.errors));const bytes=Buffer.from(out.content[1].resource.blob,'base64');assert.equal(bytes.length,out.structuredContent.byte_length);assert.equal(createHash('sha256').update(bytes).digest('hex'),out.structuredContent.file_sha256);if(format==='pdf')assert.equal(bytes.subarray(0,5).toString(),'%PDF-');

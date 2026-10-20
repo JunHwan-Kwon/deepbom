@@ -179,7 +179,7 @@ snapshot binding do not claim attachment to a particular weight state.
 Use eager host observation for GradientTape; do not put recording calls inside a
 traced `tf.function`. PyTorch compiled/distributed optimizer closures, AMP skipped
 updates and distributed aggregation are not qualified automatic observations.
-Use a quiescent boundary for snapshots; concurrent mutation is unsupported. A directory accepts one active writer. A stale lock after a process crash requires a new destination, not silent overwrite.
+Use a quiescent boundary for snapshots; concurrent mutation is unsupported. A directory accepts one active writer. After a crash, `deepbom training recover DIRECTORY --timeout 30` (or `deepbom.training.recover`) validates and seals persisted observations under exclusive writer ownership. It never resumes training or reconstructs lost buffered events. Active writers and conflicting heads are rejected; legacy writer markers require explicit inspection. See [automatic integration](AUTOMATIC_DEVELOPMENT_INTEGRATION.md) for recovery scope.
 Capturing full state is opt-in, performs host copies and can be expensive. The
 value budget is per tensor; an exceeded budget yields `not_assessed`, never a
 sample masquerading as an exact full distribution.
@@ -271,3 +271,5 @@ These tests do not qualify arbitrary custom layers, accelerators, every framewor
 version or distributed training. W&B cloud delivery requires credentials and was
 not exercised. No claim of task-accuracy preservation or measured performance
 benefit follows from this development validation.
+
+See [automatic development integration](AUTOMATIC_DEVELOPMENT_INTEGRATION.md) for opt-in monitor, Keras/Lightning adapters, immutable analysis jobs, metric plugins and bounded report queries.

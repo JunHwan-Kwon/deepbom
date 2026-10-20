@@ -66,7 +66,7 @@ try {
 
   for (const theme of ["light", "dark"]) {
     await page.evaluate((value) => { document.documentElement.dataset.theme = value; }, theme);
-    for (const viewport of [{ width: 1440, height: 1000, id: "desktop" }, { width: 390, height: 844, id: "mobile" }]) {
+    for (const viewport of [{ width: 1440, height: 1000, id: "desktop" }, { width: 390, height: 844, id: "mobile" }, { width: 320, height: 740, id: "mobile-small" }]) {
       await page.setViewportSize(viewport);
       const contrasts = await evidenceContrast(page, EVIDENCE_CLASSES);
       const failingContrast = contrasts.filter((row) => row.ratio < 4.5);
@@ -91,7 +91,7 @@ try {
         };
       });
       if (state.audit_tab_count !== 8 || state.hidden_audit_tabs.length || state.primary_domain_count !== 5 || state.specialized_lens_count !== 3
-        || state.document_overflow_px > 1 || state.workbench_overflow_px > 1 || (viewport.id === "mobile" && state.undersized_audit_controls.length)) {
+        || state.document_overflow_px > 1 || state.workbench_overflow_px > 1 || (viewport.id.startsWith("mobile") && state.undersized_audit_controls.length)) {
         throw new Error(`${theme}/${viewport.id} geometry failed: ${JSON.stringify(state)}`);
       }
       const screenshot = path.join(OUTPUT, `tflite-${theme}-${viewport.id}.png`);
@@ -172,13 +172,13 @@ async function verifyPrimaryWorkflowNavigation(page) {
     await page.setViewportSize(viewport);
     for (const [workspace, selector] of [["input", "#artifactDossier"], ["audit", "#auditWorkbench"]]) {
       await page.locator(`[data-workflow-step="${workspace}"]`).click();
-      await page.waitForTimeout(1300);
-      const visible = await page.locator(selector).evaluate((node, workspaceId) => {
+      await page.waitForFunction(({ selector, workspaceId }) => {
+        const node = document.querySelector(selector);
+        if (!node) return false;
         const top = node.getBoundingClientRect().top;
         const bound = workspaceId !== "input" || /^[a-f\d]{64}$/.test(node.querySelector("code")?.textContent || "") && /operator|Not serialized/.test(node.textContent);
         return bound && document.body.classList.contains(`workspace-${workspaceId}`) && !node.hidden && top >= -16 && top < innerHeight;
-      }, workspace);
-      if (!visible) throw new Error(`${workspace}/${viewport.width}px nav failed`);
+      }, { selector, workspaceId: workspace }, { timeout: 30_000 });
     }
   }
   await page.setViewportSize({ width: 1440, height: 1000 });

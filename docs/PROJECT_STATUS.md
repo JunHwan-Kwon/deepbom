@@ -1,14 +1,14 @@
 # DEEPBOM Project Status
 
-Current release and development baseline reviewed: 2026-10-11 KST.
+Release implementation reviewed: 2026-10-20 KST. The historical snapshot below records the earlier 2026-10-11 baseline.
 
-The release snapshot and development rules below are current. The detailed implementation inventory records accumulated feature work; it is not a claim that every format, runtime or target device was measured again on this date.
+The current implementation baseline is 2.5.0 with compatibility catalog 0.57.0. Common numerical and family-admission ownership is documented in [WASM_EXECUTION_BOUNDARY.md](WASM_EXECUTION_BOUNDARY.md). Publication artifacts and qualification receipts are recorded separately in the [2.5.0 release](https://github.com/JunHwan-Kwon/deepbom/releases/tag/channels-v2.5.0); platform directory review is independent of engine delivery. The detailed implementation inventory records accumulated feature work; it is not a claim that every format, runtime or target device was measured again on this date.
 
 Public-safe operating plan for DEEPBOM. Private implementation strategy and
 unreleased research notes belong in `LOCAL_PRIVATE_ROADMAP.local.md`, which is
 ignored by git.
 
-## Snapshot
+## Historical 2.3.0 snapshot
 
 The analyzer release baseline is **DEEPBOM 2.3.0**, published to npm and MCP Registry and deployed to Web and both hosted MCP endpoints. The [GitHub release](https://github.com/JunHwan-Kwon/deepbom/releases/tag/channels-v2.3.0) includes the Linux x86-64 standalone engine, Python wheel, npm archive, MCPB and qualification receipts. Native qualification is Linux x86-64 CPU; this release does not establish Windows/macOS native execution or PyPI, Cargo, apt or Snap publication. A documentation update does not require republishing the engine. Public source is generated from the reviewed allowlist; the deployment repository also contains private modules and service bindings outside that export.
 

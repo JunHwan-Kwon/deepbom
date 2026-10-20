@@ -1,4 +1,5 @@
-const INTEGER_TEXT = /^-?(?:0|[1-9][0-9]*)$/;
+import { portableContract } from "./portable-contracts.js";
+
 
 export const GUARDED_INTEGER_EXPRESSION_SCHEMA = "deepbom.guarded_integer_expression.v2";
 
@@ -94,79 +95,28 @@ function serializeGuard(guard) {
   return guard;
 }
 
+function normalizedAssignments(assignments) {
+  const entries = assignments instanceof Map ? assignments.entries() : Object.entries(assignments || {});
+  return Object.fromEntries([...entries].filter(([key]) => typeof key === "string").map(([key, value]) => [key, parseNonnegativeInteger(value)?.toString() ?? null]));
+}
+function evaluated(input) {
+  const result = portableContract("integer_expression", input);
+  return result === null ? null : BigInt(result);
+}
+
 export function evaluateGuardedIntegerFormula(formula, assignments) {
   if (!formula || formula.status !== "exact_guarded_integer_expression"
     || formula.ir_schema !== GUARDED_INTEGER_EXPRESSION_SCHEMA) return null;
-  const values = assignments instanceof Map ? assignments : new Map(Object.entries(assignments || {}));
-  for (const guard of formula.preconditions || []) if (!evaluateGuard(guard, values)) return null;
-  const result = evaluateIntegerExpression(formula.expression_ir, values);
-  return typeof result === "bigint" && result >= 0n ? result : null;
+  return evaluated({ formula, assignments: normalizedAssignments(assignments) });
 }
 
 export function evaluateIntegerExpression(node, assignments) {
-  const values = assignments instanceof Map ? assignments : new Map(Object.entries(assignments || {}));
-  if (node?.kind === "constant") return INTEGER_TEXT.test(String(node.value_decimal || "")) ? BigInt(node.value_decimal) : null;
-  if (node?.kind === "symbol") {
-    const assigned = values.get(node.symbol_id);
-    const integer = parseNonnegativeInteger(assigned);
-    return integer != null && integer >= 0n ? integer : null;
-  }
-  if (node?.kind !== "call") return null;
-  const args = (node.arguments || []).map((item) => evaluateIntegerExpression(item, values));
-  if (args.some((item) => item == null)) return null;
-  if (node.operator === "add") return args.reduce((sum, item) => sum + item, 0n);
-  if (node.operator === "sub") return args.length === 2 ? args[0] - args[1] : null;
-  if (node.operator === "mul") return args.reduce((product, item) => product * item, 1n);
-  if (node.operator === "exact_div") return args.length === 2 && args[1] > 0n && args[0] % args[1] === 0n ? args[0] / args[1] : null;
-  if (node.operator === "conv_transpose_pairs") return convTransposeAxisPairs(...args);
-  return null;
-}
-
-function evaluateGuard(guard, assignments) {
-  if (guard?.kind === "nonnegative") {
-    const value = evaluateIntegerExpression(guard.expression_ir, assignments);
-    return value != null && value >= 0n;
-  }
-  if (guard?.kind === "divisible") {
-    const numerator = evaluateIntegerExpression(guard.numerator_ir, assignments);
-    const denominator = evaluateIntegerExpression(guard.denominator_ir, assignments);
-    return numerator != null && denominator != null && numerator >= 0n && denominator > 0n && numerator % denominator === 0n;
-  }
-  if (guard?.kind === "equal") {
-    const left = evaluateIntegerExpression(guard.left_ir, assignments);
-    const right = evaluateIntegerExpression(guard.right_ir, assignments);
-    return left != null && right != null && left === right;
-  }
-  return false;
-}
-
-function floorDiv(value, divisor) {
-  let quotient = value / divisor;
-  if (value % divisor < 0n) quotient -= 1n;
-  return quotient;
+  return evaluated({ expression: node ?? null, assignments: normalizedAssignments(assignments) });
 }
 
 export function convTransposeAxisPairs(input, kernel, stride, dilation, padStart, output) {
-  if ([input, padStart, output].some((value) => value < 0n)
-    || [kernel, stride, dilation].some((value) => value <= 0n)) return null;
-  const loopCount = kernel < input ? kernel : input;
-  if (loopCount > 1_000_000n) return null;
-  let total = 0n;
-  if (kernel <= input) {
-    for (let k = 0n; k < kernel; k += 1n) {
-      const low = maxBigInt(-1n, floorDiv(padStart - k * dilation - 1n, stride)) + 1n;
-      const high = minBigInt(input - 1n, floorDiv(output - 1n + padStart - k * dilation, stride));
-      if (high >= low) total += high - low + 1n;
-    }
-  } else {
-    for (let i = 0n; i < input; i += 1n) {
-      const low = maxBigInt(-1n, floorDiv(padStart - i * stride - 1n, dilation)) + 1n;
-      const high = minBigInt(kernel - 1n, floorDiv(output - 1n + padStart - i * stride, dilation));
-      if (high >= low) total += high - low + 1n;
-    }
-  }
-  return total;
+  const values = [input, kernel, stride, dilation, padStart, output];
+  if (values.some(value => typeof value !== "bigint")) return null;
+  return evaluated({ expression: { kind: "call", operator: "conv_transpose_pairs",
+    arguments: values.map(integerConstant) }, assignments: {} });
 }
-
-function maxBigInt(left, right) { return left > right ? left : right; }
-function minBigInt(left, right) { return left < right ? left : right; }

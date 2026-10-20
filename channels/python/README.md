@@ -1,12 +1,30 @@
 # DEEPBOM Python SDK and launcher
 
-This package is a zero-analysis-logic launcher for the same platform-specific
-DEEPBOM engine used by the npm CLI release. Each wheel binds its operating
+Static artifact analysis calls the same platform-specific DEEPBOM engine used
+by the npm CLI release. Each wheel binds its operating
 system, architecture, engine SHA-256, and canonical TFLite WASM SHA-256 in an
-installed manifest. No parser or numerical rule is reimplemented in Python.
+installed manifest. Artifact parsers and static calculation rules are not
+reimplemented in Python. Optional local framework adapters collect native
+model state and training observations. Built-in SSIM and Generalized Dice use
+the common WASM engine; optional external metric adapters retain their explicit
+library version and aggregation contract.
 
 The public SDK invokes that same verified engine and converts its
-JSON and exit-code contracts into Python values and exceptions:
+JSON and exit-code contracts into Python values and exceptions.
+
+For trusted local PyTorch/Keras models, the development integration also provides
+`inspect_native(model, ...)` and `monitor(model, ...)`, reusing the native collector
+and common evidence engine. See [automatic development integration](https://github.com/JunHwan-Kwon/deepbom/blob/main/docs/AUTOMATIC_DEVELOPMENT_INTEGRATION.md)
+for minimal Torch, GradientTape and Keras examples, qualified versions, report
+queries and the experimental TorchLens boundary. These local execution adapters
+are separate from static file inspection and the hosted ChatGPT attachment path.
+
+After a process crash, `deepbom.training.recover("evidence/run-1", timeout=30)`
+or `deepbom training recover evidence/run-1 --timeout 30` validates persisted
+observations and completes eligible immutable snapshot jobs. It does not resume
+training or reconstruct lost buffered events. Active writers and mismatched
+producer identities are rejected. The managed recovery path is qualified on
+Linux CPU; legacy writer markers require explicit inspection.
 
 The `inspect()` method and supported SDK policy are included from **2.1.0**.
 Install the matching wheel for your platform from the release assets, or build

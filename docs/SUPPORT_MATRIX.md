@@ -14,7 +14,30 @@ This matrix describes evidence that DEEPBOM can derive from serialized artifacts
 | LiteRT Qualcomm evidence | Original TFLite graph plus exact compiler operation ledger | Preserves the TFLite numerical contract | `compiled_plan` only when LiteRT source/rulepack, compiler binary, normalized invocation and QNN plan are hash-bound | Dispatch state is recorded separately; per-source-op execution, transfer and latency remain unobserved |
 | NVIDIA host profile | Artifact plus observed device/software/VRAM inventory | No new artifact numerical claim | Host capability only; selected build remains unbound | No fit, tactic, assignment or execution claim |
 
-## Evidence Stages
+## Source inspection and local development
+
+Optional source-format inspection is bounded and declarative. TensorFlow GraphDef
+Const values, selected SavedModel MetaGraphs and TensorBundle variables, Keras
+configuration/call records and fixed numeric HDF5 datasets use the existing
+Model/Weight IR path. SavedModel function bodies and nested Keras declarations
+remain inventories where they cannot be safely expanded. String, variable-length,
+virtual and externally linked HDF5 values are not decoded. PyTorch checkpoints
+remain safe-envelope inspection; inspection never unpickles a Python model.
+
+Trusted local native development has separate, explicit execution entry points.
+`deepbom.inspect_native` and `python -m deepbom inspect-native` collect the same
+Snapshot/Model/Weight evidence; supplying probe inputs executes an independent
+copy. Monitor, Keras autolog, Lightning callbacks and optional metric adapters
+are documented with their qualified versions in
+[Automatic development integration](AUTOMATIC_DEVELOPMENT_INTEGRATION.md).
+Hosted MCP does not gain native Python execution from these additions.
+
+Optimization report query v1 remains the default. Opt-in v2 adds validation,
+source-bound facts, invocation queries and byte-budgeted paging on Web/CLI/local
+MCP. Native-to-artifact correspondence is an explicit supporting document with
+many-to-many, ambiguous and unmapped states; it does not establish equivalence.
+
+## Accelerator Evidence Stages
 
 Accelerator evidence uses one ordered vocabulary without implying promotion between stages:
 

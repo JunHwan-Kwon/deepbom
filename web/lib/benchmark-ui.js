@@ -1,6 +1,7 @@
 import { runtimeSignal, td } from "./dom.js";
 import { backendProfileText } from "./runtime.js";
 import { benchmarkNoise, movingAverage } from "./format.js";
+import { modelSupportsCapability } from "./model-file.js";
 
 export function p99EvidenceForSampleCount(value) {
   const measuredRuns = Math.max(0, Number.parseInt(value, 10) || 0);
@@ -25,6 +26,9 @@ export function runtimeReadinessSignals(analysis, {
   warmup = 1,
   runs = 50,
 } = {}) {
+  if (!modelSupportsCapability(analysis?.format, "runtime_execution")) {
+    return [runtimeSignal("Runtime", "Static artifact analysis only; browser execution is unavailable", "warn")];
+  }
   const unsupported = analysis.inputs
     .filter((tensor) => tensor.value_kind && tensor.value_kind !== "tensor"
       || !["FLOAT32", "INT32", "UINT8", "INT8"].includes(tensor.dtype))

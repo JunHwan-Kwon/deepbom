@@ -19,6 +19,8 @@ const server = createServer(async (request, response) => {
     response.setHeader("content-type", "text/javascript; charset=utf-8");
     response.end(`
       import { renderOnDeviceLlmView } from "/web/lib/on-device-llm-view.js";
+      import { initializeNumericalWasm } from "/web/lib/numerical-wasm.js";
+      await initializeNumericalWasm();
       const exact = (decimal) => ({ value: Number(decimal), decimal: String(decimal) });
       const scenarios = [
         { state_kind: "transformer_kv", context_length: 2048, batch_size: 1, storage_bits: 8, logical_bytes: exact(67108864), evidence_class: "DERIVED_CONDITIONAL_SCENARIO" },

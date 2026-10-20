@@ -1,6 +1,14 @@
 """Public Python SDK and launcher for the verified DEEPBOM engine."""
 
-__version__ = "2.4.0"
+__version__ = "2.5.0"
+
+from .inspection import inspect_native
+from .autolog import autolog
+
+
+def monitor(model, **options):
+    from .training.session import monitor as create
+    return create(model, **options)
 
 from .api import (  # noqa: E402
     DeepBomError,
@@ -17,6 +25,7 @@ from .api import (  # noqa: E402
     evidence_workflow,
     inspect,
     model_ir,
+    optimization_query,
     numerical_evidence,
     tensor_inventory,
     tensors,
@@ -33,7 +42,11 @@ __all__ = [
     "diff",
     "evidence_workflow",
     "inspect",
+    "inspect_native",
+    "monitor",
+    "autolog",
     "model_ir",
+    "optimization_query",
     "numerical_evidence",
     "tensors",
     "tensor_inventory",

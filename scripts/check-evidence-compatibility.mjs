@@ -58,6 +58,7 @@ for (const row of catalog.mappings) {
 for (const format of ["gguf", "safetensors", "hdf5", "pytorch_checkpoint"]) assert(!catalog.mappings.find(row => row.id === `${format}-artifact`).fields.some(field => field.target === "/graph"), "no graph promise for containers");
 assert.equal(catalog.mappings.find(row => row.id === "provenance-tea").status, "proposed");
 assert.equal(nodes.get("output-spdx").contract, "SPDX-2.3");
+assert(catalog.mappings.find(row => row.id === "managed-training-analysis").implementation.includes("channels/python/src/deepbom/training/session.py"), "Monitor lifecycle owner must be included in the source-pinned managed route");
 assert(!nodes.has("output-spdx3"));
 const invalid = structuredClone(catalog); invalid.mappings[0].status = "certified"; assert.equal(validate(invalid), false);
 

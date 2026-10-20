@@ -1,3 +1,4 @@
+import { protobufVarint } from "./portable-protobuf.js";
 import { logicalBytesForElements, safePositiveShapeElementCount as shapeProduct } from "./tensor-size.js";
 import { arraysEqual as sameShape } from "./array-contract.js";
 import { ProtoReader } from "./tflite-runtime-info-adapter.js";
@@ -42,6 +43,8 @@ export const COREML_FORMAT_SOURCE = Object.freeze({
   compute_plan_sha256: "977c84697df762a1958bd1c8e562db8e9cb95270254508983e11519c57f8e497",
   neural_network_proto: COREML_NEURAL_NETWORK_SOURCE.neural_network_proto,
   neural_network_proto_sha256: COREML_NEURAL_NETWORK_SOURCE.neural_network_proto_sha256,
+  neural_network_builder: COREML_NEURAL_NETWORK_SOURCE.neural_network_builder,
+  neural_network_builder_sha256: COREML_NEURAL_NETWORK_SOURCE.neural_network_builder_sha256,
   quantization_implementation: COREML_NEURAL_NETWORK_SOURCE.quantization_implementation,
   quantization_implementation_sha256: COREML_NEURAL_NETWORK_SOURCE.quantization_implementation_sha256,
   mil_proto: COREML_MIL_SOURCE.mil_proto,
@@ -1285,8 +1288,8 @@ function graphFromNeuralNetwork(network, inputs, outputs) {
   const ensureTensor = (name, contract = null) => {
     if (tensorByName.has(name)) {
       const tensor = tensors[tensorByName.get(name)];
-      if (contract?.shape?.length && tensor.shape.length && contract.shape.some((value, index) => value !== tensor.shape[index])
-        || contract?.shape?.length && tensor.shape.length !== contract.shape.length) {
+      if (contract?.shape?.length && tensor.shape.length &&
+        (tensor.shape.length !== contract.shape.length || contract.shape.some((value, index) => value !== tensor.shape[index]))) {
         throw new Error(`Core ML tensor ${name} has conflicting serialized shapes ${tensor.shape.join("x")} (${tensor.shape_source}) and ${contract.shape.join("x")} (${contract.shape_source || "unspecified source"})`);
       }
       if (contract?.shape?.length && !tensor.shape.length) {
@@ -1313,13 +1316,23 @@ function graphFromNeuralNetwork(network, inputs, outputs) {
   const inputTensorIndices = inputs.map((item) => ensureTensor(item.name, coreMlInputTensorContract(item, network)));
   const ops = [];
   for (const layer of network.layers) {
-    const inputIds = layer.inputs.map((name, index) => ensureTensor(name, layer.input_shapes[index] ? {
+    // The pinned builder copies the reshape target (including 0/-1 tokens)
+    // into BOTH descriptors. These are not concrete input/output shapes.
+    // Recognize only that exact serialization, retain it as evidence, and
+    // derive from the producer's shape plus targetShape. Other conflicts fail.
+    const target = layer.attributes?.target_shape;
+    const templateDescriptors = layer.type === "RANK_PRESERVING_RESHAPE"
+      && layer.inputs.length === 1 && layer.outputs.length === 1
+      && target?.some((value) => value <= 0)
+      && sameShape(layer.input_shapes[0] || [], target)
+      && sameShape(layer.output_shapes[0] || [], target);
+    const inputIds = layer.inputs.map((name, index) => ensureTensor(name, !templateDescriptors && layer.input_shapes[index] ? {
       shape: layer.input_shapes[index], dtype: "UNKNOWN", shape_source: `coreml_layer_input_descriptor:${layer.name}:${layer.type}`,
     } : null));
     const inputShapes = inputIds.map((id) => tensors[id]?.shape || []);
     const derived = deriveLegacyLayer(layer, inputShapes);
     const outputIds = layer.outputs.map((name, index) => {
-      const serialized = layer.output_shapes[index] || null;
+      const serialized = templateDescriptors ? null : layer.output_shapes[index] || null;
       const inferred = derived.output_shapes[index] || null;
       if (serialized?.length && inferred?.length && !sameShape(serialized, inferred)) {
         throw new Error(`Core ML layer ${layer.name} serialized output shape ${serialized.join("x")} conflicts with the operation contract ${inferred.join("x")}`);
@@ -1344,6 +1357,14 @@ function graphFromNeuralNetwork(network, inputs, outputs) {
       coreml_layer_name: layer.name,
       coreml_layer_type_field: layer.type_field,
       coreml_attributes: layer.attributes,
+      ...(templateDescriptors ? { coreml_shape_annotation: {
+        status: "serialized_reshape_templates_not_tensor_shapes",
+        input_descriptors: layer.input_shapes,
+        output_descriptors: layer.output_shapes,
+        reason: "Both descriptors equal targetShape and contain reshape tokens. Shapes are derived from the producer and operation contract; the serialized descriptors are retained, not asserted as concrete shapes.",
+        source: `https://github.com/apple/coremltools/blob/${COREML_NEURAL_NETWORK_SOURCE.source_commit}/${COREML_NEURAL_NETWORK_SOURCE.neural_network_builder}`,
+        source_sha256: COREML_NEURAL_NETWORK_SOURCE.neural_network_builder_sha256,
+      } } : {}),
       inputs: inputIds,
       outputs: outputIds,
       input_shapes: inputIds.map((id) => tensors[id]?.shape || []),
@@ -1458,6 +1479,7 @@ function graphFromNeuralNetwork(network, inputs, outputs) {
         storage: weight.storage,
         byte_length: weight.byte_length,
         value_count: weight.value_count,
+        ...(weight.shape ? { shape: weight.shape, channel_axis: weight.channel_axis, shape_basis: weight.shape_basis } : {}),
         numerical_integrity: weight.numerical_integrity,
         ...(weight.optional_statistics ? { optional_statistics: weight.optional_statistics.finish() } : {}),
       })),
@@ -2230,6 +2252,11 @@ function analysisFromHeader(header, filename, fileSize) {
       classical_model_sources: COREML_CLASSICAL_SOURCE.files.map((row) => ({ path: row.path, sha256: row.sha256 })),
     },
     parser_scope: parserScope,
+    ...(graph?.ops.some((op) => op.coreml_shape_annotation) ? { shape_annotation_summary: {
+      status: "contains_builder_reshape_templates",
+      affected_layer_count: graph.ops.filter((op) => op.coreml_shape_annotation).length,
+      reason: "Some serialized input/output descriptors contain the builder's reshape templates. Actual shapes use producer tensors and targetShape; original descriptors and source evidence remain attached to each affected operation.",
+    } } : {}),
     deployment_floor: deploymentFloor,
     flexible_input_scenarios: flexibleInputScenarios,
     preprocessing_binding: {
@@ -2377,17 +2404,17 @@ class BlobProtoCursor {
     return this.cache[this.position++ - this.cacheStart];
   }
   async varint() {
-    let value = 0n;
-    for (let shift = 0n; shift < 70n; shift += 7n) {
-      const byte = await this.byte();
-      value |= BigInt(byte & 0x7f) << shift;
-      if (!(byte & 0x80)) {
-        if (value > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("Core ML protobuf integer exceeds the safe integer range");
-        return Number(value);
-      }
+    // Only I/O buffering stays asynchronous; the shared decoder owns the value.
+    const bytes = [];
+    for (let i = 0; i < 10; i++) {
+      const byte = await this.byte(); bytes.push(byte);
+      if (!(byte & 0x80)) break;
     }
-    throw new Error("Core ML protobuf contains an overlong varint");
+    const { value } = protobufVarint(Uint8Array.from(bytes), 0, "Core ML protobuf");
+    if (value > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("Core ML protobuf integer exceeds the safe integer range");
+    return Number(value);
   }
+
   async bytes(length) {
     if (!Number.isSafeInteger(length) || length < 0 || this.position + length > this.end) throw new Error("Core ML protobuf field exceeds the message boundary");
     const bytes = new Uint8Array(await this.file.slice(this.position, this.position + length).arrayBuffer());

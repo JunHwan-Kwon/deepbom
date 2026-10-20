@@ -2,6 +2,7 @@
 export type JsonDocument = Record<string, unknown>;
 export interface Limits { timeoutMs?: number; maxOutputBytes?: number; }
 export interface InspectOptions extends Limits {
+  tfMetagraph?: number;
   scan?: "auto" | "structure" | "integrity" | "full";
   expectedSha256?: string;
   gate?: "defects";
@@ -76,6 +77,7 @@ export class DeepBomIdentityMismatch extends DeepBomError {}
 export class DeepBomTimeout extends DeepBomError {}
 export class DeepBomOutputTooLarge extends DeepBomError {}
 export function capabilities(options?: Limits): Promise<JsonDocument>;
+export function optimizationQuery(report: string, options?: Limits & { version?: 1 | 2; section?: "summary" | "changes" | "structure" | "subject" | "facts" | "validation" | "invocations"; subject?: string; search?: string; offset?: number; limit?: number; maxBytes?: number; sort?: "source" | "macs_desc"; expectedSha256?: string }): Promise<JsonDocument>;
 export function numericalEvidence(artifact: string, options: NumericalEvidenceOptions): Promise<NumericalEvidenceResult>;
 export function inspect(artifact: string, options?: InspectOptions): Promise<ReviewSummary>;
 export function audit(artifact: string, options?: InspectOptions & { output?: "envelope"; sections?: never }): Promise<EvidenceEnvelope>;

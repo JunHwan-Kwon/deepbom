@@ -1,5 +1,8 @@
+import { protobufWireFields, protobufPackedFloats } from "./lib/portable-protobuf.js";
 import { ONNX_TENSOR_TYPES as TENSOR_TYPES } from "./lib/onnx-tensor-types.js";
 import { shapeText } from "./lib/format.js";
+import { numericalWasm } from "./lib/numerical-wasm.js";
+import { portableContract, aggregateExactCounts } from "./lib/portable-contracts.js";
 import { arraysEqual as sameShape } from "./lib/array-contract.js";
 import { logicalBytesForElements, safeShapeElementCount as safeExactProduct, safeIntegerCodeRange as inputQuantizedCodeRange } from "./lib/tensor-size.js";
 
@@ -1335,85 +1338,18 @@ function parseOpset(bytes) {
 
 function readFields(bytes) {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const fields = [];
-  let offset = 0;
-  while (offset < bytes.byteLength) {
-    const tag = readVarint(view, offset);
-    offset = tag.offset;
-    const no = Number(tag.value >> 3n);
-    const wire = Number(tag.value & 7n);
-    if (wire === 0) {
-      const value = readVarint(view, offset);
-      offset = value.offset;
-      fields.push({ no, wire, value: value.value });
-    } else if (wire === 1) {
-      ensureFieldBytes(bytes, offset, 8, no, wire);
-      fields.push({ no, wire, bytes: bytes.slice(offset, offset + 8) });
-      offset += 8;
-    } else if (wire === 2) {
-      const length = readVarint(view, offset);
-      offset = length.offset;
-      const end = offset + toSafeNumber(length.value);
-      ensureFieldBytes(bytes, offset, end - offset, no, wire);
-      fields.push({ no, wire, bytes: bytes.slice(offset, end) });
-      offset = end;
-    } else if (wire === 5) {
-      ensureFieldBytes(bytes, offset, 4, no, wire);
-      fields.push({ no, wire, float32: view.getFloat32(offset, true), bytes: bytes.slice(offset, offset + 4) });
-      offset += 4;
-    } else {
-      throw new Error(`Unsupported ONNX protobuf wire type ${wire}`);
-    }
-  }
-  return fields;
-}
-
-function ensureFieldBytes(bytes, offset, length, fieldNo, wire) {
-  if (length < 0 || offset + length > bytes.byteLength) {
-    throw new Error(`Malformed ONNX protobuf: field ${fieldNo} wire ${wire} exceeds message bounds`);
-  }
-}
-
-function readVarint(view, offset) {
-  let shift = 0n;
-  let value = 0n;
-  let cursor = offset;
-  while (cursor < view.byteLength) {
-    const byte = view.getUint8(cursor++);
-    value |= BigInt(byte & 0x7f) << shift;
-    if ((byte & 0x80) === 0) return { value, offset: cursor };
-    shift += 7n;
-  }
-  throw new Error("Unterminated ONNX protobuf varint");
+  return protobufWireFields(bytes, "ONNX").map(({ no, wire, value, offset, length }) => wire === 0
+    ? { no, wire, value: BigInt(value) }
+    : { no, wire, bytes: bytes.slice(offset, offset + length), ...(wire === 5 ? { float32: view.getFloat32(offset, true) } : {}) });
 }
 
 function readPackedVarints(bytes) {
-  const values = [];
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  let offset = 0;
-  while (offset < bytes.byteLength) {
-    const value = readVarint(view, offset);
-    values.push(value.value);
-    offset = value.offset;
-  }
-  return values;
+  return Array.from(numericalWasm().protobuf_packed_varints(bytes));
 }
 
-function readPackedFloat32(bytes) {
-  const values = [];
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  for (let offset = 0; offset + 4 <= bytes.byteLength; offset += 4) {
-    values.push(view.getFloat32(offset, true));
-  }
-  return values;
-}
+function readPackedFloat32(bytes) { return protobufPackedFloats(bytes, 4, "ONNX"); }
 
-function readPackedFloat64(bytes) {
-  const values = [];
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  for (let offset = 0; offset + 8 <= bytes.byteLength; offset += 8) values.push(view.getFloat64(offset, true));
-  return values;
-}
+function readPackedFloat64(bytes) { return protobufPackedFloats(bytes, 8, "ONNX"); }
 
 function signedVarint(value, bits) {
   const width = BigInt(bits);
@@ -1421,20 +1357,6 @@ function signedVarint(value, bits) {
   const mask = (1n << width) - 1n;
   const normalized = value & mask;
   return (normalized & sign) !== 0n ? normalized - (1n << width) : normalized;
-}
-
-function broadcastShape(left, right) {
-  if (!Array.isArray(left) || !Array.isArray(right)) return null;
-  const out = [];
-  const len = Math.max(left.length, right.length);
-  for (let i = 0; i < len; i++) {
-    const a = left[left.length - 1 - i] ?? 1;
-    const b = right[right.length - 1 - i] ?? 1;
-    if (!Number.isSafeInteger(a) || !Number.isSafeInteger(b) || a < 0 || b < 0
-      || (a !== b && a !== 1 && b !== 1)) return null;
-    out.unshift(a === 1 ? b : b === 1 ? a : a);
-  }
-  return out;
 }
 
 function tensorShapeKnown(shape, shapeDeclared = Array.isArray(shape) && shape.length > 0) {
@@ -1453,15 +1375,6 @@ function tensorContractBlocksDeterministicCost(tensor) {
     || tensor?.conditional_shape_contract?.status === "assessed_partial";
 }
 
-function exactNonnegativeProduct(values) {
-  let product = 1n;
-  for (const value of values) {
-    if (typeof value === "bigint" ? value < 0n : !Number.isSafeInteger(value) || value < 0) return null;
-    product *= BigInt(value);
-  }
-  return product;
-}
-
 function exactNonnegativeInteger(value) {
   if (typeof value === "bigint") return value >= 0n ? value : null;
   if (Number.isSafeInteger(value) && value >= 0) return BigInt(value);
@@ -1469,13 +1382,13 @@ function exactNonnegativeInteger(value) {
 }
 
 function exactNonnegativeSum(values) {
-  let total = 0n;
+  const integers = [];
   for (const value of values) {
     const exact = exactNonnegativeInteger(value);
     if (exact == null) return null;
-    total += exact;
+    integers.push(String(exact));
   }
-  return total;
+  return BigInt(aggregateExactCounts(integers).decimal);
 }
 
 export function summarizeOnnxAssessedMacs(values) {
@@ -3703,11 +3616,6 @@ export function estimateOnnxMacs(node, tensorMap) {
   const weightInputIndex = ["QLinearConv", "QLinearMatMul"].includes(node.opType) ? 3 : 1;
   const weight = tensorMap.get(node.inputs[weightInputIndex]);
   const output = tensorMap.get(node.outputs[0]);
-  const assessed = (value, reason) => {
-    const exact = exactNonnegativeInteger(value);
-    if (exact == null) return { value: null, value_decimal: null, status: "not_assessed", reason: `${reason} The derived MAC cardinality is not a valid nonnegative integer.` };
-    return { value: safeBigIntNumber(exact), value_decimal: exact.toString(), status: "assessed", reason };
-  };
   const notAssessed = (reason) => ({ value: null, value_decimal: null, status: "not_assessed", reason });
   const costClass = classifyOnnxMacOperation(node.opType, isStandardOnnxNode(node));
   if (costClass === "non_standard_domain") return notAssessed(`${normalizeOnnxDomain(node.domain)}:${node.opType || "UNKNOWN"} is not an ai.onnx operator; MAC semantics were not inferred from its name.`);
@@ -3722,198 +3630,23 @@ export function estimateOnnxMacs(node, tensorMap) {
   if (invalidContract) {
     return notAssessed(`${node.opType} nominal MACs are blocked by invalid tensor contract ${invalidContract.name}; no stale declared shape is used.`);
   }
-  if ([input, weight, output].filter(Boolean).some((tensor) => !isDenseTensorValue(tensor))) {
+  if ([...(node.inputs || []), ...(node.outputs || [])].filter(Boolean)
+    .map(name => tensorMap.get(name)).filter(Boolean).some(tensor => !isDenseTensorValue(tensor))) {
     return notAssessed(`${node.opType} MACs require dense tensor values; a declared non-dense TypeProto participates in this signature.`);
   }
-  if (node.opType === "Attention") {
-    const key = tensorMap.get(node.inputs[1]);
-    const valueTensor = tensorMap.get(node.inputs[2]);
-    const pastKey = tensorMap.get(node.inputs[4]);
-    const pastValue = tensorMap.get(node.inputs[5]);
-    if (![input, key, valueTensor, output].every((tensor) => tensor && knownTensorShape(tensor))) {
-      return notAssessed("Attention nominal MACs require static Q, K, V, and Y shapes.");
-    }
-    const rank = input.shape.length;
-    if (![3, 4].includes(rank) || key.shape.length !== rank || valueTensor.shape.length !== rank) return notAssessed("Attention Q, K, and V must share source-compatible rank 3 or 4.");
-    let batch, queryHeads, kvHeads, querySequence, keySequence, qkHeadSize, valueHeadSize, expectedOutput;
-    if (rank === 4) {
-      [batch, queryHeads, querySequence, qkHeadSize] = input.shape;
-      kvHeads = key.shape[1]; keySequence = key.shape[2]; valueHeadSize = valueTensor.shape[3];
-      expectedOutput = [batch, queryHeads, querySequence, valueHeadSize];
-      if (key.shape[0] !== batch || valueTensor.shape[0] !== batch || key.shape[1] !== valueTensor.shape[1]
-        || key.shape[2] !== valueTensor.shape[2] || key.shape[3] !== qkHeadSize
-        || queryHeads < kvHeads || queryHeads % kvHeads !== 0) return notAssessed("Attention 4D Q/K/V head or sequence dimensions are incompatible.");
-    } else {
-      batch = input.shape[0]; querySequence = input.shape[1]; keySequence = key.shape[1];
-      queryHeads = attrInt(node, "q_num_heads", 0); kvHeads = attrInt(node, "kv_num_heads", 0);
-      if (queryHeads <= 0 || kvHeads <= 0 || queryHeads < kvHeads || queryHeads % kvHeads !== 0
-        || input.shape[2] % queryHeads !== 0 || key.shape[2] % kvHeads !== 0 || valueTensor.shape[2] % kvHeads !== 0) {
-        return notAssessed("Attention 3D hidden widths and q_num_heads/kv_num_heads are incompatible.");
-      }
-      qkHeadSize = input.shape[2] / queryHeads;
-      valueHeadSize = valueTensor.shape[2] / kvHeads;
-      if (key.shape[0] !== batch || valueTensor.shape[0] !== batch || key.shape[1] !== valueTensor.shape[1]
-        || key.shape[2] / kvHeads !== qkHeadSize) return notAssessed("Attention 3D Q/K/V batch, sequence, or head dimensions are incompatible.");
-      expectedOutput = [batch, querySequence, queryHeads * valueHeadSize];
-    }
-    if (!sameShape(output.shape, expectedOutput)) return notAssessed("Attention Y shape is incompatible with the source-defined Q and V contract.");
-    let pastSequence = 0;
-    if (pastKey || pastValue) {
-      if (!(pastKey && pastValue && knownTensorShape(pastKey) && knownTensorShape(pastValue))
-        || pastKey.shape.length !== 4 || pastValue.shape.length !== 4
-        || pastKey.shape[0] !== batch || pastValue.shape[0] !== batch || pastKey.shape[1] !== kvHeads || pastValue.shape[1] !== kvHeads
-        || pastKey.shape[2] !== pastValue.shape[2] || pastKey.shape[3] !== qkHeadSize || pastValue.shape[3] !== valueHeadSize) {
-        return notAssessed("Attention past key/value cache contracts are incomplete or incompatible.");
-      }
-      pastSequence = pastKey.shape[2];
-    }
-    const totalSequence = BigInt(pastSequence) + BigInt(keySequence);
-    const value = exactNonnegativeProduct([batch, queryHeads, querySequence, totalSequence, BigInt(qkHeadSize) + BigInt(valueHeadSize)]);
-    return assessed(value, "B*q_num_heads*q_sequence_length*total_sequence_length*(qk_head_size+v_head_size), summing the two source-defined dense Attention MatMul contractions; mask, softmax, and backend pruning are outside nominal MACs.");
+  const tensor = value => value ? { shape: value.shape, known: knownTensorShape(value), dense: isDenseTensorValue(value) } : null;
+  const attributes = {};
+  for (const [name, fallback] of [["group", 1], ["offset_group", 1], ["transA", 0], ["transB", 0],
+    ["q_num_heads", 0], ["kv_num_heads", 0], ["hidden_size", 0], ["layout", 0]]) attributes[name] = attrInt(node, name, fallback);
+  for (const name of ["strides", "dilations", "output_padding", "pads", "kernel_shape", "output_shape"]) {
+    if (node.attributes.has(name)) attributes[name] = attrInts(node, name);
   }
-  if (node.opType === "DeformConv") {
-    const offset = tensorMap.get(node.inputs[2]);
-    const bias = tensorMap.get(node.inputs[3]);
-    const mask = tensorMap.get(node.inputs[4]);
-    if (![input, weight, offset, output].every((tensor) => tensor && knownTensorShape(tensor))) return notAssessed("DeformConv requires static X, W, offset, and Y shapes.");
-    const x = input.shape, w = weight.shape, y = output.shape, rank = x.length, spatialRank = rank - 2;
-    const group = attrInt(node, "group", 1), offsetGroup = attrInt(node, "offset_group", 1);
-    if (rank < 3 || w.length !== rank || y.length !== rank || offset.shape.length !== rank || group <= 0 || offsetGroup <= 0
-      || x[0] !== y[0] || x[1] !== w[1] * group || x[1] % offsetGroup !== 0 || y[1] !== w[0] || w[0] % group !== 0
-      || w.slice(2).some((dimension) => dimension <= 0)) return notAssessed("DeformConv X/W/Y ranks, channels, groups, or kernel dimensions are incompatible.");
-    const kernelVolume = w.slice(2).reduce((product, dimension) => product * dimension, 1);
-    const expectedOffset = [x[0], offsetGroup * kernelVolume * spatialRank, ...y.slice(2)];
-    if (!sameShape(offset.shape, expectedOffset)) return notAssessed("DeformConv offset shape is incompatible with offset_group, kernel volume, spatial rank, and Y.");
-    if (bias && (!knownTensorShape(bias) || !sameShape(bias.shape, [w[0]]))) return notAssessed("DeformConv optional bias shape is incompatible with output channels.");
-    if (mask) {
-      const expectedMask = [x[0], offsetGroup * kernelVolume, ...y.slice(2)];
-      if (!knownTensorShape(mask) || !sameShape(mask.shape, expectedMask)) return notAssessed("DeformConv optional mask shape is incompatible with offset_group, kernel volume, and Y.");
-    }
-    const value = exactNonnegativeProduct([...y, ...w.slice(1)]);
-    return assessed(value, "product(Y shape)*product(W shape excluding output-channel axis), counting the source-defined sampled-value/weight contraction only; interpolation arithmetic is excluded from nominal tensor-contraction MACs.");
-  }
-  if (node.opType === "Einsum") {
-    const inputs = node.inputs.filter(Boolean).map((name) => tensorMap.get(name));
-    if (!inputs.length || inputs.some((tensor) => !tensor || !knownTensorShape(tensor))) return notAssessed("Einsum nominal MACs require every operand shape to be static.");
-    const parsed = parseOnnxEinsumEquation(attrString(node, "equation", ""), inputs.map((tensor) => tensor.shape.length));
-    if (parsed.status !== "assessed") return notAssessed(`Einsum equation contract is invalid: ${parsed.reason}.`);
-    if (inputs.length === 1) return { value: 0, value_decimal: "0", status: "not_applicable", reason: "A one-input Einsum has no binary tensor contraction under the nominal MAC metric." };
-    if (inputs.length !== 2) return notAssessed("Einsum with more than two operands has contraction-order-dependent multiplication work; ONNX does not serialize an evaluation path.");
-    const dimensions = new Map();
-    for (let inputIndex = 0; inputIndex < inputs.length; inputIndex += 1) {
-      for (let axis = 0; axis < parsed.operands[inputIndex].length; axis += 1) {
-        const label = parsed.operands[inputIndex][axis], value = inputs[inputIndex].shape[axis];
-        const previous = dimensions.get(label);
-        if (label.startsWith("@ellipsis:")) {
-          if (previous != null && previous !== 1 && value !== 1 && previous !== value) return notAssessed("Einsum ellipsis dimensions are not broadcast-compatible.");
-          dimensions.set(label, previous == null || previous === 1 ? value : previous);
-        } else if (previous != null && previous !== value) return notAssessed(`Einsum label ${label} has incompatible dimensions.`);
-        else dimensions.set(label, value);
-      }
-    }
-    const expectedOutput = parsed.output.map((label) => dimensions.get(label));
-    if (!sameShape(output.shape, expectedOutput)) return notAssessed("Einsum output shape is incompatible with the parsed equation and operands.");
-    const value = exactNonnegativeProduct(parsed.all_labels.map((label) => dimensions.get(label)));
-    return assessed(value, "Product of every unique index-domain extent for a two-input Einsum, equal to one pairwise product/accumulation term per complete Einstein index assignment.");
-  }
-  if (node.opType === "Conv" || node.opType === "QLinearConv" || node.opType === "ConvInteger") {
-    if (!input || !weight || !output) return notAssessed(`${node.opType} input, weight, or output tensor metadata is missing.`);
-    const group = attrInt(node, "group", 1);
-    const outShape = output.shape || [];
-    const inShape = input?.shape || [];
-    const weightShape = weight.shape || [];
-    if (inShape.length < 3 || outShape.length !== inShape.length || weightShape.length !== inShape.length
-      || !knownTensorShape(input) || !knownTensorShape(weight) || !knownTensorShape(output)) {
-      return notAssessed(`${node.opType} MACs require known equal-rank N,C,D1...Dn input/output and M,C/group,k1...kn weight shapes.`);
-    }
-    const groupedInputChannels = safeExactProduct([weightShape[1], group]);
-    if (!Number.isSafeInteger(group) || group <= 0 || groupedInputChannels == null || weightShape.slice(0, 2).some((value) => value <= 0)
-      || weightShape.slice(2).some((value) => value <= 0)
-      || inShape[0] !== outShape[0] || outShape[1] !== weightShape[0]
-      || inShape[1] !== groupedInputChannels || weightShape[0] % group !== 0) {
-      return notAssessed(`${node.opType} tensor channels, batch, or group dimensions are incompatible.`);
-    }
-    const value = exactNonnegativeProduct([...outShape, ...weightShape.slice(1)]);
-    return assessed(value, "product(output shape) * product(weight shape excluding output-channel axis) from compatible ONNX N,C,D1...Dn and M,C/group,k1...kn tensors.");
-  }
-  if (node.opType === "ConvTranspose") {
-    if (!input || !weight || !output) return notAssessed("ConvTranspose input, weight, or output tensor metadata is missing.");
-    const x = input.shape || [], w = weight.shape || [], y = output.shape || [], rank = x.length, spatialRank = rank - 2;
-    const group = attrInt(node, "group", 1);
-    if (rank < 3 || w.length !== rank || y.length !== rank || !knownTensorShape(input) || !knownTensorShape(weight) || !knownTensorShape(output)
-      || !Number.isSafeInteger(group) || group <= 0 || x[0] !== y[0] || x[1] !== w[0] || x[1] % group !== 0 || y[1] !== w[1] * group
-      || w.slice(1).some((value) => value <= 0)) return notAssessed("ConvTranspose requires compatible known N,C,D1...Dn, C,M/group,k1...kn, and N,M,O1...On tensors with a positive group.");
-    const strides = exactSpatialAttribute(node, "strides", spatialRank, 1, false);
-    const dilations = exactSpatialAttribute(node, "dilations", spatialRank, 1, false);
-    const outputPadding = exactSpatialAttribute(node, "output_padding", spatialRank, 0, true);
-    const pads = convTransposePads(node, x.slice(2), w.slice(2), y.slice(2), strides, dilations, outputPadding);
-    if (!strides || !dilations || !outputPadding || !pads) return notAssessed("ConvTranspose spatial attributes or serialized output shape are inconsistent with the ONNX contract.");
-    const pairs = x.slice(2).map((size, axis) => convTransposeAxisPairs(size, w[axis + 2], strides[axis], dilations[axis], pads[axis], y[axis + 2]));
-    if (pairs.some((value) => value == null)) return notAssessed("ConvTranspose contributing-pair count exceeds the bounded exact arithmetic path.");
-    let value = BigInt(x[0]) * BigInt(x[1]) * BigInt(w[1]);
-    for (const pair of pairs) value *= pair;
-    return assessed(value, "Exact contributing input/kernel pairs per spatial axis times N*C*(M/group), after ONNX pad, stride, dilation, output-padding, output-shape, and group validation.");
-  }
-  if (["RNN", "GRU", "LSTM"].includes(node.opType)) {
-    const recurrent = tensorMap.get(node.inputs[2]);
-    const x = input?.shape || [], w = weight?.shape || [], r = recurrent?.shape || [];
-    const gates = node.opType === "LSTM" ? 4 : node.opType === "GRU" ? 3 : 1;
-    const hidden = attrInt(node, "hidden_size", 0), layout = attrInt(node, "layout", 0), direction = attrString(node, "direction", "forward");
-    const directions = direction === "bidirectional" ? 2 : ["forward", "reverse"].includes(direction) ? 1 : 0;
-    if (![input, weight, recurrent].every((tensor) => tensor && isDenseTensorValue(tensor) && knownTensorShape(tensor))
-      || x.length !== 3 || w.length !== 3 || r.length !== 3 || ![0, 1].includes(layout) || !directions || hidden <= 0
-      || w[0] !== directions || r[0] !== directions || w[1] !== gates * hidden || r[1] !== gates * hidden
-      || w[2] !== x[2] || r[2] !== hidden) return notAssessed(`${node.opType} MACs require source-compatible X, W, R, hidden_size, direction, layout, and gate dimensions.`);
-    const sequence = x[layout ? 1 : 0], batch = x[layout ? 0 : 1];
-    if (output && knownTensorShape(output)) {
-      const expected = layout ? [batch, sequence, directions, hidden] : [sequence, directions, batch, hidden];
-      if (!sameShape(output.shape, expected)) return notAssessed(`${node.opType} Y shape is incompatible with direction, layout, and hidden_size.`);
-    }
-    const value = exactNonnegativeProduct([sequence, batch, directions, gates, hidden, BigInt(x[2]) + BigInt(hidden)]);
-    return assessed(value, `sequence*batch*directions*${gates}*hidden_size*(input_size+hidden_size), counting source-defined input and recurrent matrix contractions.`);
-  }
-  if (node.opType === "Gemm") {
-    if (!input || !weight || !output) return notAssessed("Gemm input, weight, or output tensor metadata is missing.");
-    const a = input.shape || [];
-    const b = weight.shape || [];
-    if (a.length !== 2 || b.length !== 2 || !knownTensorShape(input) || !knownTensorShape(weight) || !knownTensorShape(output)) {
-      return notAssessed("Gemm MACs require known rank-2 A and B shapes.");
-    }
-    const transAValue = attrInt(node, "transA", 0);
-    const transBValue = attrInt(node, "transB", 0);
-    if (![0, 1].includes(transAValue) || ![0, 1].includes(transBValue)) return notAssessed("Gemm transA/transB must be 0 or 1.");
-    const transA = transAValue === 1;
-    const transB = transBValue === 1;
-    const m = transA ? a[1] : a[0];
-    const kA = transA ? a[0] : a[1];
-    const kB = transB ? b[1] : b[0];
-    const n = transB ? b[0] : b[1];
-    if (kA !== kB || !sameShape(output.shape, [m, n])) return notAssessed("Gemm inner dimensions or output shape are incompatible after transpose attributes.");
-    const value = exactNonnegativeProduct([m, n, kA]);
-    return assessed(value, "M*N*K from compatible Gemm A/B/output shapes after transA/transB.");
-  }
-  if (["MatMul", "QLinearMatMul", "MatMulInteger"].includes(node.opType)) {
-    if (!input || !weight || !output) return notAssessed(`${node.opType} input, weight, or output tensor metadata is missing.`);
-    const originalA = input.shape || [];
-    const originalB = weight.shape || [];
-    if (originalA.length < 1 || originalB.length < 1 || !knownTensorShape(input) || !knownTensorShape(weight) || !knownTensorShape(output)) {
-      return notAssessed(`${node.opType} MACs require known rank-1-or-greater input and output shapes.`);
-    }
-    const vectorA = originalA.length === 1;
-    const vectorB = originalB.length === 1;
-    const a = vectorA ? [1, ...originalA] : originalA;
-    const b = vectorB ? [...originalB, 1] : originalB;
-    if (a.at(-1) !== b.at(-2)) return notAssessed(`${node.opType} inner dimensions are incompatible.`);
-    const batchShape = broadcastShape(a.slice(0, -2), b.slice(0, -2));
-    if (batchShape === null) return notAssessed(`${node.opType} batch dimensions are not broadcast-compatible.`);
-    const expectedOutput = [...batchShape, a.at(-2), b.at(-1)];
-    if (vectorA) expectedOutput.splice(-2, 1);
-    if (vectorB) expectedOutput.pop();
-    if (!sameShape(output.shape, expectedOutput)) return notAssessed(`${node.opType} output shape is incompatible with ONNX MatMul rank promotion and batch broadcasting.`);
-    const value = exactNonnegativeProduct([...batchShape, a.at(-2), b.at(-1), a.at(-1)]);
-    return assessed(value, "broadcast_batch*M*N*K after ONNX rank-1 promotion, batch broadcasting, and output-shape validation.");
-  }
-  return notAssessed(`${node.opType} MAC estimation is not implemented for this ONNX operator signature.`);
+  attributes.auto_pad = attrString(node, "auto_pad", "NOTSET");
+  attributes.direction = attrString(node, "direction", "forward");
+  const inputs = (node.opType === "Einsum" ? node.inputs.filter(Boolean) : node.inputs).map(name => tensor(tensorMap.get(name)));
+  const equation = node.opType === "Einsum" && inputs.every(t => t?.known)
+    ? parseOnnxEinsumEquation(attrString(node, "equation", ""), inputs.map(t => t.shape.length)) : null;
+  return portableContract("contraction_cost", { op: node.opType, input: tensor(input), weight: tensor(weight), output: tensor(output), attributes, inputs, equation });
 }
 
 function assessOnnxScopeIntrinsicCost(graph, tensorMap) {
@@ -4541,76 +4274,6 @@ function attrInt(node, name, fallback) {
 function attrString(node, name, fallback = "") {
   const value = node.attributes.get(name)?.s;
   return typeof value === "string" ? value : fallback;
-}
-
-function exactSpatialAttribute(node, name, rank, fallback, allowZero) {
-  if (!node.attributes.has(name)) return Array(rank).fill(fallback);
-  const values = attrInts(node, name);
-  return values.length === rank && values.every((value) => allowZero ? value >= 0 : value > 0) ? values : null;
-}
-
-function convTransposePads(node, input, kernel, output, strides, dilations, outputPadding) {
-  if (![strides, dilations, outputPadding].every(Boolean)
-    || outputPadding.some((value, axis) => value >= strides[axis] && value >= dilations[axis])) return null;
-  const rank = input.length, autoPad = attrString(node, "auto_pad", "NOTSET"), outputShape = attrInts(node, "output_shape");
-  const kernelShape = node.attributes.has("kernel_shape") ? attrInts(node, "kernel_shape") : kernel;
-  if (kernelShape.length !== rank || kernelShape.some((value, axis) => value !== kernel[axis])) return null;
-  if (node.attributes.has("output_shape") && (outputShape.length !== rank || outputShape.some((value, axis) => value !== output[axis]))) return null;
-  if (!["NOTSET", "VALID", "SAME_UPPER", "SAME_LOWER"].includes(autoPad)) return null;
-  let pads;
-  if (outputShape.length || autoPad.startsWith("SAME_")) {
-    if (!outputShape.length && output.some((value, axis) => BigInt(value) !== BigInt(input[axis]) * BigInt(strides[axis]))) return null;
-    pads = [];
-    const ends = [];
-    for (let axis = 0; axis < rank; axis += 1) {
-      const total = BigInt(strides[axis]) * BigInt(input[axis] - 1) + BigInt(outputPadding[axis])
-        + BigInt(kernel[axis] - 1) * BigInt(dilations[axis]) + 1n - BigInt(output[axis]);
-      if (total < 0n || total > BigInt(Number.MAX_SAFE_INTEGER)) return null;
-      const start = autoPad === "SAME_UPPER" ? total / 2n : total - total / 2n;
-      pads.push(Number(start));
-      ends.push(Number(total - start));
-    }
-    pads.push(...ends);
-  } else if (autoPad === "VALID") {
-    if (node.attributes.has("pads")) return null;
-    pads = Array(rank * 2).fill(0);
-  } else {
-    pads = exactSpatialAttribute(node, "pads", rank * 2, 0, true);
-  }
-  if (!pads) return null;
-  for (let axis = 0; axis < rank; axis += 1) {
-    const expected = BigInt(strides[axis]) * BigInt(input[axis] - 1) + BigInt(outputPadding[axis])
-      + BigInt(kernel[axis] - 1) * BigInt(dilations[axis]) + 1n - BigInt(pads[axis]) - BigInt(pads[axis + rank]);
-    if (expected !== BigInt(output[axis])) return null;
-  }
-  return pads;
-}
-
-function floorDiv(value, divisor) {
-  let quotient = value / divisor;
-  if (value % divisor < 0n) quotient -= 1n;
-  return quotient;
-}
-
-function convTransposeAxisPairs(input, kernel, stride, dilation, padStart, output) {
-  if (![input, kernel, stride, dilation, padStart, output].every(Number.isSafeInteger) || input < 0 || kernel <= 0 || stride <= 0 || dilation <= 0 || padStart < 0 || output < 0) return null;
-  if (Math.min(input, kernel) > 1_000_000) return null;
-  const I = BigInt(input), K = BigInt(kernel), S = BigInt(stride), D = BigInt(dilation), P = BigInt(padStart), O = BigInt(output);
-  let total = 0n;
-  if (kernel <= input) {
-    for (let k = 0n; k < K; k += 1n) {
-      const low = [-1n, floorDiv(P - k * D - 1n, S)].reduce((a, b) => a > b ? a : b) + 1n;
-      const high = [I - 1n, floorDiv(O - 1n + P - k * D, S)].reduce((a, b) => a < b ? a : b);
-      if (high >= low) total += high - low + 1n;
-    }
-  } else {
-    for (let i = 0n; i < I; i += 1n) {
-      const low = [-1n, floorDiv(P - i * S - 1n, D)].reduce((a, b) => a > b ? a : b) + 1n;
-      const high = [K - 1n, floorDiv(O - 1n + P - i * S, D)].reduce((a, b) => a < b ? a : b);
-      if (high >= low) total += high - low + 1n;
-    }
-  }
-  return total;
 }
 
 function positive(value) {

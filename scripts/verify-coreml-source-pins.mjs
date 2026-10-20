@@ -17,6 +17,7 @@ const rows = [
   [COREML_NEURAL_NETWORK_SOURCE.neural_network_proto, COREML_NEURAL_NETWORK_SOURCE.neural_network_proto_sha256],
   [COREML_NEURAL_NETWORK_SOURCE.neural_network_validator, COREML_NEURAL_NETWORK_SOURCE.neural_network_validator_sha256],
   [COREML_NEURAL_NETWORK_SOURCE.neural_network_validator_utils, COREML_NEURAL_NETWORK_SOURCE.neural_network_validator_utils_sha256],
+  [COREML_NEURAL_NETWORK_SOURCE.neural_network_builder, COREML_NEURAL_NETWORK_SOURCE.neural_network_builder_sha256],
   [COREML_NEURAL_NETWORK_SOURCE.quantization_implementation, COREML_NEURAL_NETWORK_SOURCE.quantization_implementation_sha256],
   [COREML_MIL_SOURCE.mil_proto, COREML_MIL_SOURCE.mil_proto_sha256],
   [COREML_MIL_SOURCE.conv_definition, COREML_MIL_SOURCE.conv_definition_sha256],
@@ -35,6 +36,11 @@ const rows = [
 ];
 
 const semanticRequirements = new Map([
+  [COREML_NEURAL_NETWORK_SOURCE.neural_network_builder, [
+    "def add_rank_preserving_reshape(",
+    "input_shapes=[[int(x) for x in output_shape]]",
+    "output_shapes=[[int(x) for x in output_shape]]",
+  ]],
   [COREML_MIL_SOURCE.conv_definition, [
     "class conv_transpose(Operation)",
     "weight: const tensor<[C_in,C_out/groups,*D_in], T>",

@@ -1,5 +1,5 @@
 import { canonicalJson } from "./report-utils.js";
-import { sha256TextHex } from "./sha256-sync.js";
+import { canonicalEvidenceDigest } from "./evidence-identity.js";
 
 export const ONNX_CONTRACT_CONFLICT_CAPSULE_SCHEMA = "deepbom.onnx_contract_conflict_capsule.v1";
 
@@ -45,8 +45,9 @@ export function buildOnnxContractConflictCapsule(analysis) {
   const conditionIndex = buildConditionalIndex(conditionBoundConflicts);
   const outputTensorIndices = new Set(list(analysis.ops).flatMap((op) => integerList(op.outputs)));
   const affectedValues = list(analysis.tensors)
-    .filter((tensor, index) => outputTensorIndices.has(nativeIndex(tensor, index)) && tensorContractInvalid(tensor))
-    .map((tensor, index) => affectedValue(tensor, nativeIndex(tensor, index), rootIndex));
+    .map((tensor, index) => ({tensor, index:nativeIndex(tensor,index)}))
+    .filter(({tensor,index}) => outputTensorIndices.has(index) && tensorContractInvalid(tensor))
+    .map(({tensor,index}) => affectedValue(tensor, index, rootIndex));
   const downstreamBlockedNodes = list(shape.rule_unresolved_nodes)
     .filter((row) => String(row?.reason || "").startsWith("blocked_by_upstream_contract_conflict:"))
     .map((row) => ({
@@ -113,7 +114,7 @@ export function buildOnnxContractConflictCapsule(analysis) {
 export function validateOnnxContractConflictCapsule(capsule, artifactIr = null) {
   if (capsule?.schema !== ONNX_CONTRACT_CONFLICT_CAPSULE_SCHEMA) throw new Error("ONNX contract-conflict capsule schema is invalid.");
   if (!SHA256.test(String(capsule?.artifact?.sha256 || ""))) throw new Error("ONNX contract-conflict capsule artifact SHA-256 is invalid.");
-  const expectedHash = sha256TextHex(canonicalJson(withoutHash(capsule)));
+  const expectedHash = canonicalEvidenceDigest(withoutHash(capsule));
   if (capsule.capsule_sha256 !== expectedHash) throw new Error("ONNX contract-conflict capsule digest does not match its canonical content.");
   const summary = capsule.summary || {};
   requireCount(summary.unconditional_root_conflict_count, list(capsule.root_conflicts).length, "unconditional root conflicts");
@@ -290,7 +291,7 @@ function zeroSummary() {
 }
 
 function signedCapsule(body) {
-  const capsule = { ...body, capsule_sha256: sha256TextHex(canonicalJson(body)) };
+  const capsule = { ...body, capsule_sha256: canonicalEvidenceDigest(body) };
   return validateOnnxContractConflictCapsule(capsule);
 }
 
@@ -315,7 +316,7 @@ function operatorSubject(index) { const value = safeIndex(index); return value =
 function valueSubject(index) { const value = safeIndex(index); return value == null ? null : `value:${PRIMARY_SCOPE}:${value}`; }
 function tensorContractInvalid(tensor) { return tensor?.contract_status === "invalid" || tensor?.contractStatus === "invalid"; }
 function nativeIndex(row, fallback) { return safeIndex(row?.index) ?? fallback; }
-function safeIndex(value) { const number = Number(value); return Number.isSafeInteger(number) && number >= 0 ? number : null; }
+function safeIndex(value) { if (value == null || typeof value === "boolean" || (typeof value === "string" && !value.trim())) return null; const number = Number(value); return Number.isSafeInteger(number) && number >= 0 ? number : null; }
 function nonnegative(value) { return safeIndex(value) ?? 0; }
 function nonnegativeOrNull(value) { const number = Number(value); return Number.isFinite(number) && number >= 0 ? number : null; }
 function integerList(values) { return list(values).map(safeIndex).filter((value) => value != null); }

@@ -1,26 +1,15 @@
 // Report-output projection, not a new Evidence IR layer. No framework execution.
 import { canonicalJson } from "./report-utils.js";
 import { compareNativeNodes, validateNativeTensorComparison, nativeDigest } from "./native-evidence.js";
+import { portableContract } from "./portable-contracts.js";
 
 const need = (ok, reason) => { if (!ok) throw Error(`Optimization diff: ${reason}`); };
 const equal = (a,b) => canonicalJson(a) === canonicalJson(b);
-const object = x => x !== null && typeof x === "object" && !Array.isArray(x);
-const pointer = s => String(s).replace(/~/g,"~0").replace(/\//g,"~1");
-const own = (x,k) => x !== null && Object.hasOwn(x,k);
 
 // Leaves use genuine JSON Pointers. Arrays remain atomic, avoiding invented
 // element correspondence when insertions change their positional indices.
 export function optimizationFieldChanges(before, after, beforePresent=true, afterPresent=true) {
-  const rows=[];
-  function visit(a,b,pa,pb,path) {
-    if(pa && pb && equal(a,b)) return;
-    const ao=pa&&object(a),bo=pb&&object(b);
-    if((ao&&bo || !pa&&bo || ao&&!pb) && Object.keys({...a,...b}).length) {
-      const keys=[...new Set([...Object.keys(ao?a:{}),...Object.keys(bo?b:{})])].sort();
-      for(const k of keys)visit(ao&&own(a,k)?a[k]:null,bo&&own(b,k)?b[k]:null,ao&&own(a,k),bo&&own(b,k),`${path}/${pointer(k)}`);
-    } else rows.push({path,before_present:pa,after_present:pb,before:pa?a:null,after:pb?b:null});
-  }
-  visit(before,after,beforePresent,afterPresent,"");return rows;
+  return portableContract("changes", { before, after, before_present: beforePresent, after_present: afterPresent });
 }
 
 export function buildNativeOptimizationDiff(report) {

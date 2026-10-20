@@ -85,6 +85,16 @@ const attention = assess(node("Attention", ["q", "k", "v", "", "pk", "pv"], ["y"
 expectEqual(attention.status, "assessed", "Static Attention contractions should be assessed from the source-defined Q/K/V/cache contract.");
 expectEqual(attention.value, 921_600, "Attention should sum the QK and attention-value contraction terms over total KV sequence length.");
 
+for (const slot of ["v", "pk", "pv"]) {
+  const rows = [tensor("q", [2, 8, 16, 64]), tensor("k", [2, 4, 20, 64]),
+    tensor("v", [2, 4, 20, 80]), tensor("pk", [2, 4, 5, 64]),
+    tensor("pv", [2, 4, 5, 80]), tensor("y", [2, 8, 16, 80])];
+  rows.find(row => row.name === slot).valueKind = "sequence";
+  const result = assess(node("Attention", ["q", "k", "v", "", "pk", "pv"], ["y"]), rows);
+  expectEqual(result.status, "not_assessed", `Non-dense ${slot} must not borrow a stale dense shape for MACs.`);
+  expectEqual(result.value_decimal, null, "An invalid value kind must not return a numeric cost.");
+}
+
 const deformConv = assess(node("DeformConv", ["x", "w", "offset", "bias", "mask"], ["y"], { group: 2, offset_group: 2 }), [
   tensor("x", [2, 8, 16, 16]), tensor("w", [12, 4, 3, 3]), tensor("offset", [2, 36, 14, 14]),
   tensor("bias", [12]), tensor("mask", [2, 18, 14, 14]), tensor("y", [2, 12, 14, 14]),

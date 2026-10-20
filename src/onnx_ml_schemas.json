@@ -1,0 +1,297 @@
+{
+  "LABEL_ENCODER_SCHEMAS": {
+    "1": {
+      "classes_strings": 8,
+      "default_int64": 2,
+      "default_string": 3
+    },
+    "2": {
+      "keys_strings": 8,
+      "keys_int64s": 7,
+      "keys_floats": 6,
+      "values_strings": 8,
+      "values_int64s": 7,
+      "values_floats": 6,
+      "default_string": 3,
+      "default_int64": 2,
+      "default_float": 1
+    },
+    "4": {
+      "keys_tensor": 4,
+      "keys_strings": 8,
+      "keys_int64s": 7,
+      "keys_floats": 6,
+      "values_tensor": 4,
+      "values_strings": 8,
+      "values_int64s": 7,
+      "values_floats": 6,
+      "default_string": 3,
+      "default_int64": 2,
+      "default_float": 1,
+      "default_tensor": 4
+    }
+  },
+  "TREE_CLASSIFIER_V1_SCHEMA": {
+    "nodes_treeids": 7,
+    "nodes_nodeids": 7,
+    "nodes_featureids": 7,
+    "nodes_values": 6,
+    "nodes_hitrates": 6,
+    "nodes_modes": 8,
+    "nodes_truenodeids": 7,
+    "nodes_falsenodeids": 7,
+    "nodes_missing_value_tracks_true": 7,
+    "class_treeids": 7,
+    "class_nodeids": 7,
+    "class_ids": 7,
+    "class_weights": 6,
+    "classlabels_strings": 8,
+    "classlabels_int64s": 7,
+    "post_transform": 3,
+    "base_values": 6
+  },
+  "TREE_CLASSIFIER_V3_SCHEMA": {
+    "nodes_treeids": 7,
+    "nodes_nodeids": 7,
+    "nodes_featureids": 7,
+    "nodes_values": 6,
+    "nodes_hitrates": 6,
+    "nodes_modes": 8,
+    "nodes_truenodeids": 7,
+    "nodes_falsenodeids": 7,
+    "nodes_missing_value_tracks_true": 7,
+    "class_treeids": 7,
+    "class_nodeids": 7,
+    "class_ids": 7,
+    "class_weights": 6,
+    "classlabels_strings": 8,
+    "classlabels_int64s": 7,
+    "post_transform": 3,
+    "base_values": 6,
+    "nodes_values_as_tensor": 4,
+    "nodes_hitrates_as_tensor": 4,
+    "class_weights_as_tensor": 4,
+    "base_values_as_tensor": 4
+  },
+  "TREE_REGRESSOR_V1_SCHEMA": {
+    "nodes_treeids": 7,
+    "nodes_nodeids": 7,
+    "nodes_featureids": 7,
+    "nodes_values": 6,
+    "nodes_hitrates": 6,
+    "nodes_modes": 8,
+    "nodes_truenodeids": 7,
+    "nodes_falsenodeids": 7,
+    "nodes_missing_value_tracks_true": 7,
+    "target_treeids": 7,
+    "target_nodeids": 7,
+    "target_ids": 7,
+    "target_weights": 6,
+    "n_targets": 2,
+    "post_transform": 3,
+    "aggregate_function": 3,
+    "base_values": 6
+  },
+  "TREE_REGRESSOR_V3_SCHEMA": {
+    "nodes_treeids": 7,
+    "nodes_nodeids": 7,
+    "nodes_featureids": 7,
+    "nodes_values": 6,
+    "nodes_hitrates": 6,
+    "nodes_modes": 8,
+    "nodes_truenodeids": 7,
+    "nodes_falsenodeids": 7,
+    "nodes_missing_value_tracks_true": 7,
+    "target_treeids": 7,
+    "target_nodeids": 7,
+    "target_ids": 7,
+    "target_weights": 6,
+    "n_targets": 2,
+    "post_transform": 3,
+    "aggregate_function": 3,
+    "base_values": 6,
+    "nodes_values_as_tensor": 4,
+    "nodes_hitrates_as_tensor": 4,
+    "target_weights_as_tensor": 4,
+    "base_values_as_tensor": 4
+  },
+  "TREE_ENSEMBLE_V5_SCHEMA": {
+    "nodes_featureids": 7,
+    "nodes_splits": 4,
+    "nodes_hitrates": 4,
+    "nodes_modes": 4,
+    "nodes_truenodeids": 7,
+    "nodes_falsenodeids": 7,
+    "nodes_trueleafs": 7,
+    "nodes_falseleafs": 7,
+    "nodes_missing_value_tracks_true": 7,
+    "tree_roots": 7,
+    "membership_values": 4,
+    "leaf_targetids": 7,
+    "leaf_weights": 4,
+    "n_targets": 2,
+    "post_transform": 2,
+    "aggregate_function": 2
+  },
+  "ML_SCHEMAS": {
+    "Binarizer": {
+      "threshold": 1
+    },
+    "Normalizer": {
+      "norm": 3
+    },
+    "Scaler": {
+      "scale": 6,
+      "offset": 6
+    },
+    "Imputer": {
+      "imputed_value_floats": 6,
+      "imputed_value_int64s": 7,
+      "replaced_value_float": 1,
+      "replaced_value_int64": 2
+    },
+    "OneHotEncoder": {
+      "cats_int64s": 7,
+      "cats_strings": 8,
+      "zeros": 2
+    },
+    "LinearClassifier": {
+      "classlabels_ints": 7,
+      "classlabels_strings": 8,
+      "coefficients": 6,
+      "intercepts": 6,
+      "multi_class": 2,
+      "post_transform": 3
+    },
+    "LinearRegressor": {
+      "coefficients": 6,
+      "intercepts": 6,
+      "post_transform": 3,
+      "targets": 2
+    },
+    "LabelEncoder": {
+      "keys_tensor": 4,
+      "keys_strings": 8,
+      "keys_int64s": 7,
+      "keys_floats": 6,
+      "values_tensor": 4,
+      "values_strings": 8,
+      "values_int64s": 7,
+      "values_floats": 6,
+      "default_string": 3,
+      "default_int64": 2,
+      "default_float": 1,
+      "default_tensor": 4
+    },
+    "SVMClassifier": {
+      "kernel_type": 3,
+      "kernel_params": 6,
+      "vectors_per_class": 7,
+      "support_vectors": 6,
+      "coefficients": 6,
+      "prob_a": 6,
+      "prob_b": 6,
+      "rho": 6,
+      "post_transform": 3,
+      "classlabels_strings": 8,
+      "classlabels_ints": 7
+    },
+    "SVMRegressor": {
+      "kernel_type": 3,
+      "kernel_params": 6,
+      "support_vectors": 6,
+      "one_class": 2,
+      "coefficients": 6,
+      "n_supports": 2,
+      "post_transform": 3,
+      "rho": 6
+    },
+    "TreeEnsemble": {
+      "nodes_featureids": 7,
+      "nodes_splits": 4,
+      "nodes_hitrates": 4,
+      "nodes_modes": 4,
+      "nodes_truenodeids": 7,
+      "nodes_falsenodeids": 7,
+      "nodes_trueleafs": 7,
+      "nodes_falseleafs": 7,
+      "nodes_missing_value_tracks_true": 7,
+      "tree_roots": 7,
+      "membership_values": 4,
+      "leaf_targetids": 7,
+      "leaf_weights": 4,
+      "n_targets": 2,
+      "post_transform": 2,
+      "aggregate_function": 2
+    },
+    "TreeEnsembleClassifier": {
+      "nodes_treeids": 7,
+      "nodes_nodeids": 7,
+      "nodes_featureids": 7,
+      "nodes_values": 6,
+      "nodes_hitrates": 6,
+      "nodes_modes": 8,
+      "nodes_truenodeids": 7,
+      "nodes_falsenodeids": 7,
+      "nodes_missing_value_tracks_true": 7,
+      "class_treeids": 7,
+      "class_nodeids": 7,
+      "class_ids": 7,
+      "class_weights": 6,
+      "classlabels_strings": 8,
+      "classlabels_int64s": 7,
+      "post_transform": 3,
+      "base_values": 6,
+      "nodes_values_as_tensor": 4,
+      "nodes_hitrates_as_tensor": 4,
+      "class_weights_as_tensor": 4,
+      "base_values_as_tensor": 4
+    },
+    "TreeEnsembleRegressor": {
+      "nodes_treeids": 7,
+      "nodes_nodeids": 7,
+      "nodes_featureids": 7,
+      "nodes_values": 6,
+      "nodes_hitrates": 6,
+      "nodes_modes": 8,
+      "nodes_truenodeids": 7,
+      "nodes_falsenodeids": 7,
+      "nodes_missing_value_tracks_true": 7,
+      "target_treeids": 7,
+      "target_nodeids": 7,
+      "target_ids": 7,
+      "target_weights": 6,
+      "n_targets": 2,
+      "post_transform": 3,
+      "aggregate_function": 3,
+      "base_values": 6,
+      "nodes_values_as_tensor": 4,
+      "nodes_hitrates_as_tensor": 4,
+      "target_weights_as_tensor": 4,
+      "base_values_as_tensor": 4
+    },
+    "ZipMap": {
+      "classlabels_strings": 8,
+      "classlabels_int64s": 7
+    },
+    "CastMap": {
+      "cast_to": 3,
+      "map_form": 3,
+      "max_map": 2
+    },
+    "DictVectorizer": {
+      "string_vocabulary": 8,
+      "int64_vocabulary": 7
+    },
+    "CategoryMapper": {
+      "cats_strings": 8,
+      "cats_int64s": 7,
+      "default_string": 3,
+      "default_int64": 2
+    },
+    "FeatureVectorizer": {
+      "inputdimensions": 7
+    },
+    "ArrayFeatureExtractor": {}
+  }
+}

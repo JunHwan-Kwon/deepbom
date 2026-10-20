@@ -1,4 +1,5 @@
 import { arraysEqual as sameStaticShape } from "./array-contract.js";
+import { canonicalJson } from "./report-utils.js";
 import { packedBytesForElements, broadcastStaticShapes as broadcastStatic, scalarDtypeBits, scalarDtypeBytes, safePositiveShapeElementCount as safeProduct } from "./tensor-size.js";
 
 import { float16ToNumber as halfToNumber, bfloat16ToNumber, readPackedUnsigned } from "./scalar-numeric.js";
@@ -1435,10 +1436,19 @@ export function graphFromCoreMlMilProgram(program, preferredFunction = null) {
         }
       }
       const outputIds = [];
+      let constValue = null;
+      if (String(operation.type).toLowerCase() === "const") {
+        const candidates = [operation.attributes?.val,
+          ...(inputBindings.val || []).filter(item => item.kind === "value").map(item => item.value)].filter(value => value != null);
+        if (candidates.length && candidates.some(value => canonicalJson(value) !== canonicalJson(candidates[0])))
+          throw new Error("Core ML MIL const has conflicting attribute/input values");
+        constValue = candidates[0] || null;
+        if (constValue && operation.outputs.length !== 1) throw new Error("Core ML MIL const must have one SSA output");
+      }
       for (const output of operation.outputs) {
         if (local.has(output.name)) throw new Error(`Core ML MIL scope repeats SSA value ${output.name}`);
-        const constValue = String(operation.type).toLowerCase() === "const"
-          ? Object.values(inputBindings).flat().find((item) => item.kind === "value")?.value || null : null;
+        if (constValue && canonicalJson(constValue.type) !== canonicalJson(output.type))
+          throw new Error(`Core ML MIL const value type disagrees with SSA output ${output.name}`);
         const id = addTensor(`${path}/${output.name}`, output.type, {
           role: constValue ? "constant" : "activation", mil_ssa_name: output.name, constant_buffer: Boolean(constValue),
           value_storage: constValue?.storage || null, immediate_value: constValue?.immediate || null, blob_reference: constValue?.blob || null, shape_source: "mil_value_type",

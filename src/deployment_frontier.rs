@@ -1140,7 +1140,7 @@ fn median(values: &[f64]) -> f64 {
     }
     let mut sorted = values.to_vec();
     sorted.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
-    if sorted.len().is_multiple_of(2) {
+    if sorted.len() % 2 == 0 {
         (sorted[sorted.len() / 2 - 1] + sorted[sorted.len() / 2]) * 0.5
     } else {
         sorted[sorted.len() / 2]

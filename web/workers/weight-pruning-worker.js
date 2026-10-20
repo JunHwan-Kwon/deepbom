@@ -1,12 +1,15 @@
+import { initializeNumericalWasm } from "../lib/numerical-wasm.js";
 import { collectWeightAnalysis } from "../lib/weight-analysis.js";
+import { createArtifactPayloadSource } from "../lib/artifact-bundle.js";
 import { prepareMagnitudePruning, simulateMagnitudePruning } from "../lib/weight-pruning.js";
 
 let prepared = null;
 self.onmessage = async ({ data }) => {
   try {
+    await initializeNumericalWasm();
     if (data.type === "initialize") {
-      const { model, analysis, source, weight, weightRef, options = {} } = data;
-      const result = await collectWeightAnalysis(model, analysis, source, {
+      const { model, analysis, source, files, weight, weightRef, options = {} } = data;
+      const result = await collectWeightAnalysis(model, analysis, files?.length ? createArtifactPayloadSource(analysis, files) : source, {
         weightIr: weight,
         options: { ...options, tensor_ids: [weightRef], max_tensor_values: Math.min(options.max_tensor_values ?? 2_000_000, 2_000_000), max_channels: 0, max_pairwise_channels: 0, max_svd_work: 0 },
       });

@@ -6,7 +6,7 @@ export { exactInteger, validateExactInteger } from "../../exact-integer.js";
 import { SHA256 } from "./constants.js";
 
 export function logicalTensorBytes(tensor, format = "") {
-  if (Object.hasOwn(tensor, "logical_payload_bytes")) return exactInteger(tensor.logical_payload_bytes);
+  if (Object.hasOwn(tensor, "logical_payload_bytes")) return exactInteger(tensor.logical_payload_bytes_decimal ?? tensor.logical_payload_bytes);
   return valueLogicalBytes(buildValueType(tensor, format, "logical-byte-count"));
 }
 
@@ -23,6 +23,19 @@ export function positiveStorageBytes(tensor, format = "") {
     if (number && number > 0) return number;
   }
   return 0;
+}
+
+export function coreMlParameterBindings(analysis, format) {
+  const byTensor = new Map(), canonicalIndices = new Set(), identities = new Map();
+  if (!["coreml", "mlmodel"].includes(format)) return {byTensor, canonicalIndices};
+  for (const [index, parameter] of (analysis.weight_integrity?.parameters || []).entries()) {
+    if (!positiveInteger(parameter.byte_length)) continue;
+    const key = parameter.storage === "mil_blob_v2" ? JSON.stringify([parameter.file_path, parameter.metadata_offset]) : `parameter:${index}`;
+    if (!identities.has(key)) { identities.set(key, index); canonicalIndices.add(index); }
+    const canonical = identities.get(key);
+    if (Number.isSafeInteger(parameter.tensor_index)) byTensor.set(parameter.tensor_index, `storage:parameter:${canonical}`);
+  }
+  return {byTensor, canonicalIndices};
 }
 
 export function safeExactSum(start, decimalLength) {

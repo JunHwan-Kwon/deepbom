@@ -1,6 +1,6 @@
+import { canonicalEvidenceDigest } from "./evidence-identity.js";
 import { validateModelIr } from "./model-ir.js";
 import { canonicalJson } from "./report-utils.js";
-import { sha256TextHex } from "./sha256-sync.js";
 import { sealDocument } from "./evidence-identity.js";
 
 // Shared by optional evidence layers. Adding a sidecar must not change Model IR.
@@ -20,7 +20,7 @@ export function sealEvidence(body, field) {
 export function assertEvidenceDigest(document, field) {
   canonicalJson(document);
   const { [field]: digest, ...body } = document;
-  if (typeof digest !== "string" || !/^[a-f0-9]{64}$/.test(digest) || digest !== sha256TextHex(canonicalJson(body))) throw new Error(`Evidence IR: ${field} mismatch.`);
+  if (typeof digest !== "string" || !/^[a-f0-9]{64}$/.test(digest) || digest !== canonicalEvidenceDigest(body)) throw new Error(`Evidence IR: ${field} mismatch.`);
 }
 
 export function freezeEvidence(value) {

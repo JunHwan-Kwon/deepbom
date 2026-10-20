@@ -74,6 +74,7 @@ def audit(path: os.PathLike[str] | str, *, output: Optional[str] = None,
           scan: str = "auto", sections: Optional[Iterable[str]] = None,
           gate: Optional[str] = None, policy: Optional[str] = None,
           expected_sha256: Optional[str] = None,
+          tf_metagraph: Optional[int] = None,
           timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
           max_output_bytes: int = DEFAULT_MAX_OUTPUT_BYTES) -> dict[str, Any]:
     """Audit one artifact and return a parsed JSON document.
@@ -96,6 +97,10 @@ def audit(path: os.PathLike[str] | str, *, output: Optional[str] = None,
     if gate_value and policy_value:
         raise ValueError("gate and policy are mutually exclusive")
     argv = ["audit", _path_text(path), "--scan", scan]
+    if tf_metagraph is not None:
+        if type(tf_metagraph) is not int or tf_metagraph < 0:
+            raise ValueError("tf_metagraph must be a nonnegative integer")
+        argv.extend(["--tf-metagraph", str(tf_metagraph)])
     if section_values:
         argv.extend(["--section", ",".join(section_values)])
     if resolved_output == "analysis":
@@ -349,32 +354,35 @@ def _invoke_json(argv: list[str], timeout_seconds: float, max_output_bytes: int)
 
 
 def _run_engine_json(engine, environment, argv, timeout, output_limit):
-    with tempfile.TemporaryDirectory(prefix="deepbom-python-") as directory, tempfile.TemporaryFile() as diagnostic_stream:
+    from ._process import run_process, remaining_seconds, managed_execution_active
+    with tempfile.TemporaryDirectory(prefix="deepbom-python-") as directory:
         output_path = Path(directory) / "result.json"
         command = [str(engine), *argv, "--output", str(output_path)]
         try:
-            completed = subprocess.run(
-                command,
-                check=False,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-                stderr=diagnostic_stream,
-                env=environment,
-                timeout=timeout,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
+            import sys
+            if sys.platform == "linux" or managed_execution_active():
+                execution = run_process(command, environment=environment,
+                                        timeout=remaining_seconds(timeout), file_limit=output_limit)
+            else:
+                # Preserve the established ordinary SDK transport on other OSes.
+                # It does not claim the Linux managed-runner resource contract.
+                with tempfile.TemporaryFile() as diagnostic_stream:
+                    finished=subprocess.run(command,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,
+                                            stderr=diagnostic_stream,env=environment,timeout=timeout,check=False)
+                    diagnostic_stream.seek(0,os.SEEK_END)
+                    diagnostic_stream.seek(max(0,diagnostic_stream.tell()-16384))
+                    execution={"returncode":finished.returncode,"diagnostic":diagnostic_stream.read().decode("utf-8",errors="replace")}
         except subprocess.TimeoutExpired as error:
+            raise DeepBomTimeout(f"DEEPBOM exceeded timeout_seconds={timeout:g}.",exit_code=None) from error
+        except TimeoutError as error:
             raise DeepBomTimeout(
-                f"DEEPBOM exceeded timeout_seconds={timeout:g}.", exit_code=None
+                f"DEEPBOM exceeded its execution deadline (maximum {timeout:g}s).", exit_code=None
             ) from error
         except OSError as error:
             raise DeepBomInvocationError(f"Could not start the verified DEEPBOM engine: {error}") from error
-
-        diagnostic_stream.seek(0, os.SEEK_END)
-        diagnostic_stream.seek(max(0, diagnostic_stream.tell() - 16_384))
-        diagnostic = diagnostic_stream.read().decode("utf-8", errors="replace").strip()
+        from types import SimpleNamespace
+        completed = SimpleNamespace(returncode=execution["returncode"])
+        diagnostic = execution["diagnostic"]
         try:
             document = _read_bounded_json(output_path, output_limit)
         except DeepBomError as error:
@@ -521,3 +529,15 @@ def evidence_workflow(request: dict[str, Any], *, files: Optional[dict[str, os.P
                     raise ValueError("Invalid file SHA-256")
                 argv.extend(["--file", digest + ":" + str(Path(path).resolve())])
         return _invoke_json(argv, timeout_seconds, max_output_bytes)
+
+
+def optimization_query(path, *, version=1, section="summary", subject=None, search=None,
+                       offset=None, limit=None, max_bytes=None, sort=None, expected_sha256=None,
+                       timeout_seconds=DEFAULT_TIMEOUT_SECONDS, max_output_bytes=DEFAULT_MAX_OUTPUT_BYTES):
+    """Read saved report evidence; v2 adds validation, facts and bounded calls."""
+    if type(version) is not int or version not in (1,2): raise ValueError("Query version must be 1 or 2")
+    argv=["optimization-report",_path_text(path),"--query-version",str(version),"--section",section]
+    for flag,value in (("subject",subject),("search",search),("offset",offset),("limit",limit),("max-bytes",max_bytes),("sort",sort)):
+        if value is not None: argv.extend(["--"+flag,str(value)])
+    if expected_sha256 is not None: argv.extend(["--expected-sha256",_sha256_text(expected_sha256)])
+    return _invoke_json(argv,timeout_seconds,max_output_bytes)

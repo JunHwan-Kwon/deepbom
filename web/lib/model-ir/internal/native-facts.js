@@ -1,5 +1,6 @@
+import { canonicalEvidenceDigest } from "../../evidence-identity.js";
+import { portableContract } from "../../portable-contracts.js";
 import { canonicalJson } from "../../report-utils.js";
-import { sha256TextHex } from "../../sha256-sync.js";
 import { clone, list } from "./shared.js";
 
 export const MODEL_IR_NATIVE_FACT_LEDGER_SCHEMA = "deepbom.model_ir_native_fact_ledger.v1";
@@ -37,20 +38,10 @@ export function buildModelIrNativeFactLedger(analysis, artifactIr) {
     facts,
     interpretation_boundary: "Only explicitly allow-listed serialized facts omitted by the frozen Artifact IR v2 compatibility contract are embedded. This ledger does not authorize arbitrary native-analysis access and does not synthesize absent program structure.",
   };
-  return { ...body, ledger_sha256: sha256TextHex(canonicalJson(body)) };
+  return { ...body, ledger_sha256: canonicalEvidenceDigest(body) };
 }
 
 export function validateModelIrNativeFactLedger(input, artifactIrSha256) {
   canonicalJson(input);
-  const value = clone(input);
-  if (value?.schema !== MODEL_IR_NATIVE_FACT_LEDGER_SCHEMA) throw new Error("Model IR native fact ledger schema is invalid.");
-  const digest = String(value.ledger_sha256 || "").toLowerCase();
-  delete value.ledger_sha256;
-  if (value.artifact_ir_sha256 !== artifactIrSha256 || digest !== sha256TextHex(canonicalJson(value))) {
-    throw new Error("Model IR native fact ledger binding is invalid.");
-  }
-  for (const dependency of list(value.facts?.control_dependencies)) {
-    if (!dependency.id || !["resolved", "unresolved"].includes(dependency.status)) throw new Error("Model IR native control dependency is invalid.");
-  }
-  return { ...value, ledger_sha256: digest };
+  return portableContract("semantic_validation", {operation:"native_facts",value:input,artifact_ir_sha256:artifactIrSha256});
 }

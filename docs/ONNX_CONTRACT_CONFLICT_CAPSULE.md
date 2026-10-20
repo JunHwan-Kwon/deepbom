@@ -52,10 +52,12 @@ and strict shape inference pinned by `requirements-onnx-corpus.txt`.
 
 The official ONNX runs are comparative evidence only. Some selected models
 reference external tensor files that are intentionally absent from the
-single-file cache, and strict native shape inference can terminate before
-returning a diagnostic on this Windows validation host. `fail`, `crash`, and
-`timeout` are preserved as distinct outcomes. They neither confirm nor erase a
-DEEPBOM conflict, and they are never converted into a successful validation.
+single-file cache. The 2026-10-20 Linux refresh with ONNX 1.22.0 recorded
+one checker pass and eight failures, and six strict-shape-inference passes and
+three failures. Native termination and timeout remain possible on other runs;
+`fail`, `crash`, and `timeout` are preserved as distinct outcomes. These
+comparative results neither confirm nor erase a DEEPBOM conflict, and a failed
+reference run is never converted into a successful validation.
 
 The nine-artifact corpus demonstrates reproducible failure modes within a
 bounded population. It does not estimate ONNX ecosystem prevalence, runtime

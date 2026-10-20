@@ -219,6 +219,48 @@ function bundleDigest(records) {
   return sha256TextHex(JSON.stringify({ schema: "deepbom.artifact_bundle_digest.v1", files: rows }));
 }
 
+const payloadSources = new WeakSet();
+export const isArtifactPayloadSource = value => value != null && payloadSources.has(value);
+
+// Only explicitly selected members are reachable. The analysis and its complete
+// byte ledger are verified again before numerical results are returned.
+export function createArtifactPayloadSource(analysis, files) {
+  const entries = bundleEntries(files);
+  const records = structuredClone(analysis.artifact_bundle?.files);
+  const expected = analysis.model_sha256;
+  if (!Array.isArray(records) || records.length !== entries.size || bundleDigest(records) !== expected) {
+    throw new Error("Artifact payload selection does not match the analyzed bundle");
+  }
+  const paths = new Set();
+  for (const row of records) {
+    const path = safePath(row.path), file = entries.get(path);
+    if (paths.has(path) || !file || file.size !== row.byte_length || !/^[a-f0-9]{64}$/.test(row.sha256)) throw new Error(`Invalid artifact payload member: ${path}`);
+    paths.add(path);
+  }
+  const roots = records.filter(row => ["root_model", "saved_model_protobuf"].includes(row.role));
+  const source = Object.freeze({
+    kind: "verified_artifact_set", size: records.reduce((sum, row) => sum + row.byte_length, 0),
+    rootFile: roots.length === 1 ? entries.get(roots[0].path) : null,
+    member(path) {
+      const file = entries.get(safePath(path));
+      if (!file) throw new Error("Requested payload is outside the selected artifact set");
+      return file;
+    },
+    async verify({signal, onProgress} = {}) {
+      for (const [index, row] of records.entries()) {
+        signal?.throwIfAborted(); const file = entries.get(row.path);
+        await file.assertUnchanged?.();
+        if (await sha256FileHex(file) !== row.sha256) throw new Error(`Artifact payload changed: ${row.path}`);
+        await file.assertUnchanged?.();
+        onProgress?.({phase:"identity", completed:index + 1, total:records.length});
+      }
+      return expected;
+    },
+  });
+  payloadSources.add(source);
+  return source;
+}
+
 const SAFETENSORS_MODEL_SOURCE_ROLES = Object.freeze(new Set([
   "shard_index",
   "architecture_config",
@@ -385,7 +427,7 @@ async function analyzeCoreMlPackage(plan, onProgress) {
   return { analysis, retainedBytes: parsed.retainedBytes, payloadLoaded: false, rootFile: plan.rootFile };
 }
 
-async function analyzeSavedModelPackage(plan, onProgress) {
+async function analyzeSavedModelPackage(plan, onProgress, metaGraphIndex = 0) {
   const rows = [...plan.entries].map(([memberPath, file]) => ({
     path: memberPath,
     file,
@@ -400,7 +442,7 @@ async function analyzeSavedModelPackage(plan, onProgress) {
   const records = await hashRecords(rows, onProgress);
   if (plan.rootFile.size > 1024 * 1024 * 1024) throw new Error("saved_model.pb exceeds the 1 GiB bounded protobuf parser limit");
   const protobuf = new Uint8Array(await plan.rootFile.arrayBuffer());
-  const analysis = analyzeTensorFlowProtobuf(protobuf, "saved_model.pb");
+  const analysis = analyzeTensorFlowProtobuf(protobuf, "saved_model.pb", {metaGraphIndex});
   const digest = bundleDigest(records);
   const total = records.reduce((sum, row) => sum + row.byte_length, 0);
   analysis.filename = plan.displayName;
@@ -417,6 +459,25 @@ async function analyzeSavedModelPackage(plan, onProgress) {
     fingerprint_count: records.filter((row) => row.role === "fingerprint").length,
     interpretation_boundary: "The selected SavedModel directory is completely path/size/SHA-256 bound. The first serialized MetaGraph GraphDef and SignatureDef tensor contracts are materialized; other MetaGraphs are inventoried. Variable, asset, fingerprint, kernel, and runtime semantics are not inferred from package membership.",
   };
+  const indexes = rows.filter(row => row.role === "variables_index");
+  if (indexes.length > 1) throw new Error("SavedModel selection contains multiple variables indexes");
+  if (indexes.length === 1) {
+    const {readTensorBundleIndex} = await import("./tensorflow-checkpoint.js");
+    const ledger = await readTensorBundleIndex(indexes[0].file, indexes[0].path);
+    for (const entry of ledger.tensors) if (entry.status === "serialized_dense_entry") {
+      const member = plan.entries.get(entry.file_path);
+      if (!member || entry.byte_offset + entry.byte_length > member.size) throw new Error("SavedModel variable payload is missing or outside its selected shard");
+    }
+    analysis.format_extensions.tensorflow_checkpoint = ledger;
+    const first = analysis.tensors.length;
+    analysis.tensors.push(...ledger.tensors.map((row,index) => ({index:first+index,name:row.name,dtype:row.dtype,
+      shape:row.shape || [],shape_declared:Array.isArray(row.shape),constant_buffer:true,value_kind:"checkpoint_storage",
+      serialized_payload_bytes:row.status === "serialized_dense_entry" ? row.byte_length : 0,
+      checkpoint_entry_index:row.index,checkpoint_file_path:row.file_path,checkpoint_byte_offset:row.byte_offset,
+      contract_status:row.status})));
+    analysis.tensor_count = analysis.tensors.length;
+    analysis.savedmodel.variables_inventory_status = "tensor_bundle_index_decoded_payload_not_scanned";
+  } else analysis.savedmodel.variables_inventory_status = "no_selected_variables_index";
   analysis.format_extensions.savedmodel = analysis.savedmodel;
   analysis.artifact_bundle = {
     schema: "deepbom.artifact_bundle.savedmodel.v1",
@@ -466,6 +527,7 @@ async function analyzeSafeTensorsShards(plan, onProgress, scanMode = "full") {
         ...tensor,
         index: tensorIndex,
         shard_path: shard.path,
+        shard_header_byte_length: parsed.analysis.safetensors?.header_byte_length ?? null,
         numerical_integrity: tensor.numerical_integrity
           ? { ...tensor.numerical_integrity, tensor_index: tensorIndex, shard_path: shard.path }
           : null,
@@ -575,10 +637,11 @@ async function analyzeSafeTensorsShards(plan, onProgress, scanMode = "full") {
   return { analysis, retainedBytes: new Uint8Array(), payloadLoaded: false, rootFile: plan.rootFile };
 }
 
-export async function readArtifactBundle(files, { onProgress, scanMode = "full" } = {}) {
+export async function readArtifactBundle(files, { onProgress, scanMode = "full", metaGraphIndex } = {}) {
   if (!["structure", "integrity", "full"].includes(scanMode)) throw new Error(`Unsupported artifact bundle scan mode ${scanMode}.`);
   const plan = await inspectArtifactBundle(files);
+  if (metaGraphIndex !== undefined && plan.kind !== "tensorflow_savedmodel") throw new Error("MetaGraph selection requires SavedModel");
   if (plan.kind === "coreml_package") return analyzeCoreMlPackage(plan, onProgress);
-  if (plan.kind === "tensorflow_savedmodel") return analyzeSavedModelPackage(plan, onProgress);
+  if (plan.kind === "tensorflow_savedmodel") return analyzeSavedModelPackage(plan, onProgress, metaGraphIndex ?? 0);
   return analyzeSafeTensorsShards(plan, onProgress, scanMode);
 }

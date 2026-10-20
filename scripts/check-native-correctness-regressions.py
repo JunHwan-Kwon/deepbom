@@ -3,7 +3,7 @@ import os
 os.environ.update(CUDA_VISIBLE_DEVICES='-1', TF_CPP_MIN_LOG_LEVEL='3', TF_NUM_INTEROP_THREADS='1', TF_NUM_INTRAOP_THREADS='1')
 import sys
 from pathlib import Path
-sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'channels/python/src'))
+sys.path.insert(0, os.environ.get('DEEPBOM_TEST_PACKAGE_ROOT', str(Path(__file__).resolve().parents[1]/'channels/python/src')))
 import tempfile
 import types
 import torch

@@ -69,6 +69,7 @@ await copyFile(selfTestSource, path.join(npmRoot, "bin", "deepbom-self-test.onnx
 await copyFile(path.join(root, "scripts", "capture-activation-evidence.py"), path.join(npmRoot, "bin", "capture-activation-evidence.py"));
 await copyFile(path.join(root, "channels", "npm", "README.md"), path.join(npmRoot, "README.md"));
 await copyFile(publicLicense, path.join(npmRoot, "LICENSE"));
+await copyFile(path.join(root, "THIRD_PARTY_NOTICES.md"), path.join(npmRoot, "THIRD_PARTY_NOTICES.md"));
 await cp(path.join(root, "skills", "deepbom"), path.join(npmRoot, "skills", "deepbom"), { recursive: true });
 await mkdir(path.join(npmRoot, "sdk"));
 for (const file of ["index.mjs", "index.d.mts"]) {
@@ -84,7 +85,7 @@ await writeFile(path.join(npmRoot, "package.json"), `${JSON.stringify({
   types: "./sdk/index.d.mts",
   exports: { ".": { types: "./sdk/index.d.mts", import: "./sdk/index.mjs" }, "./package.json": "./package.json" },
   bin: { deepbom: "bin/deepbom.mjs" },
-  files: ["bin/", "pkg/", "sdk/", "skills/deepbom/", "README.md", "LICENSE"],
+  files: ["bin/", "pkg/", "sdk/", "skills/deepbom/", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md"],
   engines: { node: ">=20" },
   license: "Apache-2.0",
   homepage: "https://deepbom.org",
@@ -198,6 +199,7 @@ await copySourceTree(path.join(root, "channels", "python"), pythonRoot, {
   suffixes: [".egg-info"],
 });
 await copyFile(publicLicense, path.join(pythonRoot, "LICENSE"));
+await copyFile(path.join(root, "THIRD_PARTY_NOTICES.md"), path.join(pythonRoot, "THIRD_PARTY_NOTICES.md"));
 const pythonEngineRoot = path.join(pythonRoot, "src", "deepbom", "_engine");
 await mkdir(path.join(pythonEngineRoot, "pkg"), { recursive: true });
 await copyFile(executable, path.join(pythonEngineRoot, executableName));

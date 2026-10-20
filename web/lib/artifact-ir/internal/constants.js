@@ -1,5 +1,5 @@
 export { ARTIFACT_IR_SCHEMA } from "../../evidence-ir.js";
-export const ARTIFACT_IR_METHOD_VERSION = "2.3.2";
+export const ARTIFACT_IR_METHOD_VERSION = "2.3.4";
 export const SHA256 = /^[a-f0-9]{64}$/;
 export const GRAPH_FORMATS = new Set(["tflite", "onnx", "coreml", "mlmodel", "executorch", "pte", "ptd", "graphdef", "savedmodel", "keras", "pt2"]);
 export const INLINE_PARAMETER_LIMIT = 32;

@@ -1,0 +1,3833 @@
+{
+  "schema": "deepbom.monitor_overhead_summary.v1",
+  "date": "2026-10-14",
+  "scope": "Portable canonical identity, immutable sealing, evaluation and deployment development build; CPU only. Not the published 2.4.0 release.",
+  "host_isolation": "Shared host; no other DEEPBOM build or test was launched during these benchmark trials. Unrelated host activity is uncontrolled.",
+  "aggregation": "Median of three timings; maximum of 10 ms sampled RSS per condition. Raw per-run observations retained.",
+  "experiments": [
+    {
+      "name": "saturation",
+      "protocol": {
+        "frameworks": "torch,tensorflow",
+        "widths": "16,512",
+        "repetitions": 3,
+        "steps": 100,
+        "warmup": 10,
+        "every": 10
+      },
+      "engine": {
+        "abi": "deepbom.numerical_abi.v1:exact_binary64_v1",
+        "wasm_sha256": "6aafd82205cbfc00fd0c4dcc820464b90edf4fe6e23da87fe0d2c52e42f83c05",
+        "analyzer_content_sha256": "45425530f255648cda8b334a168f56f07c309eaf722732d7fbaf4d9b2fe58c96"
+      },
+      "benchmark_source_sha256": "32abaf678146c6b2ef10b73b49d1093847a91e04832b7a717dff3e316fefdf98",
+      "environment": {
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
+        "cpu_logical_count": 48,
+        "framework_versions": {
+          "torch": "2.8.0+cpu",
+          "tensorflow": "2.20.0",
+          "numpy": "2.2.6",
+          "psutil": "7.2.1"
+        }
+      },
+      "validation": {
+        "controlled_cpu_state_and_loss_preserved": true,
+        "runs": 60,
+        "frameworks": [
+          "torch",
+          "tensorflow"
+        ],
+        "not_qualified": [
+          "GPU",
+          "distributed",
+          "unbounded models",
+          "production default overhead guarantee"
+        ]
+      },
+      "rows": [
+        {
+          "framework": "torch",
+          "width": 16,
+          "mode": "off",
+          "runs": 3,
+          "setup_seconds": 4.079192876815796e-07,
+          "training_seconds": 0.028146054595708847,
+          "close_seconds": 2.812594175338745e-07,
+          "median_step_p95_seconds": 0.00036726137623190877,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 293113856,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 4.079192876815796e-07,
+              "training_seconds": 0.02813902497291565,
+              "close_seconds": 2.812594175338745e-07,
+              "steps_per_second": 3553.7834056528936,
+              "step_seconds": {
+                "p50": 0.0002452470362186432,
+                "p95": 0.0003688148222863674,
+                "p99": 0.0006015898473560813
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 289804288,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 4.805624485015869e-07,
+              "training_seconds": 0.028146054595708847,
+              "close_seconds": 2.5890767574310303e-07,
+              "steps_per_second": 3552.8958298562393,
+              "step_seconds": {
+                "p50": 0.00026128441095352173,
+                "p95": 0.0003444905392825603,
+                "p99": 0.000515253935009242
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 293048320,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 3.390014171600342e-07,
+              "training_seconds": 0.028609268367290497,
+              "close_seconds": 3.762543201446533e-07,
+              "steps_per_second": 3495.3707559446657,
+              "step_seconds": {
+                "p50": 0.00029252003878355026,
+                "p95": 0.00036726137623190877,
+                "p99": 0.0004526321776211277
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 293113856,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 16,
+          "mode": "scalar",
+          "runs": 3,
+          "setup_seconds": 0.72806541249156,
+          "training_seconds": 0.30312955379486084,
+          "close_seconds": 0.06173890829086304,
+          "median_step_p95_seconds": 0.026093131117522716,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 298934272,
+            "worker_rss_peak_bytes": 103411712
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7588102053850889,
+              "training_seconds": 0.31273736990988255,
+              "close_seconds": 0.06262604519724846,
+              "steps_per_second": 319.7571177017179,
+              "step_seconds": {
+                "p50": 0.0006034038960933685,
+                "p95": 0.02745005814358592,
+                "p99": 0.02946102527901532
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 298217472,
+                "worker_rss_peak_bytes": 103395328
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 145830,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.72806541249156,
+              "training_seconds": 0.30312955379486084,
+              "close_seconds": 0.03986292704939842,
+              "steps_per_second": 329.89195130631754,
+              "step_seconds": {
+                "p50": 0.0005784211680293083,
+                "p95": 0.02487869327887892,
+                "p99": 0.028786374572664516
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 298876928,
+                "worker_rss_peak_bytes": 102555648
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 145830,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7277519535273314,
+              "training_seconds": 0.2901421505957842,
+              "close_seconds": 0.06173890829086304,
+              "steps_per_second": 344.65864333967966,
+              "step_seconds": {
+                "p50": 0.0005056969821453094,
+                "p95": 0.026093131117522716,
+                "p99": 0.026709827873855865
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 298934272,
+                "worker_rss_peak_bytes": 103411712
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 145830,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 16,
+          "mode": "snapshot_copy",
+          "runs": 3,
+          "setup_seconds": 3.91155481338501e-07,
+          "training_seconds": 0.03526500053703785,
+          "close_seconds": 2.1047890186309814e-07,
+          "median_step_p95_seconds": 0.0006780531257390976,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 293056512,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 3.91155481338501e-07,
+              "training_seconds": 0.03499777056276798,
+              "close_seconds": 2.1047890186309814e-07,
+              "steps_per_second": 2857.324863612426,
+              "step_seconds": {
+                "p50": 0.00033651944249868393,
+                "p95": 0.0006780531257390976,
+                "p99": 0.000704540964215994
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 292605952,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.003325188532471657,
+                "encoded_bytes": 38840
+              },
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 3.9301812648773193e-07,
+              "training_seconds": 0.03526500053703785,
+              "close_seconds": 1.601874828338623e-07,
+              "steps_per_second": 2835.6727201796803,
+              "step_seconds": {
+                "p50": 0.00033609382808208466,
+                "p95": 0.0006748748943209648,
+                "p99": 0.0006986889056861402
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 293056512,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.0033141225576400757,
+                "encoded_bytes": 38840
+              },
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 3.8370490074157715e-07,
+              "training_seconds": 0.05000652000308037,
+              "close_seconds": 2.3283064365386963e-07,
+              "steps_per_second": 1999.7392338807033,
+              "step_seconds": {
+                "p50": 0.0004603015258908272,
+                "p95": 0.0008944988250732421,
+                "p99": 0.0010235823504626753
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 293056512,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.004362471401691437,
+                "encoded_bytes": 38840
+              },
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 16,
+          "mode": "snapshot_worker",
+          "runs": 3,
+          "setup_seconds": 1.113159028813243,
+          "training_seconds": 0.419993432238698,
+          "close_seconds": 0.5849734917283058,
+          "median_step_p95_seconds": 0.029011346679180858,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 301355008,
+            "worker_rss_peak_bytes": 204664832
+          },
+          "analysis_counts": [
+            {
+              "requested": 10,
+              "admitted": 2,
+              "completed": 2,
+              "skipped": 8,
+              "failed": 0
+            },
+            {
+              "requested": 10,
+              "admitted": 2,
+              "completed": 2,
+              "skipped": 8,
+              "failed": 0
+            },
+            {
+              "requested": 10,
+              "admitted": 2,
+              "completed": 2,
+              "skipped": 8,
+              "failed": 0
+            }
+          ],
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 1.1097879726439714,
+              "training_seconds": 0.49021155945956707,
+              "close_seconds": 0.48269471526145935,
+              "steps_per_second": 203.99355761876532,
+              "step_seconds": {
+                "p50": 0.0011684177443385124,
+                "p95": 0.029039107263088223,
+                "p99": 0.048290148302912804
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 301334528,
+                "worker_rss_peak_bytes": 204591104
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.001291746273636818,
+                "raw_state_bytes": 2720,
+                "peak_reserved_bytes": 268438176
+              },
+              "requested_captures": 10,
+              "analysis_counts": {
+                "requested": 10,
+                "admitted": 2,
+                "completed": 2,
+                "skipped": 8,
+                "failed": 0
+              },
+              "stored_bytes": 268451,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 1.113159028813243,
+              "training_seconds": 0.40791852213442326,
+              "close_seconds": 0.5897421613335609,
+              "steps_per_second": 245.14699523020565,
+              "step_seconds": {
+                "p50": 0.0011582812294363976,
+                "p95": 0.027770914509892462,
+                "p99": 0.031787678897380885
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 301346816,
+                "worker_rss_peak_bytes": 204279808
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0012244172394275665,
+                "raw_state_bytes": 2720,
+                "peak_reserved_bytes": 268438176
+              },
+              "requested_captures": 10,
+              "analysis_counts": {
+                "requested": 10,
+                "admitted": 2,
+                "completed": 2,
+                "skipped": 8,
+                "failed": 0
+              },
+              "stored_bytes": 268452,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 1.1137105356901884,
+              "training_seconds": 0.419993432238698,
+              "close_seconds": 0.5849734917283058,
+              "steps_per_second": 238.0989613741537,
+              "step_seconds": {
+                "p50": 0.001086987555027008,
+                "p95": 0.029011346679180858,
+                "p99": 0.03156307289376862
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 301355008,
+                "worker_rss_peak_bytes": 204664832
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0011640749871730804,
+                "raw_state_bytes": 2720,
+                "peak_reserved_bytes": 268438176
+              },
+              "requested_captures": 10,
+              "analysis_counts": {
+                "requested": 10,
+                "admitted": 2,
+                "completed": 2,
+                "skipped": 8,
+                "failed": 0
+              },
+              "stored_bytes": 268452,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 16,
+          "mode": "activation",
+          "runs": 3,
+          "setup_seconds": 0.7400425728410482,
+          "training_seconds": 0.9759060069918633,
+          "close_seconds": 0.038988349959254265,
+          "median_step_p95_seconds": 0.06280662324279547,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 298926080,
+            "worker_rss_peak_bytes": 130777088
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7416043970733881,
+              "training_seconds": 1.0989241190254688,
+              "close_seconds": 0.038683392107486725,
+              "steps_per_second": 90.99809374343378,
+              "step_seconds": {
+                "p50": 0.0005720453336834908,
+                "p95": 0.06433028047904372,
+                "p99": 0.07153632838279074
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 298864640,
+                "worker_rss_peak_bytes": 128131072
+              },
+              "copy_measurement": null,
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 550253,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7400425728410482,
+              "training_seconds": 0.9587579034268856,
+              "close_seconds": 0.038988349959254265,
+              "steps_per_second": 104.3016173765768,
+              "step_seconds": {
+                "p50": 0.0006018811836838722,
+                "p95": 0.0608555382117629,
+                "p99": 0.0675680159218611
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 298872832,
+                "worker_rss_peak_bytes": 126423040
+              },
+              "copy_measurement": null,
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 550253,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.73842584900558,
+              "training_seconds": 0.9759060069918633,
+              "close_seconds": 0.04135581664741039,
+              "steps_per_second": 102.46888458883497,
+              "step_seconds": {
+                "p50": 0.0005945116281509399,
+                "p95": 0.06280662324279547,
+                "p99": 0.06889500563964261
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 298926080,
+                "worker_rss_peak_bytes": 130777088
+              },
+              "copy_measurement": null,
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 550253,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 512,
+          "mode": "off",
+          "runs": 3,
+          "setup_seconds": 3.762543201446533e-07,
+          "training_seconds": 0.0588946919888258,
+          "close_seconds": 2.0489096641540527e-07,
+          "median_step_p95_seconds": 0.0006936894729733466,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 318906368,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 3.3155083656311035e-07,
+              "training_seconds": 0.058288512751460075,
+              "close_seconds": 2.0489096641540527e-07,
+              "steps_per_second": 1715.6039034036787,
+              "step_seconds": {
+                "p50": 0.0005842503160238266,
+                "p95": 0.0006830849684774875,
+                "p99": 0.001018670536577702
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 294313984,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 3.762543201446533e-07,
+              "training_seconds": 0.05892971716821194,
+              "close_seconds": 2.0302832126617432e-07,
+              "steps_per_second": 1696.9367036762621,
+              "step_seconds": {
+                "p50": 0.0005908375605940819,
+                "p95": 0.0006936894729733466,
+                "p99": 0.0010059151798486724
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 311353344,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 4.023313522338867e-07,
+              "training_seconds": 0.0588946919888258,
+              "close_seconds": 2.1792948246002197e-07,
+              "steps_per_second": 1697.9458865150903,
+              "step_seconds": {
+                "p50": 0.0005923239514231682,
+                "p95": 0.0007013467140495775,
+                "p99": 0.001043881289660931
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 318906368,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 512,
+          "mode": "scalar",
+          "runs": 3,
+          "setup_seconds": 0.7388560920953751,
+          "training_seconds": 0.3479790650308132,
+          "close_seconds": 0.05364225246012211,
+          "median_step_p95_seconds": 0.02788903163745999,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 324472832,
+            "worker_rss_peak_bytes": 103305216
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7450991179794073,
+              "training_seconds": 0.3659309297800064,
+              "close_seconds": 0.06416521593928337,
+              "steps_per_second": 273.27561531931417,
+              "step_seconds": {
+                "p50": 0.0008282726630568504,
+                "p95": 0.030161973275244235,
+                "p99": 0.03246803980320692
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 306552832,
+                "worker_rss_peak_bytes": 102981632
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 145973,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7364298067986965,
+              "training_seconds": 0.33247455954551697,
+              "close_seconds": 0.05364225246012211,
+              "steps_per_second": 300.774892781863,
+              "step_seconds": {
+                "p50": 0.0008221669122576714,
+                "p95": 0.027617360651493072,
+                "p99": 0.02962643561884762
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 317026304,
+                "worker_rss_peak_bytes": 103235584
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 145973,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7388560920953751,
+              "training_seconds": 0.3479790650308132,
+              "close_seconds": 0.05318755283951759,
+              "steps_per_second": 287.37360964845715,
+              "step_seconds": {
+                "p50": 0.0007991660386323929,
+                "p95": 0.02788903163745999,
+                "p99": 0.030214172396808896
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 324472832,
+                "worker_rss_peak_bytes": 103305216
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 145973,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 512,
+          "mode": "snapshot_copy",
+          "runs": 3,
+          "setup_seconds": 3.7439167499542236e-07,
+          "training_seconds": 0.11617226153612137,
+          "close_seconds": 2.7567148208618164e-07,
+          "median_step_p95_seconds": 0.0056579943746328356,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 317046784,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 3.520399332046509e-07,
+              "training_seconds": 0.11658766120672226,
+              "close_seconds": 4.2654573917388916e-07,
+              "steps_per_second": 857.723698759935,
+              "step_seconds": {
+                "p50": 0.0006354786455631256,
+                "p95": 0.005790065973997116,
+                "p99": 0.006311379335820679
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 305627136,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.053109824657440186,
+                "encoded_bytes": 14138540
+              },
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 3.7439167499542236e-07,
+              "training_seconds": 0.11617226153612137,
+              "close_seconds": 2.0675361156463623e-07,
+              "steps_per_second": 860.7906799585464,
+              "step_seconds": {
+                "p50": 0.0006582187488675117,
+                "p95": 0.0056579943746328356,
+                "p99": 0.005771467946469784
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 312832000,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.050437163561582565,
+                "encoded_bytes": 14138540
+              },
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 4.302710294723511e-07,
+              "training_seconds": 0.11529494635760784,
+              "close_seconds": 2.7567148208618164e-07,
+              "steps_per_second": 867.3407045078295,
+              "step_seconds": {
+                "p50": 0.0006469190120697021,
+                "p95": 0.005629706662148237,
+                "p99": 0.005808627977967262
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 317046784,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.05070026032626629,
+                "encoded_bytes": 14138540
+              },
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 512,
+          "mode": "snapshot_worker",
+          "runs": 3,
+          "setup_seconds": 1.1100741885602474,
+          "training_seconds": 0.623665502294898,
+          "close_seconds": 1.1651731319725513,
+          "median_step_p95_seconds": 0.027747596614062783,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 330244096,
+            "worker_rss_peak_bytes": 251502592
+          },
+          "analysis_counts": [
+            {
+              "requested": 10,
+              "admitted": 2,
+              "completed": 2,
+              "skipped": 8,
+              "failed": 0
+            },
+            {
+              "requested": 10,
+              "admitted": 2,
+              "completed": 2,
+              "skipped": 8,
+              "failed": 0
+            },
+            {
+              "requested": 10,
+              "admitted": 2,
+              "completed": 2,
+              "skipped": 8,
+              "failed": 0
+            }
+          ],
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 1.1166985277086496,
+              "training_seconds": 0.6290747467428446,
+              "close_seconds": 1.1651731319725513,
+              "steps_per_second": 158.96362160104061,
+              "step_seconds": {
+                "p50": 0.001478469930589199,
+                "p95": 0.02833429146558046,
+                "p99": 0.10627838607877499
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 319545344,
+                "worker_rss_peak_bytes": 247578624
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.005469074472784996,
+                "raw_state_bytes": 2117664,
+                "peak_reserved_bytes": 270553120
+              },
+              "requested_captures": 10,
+              "analysis_counts": {
+                "requested": 10,
+                "admitted": 2,
+                "completed": 2,
+                "skipped": 8,
+                "failed": 0
+              },
+              "stored_bytes": 3072546,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 1.1100741885602474,
+              "training_seconds": 0.623665502294898,
+              "close_seconds": 1.0960203167051077,
+              "steps_per_second": 160.34236242349564,
+              "step_seconds": {
+                "p50": 0.0017544077709317207,
+                "p95": 0.027457007486373187,
+                "p99": 0.11848102411255244
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 325222400,
+                "worker_rss_peak_bytes": 251502592
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.005747411400079727,
+                "raw_state_bytes": 2117664,
+                "peak_reserved_bytes": 270553120
+              },
+              "requested_captures": 10,
+              "analysis_counts": {
+                "requested": 10,
+                "admitted": 2,
+                "completed": 2,
+                "skipped": 8,
+                "failed": 0
+              },
+              "stored_bytes": 3072546,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 1.1008276287466288,
+              "training_seconds": 0.6156170275062323,
+              "close_seconds": 1.1932996660470963,
+              "steps_per_second": 162.43865184347527,
+              "step_seconds": {
+                "p50": 0.0015304666012525558,
+                "p95": 0.027747596614062783,
+                "p99": 0.10080673515796672
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 330244096,
+                "worker_rss_peak_bytes": 249073664
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.005220398306846619,
+                "raw_state_bytes": 2117664,
+                "peak_reserved_bytes": 270553120
+              },
+              "requested_captures": 10,
+              "analysis_counts": {
+                "requested": 10,
+                "admitted": 2,
+                "completed": 2,
+                "skipped": 8,
+                "failed": 0
+              },
+              "stored_bytes": 3072546,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 512,
+          "mode": "activation",
+          "runs": 3,
+          "setup_seconds": 0.7336957715451717,
+          "training_seconds": 5.10493166744709,
+          "close_seconds": 0.07530147396028042,
+          "median_step_p95_seconds": 0.44956199992448087,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 320565248,
+            "worker_rss_peak_bytes": 315719680
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7336957715451717,
+              "training_seconds": 5.140042807906866,
+              "close_seconds": 0.0705720242112875,
+              "steps_per_second": 19.455090888770656,
+              "step_seconds": {
+                "p50": 0.0008259592577815056,
+                "p95": 0.4665384853258729,
+                "p99": 0.48193795898929315
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 311345152,
+                "worker_rss_peak_bytes": 297279488
+              },
+              "copy_measurement": null,
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 498428,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7475166246294975,
+              "training_seconds": 4.989336414262652,
+              "close_seconds": 0.0797850526869297,
+              "steps_per_second": 20.0427455070252,
+              "step_seconds": {
+                "p50": 0.0008615348488092422,
+                "p95": 0.44889493910595774,
+                "p99": 0.47002502668649043
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 315510784,
+                "worker_rss_peak_bytes": 298369024
+              },
+              "copy_measurement": null,
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 498428,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7279366627335548,
+              "training_seconds": 5.10493166744709,
+              "close_seconds": 0.07530147396028042,
+              "steps_per_second": 19.58890079522038,
+              "step_seconds": {
+                "p50": 0.0008204719051718712,
+                "p95": 0.44956199992448087,
+                "p99": 0.4808205345831819
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 320565248,
+                "worker_rss_peak_bytes": 315719680
+              },
+              "copy_measurement": null,
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 498428,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 16,
+          "mode": "off",
+          "runs": 3,
+          "setup_seconds": 5.681067705154419e-07,
+          "training_seconds": 0.5243250597268343,
+          "close_seconds": 2.6263296604156494e-07,
+          "median_step_p95_seconds": 0.005478746350854635,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 905428992,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 4.7124922275543213e-07,
+              "training_seconds": 0.5243250597268343,
+              "close_seconds": 3.1851232051849365e-07,
+              "steps_per_second": 190.72138198410457,
+              "step_seconds": {
+                "p50": 0.005167391151189804,
+                "p95": 0.005478746350854635,
+                "p99": 0.007681857440620672
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 900800512,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 5.811452865600586e-07,
+              "training_seconds": 0.5258006285876036,
+              "close_seconds": 2.6263296604156494e-07,
+              "steps_per_second": 190.18615528973072,
+              "step_seconds": {
+                "p50": 0.005163445137441158,
+                "p95": 0.005518972873687744,
+                "p99": 0.008944870550185448
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 904712192,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 5.681067705154419e-07,
+              "training_seconds": 0.516689145937562,
+              "close_seconds": 2.2724270820617676e-07,
+              "steps_per_second": 193.53996650838153,
+              "step_seconds": {
+                "p50": 0.00514631811529398,
+                "p95": 0.005440560076385736,
+                "p99": 0.006677912529557944
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 905428992,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 16,
+          "mode": "scalar",
+          "runs": 3,
+          "setup_seconds": 0.7355787642300129,
+          "training_seconds": 0.6549602914601564,
+          "close_seconds": 0.034662023186683655,
+          "median_step_p95_seconds": 0.007718616630882022,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 911282176,
+            "worker_rss_peak_bytes": 100769792
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7298439554870129,
+              "training_seconds": 0.6549602914601564,
+              "close_seconds": 0.03125593438744545,
+              "steps_per_second": 152.68101181685662,
+              "step_seconds": {
+                "p50": 0.0052580758929252625,
+                "p95": 0.007971424423158163,
+                "p99": 0.036762404181063205
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 909701120,
+                "worker_rss_peak_bytes": 100769792
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 45373,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7466243840754032,
+              "training_seconds": 0.6662610489875078,
+              "close_seconds": 0.04157589003443718,
+              "steps_per_second": 150.09131953903997,
+              "step_seconds": {
+                "p50": 0.005229693837463856,
+                "p95": 0.0072191635146737,
+                "p99": 0.0436066433042288
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 911007744,
+                "worker_rss_peak_bytes": 99565568
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 45373,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7355787642300129,
+              "training_seconds": 0.6522793993353844,
+              "close_seconds": 0.034662023186683655,
+              "steps_per_second": 153.30853634484126,
+              "step_seconds": {
+                "p50": 0.005181497894227505,
+                "p95": 0.007718616630882022,
+                "p99": 0.04208223503082993
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 911282176,
+                "worker_rss_peak_bytes": 99495936
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 45373,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 16,
+          "mode": "snapshot_copy",
+          "runs": 3,
+          "setup_seconds": 4.954636096954346e-07,
+          "training_seconds": 0.5329233445227146,
+          "close_seconds": 2.551823854446411e-07,
+          "median_step_p95_seconds": 0.006440625805407762,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 905191424,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 4.917383193969727e-07,
+              "training_seconds": 0.5336670149117708,
+              "close_seconds": 2.551823854446411e-07,
+              "steps_per_second": 187.38276341949413,
+              "step_seconds": {
+                "p50": 0.005176721140742302,
+                "p95": 0.006494681164622307,
+                "p99": 0.0068296150304377155
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 904196096,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.01351202093064785,
+                "encoded_bytes": 68740
+              },
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 5.811452865600586e-07,
+              "training_seconds": 0.5329233445227146,
+              "close_seconds": 2.4586915969848633e-07,
+              "steps_per_second": 187.64424757853283,
+              "step_seconds": {
+                "p50": 0.005203108303248882,
+                "p95": 0.006440625805407762,
+                "p99": 0.006573733817785979
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 905052160,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.012952318415045738,
+                "encoded_bytes": 68740
+              },
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 4.954636096954346e-07,
+              "training_seconds": 0.5290937498211861,
+              "close_seconds": 3.4086406230926514e-07,
+              "steps_per_second": 189.00242165740244,
+              "step_seconds": {
+                "p50": 0.005165447480976582,
+                "p95": 0.006431182287633419,
+                "p99": 0.006484669279307128
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 905191424,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.012866856530308723,
+                "encoded_bytes": 68740
+              },
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 16,
+          "mode": "snapshot_worker",
+          "runs": 3,
+          "setup_seconds": 1.1131382379680872,
+          "training_seconds": 0.7629252001643181,
+          "close_seconds": 0.710932856425643,
+          "median_step_p95_seconds": 0.015132695809006691,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 913498112,
+            "worker_rss_peak_bytes": 203538432
+          },
+          "analysis_counts": [
+            {
+              "requested": 10,
+              "admitted": 3,
+              "completed": 3,
+              "skipped": 7,
+              "failed": 0
+            },
+            {
+              "requested": 10,
+              "admitted": 3,
+              "completed": 3,
+              "skipped": 7,
+              "failed": 0
+            },
+            {
+              "requested": 10,
+              "admitted": 3,
+              "completed": 3,
+              "skipped": 7,
+              "failed": 0
+            }
+          ],
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 1.1130075342953205,
+              "training_seconds": 0.7343739066272974,
+              "close_seconds": 0.710932856425643,
+              "steps_per_second": 136.17041550299945,
+              "step_seconds": {
+                "p50": 0.005663779564201832,
+                "p95": 0.014166963286697839,
+                "p99": 0.03524096885696056
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 912838656,
+                "worker_rss_peak_bytes": 203538432
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.004093820229172707,
+                "raw_state_bytes": 4080,
+                "peak_reserved_bytes": 268438176
+              },
+              "requested_captures": 10,
+              "analysis_counts": {
+                "requested": 10,
+                "admitted": 3,
+                "completed": 3,
+                "skipped": 7,
+                "failed": 0
+              },
+              "stored_bytes": 287146,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 1.1206656228750944,
+              "training_seconds": 0.7671701293438673,
+              "close_seconds": 0.7134712766855955,
+              "steps_per_second": 130.349183544889,
+              "step_seconds": {
+                "p50": 0.005596066825091839,
+                "p95": 0.015427522361278529,
+                "p99": 0.03759588750079298
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 913199104,
+                "worker_rss_peak_bytes": 202985472
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0040792860090732574,
+                "raw_state_bytes": 4080,
+                "peak_reserved_bytes": 268438176
+              },
+              "requested_captures": 10,
+              "analysis_counts": {
+                "requested": 10,
+                "admitted": 3,
+                "completed": 3,
+                "skipped": 7,
+                "failed": 0
+              },
+              "stored_bytes": 285210,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 1.1131382379680872,
+              "training_seconds": 0.7629252001643181,
+              "close_seconds": 0.6869567688554525,
+              "steps_per_second": 131.07444868574547,
+              "step_seconds": {
+                "p50": 0.00560364406555891,
+                "p95": 0.015132695809006691,
+                "p99": 0.03917767308652422
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 913498112,
+                "worker_rss_peak_bytes": 200859648
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.003887586295604706,
+                "raw_state_bytes": 4080,
+                "peak_reserved_bytes": 268438176
+              },
+              "requested_captures": 10,
+              "analysis_counts": {
+                "requested": 10,
+                "admitted": 3,
+                "completed": 3,
+                "skipped": 7,
+                "failed": 0
+              },
+              "stored_bytes": 285209,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 16,
+          "mode": "activation",
+          "runs": 3,
+          "setup_seconds": 0.7448104470968246,
+          "training_seconds": 1.4147850051522255,
+          "close_seconds": 0.05312501639127731,
+          "median_step_p95_seconds": 0.08178639309480787,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 911228928,
+            "worker_rss_peak_bytes": 138190848
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7548567671328783,
+              "training_seconds": 1.4147850051522255,
+              "close_seconds": 0.048539478331804276,
+              "steps_per_second": 70.68211752020964,
+              "step_seconds": {
+                "p50": 0.005221175029873848,
+                "p95": 0.08150439644232392,
+                "p99": 0.08662725420668738
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 910462976,
+                "worker_rss_peak_bytes": 114606080
+              },
+              "copy_measurement": null,
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 561116,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7363239098340273,
+              "training_seconds": 1.3945966958999634,
+              "close_seconds": 0.06188157945871353,
+              "steps_per_second": 71.70531831460266,
+              "step_seconds": {
+                "p50": 0.005441922694444656,
+                "p95": 0.08178639309480787,
+                "p99": 0.087343200184405
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 910618624,
+                "worker_rss_peak_bytes": 126222336
+              },
+              "copy_measurement": null,
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 561116,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7448104470968246,
+              "training_seconds": 1.43106291256845,
+              "close_seconds": 0.05312501639127731,
+              "steps_per_second": 69.87812983044995,
+              "step_seconds": {
+                "p50": 0.005236930213868618,
+                "p95": 0.0834315748885274,
+                "p99": 0.09285474499687564
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 911228928,
+                "worker_rss_peak_bytes": 138190848
+              },
+              "copy_measurement": null,
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 561116,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 512,
+          "mode": "off",
+          "runs": 3,
+          "setup_seconds": 5.029141902923584e-07,
+          "training_seconds": 0.5741582754999399,
+          "close_seconds": 2.812594175338745e-07,
+          "median_step_p95_seconds": 0.0060373559594154354,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 925642752,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 5.550682544708252e-07,
+              "training_seconds": 0.5741582754999399,
+              "close_seconds": 2.9243528842926025e-07,
+              "steps_per_second": 174.16800256501827,
+              "step_seconds": {
+                "p50": 0.005688653327524662,
+                "p95": 0.005932139977812767,
+                "p99": 0.007528847511857757
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 906153984,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 5.029141902923584e-07,
+              "training_seconds": 0.5902000721544027,
+              "close_seconds": 2.812594175338745e-07,
+              "steps_per_second": 169.43406942491683,
+              "step_seconds": {
+                "p50": 0.0056527405977249146,
+                "p95": 0.006655857432633638,
+                "p99": 0.009126462247222668
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 921546752,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 4.991888999938965e-07,
+              "training_seconds": 0.5718622300773859,
+              "close_seconds": 2.7939677238464355e-07,
+              "steps_per_second": 174.86729275068183,
+              "step_seconds": {
+                "p50": 0.005720297805964947,
+                "p95": 0.0060373559594154354,
+                "p99": 0.006399834640324117
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 925642752,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 512,
+          "mode": "scalar",
+          "runs": 3,
+          "setup_seconds": 0.7526737339794636,
+          "training_seconds": 0.7049079146236181,
+          "close_seconds": 0.05093751288950443,
+          "median_step_p95_seconds": 0.008156772237271065,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 931266560,
+            "worker_rss_peak_bytes": 100462592
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7526737339794636,
+              "training_seconds": 0.7035887744277716,
+              "close_seconds": 0.04818701930344105,
+              "steps_per_second": 142.12847565871124,
+              "step_seconds": {
+                "p50": 0.005700265057384968,
+                "p95": 0.007548531610518693,
+                "p99": 0.04489637449383739
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 915587072,
+                "worker_rss_peak_bytes": 99803136
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 45562,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7532896045595407,
+              "training_seconds": 0.7066284026950598,
+              "close_seconds": 0.05093751288950443,
+              "steps_per_second": 141.51709670684474,
+              "step_seconds": {
+                "p50": 0.005720212124288082,
+                "p95": 0.008156772237271065,
+                "p99": 0.04517391964793207
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 926015488,
+                "worker_rss_peak_bytes": 100282368
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 45562,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7517236173152924,
+              "training_seconds": 0.7049079146236181,
+              "close_seconds": 0.05877556838095188,
+              "steps_per_second": 141.86250136430158,
+              "step_seconds": {
+                "p50": 0.0057473499327898026,
+                "p95": 0.008934527635574337,
+                "p99": 0.04210300143808127
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 931266560,
+                "worker_rss_peak_bytes": 100462592
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 45562,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 512,
+          "mode": "snapshot_copy",
+          "runs": 3,
+          "setup_seconds": 5.252659320831299e-07,
+          "training_seconds": 0.6388657074421644,
+          "close_seconds": 2.8312206268310547e-07,
+          "median_step_p95_seconds": 0.01193406730890274,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 921640960,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 5.252659320831299e-07,
+              "training_seconds": 0.6296670753508806,
+              "close_seconds": 2.5704503059387207e-07,
+              "steps_per_second": 158.8140843226958,
+              "step_seconds": {
+                "p50": 0.005669494159519672,
+                "p95": 0.011887040082365274,
+                "p99": 0.01218657022342086
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 916430848,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.06371322646737099,
+                "encoded_bytes": 14168450
+              },
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 4.880130290985107e-07,
+              "training_seconds": 0.6388657074421644,
+              "close_seconds": 3.0919909477233887e-07,
+              "steps_per_second": 156.52741857184884,
+              "step_seconds": {
+                "p50": 0.005742134526371956,
+                "p95": 0.01193406730890274,
+                "p99": 0.01246409131214023
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 921022464,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.06452377699315548,
+                "encoded_bytes": 14168450
+              },
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 6.332993507385254e-07,
+              "training_seconds": 0.6452748514711857,
+              "close_seconds": 2.8312206268310547e-07,
+              "steps_per_second": 154.97272173556175,
+              "step_seconds": {
+                "p50": 0.005783106200397015,
+                "p95": 0.01197232361882925,
+                "p99": 0.01224907036870718
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 921640960,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.062360625714063644,
+                "encoded_bytes": 14168450
+              },
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 512,
+          "mode": "snapshot_worker",
+          "runs": 3,
+          "setup_seconds": 1.1219874452799559,
+          "training_seconds": 1.1164821647107601,
+          "close_seconds": 1.4450282845646143,
+          "median_step_p95_seconds": 0.034622243698686356,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 936927232,
+            "worker_rss_peak_bytes": 251895808
+          },
+          "analysis_counts": [
+            {
+              "requested": 10,
+              "admitted": 3,
+              "completed": 3,
+              "skipped": 7,
+              "failed": 0
+            },
+            {
+              "requested": 10,
+              "admitted": 3,
+              "completed": 3,
+              "skipped": 7,
+              "failed": 0
+            },
+            {
+              "requested": 10,
+              "admitted": 2,
+              "completed": 2,
+              "skipped": 8,
+              "failed": 0
+            }
+          ],
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 1.1214753240346909,
+              "training_seconds": 1.123494716361165,
+              "close_seconds": 1.4455662593245506,
+              "steps_per_second": 89.00798423323731,
+              "step_seconds": {
+                "p50": 0.0061560021713376045,
+                "p95": 0.04262693114578722,
+                "p99": 0.09619801163673412
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 932466688,
+                "worker_rss_peak_bytes": 250675200
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.009314192458987236,
+                "raw_state_bytes": 3176496,
+                "peak_reserved_bytes": 270553120
+              },
+              "requested_captures": 10,
+              "analysis_counts": {
+                "requested": 10,
+                "admitted": 3,
+                "completed": 3,
+                "skipped": 7,
+                "failed": 0
+              },
+              "stored_bytes": 4491997,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 1.1236676722764969,
+              "training_seconds": 1.1164821647107601,
+              "close_seconds": 1.4450282845646143,
+              "steps_per_second": 89.56703757637396,
+              "step_seconds": {
+                "p50": 0.0061041489243507385,
+                "p95": 0.033026394434273236,
+                "p99": 0.11136765154078648
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 929587200,
+                "worker_rss_peak_bytes": 251895808
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.009980432689189911,
+                "raw_state_bytes": 3176496,
+                "peak_reserved_bytes": 270553120
+              },
+              "requested_captures": 10,
+              "analysis_counts": {
+                "requested": 10,
+                "admitted": 3,
+                "completed": 3,
+                "skipped": 7,
+                "failed": 0
+              },
+              "stored_bytes": 4491997,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 1.1219874452799559,
+              "training_seconds": 1.038186339661479,
+              "close_seconds": 0.6961542721837759,
+              "steps_per_second": 96.32182218136964,
+              "step_seconds": {
+                "p50": 0.006094672717154026,
+                "p95": 0.034622243698686356,
+                "p99": 0.10787086585536611
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 936927232,
+                "worker_rss_peak_bytes": 245739520
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0062273964285850525,
+                "raw_state_bytes": 2117664,
+                "peak_reserved_bytes": 270553120
+              },
+              "requested_captures": 10,
+              "analysis_counts": {
+                "requested": 10,
+                "admitted": 2,
+                "completed": 2,
+                "skipped": 8,
+                "failed": 0
+              },
+              "stored_bytes": 3009523,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 512,
+          "mode": "activation",
+          "runs": 3,
+          "setup_seconds": 0.7548112571239471,
+          "training_seconds": 5.5227908231318,
+          "close_seconds": 0.07449967227876186,
+          "median_step_p95_seconds": 0.47469517802819605,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 930168832,
+            "worker_rss_peak_bytes": 301191168
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7548112571239471,
+              "training_seconds": 5.533094661310315,
+              "close_seconds": 0.07108090072870255,
+              "steps_per_second": 18.073068711302074,
+              "step_seconds": {
+                "p50": 0.005769140087068081,
+                "p95": 0.47709881588816644,
+                "p99": 0.5007853823713965
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 923959296,
+                "worker_rss_peak_bytes": 301191168
+              },
+              "copy_measurement": null,
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 510112,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7523481603711843,
+              "training_seconds": 5.5227908231318,
+              "close_seconds": 0.07449967227876186,
+              "steps_per_second": 18.106787528717803,
+              "step_seconds": {
+                "p50": 0.005724580027163029,
+                "p95": 0.47469517802819605,
+                "p99": 0.5007347479090101
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 924024832,
+                "worker_rss_peak_bytes": 300072960
+              },
+              "copy_measurement": null,
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 510112,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7553356774151325,
+              "training_seconds": 5.473732441663742,
+              "close_seconds": 0.07957637868821621,
+              "steps_per_second": 18.26906979209327,
+              "step_seconds": {
+                "p50": 0.005764390341937542,
+                "p95": 0.46756446519866585,
+                "p99": 0.4963356340490288
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 930168832,
+                "worker_rss_peak_bytes": 298819584
+              },
+              "copy_measurement": null,
+              "requested_captures": 10,
+              "analysis_counts": null,
+              "stored_bytes": 510112,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "matched",
+      "protocol": {
+        "frameworks": "torch,tensorflow",
+        "widths": "16,512",
+        "repetitions": 3,
+        "steps": 100,
+        "warmup": 10,
+        "every": 1000
+      },
+      "engine": {
+        "abi": "deepbom.numerical_abi.v1:exact_binary64_v1",
+        "wasm_sha256": "6aafd82205cbfc00fd0c4dcc820464b90edf4fe6e23da87fe0d2c52e42f83c05",
+        "analyzer_content_sha256": "45425530f255648cda8b334a168f56f07c309eaf722732d7fbaf4d9b2fe58c96"
+      },
+      "benchmark_source_sha256": "32abaf678146c6b2ef10b73b49d1093847a91e04832b7a717dff3e316fefdf98",
+      "environment": {
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
+        "cpu_logical_count": 48,
+        "framework_versions": {
+          "torch": "2.8.0+cpu",
+          "tensorflow": "2.20.0",
+          "numpy": "2.2.6",
+          "psutil": "7.2.1"
+        }
+      },
+      "validation": {
+        "controlled_cpu_state_and_loss_preserved": true,
+        "runs": 60,
+        "frameworks": [
+          "torch",
+          "tensorflow"
+        ],
+        "not_qualified": [
+          "GPU",
+          "distributed",
+          "unbounded models",
+          "production default overhead guarantee"
+        ]
+      },
+      "rows": [
+        {
+          "framework": "torch",
+          "width": 16,
+          "mode": "off",
+          "runs": 3,
+          "setup_seconds": 3.241002559661865e-07,
+          "training_seconds": 0.027340775355696678,
+          "close_seconds": 2.5331974029541016e-07,
+          "median_step_p95_seconds": 0.0003673717379570007,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 292945920,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 3.241002559661865e-07,
+              "training_seconds": 0.027450082823634148,
+              "close_seconds": 2.5331974029541016e-07,
+              "steps_per_second": 3642.976257758369,
+              "step_seconds": {
+                "p50": 0.00023240875452756882,
+                "p95": 0.00035704392939805963,
+                "p99": 0.0006897118687629717
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 289685504,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 3.296881914138794e-07,
+              "training_seconds": 0.02678126096725464,
+              "close_seconds": 2.812594175338745e-07,
+              "steps_per_second": 3733.9541301759346,
+              "step_seconds": {
+                "p50": 0.00023881904780864716,
+                "p95": 0.00036942027509212494,
+                "p99": 0.0004482035525143154
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 292925440,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 2.980232238769531e-07,
+              "training_seconds": 0.027340775355696678,
+              "close_seconds": 1.862645149230957e-07,
+              "steps_per_second": 3657.540749997939,
+              "step_seconds": {
+                "p50": 0.00022162683308124542,
+                "p95": 0.0003673717379570007,
+                "p99": 0.0005944371595978739
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 292945920,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 16,
+          "mode": "scalar",
+          "runs": 3,
+          "setup_seconds": 0.7468833718448877,
+          "training_seconds": 0.3069433644413948,
+          "close_seconds": 0.045529428869485855,
+          "median_step_p95_seconds": 0.026585158891975876,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 298766336,
+            "worker_rss_peak_bytes": 103297024
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7664798106998205,
+              "training_seconds": 0.3069433644413948,
+              "close_seconds": 0.045529428869485855,
+              "steps_per_second": 325.79300152648574,
+              "step_seconds": {
+                "p50": 0.0005864463746547699,
+                "p95": 0.025296539813280106,
+                "p99": 0.032987390905618676
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 298115072,
+                "worker_rss_peak_bytes": 103067648
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 145829,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7468833718448877,
+              "training_seconds": 0.29620970226824284,
+              "close_seconds": 0.04992766119539738,
+              "steps_per_second": 337.5986648453587,
+              "step_seconds": {
+                "p50": 0.0005901036784052849,
+                "p95": 0.026585158891975876,
+                "p99": 0.030062963329255586
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 298758144,
+                "worker_rss_peak_bytes": 103297024
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 145829,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7458219304680824,
+              "training_seconds": 0.32660188153386116,
+              "close_seconds": 0.04252339154481888,
+              "steps_per_second": 306.1831717881034,
+              "step_seconds": {
+                "p50": 0.0005838442593812943,
+                "p95": 0.028965953923761844,
+                "p99": 0.03203081227838994
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 298766336,
+                "worker_rss_peak_bytes": 103014400
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 145829,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 16,
+          "mode": "snapshot_copy",
+          "runs": 3,
+          "setup_seconds": 3.4458935260772705e-07,
+          "training_seconds": 0.028145773336291313,
+          "close_seconds": 1.8998980522155762e-07,
+          "median_step_p95_seconds": 0.00036955215036869036,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 292941824,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 3.073364496231079e-07,
+              "training_seconds": 0.02780045010149479,
+              "close_seconds": 1.8998980522155762e-07,
+              "steps_per_second": 3597.064063168644,
+              "step_seconds": {
+                "p50": 0.00028078723698854446,
+                "p95": 0.0003679025918245315,
+                "p99": 0.0006482670456171037
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 292515840,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.0003472473472356796,
+                "encoded_bytes": 3884
+              },
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 3.5762786865234375e-07,
+              "training_seconds": 0.028305010870099068,
+              "close_seconds": 2.384185791015625e-07,
+              "steps_per_second": 3532.943352642846,
+              "step_seconds": {
+                "p50": 0.00030171312391757965,
+                "p95": 0.00036955215036869036,
+                "p99": 0.0005715563707053666
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 292933632,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.00034123659133911133,
+                "encoded_bytes": 3884
+              },
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 3.4458935260772705e-07,
+              "training_seconds": 0.028145773336291313,
+              "close_seconds": 1.3783574104309082e-07,
+              "steps_per_second": 3552.9313337807444,
+              "step_seconds": {
+                "p50": 0.0002736160531640053,
+                "p95": 0.00039138244464993467,
+                "p99": 0.0006275583989918241
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 292941824,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.0003420952707529068,
+                "encoded_bytes": 3884
+              },
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 16,
+          "mode": "snapshot_worker",
+          "runs": 3,
+          "setup_seconds": 1.1159633174538612,
+          "training_seconds": 0.3832824341952801,
+          "close_seconds": 0.15174685046076775,
+          "median_step_p95_seconds": 0.0295505222864449,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 301219840,
+            "worker_rss_peak_bytes": 203812864
+          },
+          "analysis_counts": [
+            {
+              "requested": 1,
+              "admitted": 1,
+              "completed": 1,
+              "skipped": 0,
+              "failed": 0
+            },
+            {
+              "requested": 1,
+              "admitted": 1,
+              "completed": 1,
+              "skipped": 0,
+              "failed": 0
+            },
+            {
+              "requested": 1,
+              "admitted": 1,
+              "completed": 1,
+              "skipped": 0,
+              "failed": 0
+            }
+          ],
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 1.1159633174538612,
+              "training_seconds": 0.3827322516590357,
+              "close_seconds": 0.16051454469561577,
+              "steps_per_second": 261.27926132832647,
+              "step_seconds": {
+                "p50": 0.0008807741105556488,
+                "p95": 0.0295505222864449,
+                "p99": 0.03178741523995998
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 301154304,
+                "worker_rss_peak_bytes": 199856128
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0006418954581022263,
+                "raw_state_bytes": 1360,
+                "peak_reserved_bytes": 134219088
+              },
+              "requested_captures": 1,
+              "analysis_counts": {
+                "requested": 1,
+                "admitted": 1,
+                "completed": 1,
+                "skipped": 0,
+                "failed": 0
+              },
+              "stored_bytes": 207441,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 1.1151272635906935,
+              "training_seconds": 0.38344185054302216,
+              "close_seconds": 0.1494090873748064,
+              "steps_per_second": 260.79573697649886,
+              "step_seconds": {
+                "p50": 0.0009008944034576416,
+                "p95": 0.029464727826416494,
+                "p99": 0.03326419403776529
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 301203456,
+                "worker_rss_peak_bytes": 203812864
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0006235595792531967,
+                "raw_state_bytes": 1360,
+                "peak_reserved_bytes": 134219088
+              },
+              "requested_captures": 1,
+              "analysis_counts": {
+                "requested": 1,
+                "admitted": 1,
+                "completed": 1,
+                "skipped": 0,
+                "failed": 0
+              },
+              "stored_bytes": 207442,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 1.123270371928811,
+              "training_seconds": 0.3832824341952801,
+              "close_seconds": 0.15174685046076775,
+              "steps_per_second": 260.9042081721142,
+              "step_seconds": {
+                "p50": 0.0008441833779215813,
+                "p95": 0.02969806445762515,
+                "p99": 0.032643237579613925
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 301219840,
+                "worker_rss_peak_bytes": 202305536
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0006416887044906616,
+                "raw_state_bytes": 1360,
+                "peak_reserved_bytes": 134219088
+              },
+              "requested_captures": 1,
+              "analysis_counts": {
+                "requested": 1,
+                "admitted": 1,
+                "completed": 1,
+                "skipped": 0,
+                "failed": 0
+              },
+              "stored_bytes": 207443,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 16,
+          "mode": "activation",
+          "runs": 3,
+          "setup_seconds": 0.7412252612411976,
+          "training_seconds": 0.4108214396983385,
+          "close_seconds": 0.06252280250191689,
+          "median_step_p95_seconds": 0.027956827450543637,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 298762240,
+            "worker_rss_peak_bytes": 105111552
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7456305082887411,
+              "training_seconds": 0.5209821797907352,
+              "close_seconds": 0.06273776106536388,
+              "steps_per_second": 191.94514491871365,
+              "step_seconds": {
+                "p50": 0.0006015729159116745,
+                "p95": 0.029706985224038363,
+                "p99": 0.10342032173648491
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 298704896,
+                "worker_rss_peak_bytes": 105111552
+              },
+              "copy_measurement": null,
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 186090,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7412252612411976,
+              "training_seconds": 0.391458036378026,
+              "close_seconds": 0.06252280250191689,
+              "steps_per_second": 255.45522305596833,
+              "step_seconds": {
+                "p50": 0.0005520787090063095,
+                "p95": 0.027079376764595507,
+                "p99": 0.029380561243743046
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 298741760,
+                "worker_rss_peak_bytes": 104525824
+              },
+              "copy_measurement": null,
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 186090,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.740440720692277,
+              "training_seconds": 0.4108214396983385,
+              "close_seconds": 0.051394617184996605,
+              "steps_per_second": 243.41475477382303,
+              "step_seconds": {
+                "p50": 0.0005855830386281013,
+                "p95": 0.027956827450543637,
+                "p99": 0.0321569758653644
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 298762240,
+                "worker_rss_peak_bytes": 103690240
+              },
+              "copy_measurement": null,
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 186090,
+              "state_sha256": "7acee13804f24977a54e52a0edd4017a07aca3931d1aaade5b257807eb59b642"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 512,
+          "mode": "off",
+          "runs": 3,
+          "setup_seconds": 3.427267074584961e-07,
+          "training_seconds": 0.05591331981122494,
+          "close_seconds": 1.993030309677124e-07,
+          "median_step_p95_seconds": 0.0006819231435656548,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 318361600,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 3.688037395477295e-07,
+              "training_seconds": 0.05560416169464588,
+              "close_seconds": 1.73225998878479e-07,
+              "steps_per_second": 1798.4265377321387,
+              "step_seconds": {
+                "p50": 0.0005650361999869347,
+                "p95": 0.0006750690750777722,
+                "p99": 0.000884721595793963
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 294195200,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 3.427267074584961e-07,
+              "training_seconds": 0.05591331981122494,
+              "close_seconds": 2.4959444999694824e-07,
+              "steps_per_second": 1788.4826073218496,
+              "step_seconds": {
+                "p50": 0.0005573499947786331,
+                "p95": 0.0007105717435479163,
+                "p99": 0.0009803931973874573
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 313245696,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 3.371387720108032e-07,
+              "training_seconds": 0.056487640365958214,
+              "close_seconds": 1.993030309677124e-07,
+              "steps_per_second": 1770.2987653961934,
+              "step_seconds": {
+                "p50": 0.0005742460489273071,
+                "p95": 0.0006819231435656548,
+                "p99": 0.0008904058299958709
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 318361600,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 512,
+          "mode": "scalar",
+          "runs": 3,
+          "setup_seconds": 0.737278163433075,
+          "training_seconds": 0.349332507699728,
+          "close_seconds": 0.05163534730672836,
+          "median_step_p95_seconds": 0.02849880699068308,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 323952640,
+            "worker_rss_peak_bytes": 103178240
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.732896376401186,
+              "training_seconds": 0.349332507699728,
+              "close_seconds": 0.05163534730672836,
+              "steps_per_second": 286.2602185478711,
+              "step_seconds": {
+                "p50": 0.0007908400148153305,
+                "p95": 0.02849880699068308,
+                "p99": 0.03077297212556007
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 306438144,
+                "worker_rss_peak_bytes": 102727680
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 145972,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7376701850444078,
+              "training_seconds": 0.3469846360385418,
+              "close_seconds": 0.05650809966027737,
+              "steps_per_second": 288.19719841685543,
+              "step_seconds": {
+                "p50": 0.0008617248386144638,
+                "p95": 0.02835222166031599,
+                "p99": 0.0313371135853231
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 318181376,
+                "worker_rss_peak_bytes": 103178240
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 145972,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.737278163433075,
+              "training_seconds": 0.3645408358424902,
+              "close_seconds": 0.04442829079926014,
+              "steps_per_second": 274.31769000279496,
+              "step_seconds": {
+                "p50": 0.000785299576818943,
+                "p95": 0.03010905710980296,
+                "p99": 0.0318891033343971
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 323952640,
+                "worker_rss_peak_bytes": 102727680
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 145972,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 512,
+          "mode": "snapshot_copy",
+          "runs": 3,
+          "setup_seconds": 4.246830940246582e-07,
+          "training_seconds": 0.06907869875431061,
+          "close_seconds": 2.2910535335540771e-07,
+          "median_step_p95_seconds": 0.0010752989910542963,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 314040320,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 4.246830940246582e-07,
+              "training_seconds": 0.06907869875431061,
+              "close_seconds": 2.3096799850463867e-07,
+              "steps_per_second": 1447.6242575973517,
+              "step_seconds": {
+                "p50": 0.0005782060325145721,
+                "p95": 0.0011800687760114667,
+                "p99": 0.002087759487330938
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 303681536,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.006261203438043594,
+                "encoded_bytes": 1413854
+              },
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 4.3213367462158203e-07,
+              "training_seconds": 0.06260613538324833,
+              "close_seconds": 2.2910535335540771e-07,
+              "steps_per_second": 1597.287540395877,
+              "step_seconds": {
+                "p50": 0.000581543892621994,
+                "p95": 0.0007854332216084003,
+                "p99": 0.0010971264727413904
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 311201792,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.005343765020370483,
+                "encoded_bytes": 1413854
+              },
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 3.557652235031128e-07,
+              "training_seconds": 0.0707829836755991,
+              "close_seconds": 1.9371509552001953e-07,
+              "steps_per_second": 1412.768928451837,
+              "step_seconds": {
+                "p50": 0.0006065163761377335,
+                "p95": 0.0010752989910542963,
+                "p99": 0.0019474657624960175
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 314040320,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.005753623321652412,
+                "encoded_bytes": 1413854
+              },
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 512,
+          "mode": "snapshot_worker",
+          "runs": 3,
+          "setup_seconds": 1.1071724351495504,
+          "training_seconds": 0.5142517071217299,
+          "close_seconds": 0.4131897948682308,
+          "median_step_p95_seconds": 0.029102312959730623,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 327925760,
+            "worker_rss_peak_bytes": 247169024
+          },
+          "analysis_counts": [
+            {
+              "requested": 1,
+              "admitted": 1,
+              "completed": 1,
+              "skipped": 0,
+              "failed": 0
+            },
+            {
+              "requested": 1,
+              "admitted": 1,
+              "completed": 1,
+              "skipped": 0,
+              "failed": 0
+            },
+            {
+              "requested": 1,
+              "admitted": 1,
+              "completed": 1,
+              "skipped": 0,
+              "failed": 0
+            }
+          ],
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 1.1097884066402912,
+              "training_seconds": 0.49859813414514065,
+              "close_seconds": 0.4141663443297148,
+              "steps_per_second": 200.56232294461466,
+              "step_seconds": {
+                "p50": 0.001272084191441536,
+                "p95": 0.026801404450088738,
+                "p99": 0.03613148121163285
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 313507840,
+                "worker_rss_peak_bytes": 246353920
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.003178337588906288,
+                "raw_state_bytes": 1058832,
+                "peak_reserved_bytes": 135276560
+              },
+              "requested_captures": 1,
+              "analysis_counts": {
+                "requested": 1,
+                "admitted": 1,
+                "completed": 1,
+                "skipped": 0,
+                "failed": 0
+              },
+              "stored_bytes": 1609560,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 1.1071724351495504,
+              "training_seconds": 0.5142517071217299,
+              "close_seconds": 0.4011193495243788,
+              "steps_per_second": 194.45730294158992,
+              "step_seconds": {
+                "p50": 0.0012249443680047989,
+                "p95": 0.029102312959730623,
+                "p99": 0.038426524344832055
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 322015232,
+                "worker_rss_peak_bytes": 247169024
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0037320777773857117,
+                "raw_state_bytes": 1058832,
+                "peak_reserved_bytes": 135276560
+              },
+              "requested_captures": 1,
+              "analysis_counts": {
+                "requested": 1,
+                "admitted": 1,
+                "completed": 1,
+                "skipped": 0,
+                "failed": 0
+              },
+              "stored_bytes": 1609561,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 1.1027719844132662,
+              "training_seconds": 0.5255107209086418,
+              "close_seconds": 0.4131897948682308,
+              "steps_per_second": 190.2910749890955,
+              "step_seconds": {
+                "p50": 0.00126601941883564,
+                "p95": 0.030008031148463486,
+                "p99": 0.039025125950575126
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 327925760,
+                "worker_rss_peak_bytes": 246677504
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0039710383862257,
+                "raw_state_bytes": 1058832,
+                "peak_reserved_bytes": 135276560
+              },
+              "requested_captures": 1,
+              "analysis_counts": {
+                "requested": 1,
+                "admitted": 1,
+                "completed": 1,
+                "skipped": 0,
+                "failed": 0
+              },
+              "stored_bytes": 1609559,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            }
+          ]
+        },
+        {
+          "framework": "torch",
+          "width": 512,
+          "mode": "activation",
+          "runs": 3,
+          "setup_seconds": 0.7384694125503302,
+          "training_seconds": 0.9464875534176826,
+          "close_seconds": 0.05295960232615471,
+          "median_step_p95_seconds": 0.026162329874932767,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 323911680,
+            "worker_rss_peak_bytes": 189734912
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.737614156678319,
+              "training_seconds": 0.9336583018302917,
+              "close_seconds": 0.05030703544616699,
+              "steps_per_second": 107.10556507018207,
+              "step_seconds": {
+                "p50": 0.0007814075797796249,
+                "p95": 0.026087728701531886,
+                "p99": 0.033395445086065026
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 318758912,
+                "worker_rss_peak_bytes": 189734912
+              },
+              "copy_measurement": null,
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 180970,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7398774269968271,
+              "training_seconds": 0.9768162239342928,
+              "close_seconds": 0.05295960232615471,
+              "steps_per_second": 102.3734020276947,
+              "step_seconds": {
+                "p50": 0.0008372142910957336,
+                "p95": 0.02806194210425019,
+                "p99": 0.037177414111796134
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 323022848,
+                "worker_rss_peak_bytes": 189112320
+              },
+              "copy_measurement": null,
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 180970,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7384694125503302,
+              "training_seconds": 0.9464875534176826,
+              "close_seconds": 0.058669211342930794,
+              "steps_per_second": 105.65379295153842,
+              "step_seconds": {
+                "p50": 0.0008247476071119308,
+                "p95": 0.026162329874932767,
+                "p99": 0.0360023124143512
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 323911680,
+                "worker_rss_peak_bytes": 189710336
+              },
+              "copy_measurement": null,
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 180970,
+              "state_sha256": "3b48b1b55a75533628930d27e66c3668d9c906766e9d54ccf459ef848cd14300"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 16,
+          "mode": "off",
+          "runs": 3,
+          "setup_seconds": 3.4458935260772705e-07,
+          "training_seconds": 0.5029291547834873,
+          "close_seconds": 2.849847078323364e-07,
+          "median_step_p95_seconds": 0.005264544393867253,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 905469952,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 3.4458935260772705e-07,
+              "training_seconds": 0.5073301959782839,
+              "close_seconds": 2.4400651454925537e-07,
+              "steps_per_second": 197.11028594931193,
+              "step_seconds": {
+                "p50": 0.004968689754605293,
+                "p95": 0.005266026034951209,
+                "p99": 0.008493146691471347
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 900841472,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 3.166496753692627e-07,
+              "training_seconds": 0.5029291547834873,
+              "close_seconds": 2.849847078323364e-07,
+              "steps_per_second": 198.8351620678072,
+              "step_seconds": {
+                "p50": 0.004988569766283035,
+                "p95": 0.005264544393867253,
+                "p99": 0.00587127123028042
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 904851456,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 4.7497451305389404e-07,
+              "training_seconds": 0.4936674516648054,
+              "close_seconds": 2.9616057872772217e-07,
+              "steps_per_second": 202.5655117888932,
+              "step_seconds": {
+                "p50": 0.004958619363605976,
+                "p95": 0.005054240208119154,
+                "p99": 0.005189257487654687
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 905469952,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 16,
+          "mode": "scalar",
+          "runs": 3,
+          "setup_seconds": 0.7386774402111769,
+          "training_seconds": 0.6362757552415133,
+          "close_seconds": 0.04212155006825924,
+          "median_step_p95_seconds": 0.007411226443946356,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 911388672,
+            "worker_rss_peak_bytes": 100253696
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.744614252820611,
+              "training_seconds": 0.6362757552415133,
+              "close_seconds": 0.04212155006825924,
+              "steps_per_second": 157.16456139687844,
+              "step_seconds": {
+                "p50": 0.005040349438786507,
+                "p95": 0.007411226443946356,
+                "p99": 0.044009823780506864
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 909729792,
+                "worker_rss_peak_bytes": 100073472
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 45372,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.733200304210186,
+              "training_seconds": 0.6350617930293083,
+              "close_seconds": 0.04475697688758373,
+              "steps_per_second": 157.46499174984214,
+              "step_seconds": {
+                "p50": 0.005020158365368843,
+                "p95": 0.007209992129355668,
+                "p99": 0.044880797658115645
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 911007744,
+                "worker_rss_peak_bytes": 100253696
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 45372,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7386774402111769,
+              "training_seconds": 0.641766257584095,
+              "close_seconds": 0.037205228582024574,
+              "steps_per_second": 155.8199715523316,
+              "step_seconds": {
+                "p50": 0.005029426887631416,
+                "p95": 0.008129232749342914,
+                "p99": 0.04328431177884342
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 911388672,
+                "worker_rss_peak_bytes": 99364864
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 45372,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 16,
+          "mode": "snapshot_copy",
+          "runs": 3,
+          "setup_seconds": 5.103647708892822e-07,
+          "training_seconds": 0.4983307793736458,
+          "close_seconds": 2.775341272354126e-07,
+          "median_step_p95_seconds": 0.005187214910984039,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 905347072,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 6.05359673500061e-07,
+              "training_seconds": 0.4981930758804083,
+              "close_seconds": 2.775341272354126e-07,
+              "steps_per_second": 200.72539110119044,
+              "step_seconds": {
+                "p50": 0.004985932260751724,
+                "p95": 0.005177065078169107,
+                "p99": 0.005764772016555071
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 904208384,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.0012569427490234375,
+                "encoded_bytes": 6874
+              },
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 5.103647708892822e-07,
+              "training_seconds": 0.4983307793736458,
+              "close_seconds": 2.644956111907959e-07,
+              "steps_per_second": 200.66992475497992,
+              "step_seconds": {
+                "p50": 0.004970281384885311,
+                "p95": 0.005253060534596443,
+                "p99": 0.005792934484779836
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 905134080,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.0012517049908638,
+                "encoded_bytes": 6874
+              },
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 4.731118679046631e-07,
+              "training_seconds": 0.4998574759811163,
+              "close_seconds": 2.942979335784912e-07,
+              "steps_per_second": 200.05702586266375,
+              "step_seconds": {
+                "p50": 0.004993944428861141,
+                "p95": 0.005187214910984039,
+                "p99": 0.005412484090775254
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 905347072,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.00123538076877594,
+                "encoded_bytes": 6874
+              },
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 16,
+          "mode": "snapshot_worker",
+          "runs": 3,
+          "setup_seconds": 1.1134608965367079,
+          "training_seconds": 0.7349561229348183,
+          "close_seconds": 0.05337683670222759,
+          "median_step_p95_seconds": 0.010963226854801143,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 913731584,
+            "worker_rss_peak_bytes": 200314880
+          },
+          "analysis_counts": [
+            {
+              "requested": 1,
+              "admitted": 1,
+              "completed": 1,
+              "skipped": 0,
+              "failed": 0
+            },
+            {
+              "requested": 1,
+              "admitted": 1,
+              "completed": 1,
+              "skipped": 0,
+              "failed": 0
+            },
+            {
+              "requested": 1,
+              "admitted": 1,
+              "completed": 1,
+              "skipped": 0,
+              "failed": 0
+            }
+          ],
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 1.1134608965367079,
+              "training_seconds": 0.7377240918576717,
+              "close_seconds": 0.05337683670222759,
+              "steps_per_second": 135.55203239762554,
+              "step_seconds": {
+                "p50": 0.005289250053465366,
+                "p95": 0.011658513266593193,
+                "p99": 0.05005920536816121
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 912785408,
+                "worker_rss_peak_bytes": 200060928
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0013482123613357544,
+                "raw_state_bytes": 1360,
+                "peak_reserved_bytes": 134219088
+              },
+              "requested_captures": 1,
+              "analysis_counts": {
+                "requested": 1,
+                "admitted": 1,
+                "completed": 1,
+                "skipped": 0,
+                "failed": 0
+              },
+              "stored_bytes": 126342,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 1.1104794777929783,
+              "training_seconds": 0.7349561229348183,
+              "close_seconds": 0.0410853773355484,
+              "steps_per_second": 136.06254425186793,
+              "step_seconds": {
+                "p50": 0.005296177230775356,
+                "p95": 0.010381263121962513,
+                "p99": 0.048953671585768486
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 913309696,
+                "worker_rss_peak_bytes": 190676992
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0011709388345479965,
+                "raw_state_bytes": 1360,
+                "peak_reserved_bytes": 134219088
+              },
+              "requested_captures": 1,
+              "analysis_counts": {
+                "requested": 1,
+                "admitted": 1,
+                "completed": 1,
+                "skipped": 0,
+                "failed": 0
+              },
+              "stored_bytes": 126342,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 1.119824668392539,
+              "training_seconds": 0.7274268884211779,
+              "close_seconds": 0.05919216386973858,
+              "steps_per_second": 137.47086008470492,
+              "step_seconds": {
+                "p50": 0.005253612995147705,
+                "p95": 0.010963226854801143,
+                "p99": 0.05120992368087174
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 913731584,
+                "worker_rss_peak_bytes": 200314880
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0013264436274766922,
+                "raw_state_bytes": 1360,
+                "peak_reserved_bytes": 134219088
+              },
+              "requested_captures": 1,
+              "analysis_counts": {
+                "requested": 1,
+                "admitted": 1,
+                "completed": 1,
+                "skipped": 0,
+                "failed": 0
+              },
+              "stored_bytes": 126342,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 16,
+          "mode": "activation",
+          "runs": 3,
+          "setup_seconds": 0.7415047995746136,
+          "training_seconds": 0.7470728699117899,
+          "close_seconds": 0.03284255042672157,
+          "median_step_p95_seconds": 0.007443904317915435,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 911265792,
+            "worker_rss_peak_bytes": 105054208
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7415047995746136,
+              "training_seconds": 0.7470728699117899,
+              "close_seconds": 0.03284255042672157,
+              "steps_per_second": 133.85575092802853,
+              "step_seconds": {
+                "p50": 0.005065997131168842,
+                "p95": 0.0076864978298544825,
+                "p99": 0.042834869436920095
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 910553088,
+                "worker_rss_peak_bytes": 104730624
+              },
+              "copy_measurement": null,
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 96973,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7422522883862257,
+              "training_seconds": 0.7562783602625132,
+              "close_seconds": 0.028857652097940445,
+              "steps_per_second": 132.22644631176385,
+              "step_seconds": {
+                "p50": 0.005662168376147747,
+                "p95": 0.007443904317915435,
+                "p99": 0.03920465491712132
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 910798848,
+                "worker_rss_peak_bytes": 105054208
+              },
+              "copy_measurement": null,
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 96973,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7284854203462601,
+              "training_seconds": 0.7397887241095304,
+              "close_seconds": 0.05233013443648815,
+              "steps_per_second": 135.17372831056338,
+              "step_seconds": {
+                "p50": 0.005041099153459072,
+                "p95": 0.007249845378100867,
+                "p99": 0.04583270814269817
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 911265792,
+                "worker_rss_peak_bytes": 104943616
+              },
+              "copy_measurement": null,
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 96973,
+              "state_sha256": "874eacbe9f46abd04aabc4d8430540bdcdfa59d165c875074201769b622a4293"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 512,
+          "mode": "off",
+          "runs": 3,
+          "setup_seconds": 4.824250936508179e-07,
+          "training_seconds": 0.5532261840999126,
+          "close_seconds": 2.8870999813079834e-07,
+          "median_step_p95_seconds": 0.005719100777059794,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 921956352,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 4.470348358154297e-07,
+              "training_seconds": 0.5471364818513393,
+              "close_seconds": 2.8870999813079834e-07,
+              "steps_per_second": 182.7697536483606,
+              "step_seconds": {
+                "p50": 0.005479740910232067,
+                "p95": 0.005718497559428215,
+                "p99": 0.0057955571077764065
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 905666560,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 5.066394805908203e-07,
+              "training_seconds": 0.5532261840999126,
+              "close_seconds": 2.7939677238464355e-07,
+              "steps_per_second": 180.75789410202609,
+              "step_seconds": {
+                "p50": 0.0055479202419519424,
+                "p95": 0.005719100777059794,
+                "p99": 0.005810079574584965
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 921956352,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 4.824250936508179e-07,
+              "training_seconds": 0.5580324791371822,
+              "close_seconds": 3.1478703022003174e-07,
+              "steps_per_second": 179.20103889762444,
+              "step_seconds": {
+                "p50": 0.005509279668331146,
+                "p95": 0.006092720385640859,
+                "p99": 0.0063677816279232545
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 920481792,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 512,
+          "mode": "scalar",
+          "runs": 3,
+          "setup_seconds": 0.7487863078713417,
+          "training_seconds": 0.6904644798487425,
+          "close_seconds": 0.040809787809848785,
+          "median_step_p95_seconds": 0.007933682203292838,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 928874496,
+            "worker_rss_peak_bytes": 100442112
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7374198064208031,
+              "training_seconds": 0.6904644798487425,
+              "close_seconds": 0.040809787809848785,
+              "steps_per_second": 144.83004255614514,
+              "step_seconds": {
+                "p50": 0.0055325822904706,
+                "p95": 0.0076507380232214844,
+                "p99": 0.0444252651743591
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 917966848,
+                "worker_rss_peak_bytes": 99766272
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 45561,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.753366744145751,
+              "training_seconds": 0.6922548841685057,
+              "close_seconds": 0.03768807463347912,
+              "steps_per_second": 144.45546327941608,
+              "step_seconds": {
+                "p50": 0.005539941601455212,
+                "p95": 0.008643638994544744,
+                "p99": 0.04723233584314585
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 923406336,
+                "worker_rss_peak_bytes": 100319232
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 45561,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7487863078713417,
+              "training_seconds": 0.6768265105783939,
+              "close_seconds": 0.05635545216500759,
+              "steps_per_second": 147.74834974259986,
+              "step_seconds": {
+                "p50": 0.005501040257513523,
+                "p95": 0.007933682203292838,
+                "p99": 0.045898108165711174
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 928874496,
+                "worker_rss_peak_bytes": 100442112
+              },
+              "copy_measurement": null,
+              "requested_captures": 0,
+              "analysis_counts": null,
+              "stored_bytes": 45561,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 512,
+          "mode": "snapshot_copy",
+          "runs": 3,
+          "setup_seconds": 5.271285772323608e-07,
+          "training_seconds": 0.555201118811965,
+          "close_seconds": 2.3096799850463867e-07,
+          "median_step_p95_seconds": 0.005719303619116545,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 923070464,
+            "worker_rss_peak_bytes": 0
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 5.718320608139038e-07,
+              "training_seconds": 0.555201118811965,
+              "close_seconds": 2.123415470123291e-07,
+              "steps_per_second": 180.11491081643138,
+              "step_seconds": {
+                "p50": 0.00547641608864069,
+                "p95": 0.005719303619116545,
+                "p99": 0.006331674829125437
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 913461248,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.00677654892206192,
+                "encoded_bytes": 1416845
+              },
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 4.973262548446655e-07,
+              "training_seconds": 0.5584447253495455,
+              "close_seconds": 2.3096799850463867e-07,
+              "steps_per_second": 179.06875194748653,
+              "step_seconds": {
+                "p50": 0.005500766448676586,
+                "p95": 0.005754493642598391,
+                "p99": 0.010132618099451072
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 923070464,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.006312105804681778,
+                "encoded_bytes": 1416845
+              },
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 5.271285772323608e-07,
+              "training_seconds": 0.553717328235507,
+              "close_seconds": 3.1478703022003174e-07,
+              "steps_per_second": 180.59756287321392,
+              "step_seconds": {
+                "p50": 0.005494936369359493,
+                "p95": 0.005683025903999805,
+                "p99": 0.005886855404824046
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 918978560,
+                "worker_rss_peak_bytes": 0
+              },
+              "copy_measurement": {
+                "basis": "snapshot_copy_and_json_encoding",
+                "seconds": 0.006141375750303268,
+                "encoded_bytes": 1416845
+              },
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 0,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 512,
+          "mode": "snapshot_worker",
+          "runs": 3,
+          "setup_seconds": 1.126330602914095,
+          "training_seconds": 0.9054798353463411,
+          "close_seconds": 0.040539614856243134,
+          "median_step_p95_seconds": 0.044050421565771096,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 934363136,
+            "worker_rss_peak_bytes": 245383168
+          },
+          "analysis_counts": [
+            {
+              "requested": 1,
+              "admitted": 1,
+              "completed": 1,
+              "skipped": 0,
+              "failed": 0
+            },
+            {
+              "requested": 1,
+              "admitted": 1,
+              "completed": 1,
+              "skipped": 0,
+              "failed": 0
+            },
+            {
+              "requested": 1,
+              "admitted": 1,
+              "completed": 1,
+              "skipped": 0,
+              "failed": 0
+            }
+          ],
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 1.126330602914095,
+              "training_seconds": 0.9054798353463411,
+              "close_seconds": 0.04061262495815754,
+              "steps_per_second": 110.43868244923482,
+              "step_seconds": {
+                "p50": 0.005819306708872318,
+                "p95": 0.044050421565771096,
+                "p99": 0.06459646346047537
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 929370112,
+                "worker_rss_peak_bytes": 239292416
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.003289327025413513,
+                "raw_state_bytes": 1058832,
+                "peak_reserved_bytes": 135276560
+              },
+              "requested_captures": 1,
+              "analysis_counts": {
+                "requested": 1,
+                "admitted": 1,
+                "completed": 1,
+                "skipped": 0,
+                "failed": 0
+              },
+              "stored_bytes": 1528763,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 1.1265663839876652,
+              "training_seconds": 0.8977927528321743,
+              "close_seconds": 0.03306894749403,
+              "steps_per_second": 111.38428070903926,
+              "step_seconds": {
+                "p50": 0.005773849785327911,
+                "p95": 0.04508963460102677,
+                "p99": 0.061609321106225405
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 932745216,
+                "worker_rss_peak_bytes": 245383168
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0033346712589263916,
+                "raw_state_bytes": 1058832,
+                "peak_reserved_bytes": 135276560
+              },
+              "requested_captures": 1,
+              "analysis_counts": {
+                "requested": 1,
+                "admitted": 1,
+                "completed": 1,
+                "skipped": 0,
+                "failed": 0
+              },
+              "stored_bytes": 1528764,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 1.1088144164532423,
+              "training_seconds": 0.9084289874881506,
+              "close_seconds": 0.040539614856243134,
+              "steps_per_second": 110.08015087288744,
+              "step_seconds": {
+                "p50": 0.005839348770678043,
+                "p95": 0.035937742330133894,
+                "p99": 0.061291875988245266
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 934363136,
+                "worker_rss_peak_bytes": 244764672
+              },
+              "copy_measurement": {
+                "basis": "admitted_immutable_snapshot_capture",
+                "seconds": 0.0032639838755130768,
+                "raw_state_bytes": 1058832,
+                "peak_reserved_bytes": 135276560
+              },
+              "requested_captures": 1,
+              "analysis_counts": {
+                "requested": 1,
+                "admitted": 1,
+                "completed": 1,
+                "skipped": 0,
+                "failed": 0
+              },
+              "stored_bytes": 1528764,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            }
+          ]
+        },
+        {
+          "framework": "tensorflow",
+          "width": 512,
+          "mode": "activation",
+          "runs": 3,
+          "setup_seconds": 0.7478518635034561,
+          "training_seconds": 1.3128218278288841,
+          "close_seconds": 0.053706735372543335,
+          "median_step_p95_seconds": 0.009555749502032996,
+          "sampled_peak_rss_bytes": {
+            "trainer_rss_peak_bytes": 928825344,
+            "worker_rss_peak_bytes": 197111808
+          },
+          "analysis_counts": null,
+          "observations": [
+            {
+              "repeat": 0,
+              "setup_seconds": 0.7478518635034561,
+              "training_seconds": 1.3106161188334227,
+              "close_seconds": 0.05465122312307358,
+              "steps_per_second": 76.29999247148726,
+              "step_seconds": {
+                "p50": 0.0055388230830430984,
+                "p95": 0.007755780685693017,
+                "p99": 0.05243544364348356
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 920829952,
+                "worker_rss_peak_bytes": 197111808
+              },
+              "copy_measurement": null,
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 92061,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 1,
+              "setup_seconds": 0.7451195400208235,
+              "training_seconds": 1.3128218278288841,
+              "close_seconds": 0.041433002799749374,
+              "steps_per_second": 76.1717987012585,
+              "step_seconds": {
+                "p50": 0.005868494510650635,
+                "p95": 0.009555749502032996,
+                "p99": 0.05221763618290723
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 923054080,
+                "worker_rss_peak_bytes": 195022848
+              },
+              "copy_measurement": null,
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 92061,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            },
+            {
+              "repeat": 2,
+              "setup_seconds": 0.7501146364957094,
+              "training_seconds": 1.3237009197473526,
+              "close_seconds": 0.053706735372543335,
+              "steps_per_second": 75.54576604742893,
+              "step_seconds": {
+                "p50": 0.005552205257117748,
+                "p95": 0.009811556339263913,
+                "p99": 0.05084518812597103
+              },
+              "memory": {
+                "trainer_rss_peak_bytes": 928825344,
+                "worker_rss_peak_bytes": 188055552
+              },
+              "copy_measurement": null,
+              "requested_captures": 1,
+              "analysis_counts": null,
+              "stored_bytes": 92061,
+              "state_sha256": "cd6047d027c4caedd66bc770d2d64b6ba818be7682ec5c552a99bff79187ac3b"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

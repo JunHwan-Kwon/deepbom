@@ -1,5 +1,5 @@
 export { MODEL_IR_SCHEMA, ARTIFACT_IR_SCHEMA as MODEL_IR_SOURCE_SCHEMA } from "../../evidence-ir.js";
-export const MODEL_IR_METHOD_VERSION = "1.1.3";
+export const MODEL_IR_METHOD_VERSION = "1.1.4";
 export const SHA256 = /^[a-f0-9]{64}$/;
 
 export const EVIDENCE_CLASSES = Object.freeze([

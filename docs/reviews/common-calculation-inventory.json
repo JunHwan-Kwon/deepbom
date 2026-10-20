@@ -21,7 +21,7 @@
     ],
     "boundary": "All application source files in these roots are enumerated. JS functions/tables are parsed; Rust/Python/C++ candidates also require semantic review. Textual equality is a candidate, not proof of equivalent contracts."
   },
-  "source_file_count": 556,
+  "source_file_count": 644,
   "files": [
     {
       "file": "bin/deepbom-agent-contract.mjs",
@@ -49,7 +49,7 @@
     },
     {
       "file": "bin/deepbom-automation.mjs",
-      "sha256": "fd394ad8d6d05b3751a282a4d6acfde6cadf197a85ebb9fdfeb48dcd6940c6bc",
+      "sha256": "0e1dc79a0761687f844ebc652b372cc700e609c84a6dd9ad5ea7ccf4c9c1fd01",
       "language": "mjs",
       "role": "runtime",
       "functions": 35,
@@ -65,7 +65,7 @@
     },
     {
       "file": "bin/deepbom-mcp.mjs",
-      "sha256": "214dd2123375f936c3c3be44ce64e3602f0d8b1eabfc100e2d1441b96cdb73db",
+      "sha256": "8028218660b94ed38e99ecfe4e9601027d985f02b63f692634e779254b8d76ab",
       "language": "mjs",
       "role": "runtime",
       "functions": 60,
@@ -73,10 +73,10 @@
     },
     {
       "file": "bin/deepbom-native-evidence.mjs",
-      "sha256": "83528184ca288a8372ab6c92f9466c552db9d99382f4d7debb7b703d44603393",
+      "sha256": "5edb1294b17e26d1137361e0c6e95ceda628dfebeb112f6ed697e50011007634",
       "language": "mjs",
       "role": "runtime",
-      "functions": 5,
+      "functions": 9,
       "calculation_candidates": 0
     },
     {
@@ -97,7 +97,7 @@
     },
     {
       "file": "bin/deepbom.mjs",
-      "sha256": "36684b1cbad2d76fdd28ee4867e7e2c722f1bb38ad564f56823ed68620722f0b",
+      "sha256": "b994e3fba1897d49f5d0ae9142c1dac9a48f8d05086b9b61579f86716bc727da",
       "language": "mjs",
       "role": "runtime",
       "functions": 205,
@@ -137,7 +137,7 @@
     },
     {
       "file": "bin/optimization-report.mjs",
-      "sha256": "633698e9cf1f8b7fb607a29aaefaac43366913dc2cecce08815cd20464fb8fe8",
+      "sha256": "6fd18c6f27e61b645efa23adfd210ab4691365a47706e13a6f9926437add42ee",
       "language": "mjs",
       "role": "runtime",
       "functions": 12,
@@ -185,15 +185,15 @@
     },
     {
       "file": "channels/python/src/deepbom/__init__.py",
-      "sha256": "8dae82d253155e2bd029c8b8fb1c938502ef1ad2d12c43757f0f8a2547d6d579",
+      "sha256": "49f1ea868e36b9116771b8f32bfa88c098ccb68917235a4765262126b1dd0b80",
       "language": "py",
       "role": "runtime",
-      "functions": 0,
+      "functions": 1,
       "calculation_candidates": 0
     },
     {
       "file": "channels/python/src/deepbom/__main__.py",
-      "sha256": "d5ab6b39dc7ed1a0aa4ddf8d1588a9c3f0de8991207cb022ef5d2c87d8183a31",
+      "sha256": "4df5d14010959fca004cee9a942ab9639155fa60114b66c19ab326e4c3f2b2ca",
       "language": "py",
       "role": "runtime",
       "functions": 1,
@@ -217,18 +217,74 @@
     },
     {
       "file": "channels/python/src/deepbom/_native/adapters.py",
-      "sha256": "e3f8d1519d1b0cc328e47780ce1faa2850971fa6ec4bf85c9f717dd76136b796",
-      "language": "py",
-      "role": "runtime",
-      "functions": 10,
-      "calculation_candidates": 0
-    },
-    {
-      "file": "channels/python/src/deepbom/_native/core.py",
-      "sha256": "72824be47df68caa6520d22c3a46f2546ad7b16c277e55f494eee6e9a5328fe3",
+      "sha256": "67c93478bca232dc58617c01fe2766bc4fe49551b984547945fba81adf84d452",
       "language": "py",
       "role": "runtime",
       "functions": 11,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "channels/python/src/deepbom/_native/core.py",
+      "sha256": "8c017f09e4ce10bddcdf24b0fa3865667a52f4b59cff634e6f33093138548b49",
+      "language": "py",
+      "role": "runtime",
+      "functions": 14,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/_native/keras_identity.py",
+      "sha256": "cfe54a9fceeead222f34656c02d853697f8b0288812f24e4010a0afdb4f9077f",
+      "language": "py",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/_native/probe.py",
+      "sha256": "aed41f77e1bf97c7e5ff1687e0d9ee7bcad01f2c1cf2659b3e160f594bdc6bac",
+      "language": "py",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/_native/session.py",
+      "sha256": "fb22befd50908b698b035fc8005692297c0043e225babb301c66c6e95c0aeea1",
+      "language": "py",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/_ownership.py",
+      "sha256": "5166f7a84d9e2728426dbb0d691960dce2ab1a407226581b5358354c4d35ac4a",
+      "language": "py",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/_plugin_runner.py",
+      "sha256": "7f72c52946cc77983535d27edb0c8631fbb19c41f9b77940bb9d9af349968c5a",
+      "language": "py",
+      "role": "runtime",
+      "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/_process.py",
+      "sha256": "eb37c725af83392d45b56c2f951d9db5d565d33d691bcaa29f0cddd37e69e09a",
+      "language": "py",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/_process_exec.py",
+      "sha256": "58222a858ae8df6bc673f3e84c80db3d7b137ebb68c6541a1fea7bce86c8bf29",
+      "language": "py",
+      "role": "runtime",
+      "functions": 0,
       "calculation_candidates": 0
     },
     {
@@ -240,12 +296,44 @@
       "calculation_candidates": 0
     },
     {
-      "file": "channels/python/src/deepbom/api.py",
-      "sha256": "6e2d7da5cf5685d5b1f491bb28e7ab8b1388219ddaf011f7f21373c5e2cae6c7",
+      "file": "channels/python/src/deepbom/analyzers.py",
+      "sha256": "6a7923700703c541259a783b93d0e07c097d5c05660c84c536c14b4a4471eda6",
       "language": "py",
       "role": "runtime",
-      "functions": 27,
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/api.py",
+      "sha256": "d70877a2d292b99a433f1bcadebefd5bfe3e2837b348c2fdbc10023503c13ad0",
+      "language": "py",
+      "role": "runtime",
+      "functions": 28,
       "calculation_candidates": 1
+    },
+    {
+      "file": "channels/python/src/deepbom/autolog.py",
+      "sha256": "9ff5ea4dc4fc8a1d49c7dd4f8def5c206a748588016be41839b45b2b5bce3a3d",
+      "language": "py",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/completed_files.py",
+      "sha256": "95834e64b589fd5e7899e2ee7b45b928a3e89d0090b4e23211c71b0d01f3e8ff",
+      "language": "py",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/correspondence.py",
+      "sha256": "090ad9f2df63ebde8fd422b431c5f61d4d6e427f78ba818193a7e61538a397e4",
+      "language": "py",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
     },
     {
       "file": "channels/python/src/deepbom/evidence.py",
@@ -264,16 +352,48 @@
       "calculation_candidates": 0
     },
     {
-      "file": "channels/python/src/deepbom/optimization/__init__.py",
-      "sha256": "87ef481a77bb7efe73807f2db2ef35846ec3f87a2e4d9b3a49609a73927ef3c8",
+      "file": "channels/python/src/deepbom/inspection.py",
+      "sha256": "dd91e9e723f2a161d05f2070d1df519bd00b97e08d5c636e9cf151e8c8a0eb76",
       "language": "py",
       "role": "runtime",
-      "functions": 18,
+      "functions": 1,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/instrument.py",
+      "sha256": "46e97d15eb91386dd498e7016de5dfc71d13073aeef8028f97fe1a204b8bf3e1",
+      "language": "py",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/jobs.py",
+      "sha256": "a8225200ac7ed71af4ea45d4213b418e381c6d670d27e96f8c690cf3ff088056",
+      "language": "py",
+      "role": "runtime",
+      "functions": 23,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/metrics.py",
+      "sha256": "8e0779c3a5f67e7f1e37c7e91af45e472cabfe96ef33ae8e02e058466136201d",
+      "language": "py",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/optimization/__init__.py",
+      "sha256": "6f10342c3fa8c4be80b6dd36a30dab706a2a888cc40783b2c0bbcee8f542ead6",
+      "language": "py",
+      "role": "runtime",
+      "functions": 19,
       "calculation_candidates": 0
     },
     {
       "file": "channels/python/src/deepbom/optimization/__main__.py",
-      "sha256": "565a6d570a6dd2f3d43d14caafe6e6b2ff2460b55eab8e7306aa3ff43ce75294",
+      "sha256": "1b2d945b33c7585f6e2518d5145b3987ee090a2bf52c890b7ca4fa30d599fac3",
       "language": "py",
       "role": "runtime",
       "functions": 1,
@@ -281,7 +401,7 @@
     },
     {
       "file": "channels/python/src/deepbom/optimization/_models.py",
-      "sha256": "cc8fa4c1cbc0bb7265bd401151d51de1bb1495523840147f130d475c5e66e829",
+      "sha256": "60a06c5f5a24bbd413f6664b0ee849cfab41b03c4accbac21c0814a0b23aab9f",
       "language": "py",
       "role": "runtime",
       "functions": 10,
@@ -297,11 +417,11 @@
     },
     {
       "file": "channels/python/src/deepbom/optimization/_report_probe.py",
-      "sha256": "77cff0626768b1f62dea94027787918a5a5a89409156813853277865692fcb71",
+      "sha256": "d38267df226bde85c463202ec0523180429718114cb222e8bb4f487314b3a2b4",
       "language": "py",
       "role": "runtime",
-      "functions": 7,
-      "calculation_candidates": 1
+      "functions": 8,
+      "calculation_candidates": 2
     },
     {
       "file": "channels/python/src/deepbom/optimization/render.py",
@@ -321,7 +441,7 @@
     },
     {
       "file": "channels/python/src/deepbom/optimization/report.py",
-      "sha256": "4c5a5a52e0af4d9eacb6e13a38bbc4a21f36797d887b5d045ddd017f1104d2a7",
+      "sha256": "4cd453ff916d3eaba2c129ef96ea7c2fe8bd1e461f2dde1c167f8857f3f3dfd6",
       "language": "py",
       "role": "runtime",
       "functions": 15,
@@ -329,50 +449,98 @@
     },
     {
       "file": "channels/python/src/deepbom/training/__init__.py",
-      "sha256": "c88b646c944f252b05b187a5836406610a5d4c5f5ff51c27bb28df6abbb42d81",
+      "sha256": "4af601080b55fcd65c05c06020ec608593e2fc5f9e71e5092a7814eb410fe23e",
       "language": "py",
       "role": "runtime",
-      "functions": 10,
+      "functions": 7,
       "calculation_candidates": 0
     },
     {
       "file": "channels/python/src/deepbom/training/__main__.py",
-      "sha256": "c75957018c885abc3c811d990cba82322960515ba5334bf3cf6c98ea746d04f7",
+      "sha256": "3af7f1164ee8ca99bed2654a33b3fab35651f4ad09216a97e025a3e8a7393118",
       "language": "py",
       "role": "runtime",
       "functions": 1,
       "calculation_candidates": 0
     },
     {
-      "file": "channels/python/src/deepbom/training/board.js",
-      "sha256": "8f48de2a7564cab9ea4ddd7557c51399dc437a5028b417bff687177d743320c2",
-      "language": "js",
-      "role": "runtime",
-      "functions": 26,
-      "calculation_candidates": 0
-    },
-    {
-      "file": "channels/python/src/deepbom/training/collector.py",
-      "sha256": "d53dfe55782ab92c56418493e153f600a1738234398c2f5be9395a2fbe15f364",
-      "language": "py",
-      "role": "runtime",
-      "functions": 18,
-      "calculation_candidates": 0
-    },
-    {
-      "file": "channels/python/src/deepbom/training/integrations.py",
-      "sha256": "c94e367956c45cdf3f5947518e25507d857d55fbb06c4dd5b33ab1e41219e507",
+      "file": "channels/python/src/deepbom/training/_persistence.py",
+      "sha256": "b19678718f0cfb7f8b7543bbca8fbbcc35be8650f7c3153087251f5774619276",
       "language": "py",
       "role": "runtime",
       "functions": 3,
       "calculation_candidates": 0
     },
     {
-      "file": "channels/python/src/deepbom/training/viewer.py",
-      "sha256": "cc04d8a135e9d55a712584e15947cb313392857bde9472f02775089245f0bd08",
+      "file": "channels/python/src/deepbom/training/board.js",
+      "sha256": "d2ca8bf92d1951463381f0d0b687080c07cdb506cb68698d3ba30563fbdc7d09",
+      "language": "js",
+      "role": "runtime",
+      "functions": 40,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/training/collector.py",
+      "sha256": "2f18068db7d8cd6d3a4cd6871ae7e9f3c5fb5fa18098c546742e51d3344fb9fc",
+      "language": "py",
+      "role": "runtime",
+      "functions": 23,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/training/integrations.py",
+      "sha256": "f64e77f5579da45f91d041d706e7872679829f771757f5b8273285e912127bf1",
+      "language": "py",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/training/keras_callback.py",
+      "sha256": "e083da4d7ee5f963fd58e17ccf074cd80831651b59e26358838600862c2ba286",
+      "language": "py",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/training/lightning.py",
+      "sha256": "775742666aaaf45890700dac0a6d8dd17e1c2b87aae70fa63b6a4650b1871384",
+      "language": "py",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/training/managed.py",
+      "sha256": "a36f603c5de39a0b370b56203cd7239c22d1844e272648392296139c92551668",
+      "language": "py",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/training/recovery.py",
+      "sha256": "82bf8cdd7bd6711f8bdc19c6ce1e23255e9528b751833838e9419b0f548a3f76",
       "language": "py",
       "role": "runtime",
       "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/training/session.py",
+      "sha256": "033b31715dff30e11d575f42cb42363e346ef4eefed6084c559421264b867461",
+      "language": "py",
+      "role": "runtime",
+      "functions": 16,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "channels/python/src/deepbom/training/viewer.py",
+      "sha256": "b55ac90b9e901bec7e56cb1382cf5ad129238ef6b2749ec9929435e34649cd11",
+      "language": "py",
+      "role": "runtime",
+      "functions": 7,
       "calculation_candidates": 0
     },
     {
@@ -425,11 +593,11 @@
     },
     {
       "file": "src/arena_planner.rs",
-      "sha256": "1690f0b531df8ef501dfbe4022462afac3f407ac9324fab611f53bd929c09e7a",
+      "sha256": "6600ef032b4bcf0f0cb761a5ada5fb10f105af0c5c7400d17f5d8aa6419e3280",
       "language": "rs",
       "role": "runtime",
-      "functions": 11,
-      "calculation_candidates": 1
+      "functions": 12,
+      "calculation_candidates": 2
     },
     {
       "file": "src/artifact_byte_ledger.rs",
@@ -489,7 +657,7 @@
     },
     {
       "file": "src/deployment_frontier.rs",
-      "sha256": "c487c182236a7696541dc8b3f5c4c0ff2de90a55d6bc72d1456bfb3f2340fa90",
+      "sha256": "e37e9b899654f8771b1de835b14bcb6f195be0b250d1c09a7c39b20ff91836cf",
       "language": "rs",
       "role": "runtime",
       "functions": 39,
@@ -537,19 +705,459 @@
     },
     {
       "file": "src/lib.rs",
-      "sha256": "e131c9ab7eb63b986a7e2485a0ccc41b8b1e40642efa394ba8b9617966066222",
+      "sha256": "fd4c95ad2afe0a84f4116a760e96d331b3ec1ab6e048abe4c48563453abac454",
       "language": "rs",
       "role": "runtime",
-      "functions": 182,
+      "functions": 184,
       "calculation_candidates": 45
     },
     {
       "file": "src/numerical_abi_propagation.rs",
-      "sha256": "dd7623c7a10415f3016fc5ccb12d933c91e7a4471a49b18ea3ebf3d74012680c",
+      "sha256": "03558673abce32987f0167d9abcdc0f25385a13341284a967fe099e901e7244f",
       "language": "rs",
       "role": "runtime",
       "functions": 31,
       "calculation_candidates": 4
+    },
+    {
+      "file": "src/portable_activation_validation.rs",
+      "sha256": "c89d0ad75ef220f2f3a9cbdb03587d22248ef848fabe8d348cb58973f6f9b871",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_affine.rs",
+      "sha256": "3bb1533467de8cd94edc883b675e2b941275249b5840e140de74cf4cfd684c97",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/portable_artifact_validation.rs",
+      "sha256": "3e0a74d847af0e346bfc1bfc26886356714ca57640a50e24dd142d24f6da02f2",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_contracts.rs",
+      "sha256": "36c459b1aa9716e4fb0bd021d86a9f8f0c4d0fc23c90bfed3766baa92a4a8220",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 15,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "src/portable_conversion.rs",
+      "sha256": "d718b6eb302d5c500a291badb0653ef70e84f232c6198ac4ccdf38fe7f4404cf",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 13,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_coreml.rs",
+      "sha256": "97424bbe1e1816453308f552584a7cb954333e21c8ff20649ad925b5cdb85294",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_cost.rs",
+      "sha256": "34ed2ea3483ef3ae1412657a91e11d699f21953659909a10ec503266956de5de",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "src/portable_decimal.rs",
+      "sha256": "11f2a3d3f8901f9a3ee5f8b2e42d3a5b8d88d4654ad5162ce77502510ca5260a",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_distribution.rs",
+      "sha256": "b73a5154002e389102b198e8f413327a43e812da15eac384a86a57181fe7804a",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/portable_einsum.rs",
+      "sha256": "cd0c0938dbb47c29996732af4b8681d8c3b02fa6422d92d6e85c08f601800e9c",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_evidence.rs",
+      "sha256": "288ee37fb6bc16d61446e6953957bbf57641eadc956ee5bb0cbaf57762c1ca58",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_graph.rs",
+      "sha256": "1e1cd1e937f28de12cbd9d6124fbc6b4c2e063406486211386d933ae468f7964",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_identity.rs",
+      "sha256": "ba766a2177b5cf95ca892e5d5f9179dcc8b0c6ff2d7dbc054a408af08bc91669",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_integer.rs",
+      "sha256": "c279b7fcef420a585b9525e24b46e02ecea5050f6c5d6253b7261de443221ab4",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_ir.rs",
+      "sha256": "df36744ec3bc1607aaf01623cc1a4d6375806ff8fc04079e05dd2fd372ab0ca6",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 26,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "src/portable_metrics.rs",
+      "sha256": "7a392d7feed8d192aebf8a26a5d6b0baf163bdddc186ee3bd8ca3ec23c5839d9",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_model_validation.rs",
+      "sha256": "01a77f98d8b3eea689a1a7e3d28abce6c643bdd8e172da9377ea28d47c633a5b",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_native.rs",
+      "sha256": "e060b59317d485553f381e5584000a5e297af21a60d810ffcc857a2d28000791",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/portable_numerical_validation.rs",
+      "sha256": "98b6edce6943a05b47e775ffd6620c9dc76c5b38de42c3cf657b7864d5785303",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_numerics.rs",
+      "sha256": "acba01a0441afe7784d63992de6643b97e2f2dd0e4b181217c9bff1b843c1f32",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 44,
+      "calculation_candidates": 7
+    },
+    {
+      "file": "src/portable_onnx_conditional.rs",
+      "sha256": "5fba809248755937a820fbb00334aef0472546bcee0232686f5462a75aec73c1",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_container.rs",
+      "sha256": "12ddf91140a25daea4d837e9f3741f7f2a4df04ff231568f5c0fd219abd6c77c",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 27,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_dynamic.rs",
+      "sha256": "6293076d25eafab296243906c358eba4c257ad61be1af97391fba2572bf0d811",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 16,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_elementwise.rs",
+      "sha256": "87174dabec02f24221aaa680893048470fd55558ed2b0dfc6a0d0f552287980c",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_merge.rs",
+      "sha256": "41f913056ee8381db26492b8acea4dbc096d00b029898b796fcb72c9337bf781",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_ml.rs",
+      "sha256": "5b38c6ab5e07e09a6d5724e3aabb4f861dbc047e59f550537a3882c6952b3653",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 28,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/portable_onnx_ml_label.rs",
+      "sha256": "c1d32309c88529830667056071fc899e1706ccb6fc7b13606288ff8663b8f183",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_ml_linear.rs",
+      "sha256": "1ea03ae028a009c8515ab0b6033089a64b2b121330df4c836dd4f3cc931d5b54",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_ml_mapping.rs",
+      "sha256": "8ecfe1626c2ae9e6dcd3b98e9b4d45639c01d664fb3c7752431da1836c135964",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 19,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_ml_schema.rs",
+      "sha256": "193c89fbcf44c888baef369f9f6ecae93748207c6e2e58351b16f9d4645ac562",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_ml_svm.rs",
+      "sha256": "70a18ab7ea8a6aea4a976da638a11aeda254aa2fa1f646209b63254a16471c85",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_ml_svm_eval.rs",
+      "sha256": "500476602bf8b88c063b09f2c71690f81eca969741837e5b934f959845ff304f",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_ml_tree.rs",
+      "sha256": "192b2952a6d94edb23348168bebb0d753d5e70daf24ab795931518b282cf5b1c",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_ml_tree_data.rs",
+      "sha256": "84a026ad5775cac3038134f686ae3259ab771de03bfbfa8a92828d56192b4527",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 12,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_ml_tree_eval.rs",
+      "sha256": "b5b7f9bcd720157a60d0b644ca2ca304f33db361ed116b51d3ada9ec4f9eb2b7",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_ml_tree_graph.rs",
+      "sha256": "d45829e8438beaacd4995014a8ba9ca2ca2278241b33bb44176e4e76c2d03238",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_node.rs",
+      "sha256": "f7622f1d47fd4337231892ac9d2dd6098549769d0d0124f6368b13840cfc4c86",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 21,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "src/portable_onnx_ort.rs",
+      "sha256": "0b9a5ede15da0e874e4af2a75395da68c6b6eba882064f2eae0ef90f03cf7831",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 16,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/portable_onnx_regions.rs",
+      "sha256": "fc3879e472b20b6753d992b1baaee9176760bb25310ecc5fb874a8a5a4871215",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 17,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_semantics.rs",
+      "sha256": "956340119cb43c7530082acefc6dd94294134f9a6a65e34e8ad7cd6e5b401341",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 19,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_slice.rs",
+      "sha256": "2756fbde51be0d404bebc2384e562190297b29e0640e6eb0bc17413fdd585263",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_onnx_special.rs",
+      "sha256": "26c475f08b1e7457492bb192d951a862a408b4f7533090724299960ccf9641ce",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/portable_onnx_tensor.rs",
+      "sha256": "48335d2d449e233390ed6e43414eb81497523ab7e7b0922ed30adbd139be51b3",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/portable_onnx_tfidf.rs",
+      "sha256": "6ea6d462a07c9d6cfdeed1a66746aba35c4eb71e11a2df3df49d17f25e2ca1cc",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 9,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/portable_onnx_type.rs",
+      "sha256": "051cbd9c762b695f0d4af1fca809ee244e06b8e63b8f5872b59a7f8160fbb8b8",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_protobuf.rs",
+      "sha256": "fc790b128c713c1f4b1a3f07fc541b4fa4b770d11b03427daae39132f056305d",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 8,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_provenance.rs",
+      "sha256": "831a1cddf08c8b85d6b7d621e3601eea8666a69aeb67824f18788bf1721816b6",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 17,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_pruning.rs",
+      "sha256": "6b7bd6aa2d029afd716c6f4a7082226d9b076cfda2ec5bb5d746c19477e7aa01",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/portable_redesign.rs",
+      "sha256": "97085f1b8201d01658c2772a43f2de85ac248d6e903365fa81f2f4d7e3dd224b",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "src/portable_runtime_overlay.rs",
+      "sha256": "3823d4cc6928f8e7f3350f7286df94922ff8b13b120a2f7debaf59a8c097567d",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 6,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_shape.rs",
+      "sha256": "8d0c81983c747efebd428fc87b13ae16a78690ee70c7168439727f22520b7311",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 36,
+      "calculation_candidates": 6
+    },
+    {
+      "file": "src/portable_spectrum.rs",
+      "sha256": "770cf3cc3978561df61b19c6418b50c3109a5c03fad1bbb00ccb30daf672e78d",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 2
+    },
+    {
+      "file": "src/portable_validation.rs",
+      "sha256": "a050e180ceccbff332e775019801044d47a00668204694b431eb0c1becbac943",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 16,
+      "calculation_candidates": 3
+    },
+    {
+      "file": "src/portable_weight.rs",
+      "sha256": "8219798772a07f4c9d38e0c3d718f716e2683b98188df057eaff328688adbce8",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 28,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "src/portable_workflow.rs",
+      "sha256": "c8c4013431e9ee91826169a680ceafcbb1dac726488d826a6e565a023a9de6ce",
+      "language": "rs",
+      "role": "runtime",
+      "functions": 18,
+      "calculation_candidates": 2
     },
     {
       "file": "src/preprocessing.rs",
@@ -585,11 +1193,11 @@
     },
     {
       "file": "src/redesign.rs",
-      "sha256": "e78b0948d3751fa6a741081ac497887ca8319fdaf4d5eee71834ec518a84023f",
+      "sha256": "9a2dbf2233eff41e275b998d92f733028ec941f248483645752e36b2dce5610d",
       "language": "rs",
       "role": "runtime",
-      "functions": 55,
-      "calculation_candidates": 8
+      "functions": 58,
+      "calculation_candidates": 9
     },
     {
       "file": "src/report_exports.rs",
@@ -609,7 +1217,7 @@
     },
     {
       "file": "src/research.rs",
-      "sha256": "feeeee19c76fa2595c3ce46993adfd25b2bcbb633264d74aa22e94bcfb697d8d",
+      "sha256": "a2eeca336ce6fd96594141f97ae4c3444e2b416c67c1d9fc1e6de76428ed87ec",
       "language": "rs",
       "role": "runtime",
       "functions": 42,
@@ -705,7 +1313,7 @@
     },
     {
       "file": "src/tflite_shape_reconciliation.rs",
-      "sha256": "c04925d5d91b57264b0f55f72b9feb223c2adb0723415622ce414b47a3223899",
+      "sha256": "927ddac608da42693cffc2178028b65c4e0e393887551ea2afbaed272917e2ab",
       "language": "rs",
       "role": "runtime",
       "functions": 8,
@@ -721,10 +1329,10 @@
     },
     {
       "file": "src/tflite_subgraphs.rs",
-      "sha256": "6fc4ea4dd1f4b8b7b459169b3bb9fc80c775cd304fd441df9ff08b9635c9210c",
+      "sha256": "8015bc58db9865282b3c6fb907bfeea787e50c50922a66312de8bb6d8ba9389d",
       "language": "rs",
       "role": "runtime",
-      "functions": 25,
+      "functions": 27,
       "calculation_candidates": 3
     },
     {
@@ -761,7 +1369,7 @@
     },
     {
       "file": "web/app.js",
-      "sha256": "3608e2db5273c0b1473163d6efb64b880a83a08ef8e9bff9c9c86aaac75a8a3f",
+      "sha256": "d530e2c8e3536a8afbf1a1a4ebdb50dddef2c3dc8e612e02bf740e7e3649f52c",
       "language": "js",
       "role": "runtime",
       "functions": 597,
@@ -785,7 +1393,7 @@
     },
     {
       "file": "web/chatgpt/deepbom-widget.js",
-      "sha256": "af573dbdde8a2055d1e0b54d00d68973b0681b27943be2c6a289362472e960cd",
+      "sha256": "54c95bb3bab627918ae2939fdd22570545834ef788970f90611ef4fd2a8649a4",
       "language": "js",
       "role": "runtime",
       "functions": 105,
@@ -793,7 +1401,7 @@
     },
     {
       "file": "web/claude/deepbom-widget.js",
-      "sha256": "d511a8c13dca3d5095130c646bace578ed47423cf0dfd92a4d7027baa8e39d20",
+      "sha256": "337e092a40e2f2527064dea68990d37f98493ee22c1b91fa4f9cc5950c783fa3",
       "language": "js",
       "role": "runtime",
       "functions": 33,
@@ -905,11 +1513,11 @@
     },
     {
       "file": "web/lib/activation-ir.js",
-      "sha256": "d2641168a7b6a233a24672500aa69a26d56226866b729d62c654d90d6479228e",
+      "sha256": "21ec0f4a373ebf4dcbb97a0e21f54bb1be96e44c53e382127f75383681f6088f",
       "language": "js",
       "role": "runtime",
-      "functions": 31,
-      "calculation_candidates": 1
+      "functions": 6,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/admin-elements.js",
@@ -936,6 +1544,14 @@
       "calculation_candidates": 0
     },
     {
+      "file": "web/lib/analysis-facts.js",
+      "sha256": "7ad25e32054f5eff4f86a079223a5f2c87f4e37a452d82b127c66ae2b0e5566c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 1
+    },
+    {
       "file": "web/lib/analysis-summary-contract.js",
       "sha256": "e990c7815bacf2af6560ea57989d2e889c00482e8cbfe2df1668f2ceb525b759",
       "language": "js",
@@ -953,7 +1569,7 @@
     },
     {
       "file": "web/lib/app-config.js",
-      "sha256": "a1dd288726618feb07e474c19d5d8b4218732b41d9c9798fc5d4ed4727673815",
+      "sha256": "b3b8d93ae2bd54e119eb9f1c5fdd3e4a10dfdb8f069d6e7ad101a8675ecc736b",
       "language": "js",
       "role": "runtime",
       "functions": 15,
@@ -969,7 +1585,7 @@
     },
     {
       "file": "web/lib/app-graph-workspace.js",
-      "sha256": "5f3949320e6e37084f32cd4ff2aefa8f65272f9fb59d832fbe1d7635be0b138e",
+      "sha256": "2c8499d0d7d2aa967d69439b1c7bd9e1859b5b30eff4967c413376a9b985a7ba",
       "language": "js",
       "role": "runtime",
       "functions": 184,
@@ -1001,10 +1617,10 @@
     },
     {
       "file": "web/lib/artifact-bundle.js",
-      "sha256": "2770f4be8c9953cb746144c48d9c800efbc24caee97b3e2b7ed342711c75f52b",
+      "sha256": "3af2bde94b480bc2bc2eab2bfbcc3c81d4e35a00b6bd987e20ebbe6c5a0c0457",
       "language": "js",
       "role": "runtime",
-      "functions": 92,
+      "functions": 100,
       "calculation_candidates": 1
     },
     {
@@ -1049,7 +1665,7 @@
     },
     {
       "file": "web/lib/artifact-ir-context.js",
-      "sha256": "b4ee48ceeb0e07eda6943cbe95015942af8ea799d046198860bdc8afdee5b121",
+      "sha256": "97284c2e906e4a739602ea1a00a38e7a9b3a338f7aa9765365a769152618a2cf",
       "language": "js",
       "role": "runtime",
       "functions": 29,
@@ -1057,10 +1673,10 @@
     },
     {
       "file": "web/lib/artifact-ir-runtime.js",
-      "sha256": "7ed92e745fc002d13a41bc5296319be45da5f0ca84c17398f31c750319dd269b",
+      "sha256": "2776028bbb29d12a44bc37ecfd9613297d1912cfdfd2db0e2838f899523149fb",
       "language": "js",
       "role": "runtime",
-      "functions": 34,
+      "functions": 2,
       "calculation_candidates": 0
     },
     {
@@ -1073,7 +1689,7 @@
     },
     {
       "file": "web/lib/artifact-ir.js",
-      "sha256": "acf24360e9b637275b217af4e676f626d559f51f6cd682d1d033d92e86d28a77",
+      "sha256": "1f209e51036e054e76dc8941d91d8bbab09784f095fb3748230d941290728304",
       "language": "js",
       "role": "runtime",
       "functions": 3,
@@ -1089,7 +1705,7 @@
     },
     {
       "file": "web/lib/artifact-ir/internal/constants.js",
-      "sha256": "745769a6c4178b3ef924d646bbdc13dea9b7d4dd71a651ac7d922daf6e403447",
+      "sha256": "61de0ccb3554841f606e85025928e7f5deb9a420723a58febca2356f88d70563",
       "language": "js",
       "role": "runtime",
       "functions": 0,
@@ -1097,10 +1713,10 @@
     },
     {
       "file": "web/lib/artifact-ir/internal/graph.js",
-      "sha256": "05158244192106ebbbce80a0be2f2c1fdee4b5354f5897c05d9bef2109aba15d",
+      "sha256": "f20f16527844decb5b7c5ceeedc14a8e75ec7710377fa5d98caa970e40b63b4b",
       "language": "js",
       "role": "runtime",
-      "functions": 61,
+      "functions": 64,
       "calculation_candidates": 1
     },
     {
@@ -1121,7 +1737,7 @@
     },
     {
       "file": "web/lib/artifact-ir/internal/quantization.js",
-      "sha256": "5f20ce2d31c509f4856915c1687723ccc8ef48ae1d1097bbcc31f7e4ba12004b",
+      "sha256": "1d27d89db35a530e5cec2f90793ca4f7148ba48ebb276f135270190538d74452",
       "language": "js",
       "role": "runtime",
       "functions": 22,
@@ -1129,26 +1745,26 @@
     },
     {
       "file": "web/lib/artifact-ir/internal/shared.js",
-      "sha256": "60946e0a3c5a48c34cba714b3565fa2cac9546e0b8e931725e33b9cc6889ed1f",
+      "sha256": "3e9c14d509ffd2babc3fb821d37f686bee41a1e58b5391540e418e03f0d15891",
       "language": "js",
       "role": "runtime",
-      "functions": 26,
+      "functions": 27,
       "calculation_candidates": 4
     },
     {
       "file": "web/lib/artifact-ir/internal/storage.js",
-      "sha256": "c0e7bca466e3275d75246be3b02a4909c9d35232a36aa984f6c71cfcdd55f888",
+      "sha256": "a2ca6f96f0b386b44b56426886c8b1039546bf3ac1cdfbb847cd9fd4349f1abf",
       "language": "js",
       "role": "runtime",
-      "functions": 15,
+      "functions": 16,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/artifact-ir/internal/validation.js",
-      "sha256": "af302ab82cdda8096106a885181c3690e44533bd0f38fbb67b289fcbbdf2fd14",
+      "sha256": "78c40461d8bb1d549fb84fa93b44789931ea4eb142a7a1bfcfdfab246c8d9b22",
       "language": "js",
       "role": "runtime",
-      "functions": 20,
+      "functions": 1,
       "calculation_candidates": 0
     },
     {
@@ -1217,7 +1833,7 @@
     },
     {
       "file": "web/lib/benchmark-ui.js",
-      "sha256": "4221a996fd864ed09915660151e4655f610a4d8324676e2b17a83390dbbc1fbb",
+      "sha256": "c181e2ebb35dcb5b9739eb83adfce0f30d296c98853cbda6373f091119a0b4d8",
       "language": "js",
       "role": "runtime",
       "functions": 14,
@@ -1241,10 +1857,18 @@
     },
     {
       "file": "web/lib/build-metadata.js",
-      "sha256": "3d9ad075d9e412263e1bb343155759eac9ba39c9e2a7d1b5f3fdb53e3397dd5c",
+      "sha256": "449cc0aa2e380c991d842a09cb1dea5dbd2f7ff3f1f9f7ddc8b5d63f7956084f",
       "language": "js",
       "role": "runtime",
       "functions": 0,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/builtin-metrics.js",
+      "sha256": "d6c0a7fea4b4b4f04f14ee2e1e9edf8b5b5d9c1ea339f95a7b626aab55a79cd5",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
       "calculation_candidates": 0
     },
     {
@@ -1273,7 +1897,7 @@
     },
     {
       "file": "web/lib/change-review.js",
-      "sha256": "461ff2f313d2dbfbad6a5988c030382ea5e5343bb412008cf14290364ebab8a7",
+      "sha256": "204ae15bc0f06a0e60cc79d44a54b3a8b2eb12066eed78687ce2910d21269cdd",
       "language": "js",
       "role": "runtime",
       "functions": 18,
@@ -1337,11 +1961,11 @@
     },
     {
       "file": "web/lib/conversion-receipt.js",
-      "sha256": "0afb07e979cbdae0af6db8c0ab352284f7e3c9643ae9fec612e8c6f7d72b1032",
+      "sha256": "0fcb47f53dc38d73dae17da4948394b5ddd8bfcd3d29e8d1044da4fdf655b506",
       "language": "js",
       "role": "runtime",
-      "functions": 21,
-      "calculation_candidates": 1
+      "functions": 6,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/core-isolation-view.js",
@@ -1353,10 +1977,10 @@
     },
     {
       "file": "web/lib/coreml-blob.js",
-      "sha256": "e3c4a229a8e0d9198935d639a9509695a2ec067d2c9c56230bac5f1b199bcc14",
+      "sha256": "de9dd9af96627dd69cc7fcf1db2a549965dd15bf64cd0d69816f48debfb9a48b",
       "language": "js",
       "role": "runtime",
-      "functions": 20,
+      "functions": 23,
       "calculation_candidates": 2
     },
     {
@@ -1377,10 +2001,10 @@
     },
     {
       "file": "web/lib/coreml-deployment-contract.js",
-      "sha256": "0ace70a8843fd8bd09708ad1994f7c23e9d8e367159dffeb5d07d863e3070a2f",
+      "sha256": "eda3becbe817cd64fb06747d4d01977ade33f0471fa07bfeaeb1215b5e01cedc",
       "language": "js",
       "role": "runtime",
-      "functions": 11,
+      "functions": 2,
       "calculation_candidates": 0
     },
     {
@@ -1393,23 +2017,23 @@
     },
     {
       "file": "web/lib/coreml-metadata-adapter.js",
-      "sha256": "47205c70a9469b800048aebc5e3be5612b0d03742df85077a1172668b1fd1f71",
+      "sha256": "1ce6274fc815f36004642a56dfe355628db57a63a8591bbce16deb4fd8e542c2",
       "language": "js",
       "role": "runtime",
-      "functions": 289,
+      "functions": 292,
       "calculation_candidates": 11
     },
     {
       "file": "web/lib/coreml-mil-program.js",
-      "sha256": "6e9392b2d2dbc634840676898e1945c9fcecc0007a65085aed53e14482fda641",
+      "sha256": "ef553cd623799361547c5924da4629edc4172628082278614044625e14a36013",
       "language": "js",
       "role": "runtime",
-      "functions": 125,
+      "functions": 128,
       "calculation_candidates": 15
     },
     {
       "file": "web/lib/coreml-neural-network.js",
-      "sha256": "7d17d7a6ed3e9083b0304f960cadf8c0d4081e9ef9c16b29f59a40377b59afab",
+      "sha256": "6ff616b8aa13e2ef305dfc93c5cc9c11a3775def0ff0b1427dbf7123a9d4e23b",
       "language": "js",
       "role": "runtime",
       "functions": 59,
@@ -1513,10 +2137,10 @@
     },
     {
       "file": "web/lib/deployment-evidence.js",
-      "sha256": "f4323cfbab36e221249c45000c46dd4027a57c2660bdc6b4aa2163628eab6f81",
+      "sha256": "7bd99fbac3b564c107f9a810cc486c2c347994fa27699ff57fa13eb87d977fd4",
       "language": "js",
       "role": "runtime",
-      "functions": 8,
+      "functions": 5,
       "calculation_candidates": 0
     },
     {
@@ -1577,10 +2201,10 @@
     },
     {
       "file": "web/lib/evaluation-evidence.js",
-      "sha256": "491d99db6c05de345f0cc0b76d0d8a0e5352dc7d0ec4c77dbf8a05ec8dc28786",
+      "sha256": "42eba58715e74f1523391714bf281b69b7cc18d7d8c7f9b3e15a94de2af68181",
       "language": "js",
       "role": "runtime",
-      "functions": 12,
+      "functions": 6,
       "calculation_candidates": 1
     },
     {
@@ -1601,7 +2225,7 @@
     },
     {
       "file": "web/lib/evidence-context.js",
-      "sha256": "971b418b9eec746cf164a888339201c9741705efb4ff3c10218bffcedcaef278",
+      "sha256": "7bfb322487cb2e99a5a267ff44dd0696a4437d31d17a1e84de783a7d5829ecb6",
       "language": "js",
       "role": "runtime",
       "functions": 29,
@@ -1617,7 +2241,7 @@
     },
     {
       "file": "web/lib/evidence-identity.js",
-      "sha256": "3813559fef49956c1352a3ebd6b7db8ee1cad1aa83eb728d705540b64babd4b7",
+      "sha256": "5ac3d348605c9a5efde71548c159ff07cb056edf6efe3c46f72a56a0e62ad8ee",
       "language": "js",
       "role": "runtime",
       "functions": 17,
@@ -1737,7 +2361,7 @@
     },
     {
       "file": "web/lib/evidence-workflow-worker.js",
-      "sha256": "d551d12e9e8b3c6037239b909b352dae39a4be257d7533ccae1d46ef249e900a",
+      "sha256": "a72150eb83267873e58e959223dcbc8e8acb2a5e384cc66a26fe7748d2115180",
       "language": "js",
       "role": "runtime",
       "functions": 3,
@@ -1753,18 +2377,18 @@
     },
     {
       "file": "web/lib/exact-integer.js",
-      "sha256": "9bc3b0e87fd01c86dfa516ae90f572b724f7a0b86f79f972361e0950b060fbef",
+      "sha256": "f8e6cdecddafee992421ec5b5dd4b03d58c20d681e360888ce03522fa58cafc3",
       "language": "js",
       "role": "runtime",
       "functions": 7,
-      "calculation_candidates": 5
+      "calculation_candidates": 4
     },
     {
       "file": "web/lib/exact-rational.js",
-      "sha256": "b6f6c089241914fa1973266bd760f39d66f0c86a5a2adff9882b7cd3df9733b8",
+      "sha256": "f5b1edb2e688a18f05eaad947f4773a67f769272a471afa4c972d0dc907e25c3",
       "language": "js",
       "role": "runtime",
-      "functions": 10,
+      "functions": 13,
       "calculation_candidates": 8
     },
     {
@@ -1817,10 +2441,10 @@
     },
     {
       "file": "web/lib/explorer-redesign.js",
-      "sha256": "69f88b1869bfcd9a55f4f25bf770819b35e38f0c3c839683fc16c4a839f55d8d",
+      "sha256": "db44e4f52b5f2188942404989e106382d5c5c44f4a08c3a34be47aec111a3bfd",
       "language": "js",
       "role": "runtime",
-      "functions": 222,
+      "functions": 225,
       "calculation_candidates": 3
     },
     {
@@ -2001,10 +2625,10 @@
     },
     {
       "file": "web/lib/graph-topology.js",
-      "sha256": "c47dd3b704fa54f43f52ae89296863ad80fc2ee4e9bf09b972e288e536ec8fc9",
+      "sha256": "0cabb87ed102f9248fdc1cbacfede8f04b4067ef44a67cce76cbdb33fdcc44fd",
       "language": "js",
       "role": "runtime",
-      "functions": 10,
+      "functions": 7,
       "calculation_candidates": 0
     },
     {
@@ -2017,10 +2641,10 @@
     },
     {
       "file": "web/lib/guarded-integer-expression.js",
-      "sha256": "80db9536a2db7239b45f171836353167b2311aeb3d53b3fddd62afa32d79d21a",
+      "sha256": "4658d4b06619a2bab1785a635522c5064a1b3990bba149d0ab3ea12ed591d52f",
       "language": "js",
       "role": "runtime",
-      "functions": 29,
+      "functions": 24,
       "calculation_candidates": 1
     },
     {
@@ -2030,6 +2654,14 @@
       "role": "runtime",
       "functions": 6,
       "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/hdf5-source.js",
+      "sha256": "322c2afa8d93f09565f3562d5472824643a8b2bcb4f8056efe36c89dc3d6d939",
+      "language": "js",
+      "role": "runtime",
+      "functions": 16,
+      "calculation_candidates": 1
     },
     {
       "file": "web/lib/hf-safetensors-contract.js",
@@ -2081,15 +2713,15 @@
     },
     {
       "file": "web/lib/ir-artifact-members.js",
-      "sha256": "f9813699d37dd3ae0b8f85e128a37886bed87ddb04d10d7409b5d1aef6f6eccd",
+      "sha256": "45fbf44b1af613e808c6a07c478830745af5bb1d3b2876d24bb496d3d57d2473",
       "language": "js",
       "role": "runtime",
-      "functions": 13,
+      "functions": 9,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/ir-evidence-contract.js",
-      "sha256": "c7f352d49920d0a0d3070aa60254d89aebd3d84af644c7d2490839b0518e2fe1",
+      "sha256": "1700498ce12ae3ce5162f0d62754977ce40329d952135e09797a2738c29c9372",
       "language": "js",
       "role": "runtime",
       "functions": 5,
@@ -2097,18 +2729,18 @@
     },
     {
       "file": "web/lib/ir-logical-inventory.js",
-      "sha256": "adc450369ed3ef4c98f624e3df08173aabbe2a9681692725b649024974b22337",
+      "sha256": "62dc93c399ee8b5280982ad8f9df14491b3491f8c5fb59da55958dc6ea717058",
       "language": "js",
       "role": "runtime",
-      "functions": 11,
+      "functions": 8,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/ir-metric.js",
-      "sha256": "5a3ccb0a6aadb07eb43ce80e40d5ce6de1f7e6ad4c23f8cd3149f7a2231b68c3",
+      "sha256": "c8ec3e90b70b16c42faf4964d43b9f0a70cc2f2c6ac5ca4a79b02fb43c34c3fc",
       "language": "js",
       "role": "runtime",
-      "functions": 9,
+      "functions": 4,
       "calculation_candidates": 0
     },
     {
@@ -2121,18 +2753,18 @@
     },
     {
       "file": "web/lib/ir-runtime-provenance.js",
-      "sha256": "fa6a1ed792db3ddca25e054eb7aba2ddea52a2251c6c2da87eac48dda5d70770",
+      "sha256": "088811db26fcbe6cb49434370e035c82f136a6cc4ab49a0395a4875b71753630",
       "language": "js",
       "role": "runtime",
-      "functions": 5,
+      "functions": 3,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/ir-value-type.js",
-      "sha256": "fadd68d31ba7a761e1dd3b5511fa2fdab182b4643c668d7830cddce359b233f5",
+      "sha256": "4439d1ca6132fd8fa26f4a4d188c679e7118d0e358e161d50302131ac6ed506f",
       "language": "js",
       "role": "runtime",
-      "functions": 12,
+      "functions": 8,
       "calculation_candidates": 2
     },
     {
@@ -2256,6 +2888,14 @@
       "calculation_candidates": 1
     },
     {
+      "file": "web/lib/metric-evidence.js",
+      "sha256": "c0ebc56d76c60a53aff0f2d182695d95cd340ad5d12999448e2f01f7463a7c63",
+      "language": "js",
+      "role": "runtime",
+      "functions": 4,
+      "calculation_candidates": 0
+    },
+    {
       "file": "web/lib/modal-accessibility.js",
       "sha256": "e84bed83f3ebbe577e496b851b74ba5403c95f60eb2b13f8db151b0d5ae15c6f",
       "language": "js",
@@ -2289,10 +2929,10 @@
     },
     {
       "file": "web/lib/model-hierarchy.js",
-      "sha256": "94c705e70f9b564229dbe5ae5061cffe0a027bbd6c1449b0ec4c19f85d5f8b92",
+      "sha256": "6758cbec7eefa240134cf8027c0575b9dd229948c6e211077457bf94090ced33",
       "language": "js",
       "role": "runtime",
-      "functions": 60,
+      "functions": 61,
       "calculation_candidates": 1
     },
     {
@@ -2321,10 +2961,10 @@
     },
     {
       "file": "web/lib/model-ir.js",
-      "sha256": "d09ebd6cdb2ade610fb6459393d45d0e47be166ca61bde3e420419622485cc97",
+      "sha256": "735ccdd4d30fea76203209c61414be6d7ec15fb610d4d86b85694ec4d3eb7297",
       "language": "js",
       "role": "runtime",
-      "functions": 76,
+      "functions": 55,
       "calculation_candidates": 2
     },
     {
@@ -2337,7 +2977,7 @@
     },
     {
       "file": "web/lib/model-ir/internal/constants.js",
-      "sha256": "65073d2b5cca3a9a00c4d13e0da0d94dc192e99b682af0d99bd1ca19e600ad6d",
+      "sha256": "bc2c44118783671f01721006cbd192dda8edbe8ea6929a28b6298100511ee700",
       "language": "js",
       "role": "runtime",
       "functions": 0,
@@ -2345,7 +2985,7 @@
     },
     {
       "file": "web/lib/model-ir/internal/native-facts.js",
-      "sha256": "0c1b08447564d83130d6867f8161e39f1945560a9ab0939456139c88ea37178a",
+      "sha256": "086ad4d58edf0a775ccbdc8b62b548c515d08b05cabdfaeedf3df11d27b2f9a0",
       "language": "js",
       "role": "runtime",
       "functions": 8,
@@ -2361,11 +3001,11 @@
     },
     {
       "file": "web/lib/model-ir/internal/program.js",
-      "sha256": "0ab44689af80101f20b626cb10750e944e22025008f9f1221377edf14cb2ea44",
+      "sha256": "c8a5aac4c4267f42c26e881b39dc66739765535e9341ab76299c9c3552b647b1",
       "language": "js",
       "role": "runtime",
-      "functions": 42,
-      "calculation_candidates": 1
+      "functions": 20,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/model-ir/internal/shared.js",
@@ -2377,26 +3017,26 @@
     },
     {
       "file": "web/lib/model-program-boundary.js",
-      "sha256": "3fd03fa34b6ad35f0db51f90e733cb3ce0c0bca3bbe378086460a3f96aeeecad",
+      "sha256": "b721e894442a00106bfcecea60a84815a8d582dcfbc9fc27c1a1373761da962d",
       "language": "js",
       "role": "runtime",
-      "functions": 19,
+      "functions": 16,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/model-source-metadata.js",
-      "sha256": "ccd8d663bee2ddae90f0ea3d12551dd08da5e1a884fd93ddf046212a154f62e2",
+      "sha256": "f6e506e00b728f3ca6c37caaa1030da997bae7887856419b1c486aef182610d0",
       "language": "js",
       "role": "runtime",
-      "functions": 8,
+      "functions": 10,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/model-structure-editor.js",
-      "sha256": "f1d22b8bb971f629894b55ce104f6a3c5e5a8cf6c171841e9c7b8564b2c1c6a8",
+      "sha256": "1424110024fc270428395df378d610e6f76bed290529bc8b9a08d66ac612bae4",
       "language": "js",
       "role": "runtime",
-      "functions": 159,
+      "functions": 161,
       "calculation_candidates": 0
     },
     {
@@ -2409,34 +3049,42 @@
     },
     {
       "file": "web/lib/model-summary.js",
-      "sha256": "4b9d759536ac6e66157c1f15a224537b80b36ef138da67ef1b994f00c2412b37",
+      "sha256": "0c008fc19e0568d924a33a029b735d6ac33eb8b6cdf99afaf9626a0c82ad8a7d",
       "language": "js",
       "role": "runtime",
-      "functions": 90,
+      "functions": 88,
       "calculation_candidates": 15
     },
     {
       "file": "web/lib/native-evidence.js",
-      "sha256": "2a91bde14da0f4c4c5bef8f073e17bab813ff47c25822105722ebb9e27420de2",
+      "sha256": "8a302ca3e5878b22f8c3ac38f1eeaf31dc5b02cbbb9a1e3ba37f02498c865f8b",
       "language": "js",
       "role": "runtime",
-      "functions": 76,
+      "functions": 70,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/native-inspection.js",
+      "sha256": "be6e9de079d82bde65dd9a8f8b42ffb2e594add680b2d1ee2b7ee6cecca60333",
+      "language": "js",
+      "role": "runtime",
+      "functions": 1,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/native-optimization-diff.js",
-      "sha256": "55af990c53df426796fc78e940ce36969c5e0af24bc7cd7c4d573d93af030e8d",
+      "sha256": "b665bbcec4dbfb2291715d92d85a4e21439035bbfe134c3ca88b5cf806dea4f8",
       "language": "js",
       "role": "runtime",
-      "functions": 30,
+      "functions": 26,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/native-optimization-report.js",
-      "sha256": "cfa7d86ed31982917db74ad926a5be17e1c1fb155ec97a48660970c7f8b0e02d",
+      "sha256": "25b81181aec875f53bf3dea34ae95330389e21f1cd70e25c5f7efdd4a0278754",
       "language": "js",
       "role": "runtime",
-      "functions": 30,
+      "functions": 31,
       "calculation_candidates": 1
     },
     {
@@ -2497,7 +3145,7 @@
     },
     {
       "file": "web/lib/numerical-ir-panel.js",
-      "sha256": "15fe683f9c5fd133083e581bd58493775f06cb2ffe3074bc7fb391d3db8aec0d",
+      "sha256": "aa87512038688e9c3c164f60a92bdaaecbbde52ee61dba64f8aaea0897de6f2e",
       "language": "js",
       "role": "runtime",
       "functions": 90,
@@ -2505,35 +3153,35 @@
     },
     {
       "file": "web/lib/numerical-ir/common.js",
-      "sha256": "1623718968e6827cfa45f8527832c403821b733079c90aa418f6d31612f917d6",
+      "sha256": "97e8217f428d1ec604e150ab84ce28e56612b64db0c93add91f1d4d16ec8c95a",
       "language": "js",
       "role": "runtime",
-      "functions": 12,
+      "functions": 10,
       "calculation_candidates": 3
     },
     {
       "file": "web/lib/numerical-ir/distribution.js",
-      "sha256": "4832517f259237c230876a0e025434da6f3c8d020478d3fe013d014307f5bc2c",
+      "sha256": "2befb8dc2c55084714db3bb65b5f426220993563fa7ec2fedc4d5bf10f218c4d",
       "language": "js",
       "role": "runtime",
-      "functions": 5,
+      "functions": 2,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/numerical-ir/exact-moments.js",
-      "sha256": "7c7a3b4163f50021234330cf141131930a0eb05b3283a5042bb5ac0468ca0207",
+      "sha256": "6679057bbf709e82633d78a33409c24b2a51367b27c4f533e538c9666b805698",
       "language": "js",
       "role": "runtime",
-      "functions": 27,
-      "calculation_candidates": 9
+      "functions": 19,
+      "calculation_candidates": 3
     },
     {
       "file": "web/lib/numerical-ir/statistics.js",
-      "sha256": "736c55cf5f1f08554062342821f289532bbea3793c915f5443aab5bbc15893d6",
+      "sha256": "1bde50a525d0bf14525d64fb2d9ac0c82c76e8c1d58256ac04540bb0df8c4b94",
       "language": "js",
       "role": "runtime",
-      "functions": 15,
-      "calculation_candidates": 1
+      "functions": 9,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/numerical-ir/weight-browser-input.js",
@@ -2545,27 +3193,35 @@
     },
     {
       "file": "web/lib/numerical-ir/weight-contracts.js",
-      "sha256": "8509c60d4379575792ea71183d0ae7ff8e5bb59e5b8f8142937a07819fbe221d",
+      "sha256": "9b4be95c0c8c55f7a882a00b5604954cee08c31737e89f95fd93fce3981d6ed1",
       "language": "js",
       "role": "runtime",
-      "functions": 19,
+      "functions": 14,
       "calculation_candidates": 4
     },
     {
       "file": "web/lib/numerical-ir/weight-math.js",
-      "sha256": "f3f45fba926d213d6bab15c80f03806d2289a41e6a89b498cf86ed2d1cdc9f5d",
+      "sha256": "8214e0e656b8268db931aa768c973421e58706cb25884035f916cd20da9e8ef5",
       "language": "js",
       "role": "runtime",
-      "functions": 40,
+      "functions": 16,
       "calculation_candidates": 1
     },
     {
       "file": "web/lib/numerical-ir/weight-sources.js",
-      "sha256": "9b452d81bf4017a4b71224bfba1c046cfd72e0888399788df65a7c0aca9ca43b",
+      "sha256": "4a590ace4b00fe942e075539ecd21ca2a5c0d8da2a236e7882d872f3152f1dd9",
       "language": "js",
       "role": "runtime",
-      "functions": 27,
+      "functions": 37,
       "calculation_candidates": 2
+    },
+    {
+      "file": "web/lib/numerical-wasm.js",
+      "sha256": "3c245e75c12de670cead80ce81aaf00ad7d1b595ae91e881d1772edee28027ab",
+      "language": "js",
+      "role": "runtime",
+      "functions": 11,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/nvidia-accelerator-profile.js",
@@ -2617,26 +3273,26 @@
     },
     {
       "file": "web/lib/onnx-container-inference.js",
-      "sha256": "f4446d860d5e4426cfca651eeee65b43313df31c041f0556732ac4c9264869b4",
+      "sha256": "e7b516aaf3a1af7cb57ce5ea291dc4f27f2660e75c1b7205952108e9758caf42",
       "language": "js",
       "role": "runtime",
-      "functions": 59,
-      "calculation_candidates": 3
+      "functions": 1,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-contract-conflict.js",
-      "sha256": "9bc48c1871f828a65cd7c1da812d27756fd28242521b68d8bfd03566983e9a40",
+      "sha256": "615af044756278d723d2eec172b34a4081133e426c0dbc66bf5e0c397b713ee9",
       "language": "js",
       "role": "runtime",
-      "functions": 55,
+      "functions": 56,
       "calculation_candidates": 2
     },
     {
       "file": "web/lib/onnx-dimension-expression.js",
-      "sha256": "e9c24d6a53514fc6c2b5f740bde9d0f601072dd086bdce500de5419db568d730",
+      "sha256": "76a392eabb6d236379361e50bc6c5233ff3694f14c82b8102618749deb73ddd2",
       "language": "js",
       "role": "runtime",
-      "functions": 19,
+      "functions": 8,
       "calculation_candidates": 0
     },
     {
@@ -2657,19 +3313,19 @@
     },
     {
       "file": "web/lib/onnx-einsum-contract.js",
-      "sha256": "483ea748096ad2079d50fc88ae812b1130f85f4139bf28968672f801e8225284",
+      "sha256": "dad1826c60353aa682517491ff4fc8505547ef16963e3f1913b8ac33b7d75edc",
       "language": "js",
       "role": "runtime",
-      "functions": 12,
+      "functions": 1,
       "calculation_candidates": 1
     },
     {
       "file": "web/lib/onnx-extended-shape-inference.js",
-      "sha256": "665ae995587eb983c057c64ffbe7df7ba6189bc5c765ccbb4f2fcee830d422d0",
+      "sha256": "605127736d576be6b89ae1283ea04315e1766a2633544c04e2fee1d6195d7c34",
       "language": "js",
       "role": "runtime",
-      "functions": 192,
-      "calculation_candidates": 20
+      "functions": 172,
+      "calculation_candidates": 15
     },
     {
       "file": "web/lib/onnx-external-data-status.js",
@@ -2705,11 +3361,11 @@
     },
     {
       "file": "web/lib/onnx-ml-imputer.js",
-      "sha256": "799f99a12f8e02c08545488c90669e77199000c8f528b8e0b33dcc5f61b8a337",
+      "sha256": "b68753defcc9b8769a4df0fa83375216cc1e497579d5337cc02b0adc9574441b",
       "language": "js",
       "role": "runtime",
-      "functions": 12,
-      "calculation_candidates": 1
+      "functions": 1,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-ml-label-encoder-conformance.js",
@@ -2721,11 +3377,11 @@
     },
     {
       "file": "web/lib/onnx-ml-label-encoder.js",
-      "sha256": "c6d65729e2a10020e0ec84d845499db6fa795087b868d96dea6cadfb86b0eedf",
+      "sha256": "e6b8be7e6b11eb69d24ea338e27ee093350d554204cb4928c405f658f9ed8088",
       "language": "js",
       "role": "runtime",
-      "functions": 38,
-      "calculation_candidates": 1
+      "functions": 2,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-ml-linear-model-conformance.js",
@@ -2737,15 +3393,15 @@
     },
     {
       "file": "web/lib/onnx-ml-linear-model.js",
-      "sha256": "8c5a7abbd4df3404f7683f2a517cf508f161522e047d57be0da294a13a0f6935",
+      "sha256": "0939b825c44f87278e526100555afdab3924b323c5a4b50a23f0e9ff4e68f8cd",
       "language": "js",
       "role": "runtime",
-      "functions": 35,
-      "calculation_candidates": 1
+      "functions": 2,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-ml-normalizer-conformance.js",
-      "sha256": "d7e1543cb5d39f777d605380f832d32f9171923ecb6beaf9958193ef33add6e9",
+      "sha256": "ed5475469931bbfe1e95fc9a96cb345cb88fccc102493c6a896142272a53dae5",
       "language": "js",
       "role": "independent_reconstruction",
       "functions": 18,
@@ -2753,11 +3409,11 @@
     },
     {
       "file": "web/lib/onnx-ml-normalizer.js",
-      "sha256": "c92fe96aceecbbe84c995fd7f7092758a4b2f4dc37580f51660fda5c6f5e1424",
+      "sha256": "74802b4bf8003961213e44852d4dd64bd44ed4e765ce06b12ebeeae963008ebc",
       "language": "js",
       "role": "runtime",
-      "functions": 13,
-      "calculation_candidates": 3
+      "functions": 1,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-ml-one-hot-encoder-conformance.js",
@@ -2769,10 +3425,10 @@
     },
     {
       "file": "web/lib/onnx-ml-one-hot-encoder.js",
-      "sha256": "1660405122d17253a6af763602969f7e74d7240bf3befd71b23ff81dd248237b",
+      "sha256": "ef42cf0d05ce53ac0510761e2857e0d2177ff111446fa0aa5dee5d86a5975de1",
       "language": "js",
       "role": "runtime",
-      "functions": 18,
+      "functions": 1,
       "calculation_candidates": 0
     },
     {
@@ -2785,10 +3441,10 @@
     },
     {
       "file": "web/lib/onnx-ml-scaler.js",
-      "sha256": "58883cf9e8d7a4c37eb8d3852c48a529103c8ecc179362fb92d6ad9735806098",
+      "sha256": "1c71cb6449b60b14b37b419dc6e0ba541d4ec64887e781292292acf4d091c644",
       "language": "js",
       "role": "runtime",
-      "functions": 9,
+      "functions": 1,
       "calculation_candidates": 0
     },
     {
@@ -2801,11 +3457,11 @@
     },
     {
       "file": "web/lib/onnx-ml-svm.js",
-      "sha256": "90b3641c0f40e511f3dd0ea23de5e0f5d2e3340b8067dc243e90b053a5121133",
+      "sha256": "b6814188d533ffb8d9b2ad1164cc97891ce140115330b06a991ba5099bb96f3b",
       "language": "js",
       "role": "runtime",
-      "functions": 57,
-      "calculation_candidates": 4
+      "functions": 2,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-ml-tree-ensemble-conformance.js",
@@ -2817,19 +3473,19 @@
     },
     {
       "file": "web/lib/onnx-ml-tree-ensemble.js",
-      "sha256": "1738f39c553d64008bcbf19ce5cbe89db64c732bb0aeda74a64ca747789a8732",
+      "sha256": "54ed5dea28966a240f4efcfac49d457be1e3ae93745c4d00cfe8eb0cb19e7e4b",
       "language": "js",
       "role": "runtime",
-      "functions": 108,
-      "calculation_candidates": 2
+      "functions": 4,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-ml-value-inference.js",
-      "sha256": "c213f24657b21b6a112d5ab8a5b011a448e06070cda8fc1c85f5b40b9d8933ad",
+      "sha256": "556b379e1c6bd4319d626e188f3295803345e911b7d5a3bd2830c29a1edfde20",
       "language": "js",
       "role": "runtime",
-      "functions": 61,
-      "calculation_candidates": 12
+      "functions": 10,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-operation-cost.js",
@@ -2849,35 +3505,43 @@
     },
     {
       "file": "web/lib/onnx-ort-extension-shape-inference.js",
-      "sha256": "47714385e4057c69034da23d3cdd8a86ae5503b62e8d29afc29d85ea63152b63",
+      "sha256": "887fc14ae998729ce5f65771a72ae2abe75df74b71357ef12f3af7c6ce797704",
       "language": "js",
       "role": "runtime",
-      "functions": 19,
-      "calculation_candidates": 1
+      "functions": 4,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-ort-matmul-shape-inference.js",
-      "sha256": "c66d0fb278ad53aa9843c73a6234b133d027a680a57fbdcb1990e17a2a367446",
+      "sha256": "e6cc5fe080c4e7a717d30ca0b040ca417cd4f245c8536a74a62c19a9a9814af5",
       "language": "js",
       "role": "runtime",
-      "functions": 24,
-      "calculation_candidates": 1
+      "functions": 3,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-ort-recurrent-shape-inference.js",
-      "sha256": "096596e889ea899b404002334c81b712b828554bc4747668e267dcdba284093a",
+      "sha256": "7f97182780167c028a25951ac501123e2db03c522f94945edd3dad017de6edd5",
       "language": "js",
       "role": "runtime",
-      "functions": 12,
+      "functions": 3,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-ort-transformer-shape-inference.js",
-      "sha256": "ffcd883d6038d265b56b1127c86cdf699f5de0ba22549483f7a17cf7d2b401fd",
+      "sha256": "1b02d3ccc15cde494c073e14515f23c43f78cdc71b2dd0ce282e5299b97e5bf1",
       "language": "js",
       "role": "runtime",
-      "functions": 25,
-      "calculation_candidates": 1
+      "functions": 3,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/onnx-portable.js",
+      "sha256": "1d1c43acfe943b378ec9ca8c28bb8c177d17cb9ff88f6eb9903fd5714aae2361",
+      "language": "js",
+      "role": "runtime",
+      "functions": 10,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-runtime-shape-binding.js",
@@ -2889,19 +3553,19 @@
     },
     {
       "file": "web/lib/onnx-schema-legality.js",
-      "sha256": "af81ab59cf53d1286492eacaa5cf42f181f21d54d28f9e337088dea33b4c12a4",
+      "sha256": "914ad16e320fd2a8166954268ad28d2b7911ce9a99750edfb668fadb0d027664",
       "language": "js",
       "role": "runtime",
-      "functions": 13,
+      "functions": 3,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-shape-inference.js",
-      "sha256": "e0b6147455eda287f75b56b7a6c098d14dee7e59649c0162110f13c82ddf5e0f",
+      "sha256": "8e4640347e060061087bbadcd89a2dc589255f361e32f7bad59f65c0fd733b29",
       "language": "js",
       "role": "runtime",
-      "functions": 606,
-      "calculation_candidates": 43
+      "functions": 333,
+      "calculation_candidates": 15
     },
     {
       "file": "web/lib/onnx-shape-ops.js",
@@ -2953,19 +3617,19 @@
     },
     {
       "file": "web/lib/onnx-tfidf-vectorizer.js",
-      "sha256": "482d106fbeb04827d4f684bf3b381894ad398056f6e5354fcc6c8be7d7b226b0",
+      "sha256": "13c19ce3ccfd28ed409b60993539c93dbabc2361d64c2733fa10824d0c593969",
       "language": "js",
       "role": "runtime",
-      "functions": 44,
-      "calculation_candidates": 7
+      "functions": 3,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/onnx-type-proto.js",
-      "sha256": "70c9cae4fb43e1e35c862b273838742f58c29ad5d3b55fc40d1dd6b368a99d6e",
+      "sha256": "1bbdf72ca6b1c7cc1a013f50122db4ae30580807a74837ecbd4c926cbfe1266f",
       "language": "js",
       "role": "runtime",
-      "functions": 72,
-      "calculation_candidates": 9
+      "functions": 67,
+      "calculation_candidates": 8
     },
     {
       "file": "web/lib/operator-weight-evidence.js",
@@ -2977,26 +3641,26 @@
     },
     {
       "file": "web/lib/optimization-report-access.js",
-      "sha256": "8cb821bf4e5b62c7aaea2836f90bfd5be17df8b93a7d2089f137ecfe8bd437b2",
+      "sha256": "e250779545fa9d3f470f297c78c73aa5ea9f2f94312e60902a9d7917b5fc10e5",
       "language": "js",
       "role": "runtime",
-      "functions": 7,
+      "functions": 15,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/optimization-report-html.js",
-      "sha256": "4a7faeb57f7f218bc8611d0fbd7ee7926f9d3c4fc99be9a75aea33ec37a20b09",
+      "sha256": "7903837086c8b63a8668231ae15a08359aae0949d6f5ede838dceaf2dfaf5a28",
       "language": "js",
       "role": "runtime",
-      "functions": 16,
+      "functions": 18,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/optimization-report-page.js",
-      "sha256": "ab2a2d4b5eaf7c08a9ebe05ceb010a0b336711ac3242897e93ca349b2c2e337c",
+      "sha256": "88e70974b14e5569ef3534458a3c783e8ccff4333199e267ad488bd8368b2d03",
       "language": "js",
       "role": "runtime",
-      "functions": 35,
+      "functions": 38,
       "calculation_candidates": 0
     },
     {
@@ -3062,6 +3726,22 @@
       "role": "runtime",
       "functions": 9,
       "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/portable-contracts.js",
+      "sha256": "f2f70c0735ba3f9bed79bf6a40c59d2a4f9797249076bcd671c7de7e98e9104c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 2,
+      "calculation_candidates": 1
+    },
+    {
+      "file": "web/lib/portable-protobuf.js",
+      "sha256": "86368d7dc685ab9ed6d62de2856c10c9a32aea8a7e9f153f6afcb61ac1c8b207",
+      "language": "js",
+      "role": "runtime",
+      "functions": 7,
+      "calculation_candidates": 1
     },
     {
       "file": "web/lib/preprocess-ui.js",
@@ -3137,15 +3817,15 @@
     },
     {
       "file": "web/lib/provenance-ir.js",
-      "sha256": "a35561196c07b3655fd2d3550fc0a44b23348f57122a621003eeff03ff6e5efa",
+      "sha256": "a65bef2df84851ef5d94c7a10c8aa09955429b80c8fe77362a4f6ca466b946fb",
       "language": "js",
       "role": "runtime",
-      "functions": 27,
+      "functions": 3,
       "calculation_candidates": 1
     },
     {
       "file": "web/lib/provenance-panel.js",
-      "sha256": "1acaf77306c114f4c0b3a0655f2e770a347d736b0162f8ceff7b1423d90cfb85",
+      "sha256": "18f29ae2ed5e15cde1aff04a470ca706769a0864958d5f285d5fef070f8a29cb",
       "language": "js",
       "role": "runtime",
       "functions": 63,
@@ -3161,23 +3841,23 @@
     },
     {
       "file": "web/lib/provenance/bom-reference.js",
-      "sha256": "cd15d21aeed8463d85bce8144b326560b8d33cad755a6ed28f40318dd297c129",
+      "sha256": "154f9af5475145842b5fbed371abc0122345be6888a10d2da1973033ad57bd8f",
       "language": "js",
       "role": "runtime",
-      "functions": 9,
+      "functions": 1,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/provenance/contracts.js",
-      "sha256": "8227c213028aeb8583aaee62ec67e79de05cc5750812d41b3e4c734d61fc1ead",
+      "sha256": "75c7ceffec901c04ea7f7c7565ad20058000f4615561eebc30bdf9b0f1b99bd9",
       "language": "js",
       "role": "runtime",
-      "functions": 16,
+      "functions": 12,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/provenance/cyclonedx.js",
-      "sha256": "f86f38288c3629f792d06a1216fd07b7df490cfe040bf488285eddc9724b2d99",
+      "sha256": "75bf1aa9354235e56764526b7757a94b86670d62ad3a1efbf9eeccf5e59d7e4e",
       "language": "js",
       "role": "runtime",
       "functions": 26,
@@ -3193,10 +3873,10 @@
     },
     {
       "file": "web/lib/provenance/omop.js",
-      "sha256": "de821a4329ce12aeba14bb2e1a46a7a7c24c52c5269a66e28ef97add862b44e3",
+      "sha256": "f25b1a392e396019da9d11272e63cfef0bbbf7ef0955d580bc6de4b588edb806",
       "language": "js",
       "role": "runtime",
-      "functions": 8,
+      "functions": 5,
       "calculation_candidates": 0
     },
     {
@@ -3329,10 +4009,10 @@
     },
     {
       "file": "web/lib/redesign-codegen.js",
-      "sha256": "6ea382791d36fb78bbd2ef95612b1846ce43d50f08b40aa4385e55589db2c09a",
+      "sha256": "a78b68cb2fba2ffc3f741d0d14e8bfe38061ec6aadd1c709ef3cc056802f2758",
       "language": "js",
       "role": "runtime",
-      "functions": 67,
+      "functions": 68,
       "calculation_candidates": 6
     },
     {
@@ -3593,7 +4273,7 @@
     },
     {
       "file": "web/lib/report-metadata.js",
-      "sha256": "67196abab4bb37ea5ca92d158c5dcca0726d1d4adfd3f359106feadbaf3f378a",
+      "sha256": "9ba5063cf5dc9432b3bdd1333f5b3554c2ab9bef3d6699d3d6e064aceedc15ad",
       "language": "js",
       "role": "runtime",
       "functions": 5,
@@ -3673,10 +4353,10 @@
     },
     {
       "file": "web/lib/report-utils.js",
-      "sha256": "c8c2b9b7fcf8ca58e82805e3744e71718e690162e58acea6e6f569a31dcfdf69",
+      "sha256": "86ab5df9fbb840ddf38e92ac2a5c26edee84bb794ad176582d32fb2959f0ace4",
       "language": "js",
       "role": "runtime",
-      "functions": 29,
+      "functions": 32,
       "calculation_candidates": 0
     },
     {
@@ -3889,10 +4569,10 @@
     },
     {
       "file": "web/lib/safe-source-artifacts.js",
-      "sha256": "7802fd544a7508d8d749f704f2ceb1a67f4be70efaf2a5dc8a4804f24e8436cc",
+      "sha256": "bc2b398642ad775bdf9f47d95bf7599a5e262f4c1bd476ea882f59afcb99e640",
       "language": "js",
       "role": "runtime",
-      "functions": 200,
+      "functions": 259,
       "calculation_candidates": 7
     },
     {
@@ -4009,10 +4689,10 @@
     },
     {
       "file": "web/lib/snapshot-ir.js",
-      "sha256": "1547b6f9d1c87efa37a31ee252c81a1d7740bbf9b090221eb9797f8ce070f4b8",
+      "sha256": "664de94ee0d2427391466ab55525fe9b107bd14c8fcd99ae5f4a5bd8801fa89f",
       "language": "js",
       "role": "runtime",
-      "functions": 11,
+      "functions": 4,
       "calculation_candidates": 0
     },
     {
@@ -4105,11 +4785,19 @@
     },
     {
       "file": "web/lib/tensor-size.js",
-      "sha256": "404e3659cac1d92e35827c9e978cc28c97fb4c0ad5e567ceff3f0399275b859e",
+      "sha256": "4df03b25ca3874dcb48b417a4bd3a0ec31082c833eb12bb6888ea7ec3e0373b5",
       "language": "js",
       "role": "runtime",
-      "functions": 23,
+      "functions": 21,
       "calculation_candidates": 12
+    },
+    {
+      "file": "web/lib/tensorflow-checkpoint.js",
+      "sha256": "7527fb0ecd46877e7dd4911d67dc10dbbd061b0c98eb0910e8d522d7cfaf01e6",
+      "language": "js",
+      "role": "runtime",
+      "functions": 21,
+      "calculation_candidates": 2
     },
     {
       "file": "web/lib/tensorrt-cyclonedx-properties.js",
@@ -4225,7 +4913,7 @@
     },
     {
       "file": "web/lib/tflite-runtime-info-adapter.js",
-      "sha256": "3efdfd2038b9ecc69c3a93546b9959f70fd62ded31f45da9e4350834b26a3332",
+      "sha256": "662a512abd2b32a970ba82fb902af2bb517e30acb4f6152e1e6551b2e4d17d4e",
       "language": "js",
       "role": "runtime",
       "functions": 48,
@@ -4245,6 +4933,22 @@
       "language": "js",
       "role": "runtime",
       "functions": 11,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/training-analysis-bindings.js",
+      "sha256": "d4c892623fb4c5422632e72a1689e5ee07e017ca5462f592599a88710817034c",
+      "language": "js",
+      "role": "runtime",
+      "functions": 5,
+      "calculation_candidates": 0
+    },
+    {
+      "file": "web/lib/transformation-correspondence.js",
+      "sha256": "670fd7034238cc53a01a153d11fb544981dbeecb859f5bf25716b74f73aef72e",
+      "language": "js",
+      "role": "runtime",
+      "functions": 21,
       "calculation_candidates": 0
     },
     {
@@ -4281,10 +4985,10 @@
     },
     {
       "file": "web/lib/weight-analysis.js",
-      "sha256": "2baa800fcf08cdb7c9f414bf43c5454053d99f266289f6a98e709ef64352bddf",
+      "sha256": "75d16ee9b9ba93c166c0db3cb55a8f7bd86fb23da60bb4dffe3073a8d2c83ab9",
       "language": "js",
       "role": "runtime",
-      "functions": 57,
+      "functions": 55,
       "calculation_candidates": 0
     },
     {
@@ -4297,10 +5001,10 @@
     },
     {
       "file": "web/lib/weight-ir.js",
-      "sha256": "b039758111563bcb7ff31be322e52e08b61169f619ee638c4a4d0f7c5d34ef83",
+      "sha256": "c9c57244ed39056003891c6b4d0f42cc36011b9927d995b65f20ff7713990953",
       "language": "js",
       "role": "runtime",
-      "functions": 15,
+      "functions": 8,
       "calculation_candidates": 0
     },
     {
@@ -4313,11 +5017,11 @@
     },
     {
       "file": "web/lib/weight-pruning.js",
-      "sha256": "40bb53a0397c16fae35e4dc97d9b3bf85d98b6fca582b6d7cb7701d4e4c76933",
+      "sha256": "adc5bf02e80ad27b009c923b10470e5ddbc92124e9b04dbc7b23cb1d3414ea81",
       "language": "js",
       "role": "runtime",
-      "functions": 12,
-      "calculation_candidates": 1
+      "functions": 4,
+      "calculation_candidates": 0
     },
     {
       "file": "web/lib/weight-query-visual.js",
@@ -4409,15 +5113,15 @@
     },
     {
       "file": "web/onnx.js",
-      "sha256": "f9405d3ae371c387733712d437572540b67d4317124119495ffacd158ef773a9",
+      "sha256": "d4d72d4731f79d5c88ac24be66d7ae4ea72254711e7e0330711c3e77a555f6f5",
       "language": "js",
       "role": "runtime",
-      "functions": 507,
-      "calculation_candidates": 59
+      "functions": 480,
+      "calculation_candidates": 54
     },
     {
       "file": "web/sw.js",
-      "sha256": "adb46b46485f33dfc4dcbd09f2a155fbd12beaa4a599da00441cadf0e36814bc",
+      "sha256": "4ea4a230d95429cbc07d5d8140ab2263400b66ec7a23397b16bb1e544e4f02bf",
       "language": "js",
       "role": "runtime",
       "functions": 18,
@@ -4441,7 +5145,7 @@
     },
     {
       "file": "web/workers/numerical-ir-worker.js",
-      "sha256": "fb3777c600e06ddfbc3c892ee206d6554c670b65201098ab8b5eba5f6ee33147",
+      "sha256": "64371f97a0d411282a7232587632bd7bb2fbbd38c909985cdda1fb1448bde656",
       "language": "js",
       "role": "runtime",
       "functions": 2,
@@ -4449,7 +5153,7 @@
     },
     {
       "file": "web/workers/optimization-report-worker.js",
-      "sha256": "902258e0d000d5152dc11984b7393054c6083d8f6c526143371edae1e6ebad32",
+      "sha256": "fc10d671d287580fb8c410ca101852f2d4fed218698a59313c7ec1d9da830500",
       "language": "js",
       "role": "runtime",
       "functions": 1,
@@ -4457,7 +5161,7 @@
     },
     {
       "file": "web/workers/static-audit-worker.js",
-      "sha256": "352e70d69b63840335d876e075d98eedb76cff28d48f62f332b6a2068f8623d9",
+      "sha256": "ce90b7aa8e9330c901b4f4f4d209c8cdcb724f7dffae4afdb2101ba6d17007be",
       "language": "js",
       "role": "runtime",
       "functions": 11,
@@ -4465,7 +5169,7 @@
     },
     {
       "file": "web/workers/weight-pruning-worker.js",
-      "sha256": "c599054a6a329cc44432fea8a5c479e707ceb785d565e793751ca6cea3cd41d4",
+      "sha256": "3b02075d285775baf957a4a9789ec614f49348ec239b6689112b47c941a70b6d",
       "language": "js",
       "role": "runtime",
       "functions": 2,
@@ -4505,6 +5209,27 @@
         "INT2"
       ],
       "disposition": "Independent symbolic-cost reconstruction oracle; deliberately does not import production width rules."
+    },
+    {
+      "file": "web/lib/safe-source-artifacts.js",
+      "line": 495,
+      "body_sha256": "c200506ff212314f0d2bb8e7e482c6a55f82cb53015dfb41f1f3f1402acd9153",
+      "names": [
+        "FLOAT32",
+        "FLOAT64",
+        "INT32",
+        "INT16",
+        "UINT16",
+        "INT8",
+        "UINT8",
+        "INT64",
+        "BOOL",
+        "FLOAT16",
+        "BFLOAT16",
+        "UINT32",
+        "UINT64"
+      ],
+      "disposition": "TensorFlow TensorProto protobuf field numbers (float_val=5, double_val=6, int_val=7, int64_val=10, bool_val=11, half_val=13, uint32_val=16, uint64_val=17), not scalar bit widths or storage arithmetic. Numeric decoding uses existing scalar-numeric and ONNX byte visitors; compared to tf.make_ndarray in check-tensorflow-source-numerics.py."
     }
   ],
   "native_scalar_tables": [
@@ -4526,7 +5251,7 @@
         {
           "file": "web/lib/onnx-ml-normalizer-conformance.js",
           "name": "bigintToFloat32",
-          "line": 185
+          "line": 192
         },
         {
           "file": "web/lib/onnx-ml-scaler-conformance.js",
@@ -4578,31 +5303,12 @@
       }
     },
     {
-      "body_sha256": "607f38da5ddff22b1491e33723a851de950237852563644797d08852b7f85139",
-      "occurrences": [
-        {
-          "file": "web/lib/onnx-ml-normalizer-conformance.js",
-          "name": "squareToFloat32",
-          "line": 170
-        },
-        {
-          "file": "web/lib/onnx-ml-normalizer.js",
-          "name": "squareToFloat32",
-          "line": 229
-        }
-      ],
-      "disposition": {
-        "category": "independent_oracle",
-        "reason": "Normalizer conformance independently reconstructs pinned float32 intermediate rounding; sharing production arithmetic would weaken the oracle."
-      }
-    },
-    {
       "body_sha256": "69b2be6191d2da144b01932c135c65f00c52dedc20c4f89e5c52b36c4b4032c0",
       "occurrences": [
         {
           "file": "web/lib/onnx-ml-normalizer-conformance.js",
           "name": "toFloat32",
-          "line": 181
+          "line": 188
         },
         {
           "file": "web/lib/onnx-ml-scaler-conformance.js",
@@ -4626,12 +5332,12 @@
         {
           "file": "web/chatgpt/deepbom-widget.js",
           "name": "formatBytes",
-          "line": 1117
+          "line": 1119
         },
         {
           "file": "web/claude/deepbom-widget.js",
           "name": "formatBytes",
-          "line": 398
+          "line": 400
         }
       ],
       "disposition": {
@@ -4678,25 +5384,6 @@
       }
     },
     {
-      "body_sha256": "8ed8d37419c2f2a966a5de1e653956ebd130b1a337a915c589ef2d52538c19e2",
-      "occurrences": [
-        {
-          "file": "web/lib/onnx-ml-value-inference.js",
-          "name": "sumExactNonnegative",
-          "line": 1350
-        },
-        {
-          "file": "web/lib/report-conformance-onnx.js",
-          "name": "exactArraySum",
-          "line": 994
-        }
-      ],
-      "disposition": {
-        "category": "independent_oracle",
-        "reason": "Production integer-list inference and report conformance independently validate exact nonnegative sums."
-      }
-    },
-    {
       "body_sha256": "a8052629185105985bb06e352b4e64203a40643fbbee8175642c1516e0d43f60",
       "occurrences": [
         {
@@ -4712,7 +5399,7 @@
         {
           "file": "web/lib/onnx-ml-normalizer-conformance.js",
           "name": "safeShapeProduct",
-          "line": 230
+          "line": 237
         },
         {
           "file": "web/lib/onnx-ml-scaler-conformance.js",
@@ -4742,25 +5429,6 @@
       "disposition": {
         "category": "independent_observation_check",
         "reason": "Inspector and report independently compare named observed count dictionaries; neither computes the underlying counts."
-      }
-    },
-    {
-      "body_sha256": "e4a09c51681eaafe2b1a8cd139bfafe519a348e9c13f0126149e7f81670c113d",
-      "occurrences": [
-        {
-          "file": "web/lib/onnx-ml-normalizer-conformance.js",
-          "name": "countOverflow",
-          "line": 153
-        },
-        {
-          "file": "web/lib/onnx-ml-normalizer.js",
-          "name": "countSignedOverflow",
-          "line": 211
-        }
-      ],
-      "disposition": {
-        "category": "independent_oracle",
-        "reason": "Normalizer conformance independently detects signed-overflow boundaries for pinned operator semantics."
       }
     }
   ]

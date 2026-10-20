@@ -1440,6 +1440,7 @@ mod tests {
             bottleneck_assessment_status: "assessed".to_string(),
             batch_matmul_adjoints: (false, false),
             pool_filter: None,
+            spatial_options: None,
             macs_status: "assessed_nominal".to_string(),
             macs_reason: "Test fixture supplies a closed nominal MAC value.".to_string(),
             mac_percent: 0.0,
