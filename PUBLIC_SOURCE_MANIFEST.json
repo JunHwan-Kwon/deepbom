@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "a9b28ecf34f689409ac795052221f7017fc1473b",
+  "source_commit": "05db82f81d68724d790bf442136b930543d67f63",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 1727,
+  "file_count": 1736,
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -577,8 +577,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 73924,
-      "sha256": "be9d0c5100141165930da5b58af1a901821563bcd6d2272a8424e3d6d8c00898"
+      "byte_length": 75258,
+      "sha256": "6917c464a9c3a38fa389b4fa09d52a819ab90cf371cecc25ba67320f7976ff04"
     },
     {
       "path": "config/scalar-types.v1.json",
@@ -962,8 +962,8 @@
     },
     {
       "path": "docs/AGENT_CONTRACT_VERSIONING.md",
-      "byte_length": 4287,
-      "sha256": "c4b530871f6c2336e01af6fc3631b118bb60c16f4e9d7d6eadf9c19960f1010d"
+      "byte_length": 5330,
+      "sha256": "c053faacdea406b5c6e9c06102e9dd2ec5d2f6f77a5850e9b4b688344bc6f0c4"
     },
     {
       "path": "docs/AGENT_DISTRIBUTION_OPERATIONS.md",
@@ -1157,13 +1157,13 @@
     },
     {
       "path": "docs/agent-evaluation/README.md",
-      "byte_length": 1603,
-      "sha256": "7d251e58e8163b38c39be208fdc5a33d89717b9a1535e788213a46333b3eedd6"
+      "byte_length": 2197,
+      "sha256": "6ac525fbb9400cf63f0270f83fbe44048f575f4607739942b50a5b8e016dba0e"
     },
     {
       "path": "docs/agent-evaluation/host-evaluation-cases.v1.json",
-      "byte_length": 8982,
-      "sha256": "554fff901afd581184253c37b2ce921930bec23cd29f8ad7efaf81e432c114ea"
+      "byte_length": 18239,
+      "sha256": "bb06d8d64f5812f6a9650c84a819b3e65e06b7cde4afe097c1da53b0ed37d1ed"
     },
     {
       "path": "docs/agent-evaluation/host-evaluation-run.template.json",
@@ -1177,8 +1177,8 @@
     },
     {
       "path": "docs/chatgpt-app/INTERACTIVE_REVIEW.md",
-      "byte_length": 8570,
-      "sha256": "a1f765ca9e0b4ef3dfb894491258a2a84e9ebad93b0028b9a6de46b446379be1"
+      "byte_length": 12289,
+      "sha256": "727f8a9d2d4c0fcdff00d706f4f0c5531709f4ed10b2d7d22b22a6b83bef547c"
     },
     {
       "path": "docs/chatgpt-app/PORTAL_VALUES.md",
@@ -1187,8 +1187,8 @@
     },
     {
       "path": "docs/chatgpt-app/PUBLICATION_COMPATIBILITY.md",
-      "byte_length": 4140,
-      "sha256": "c0ba6961357a98bff1ceadd3395d360550563ac43752650524b348d761e1e85d"
+      "byte_length": 6156,
+      "sha256": "4e7859b705b417d798da4dc81faed9de456396683dd109e13e20f6ba813dc0b7"
     },
     {
       "path": "docs/chatgpt-app/README.md",
@@ -1718,7 +1718,7 @@
     {
       "path": "docs/reviews/common-calculation-inventory.json",
       "byte_length": 171778,
-      "sha256": "8b5bc4ae99c24a506108e756ecedbbd185c863ea81994a668b43c36a4557a91e"
+      "sha256": "de6235482206109621923e616780e21195b80c5365740e543274f423d8108763"
     },
     {
       "path": "docs/schemas/deepbom-artifact-ir-v2.schema.json",
@@ -2128,7 +2128,7 @@
     {
       "path": "reference/cyclonedx/1.7/examples/current-reference.json",
       "byte_length": 33064,
-      "sha256": "c2d9bf69f0922c447c97ded128bca7535bd417805cfb9c2f07a872c95789d049"
+      "sha256": "3ec0230a32db00a6410d7c8964bc55d823f6ff6a5a3e4164ffe580a258ff4c88"
     },
     {
       "path": "reference/cyclonedx/1.7/examples/historical-reference.json",
@@ -2316,6 +2316,96 @@
       "sha256": "24a099d66399376bcdcfcd5a4994f10e8efe1aaed84dcc4481c2239e82dd32a3"
     },
     {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_artifact_evidence_envelope.json",
+      "byte_length": 169121,
+      "sha256": "ae5b4f547b0f4a0b3c1f13946791aa338513225d2968ebaa89301fd9d3ae568c"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_artifact_ir.json",
+      "byte_length": 1217218,
+      "sha256": "ead59dc5fa57dc1feb9c52ad3ec80e6b62e40d6bb993db03edb00d997ddfa4d0"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_cyclonedx_evidence.cdx.json",
+      "byte_length": 56067,
+      "sha256": "33887c285825579290ec554a00b60f0e1c758e3b116fc3e333f3a6fcb3fd2df3"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_interface_contracts.json",
+      "byte_length": 32303,
+      "sha256": "39d46c981e9cc385fb5dbaca1f68da716b3e5c3b4ebca388978b02facffec8b0"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_missing_provenance_fields.json",
+      "byte_length": 46003,
+      "sha256": "85b38cabc39e21043f8da3ec84584721ded7bbc98efb90b6d9e3f496d8945da5"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_model_ir.json",
+      "byte_length": 1772651,
+      "sha256": "f4e21fc2ef3e1995452a8c7c157421e010dadf72bd6ea7bc083afca17c53c928"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_observed_formulation.cdx.json",
+      "byte_length": 20126,
+      "sha256": "c945953b0f1bc7def700672f30a9f70ce3ddaaa02069e5fb8096b4fc9f5caf8b"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_runtime_requirements.json",
+      "byte_length": 76480,
+      "sha256": "0d049215aaefd18244e0fab003ca37d5829a6956852b8e7164144be8ee996072"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/producer.json",
+      "byte_length": 32975,
+      "sha256": "b2b4bfa8a4eb4358fa31c1350b50d03def0b66d9fc8c44bfbcf0dd257f918077"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-98bea1fa31e28ff24c5ab0ba73ec81c0a60efc8fe1c09feff1076682bcedbd4a/deepbom_artifact_evidence_envelope.json",
+      "byte_length": 169456,
+      "sha256": "cdb1ea4594408547b47b968bc2d5fb6190b52fa98030955459dd24e34483d1c8"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-98bea1fa31e28ff24c5ab0ba73ec81c0a60efc8fe1c09feff1076682bcedbd4a/deepbom_artifact_ir.json",
+      "byte_length": 1217218,
+      "sha256": "ead59dc5fa57dc1feb9c52ad3ec80e6b62e40d6bb993db03edb00d997ddfa4d0"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-98bea1fa31e28ff24c5ab0ba73ec81c0a60efc8fe1c09feff1076682bcedbd4a/deepbom_cyclonedx_evidence.cdx.json",
+      "byte_length": 56067,
+      "sha256": "940abc723c0624d4ad8b3d59d0739b76f64621f178edd63211fa4028ff76efd1"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-98bea1fa31e28ff24c5ab0ba73ec81c0a60efc8fe1c09feff1076682bcedbd4a/deepbom_interface_contracts.json",
+      "byte_length": 32638,
+      "sha256": "d202a711d51cd72f8dc21e91602d543c0dd41bb8a7948c4f22fb237f3ec59782"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-98bea1fa31e28ff24c5ab0ba73ec81c0a60efc8fe1c09feff1076682bcedbd4a/deepbom_missing_provenance_fields.json",
+      "byte_length": 46338,
+      "sha256": "be8fc8a225054fe3784f667e94d5fd344cf2674c357f275c734e5bdeadc85adf"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-98bea1fa31e28ff24c5ab0ba73ec81c0a60efc8fe1c09feff1076682bcedbd4a/deepbom_model_ir.json",
+      "byte_length": 1772651,
+      "sha256": "f4e21fc2ef3e1995452a8c7c157421e010dadf72bd6ea7bc083afca17c53c928"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-98bea1fa31e28ff24c5ab0ba73ec81c0a60efc8fe1c09feff1076682bcedbd4a/deepbom_observed_formulation.cdx.json",
+      "byte_length": 20126,
+      "sha256": "b2f224a07cfcba40d6acedd0ffe05bcf3577ad818f96e34ec50071d4889512a6"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-98bea1fa31e28ff24c5ab0ba73ec81c0a60efc8fe1c09feff1076682bcedbd4a/deepbom_runtime_requirements.json",
+      "byte_length": 76815,
+      "sha256": "5b4141b983ce92bee295eb06ee0d448de24d356fa7dff13fe5e078c9848fc925"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-98bea1fa31e28ff24c5ab0ba73ec81c0a60efc8fe1c09feff1076682bcedbd4a/producer.json",
+      "byte_length": 33325,
+      "sha256": "fb1f29d984561f6932463d03792bdaa9c1f839484702c5503c05c27834c8a2a4"
+    },
+    {
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9c85eac5628b066866e3036ffddfa1ec4b0681aba2dbc3dc034e4f3a757f427a/deepbom_artifact_evidence_envelope.json",
       "byte_length": 169456,
       "sha256": "9b99b40c46ff00b52e94af956e74655394e5343410a29fd5813ab725aaa212f7"
@@ -2404,51 +2494,6 @@
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b1943c6c15c107f8b3b799ee7a3059a64444f8749a0a413c8da0adb45c3689f1/producer.json",
       "byte_length": 33350,
       "sha256": "1dd656be0ac7445c93ea4afef569f8d3c8e09d19f000a17ef1068f17f2472d48"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_artifact_evidence_envelope.json",
-      "byte_length": 169121,
-      "sha256": "8243e84c00b228f574a7d70da27c553abae7c84a1aea39d9a15f964f1b7022e8"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_artifact_ir.json",
-      "byte_length": 1217218,
-      "sha256": "ead59dc5fa57dc1feb9c52ad3ec80e6b62e40d6bb993db03edb00d997ddfa4d0"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_cyclonedx_evidence.cdx.json",
-      "byte_length": 56067,
-      "sha256": "5dff6e537d1a7afee3aa1e7ca45e904838306dec31a92977530fc4cdab84176a"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_interface_contracts.json",
-      "byte_length": 32303,
-      "sha256": "de0593e9f42c2fa111324d1a8c8d896bc1aa86bd4538f2a14902e0eaf93fa26c"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_missing_provenance_fields.json",
-      "byte_length": 46003,
-      "sha256": "38d4dc057088769cb33d9c2535efdda6efdb4ae1687804712db1ab9bda8b8a17"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_model_ir.json",
-      "byte_length": 1772651,
-      "sha256": "f4e21fc2ef3e1995452a8c7c157421e010dadf72bd6ea7bc083afca17c53c928"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_observed_formulation.cdx.json",
-      "byte_length": 20126,
-      "sha256": "3775698b78f6f9b5b86f9618d9940cf4ab38f769d51224c12192f8991890544a"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_runtime_requirements.json",
-      "byte_length": 76480,
-      "sha256": "5970a2e1f2fab1ed0f4a09ee232ad473640d7d3d3afa54b8975b0aa43a90ed5b"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/producer.json",
-      "byte_length": 32975,
-      "sha256": "0eb61e40d90c433c819f6d6debeeb77a71d2ce66429a0d03068f32d88d1660f8"
     },
     {
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-c6580034bb3d512d1d8eb43a6d8e0e22d444137e5ff8a8a9f90e276ccc5ba470/deepbom_artifact_evidence_envelope.json",
@@ -3157,8 +3202,8 @@
     },
     {
       "path": "scripts/check-chatgpt-widget.mjs",
-      "byte_length": 53470,
-      "sha256": "461494c5f166870af373e9b8f48adf74f6ce46602f219649d3ea16ef9eafbfe8"
+      "byte_length": 61995,
+      "sha256": "799232272e728dae8c70c0360fd19dfb479a2f6570faafaf6c8a7c55f8fd7969"
     },
     {
       "path": "scripts/check-ci-deploy-contract.mjs",
@@ -3407,8 +3452,8 @@
     },
     {
       "path": "scripts/check-evidence-query.mjs",
-      "byte_length": 14234,
-      "sha256": "8d359f01f4a1845e2b93e396358134fa3ae26da70a8826dfe7074d58fd001018"
+      "byte_length": 22499,
+      "sha256": "0cc11269a8d08ffc1aa24825f1bd2eff905b5e3aef419bb7bae1c91234f39a7a"
     },
     {
       "path": "scripts/check-evidence-treemap.mjs",
@@ -6407,8 +6452,8 @@
     },
     {
       "path": "web/lib/build-metadata.js",
-      "byte_length": 124824,
-      "sha256": "449cc0aa2e380c991d842a09cb1dea5dbd2f7ff3f1f9f7ddc8b5d63f7956084f"
+      "byte_length": 124809,
+      "sha256": "5a5fa5dbc1720c3787d897ede3fed817296703c717e4c99776a898c3fc1ae3c7"
     },
     {
       "path": "web/lib/builtin-metrics.js",
@@ -6677,13 +6722,13 @@
     },
     {
       "path": "web/lib/evidence-query-view.js",
-      "byte_length": 18072,
-      "sha256": "c2502a57f1052f636ad4498b0337362cc7398102a609fae381b370b21bba9536"
+      "byte_length": 23657,
+      "sha256": "87e3f50b09888b9340a90895ae226ac36abe265a0c5998e0dd7137a79aae46ef"
     },
     {
       "path": "web/lib/evidence-query.js",
-      "byte_length": 15981,
-      "sha256": "cbb5dfc2dd148307e9e0c06041e439dac3d6576eba20a2eda30485a81e9954df"
+      "byte_length": 22603,
+      "sha256": "7a14afcb85232ee1ca8b101ed6e414e203f96038940ef8ad019f4b929a13c311"
     },
     {
       "path": "web/lib/evidence-standard-projection.js",
@@ -8397,8 +8442,8 @@
     },
     {
       "path": "web/lib/workflow-catalog.js",
-      "byte_length": 10948,
-      "sha256": "c46431b1026d2568a2357e559ee799bdaf9f54930ef487e9f0be4f9cd4ed82a4"
+      "byte_length": 16408,
+      "sha256": "c85f9e9e664e049d4f9e8a18c450fe1849b04b8eef61978a91a4619ea020bd20"
     },
     {
       "path": "web/lib/workflow-continuation.js",
@@ -8593,7 +8638,7 @@
     {
       "path": "web/sw.js",
       "byte_length": 18712,
-      "sha256": "4ea4a230d95429cbc07d5d8140ab2263400b66ec7a23397b16bb1e544e4f02bf"
+      "sha256": "d0b9a11d3cbfd87770a621dec23a0dd610b762fbb168d55411e3d79a29b7954f"
     },
     {
       "path": "web/test.html",

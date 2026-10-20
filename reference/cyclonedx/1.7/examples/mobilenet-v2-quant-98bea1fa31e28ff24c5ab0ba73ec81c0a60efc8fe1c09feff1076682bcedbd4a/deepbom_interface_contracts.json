@@ -442,12 +442,12 @@
     "analyzer": "deepbom",
     "analyzer_semantic_version": "2.5.0",
     "analyzer_build_version": "2026-08-03",
-    "analyzer_build_commit": "a9b28ecf34f689409ac795052221f7017fc1473b",
+    "analyzer_build_commit": "e207dab4ce6c901909e0ef80bae42bb33ccd6443",
     "analyzer_build_source_state": "clean",
-    "analyzer_bundle_content_sha256": "8c8a64e951c07693f13b65f17671f84b1e213735cb4c3a1c25fa515d625ddc9b",
+    "analyzer_bundle_content_sha256": "5b24205b0f1a0d3bc5c6736adef7d344e0c7226928ab9c9b2198e65444964293",
     "analyzer_bundle_content_hash_method": "SHA-256 over RFC8785-JCS canonical deepbom.analyzer_build_file_digest_set.v1",
     "rulepack_version": "deepbom.rulepack.2026-07-24.63",
-    "rulepack_sha256": "62cec38a2d4ae8781da02e1713283cae42308355b45120b210db0f30410f35c7",
+    "rulepack_sha256": "93be0bf6c4d5c3b1b25895352c2b6f2728b39cc7dc7cd651c1bd69e8d9698565",
     "rulepack_hash_basis": [
       "web/lib/evidence-ir.js (common Evidence IR schema identities)",
       "config/scalar-types.v1.json (common calculation and native storage rules)",
@@ -552,6 +552,7 @@
       "src/xnnpack_rulepack_generated.rs (generated XNNPACK delegate documentary rules)",
       "reference/xnnpack-readme/README-v2.21.0.md (pinned XNNPACK delegate README snapshot)",
       "reference/xnnpack-readme/rule-manifest-v2.21.0.json (XNNPACK delegate semantic rule manifest)",
+      "scripts/generate-xnnpack-delegate-rulepack.mjs (XNNPACK delegate rule generator and source digest contract)",
       "src/target_profiles.rs (target profiles and target-specific planning contracts)",
       "src/lib.rs (quantization classification and XNNPACK planning rules)",
       "src/lib.rs (TFLite runtime-version floor derivation)",
@@ -585,6 +586,7 @@
       "src/residual_contract_distortion.rs (exhaustive residual contract-distortion solver)",
       "web/lib/residual-contract-distortion.js (independent browser residual contract-distortion validator)",
       "web/lib/residual-contract-distortion-worker.js (independent browser residual contract-distortion worker)",
+      "scripts/generate-ort-rulepack.mjs (pinned ORT rule generator and source digest contract)",
       "web/lib/xnnpack-selector-evidence.js (public XNNPACK evidence identity and arithmetic adapter)",
       "web/lib/ort-compatibility-evidence.js (public ORT evidence identity and conservation adapter)",
       "web/onnx.js (ONNX rule/reconstruction)",
@@ -625,7 +627,8 @@
       "web/lib/onnx-tfidf-vectorizer.js (ONNX rule/reconstruction)",
       "web/lib/onnx-type-proto.js (ONNX rule/reconstruction)",
       "web/lib/report-findings.js (authoritative finding rules)",
-      "web/lib/finding-contract.js (finding evidence-pointer contract)"
+      "web/lib/finding-contract.js (finding evidence-pointer contract)",
+      "protected authenticated rule source set (3 owners; implementation paths withheld; included in RULEPACK_SHA256)"
     ]
   }
 }

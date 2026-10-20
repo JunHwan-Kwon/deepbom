@@ -1,4 +1,4 @@
-const CACHE_NAME = "tflite-wasm-static-audit-v613";
+const CACHE_NAME = "tflite-wasm-static-audit-v614";
 const APP_CACHE_PREFIX = "tflite-wasm-static-audit-v";
 const APP_ASSETS = [
   "./",

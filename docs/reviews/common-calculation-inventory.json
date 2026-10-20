@@ -1857,7 +1857,7 @@
     },
     {
       "file": "web/lib/build-metadata.js",
-      "sha256": "449cc0aa2e380c991d842a09cb1dea5dbd2f7ff3f1f9f7ddc8b5d63f7956084f",
+      "sha256": "5a5fa5dbc1720c3787d897ede3fed817296703c717e4c99776a898c3fc1ae3c7",
       "language": "js",
       "role": "runtime",
       "functions": 0,
@@ -2289,18 +2289,18 @@
     },
     {
       "file": "web/lib/evidence-query-view.js",
-      "sha256": "c2502a57f1052f636ad4498b0337362cc7398102a609fae381b370b21bba9536",
+      "sha256": "87e3f50b09888b9340a90895ae226ac36abe265a0c5998e0dd7137a79aae46ef",
       "language": "js",
       "role": "runtime",
-      "functions": 30,
+      "functions": 42,
       "calculation_candidates": 0
     },
     {
       "file": "web/lib/evidence-query.js",
-      "sha256": "cbb5dfc2dd148307e9e0c06041e439dac3d6576eba20a2eda30485a81e9954df",
+      "sha256": "7a14afcb85232ee1ca8b101ed6e414e203f96038940ef8ad019f4b929a13c311",
       "language": "js",
       "role": "runtime",
-      "functions": 47,
+      "functions": 59,
       "calculation_candidates": 1
     },
     {
@@ -5041,10 +5041,10 @@
     },
     {
       "file": "web/lib/workflow-catalog.js",
-      "sha256": "c46431b1026d2568a2357e559ee799bdaf9f54930ef487e9f0be4f9cd4ed82a4",
+      "sha256": "c85f9e9e664e049d4f9e8a18c450fe1849b04b8eef61978a91a4619ea020bd20",
       "language": "js",
       "role": "runtime",
-      "functions": 10,
+      "functions": 11,
       "calculation_candidates": 0
     },
     {
@@ -5121,7 +5121,7 @@
     },
     {
       "file": "web/sw.js",
-      "sha256": "4ea4a230d95429cbc07d5d8140ab2263400b66ec7a23397b16bb1e544e4f02bf",
+      "sha256": "d0b9a11d3cbfd87770a621dec23a0dd610b762fbb168d55411e3d79a29b7954f",
       "language": "js",
       "role": "runtime",
       "functions": 18,

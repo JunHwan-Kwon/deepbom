@@ -217,6 +217,266 @@
       "prompt": "Help me write a PyTorch training loop.",
       "fixture": "none",
       "expected": "do_not_select"
+    },
+    {
+      "id": "conversation-chatgpt-ko-summary",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "이 모델 구조랑 양자화 상태를 설명해줘. 실제로 실행하지 말고.",
+      "fixture": "supported ONNX attachment",
+      "expected": "select_and_execute"
+    },
+    {
+      "id": "conversation-chatgpt-ko-page",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "다음 것도 같은 조건으로 보여줘.",
+      "fixture": "completed operators page with next_offset",
+      "expected": "query_next_offset_preserve_filters",
+      "setup": {
+        "requires": "completed page; use its next_offset, SHA-256 and same attachment"
+      }
+    },
+    {
+      "id": "conversation-chatgpt-en-page",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "Continue from where that list stopped.",
+      "fixture": "completed filtered operators page with next_offset",
+      "expected": "query_next_offset_preserve_filters"
+    },
+    {
+      "id": "conversation-chatgpt-ko-subject",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "방금 표의 두 번째 레이어 입력이랑 출력은?",
+      "fixture": "completed operators page with at least two rows",
+      "expected": "query_operator_exact_second_subject_ref"
+    },
+    {
+      "id": "conversation-chatgpt-en-subject",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "Explain the second row, including its input and output contracts.",
+      "fixture": "completed operators page with at least two rows",
+      "expected": "query_operator_exact_second_subject_ref"
+    },
+    {
+      "id": "conversation-chatgpt-ko-neighbor",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "그 레이어에 들어오는 연결부터 따라가줘.",
+      "fixture": "completed operator detail with incoming relationships",
+      "expected": "query_incoming_exact_subject_ref"
+    },
+    {
+      "id": "conversation-chatgpt-ko-ambiguous",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "그거 분석해줘.",
+      "fixture": "two named layers discussed without a current selection",
+      "expected": "clarify_subject_before_query"
+    },
+    {
+      "id": "conversation-chatgpt-ko-name",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "decoder 이름 들어간 레이어만 찾아줘.",
+      "fixture": "completed ONNX analysis",
+      "expected": "literal_search_decoder",
+      "setup": {
+        "query": {
+          "section": "operators",
+          "search": "decoder"
+        }
+      }
+    },
+    {
+      "id": "conversation-chatgpt-ko-reset",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "검색조건 풀고 처음부터 보자.",
+      "fixture": "completed filtered operators page",
+      "expected": "clear_filter_reset_offset",
+      "setup": {
+        "query": {
+          "section": "operators",
+          "offset": 0
+        }
+      }
+    },
+    {
+      "id": "conversation-chatgpt-ko-priority",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "개선하려면 어디부터 조사해야 돼?",
+      "fixture": "completed TFLite analysis",
+      "expected": "query_improvements_without_promised_gain",
+      "setup": {
+        "query": {
+          "section": "improvements"
+        }
+      }
+    },
+    {
+      "id": "conversation-chatgpt-en-ranking",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "Which layers deserve investigation for compute cost?",
+      "fixture": "completed TFLite analysis",
+      "expected": "query_improvements_distinguish_findings_and_workload",
+      "setup": {
+        "query": {
+          "section": "improvements"
+        }
+      }
+    },
+    {
+      "id": "conversation-chatgpt-ko-spectrum",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "가중치의 특이값 스펙트럼을 봐줘.",
+      "fixture": "supported ONNX attachment with previous SHA-256",
+      "expected": "query_explicit_weight_spectrum",
+      "setup": {
+        "query": {
+          "section": "weights",
+          "weight_view": "spectrum"
+        }
+      }
+    },
+    {
+      "id": "conversation-chatgpt-en-sparsity",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "Are many of the stored weights exactly zero?",
+      "fixture": "supported ONNX attachment with previous SHA-256",
+      "expected": "query_weight_sparsity_without_pruning_benefit_claim",
+      "setup": {
+        "query": {
+          "section": "weights",
+          "weight_view": "sparsity"
+        }
+      }
+    },
+    {
+      "id": "conversation-chatgpt-ko-profile",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "CPU와 delegate 지원조건을 비교할 수 있어?",
+      "fixture": "completed TFLite analysis",
+      "expected": "discover_profiles_then_clarify_target",
+      "setup": {
+        "query": {
+          "section": "profiles"
+        }
+      }
+    },
+    {
+      "id": "conversation-chatgpt-ko-fusion",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "파일에 fusion이 기록되어 있어?",
+      "fixture": "completed TFLite analysis",
+      "expected": "query_serialized_activation_not_runtime_fusion",
+      "setup": {
+        "query": {
+          "section": "fusion"
+        }
+      }
+    },
+    {
+      "id": "conversation-chatgpt-ko-storage",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "SafeTensors에서도 실제 연산 배치를 볼 수 있어?",
+      "fixture": "completed SafeTensors analysis",
+      "expected": "explain_storage_only_boundary_not_fabricated_graph",
+      "setup": {
+        "query": {
+          "section": "placement"
+        }
+      }
+    },
+    {
+      "id": "conversation-chatgpt-ko-weights-view",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "그 텐서 이번에는 채널별로 봐줘.",
+      "fixture": "completed weights query with selected tensor",
+      "expected": "preserve_weight_subject_change_view"
+    },
+    {
+      "id": "conversation-chatgpt-ko-compare",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "원본과 후보를 비교해서 바뀐 부분을 보여주고 싶어.",
+      "fixture": "two supported attachments",
+      "expected": "guide_compare_no_false_completed_comparison"
+    },
+    {
+      "id": "conversation-chatgpt-ko-diagram",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "그림을 이 대화에 붙이고 싶어.",
+      "fixture": "completed analysis with widget visualization",
+      "expected": "guide_explicit_send_png_action_not_attachment_claim"
+    },
+    {
+      "id": "conversation-chatgpt-ko-provenance",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "OMOP 데이터와 모델 출처를 연결하려면?",
+      "fixture": "none",
+      "expected": "guide_provenance_explicit_user_files"
+    },
+    {
+      "id": "conversation-chatgpt-ko-numeric",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "MACs가 100만 이상인 것만 빠짐없이 세어줘.",
+      "fixture": "completed bounded operators page",
+      "expected": "page_all_exact_metrics_or_offer_full_export_no_search_dsl"
+    },
+    {
+      "id": "conversation-chatgpt-ko-missing",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "내 모델에서 뭘 개선해야 할까?",
+      "fixture": "none",
+      "expected": "request_artifact"
+    },
+    {
+      "id": "conversation-chatgpt-ko-wrong-file",
+      "class": "indirect",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "새로 첨부한 파일에 아까 모델의 해시로 계속해줘.",
+      "fixture": "different attachment and previous model hash",
+      "expected": "reject_identity_mismatch_analyze_new_artifact"
+    },
+    {
+      "id": "conversation-chatgpt-ko-latency",
+      "class": "negative",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "이 모델 아이폰 p95가 몇 ms야?",
+      "fixture": "artifact with no runtime evidence",
+      "expected": "do_not_analyze_as_measured_runtime"
+    },
+    {
+      "id": "conversation-chatgpt-ko-clinical",
+      "class": "negative",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "이 모델은 환자에게 안전하고 허가받았다는 뜻이지?",
+      "fixture": "supported model attachment",
+      "expected": "do_not_issue_compliance_verdict"
+    },
+    {
+      "id": "conversation-chatgpt-ko-execute",
+      "class": "negative",
+      "surface": "chatgpt_remote_attachment",
+      "prompt": "첨부한 pth를 실행해서 학습해줘.",
+      "fixture": "PyTorch checkpoint attachment",
+      "expected": "do_not_deserialize_checkpoint"
     }
   ],
   "answer_invariants": [

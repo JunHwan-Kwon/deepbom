@@ -39,6 +39,7 @@ implement another parser, MAC formula, quantization rulepack or delegate matcher
 | `findings` | Paged findings with the existing classes, severity and recommendations |
 | `improvements` | Existing findings by severity, followed by exact workload/storage ranks |
 | `profiles` | Available static backend profiles; CPU planning profiles for TFLite |
+| `weights` | Optional Weight IR statistics and selected feature, with decoder/budget coverage |
 | `placement` | Independent per-profile static states, reasons, source identities and coverage |
 | `fusion` | TFLite encoded fused activations and existing static review hints |
 
@@ -73,7 +74,43 @@ Placement cards distinguish static eligibility from observed execution. Full
 model views remain below the query panel. Query SVG/PNG uses the existing
 explicit export/file-sharing controls. A preview is not a chat attachment.
 
-## Submission update
+## Compatible query navigation improvements
+
+The existing eight query sections and public input/output schemas remain
+unchanged. Within the extensible result context, queries now include the shared
+review summary's finding counts and analysis coverage, and the existing Model
+Hierarchy identity and coverage when available. These describe the source
+analysis before filtering or pagination; filtered/page counts retain their
+separate meaning. The graph summary keeps its source scope, identified by
+`native_detail_scope`, rather than recomputing a total across nested graphs. No
+new metric formulas, format parsers or eligibility rules are introduced.
+
+Selecting a diagram row opens its evidence without changing the query filter.
+**Inspect selected layer** resolves the exact subject in the same Model IR.
+Its incoming/outgoing navigation is projected from the full Model Summary's
+serialized relationships, including neighbors outside the original page.
+Relationship kinds and truncation counts remain explicit; navigation does not
+infer execution, gradients or causal influence. **Back to results** restores
+the original query and page. **Clear filters** recovers from an empty search.
+The JSON disclosure retains the original detailed evidence for inspection.
+Narrow panels scroll the graph internally instead of shrinking its text.
+
+Finding references retain their envelope index when improvement priorities are
+sorted, so a reference from `findings` identifies the same finding in
+`improvements`. They are scoped to the artifact, scan policy and returned
+`evidence_envelope_sha256`, not stable identity across changed analyses or
+releases. Literal search runs before display
+truncation. Source names exceeding the display budget can still match, with
+omissions marked in the returned row.
+
+Failed page requests preserve the displayed result and navigation history and
+do not publish that result as the failed request's answer. Replacing a panel
+prevents late results from the previous panel from initiating a new report or
+replacing the current view. Export content and filenames use the same captured
+result. The unchanged contract fingerprint is checked separately from browser
+interaction tests; neither establishes actual host rendering or portal status.
+
+## 2.0.0 submission history
 
 - Keep the published directory version operating while preparing this draft.
 - Import the updated root `chatgpt-app-submission.json`: seven tool justifications,
@@ -139,3 +176,24 @@ select a tensor and export the selected plot; request a pruning workflow and
 open its website link, select the same file and show the Weight workspace; ask
 for BOM verification and batch commands and show that these are local templates,
 not results. The old recording does not establish these new interactions.
+
+## Compatible conversational guidance update
+
+The workflow guide now returns Korean/English question examples and valid query
+examples for the existing workflows. Capabilities explains literal search,
+ambiguous references and asynchronous completion. Query results provide
+`context.follow_up`: optional next queries tied to the returned artifact hash,
+page cursor and exact subjects. They preserve filters for continuation and
+reset offsets when switching views. These suggestions do not execute themselves
+and do not create a natural-language parser, new tool or new query section.
+
+Typical follow-ups include “다음 페이지”, “이 레이어로 들어오는 연결”, “이 텐서의
+채널별 통계”, and “어디부터 개선을 검토할까?”. Weight payload analysis still
+requires an explicit request; measured speed, clinical conclusions and actual
+runtime placement are outside static evidence. The shared IR remains the only
+source of graph and numerical facts. Query tests exercise the actual next-query
+arguments; host interpretation of the example questions is evaluated separately.
+
+This deployment updates compatible Web/MCP implementation and guidance data on
+the existing engine 2.5.0 and plugin 2.0.0 contracts. It does not replace immutable
+2.5.0 npm/release archives or change the submitted Skill, tools or CSP.

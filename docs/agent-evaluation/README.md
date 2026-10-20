@@ -28,3 +28,12 @@ actually approved and visible.
 The run record contains potentially sensitive host, prompt, and fixture data.
 Review it before publication; this repository publishes the cases and schema,
 not fabricated host results.
+
+The catalog also includes Korean and English follow-up scenarios for pagination,
+ambiguous references, layer connections, weight views, backend profiles and web
+continuation. Establish the stated conversation context before each follow-up.
+The deterministic `check-evidence-query.mjs` executes real source-bound next
+queries and the structured query examples against the shared IR. It does not
+interpret the natural-language prompts. Report these checks separately from a
+host-observed tool-selection run; neither the prompt count nor a passing query
+check is a language-model accuracy score.

@@ -16,12 +16,12 @@
         {
           "type": "application",
           "name": "deepbom",
-          "version": "2.5.0+git.a9b28ecf34f6.bundle.8c8a64e951c0",
-          "bom-ref": "deepbom-analyzer-deepbom-2.5.0-a9b28ecf34f689409ac795052221f7017fc1473b",
+          "version": "2.5.0+git.e207dab4ce6c.bundle.5b24205b0f1a",
+          "bom-ref": "deepbom-analyzer-deepbom-2.5.0-e207dab4ce6c901909e0ef80bae42bb33ccd6443",
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "8c8a64e951c07693f13b65f17671f84b1e213735cb4c3a1c25fa515d625ddc9b"
+              "content": "5b24205b0f1a0d3bc5c6736adef7d344e0c7226928ab9c9b2198e65444964293"
             }
           ],
           "externalReferences": [
@@ -48,7 +48,7 @@
             },
             {
               "name": "deepbom:analyzer:buildCommit",
-              "value": "a9b28ecf34f689409ac795052221f7017fc1473b"
+              "value": "e207dab4ce6c901909e0ef80bae42bb33ccd6443"
             },
             {
               "name": "deepbom:analyzer:buildSourceState",
@@ -64,7 +64,7 @@
             },
             {
               "name": "deepbom:analyzer:rulepackSha256",
-              "value": "62cec38a2d4ae8781da02e1713283cae42308355b45120b210db0f30410f35c7"
+              "value": "93be0bf6c4d5c3b1b25895352c2b6f2728b39cc7dc7cd651c1bd69e8d9698565"
             },
             {
               "name": "deepbom:validation:interfaceCorpusProfileId",
@@ -146,7 +146,7 @@
               }
             ],
             "tools": [
-              "deepbom-analyzer-deepbom-2.5.0-a9b28ecf34f689409ac795052221f7017fc1473b"
+              "deepbom-analyzer-deepbom-2.5.0-e207dab4ce6c901909e0ef80bae42bb33ccd6443"
             ]
           }
         ]
@@ -439,7 +439,7 @@
         },
         {
           "name": "deepbom:analyzer:rulepackSha256",
-          "value": "62cec38a2d4ae8781da02e1713283cae42308355b45120b210db0f30410f35c7"
+          "value": "93be0bf6c4d5c3b1b25895352c2b6f2728b39cc7dc7cd651c1bd69e8d9698565"
         }
       ],
       "externalReferences": [
@@ -450,7 +450,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "9371db81ef9c6874b613868d3a987c6f46a83212f7ca10275eff470fe1318e5d"
+              "content": "491a78296016de755beeeb00607fadf02424f8f2fa5028f2d3001119c4c3c3e5"
             }
           ]
         },
@@ -461,7 +461,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "526b85276bd114b33f652f9703cd215c6c139fe2985fbb0222881d575b3c2146"
+              "content": "277f9bc62dbd4afedf44362f2f9ec73e2fc3e1de88d9e152d147c5e56093f20a"
             }
           ]
         },
@@ -472,7 +472,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "9ffb95a8fd46e120dea7911e269a149d229a25e8db1701c5c70332e203f6525f"
+              "content": "3aa5b6fe75177e80d2b6c252d27ac7f67d10c298cdfa7d6d6dbd048fcbac2d8e"
             }
           ]
         }

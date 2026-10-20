@@ -15,7 +15,7 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
   const query = normalizeEvidenceQuery(input);
   const model = artifactIrContext.model_ir;
   const modelSummary = artifactIrContext.model_summary;
-  if (analysis.model_sha256 !== model.artifact.sha256 || summary.artifact.sha256 !== model.artifact.sha256) throw new Error("Evidence query artifact identity mismatch.");
+  if (analysis.model_sha256 !== model.artifact.sha256 || summary.artifact.sha256 !== model.artifact.sha256 || envelope.identity?.sha256 !== model.artifact.sha256) throw new Error("Evidence query artifact identity mismatch.");
   if (query.target && (analysis.format !== "tflite" || analysis.target_profile?.id !== query.target)) throw new Error("Requested CPU planning target was not analyzed.");
   const all = modelSummary.rows;
   const operations = model.program.operations;
@@ -24,6 +24,11 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
   const nativeByRef = new Map(nativeOps.filter(op => op.artifact_ir_subject_ref).map(op => [op.artifact_ir_subject_ref, op]));
   const nativeByIndex = new Map(nativeOps.map((op, position) => [op.index ?? position, op]));
   const rowsByRef = new Map(all.map(row => [row.subject_ref, row]));
+  const successors = new Map();
+  for (const row of all) for (const edge of row.predecessor_relationships || []) {
+    if (!successors.has(edge.from_ref)) successors.set(edge.from_ref, []);
+    successors.get(edge.from_ref).push({ ...edge, to_ref: row.subject_ref });
+  }
   const hierarchy = artifactIrContext.model_hierarchy;
   const sourceByRef = new Map((hierarchy?.assignments || []).map(row => [row.subject_ref, row]));
   const groupByRef = new Map((hierarchy?.groups || []).map(row => [row.id, row]));
@@ -36,7 +41,8 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
       ...sourceByRef.get(row.subject_ref),
       path: groupByRef.get(sourceByRef.get(row.subject_ref).group_ref)?.path || null,
       hierarchy_sha256: hierarchy.hierarchy_sha256,
-      interpretation_boundary: "Exporter source annotation; not a proven native module or runtime invocation.",
+      group_kind: groupByRef.get(sourceByRef.get(row.subject_ref).group_ref)?.kind || null,
+      interpretation_boundary: hierarchy.interpretation_boundary,
     } } : {}),
     metric_contracts: opByRef.get(row.subject_ref)?.metric_contracts ?? null,
     quantization_summary: opByRef.get(row.subject_ref)?.quantization_summary ?? null,
@@ -52,6 +58,12 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
     graph: summary.graph,
     selected_level: modelSummary.selected_level ?? modelSummary.projection.selected_level,
     ordering: modelSummary.projection.ordering,
+    summary_scope: "graph, finding_summary and analysis_coverage retain the source analysis scope before filtering or pagination. graph is not recomputed across nested graphs; see native_detail_scope. Row coverage describes this query section; never sum page-local rows to infer whole-model totals.",
+    finding_summary: summary.verdict,
+    evidence_envelope_sha256: envelope.envelope_sha256,
+    analysis_coverage: summary.coverage,
+    ...(hierarchy ? { hierarchy: { status: hierarchy.status, hierarchy_sha256: hierarchy.hierarchy_sha256, coverage: hierarchy.coverage, interpretation_boundary: hierarchy.interpretation_boundary } } : {}),
+    reference_scope: "Use subject_ref with this artifact SHA-256. Finding references also require the same evidence_envelope_sha256 and scan policy: their source envelope index is preserved across findings and improvements, not across changed analyses or releases.",
     native_detail_scope: analysis.artifact_ir_primary_scope_ref ?? null,
     reproduction: summary.reproduction,
     continuation: { url: workflowUrl(({ operators: "layers", operator: "layers", findings: "findings", improvements: "findings", placement: "placement", profiles: "placement", fusion: "fusion", weights: "weights" })[query.section]), instruction: "For richer interaction, select the model again on deepbom.org and compare its SHA-256. No file or result is transferred by this link." },
@@ -60,6 +72,19 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
   let unavailable = null;
   if (query.section === "operators" || query.section === "operator") {
     rows = all.map(opRow);
+    if (query.section === "operator") {
+      for (const row of rows) {
+        if (row.kind !== "operation") continue;
+        const neighbors = (edges, field) => edges.filter(edge => rowsByRef.get(edge[field])?.kind === "operation").map(edge => ({
+          subject_ref: edge[field], title: rowsByRef.get(edge[field]).name || edge[field],
+          relationship_ref: edge.relationship_ref, kind: edge.kind,
+        }));
+        const incoming = neighbors(row.details.predecessor_relationships || [], "from_ref");
+        const outgoing = neighbors(successors.get(row.subject_ref) || [], "to_ref");
+        row.details.navigation = { incoming_count: incoming.length, outgoing_count: outgoing.length, incoming, outgoing,
+          interpretation_boundary: "Direct serialized relationships in the full Model Summary, including relationships outside the current page. Relationship kind is preserved; these are not observed execution or gradient paths." };
+      }
+    }
   } else if (query.section === "findings") {
     rows = list(envelope.findings).map((finding, index) => makeRow(`finding:${finding.id}:${index}`, "finding", finding.title || finding.id, finding));
     context.finding_boundary = "Finding classes are distinct. Severity is an investigation priority, not a measured loss of accuracy.";
@@ -95,12 +120,13 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
     if (analysis.format !== "tflite") unavailable = "This query currently exposes TFLite serialized fused-activation evidence; no backend fusion rule is inferred for other formats.";
   } else if (query.section === "improvements") {
     const priority = { critical: 0, high: 1, medium: 2, low: 3, informational: 4 };
-    const findings = [...list(envelope.findings)].sort((a, b) => (priority[a.severity] ?? 5) - (priority[b.severity] ?? 5) || compareCanonicalText(a.id, b.id));
+    const findings = list(envelope.findings).map((finding, index) => ({ finding, index }))
+      .sort((a, b) => (priority[a.finding.severity] ?? 5) - (priority[b.finding.severity] ?? 5) || compareCanonicalText(a.finding.id, b.finding.id) || a.index - b.index);
     const candidates = [...all].sort((a, b) => compareExact(b.metrics?.macs, a.metrics?.macs) || compareExact(b.aggregates?.serialized_byte_length, a.aggregates?.serialized_byte_length) || compareCanonicalText(a.subject_ref, b.subject_ref));
     rows = [
-      ...findings.map((finding, index) => makeRow(`finding:${finding.id}:${index}`, "investigation", finding.title || finding.id, { ...finding, priority_basis: "existing_finding_severity", effect_on_quality_or_latency: "not_measured" })),
+      ...findings.map(({ finding, index }) => makeRow(`finding:${finding.id}:${index}`, "investigation", finding.title || finding.id, { ...finding, priority_basis: "existing_finding_severity", effect_on_quality_or_latency: "not_measured" })),
       ...candidates.map(row => makeRow(row.subject_ref, "workload_review", row.name, {
-        ...row, priority_basis: "descending_exact_serialized_MACs_then_bound_storage_bytes_unknown_last",
+        ...opRow(row).details, priority_basis: "descending_exact_serialized_MACs_then_bound_storage_bytes_unknown_last",
         static_action: nativeFor(row)?.static_action ?? null,
         effect_on_quality_or_latency: "not_measured",
       })),
@@ -156,7 +182,7 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
   if (unavailable) context.unavailable_reason = unavailable;
   // Bound nested ledgers explicitly, retaining truncation paths. Full rows can
   // be inspected in local exports; no omitted detail is presented as complete.
-  const page = rows.slice(query.offset, query.offset + query.limit);
+  const page = rows.slice(query.offset, query.offset + query.limit).map(boundRow);
   const boundedContext = boundDetails(context);
   if (boundedContext.paths.length) boundedContext.value.detail_truncations = boundedContext.paths;
   const body = {
@@ -175,6 +201,7 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
     body.coverage.next_offset = query.offset + page.length < rows.length ? query.offset + page.length : null;
     body.coverage.detail_truncated = boundedContext.paths.length > 0 || page.some(row => row.detail_truncations.length > 0);
     if (!unavailable && rows.length) body.status = body.coverage.next_offset !== null || body.coverage.detail_truncated ? "partial" : "complete";
+    body.context.follow_up = queryFollowUps(body);
     return sealEvidenceQueryResult(body);
   };
   let result = seal();
@@ -182,11 +209,51 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
   return validateEvidenceQueryResult(result);
 }
 
+// Suggestions are navigation over the final returned page, never analysis or
+// natural-language parsing. Recompute after byte-budget trimming so cursors and
+// subjects cannot refer to rows omitted from the result.
+function queryFollowUps(result) {
+  const { query, rows, coverage } = result;
+  const base = { limit: query.limit, ...(query.target ? { target: query.target } : {}) };
+  const actions = [];
+  const add = (id, ko, en, next) => actions.push({ id, prompt: { ko, en }, query: normalizeEvidenceQuery(next) });
+  const usable = ref => typeof ref === "string" && ref.length > 0 && ref.length <= 512;
+  if (coverage.next_offset !== null) add("next_page", "같은 조건으로 다음 페이지를 보여줘.", "Show the next page with the same filters.", { ...query, offset: coverage.next_offset });
+  if (query.search || query.subject_ref || query.source_index !== undefined || query.offset) {
+    add("reset", "선택과 검색을 풀고 처음부터 보여줘.", "Clear the selection and search, and start at the first page.", { ...base, section: query.section === "operator" ? "operators" : query.section, ...(query.profile_ids.length ? { profile_ids: query.profile_ids } : {}), ...(query.weight_view ? { weight_view: query.weight_view } : {}) });
+  }
+  if (query.section === "operator") {
+    for (const [direction, ko, en] of [["incoming", "이 연산으로 들어오는 첫 연결을 설명해줘.", "Explain the first incoming relationship."], ["outgoing", "이 연산에서 나가는 첫 연결을 설명해줘.", "Explain the first outgoing relationship."]]) {
+      const edge = rows[0]?.details.navigation?.[direction]?.find(edge => usable(edge.subject_ref));
+      if (edge) add(direction, ko, en, { ...base, section: "operator", subject_ref: edge.subject_ref });
+    }
+  } else if (query.section === "weights") {
+    const ref = rows[0]?.subject_ref;
+    if (usable(ref)) for (const [view, ko, en] of [["distribution", "이 텐서의 분포를 보여줘.", "Show this tensor's distribution."], ["channels", "이 텐서의 채널별 통계를 보여줘.", "Show this tensor's channel statistics."], ["spectrum", "이 텐서의 특이값 스펙트럼을 보여줘.", "Show this tensor's singular spectrum."]]) {
+      if (view !== (query.weight_view || "distribution") || !query.subject_ref) add(`weight_${view}`, ko, en, { ...base, section: "weights", weight_view: view, subject_ref: ref });
+    }
+  } else if (query.section === "profiles") {
+    const profile = rows.find(row => row.kind === "backend_profile");
+    if (profile) add("profile_eligibility", "첫 backend profile의 연산별 정적 지원 조건을 보여줘.", "Show static operation eligibility for the first backend profile.", { ...base, section: "placement", profile_ids: [profile.subject_ref] });
+  } else {
+    const row = rows.find(row => ["operation", "serialized_storage", "fusion_evidence", "static_placement", "workload_review"].includes(row.kind) && usable(row.subject_ref));
+    if (row) add("inspect_subject", "표시된 첫 레이어 또는 저장 텐서를 자세히 설명해줘.", "Explain the first displayed layer or storage tensor in detail.", { ...base, section: "operator", subject_ref: row.subject_ref });
+    const finding = rows.find(row => ["finding", "investigation"].includes(row.kind) && usable(row.subject_ref));
+    if (finding && !query.subject_ref) add("inspect_finding", "표시된 첫 finding의 근거와 한계를 설명해줘.", "Explain the evidence and limits of the first displayed finding.", { ...base, section: "findings", subject_ref: finding.subject_ref });
+  }
+  return { tool: "deepbom_query_file", expected_sha256: result.artifact.sha256,
+    instruction: "Reuse the authorized attachment and analysis depth. These are optional requests, not executed results. Resolve ambiguous references with the user; do not substitute display row numbers for subject_ref. Read the current evidence before repeating a query.", actions };
+}
+
 function makeRow(ref, kind, title, details) {
-  const bounded = boundDetails(details);
-  const text = String(title || ref);
-  if (text.length > 512) bounded.paths.push("title");
-  return { subject_ref: String(ref), kind, title: text.slice(0, 512), details: bounded.value, detail_truncations: bounded.paths };
+  // Search full source names/paths before bounding the returned page. Otherwise
+  // a valid match past a display limit disappears from search and pagination.
+  return { subject_ref: String(ref), kind, title: String(title || ref), details };
+}
+function boundRow(row) {
+  const bounded = boundDetails(row.details);
+  if (row.title.length > 512) bounded.paths.push("title");
+  return { ...row, title: row.title.slice(0, 512), details: bounded.value, detail_truncations: bounded.paths };
 }
 function pick(value, keys) { return value ? Object.fromEntries(keys.filter(key => value[key] !== undefined).map(key => [key, value[key]])) : null; }
 function boundDetails(value) {

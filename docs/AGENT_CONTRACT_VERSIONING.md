@@ -5,7 +5,7 @@ DEEPBOM publishes three independent identities:
 | Identity | Current value | Changes when |
 | --- | --- | --- |
 | Engine release | `package.json` / `release/version.json` | Parser, analysis, performance, packaging, or other product code is released |
-| Public Agent contract | `deepbom.agent_contract.v1` / `1.0.2` | Reviewed tool metadata, schemas, annotations, instructions, UI resource identity or policy metadata, or the public Skill changes |
+| Public Agent contract | `deepbom.agent_contract.v2` / `2.0.0` | An explicit contract-version decision changes the public API identity; metadata changes are fingerprinted and classified separately |
 | Evidence contract | `deepbom.artifact_evidence_envelope.v1` / `1.0.0` | A removal or semantic incompatibility changes the stable evidence envelope |
 
 An engine update may change `analyzer_version` and measured results while keeping
@@ -55,12 +55,28 @@ For a source-classified engine-only update, run the normal release suite and a
 real host smoke test. Do not create a new OpenAI plugin version solely because
 the DEEPBOM engine version changed.
 
-For an OpenAI-facing contract change, keep the existing published surface
-compatible, prepare a new plugin version, scan its tools, complete review, and
-publish it through the account-owned portal. An origin change is treated as a
-new plugin, while an endpoint-path change is treated as a reviewed new version.
-The current operational source is:
-https://developers.openai.com/plugins/deploy/app-review#how-published-mcp-metadata-versions-work
+For OpenAI updates, classify the changed surface before preparing a package:
+
+- Compatible engine/result fixes and UI content at the existing resource URI
+  can be deployed without a new plugin version.
+- MCP tool definitions and server instructions use continuous review. Deploy
+  compatible support, request **MCPs → server → Issues → Rescan** when available,
+  and check the live tool definitions. A tool-only update does not require a
+  package upload; keep the old contract working while an update is held.
+- Submitted plugin information, assets, and imported Skills require a new
+  package version and review. Preserve them during routine engine updates.
+
+Keep the current endpoint for routine updates. A URL change needs a separate
+migration: the current submission workflow directs developers to support, and
+review guidance distinguishes origin changes from endpoint-path changes.
+Official operations: [MCP updates](https://developers.openai.com/plugins/deploy/submission#update-to-your-mcp-server)
+and [maintenance](https://developers.openai.com/plugins/deploy/app-review#ongoing-maintenance).
+
+The local release gate remains stricter than deployment availability: any
+metadata drift requires deliberate review and a candidate baseline, including
+MCP-only changes. Do not bypass the gate or infer platform approval from it.
+See [ChatGPT maintenance scope](chatgpt-app/PUBLICATION_COMPATIBILITY.md#routine-updates-after-200)
+for the minimal-change development policy.
 
 Claude remote MCP clients refresh tool surfaces on connection, so a tool change
 does not by itself require connector resubmission. The refreshed surface still

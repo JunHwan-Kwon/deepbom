@@ -84,6 +84,9 @@ const [bundle, workerBundle, tfliteWasm] = await Promise.all([
   readFile(process.env.DEEPBOM_WIDGET_DIST ? path.join(process.env.DEEPBOM_WIDGET_DIST, "chatgpt/static-audit-worker.js") : workerBundlePath),
   readFile(path.join(process.env.DEEPBOM_WIDGET_DIST || root, "pkg", "tflite_wasm_audit_bg.wasm")),
 ]);
+// Isolated interaction harness: the real engine/bridge is tested below; this
+// bundle lets us deterministically inject query failures and late completions.
+const navigationBundle = (await build({ absWorkingDir: root, entryPoints: ["web/lib/evidence-query-view.js"], bundle: true, format: "esm", platform: "browser", target: "es2022", write: false })).outputFiles[0].contents;
 const requests = [];
 const assetRequests = [];
 let assetOrigin;
@@ -98,6 +101,12 @@ const server = createServer((request, response) => {
     const child = url.pathname.startsWith("/host") ? (noDownloads ? "/sandbox-no-download.html" : "/sandbox.html") : "/test.html";
     response.end(`<!doctype html><iframe name="${child === "/test.html" ? "widget" : "sandbox"}" sandbox="allow-scripts allow-same-origin${noDownloads ? "" : " allow-downloads"}" src="${child}" style="width:900px;height:900px"></iframe>`);
     return;
+  }
+  if (url.pathname === "/query-navigation.html") {
+    response.writeHead(200, { "content-type": "text/html" }); response.end('<!doctype html><main id="host"></main>'); return;
+  }
+  if (url.pathname === "/query-navigation.js") {
+    response.writeHead(200, { "content-type": "text/javascript" }); response.end(navigationBundle); return;
   }
   if (url.pathname === "/test.html") {
     response.setHeader("content-security-policy", `default-src 'none'; script-src ${assetOrigin} 'wasm-unsafe-eval'; worker-src blob:; connect-src ${assetOrigin} https://chatgpt-files.example; style-src 'unsafe-inline'; img-src data: blob:`);
@@ -833,6 +842,7 @@ try {
       const f = await queryFrame.evaluate(() => window.__queryCalls[2].args.result);
       assert(f.rows.every(row => row.details.runtime_fusion === "not_observed"));
       await queryFrame.locator(".query-viewport [data-row-index]").first().click();
+      await queryFrame.getByText("Source evidence · JSON", { exact: true }).click();
       assert.match(await queryFrame.locator(".query-detail").innerText(), /serialized_fused_activation/);
       const svgDownload = queryPage.waitForEvent("download");
       await queryFrame.locator('[data-action="export-query-svg"]').click();
@@ -843,6 +853,38 @@ try {
       const pngFile = await pngDownload;
       const png = await readFile(await pngFile.path());
       assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+      // Follow exact subjects through the shared graph, then return to the
+      // same page. Selecting a diagram row must not silently filter the list.
+      await queryFrame.getByLabel("Evidence section", { exact: true }).selectOption("operators");
+      const invoke = async action => {
+        const before = await queryFrame.evaluate(() => window.__queryCalls.length);
+        await action();
+        await queryFrame.waitForFunction(n => window.__queryCalls.length === n + 1 && !document.querySelector('[data-action="run-evidence-query"]').disabled, before);
+        return queryFrame.evaluate(() => window.__queryCalls.at(-1).args.result);
+      };
+      const listed = await invoke(() => queryFrame.locator('[data-action="run-evidence-query"]').click());
+      assert.equal(await queryFrame.getByLabel("Weight feature", { exact: true }).isVisible(), false, "Weight controls must be hidden in other sections");
+      await queryFrame.locator(".query-viewport [data-row-index]").first().click();
+      assert.equal(await queryFrame.getByLabel("Layer reference", { exact: true }).inputValue(), "", "Selection is distinct from a query filter");
+      const detail = await invoke(() => queryFrame.locator('[data-action="inspect-evidence-subject"]').click());
+      assert.equal(detail.query.section, "operator");
+      assert.equal(detail.rows[0].subject_ref, listed.rows[0].subject_ref);
+      const edge = detail.rows[0].details.navigation.outgoing[0];
+      assert(edge, "The first real TFLite operation has a successor");
+      const neighbor = await invoke(() => queryFrame.locator('[data-action="inspect-related-subject"]').filter({ hasText: "To:" }).first().click());
+      assert.equal(neighbor.rows[0].subject_ref, edge.subject_ref);
+      const restoredDetail = await invoke(() => queryFrame.locator('[data-action="back-evidence-results"]').click());
+      assert.equal(restoredDetail.rows[0].subject_ref, detail.rows[0].subject_ref);
+      const restoredPage = await invoke(() => queryFrame.locator('[data-action="back-evidence-results"]').click());
+      assert.deepEqual(restoredPage.query, listed.query);
+      assert.deepEqual(restoredPage.rows.map(row => row.subject_ref), listed.rows.map(row => row.subject_ref));
+      await queryFrame.getByLabel("Filter", { exact: true }).fill("no_such_model_node");
+      const noMatch = await invoke(() => queryFrame.locator('[data-action="run-evidence-query"]').click());
+      assert.equal(noMatch.status, "no_matches");
+      const cleared = await invoke(() => queryFrame.locator('[data-action="clear-evidence-filters"]').click());
+      assert.equal(cleared.coverage.matched_rows, listed.coverage.matched_rows);
+      assert.equal(await queryFrame.getByLabel("Filter", { exact: true }).inputValue(), "");
+      await checkQueryNavigationFailures(browser, origin, listed);
       if (process.env.DEEPBOM_QUERY_SCREENSHOT) await queryFrame.locator('[data-testid="evidence-query"]').screenshot({ path: process.env.DEEPBOM_QUERY_SCREENSHOT });
     }
     await queryPage.close();
@@ -891,4 +933,69 @@ async function fulfillAttachmentRoute(route, request, bytes, ledger) {
     },
     body: bytes,
   });
+}
+
+async function checkQueryNavigationFailures(browser, origin, fixture) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errors = []; page.on("pageerror", error => errors.push(error.message));
+  try {
+    await page.goto(`${origin}/query-navigation.html`);
+    await page.evaluate(async fixture => {
+      const { mountEvidenceQuery } = await import("/query-navigation.js");
+      window.queryMount = mountEvidenceQuery;
+      window.events = []; window.failNext = false;
+      window.fakeResult = query => {
+        const q = { offset: 0, limit: 2, profile_ids: [], ...query };
+        const matches = q.subject_ref ? fixture.rows.filter(row => row.subject_ref === q.subject_ref) : fixture.rows;
+        const rows = matches.slice(q.offset, q.offset + q.limit);
+        const next = q.offset + rows.length < matches.length ? q.offset + rows.length : null;
+        return { ...fixture, query: q, rows, status: next === null ? "complete" : "partial", result_sha256: `interaction-${q.section}-${q.offset}`,
+          coverage: { total_rows: fixture.rows.length, matched_rows: matches.length, returned_rows: rows.length, offset: q.offset, next_offset: next, detail_truncated: false } };
+      };
+      window.options = {
+        initialQuery: { section: "operators", limit: 2 },
+        async execute(query) {
+          if (window.failNext) { window.failNext = false; throw new Error("Injected execution failure"); }
+          return window.fakeResult(query);
+        },
+        async publish(result) { window.events.push(["publish", result.query.section, result.query.offset]); return result; },
+        openai: { async sendFollowUpMessage() { window.events.push(["reply"]); } }, offerDownload() {},
+      };
+      await mountEvidenceQuery(document.getElementById("host"), window.options);
+    }, fixture);
+    const click = action => page.locator(`[data-action="${action}"]`).click();
+    const idle = () => page.waitForFunction(() => !document.querySelector('[data-action="run-evidence-query"]').disabled);
+    const offset = () => page.locator(".query-scope").first().innerText();
+    const fail = () => page.evaluate(() => { window.failNext = true; });
+    await page.locator(".query-viewport").evaluate(node => { node.scrollLeft = 100; });
+    await fail(); await click("next-evidence-page"); await idle();
+    assert.match(await offset(), /offset 0/);
+    assert(await page.locator('[data-action="previous-evidence-page"]').isDisabled());
+    assert.match(await page.locator(".query-delivery").innerText(), /previous result remains/);
+    assert.equal(await page.evaluate(() => window.events.length), 2, "A failed execution must not publish stale evidence");
+    await click("next-evidence-page"); await idle(); assert.match(await offset(), /offset 2/);
+    assert.equal(await page.locator(".query-viewport").evaluate(node => node.scrollLeft), 0, "A new result resets graph scrolling to its beginning");
+    await fail(); await click("previous-evidence-page"); await idle(); assert.match(await offset(), /offset 2/);
+    assert(!await page.locator('[data-action="previous-evidence-page"]').isDisabled(), "Failed back navigation must retain its cursor");
+    await click("previous-evidence-page"); await idle(); assert.match(await offset(), /offset 0/);
+    assert(await page.locator('[data-action="previous-evidence-page"]').isDisabled());
+    await page.locator(".query-viewport [data-row-index]").first().click();
+    assert.equal(await page.getByLabel("Layer reference", { exact: true }).inputValue(), "");
+    assert(await page.locator("#host").evaluate(node => node.scrollWidth <= node.clientWidth + 2), "Narrow panel scrolls the diagram internally");
+    assert(await page.locator(".query-viewport text").last().evaluate(node => parseFloat(getComputedStyle(node).fontSize) * node.getScreenCTM().a >= 11), "Narrow panels must not shrink graph glyphs below 11px");
+    assert.equal(await page.getByLabel("Weight feature", { exact: true }).isVisible(), false);
+    // A late result from a replaced panel must not publish or overwrite the new
+    // query. The host receives only the new mount's report.
+    await page.evaluate(async () => {
+      window.events = [];
+      const host = document.getElementById("host");
+      const pending = window.queryMount(host, { ...window.options, execute: () => new Promise(resolve => { window.releaseOldQuery = resolve; }) });
+      await window.queryMount(host, { ...window.options, initialQuery: { section: "findings", limit: 2 } });
+      window.releaseOldQuery(window.fakeResult({ section: "operators", limit: 2 }));
+      await pending;
+    });
+    assert.equal(await page.locator("h3").innerText(), "Findings");
+    assert.deepEqual(await page.evaluate(() => window.events), [["publish", "findings", 0], ["reply"]]);
+    assert.deepEqual(errors, []);
+  } finally { await page.close(); }
 }

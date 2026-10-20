@@ -8,20 +8,20 @@
       "displayName": "DEEPBOM / wasm-static-analyzer",
       "version": "2026-08-03",
       "semanticVersion": "2.5.0",
-      "buildCommit": "a9b28ecf34f689409ac795052221f7017fc1473b",
+      "buildCommit": "05db82f81d68724d790bf442136b930543d67f63",
       "buildSourceState": "clean",
-      "buildContentSha256": "8c8a64e951c07693f13b65f17671f84b1e213735cb4c3a1c25fa515d625ddc9b",
+      "buildContentSha256": "92f7068b7ae269c899fdd3b0fa00e8ba915d5476a19498e4cd629aa919305c87",
       "buildContentHashMethod": "SHA-256 over RFC8785-JCS canonical deepbom.analyzer_build_file_digest_set.v1",
       "buildContentHashBasis": [
         "654 files",
         "SHA-256 over RFC8785-JCS canonical deepbom.analyzer_build_file_digest_set.v1",
-        "manifest deepbom.analyzer_build_content_manifest.v1 SHA-256 968f92b74c5594d022a45f61c4c0dadb859cab7f9dfebc161e32462c628ccca7",
+        "manifest deepbom.analyzer_build_content_manifest.v1 SHA-256 b4289bb908244137d35c8058d120d4008b13a86b9af5a45d766712aa99b48aee",
         "roots: web, pkg/tflite_wasm_audit.js, pkg/tflite_wasm_audit_bg.wasm, package.json, package-lock.json, Cargo.toml, Cargo.lock, build.rs, src",
         "file excludes: **/.gitignore, web/lib/build-metadata.js, web/samples/mobilenet_v1_025_224_float.tflite, web/samples/sample_cnn_float.onnx",
         "file exclude patterns: ^web\\/lib\\/cyclonedx-(?:20|draft|perspective)(?:-|\\.|$), ^web\\/vendor\\/jsonpath-rfc95\\d+(?:\\.|$)",
         "directory excludes: .git, .wrangler, dist, node_modules, target, web/protected"
       ],
-      "buildContentManifestSha256": "968f92b74c5594d022a45f61c4c0dadb859cab7f9dfebc161e32462c628ccca7",
+      "buildContentManifestSha256": "b4289bb908244137d35c8058d120d4008b13a86b9af5a45d766712aa99b48aee",
       "rulepackVersion": "deepbom.rulepack.2026-07-24.63",
       "rulepackSha256": "62cec38a2d4ae8781da02e1713283cae42308355b45120b210db0f30410f35c7",
       "rulepackHashBasis": [
@@ -361,15 +361,15 @@
     "wasm_sha256": "57d27d11fa0b60957f5567e5a7657e1cc5f19d55924f768de5ec3dc9fc904783"
   },
   "files": {
-    "deepbom_cyclonedx_evidence.cdx.json": "5dff6e537d1a7afee3aa1e7ca45e904838306dec31a92977530fc4cdab84176a",
-    "deepbom_artifact_evidence_envelope.json": "8243e84c00b228f574a7d70da27c553abae7c84a1aea39d9a15f964f1b7022e8",
+    "deepbom_cyclonedx_evidence.cdx.json": "33887c285825579290ec554a00b60f0e1c758e3b116fc3e333f3a6fcb3fd2df3",
+    "deepbom_artifact_evidence_envelope.json": "ae5b4f547b0f4a0b3c1f13946791aa338513225d2968ebaa89301fd9d3ae568c",
     "deepbom_artifact_ir.json": "ead59dc5fa57dc1feb9c52ad3ec80e6b62e40d6bb993db03edb00d997ddfa4d0",
     "deepbom_model_ir.json": "f4e21fc2ef3e1995452a8c7c157421e010dadf72bd6ea7bc083afca17c53c928",
-    "deepbom_interface_contracts.json": "de0593e9f42c2fa111324d1a8c8d896bc1aa86bd4538f2a14902e0eaf93fa26c",
-    "deepbom_observed_formulation.cdx.json": "3775698b78f6f9b5b86f9618d9940cf4ab38f769d51224c12192f8991890544a",
-    "deepbom_runtime_requirements.json": "5970a2e1f2fab1ed0f4a09ee232ad473640d7d3d3afa54b8975b0aa43a90ed5b",
-    "deepbom_missing_provenance_fields.json": "38d4dc057088769cb33d9c2535efdda6efdb4ae1687804712db1ab9bda8b8a17"
+    "deepbom_interface_contracts.json": "39d46c981e9cc385fb5dbaca1f68da716b3e5c3b4ebca388978b02facffec8b0",
+    "deepbom_observed_formulation.cdx.json": "c945953b0f1bc7def700672f30a9f70ce3ddaaa02069e5fb8096b4fc9f5caf8b",
+    "deepbom_runtime_requirements.json": "0d049215aaefd18244e0fab003ca37d5829a6956852b8e7164144be8ee996072",
+    "deepbom_missing_provenance_fields.json": "85b38cabc39e21043f8da3ec84584721ded7bbc98efb90b6d9e3f496d8945da5"
   },
-  "directory": "mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2",
-  "manifest_sha256": "0eb61e40d90c433c819f6d6debeeb77a71d2ce66429a0d03068f32d88d1660f8"
+  "directory": "mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c",
+  "manifest_sha256": "b2b4bfa8a4eb4358fa31c1350b50d03def0b66d9fc8c44bfbcf0dd257f918077"
 }
