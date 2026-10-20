@@ -1,9 +1,9 @@
 {
   "schema": "deepbom.public_source_export.v1",
-  "source_commit": "05db82f81d68724d790bf442136b930543d67f63",
+  "source_commit": "a90fa88ded6884ed0170601c7d939b99b2e039d2",
   "source_state": "clean",
   "license": "Apache-2.0",
-  "file_count": 1736,
+  "file_count": 1745,
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -577,8 +577,8 @@
     },
     {
       "path": "config/public-source-files.v1.txt",
-      "byte_length": 75258,
-      "sha256": "6917c464a9c3a38fa389b4fa09d52a819ab90cf371cecc25ba67320f7976ff04"
+      "byte_length": 76592,
+      "sha256": "6c1a372d55fd94e82658e937092d77a76c8c9f545aec6284ca45c4f7e2eb09ea"
     },
     {
       "path": "config/scalar-types.v1.json",
@@ -1718,7 +1718,7 @@
     {
       "path": "docs/reviews/common-calculation-inventory.json",
       "byte_length": 171778,
-      "sha256": "de6235482206109621923e616780e21195b80c5365740e543274f423d8108763"
+      "sha256": "99290d6930afe5fa2e235db12ea8489aacc59fe4df46d49fddb2fb94c5bb7ead"
     },
     {
       "path": "docs/schemas/deepbom-artifact-ir-v2.schema.json",
@@ -2128,12 +2128,57 @@
     {
       "path": "reference/cyclonedx/1.7/examples/current-reference.json",
       "byte_length": 33064,
-      "sha256": "3ec0230a32db00a6410d7c8964bc55d823f6ff6a5a3e4164ffe580a258ff4c88"
+      "sha256": "f8afad3982d9cdae707bda6e1f9a9ef963292dba2eb60fbfb060f6d787f93950"
     },
     {
       "path": "reference/cyclonedx/1.7/examples/historical-reference.json",
       "byte_length": 1087,
       "sha256": "8e91a88eced2e744067df30adf8f623e06d18cfc993e3ae25bf45201f8571040"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_artifact_evidence_envelope.json",
+      "byte_length": 169121,
+      "sha256": "75c86974fd03d5585da7ebe4147d2300cc77b695b252e5b0d0853c0442f5df6f"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_artifact_ir.json",
+      "byte_length": 1217218,
+      "sha256": "ead59dc5fa57dc1feb9c52ad3ec80e6b62e40d6bb993db03edb00d997ddfa4d0"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_cyclonedx_evidence.cdx.json",
+      "byte_length": 56067,
+      "sha256": "dbc4ca78a865c8a4adcb1b9fb76dec57120743ff4489c82cd9842b99596af553"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_interface_contracts.json",
+      "byte_length": 32303,
+      "sha256": "d8da2a0522c6eab03b33be09ff2793ed9c1a1d68fdd93a68a4e71655787b4ca9"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_missing_provenance_fields.json",
+      "byte_length": 46003,
+      "sha256": "b23caf0c3c44e6a3aab1c1206af597fd4011f0897d58dc7eb590fc7cd1cabcab"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_model_ir.json",
+      "byte_length": 1772651,
+      "sha256": "f4e21fc2ef3e1995452a8c7c157421e010dadf72bd6ea7bc083afca17c53c928"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_observed_formulation.cdx.json",
+      "byte_length": 20126,
+      "sha256": "a8aacc1b2b7a1b1c3e5c2f065c38df15661cbf0f5d0692e47d40f7c3932bc343"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/deepbom_runtime_requirements.json",
+      "byte_length": 76480,
+      "sha256": "4fb36a605518572564bfbcd50ae662655586b03ba064ffdd9c82bb00f005be5c"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6/producer.json",
+      "byte_length": 32975,
+      "sha256": "d95ed17e2cddc6a05484a60516dd1a1df665acfd26f01c9675cd04fccf79f5e8"
     },
     {
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-30ddafa6602abcc1128b346ec6e7a15045eb3a59d4d53e989ccae78c4952e1b1/deepbom_artifact_evidence_envelope.json",
@@ -2316,51 +2361,6 @@
       "sha256": "24a099d66399376bcdcfcd5a4994f10e8efe1aaed84dcc4481c2239e82dd32a3"
     },
     {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_artifact_evidence_envelope.json",
-      "byte_length": 169121,
-      "sha256": "ae5b4f547b0f4a0b3c1f13946791aa338513225d2968ebaa89301fd9d3ae568c"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_artifact_ir.json",
-      "byte_length": 1217218,
-      "sha256": "ead59dc5fa57dc1feb9c52ad3ec80e6b62e40d6bb993db03edb00d997ddfa4d0"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_cyclonedx_evidence.cdx.json",
-      "byte_length": 56067,
-      "sha256": "33887c285825579290ec554a00b60f0e1c758e3b116fc3e333f3a6fcb3fd2df3"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_interface_contracts.json",
-      "byte_length": 32303,
-      "sha256": "39d46c981e9cc385fb5dbaca1f68da716b3e5c3b4ebca388978b02facffec8b0"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_missing_provenance_fields.json",
-      "byte_length": 46003,
-      "sha256": "85b38cabc39e21043f8da3ec84584721ded7bbc98efb90b6d9e3f496d8945da5"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_model_ir.json",
-      "byte_length": 1772651,
-      "sha256": "f4e21fc2ef3e1995452a8c7c157421e010dadf72bd6ea7bc083afca17c53c928"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_observed_formulation.cdx.json",
-      "byte_length": 20126,
-      "sha256": "c945953b0f1bc7def700672f30a9f70ce3ddaaa02069e5fb8096b4fc9f5caf8b"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/deepbom_runtime_requirements.json",
-      "byte_length": 76480,
-      "sha256": "0d049215aaefd18244e0fab003ca37d5829a6956852b8e7164144be8ee996072"
-    },
-    {
-      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c/producer.json",
-      "byte_length": 32975,
-      "sha256": "b2b4bfa8a4eb4358fa31c1350b50d03def0b66d9fc8c44bfbcf0dd257f918077"
-    },
-    {
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-98bea1fa31e28ff24c5ab0ba73ec81c0a60efc8fe1c09feff1076682bcedbd4a/deepbom_artifact_evidence_envelope.json",
       "byte_length": 169456,
       "sha256": "cdb1ea4594408547b47b968bc2d5fb6190b52fa98030955459dd24e34483d1c8"
@@ -2494,6 +2494,51 @@
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b1943c6c15c107f8b3b799ee7a3059a64444f8749a0a413c8da0adb45c3689f1/producer.json",
       "byte_length": 33350,
       "sha256": "1dd656be0ac7445c93ea4afef569f8d3c8e09d19f000a17ef1068f17f2472d48"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_artifact_evidence_envelope.json",
+      "byte_length": 169121,
+      "sha256": "8243e84c00b228f574a7d70da27c553abae7c84a1aea39d9a15f964f1b7022e8"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_artifact_ir.json",
+      "byte_length": 1217218,
+      "sha256": "ead59dc5fa57dc1feb9c52ad3ec80e6b62e40d6bb993db03edb00d997ddfa4d0"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_cyclonedx_evidence.cdx.json",
+      "byte_length": 56067,
+      "sha256": "5dff6e537d1a7afee3aa1e7ca45e904838306dec31a92977530fc4cdab84176a"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_interface_contracts.json",
+      "byte_length": 32303,
+      "sha256": "de0593e9f42c2fa111324d1a8c8d896bc1aa86bd4538f2a14902e0eaf93fa26c"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_missing_provenance_fields.json",
+      "byte_length": 46003,
+      "sha256": "38d4dc057088769cb33d9c2535efdda6efdb4ae1687804712db1ab9bda8b8a17"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_model_ir.json",
+      "byte_length": 1772651,
+      "sha256": "f4e21fc2ef3e1995452a8c7c157421e010dadf72bd6ea7bc083afca17c53c928"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_observed_formulation.cdx.json",
+      "byte_length": 20126,
+      "sha256": "3775698b78f6f9b5b86f9618d9940cf4ab38f769d51224c12192f8991890544a"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/deepbom_runtime_requirements.json",
+      "byte_length": 76480,
+      "sha256": "5970a2e1f2fab1ed0f4a09ee232ad473640d7d3d3afa54b8975b0aa43a90ed5b"
+    },
+    {
+      "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b4171da442c3a5643b0154ce9867be76841575ab07086b7ae7e75f4ab894b2a2/producer.json",
+      "byte_length": 32975,
+      "sha256": "0eb61e40d90c433c819f6d6debeeb77a71d2ce66429a0d03068f32d88d1660f8"
     },
     {
       "path": "reference/cyclonedx/1.7/examples/mobilenet-v2-quant-c6580034bb3d512d1d8eb43a6d8e0e22d444137e5ff8a8a9f90e276ccc5ba470/deepbom_artifact_evidence_envelope.json",
@@ -6453,7 +6498,7 @@
     {
       "path": "web/lib/build-metadata.js",
       "byte_length": 124809,
-      "sha256": "5a5fa5dbc1720c3787d897ede3fed817296703c717e4c99776a898c3fc1ae3c7"
+      "sha256": "62e319dd9df1af34eed42636e5288d2d079fe2e147db71e4841caf993ff31d92"
     },
     {
       "path": "web/lib/builtin-metrics.js",

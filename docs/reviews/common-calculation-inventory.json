@@ -1857,7 +1857,7 @@
     },
     {
       "file": "web/lib/build-metadata.js",
-      "sha256": "5a5fa5dbc1720c3787d897ede3fed817296703c717e4c99776a898c3fc1ae3c7",
+      "sha256": "62e319dd9df1af34eed42636e5288d2d079fe2e147db71e4841caf993ff31d92",
       "language": "js",
       "role": "runtime",
       "functions": 0,

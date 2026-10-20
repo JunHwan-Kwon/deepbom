@@ -16,12 +16,12 @@
         {
           "type": "application",
           "name": "deepbom",
-          "version": "2.5.0+git.05db82f81d68.bundle.92f7068b7ae2",
-          "bom-ref": "deepbom-analyzer-deepbom-2.5.0-05db82f81d68724d790bf442136b930543d67f63",
+          "version": "2.5.0+git.a9b28ecf34f6.bundle.8c8a64e951c0",
+          "bom-ref": "deepbom-analyzer-deepbom-2.5.0-a9b28ecf34f689409ac795052221f7017fc1473b",
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "92f7068b7ae269c899fdd3b0fa00e8ba915d5476a19498e4cd629aa919305c87"
+              "content": "8c8a64e951c07693f13b65f17671f84b1e213735cb4c3a1c25fa515d625ddc9b"
             }
           ],
           "externalReferences": [
@@ -48,7 +48,7 @@
             },
             {
               "name": "deepbom:analyzer:buildCommit",
-              "value": "05db82f81d68724d790bf442136b930543d67f63"
+              "value": "a9b28ecf34f689409ac795052221f7017fc1473b"
             },
             {
               "name": "deepbom:analyzer:buildSourceState",
@@ -146,7 +146,7 @@
               }
             ],
             "tools": [
-              "deepbom-analyzer-deepbom-2.5.0-05db82f81d68724d790bf442136b930543d67f63"
+              "deepbom-analyzer-deepbom-2.5.0-a9b28ecf34f689409ac795052221f7017fc1473b"
             ]
           }
         ]
@@ -450,7 +450,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "0a471910433ee46f8e7ce0b0496124215c715ed5ff3a675936dd71cff5b9a4da"
+              "content": "9371db81ef9c6874b613868d3a987c6f46a83212f7ca10275eff470fe1318e5d"
             }
           ]
         },
@@ -461,7 +461,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "9bfbb16d2f6ca3fdfa4c49409d2548e74f98d019c7aacb65dad4f7f1a9712f5f"
+              "content": "526b85276bd114b33f652f9703cd215c6c139fe2985fbb0222881d575b3c2146"
             }
           ]
         },
@@ -472,7 +472,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "9c9413f12880fbb61a056a62069c56e028c352853d284125640ce9df297b4aff"
+              "content": "9ffb95a8fd46e120dea7911e269a149d229a25e8db1701c5c70332e203f6525f"
             }
           ]
         }

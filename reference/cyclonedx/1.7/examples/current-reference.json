@@ -8,7 +8,7 @@
       "displayName": "DEEPBOM / wasm-static-analyzer",
       "version": "2026-08-03",
       "semanticVersion": "2.5.0",
-      "buildCommit": "05db82f81d68724d790bf442136b930543d67f63",
+      "buildCommit": "a90fa88ded6884ed0170601c7d939b99b2e039d2",
       "buildSourceState": "clean",
       "buildContentSha256": "92f7068b7ae269c899fdd3b0fa00e8ba915d5476a19498e4cd629aa919305c87",
       "buildContentHashMethod": "SHA-256 over RFC8785-JCS canonical deepbom.analyzer_build_file_digest_set.v1",
@@ -361,15 +361,15 @@
     "wasm_sha256": "57d27d11fa0b60957f5567e5a7657e1cc5f19d55924f768de5ec3dc9fc904783"
   },
   "files": {
-    "deepbom_cyclonedx_evidence.cdx.json": "33887c285825579290ec554a00b60f0e1c758e3b116fc3e333f3a6fcb3fd2df3",
-    "deepbom_artifact_evidence_envelope.json": "ae5b4f547b0f4a0b3c1f13946791aa338513225d2968ebaa89301fd9d3ae568c",
+    "deepbom_cyclonedx_evidence.cdx.json": "dbc4ca78a865c8a4adcb1b9fb76dec57120743ff4489c82cd9842b99596af553",
+    "deepbom_artifact_evidence_envelope.json": "75c86974fd03d5585da7ebe4147d2300cc77b695b252e5b0d0853c0442f5df6f",
     "deepbom_artifact_ir.json": "ead59dc5fa57dc1feb9c52ad3ec80e6b62e40d6bb993db03edb00d997ddfa4d0",
     "deepbom_model_ir.json": "f4e21fc2ef3e1995452a8c7c157421e010dadf72bd6ea7bc083afca17c53c928",
-    "deepbom_interface_contracts.json": "39d46c981e9cc385fb5dbaca1f68da716b3e5c3b4ebca388978b02facffec8b0",
-    "deepbom_observed_formulation.cdx.json": "c945953b0f1bc7def700672f30a9f70ce3ddaaa02069e5fb8096b4fc9f5caf8b",
-    "deepbom_runtime_requirements.json": "0d049215aaefd18244e0fab003ca37d5829a6956852b8e7164144be8ee996072",
-    "deepbom_missing_provenance_fields.json": "85b38cabc39e21043f8da3ec84584721ded7bbc98efb90b6d9e3f496d8945da5"
+    "deepbom_interface_contracts.json": "d8da2a0522c6eab03b33be09ff2793ed9c1a1d68fdd93a68a4e71655787b4ca9",
+    "deepbom_observed_formulation.cdx.json": "a8aacc1b2b7a1b1c3e5c2f065c38df15661cbf0f5d0692e47d40f7c3932bc343",
+    "deepbom_runtime_requirements.json": "4fb36a605518572564bfbcd50ae662655586b03ba064ffdd9c82bb00f005be5c",
+    "deepbom_missing_provenance_fields.json": "b23caf0c3c44e6a3aab1c1206af597fd4011f0897d58dc7eb590fc7cd1cabcab"
   },
-  "directory": "mobilenet-v2-quant-9763f94f386eb468d8c46ca9f78e3fd2b2fe5942a39968d870c188d9b277c96c",
-  "manifest_sha256": "b2b4bfa8a4eb4358fa31c1350b50d03def0b66d9fc8c44bfbcf0dd257f918077"
+  "directory": "mobilenet-v2-quant-1c9b9ecbf25520b4c229a67d04f40ff67aeb5c63ea4392e6b1b13014a7b03ab6",
+  "manifest_sha256": "d95ed17e2cddc6a05484a60516dd1a1df665acfd26f01c9675cd04fccf79f5e8"
 }
