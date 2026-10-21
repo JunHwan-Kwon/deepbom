@@ -212,11 +212,16 @@ export function queryEvidence({ analysis, artifactIrContext, summary, envelope, 
 // Suggestions are navigation over the final returned page, never analysis or
 // natural-language parsing. Recompute after byte-budget trimming so cursors and
 // subjects cannot refer to rows omitted from the result.
-function queryFollowUps(result) {
-  const { query, rows, coverage } = result;
+export function queryFollowUps(result, selectedRow = null) {
+  const { query, coverage } = result;
+  if (selectedRow && !result.rows.includes(selectedRow)) throw new Error("Selected evidence is not part of this query result.");
+  const rows = selectedRow ? [selectedRow] : result.rows;
   const base = { limit: query.limit, ...(query.target ? { target: query.target } : {}) };
   const actions = [];
-  const add = (id, ko, en, next) => actions.push({ id, prompt: { ko, en }, query: normalizeEvidenceQuery(next) });
+  const add = (id, ko, en, next) => actions.push({ id, prompt: {
+    ko: selectedRow ? ko.replace("표시된 첫", "선택한").replace("첫 backend", "선택한 backend") : ko,
+    en: selectedRow ? en.replace("first displayed", "selected").replace("first backend", "selected backend") : en,
+  }, query: normalizeEvidenceQuery(next) });
   const usable = ref => typeof ref === "string" && ref.length > 0 && ref.length <= 512;
   if (coverage.next_offset !== null) add("next_page", "같은 조건으로 다음 페이지를 보여줘.", "Show the next page with the same filters.", { ...query, offset: coverage.next_offset });
   if (query.search || query.subject_ref || query.source_index !== undefined || query.offset) {

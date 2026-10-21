@@ -197,3 +197,45 @@ arguments; host interpretation of the example questions is evaluated separately.
 This deployment updates compatible Web/MCP implementation and guidance data on
 the existing engine 2.5.0 and plugin 2.0.0 contracts. It does not replace immutable
 2.5.0 npm/release archives or change the submitted Skill, tools or CSP.
+
+## Result-first interaction and selection context
+
+The initial component shows the format/graph summary, existing finding counts,
+one first finding and the static-evidence boundary. Two actions open the grouped
+structure or inspect improvement investigations. Identity details, full findings,
+the visualization/export surface and the long summary table remain available in
+explicit disclosures. Opening structure exposes the existing export controls.
+
+Query controls are under Advanced query settings. Contextual follow-up buttons
+reuse `queryFollowUps`, the same builder used in the bounded query result: two
+are shown initially, with additional actions under More questions. Page actions
+retain filters/cursors; selected-subject actions use the actual selected row,
+including a tensor other than the first returned tensor. Korean/English question
+labels follow the host locale. This is navigation, not another analysis engine.
+
+Selection updates optional model-visible widget state with the artifact hash,
+exact subject reference, query/result identity and finding envelope identity.
+Selecting a row does not send a message or change filters. Ask about this
+selection explicitly requests an explanation of that row with the validated
+query result. Clear selection and new results clear the old subject. The shared
+state writer preserves selection during visualization/export updates and drops
+prior-model state, report digests and image IDs when the artifact changes. Hosts
+without state support retain explicit selected-subject follow-up messages.
+
+The full summary table and architecture overview continue to use
+`resolveModelHierarchyPresentation`. Source annotations produce declared source
+module groups; absent or invalid annotations use derived/unclassified groups.
+Grouped views retain member and edge provenance; query diagrams represent only
+the returned page. This update adds no semantic hierarchy inference, MAC formula,
+runtime observation or new MCP schema. The compact chat summary keeps its
+existing operation/storage ledger contract; it is not the grouped table.
+
+Verification includes `check-conversation-ux.mjs`, the widget browser scenarios,
+and model hierarchy/visualization conservation checks. Browser tests use a
+controlled host bridge and do not establish natural-language routing accuracy
+inside an independently running ChatGPT session.
+
+Deployment regression checks also cover a failed replacement query clearing the
+previous selection, and failed weight-chart rendering preserving the selected
+tensor's source evidence and explicit conversation action. Rendering failure is
+not reported as missing or invalid underlying evidence.

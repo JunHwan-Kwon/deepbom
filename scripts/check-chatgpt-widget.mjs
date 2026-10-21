@@ -350,10 +350,19 @@ try {
   assert.match(observed.followUps[0].prompt, /Send PNG to chat/);
   assert.match(observed.followUps[0].prompt, /model_summary\.rows/);
   assert.match(observed.resultText, /button remains available so the completed result is never stranded/);
+  assert.equal(await page.locator(".analysis-details").getAttribute("open"), null);
+  assert.equal(await page.locator(".model-visual-details").getAttribute("open"), null);
+  assert.equal(await page.locator(".model-summary").getAttribute("open"), null);
+  assert.equal(await page.locator(".analysis-overview button").count(), 2);
   // Reproduce a narrow, height-limited host: every export control must appear
   // before the preview, findings, and potentially very long model-summary table.
   await page.setViewportSize({ width: 380, height: 640 });
-  await page.evaluate(() => window.scrollTo(0, 0));
+  for (const action of ["explore-structure", "review-evidence"]) {
+    const box = await page.locator(`[data-action="${action}"]`).boundingBox();
+    assert(box && box.y >= 0 && box.y + box.height <= 640, `${action}: initial action should be visible`);
+  }
+  if (process.env.DEEPBOM_UX_OVERVIEW_SCREENSHOT) await page.screenshot({ path: process.env.DEEPBOM_UX_OVERVIEW_SCREENSHOT });
+  await page.click('[data-action="explore-structure"]');
   for (const action of ["visual-download-svg", "visual-download-png", "visual-download-bundle", "download-cyclonedx", "download-spdx", "visual-send-chat"]) {
     const box = await page.locator(`[data-action="${action}"]`).boundingBox();
     assert(box && box.y >= 0 && box.y + box.height <= 640, `${action} is clipped below the host viewport`);
@@ -557,6 +566,7 @@ try {
   assert(tfliteAssetRequests.some((request) => new URL(request.url).pathname === "/pkg/tflite_wasm_audit_bg.wasm"));
   assert(tfliteAssetRequests.every((request) => ["GET", "HEAD"].includes(request.method)));
   const tflitePngPromise = tflitePage.waitForEvent("download");
+  await tfliteFrame.click('[data-action="explore-structure"]');
   await tfliteFrame.click('[data-action="visual-download-png"]');
   const tflitePng = await tflitePngPromise;
   assert.deepEqual([...new Uint8Array(await readFile(await tflitePng.path())).slice(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
@@ -624,6 +634,7 @@ try {
   await exportPage.goto(`${origin}/host-no-download.html`, { waitUntil: "networkidle" });
   const exportFrame = exportPage.frame({ name: "widget" });
   await exportFrame.waitForFunction(() => document.querySelector("#status")?.textContent === "Static evidence ready");
+  await exportFrame.click('[data-action="explore-structure"]');
   for (const kind of ["cyclonedx", "spdx"]) {
     await exportFrame.click(`[data-action="download-${kind}"]`);
     const row = exportFrame.locator(".visual-downloads > div").last();
@@ -775,6 +786,7 @@ try {
   const weightSvgDownload = page.waitForEvent("download");
   await page.locator('[data-action="export-weight-svg"]').click();
   assert.match(await readFile(await (await weightSvgDownload).path(), "utf8"), new RegExp(expectedSha256));
+  assert(await page.locator(".model-visual-details").evaluate(node => node.open), "Query export must reveal Save via ChatGPT even when structure started collapsed");
   const weightPngDownload = page.waitForEvent("download");
   await page.locator('[data-action="export-weight-png"]').click();
   const weightPng = await readFile(await (await weightPngDownload).path());
@@ -789,10 +801,26 @@ try {
     for (let i = 0; i < pixels.length; i += 4) if (Math.abs(pixels[i] - pixels[i + 1]) > 20) return true;
     return false;
   }, weightPng.toString("base64")), "Weight plots retain their color encoding in PNG");
+  const selectedTensor = weightResult.rows[1];
+  assert(selectedTensor, "Fixture must exercise selecting a tensor beyond the first row");
+  await page.locator('.query-viewport [data-row-index="1"]').click();
+  assert.equal(await page.evaluate(() => window.__deepbomWidgetStates.at(-1).modelContent.selected_evidence.subject_ref), selectedTensor.subject_ref);
+  // Another view writer must retain the selected tensor and query identity.
+  await page.click('[data-action="explore-structure"]');
+  await page.locator('[data-action="visual-view"]').selectOption("block-detail");
+  assert.equal(await page.evaluate(() => window.__deepbomWidgetStates.at(-1).modelContent.selected_evidence.subject_ref), selectedTensor.subject_ref);
+  if (await page.locator('.query-more > summary').isVisible()) await page.locator('.query-more > summary').click();
+  await page.locator('[data-follow-up-id="weight_channels"]').click();
+  await page.waitForFunction(ref => window.__deepbomToolCalls.at(-1)?.args.result?.query.subject_ref === ref && !document.querySelector('[data-action="run-evidence-query"]').disabled, selectedTensor.subject_ref);
+  assert.equal(await page.evaluate(() => window.__deepbomToolCalls.at(-1).args.result.query.weight_view), "channels");
+  await page.locator(".query-advanced > summary").click();
   await page.getByLabel("Weight feature", { exact: true }).selectOption("spectrum");
   await page.locator('[data-action="run-evidence-query"]').click();
   await page.waitForFunction(() => window.__deepbomToolCalls.some(call => call.name === "deepbom_publish_query" && call.args.result.query.weight_view === "spectrum"));
   await page.locator('[data-testid="workflow-guide"]').scrollIntoViewIfNeeded();
+  await page.locator('[data-action="review-evidence"]').click();
+  await page.waitForFunction(() => window.__deepbomToolCalls.at(-1)?.args.result?.query.section === "improvements" && !document.querySelector('[data-action="review-evidence"]').disabled);
+  assert.equal(await page.evaluate(() => window.__deepbomWidgetStates.at(-1).modelContent.selected_evidence), null);
   await page.getByLabel("DEEPBOM workflow", { exact: true }).selectOption("verify");
   assert.equal(await page.locator('[data-action="workflow-inspect"]').isVisible(), false);
   assert.match(await page.locator('[data-testid="workflow-guide"] pre').innerText(), /verify.*--bom/);
@@ -836,6 +864,8 @@ try {
       await queryFrame.locator('[data-action="next-evidence-page"]').click();
       await queryFrame.waitForFunction(() => window.__queryCalls.length === 2 && window.__queryFollowUps.length === 2);
       assert.equal(await queryFrame.evaluate(() => window.__queryCalls[1].args.result.query.offset), 10);
+      assert.equal(await queryFrame.locator(".query-advanced").getAttribute("open"), null);
+      await queryFrame.locator(".query-advanced > summary").click();
       await queryFrame.getByLabel("Evidence section", { exact: true }).selectOption("fusion");
       await queryFrame.locator('[data-action="run-evidence-query"]').click();
       await queryFrame.waitForFunction(() => window.__queryCalls.length === 3 && window.__queryFollowUps.length === 3);
@@ -959,7 +989,7 @@ async function checkQueryNavigationFailures(browser, origin, fixture) {
           return window.fakeResult(query);
         },
         async publish(result) { window.events.push(["publish", result.query.section, result.query.offset]); return result; },
-        openai: { async sendFollowUpMessage() { window.events.push(["reply"]); } }, offerDownload() {},
+        openai: { locale: "ko-KR", setWidgetState(state) { window.state = state; }, async sendFollowUpMessage(message) { window.events.push(["reply"]); window.lastMessage = message; } }, offerDownload() {},
       };
       await mountEvidenceQuery(document.getElementById("host"), window.options);
     }, fixture);
@@ -984,6 +1014,47 @@ async function checkQueryNavigationFailures(browser, origin, fixture) {
     assert(await page.locator("#host").evaluate(node => node.scrollWidth <= node.clientWidth + 2), "Narrow panel scrolls the diagram internally");
     assert(await page.locator(".query-viewport text").last().evaluate(node => parseFloat(getComputedStyle(node).fontSize) * node.getScreenCTM().a >= 11), "Narrow panels must not shrink graph glyphs below 11px");
     assert.equal(await page.getByLabel("Weight feature", { exact: true }).isVisible(), false);
+    assert.equal(await page.locator(".query-advanced").getAttribute("open"), null);
+    assert((await page.locator(".query-follow-ups").innerText()).includes("다음 페이지"));
+    await page.locator('.query-viewport [data-row-index="1"]').click();
+    const secondRef = fixture.rows[1].subject_ref;
+    assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence.subject_ref), secondRef);
+    assert.equal(await page.evaluate(() => window.state.modelContent.artifact_sha256), fixture.artifact.sha256);
+    await click("ask-evidence-selection"); await idle();
+    assert((await page.evaluate(() => window.lastMessage.prompt)).includes(secondRef));
+    await page.locator('[data-follow-up-id="inspect_subject"]').click(); await idle();
+    assert.equal(await page.evaluate(() => window.state.modelContent.evidence_query.query.subject_ref), secondRef);
+    await click("clear-evidence-selection");
+    assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence), null);
+    assert(await page.locator('[data-action="ask-evidence-selection"]').isDisabled());
+    await click("back-evidence-results"); await idle();
+    assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence), null);
+    // A replacement panel must clear the old subject even when its initial
+    // request fails; it no longer displays that previous result.
+    await page.locator('.query-viewport [data-row-index="1"]').click();
+    assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence.subject_ref), secondRef);
+    const failedMount = await page.evaluate(async () => {
+      try {
+        await window.queryMount(document.getElementById("host"), { ...window.options, execute: async () => { throw new Error("Replacement failure"); } });
+      } catch (error) { return error.message; }
+    });
+    assert.equal(failedMount, "Replacement failure");
+    assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence), null);
+    assert.equal(await page.evaluate(() => window.state.modelContent.evidence_query), null);
+    // Chart failure must not prevent selecting or explaining the exact tensor.
+    await page.evaluate(async () => {
+      await window.queryMount(document.getElementById("host"), { ...window.options,
+        initialQuery: { section: "weights", limit: 2 },
+        execute: async query => { const result = window.fakeResult(query); result.rows = result.rows.map(row => ({ ...row, kind: "weight_evidence" })); return result; },
+        weightVisual() { throw new Error("Injected chart failure"); },
+      });
+    });
+    await page.locator('.query-viewport [data-row-index="1"]').click();
+    assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence.subject_ref), secondRef);
+    assert.match(await page.locator(".query-selection").innerText(), /Injected chart failure/);
+    assert.equal(await page.locator('[data-action="export-weight-svg"]').isVisible(), false);
+    await click("ask-evidence-selection"); await idle();
+    assert((await page.evaluate(() => window.lastMessage.prompt)).includes(secondRef));
     // A late result from a replaced panel must not publish or overwrite the new
     // query. The host receives only the new mount's report.
     await page.evaluate(async () => {

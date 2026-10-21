@@ -44,7 +44,10 @@ const dist = path.resolve("dist");
 // Measured assembly is 82.29 MiB; add 128 KiB total while retaining all per-file/startup limits.
 // Bilingual query guidance, widget navigation and immutable 0.57.1 total 82.57 MiB.
 // Allocate 256 KiB; preserve the existing per-file and startup limits.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 82.6875);
+// Selection context, follow-up controls and the immutable 0.57.2 catalog bring
+// measured dist to 86,714,220 bytes (82.70 MiB). Add a bounded 64 KiB;
+// preserve the 16 MiB per-file and 2,475-byte gzip startup ceilings.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 82.75);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

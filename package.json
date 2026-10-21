@@ -140,7 +140,7 @@
     "check:usage-metrics": "node scripts/check-usage-metrics.mjs",
     "check:usage-dashboard": "node scripts/check-usage-dashboard.mjs",
     "check:web-usage": "node scripts/check-web-usage.mjs",
-    "check:chatgpt-widget": "node scripts/check-chatgpt-widget.mjs",
+    "check:chatgpt-widget": "node scripts/check-conversation-ux.mjs && node scripts/check-chatgpt-widget.mjs",
     "check:spdx-artifact-export": "node scripts/check-spdx-artifact-export.mjs",
     "check:chatgpt-app-metadata": "node scripts/check-chatgpt-app-metadata.mjs",
     "check:plugin-package": "node scripts/check-plugin-package.mjs",
