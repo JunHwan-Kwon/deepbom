@@ -99,7 +99,7 @@ export function renderModelHierarchyHtml(view) {
   return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Model hierarchy — selected view</title><style>body{font:15px system-ui,sans-serif;color:#171717;background:#fff;max-width:1100px;margin:32px auto;padding:0 20px}h1{font-size:24px}.diagram{overflow:auto;max-height:760px;border:1px solid #aaa}.diagram svg{max-width:none}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}summary{cursor:pointer;padding:12px;border-bottom:1px solid #ccc}@media print{.diagram{max-height:none;overflow:visible}.diagram svg{max-width:100%;height:auto}details{break-inside:avoid}}</style><h1>Model hierarchy — selected view</h1><p>Artifact SHA-256: <code>${view.source.artifact_sha256}</code></p><p>${view.conservation.represented_operations} of ${view.conservation.total_operations} operations represented. Collapsed members remain in the record. ${view.conservation.omitted_operation_refs.length} operations are outside this view. Select a smaller module before printing when the diagram would be unreadable.</p><div class="diagram">${svg}</div><h2>Source-bound group and operation records</h2>${records}<p>${esc(view.interpretation_boundary)}</p><script>document.querySelectorAll('[data-subject-ref]').forEach(function(n){function open(){var d=document.getElementById(n.getAttribute('data-subject-ref'));if(d){d.open=true;d.scrollIntoView({block:'start'});}}n.addEventListener('click',open);n.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});});</script></html>`;
 }
 
-export function mountModelHierarchy(container, model, hierarchy, { onSelect = () => {} } = {}) {
+export function mountModelHierarchy(container, model, hierarchy, { onSelect = () => {}, onSelection = () => {}, offerDownload = null } = {}) {
   // Validate imported/worker-cloned values once, then retain only the immutable
   // results. Revalidating a mutable caller object on every click is both slow
   // and vulnerable to changing the source underneath a mounted view.
@@ -130,25 +130,27 @@ export function mountModelHierarchy(container, model, hierarchy, { onSelect = ()
   const detail = el("div"); detail.className = "mh-detail";
   const table = el("div"); table.className = "mh-table";
   let view, svgText;
-  const save = (extension, data, type) => downloadText(`model-hierarchy.${extension}`, data, type);
+  const save = (extension, data, type) => offerDownload ? offerDownload(new Blob([data], { type }), `model-hierarchy.${extension}`) : downloadText(`model-hierarchy.${extension}`, data, type);
   const download = async (extension) => {
     if (!view || stores.get(container) !== state) return;
     const capturedView = view, capturedSvg = svgText;
-    if (extension === "svg") save(extension, svgText, "image/svg+xml");
-    else if (extension === "csv") save(extension, renderModelHierarchyTable(view, "csv"), "text/csv");
-    else if (extension === "html") save(extension, renderModelHierarchyHtml(view), "text/html");
+    try {
+    if (extension === "svg") await save(extension, svgText, "image/svg+xml");
+    else if (extension === "csv") await save(extension, renderModelHierarchyTable(view, "csv"), "text/csv");
+    else if (extension === "html") await save(extension, renderModelHierarchyHtml(view), "text/html");
     else if (extension === "png") {
       try {
         const svg = canvas.querySelector("svg"), width = Number(svg.getAttribute("width")), height = Number(svg.getAttribute("height"));
         if (width * height * 2.25 > 32_000_000 || Math.max(width, height) * 1.5 > 16_384) throw new Error("Select a smaller module for PNG export; SVG and full JSON retain the larger view.");
         const { rasterizeColorModelView } = await import("./model-ir-browser-export.js");
         const bytes = await rasterizeColorModelView(capturedSvg, { width_mm: width * 25.4 / 96, height_mm: height * 25.4 / 96 }, { dpi: 144 });
-        if (stores.get(container) === state && view === capturedView) save("png", bytes, "image/png");
+        if (stores.get(container) === state && view === capturedView) await save("png", bytes, "image/png");
       } catch (error) { if (stores.get(container) === state && view === capturedView) status.textContent = error.message; }
     }
-    else save("json", JSON.stringify({ view, hierarchy }, null, 2), "application/json");
+    else await save("json", JSON.stringify({ view, hierarchy }, null, 2), "application/json");
+    } catch (error) { if (stores.get(container) === state && view === capturedView) status.textContent = `Export unavailable: ${error.message}`; }
   };
-  const choose = ref => { if (stores.get(container) !== state) return; state.selected = ref; draw(); const op = model.program.operations.find(row => row.id === ref); if (op) onSelect(op); };
+  const choose = ref => { if (stores.get(container) !== state) return; state.selected = ref; draw(); const op = model.program.operations.find(row => row.id === ref); if (op) onSelect(op); const group = hierarchy.groups.find(row => row.id === ref); if (op || group) onSelection({ kind: op ? "operation" : "group", subject_ref: ref, label: group?.path || op?.name || ref }); };
   function draw() {
     if (stores.get(container) !== state) return;
     try {

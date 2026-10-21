@@ -777,7 +777,10 @@ try {
   await page.getByLabel("DEEPBOM workflow", { exact: true }).selectOption("weights");
   assert.equal(await page.locator('[data-action="workflow-web"]').getAttribute("href"), "https://deepbom.org/#workflow=weights");
   await page.locator('[data-action="workflow-inspect"]').click();
-  await page.waitForFunction(() => window.__deepbomToolCalls.some(call => call.name === "deepbom_publish_query"), null, { timeout: 90_000 });
+  await page.waitForFunction(() => window.__deepbomWidgetStates.at(-1)?.modelContent.evidence_query?.query.section === "weights" && !document.querySelector('[data-action="run-evidence-query"]').disabled, null, { timeout: 90_000 });
+  assert.equal(await page.evaluate(() => window.__deepbomToolCalls.filter(call => call.name === "deepbom_publish_query").length), 0, "Local exploration does not publish to chat");
+  await page.locator('[data-action="report-query-chat"]').click();
+  await page.waitForFunction(() => window.__deepbomToolCalls.some(call => call.name === "deepbom_publish_query"));
   const weightResult = await page.evaluate(() => window.__deepbomToolCalls.find(call => call.name === "deepbom_publish_query").args.result);
   assert.equal(weightResult.query.section, "weights");
   assert.equal(weightResult.artifact.sha256, expectedSha256);
@@ -803,7 +806,7 @@ try {
   }, weightPng.toString("base64")), "Weight plots retain their color encoding in PNG");
   const selectedTensor = weightResult.rows[1];
   assert(selectedTensor, "Fixture must exercise selecting a tensor beyond the first row");
-  await page.locator('.query-viewport [data-row-index="1"]').click();
+  await page.locator('.query-list [data-action="select-evidence-row"]').nth(1).click();
   assert.equal(await page.evaluate(() => window.__deepbomWidgetStates.at(-1).modelContent.selected_evidence.subject_ref), selectedTensor.subject_ref);
   // Another view writer must retain the selected tensor and query identity.
   await page.click('[data-action="explore-structure"]');
@@ -811,19 +814,42 @@ try {
   assert.equal(await page.evaluate(() => window.__deepbomWidgetStates.at(-1).modelContent.selected_evidence.subject_ref), selectedTensor.subject_ref);
   if (await page.locator('.query-more > summary').isVisible()) await page.locator('.query-more > summary').click();
   await page.locator('[data-follow-up-id="weight_channels"]').click();
-  await page.waitForFunction(ref => window.__deepbomToolCalls.at(-1)?.args.result?.query.subject_ref === ref && !document.querySelector('[data-action="run-evidence-query"]').disabled, selectedTensor.subject_ref);
+  await page.waitForFunction(ref => window.__deepbomWidgetStates.at(-1)?.modelContent.evidence_query?.query.subject_ref === ref && !document.querySelector('[data-action="run-evidence-query"]').disabled, selectedTensor.subject_ref);
+  await page.locator('[data-action="report-query-chat"]').click();
+  await page.waitForFunction(() => !document.querySelector('[data-action="run-evidence-query"]').disabled);
   assert.equal(await page.evaluate(() => window.__deepbomToolCalls.at(-1).args.result.query.weight_view), "channels");
   await page.locator(".query-advanced > summary").click();
   await page.getByLabel("Weight feature", { exact: true }).selectOption("spectrum");
   await page.locator('[data-action="run-evidence-query"]').click();
-  await page.waitForFunction(() => window.__deepbomToolCalls.some(call => call.name === "deepbom_publish_query" && call.args.result.query.weight_view === "spectrum"));
+  await page.waitForFunction(() => window.__deepbomWidgetStates.at(-1)?.modelContent.evidence_query?.query.weight_view === "spectrum" && !document.querySelector('[data-action="run-evidence-query"]').disabled);
   await page.locator('[data-testid="workflow-guide"]').scrollIntoViewIfNeeded();
   await page.locator('[data-action="review-evidence"]').click();
-  await page.waitForFunction(() => window.__deepbomToolCalls.at(-1)?.args.result?.query.section === "improvements" && !document.querySelector('[data-action="review-evidence"]').disabled);
+  await page.waitForFunction(() => window.__deepbomWidgetStates.at(-1)?.modelContent.evidence_query?.query.section === "improvements" && !document.querySelector('[data-action="review-evidence"]').disabled);
   assert.equal(await page.evaluate(() => window.__deepbomWidgetStates.at(-1).modelContent.selected_evidence), null);
   await page.getByLabel("DEEPBOM workflow", { exact: true }).selectOption("verify");
   assert.equal(await page.locator('[data-action="workflow-inspect"]').isVisible(), false);
   assert.match(await page.locator('[data-testid="workflow-guide"] pre').innerText(), /verify.*--bom/);
+  // Clipboard denial keeps an explicit, selectable preview; no private tool call.
+  const copyCalls = await page.evaluate(() => window.__deepbomToolCalls.length);
+  await page.evaluate(() => Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => { throw new Error("clipboard denied"); } } }));
+  await page.locator('.evidence-query .evidence-copy > summary').click();
+  await page.locator('.evidence-query [data-action="copy-evidence-note"]').click();
+  const copied = await page.locator('.evidence-query .evidence-copy textarea').inputValue();
+  assert(copied.includes(expectedSha256) && copied.includes("Coverage:"));
+  await page.locator('.evidence-query [data-action="copy-evidence-question"]').click();
+  assert(!(await page.locator('.evidence-query .evidence-copy textarea').inputValue()).includes(expectedSha256));
+  assert.equal(await page.evaluate(() => window.__deepbomToolCalls.length), copyCalls);
+  // Fullscreen lazily mounts the same hierarchy component used by the website.
+  assert.equal(await page.locator('.conversation-hierarchy .model-hierarchy-panel').count(), 0);
+  await page.evaluate(() => { window.openai.displayMode = "fullscreen"; window.dispatchEvent(new CustomEvent("openai:set_globals", { detail: { globals: { displayMode: "fullscreen" } } })); });
+  await page.click('[data-action="explore-structure"]');
+  assert.equal(await page.locator('.conversation-hierarchy .model-hierarchy-panel').count(), 1);
+  await page.locator('.conversation-hierarchy [data-subject-ref]').first().click();
+  const hierarchySelection = await page.evaluate(() => window.__deepbomWidgetStates.at(-1).modelContent.selected_evidence);
+  assert(["group", "operation"].includes(hierarchySelection.kind));
+  assert.equal(await page.locator('[data-action="inspect-hierarchy-operation"]').isVisible(), hierarchySelection.kind === "operation");
+  assert.equal(await page.evaluate(() => window.__deepbomToolCalls.length), copyCalls, "Hierarchy selection is local");
+  if (process.env.DEEPBOM_HIERARCHY_SCREENSHOT) await page.screenshot({ path: process.env.DEEPBOM_HIERARCHY_SCREENSHOT });
   for (const scenario of ["success", "wrong_hash", "unavailable_profile"]) {
     const queryPage = await browser.newPage({ viewport: { width: 900, height: 900 } });
     await installToolBridge(queryPage);
@@ -860,20 +886,26 @@ try {
       assert.equal(result.coverage.returned_rows, 10);
       assert.equal(state.replies.length, 1, "One automatic reply request for an explicit follow-up query");
       assert.equal(await queryFrame.locator(".query-viewport [data-row-index]").count(), 10);
-      assert(await queryFrame.locator(".query-viewport").evaluate(node => node.scrollHeight > node.clientHeight));
+      assert.equal(await queryFrame.locator(".query-viewport").isVisible(), false, "Inline queries use readable rows, not nested graph scrolling");
+      assert.equal(await queryFrame.locator('.query-list button').count(), 5);
+      assert.equal(await queryFrame.locator('.analysis-overview').isVisible(), false, "A specific query shows its requested evidence first");
       await queryFrame.locator('[data-action="next-evidence-page"]').click();
-      await queryFrame.waitForFunction(() => window.__queryCalls.length === 2 && window.__queryFollowUps.length === 2);
-      assert.equal(await queryFrame.evaluate(() => window.__queryCalls[1].args.result.query.offset), 10);
+      await queryFrame.waitForFunction(() => window.openai.widgetState?.modelContent.evidence_query?.query.offset === 10 && !document.querySelector('[data-action="run-evidence-query"]').disabled);
+      assert.deepEqual(await queryFrame.evaluate(() => [window.__queryCalls.length, window.__queryFollowUps.length]), [1, 1], "Page navigation must remain local");
       assert.equal(await queryFrame.locator(".query-advanced").getAttribute("open"), null);
       await queryFrame.locator(".query-advanced > summary").click();
       await queryFrame.getByLabel("Evidence section", { exact: true }).selectOption("fusion");
       await queryFrame.locator('[data-action="run-evidence-query"]').click();
-      await queryFrame.waitForFunction(() => window.__queryCalls.length === 3 && window.__queryFollowUps.length === 3);
-      const f = await queryFrame.evaluate(() => window.__queryCalls[2].args.result);
+      await queryFrame.waitForFunction(() => window.openai.widgetState?.modelContent.evidence_query?.query.section === "fusion" && !document.querySelector('[data-action="run-evidence-query"]').disabled);
+      assert.deepEqual(await queryFrame.evaluate(() => [window.__queryCalls.length, window.__queryFollowUps.length]), [1, 1]);
+      await queryFrame.locator('[data-action="report-query-chat"]').click();
+      await queryFrame.waitForFunction(() => window.__queryCalls.length === 2 && window.__queryFollowUps.length === 2);
+      const f = await queryFrame.evaluate(() => window.__queryCalls.at(-1).args.result);
       assert(f.rows.every(row => row.details.runtime_fusion === "not_observed"));
-      await queryFrame.locator(".query-viewport [data-row-index]").first().click();
+      await queryFrame.locator(".query-list button").first().click();
       await queryFrame.getByText("Source evidence · JSON", { exact: true }).click();
       assert.match(await queryFrame.locator(".query-detail").innerText(), /serialized_fused_activation/);
+      await queryFrame.locator(".query-export > summary").click();
       const svgDownload = queryPage.waitForEvent("download");
       await queryFrame.locator('[data-action="export-query-svg"]').click();
       const svgFile = await svgDownload;
@@ -889,14 +921,17 @@ try {
       const invoke = async action => {
         const before = await queryFrame.evaluate(() => window.__queryCalls.length);
         await action();
+        await queryFrame.waitForFunction(() => !document.querySelector('[data-action="run-evidence-query"]').disabled);
+        assert.equal(await queryFrame.evaluate(() => window.__queryCalls.length), before, "Local query must not publish");
+        await queryFrame.locator('[data-action="report-query-chat"]').click();
         await queryFrame.waitForFunction(n => window.__queryCalls.length === n + 1 && !document.querySelector('[data-action="run-evidence-query"]').disabled, before);
         return queryFrame.evaluate(() => window.__queryCalls.at(-1).args.result);
       };
       const listed = await invoke(() => queryFrame.locator('[data-action="run-evidence-query"]').click());
       assert.equal(await queryFrame.getByLabel("Weight feature", { exact: true }).isVisible(), false, "Weight controls must be hidden in other sections");
-      await queryFrame.locator(".query-viewport [data-row-index]").first().click();
+      await queryFrame.locator(".query-list button").first().click();
       assert.equal(await queryFrame.getByLabel("Layer reference", { exact: true }).inputValue(), "", "Selection is distinct from a query filter");
-      const detail = await invoke(() => queryFrame.locator('[data-action="inspect-evidence-subject"]').click());
+      const detail = await invoke(() => queryFrame.locator('[data-follow-up-id="inspect_subject"]').click());
       assert.equal(detail.query.section, "operator");
       assert.equal(detail.rows[0].subject_ref, listed.rows[0].subject_ref);
       const edge = detail.rows[0].details.navigation.outgoing[0];
@@ -986,10 +1021,12 @@ async function checkQueryNavigationFailures(browser, origin, fixture) {
         initialQuery: { section: "operators", limit: 2 },
         async execute(query) {
           if (window.failNext) { window.failNext = false; throw new Error("Injected execution failure"); }
-          return window.fakeResult(query);
+          const result = window.fakeResult(query);
+          if (window.changeBinding) result.model_ir_sha256 = "f".repeat(64);
+          return result;
         },
         async publish(result) { window.events.push(["publish", result.query.section, result.query.offset]); return result; },
-        openai: { locale: "ko-KR", setWidgetState(state) { window.state = state; }, async sendFollowUpMessage(message) { window.events.push(["reply"]); window.lastMessage = message; } }, offerDownload() {},
+        openai: { locale: "ko-KR", displayMode: "fullscreen", setWidgetState(state) { window.state = state; }, async sendFollowUpMessage(message) { window.events.push(["reply"]); window.lastMessage = message; } }, offerDownload() {},
       };
       await mountEvidenceQuery(document.getElementById("host"), window.options);
     }, fixture);
@@ -1015,7 +1052,7 @@ async function checkQueryNavigationFailures(browser, origin, fixture) {
     assert(await page.locator(".query-viewport text").last().evaluate(node => parseFloat(getComputedStyle(node).fontSize) * node.getScreenCTM().a >= 11), "Narrow panels must not shrink graph glyphs below 11px");
     assert.equal(await page.getByLabel("Weight feature", { exact: true }).isVisible(), false);
     assert.equal(await page.locator(".query-advanced").getAttribute("open"), null);
-    assert((await page.locator(".query-follow-ups").innerText()).includes("다음 페이지"));
+    assert.equal(await page.locator('[data-follow-up-id="next_page"]').count(), 0, "Pagination has one canonical control");
     await page.locator('.query-viewport [data-row-index="1"]').click();
     const secondRef = fixture.rows[1].subject_ref;
     assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence.subject_ref), secondRef);
@@ -1028,7 +1065,13 @@ async function checkQueryNavigationFailures(browser, origin, fixture) {
     assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence), null);
     assert(await page.locator('[data-action="ask-evidence-selection"]').isDisabled());
     await click("back-evidence-results"); await idle();
-    assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence), null);
+    assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence.subject_ref), secondRef, "Back restores the exact selected row");
+    assert.equal(await page.evaluate(() => window.events.filter(event => event[0] === "reply").length), 2, "Only initial query and explicit selection explanation request replies");
+    await page.locator('[data-follow-up-id="inspect_subject"]').click(); await idle();
+    await page.evaluate(() => { window.changeBinding = true; });
+    await click("back-evidence-results"); await idle();
+    assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence), null, "Changed binding cannot restore or substitute a subject");
+    await page.evaluate(() => { window.changeBinding = false; });
     // A replacement panel must clear the old subject even when its initial
     // request fails; it no longer displays that previous result.
     await page.locator('.query-viewport [data-row-index="1"]').click();
@@ -1067,6 +1110,20 @@ async function checkQueryNavigationFailures(browser, origin, fixture) {
     });
     assert.equal(await page.locator("h3").innerText(), "Findings");
     assert.deepEqual(await page.evaluate(() => window.events), [["publish", "findings", 0], ["reply"]]);
+    await page.evaluate(async () => {
+      window.events = [];
+      await window.queryMount(document.getElementById("host"), { ...window.options, initialReply: false,
+        openai: { ...window.options.openai, displayMode: "inline", async requestDisplayMode() { throw new Error("not supported"); } } });
+    });
+    assert.equal(await page.locator(".query-viewport").isVisible(), false);
+    await page.locator('.query-list button').nth(1).focus(); await page.keyboard.press("Enter");
+    const box = await page.locator('[data-action="ask-evidence-selection"]').boundingBox();
+    assert(box.y >= 0 && box.y + box.height <= 844, "Selected row explanation is immediately visible on mobile");
+    assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence.subject_ref), secondRef);
+    await click("query-fullscreen");
+    await page.waitForFunction(() => document.querySelector('.query-delivery').textContent.includes("전체 화면"));
+    assert.equal(await page.locator('.query-list').isVisible(), true);
+    assert.deepEqual(await page.evaluate(() => window.events), [], "Inline navigation and fullscreen failure stay local");
     assert.deepEqual(errors, []);
   } finally { await page.close(); }
 }

@@ -7,8 +7,8 @@ export function mountWorkflowGuide(container, { format, openai, inspect }) {
   const guide = guideWorkflows({ format });
   for (const row of guide.workflows) { const option = document.createElement("option"); option.value = row.id; option.textContent = row.title; select.append(option); }
   const description = document.createElement("p"), boundary = document.createElement("p"), commands = document.createElement("pre"), status = document.createElement("p");
-  commands.style.cssText = "white-space:pre-wrap;overflow-wrap:anywhere;max-height:180px;overflow:auto";
-  const run = document.createElement("button"); run.type = "button"; run.textContent = "Inspect here and reply in chat"; run.dataset.action = "workflow-inspect";
+  commands.style.cssText = "white-space:pre-wrap;overflow-wrap:anywhere";
+  const run = document.createElement("button"); run.type = "button"; run.textContent = "Inspect here"; run.dataset.action = "workflow-inspect";
   const link = document.createElement("a"); link.target = "_blank"; link.rel = "noopener noreferrer"; link.style.marginLeft = "12px"; link.dataset.action = "workflow-web";
   const privacy = document.createElement("p"); privacy.className = "detail"; privacy.textContent = "Web continuation opens the selected workspace after you select your model and run its audit. No attachment or result is transferred; compare SHA-256 with your conversation. CLI commands are templates for your local terminal.";
   let current;

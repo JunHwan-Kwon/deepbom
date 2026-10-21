@@ -47,7 +47,9 @@ const dist = path.resolve("dist");
 // Selection context, follow-up controls and the immutable 0.57.2 catalog bring
 // measured dist to 86,714,220 bytes (82.70 MiB). Add a bounded 64 KiB;
 // preserve the 16 MiB per-file and 2,475-byte gzip startup ceilings.
-const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 82.75);
+// Local exploration, shared hierarchy UI and immutable 0.57.3 measure 86882348 bytes.
+// Add 128 KiB total; preserve per-file and startup ceilings.
+const totalBudgetMiB = Number(process.env.DIST_BUDGET_MIB || 82.875);
 const fileBudgetMiB = Number(process.env.DIST_FILE_BUDGET_MIB || 16);
 
 if (!existsSync(dist)) {

@@ -25,16 +25,20 @@ try {
     await initializeNumericalWasm();
     const { mountModelHierarchy } = await import("/web/lib/model-hierarchy-view.js");
     window.hierarchyMount = mountModelHierarchy; window.sourceData = data;
-    window.current = mountModelHierarchy(document.getElementById("host"), data.model, data.hierarchy, { onSelect: op => { window.selectedOp = op.id; } });
+    window.current = mountModelHierarchy(document.getElementById("host"), data.model, data.hierarchy, { onSelect: op => { window.selectedOp = op.id; }, onSelection: selection => { window.selectedSource = selection; } });
   }, data);
   const host = page.locator("#host");
   assert.equal(await host.locator("[data-subject-ref]").count(), 2);
   await host.locator("[data-subject-ref]").first().focus(); await page.keyboard.press("Enter");
   assert.match(await host.locator(".mh-detail").textContent(), /enc\.0/);
+  assert.equal(await page.evaluate(() => window.selectedSource.kind), "group");
+  assert.equal(await page.evaluate(() => window.selectedOp), undefined, "Group selection must not invoke the legacy operation callback");
   await host.getByRole("button", { name: "Expand group", exact: true }).click();
   assert.equal(await host.locator("[data-subject-ref]").count(), 3);
   await host.locator("[data-subject-ref]").first().click();
   assert(await page.evaluate(() => !!window.selectedOp));
+  assert.equal(await page.evaluate(() => window.selectedSource.kind), "operation");
+  assert.equal(await page.evaluate(() => window.selectedSource.subject_ref === window.selectedOp), true);
   await host.getByRole("button", { name: "Trace upstream data paths" }).click();
   await host.getByRole("button", { name: "Whole model", exact: true }).click();
   await host.getByRole("searchbox").fill("dec.0");
@@ -73,6 +77,19 @@ try {
   assert.equal(await host.locator("[data-subject-ref]").count(), 1, "Same-source remount preserves search state");
   await page.evaluate(() => { window.current.destroy(); });
   assert.equal(await host.locator("svg").count(), 0);
+  // The optional host handoff preserves bytes and reports rejected delivery.
+  await page.evaluate(() => {
+    window.exported = [];
+    window.hierarchyMount(document.getElementById("host"), window.sourceData.model, window.sourceData.hierarchy, {
+      async offerDownload(blob, name) { if (window.rejectExport) throw new Error("host delivery denied"); window.exported.push({ name, type: blob.type, text: await blob.text() }); },
+    });
+  });
+  await host.getByRole("button", { name: "Export SVG", exact: true }).click();
+  await page.waitForFunction(() => window.exported.length === 1);
+  assert.match(await page.evaluate(() => window.exported[0].text), /view_sha256/);
+  await page.evaluate(() => { window.rejectExport = true; });
+  await host.getByRole("button", { name: "Export SVG", exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('.mh-status').textContent.includes("host delivery denied"));
   // Exercise the real file → worker → common context → Explorer path as well.
   await page.goto(`${origin}/web/`);
   await page.locator("#dropzone").dispatchEvent("pointerdown"); await page.locator("#fileInput").focus();

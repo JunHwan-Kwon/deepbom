@@ -22,7 +22,7 @@ import { buildBrowserModelIrVisualizationArchive, rasterizeMonochromeModelView }
 import { MODEL_IR_VIEW_IDS, buildModelIrVisualizationBundle } from "../lib/model-ir-visualization.js";
 import { compactModelSummaryForConversation, renderModelSummaryTable } from "../lib/model-summary.js";
 import { resolveModelHierarchyPresentation } from "../lib/model-hierarchy.js";
-import { renderModelHierarchyTable } from "../lib/model-hierarchy-view.js";
+import { mountModelHierarchy, renderModelHierarchyTable } from "../lib/model-hierarchy-view.js";
 import { createStaticAuditWorkerClient } from "../lib/static-audit-worker-client.js";
 import { STATIC_AUDIT_OPERATION } from "../lib/static-audit-worker-protocol.js";
 import { sha256FileHex } from "../lib/hash.js";
@@ -35,6 +35,8 @@ import { mountWorkflowGuide } from "../lib/workflow-guide-view.js";
 import { buildWeightQueryVisual } from "../lib/weight-query-visual.js";
 import { updateWidgetState, widgetLanguage } from "../lib/chatgpt-widget-state.js";
 import { mountEvidenceQuery } from "../lib/evidence-query-view.js";
+import { shareEvidenceTask, mountEvidenceCopy } from "../lib/evidence-exploration.js";
+import { formatExactInteger } from "../lib/format.js";
 import { BROWSER_TARGET_PROFILES } from "../lib/target-profiles.generated.js";
 import { buildCpuCostTargetBinding } from "../lib/cpu-target-binding.js";
 
@@ -173,23 +175,25 @@ async function start() {
   const reportDelivery = inspection ? null : createReportDelivery(openai, resultFollowUpPrompt(returned));
   let weightEvidence = null;
   const exportActions = {
+    copyResult: () => ({ ...returned, context: { scan_policy: analysis.cli_scan_policy, evidence_envelope_sha256: envelope.envelope_sha256 } }),
     cyclonedx: () => buildPublicCycloneDx17ArtifactContract(analysisView, {
       hash: sha256, fileSizeBytes: remote.size, artifactIr: artifactIrContext.artifact_ir,
     }),
     spdx: () => buildSpdxArtifactDocument(envelope),
     modelIr: () => artifactIrContext.model_ir,
-    weightIr: async () => {
+    weightIr: shareEvidenceTask(async () => {
       if (weightEvidence) return weightEvidence;
       if (remote.size > FULL_FILE_LIMIT) throw new Error("Widget Weight IR is limited to 128 MiB; use the local CLI for larger artifacts.");
       await prepareSandboxWorker();
       const file = new Blob([await remote.slice(0, remote.size).arrayBuffer()]);
       weightEvidence = await staticAuditWorkerClient.runFile(STATIC_AUDIT_OPERATION.WEIGHT_IR, { file, analysis, model: artifactIrContext.model_ir, advanced: true });
       return weightEvidence;
-    },
+    }),
   };
   renderResult(returned, openai, artifactIrContext.model_ir, artifactIrContext.model_summary, reportDelivery, exportActions, artifactIrContext.model_hierarchy);
-  let inspectionGeneration = 0;
-  const inspect = async requestedQuery => {
+  if (inspection) root.querySelector(".analysis-overview").hidden = true;
+  let inspectionGeneration = 0, queryPanel = null;
+  const inspect = async (requestedQuery, { reply = false } = {}) => {
     const generation = ++inspectionGeneration;
     const context = { analysis: analysisView, artifactIrContext, summary, envelope };
     let queryContainer = root.querySelector(".evidence-query");
@@ -202,7 +206,9 @@ async function start() {
       if (accepted.result_sha256 !== queryResult.result_sha256) throw new Error("The query acknowledgement belongs to a different result.");
       return accepted;
     };
-    await mountEvidenceQuery(queryContainer, {
+    if (queryPanel) return queryPanel.navigate(normalizeEvidenceQuery(requestedQuery), { reply });
+    const mounted = await mountEvidenceQuery(queryContainer, {
+      initialReply: reply,
       initialQuery: normalizeEvidenceQuery(requestedQuery),
       execute: async query => {
         if (query.section === "weights") context.weightEvidence = await exportActions.weightIr();
@@ -211,7 +217,7 @@ async function start() {
       weightVisual: (ref, view) => buildWeightQueryVisual(weightEvidence, ref, view, artifactIrContext.model_ir),
       publish, openai, offerDownload: exportActions.offerDownload,
     });
-    if (generation === inspectionGeneration) setStatus("Requested evidence ready", `${remote.name} · ${requestedQuery.section} · identity verified`);
+    if (generation === inspectionGeneration) { queryPanel = mounted; setStatus("Requested evidence ready", `${remote.name} · ${requestedQuery.section} · identity verified`); }
   };
   const review = root.querySelector('[data-action="review-evidence"]');
   review?.addEventListener("click", async () => {
@@ -221,7 +227,45 @@ async function start() {
     finally { review.disabled = false; }
   });
   mountWorkflowGuide(root.querySelector("#result"), { format, openai, inspect });
-  if (inspection) await inspect(inspection);
+  const hierarchyHost = root.querySelector(".conversation-hierarchy");
+  if (hierarchyHost && artifactIrContext.model_hierarchy?.groups?.length) {
+    const selectionAction = element("button", "", widgetLanguage(openai) === "ko" ? "선택 연산 자세히 보기" : "Inspect selected operation");
+    selectionAction.type = "button"; selectionAction.dataset.action = "inspect-hierarchy-operation"; selectionAction.hidden = true;
+    const selectionNote = element("p", "detail"); selectionNote.setAttribute("role", "status");
+    hierarchyHost.before(selectionNote, selectionAction);
+    let selectedOperation = null;
+    selectionAction.addEventListener("click", async () => {
+      if (!selectedOperation) return;
+      selectionAction.disabled = true;
+      try { await inspect({ section: "operator", subject_ref: selectedOperation, limit: 20 }); }
+      catch (error) { selectionNote.textContent = error.message; }
+      finally { selectionAction.disabled = false; }
+    });
+    let hierarchyMounted = false;
+    exportActions.ensureHierarchy = () => {
+      if (hierarchyMounted || root.dataset.displayMode !== "fullscreen") return;
+      try {
+        mountModelHierarchy(hierarchyHost, artifactIrContext.model_ir, artifactIrContext.model_hierarchy, {
+      offerDownload: exportActions.offerDownload,
+      onSelection: selection => {
+        selectedOperation = selection.kind === "operation" ? selection.subject_ref : null;
+        selectionAction.hidden = !selectedOperation;
+        selectionNote.textContent = selection.kind === "group"
+          ? (widgetLanguage(openai) === "ko" ? "그룹을 펼친 뒤 연산을 선택하면 대화에서 설명을 요청할 수 있습니다." : "Expand the group and select an operation to inspect its exact evidence.") : selection.label;
+        updateWidgetState(openai, sha256, { modelContent: { evidence_query: null, selected_evidence: {
+          subject_ref: selection.subject_ref, kind: selection.kind, title: selection.label,
+          model_ir_sha256: artifactIrContext.model_ir.model_ir_sha256,
+          hierarchy_sha256: artifactIrContext.model_hierarchy.hierarchy_sha256,
+          interpretation: selection.kind === "group" ? "Local hierarchy group only. Not a valid operator query subject. Select a member operation before querying." : "Selected serialized operation; use this artifact hash and exact reference.",
+        } } });
+      },
+        });
+        hierarchyMounted = true;
+      } catch (error) { selectionNote.textContent = `Hierarchy view unavailable: ${error.message}. The static diagram and source evidence remain available.`; }
+    };
+    window.addEventListener("openai:set_globals", () => exportActions.ensureHierarchy());
+  }
+  if (inspection) await inspect(inspection, { reply: true });
 }
 
 function observeWidgetHeight(openai) {
@@ -528,11 +572,11 @@ function renderResult(result, openai, modelIr = null, modelSummary = null, repor
   overview.append(metrics);
   const priority = result.findings?.artifact_defects?.[0] || result.findings?.cautions?.[0] || result.findings?.evidence_needed?.[0];
   overview.append(element("p", "detail", priority
-    ? `${t("First item to examine", "먼저 확인할 항목")}: ${String(priority.title || priority.message || priority.code || "Finding").slice(0, 260)}`
+    ? `${t("Representative item to examine", "대표 확인 항목")}: ${String(priority.title || priority.message || priority.code || "Finding").slice(0, 260)}`
     : t("No findings were returned within the assessed scope. This is not a runtime or quality validation.", "평가한 범위에서 반환된 지적 사항이 없습니다. 실행 성능이나 품질을 검증했다는 뜻은 아닙니다.")));
   overview.append(element("p", "detail", t("Static artifact evidence · measured speed and accuracy are not assessed.", "정적 파일 분석 · 실행 속도와 정확도는 측정하지 않았습니다.")));
   const quick = element("div", "actions");
-  const structure = element("button", "", t("Explore structure", "구조 살펴보기"));
+  const structure = element("button", "", result.graph?.operator_count ? t("Explore structure", "구조 살펴보기") : t("Explore tensor storage", "저장 텐서 보기"));
   structure.type = "button"; structure.dataset.action = "explore-structure"; structure.disabled = !modelIr;
   const review = element("button", "", t("Review findings", "확인할 항목 보기"));
   review.type = "button"; review.dataset.action = "review-evidence";
@@ -592,16 +636,32 @@ function renderResult(result, openai, modelIr = null, modelSummary = null, repor
 
   // Keep the actions and file controls ahead of long evidence tables in the
   // host's height-limited iframe. The preview must not hide its own controls.
-  if (reportControl) overview.after(reportControl.button.parentElement);
+  if (reportControl) { reportControl.button.classList.add("report-recovery"); overview.after(reportControl.button.parentElement); }
   if (modelIr) {
     const visual = element("details", "model-visual-details");
     visual.append(element("summary", "", t("Model structure and exports", "모델 구조와 내보내기")));
+    const graphHost = element("div", "conversation-hierarchy");
+    if (hierarchy?.groups?.length) visual.append(graphHost);
     appendModelIrVisualization(visual, result, openai, modelIr, exports, hierarchy);
     (reportControl ? reportControl.button.parentElement : overview).after(visual);
-    structure.addEventListener("click", () => { visual.open = true; visual.scrollIntoView({ block: "start" }); });
+    structure.addEventListener("click", async () => {
+      visual.open = true;
+      if (typeof openai?.requestDisplayMode === "function") {
+        try { const mode = await openai.requestDisplayMode({ mode: "fullscreen" }); if (mode?.mode) root.dataset.displayMode = mode.mode; }
+        catch { actionStatus.textContent = t("Fullscreen unavailable. Files and the returned evidence remain available here.", "전체 화면을 열 수 없습니다. 여기서 파일과 조회 결과를 확인할 수 있습니다."); }
+      }
+      exports.ensureHierarchy?.();
+      visual.scrollIntoView({ block: "start" });
+    });
   }
   if (modelIr) appendMetadataPanel(container, result, openai, modelIr, exports);
   if (modelSummary) appendModelSummary(container, modelSummary, modelIr, hierarchy);
+  mountEvidenceCopy(evidenceDetails, exports.copyResult || (() => result), () => null, widgetLanguage(openai));
+  root.dataset.displayMode = openai?.displayMode || "inline";
+  window.addEventListener("openai:set_globals", event => { root.dataset.displayMode = event.detail?.globals?.displayMode || openai?.displayMode || "inline"; });
+  const displayStyle = element("style", "");
+  displayStyle.textContent = `.report-recovery{background:transparent!important;color:inherit!important;font-size:12px!important}#deepbom-chatgpt-root[data-display-mode=inline] .conversation-hierarchy{display:none}#deepbom-chatgpt-root[data-display-mode=inline] .visual-preview{max-height:none;overflow:visible}#deepbom-chatgpt-root[data-display-mode=inline] .visual-preview svg{max-width:100%;height:auto}#deepbom-chatgpt-root[data-display-mode=inline] .model-summary-table{max-height:none;white-space:pre-wrap;overflow-wrap:anywhere}`;
+  container.append(displayStyle);
   return reportControl;
 }
 
@@ -663,8 +723,10 @@ function appendModelIrVisualization(container, result, openai, modelIr, exports,
     fullscreen.addEventListener("click", async () => {
       fullscreen.disabled = true;
       try {
-        await openai.requestDisplayMode({ mode: "fullscreen" });
-      } finally {
+        const response = await openai.requestDisplayMode({ mode: "fullscreen" });
+        root.dataset.displayMode = response?.mode || openai?.displayMode || "inline";
+      } catch { root.querySelector(".overview-action-status").textContent = "Fullscreen unavailable. The evidence and file controls remain available."; }
+      finally {
         fullscreen.disabled = false;
       }
     });
@@ -1042,8 +1104,8 @@ function graphSummary(graph) {
   const values = [
     `${humanValue(graph?.operator_count)} operators`,
     `${humanValue(graph?.tensor_count)} tensors`,
-    `${humanValue(graph?.total_macs)} MACs`,
-    `${humanValue(graph?.mac_confidence)} confidence`,
+    `${formatExactInteger(null, graph?.total_macs)} static MACs`,
+    `MAC assessment: ${humanValue(graph?.mac_confidence)}`,
   ];
   return values.join(" · ");
 }

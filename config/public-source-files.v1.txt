@@ -327,6 +327,7 @@ docs/evidence-ir/compatibility/0.56.0.json
 docs/evidence-ir/compatibility/0.57.0.json
 docs/evidence-ir/compatibility/0.57.1.json
 docs/evidence-ir/compatibility/0.57.2.json
+docs/evidence-ir/compatibility/0.57.3.json
 docs/evidence-ir/compatibility/0.6.0.json
 docs/evidence-ir/compatibility/0.7.0.json
 docs/evidence-ir/compatibility/0.8.0.json
@@ -497,6 +498,15 @@ reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9c85eac5628b066866e3036ffddf
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9c85eac5628b066866e3036ffddfa1ec4b0681aba2dbc3dc034e4f3a757f427a/deepbom_observed_formulation.cdx.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9c85eac5628b066866e3036ffddfa1ec4b0681aba2dbc3dc034e4f3a757f427a/deepbom_runtime_requirements.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant-9c85eac5628b066866e3036ffddfa1ec4b0681aba2dbc3dc034e4f3a757f427a/producer.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-a3c3fa4e61464bc7f7859c6f1932af754427be267278c44ea5a3643a80690935/deepbom_artifact_evidence_envelope.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-a3c3fa4e61464bc7f7859c6f1932af754427be267278c44ea5a3643a80690935/deepbom_artifact_ir.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-a3c3fa4e61464bc7f7859c6f1932af754427be267278c44ea5a3643a80690935/deepbom_cyclonedx_evidence.cdx.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-a3c3fa4e61464bc7f7859c6f1932af754427be267278c44ea5a3643a80690935/deepbom_interface_contracts.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-a3c3fa4e61464bc7f7859c6f1932af754427be267278c44ea5a3643a80690935/deepbom_missing_provenance_fields.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-a3c3fa4e61464bc7f7859c6f1932af754427be267278c44ea5a3643a80690935/deepbom_model_ir.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-a3c3fa4e61464bc7f7859c6f1932af754427be267278c44ea5a3643a80690935/deepbom_observed_formulation.cdx.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-a3c3fa4e61464bc7f7859c6f1932af754427be267278c44ea5a3643a80690935/deepbom_runtime_requirements.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-a3c3fa4e61464bc7f7859c6f1932af754427be267278c44ea5a3643a80690935/producer.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b1943c6c15c107f8b3b799ee7a3059a64444f8749a0a413c8da0adb45c3689f1/deepbom_artifact_evidence_envelope.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b1943c6c15c107f8b3b799ee7a3059a64444f8749a0a413c8da0adb45c3689f1/deepbom_artifact_ir.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant-b1943c6c15c107f8b3b799ee7a3059a64444f8749a0a413c8da0adb45c3689f1/deepbom_cyclonedx_evidence.cdx.json
@@ -560,6 +570,15 @@ reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f198b81914b662f781d6d546a119
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f198b81914b662f781d6d546a119cdf4662d165508e5aea69f8f749de4e4843a/deepbom_observed_formulation.cdx.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f198b81914b662f781d6d546a119cdf4662d165508e5aea69f8f749de4e4843a/deepbom_runtime_requirements.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f198b81914b662f781d6d546a119cdf4662d165508e5aea69f8f749de4e4843a/producer.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f59690742a6fd5439f505031d680ae14cfc0ca20c8a4bbcb2239921918fa8c1b/deepbom_artifact_evidence_envelope.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f59690742a6fd5439f505031d680ae14cfc0ca20c8a4bbcb2239921918fa8c1b/deepbom_artifact_ir.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f59690742a6fd5439f505031d680ae14cfc0ca20c8a4bbcb2239921918fa8c1b/deepbom_cyclonedx_evidence.cdx.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f59690742a6fd5439f505031d680ae14cfc0ca20c8a4bbcb2239921918fa8c1b/deepbom_interface_contracts.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f59690742a6fd5439f505031d680ae14cfc0ca20c8a4bbcb2239921918fa8c1b/deepbom_missing_provenance_fields.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f59690742a6fd5439f505031d680ae14cfc0ca20c8a4bbcb2239921918fa8c1b/deepbom_model_ir.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f59690742a6fd5439f505031d680ae14cfc0ca20c8a4bbcb2239921918fa8c1b/deepbom_observed_formulation.cdx.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f59690742a6fd5439f505031d680ae14cfc0ca20c8a4bbcb2239921918fa8c1b/deepbom_runtime_requirements.json
+reference/cyclonedx/1.7/examples/mobilenet-v2-quant-f59690742a6fd5439f505031d680ae14cfc0ca20c8a4bbcb2239921918fa8c1b/producer.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/README.md
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_artifact_evidence_envelope.json
 reference/cyclonedx/1.7/examples/mobilenet-v2-quant/deepbom_artifact_ir.json
@@ -1364,6 +1383,7 @@ web/lib/evidence-applicability.js
 web/lib/evidence-class.js
 web/lib/evidence-context.js
 web/lib/evidence-cursor.js
+web/lib/evidence-exploration.js
 web/lib/evidence-identity.js
 web/lib/evidence-ir.js
 web/lib/evidence-level-report.js

@@ -67,7 +67,7 @@ Investigation rankings do not establish speedup, quality loss or pruning safety.
 
 ## Visualization and file sharing
 
-The scrollable query diagram displays the returned page. Clicking a row shows
+Inline queries show a readable list; fullscreen shows the returned-page diagram. Clicking a row shows
 its structured details and reference. Solid connectors come from serialized
 relationships whose endpoints appear on that page; no absent edge is inferred.
 Placement cards distinguish static eligibility from observed execution. Full
@@ -86,14 +86,14 @@ separate meaning. The graph summary keeps its source scope, identified by
 new metric formulas, format parsers or eligibility rules are introduced.
 
 Selecting a diagram row opens its evidence without changing the query filter.
-**Inspect selected layer** resolves the exact subject in the same Model IR.
+**View details** resolves the exact subject in the same Model IR.
 Its incoming/outgoing navigation is projected from the full Model Summary's
 serialized relationships, including neighbors outside the original page.
 Relationship kinds and truncation counts remain explicit; navigation does not
 infer execution, gradients or causal influence. **Back to results** restores
-the original query and page. **Clear filters** recovers from an empty search.
+the original query, page, exact selection and diagram scroll position when the evidence binding still matches. **Clear filters** recovers from an empty search.
 The JSON disclosure retains the original detailed evidence for inspection.
-Narrow panels scroll the graph internally instead of shrinking its text.
+Inline panels use readable rows without nested graph scrolling. Fullscreen diagrams preserve their glyph size and scroll independently.
 
 Finding references retain their envelope index when improvement priorities are
 sorted, so a reference from `findings` identifies the same finding in
@@ -239,3 +239,34 @@ Deployment regression checks also cover a failed replacement query clearing the
 previous selection, and failed weight-chart rendering preserving the selected
 tensor's source evidence and explicit conversation action. Rendering failure is
 not reported as missing or invalid underlying evidence.
+
+## Local exploration and explicit conversation requests
+
+The initial tool-driven query requests one reply. Widget page changes, filters,
+linked subjects and feature switches inspect the mounted evidence locally;
+**Ask about this selection** or **Report query in chat** explicitly delivers the
+validated result. Failed navigation keeps the prior result and describes the
+failed request. Back restores the exact selection only when the artifact, Model
+IR, scan policy, envelope and result identities still agree. It never substitutes
+a different row when that binding changes.
+
+**Explore structure** requests fullscreen when the host supports it and lazily
+mounts the existing Model Hierarchy component. Groups retain their membership,
+port edges and aggregate definitions. Select a member operation to query its
+exact evidence; a group ID is never passed as an operator reference. A host
+without fullscreen retains the static preview, returned rows and exports.
+Optional Weight evidence is computed on demand; concurrent consumers share the
+same pending work, and failed work can be retried.
+
+**Copy evidence note** includes identity, scan conditions, exact source values,
+coverage and limitations for the selected row or returned page. **Copy question
+for a new model** contains the workflow intent but no old subject, profile, file
+URL or artifact hash. The new attachment still needs its own authorization and
+analysis. Both actions expose selectable text if clipboard access is denied;
+neither sends content to an external service. Query SVG/PNG exports are labeled
+as the returned page, separately from the selected tensor plot and model views.
+
+This update changes presentation and interaction only. Existing public tool
+schemas, annotations, CSP and Skill are unchanged; the common IR and WASM
+calculations retain their owners. Automated browser checks cover the controlled
+host bridge. Actual LLM routing and user retention require separate observation.
