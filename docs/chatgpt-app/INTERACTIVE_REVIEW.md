@@ -210,8 +210,16 @@ Query controls are under Advanced query settings. Contextual follow-up buttons
 reuse `queryFollowUps`, the same builder used in the bounded query result: two
 are shown initially, with additional actions under More questions. Page actions
 retain filters/cursors; selected-subject actions use the actual selected row,
-including a tensor other than the first returned tensor. Korean/English question
-labels follow the host locale. This is navigation, not another analysis engine.
+including a tensor other than the first returned tensor. Widget controls and
+suggested-question labels use English regardless of host/browser locale. Chat
+replies default to English and honor an explicit response-language request in
+the conversation, including an earlier Korean preference, until changed. Every
+MCP tool result and explicit widget chat handoff carries the same policy from
+`conversation-language.js`. The widget does not inspect private conversation
+text or translate evidence identifiers. This is presentation guidance, not a
+new analysis engine, tool argument, or evidence field. The submitted Skill and
+public tool definitions remain unchanged; actual host language adherence still
+needs an end-to-end conversational check.
 
 Selection updates optional model-visible widget state with the artifact hash,
 exact subject reference, query/result identity and finding envelope identity.

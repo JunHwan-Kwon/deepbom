@@ -21,7 +21,16 @@ assert.equal(host.saved.imageIds, undefined);
 assert.equal(host.saved.privateContent.evidence_query_report, undefined);
 assert.equal(updateWidgetState({}, a, {}), false);
 assert.equal(updateWidgetState({ setWidgetState() { throw new Error("unsupported"); } }, a, {}), false);
-assert.equal(widgetLanguage(host), "ko");
+assert.equal(widgetLanguage(host), "en", "Korean host locale must not partially translate the widget");
+for (const locale of [undefined, "ko", "ko-KR", "en-US", "ja-JP"]) assert.equal(widgetLanguage({ locale }), "en");
+const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+try {
+  Object.defineProperty(globalThis, "navigator", { configurable: true, value: { language: "ko-KR" } });
+  assert.equal(widgetLanguage(), "en", "Korean browser locale is not an explicit chat language choice");
+} finally {
+  if (navigatorDescriptor) Object.defineProperty(globalThis, "navigator", navigatorDescriptor);
+  else delete globalThis.navigator;
+}
 assert.equal(widgetLanguage({ locale: "en-US" }), "en");
 
 const rows = ["first", "second"].map(ref => ({ subject_ref: ref, kind: "weight_evidence", title: ref, details: {} }));

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { CONVERSATION_LANGUAGE_GUIDANCE } from "../web/lib/conversation-language.js";
 import { createHash } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:http";
@@ -230,6 +231,7 @@ try {
     window.__deepbomWidgetStates = [];
     window.__deepbomHeights = [];
     window.openai = {
+      locale: "ko-KR",
       toolInput: null,
       async callTool(name, args) {
         window.__deepbomToolCalls.push({ name, args });
@@ -332,6 +334,9 @@ try {
   assert.match(observed.resultText, new RegExp(`${result.graph.operator_count} operators`));
   assert.match(observed.resultText, /Evidence boundary\./);
   assert.match(observed.resultText, /Model bytes were read in this browser sandbox/);
+  assert.match(observed.resultText, /Your model at a glance/);
+  assert.doesNotMatch(observed.resultText, /[가-힣]/, "Korean host locale must not mix UI languages for an English fixture");
+  assert(observed.followUps.every(message => message.prompt.startsWith(CONVERSATION_LANGUAGE_GUIDANCE)));
   assert.equal(observed.reportButtonText, "Report in chat again");
   assert.equal(observed.reportButtonDisabled, false);
   assert.equal(observed.visual.view, "architecture-overview");
@@ -472,6 +477,7 @@ try {
       mime_type: "application/octet-stream",
     };
     window.openai = {
+      locale: "ko-KR",
       toolInput: null,
       toolOutput: null,
       toolResponseMetadata: {
@@ -1030,6 +1036,9 @@ async function checkQueryNavigationFailures(browser, origin, fixture) {
       };
       await mountEvidenceQuery(document.getElementById("host"), window.options);
     }, fixture);
+    assert.equal(await page.locator(".evidence-query h3").innerText(), "Operations / storage");
+    assert.doesNotMatch(await page.locator("#host").innerText(), /[가-힣]/, "Query controls stay English on a Korean host");
+    assert((await page.evaluate(() => window.lastMessage.prompt)).startsWith(CONVERSATION_LANGUAGE_GUIDANCE));
     const click = action => page.locator(`[data-action="${action}"]`).click();
     const idle = () => page.waitForFunction(() => !document.querySelector('[data-action="run-evidence-query"]').disabled);
     const offset = () => page.locator(".query-scope").first().innerText();
@@ -1059,6 +1068,7 @@ async function checkQueryNavigationFailures(browser, origin, fixture) {
     assert.equal(await page.evaluate(() => window.state.modelContent.artifact_sha256), fixture.artifact.sha256);
     await click("ask-evidence-selection"); await idle();
     assert((await page.evaluate(() => window.lastMessage.prompt)).includes(secondRef));
+    assert((await page.evaluate(() => window.lastMessage.prompt)).startsWith(CONVERSATION_LANGUAGE_GUIDANCE));
     await page.locator('[data-follow-up-id="inspect_subject"]').click(); await idle();
     assert.equal(await page.evaluate(() => window.state.modelContent.evidence_query.query.subject_ref), secondRef);
     await click("clear-evidence-selection");
@@ -1098,6 +1108,7 @@ async function checkQueryNavigationFailures(browser, origin, fixture) {
     assert.equal(await page.locator('[data-action="export-weight-svg"]').isVisible(), false);
     await click("ask-evidence-selection"); await idle();
     assert((await page.evaluate(() => window.lastMessage.prompt)).includes(secondRef));
+    assert((await page.evaluate(() => window.lastMessage.prompt)).startsWith(CONVERSATION_LANGUAGE_GUIDANCE));
     // A late result from a replaced panel must not publish or overwrite the new
     // query. The host receives only the new mount's report.
     await page.evaluate(async () => {
@@ -1121,7 +1132,7 @@ async function checkQueryNavigationFailures(browser, origin, fixture) {
     assert(box.y >= 0 && box.y + box.height <= 844, "Selected row explanation is immediately visible on mobile");
     assert.equal(await page.evaluate(() => window.state.modelContent.selected_evidence.subject_ref), secondRef);
     await click("query-fullscreen");
-    await page.waitForFunction(() => document.querySelector('.query-delivery').textContent.includes("전체 화면"));
+    await page.waitForFunction(() => document.querySelector('.query-delivery').textContent.includes("Fullscreen unavailable"));
     assert.equal(await page.locator('.query-list').isVisible(), true);
     assert.deepEqual(await page.evaluate(() => window.events), [], "Inline navigation and fullscreen failure stay local");
     assert.deepEqual(errors, []);

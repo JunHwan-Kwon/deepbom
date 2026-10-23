@@ -1,3 +1,5 @@
+import { WIDGET_LANGUAGE } from "./conversation-language.js";
+
 // Merge the component's independent view/selection writers. Some hosts expose
 // widgetState asynchronously, so retain the last successfully written snapshot.
 const states = new WeakMap();
@@ -17,6 +19,8 @@ export function updateWidgetState(openai, artifactSha256, patch) {
   try { openai.setWidgetState(next); states.set(openai, next); return true; }
   catch { return false; } // Optional host state must not prevent evidence inspection.
 }
-export function widgetLanguage(openai) {
-  return /^ko(?:-|$)/i.test(openai?.locale || globalThis.navigator?.language || "en") ? "ko" : "en";
+export function widgetLanguage() {
+  // Keep the entire widget consistent; chat replies honor explicit language
+  // requests through the separate conversation-language policy.
+  return WIDGET_LANGUAGE;
 }

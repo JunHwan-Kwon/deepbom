@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { CONVERSATION_LANGUAGE_GUIDANCE } from "../web/lib/conversation-language.js";
 import { readFile } from "node:fs/promises";
 import { ANALYZER_SEMANTIC_VERSION } from "../web/lib/app-config.js";
 import { CHATGPT_MCP_CONTRACT, routeChatGptMcp } from "../worker/chatgpt-mcp.js";
@@ -325,6 +326,7 @@ function boundedModelSummary() {
 async function rpc(method, params = undefined) {
   const response = await rawRpc(method, params);
   if (response.error) throw new Error(response.error.message);
+  if (method === "tools/call") assert(response.result.content[0].text.startsWith(CONVERSATION_LANGUAGE_GUIDANCE), `${params.name} must apply the shared response-language policy`);
   return response.result;
 }
 
